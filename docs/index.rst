@@ -1,5 +1,9 @@
-Optimus
+Optimus (By Iron_)
 =======
+
+
+.. _Iron: https://github.com/ironmussa
+
 
 Optimus is the missing library for cleaning and pre-processing data in a distributed fashion. It uses all the power of `Apache Spark`_ (optimized via Catalyst_) to do it. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
 
@@ -633,24 +637,24 @@ Building a dummy dataFrame:
 
 
     Original dataFrame:
-    +---------------+--------+----------+
-    |           city| country|population|
-    +---------------+--------+----------+
-    |         Bogotá|Colombia|  37800000|
-    |       New York|    US@A|  19795791|
-    |   São Paulo   |  Brazil|  12341418|
-    |        ~Madrid|   Spain|   6489162|
-    +---------------+--------+----------+
+    #+---------------+--------+----------+
+    #|           city| country|population|
+    #+---------------+--------+----------+
+    #|         Bogotá|Colombia|  37800000|
+    #|       New York|    US@A|  19795791|
+    #|   São Paulo   |  Brazil|  12341418|
+    #|        ~Madrid|   Spain|   6489162|
+    #+---------------+--------+----------+
 
     New dataFrame:
-    +---------------+--------+----------+
-    |           city| country|population|
-    +---------------+--------+----------+
-    |         Bogota|Colombia|  37800000|
-    |       New York|    US@A|  19795791|
-    |   Sao Paulo   |  Brazil|  12341418|
-    |        ~Madrid|   Spain|   6489162|
-    +---------------+--------+----------+
+    #+---------------+--------+----------+
+    #|           city| country|population|
+    #+---------------+--------+----------+
+    #|         Bogota|Colombia|  37800000|
+    #|       New York|    US@A|  19795791|
+    #|   Sao Paulo   |  Brazil|  12341418|
+    #|        ~Madrid|   Spain|   6489162|
+    #+---------------+--------+----------+
 
 DataFrameTransformer.removeSpecialChars(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1070,3 +1074,7 @@ dateTransform(self, column, currentFormat, outputFormat)
     #|   São Paulo   |15-03-1993|  12341418|
     #|        ~Madrid|17-07-1992|   6489162|
     #+---------------+----------+----------+
+    
+Library mantained by `Favio Vazquez`_
+-------
+.. _Favio Vazquez: https://github.com/faviovazquez
