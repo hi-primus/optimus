@@ -424,6 +424,50 @@ class DataFrameTransformer():
         # Returning the transformer object for able chaining operations
         return self
 
+    def removeSpecialCharsRegex(self, columns,regex):
+        """This function remove special chars in string columns using a regex, such as: .!"#$%&/()
+        :param columns      list of names columns to be processed.
+        :param regex        string that contains the regular expression
+
+        columns argument can be a string or a list of strings."""
+
+        # Check if columns argument must be a string or list datatype:
+        self.__assertTypeStrOrList(columns, "columns")
+
+        # Filters all string columns in dataFrame
+        validCols = [c for (c, t) in filter(lambda t: t[1] == 'string', self.__df.dtypes)]
+
+        # If None or [] is provided with column parameter:
+        if (columns == "*"): columns = validCols[:]
+
+        # If columns is string, make a list:
+        if type(columns) == type(' '): columns = [columns]
+
+        # Check if columns to be process are in dataframe
+        self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
+
+        colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
+
+        assert (
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+
+        def rmSpecCharsRegex(inputStr,regex):
+            for s in set(inputStr):
+                inputStr = re.sub(regex, '', inputStr)
+            return inputStr
+
+        # User define function that does operation in cells
+        function = udf(lambda cell: rmSpecCharsRegex(cell,regex) if cell != None else cell, StringType())
+
+        exprs = [function(c).alias(c) if (c in columns) and (c in validCols)  else c for c in self.__df.columns]
+
+        self.__df = self.__df.select(*exprs)
+
+        self.__addTransformation()  # checkpoint in case
+
+        # Returning the transformer object for able chaining operations
+        return self
+
     def renameCol(self, columns):
         """"This functions change the name of columns datraFrame.
         :param columns      List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
