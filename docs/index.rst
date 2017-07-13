@@ -106,7 +106,7 @@ DataFrameTransformer class
 DataFrameTransformer class
 --------------------------
 
-\* Transformer(dataFrame)
+* Transformer(dataFrame)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DataFrameTransformer class receives a dataFrame as an argument. This
@@ -209,7 +209,7 @@ operation in whole dataframe.
     #|  Madrid|  Spain|   6489162|
     #+--------+-------+----------+
 
-\* Transformer.dropCol(columns)
+* Transformer.dropCol(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method eliminate the list of columns provided by user.
@@ -257,7 +257,7 @@ names.
     #|     Madrid|   6489162|
     #+-----------+----------+
 
-\* Transformer.keepCol(columns)
+* Transformer.keepCol(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method keep only columns specified by user with ``columns``
@@ -306,7 +306,7 @@ names.
     #|     Madrid|   6489162|
     #+-----------+----------+
 
-\* Transformer.replaceCol(search, changeTo, columns)
+* Transformer.replaceCol(search, changeTo, columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method search the ``search`` value argument in the DataFrame
@@ -360,7 +360,7 @@ in all columns of DataFrame that have same dataType of ``search`` and
     #|     Madrid|  Spain|   6489162|
     #+-----------+-------+----------+
 
-\* Transformer.deleteRow(func)
+* Transformer.deleteRow(func)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method deletes rows in columns according to condition provided by
@@ -460,7 +460,7 @@ python feature.
     #|   Paris   | France|  12341418|
     #+-----------+-------+----------+
 
-\* Transformer.setCol(columns, func, dataType)
+* Transformer.setCol(columns, func, dataType)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method can be used to make math operations or string manipulations
@@ -567,7 +567,7 @@ Here some examples:
     #|     MADRID|  Spain|   6489162|
     #+-----------+-------+----------+
 
-\* Transformer.clearAccents(columns)
+* Transformer.clearAccents(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function deletes accents in strings dataFrames, it does not
@@ -652,7 +652,7 @@ Building a dummy dataFrame:
     |        ~Madrid|   Spain|   6489162|
     +---------------+--------+----------+
 
-\* DataFrameTransformer.removeSpecialChars(columns)
+* DataFrameTransformer.removeSpecialChars(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method remove special characters (i.e. !"#$%&/()=?) in columns of
@@ -703,7 +703,7 @@ E.g:
     #|         Madrid|   Spain|   6489162|
     #+---------------+--------+----------+
 
-\* DataFrameTransformer.renameCol(column, newName)
+* DataFrameTransformer.renameCol(column, newName)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method changes name of column specified by ``column`` argument.
@@ -751,7 +751,7 @@ E.g:
     #|        ~Madrid|   Spain|   6489162|
     #+---------------+--------+----------+
 
-\* DataFrameTransformer.lookup(column, listStr, StrToReplace)
+* DataFrameTransformer.lookup(column, listStr, StrToReplace)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method search a list of strings specified in ``listStr`` argument
@@ -838,7 +838,7 @@ Building a dummy dataFrame:
     #|        ~Madrid|    Spain|   6489162|
     #+---------------+---------+----------+
 
-\* DataFrameTransformer.moveCol(column, refCol, position)
+* DataFrameTransformer.moveCol(column, refCol, position)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function move a column from one position to another according to
@@ -889,7 +889,7 @@ E.g:
     #|    Spain|        ~Madrid|   6489162|
     #+---------+---------------+----------+
 
-\* DataFrameTransformer.contarTable(coldId, col, newColFeature)
+* DataFrameTransformer.contarTable(coldId, col, newColFeature)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -980,7 +980,7 @@ See the example bellow to more explanations:
     #|      4|    Pizza|   1|
     #+-------+---------+----+
 
-\* DataFrameTransformer.dateTransform(column, currentFormat, outputFormat)
+* DataFrameTransformer.dateTransform(column, currentFormat, outputFormat)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method changes date format in ``column`` from ``currentFormat`` to
