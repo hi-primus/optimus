@@ -1,6 +1,6 @@
 # Optimus
 
-[![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest) --->>> See the official documentation.
+[![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest) --->>> **See the official documentation.**
 
 Optimus is a class that binds the DataFrameTransformer and DataFrameAnalyzer
 functionalities.
