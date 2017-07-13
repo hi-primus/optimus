@@ -1,7 +1,7 @@
 id,firstName,lastName,billingId,product,price,birth,dummyCol
-1,Luis,Alvarez$$%!”,123,Cake,10,1980/07/07,never
+1,Luis,Alvarez$$%!,123,Cake,10,1980/07/07,never
 2,André,Ampère,423,piza,8,1950/07/08,gonna
-3,NiELS,Böhr//((“%%,551,pizza,8,1990/07/09,give
+3,NiELS,Böhr//((%%,551,pizza,8,1990/07/09,give
 4,PAUL,dirac$,521,pizza,8,1954/07/10,you
 5,Albert,Einstein,634,pizza,8,1990/07/11,up
 6,Galileo,             GALiLEI,672,arepa,5,1930/08/12,never
@@ -16,5 +16,5 @@ id,firstName,lastName,billingId,product,price,birth,dummyCol
 15,(((   Heinrich ))))),Hertz,116,pizza,8,1956/11/30,and
 16,William,Gilbert###,886,BEER,2,1958/03/26,desert
 17,Marie,CURIE,912,Rice,1,2000/03/22,you
-18,Arthur,COM%%%pton,812,arepa,5,1899/01/01,#
+18,Arthur,COM%%%pton,812,arepa110790,5,1899/01/01,#
 19,JAMES,Chadwick,467,null,10,1921/05/03,#
