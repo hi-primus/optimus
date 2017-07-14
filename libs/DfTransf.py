@@ -50,7 +50,7 @@ class DataFrameTransformer():
     def __addTransformation(self):
         self.__numberOfTransformations += 1
 
-        if (self.__numberOfTransformations > 5):
+        if (self.__numberOfTransformations > 50):
             self.checkPoint()
             self.__numberOfTransformations = 0
 
