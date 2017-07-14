@@ -1074,6 +1074,6 @@ dateTransform(self, column, currentFormat, outputFormat)
     #|        ~Madrid|17-07-1992|   6489162|
     #+---------------+----------+----------+
     
-Library mantained by `Favio Vazquez`_
+Library mantained by `Favio Vázquez`_
 -------
 .. _Favio Vazquez: https://github.com/faviovazquez
