@@ -1,6 +1,6 @@
 # Optimus
 
-[![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest) [![Built_By iron](https://img.shields.io/badge/Built_By-iron-FF69A4.svg)](http://ironmussa.com)
 
 ## Click below for the official documentation
 
