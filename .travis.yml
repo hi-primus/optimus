@@ -10,3 +10,6 @@ env:
 install:
     - ./install-spark-1-6.sh
     - "pip install -r requirements-test.txt"
+    
+notifications:
+  email: false
