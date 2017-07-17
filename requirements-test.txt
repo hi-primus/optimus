@@ -1,4 +1,4 @@
 mock
 nose
-unittest2
+unittest
 pylint
