@@ -23,13 +23,10 @@ lint_requires = [
     'pyflakes'
 ]
 
-if sys.version_info.major < 3:
-    tests_require = ['mock', 'nose', 'unittest2']
-else:
-    tests_require = ['mock', 'nose']
+tests_require = ['pytest','mock', 'nose']
 
 dependency_links = []
-setup_requires = []
+setup_requires=['pytest-runner']
 if 'nosetests' in sys.argv[1:]:
     setup_requires.append('nose')
 
