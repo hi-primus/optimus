@@ -10,6 +10,7 @@ env:
 before_install:
     - chmod +x install-spark-1-6.sh
     - pip install pytest pytest-cov
+    - pip install coveralls
     
 install:
     - ./install-spark-1-6.sh
