@@ -7,6 +7,9 @@ env:
     global:
         - SPARK_HOME=/tmp/spark-1.6.0-bin-hadoop2.6
 
+before_install:
+    - pip install pytest pytest-cov
+    
 install:
     - ./install-spark-1-6.sh
     - "pip install -r requirements-test.txt"
