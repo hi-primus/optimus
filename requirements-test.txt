@@ -1,0 +1,4 @@
+mock
+nose
+unittest2
+pylint
