@@ -37,7 +37,7 @@ setup(
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
     download_url = 'https://github.com/ironmussa/Optimus/archive/0.1.0.tar.gz'
-    description=('Optimus is the missing library for cleaning and pre-processing data in a distributed fashion.'),
+    description=('Optimus is the missing library for cleaning and preprocessing data in a distributed fashion.'),
     long_description=readme(),
     license='APACHE',
     packages=find_packages(),
