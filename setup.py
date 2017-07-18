@@ -59,5 +59,5 @@ setup(
         'License :: Apache License',
         'Programming Language :: Python :: 3.5',
     ],
-
+    keywords = ["datacleaner","apachespark", "spark", "pyspark", "data-wrangling"],
 )
