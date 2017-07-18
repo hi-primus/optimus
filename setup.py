@@ -31,7 +31,7 @@ if 'nosetests' in sys.argv[1:]:
     setup_requires.append('nose')
 
 setup(
-    name='Optimus',
+    name='optimus-iron',
     version=get_version(),
     author='Favio Vazquez',
     author_email='favio.vazquez@ironmussa.com',
@@ -57,7 +57,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'License :: Apache License',
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.5',
     ],
     keywords = ['datacleaner','apachespark', 'spark', 'pyspark', 'data-wrangling'],
