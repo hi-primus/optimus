@@ -14,7 +14,7 @@ if sys.version_info < (3, 5):
     raise RuntimeError('This version requires Python 3.5+')  # pragma: no cover
 
 def readme():
-    with open('README.md') as f:
+    with open('Readme.txt') as f:
         return f.read()
 
 install_requires = []
