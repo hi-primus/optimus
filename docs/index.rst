@@ -32,7 +32,7 @@ Requirements
 Installation
 -------------
 
-1 - Download ``libs`` folder and place the content inside your working
+1 - Download ``optimus`` folder and place the content inside your working
 folder.
 
 2 - When starting pySpark in terminal, write the following line:
