@@ -55,7 +55,7 @@ setup(
     include_package_data=False,
     classifiers=[
         'Development Status :: 3 - Alpha',
-        'Intended Audience :: Data Scientists',
+        'Intended Audience :: Developers',
         'Topic :: Data cleaning :: Apache Spark :: Pyspark',
         'License :: Apache License',
         'Programming Language :: Python :: 3.5',
