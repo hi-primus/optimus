@@ -36,6 +36,7 @@ setup(
     author='Favio Vazquez',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
+    download_url = 'https://github.com/ironmussa/Optimus/archive/0.1.0.tar.gz'
     description=('Optimus is the missing library for cleaning and pre-processing data in a distributed fashion.'),
     long_description=readme(),
     license='APACHE',
@@ -59,5 +60,5 @@ setup(
         'License :: Apache License',
         'Programming Language :: Python :: 3.5',
     ],
-    keywords = ["datacleaner","apachespark", "spark", "pyspark", "data-wrangling"],
+    keywords = ['datacleaner','apachespark', 'spark', 'pyspark', 'data-wrangling'],
 )
