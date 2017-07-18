@@ -52,4 +52,12 @@ setup(
     dependency_links=dependency_links,
     test_suite='nose.collector',
     include_package_data=False,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Data Scientists',
+        'Topic :: Data cleaning :: Apache Spark :: Pyspark',
+        'License :: Apache License',
+        'Programming Language :: Python :: 3.5',
+    ],
+
 )
