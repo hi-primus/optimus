@@ -37,8 +37,7 @@ setup(
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
     download_url = 'https://github.com/ironmussa/Optimus/archive/0.1.2.tar.gz',
-    description=('Optimus is the missing library for cleaning and preprocessing data in a distributed fashion with 
-                 pyspark.'),
+    description=('Optimus is the missing library for cleaning and preprocessing data in a distributed fashion with pyspark.'),
     long_description=readme(),
     license='APACHE',
     packages=find_packages(),
