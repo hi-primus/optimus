@@ -56,7 +56,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Topic :: Data cleaning :: Apache Spark :: Pyspark',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'License :: Apache License',
         'Programming Language :: Python :: 3.5',
     ],
