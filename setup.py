@@ -31,7 +31,7 @@ if 'nosetests' in sys.argv[1:]:
     setup_requires.append('nose')
 
 setup(
-    name='pyspark_testing',
+    name='Optimus',
     version=get_version(),
     author='Favio Vazquez',
     author_email='favio.vazquez@ironmussa.com',
