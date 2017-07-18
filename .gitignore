@@ -28,6 +28,7 @@ crashlytics-build.properties
 metastore_db/*
 checkPointFolder/*
 *.crc
+examples/metastore_db/*
 
 
 
