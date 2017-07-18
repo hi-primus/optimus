@@ -32,11 +32,12 @@ Requirements
 Installation
 -------------
 
-1 - Download ``optimus`` folder and place the content inside your working
-folder.
+In your terminal just type:
 
-2 - When starting pySpark in terminal, write the following line:
-``$ pyspark --packages com.databricks:spark-csv_2.11:1.3.0 --py-files DfAnalizer.py,DfTransf.py,utilities.py``
+.. code:: bash
+
+  pip install optimuspyspark
+
 
 DataFrameTransformer
 --------------------
