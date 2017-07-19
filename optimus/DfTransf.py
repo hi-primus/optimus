@@ -623,7 +623,7 @@ class DataFrameTransformer():
 
         return self
 
-    def contarTable(self, colId, col1, newColFeature, listToAssign):
+    def explodeTable(self, colId, col1, newColFeature, listToAssign):
         """
         This function can be used to split a feature with some extra information in order
         to make a new column feature.

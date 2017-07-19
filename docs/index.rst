@@ -104,7 +104,7 @@ DataFrameTransformer class
   - DataFrameTransformer.setCol(columns, func, dataType)
 
 * **Others**:
-  - DataFrameTransformer.contarTable(coldId, col, newColFeature)
+  - DataFrameTransformer.explodeTable(coldId, col, newColFeature)
   - DataFrameTransformer.ageCalculate(column)
 
 DataFrameTransformer class
@@ -893,7 +893,7 @@ E.g:
     #|    Spain|        ~Madrid|   6489162|
     #+---------+---------------+----------+
 
-DataFrameTransformer.contarTable(coldId, col, newColFeature)
+DataFrameTransformer.explodeTable(coldId, col, newColFeature)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -951,7 +951,7 @@ See the example bellow to more explanations:
     transformer.getDataframe().show()
 
     # Transformation:
-    transformer.contarTable('bill id', 'foods', 'Beer')
+    transformer.explodeTable('bill id', 'foods', 'Beer')
 
     # Printing new dataFrame:
     print('New dataFrame:')
