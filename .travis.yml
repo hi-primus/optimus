@@ -12,6 +12,7 @@ before_install:
     - pip install pytest pytest-cov
     - pip install coveralls
     - pip install findspark
+    - pip install matplotlib
     
 install:
     - ./install-spark-1-6.sh
