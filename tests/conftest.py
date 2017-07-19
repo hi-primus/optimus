@@ -1,3 +1,6 @@
+import findspark
+findspark.init()
+
 import logging
 import pytest
 
