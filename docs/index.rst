@@ -127,7 +127,7 @@ dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from Transformer import DataFrameTransformer
+    from optimus.DfTransf import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -589,7 +589,7 @@ Building a dummy dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from DfTransf import DataFrameTransformer
+    from optimus.DfTransf import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -773,7 +773,7 @@ Building a dummy dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from DfTransf import DataFrameTransformer
+    from optimus.DfTransf import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -908,7 +908,7 @@ See the example bellow to more explanations:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from DfTransf import DataFrameTransformer
+    from optimus.DfTransf import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1004,7 +1004,7 @@ dateTransform(self, column, currentFormat, outputFormat)
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from DfTransf import DataFrameTransformer
+    from optimus.DfTransf import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
