@@ -13,6 +13,7 @@ before_install:
     - pip install coveralls
     - pip install findspark
     - pip install matplotlib
+    - pip install ipython
     
 install:
     - ./install-spark-1-6.sh
