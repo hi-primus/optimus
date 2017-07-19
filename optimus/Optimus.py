@@ -1,7 +1,7 @@
 # Importing DataFrameTransformer library
-from DfTransf import DataFrameTransformer
+from optimus.DfTransf import DataFrameTransformer
 # Importing DataFrameAnalyzer library
-from DfAnalizer import DataFrameAnalizer
+from optimus.DfAnalizer import DataFrameAnalizer
 
 
 class Optimus():
