@@ -1,4 +1,4 @@
 mock
 nose
 pytest
-pylint
+pylint==1.7.2
