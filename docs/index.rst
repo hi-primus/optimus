@@ -107,12 +107,6 @@ DataFrameTransformer class
   - DataFrameTransformer.explodeTable(coldId, col, newColFeature)
   - DataFrameTransformer.ageCalculate(column)
 
-DataFrameTransformer class
---------------------------
-
-* Transformer(dataFrame)
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 DataFrameTransformer class receives a dataFrame as an argument. This
 class has all methods listed aboved.
 
