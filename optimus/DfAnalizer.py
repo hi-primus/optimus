@@ -493,8 +493,7 @@ class DataFrameAnalizer():
         # Input:
         # columnList: a list or a string column name
         # valuesBar (optional): Can be True or False. If it is True, frequency values are placed over each bar.
-        # printType (optional): Can be one of the following strings: 'integer', 'string', 'float'. Depending of what string
-        # is provided, a list of distinct values of that type is printed.
+        # printType (optional): Can be True or False. If true it will print the analysis.
         # numBars: number of bars printed in histogram
         # Output:
         # values: a list containing the number of the different datatypes [nulls, strings, integers, floats]
