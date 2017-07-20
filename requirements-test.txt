@@ -1,4 +1,4 @@
-mock
+mock==2.0.0
 nose
 pytest
 pylint
