@@ -58,18 +58,152 @@ Optimus
 Optimus is a class that wraps DataFrameAnalyzer and DataFrameTransformer
 classes.
 
-DataFrameAnalyzer
------------------
+DataFrameAnalyzer class
+-----------------------
 
 DataFrameAnalyzer class analyze dataType of rows in each columns of
 dataFrames.
 
--  columnAnalize
--  plotHist
--  getCategoricalHist
--  getNumericalHist
--  uniqueValuesCol
--  writeJson
+**DataFrameAnalyzer methods**
+
+-  DataFrameAnalyzer.columnAnalize(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
+-  DataFrameAnalyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+-  DataFrameAnalyzer.getCategoricalHist(dfOneCol, numBars)
+-  DataFrameAnalyzer.getNumericalHist(dfOneCol, numBars)
+-  DataFrameAnalyzer.uniqueValuesCol(column)
+-  DataFrameAnalyzer.writeJson(jsonCols, pathToJsonFile)
+
+The following code shows how to instanciate the class to analyze a dataFrame:
+
+.. code:: python
+
+  # Importing DataFrameAnalyzer library
+  from optimus.DfAnalizer import DataFrameAnalizer
+  # Importing Utility library
+  from optimus.utilities import *
+  # Setting notebook to show plots inline
+  %matplotlib inline 
+  # Import module for system tools 
+  import os
+  
+  # Instance of Utilities class
+  tools = Utilites(sc)
+  
+  # Reading dataframe. os.getcwd() returns de current directory of the notebook 
+  # 'file:///' is a prefix that specifies the type of file system used, in this
+  # case, local file system (hard drive of the pc) is used.
+  filePath = "file:///" + os.getcwd() + "/foo.csv"
+  
+  df = tools.readDatasetCsv(path=filePath, delimiterMark=',')
+
+  analyzer = DataFrameAnalizer(df=df,pathFile=filePath)
+
+Methods
+--------
+
+Analyzer.columnAnalize(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function counts the number of registers in a column that are numbers (integers, floats) and the number of string registers.
+
+Input:
+
+``columnList``: A list or a string column name.
+
+``plots``: Can be True or False. If true it will output the predefined plots.
+
+``valuesBar (optional)``: Can be True or False. If it is True, frequency values are placed over each bar.
+
+``printType (optional)``: Can be one of the following strings: 'integer', 'string', 'float'. Depending of what string
+is provided, a list of distinct values of that type is printed.
+
+``numBars``: number of bars printed in histogram
+
+The method outputs a list containing the number of the different datatypes [nulls, strings, integers, floats].
+
+Example: 
+
+Analyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function builds the histogram (bins) of an categorical column dataframe.
+
+Input: 
+
+``dfOneCol``: A dataFrame of one column.
+``histDict``: Python dictionary with histogram values
+``typeHist``: type of histogram to be generated, numerical or categorical
+``numBars``: Number of bars in histogram.
+``valuesBar``: If valuesBar is True, values of frequency are plotted over bars.
+        
+The method outputs adictionary of the histogram generated.
+
+Example:
+
+Analyzer.getCategoricalHist(dfOneCol, numBars)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function analyzes a dataframe of a single column (only string type columns) and returns a dictionary with bins and values of frequency.
+
+Input:
+
+``dfOneCol``:One column dataFrame.
+
+``numBars``: Number of bars or histogram bins.
+
+The method outputs a dictionary with bins and values of frequency for only type strings colmuns.
+
+Example:
+
+Analyzer.getNumericalHist(dfOneCol, numBars)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function analyzes a dataframe of a single column (only numerical columns) and returns a dictionary with bins and values of frequency.
+
+Input:
+
+``dfOneCol``:One column dataFrame.
+
+``numBars``: Number of bars or histogram bins.
+
+The method outputs a dictionary with bins and values of frequency for only numerical colmuns.
+
+Example:
+
+Analyzer.uniqueValuesCol(column)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function counts the number of values that are unique and also the total number of values. Then, returns the values obtained.
+
+Input:
+
+``column``: Name of column dataFrame, this argument must be string type.
+
+The method outputs a dictionary of values counted, as an example: ``{'unique': 10, 'total': 15}``.
+
+Analyzer.writeJson(jsonCols, pathToJsonFile)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This functions ... and outputs a JSON in the specified path.
+
+Input:
+
+``jsonCols``: Dictionary that represents the dataframe.
+
+``pathToJsonFile``: Specified path to write the returned JSON.
+
+The method outputs the dataFrame as a JSON. To use it in a simple way first run 
+
+.. code:: python
+
+  jsonCols = analyzer.columnAnalize(columnList="*", printType=False, plots=False) 
+
+And you will have the desired dictionary to pass to the writeJson function.
+
+Example:
+
+
+
 
 DataFrameTransformer class
 --------------------------
@@ -80,10 +214,10 @@ DataFrameTransformer class
 
 * **Column operations**:
 
-  - [DataFrameTransformer.dropCol(columns)](#dataframetransformer-class)
-  - DataFrameTransformer.replaceCol(search, changeTo, columns)]
+  - DataFrameTransformer.dropCol(columns)
+  - DataFrameTransformer.replaceCol(search, changeTo, columns)
   - DataFrameTransformer.keepCol(columns)
-  - DataFrameTransformer.renameCol(column, newName)</li>
+  - DataFrameTransformer.renameCol(column, newName)
   - DataFrameTransformer.moveCol(column, refCol, position)
 
 * **Row operations** :
