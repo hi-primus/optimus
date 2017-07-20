@@ -322,12 +322,16 @@ This function builds the histogram (bins) of an categorical column dataframe.
 Input: 
 
 ``dfOneCol``: A dataFrame of one column.
-``histDict``: Python dictionary with histogram values
-``typeHist``: type of histogram to be generated, numerical or categorical
+
+``histDict``: Python dictionary with histogram values.
+
+``typeHist``: type of histogram to be generated, numerical or categorical.
+
 ``numBars``: Number of bars in histogram.
+
 ``valuesBar``: If valuesBar is True, values of frequency are plotted over bars.
         
-The method outputs adictionary of the histogram generated.
+The method outputs a dictionary of the histogram generated.
 
 Example:
 
@@ -465,18 +469,21 @@ dataFrame:
     transformer = DataFrameTransformer(df)
 
     transformer.getDataframe().show()
-
-.. code:: python
-
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
-
+    
+Output:
+ 
+ +-----------+-------+----------+
+ |       city|country|population|
+ +-----------+-------+----------+
+ |      Tokyo|  Japan|  37800000|
+ +-----------+-------+----------+
+ |   New York|    USA|  19795791|
+ +-----------+-------+----------+
+ |   Paris   | France|  12341418|
+ +-----------+-------+----------+
+ |     Madrid|  Spain|   6489162|
+ +-----------+-------+----------+
+ 
 Methods
 -------
 
@@ -510,27 +517,33 @@ operation in whole dataframe.
     print('Trimmed dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    Trimmed dataFrame:
-    #+--------+-------+----------+
-    #|    city|country|population|
-    #+--------+-------+----------+
-    #|   Tokyo|  Japan|  37800000|
-    #|New York|    USA|  19795791|
-    #|   Paris| France|  12341418|
-    #|  Madrid|  Spain|   6489162|
-    #+--------+-------+----------+
+Trimmed dataFrame:
+
++--------+-------+----------+
+|    city|country|population|
++--------+-------+----------+
+|   Tokyo|  Japan|  37800000|
++--------+-------+----------+
+|New York|    USA|  19795791|
++--------+-------+----------+
+|   Paris| France|  12341418|
++--------+-------+----------+
+|  Madrid|  Spain|   6489162|
++--------+-------+----------+
 
 Transformer.dropCol(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -558,27 +571,34 @@ names.
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
+Original dataFrame:
 
-    New dataFrame:
-    #+-----------+----------+
-    #|       city|population|
-    #+-----------+----------+
-    #|      Tokyo|  37800000|
-    #|   New York|  19795791|
-    #|   Paris   |  12341418|
-    #|     Madrid|   6489162|
-    #+-----------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
+
+New dataFrame:
+
++-----------+----------+
+|       city|population|
++-----------+----------+
+|      Tokyo|  37800000|
++-----------+----------+
+|   New York|  19795791|
++-----------+----------+
+|   Paris   |  12341418|
++-----------+----------+
+|     Madrid|   6489162|
++-----------+----------+
 
 Transformer.keepCol(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -586,8 +606,7 @@ Transformer.keepCol(columns)
 This method keep only columns specified by user with ``columns``
 argument in DataFrame.
 
-``columns`` argument is expected to be a string or a list of columns
-names.
+``columns`` argument is expected to be a string or a list of columns names.
 
 **Example:**
 
@@ -607,27 +626,33 @@ names.
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    New dataFrame:
-    #+-----------+----------+
-    #|       city|population|
-    #+-----------+----------+
-    #|      Tokyo|  37800000|
-    #|   New York|  19795791|
-    #|   Paris   |  12341418|
-    #|     Madrid|   6489162|
-    #+-----------+----------+
+New dataFrame:
+    
++-----------+----------+
+|       city|population|
++-----------+----------+
+|      Tokyo|  37800000|
++-----------+----------+
+|   New York|  19795791|
++-----------+----------+
+|   Paris   |  12341418|
++-----------+----------+
+|     Madrid|   6489162|
++-----------+----------+
 
 Transformer.replaceCol(search, changeTo, columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -661,27 +686,33 @@ in all columns of DataFrame that have same dataType of ``search`` and
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    New dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|  Maracaibo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
+New dataFrame:
+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|  Maracaibo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
 Transformer.deleteRow(func)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -717,26 +748,29 @@ python feature.
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
 
 **Example 2:**
 
@@ -762,26 +796,29 @@ python feature.
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
-
-    New dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   Paris   | France|  12341418|
-    #+-----------+-------+----------+
+New dataFrame:
+    
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
 
 Transformer.setCol(columns, func, dataType)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -826,28 +863,35 @@ Here some examples:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    Replacing a number if value in cell is greater than 14000000:
-    New dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  75600000|
-    #|   New York|    USA|  39591582|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
+Replacing a number if value in cell is greater than 14000000:
+
+New dataFrame:
+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  75600000|
++-----------+-------+----------+
+|   New York|    USA|  39591582|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
 **Example 2:**
 
@@ -868,27 +912,33 @@ Here some examples:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      Tokyo|  Japan|  37800000|
-    #|   New York|    USA|  19795791|
-    #|   Paris   | France|  12341418|
-    #|     Madrid|  Spain|   6489162|
-    #+-----------+-------+----------+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      Tokyo|  Japan|  37800000|
++-----------+-------+----------+
+|   New York|    USA|  19795791|
++-----------+-------+----------+
+|   Paris   | France|  12341418|
++-----------+-------+----------+
+|     Madrid|  Spain|   6489162|
++-----------+-------+----------+
 
-    New dataFrame:
-    #+-----------+-------+----------+
-    #|       city|country|population|
-    #+-----------+-------+----------+
-    #|      TOKYO|  Japan|  37800000|
-    #|   NEW YORK|    USA|  19795791|
-    #|   PARIS   | France|  12341418|
-    #|     MADRID|  Spain|   6489162|
-    #+-----------+-------+----------+
+New dataFrame:
+
++-----------+-------+----------+
+|       city|country|population|
++-----------+-------+----------+
+|      TOKYO|  Japan|  37800000|
++-----------+-------+----------+
+|   NEW YORK|    USA|  19795791|
++-----------+-------+----------+
+|   PARIS   | France|  12341418|
++-----------+-------+----------+
+|     MADRID|  Spain|   6489162|
++-----------+-------+----------+
 
 Transformer.clearAccents(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -925,16 +975,19 @@ Building a dummy dataFrame:
 
     df.show()
 
-.. code:: python
+New DF:
 
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
 .. code:: python
 
@@ -952,28 +1005,33 @@ Building a dummy dataFrame:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
-    Original dataFrame:
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogota|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   Sao Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogota|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   Sao Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
 DataFrameTransformer.removeSpecialChars(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1003,28 +1061,33 @@ E.g:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
-    Original dataFrame:
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|     USA|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|         Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|     USA|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|         Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
 DataFrameTransformer.renameCol(column, newName)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1051,28 +1114,33 @@ E.g:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
-    Original dataFrame:
-    #+---------------+--------+----------+
-    #|           city| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+---------------+--------+----------+
-    #|         villes| country|population|
-    #+---------------+--------+----------+
-    #|         Bogotá|Colombia|  37800000|
-    #|       New York|    US@A|  19795791|
-    #|   São Paulo   |  Brazil|  12341418|
-    #|        ~Madrid|   Spain|   6489162|
-    #+---------------+--------+----------+
++---------------+--------+----------+
+|         villes| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
 
 DataFrameTransformer.lookup(column, listStr, StrToReplace)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1109,17 +1177,19 @@ Building a dummy dataFrame:
 
     df.show()
 
-.. code:: python
+New DF:
 
-
-    #+---------------+---------+----------+
-    #|           city|  country|population|
-    #+---------------+---------+----------+
-    #|        Caracas|Venezuela|  37800000|
-    #|            Ccs|Venezuela|  19795791|
-    #|   São Paulo   |   Brazil|  12341418|
-    #|        ~Madrid|    Spain|   6489162|
-    #+---------------+---------+----------+
++---------------+---------+----------+
+|           city|  country|population|
++---------------+---------+----------+
+|        Caracas|Venezuela|  37800000|
++---------------+---------+----------+
+|            Ccs|Venezuela|  19795791|
++---------------+---------+----------+
+|   São Paulo   |   Brazil|  12341418|
++---------------+---------+----------+
+|        ~Madrid|    Spain|   6489162|
++---------------+---------+----------+
 
 .. code:: python
 
@@ -1138,28 +1208,33 @@ Building a dummy dataFrame:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++---------------+---------+----------+
+|           city|  country|population|
++---------------+---------+----------+
+|        Caracas|Venezuela|  37800000|
++---------------+---------+----------+
+|            Ccs|Venezuela|  19795791|
++---------------+---------+----------+
+|   São Paulo   |   Brazil|  12341418|
++---------------+---------+----------+
+|        ~Madrid|    Spain|   6489162|
++---------------+---------+----------+
 
-    Original dataFrame:
-    #+---------------+---------+----------+
-    #|           city|  country|population|
-    #+---------------+---------+----------+
-    #|        Caracas|Venezuela|  37800000|
-    #|            Ccs|Venezuela|  19795791|
-    #|   São Paulo   |   Brazil|  12341418|
-    #|        ~Madrid|    Spain|   6489162|
-    #+---------------+---------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+---------------+---------+----------+
-    #|           city|  country|population|
-    #+---------------+---------+----------+
-    #|        Caracas|Venezuela|  37800000|
-    #|        Caracas|Venezuela|  19795791|
-    #|   São Paulo   |   Brazil|  12341418|
-    #|        ~Madrid|    Spain|   6489162|
-    #+---------------+---------+----------+
++---------------+---------+----------+
+|           city|  country|population|
++---------------+---------+----------+
+|        Caracas|Venezuela|  37800000|
++---------------+---------+----------+
+|        Caracas|Venezuela|  19795791|
++---------------+---------+----------+
+|   São Paulo   |   Brazil|  12341418|
++---------------+---------+----------+
+|        ~Madrid|    Spain|   6489162|
++---------------+---------+----------+
 
 DataFrameTransformer.moveCol(column, refCol, position)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1190,27 +1265,33 @@ E.g:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+---------------+---------+----------+
-    #|           city|  country|population|
-    #+---------------+---------+----------+
-    #|        Caracas|Venezuela|  37800000|
-    #|            Ccs|Venezuela|  19795791|
-    #|   São Paulo   |   Brazil|  12341418|
-    #|        ~Madrid|    Spain|   6489162|
-    #+---------------+---------+----------+
++---------------+---------+----------+
+|           city|  country|population|
++---------------+---------+----------+
+|        Caracas|Venezuela|  37800000|
++---------------+---------+----------+
+|            Ccs|Venezuela|  19795791|
++---------------+---------+----------+
+|   São Paulo   |   Brazil|  12341418|
++---------------+---------+----------+
+|        ~Madrid|    Spain|   6489162|
++---------------+---------+----------+
 
-    New dataFrame:
-    #+---------+---------------+----------+
-    #|  country|           city|population|
-    #+---------+---------------+----------+
-    #|Venezuela|        Caracas|  37800000|
-    #|Venezuela|            Ccs|  19795791|
-    #|   Brazil|   São Paulo   |  12341418|
-    #|    Spain|        ~Madrid|   6489162|
-    #+---------+---------------+----------+
+New dataFrame:
+
++---------+---------------+----------+
+|  country|           city|population|
++---------+---------------+----------+
+|Venezuela|        Caracas|  37800000|
++---------+---------------+----------+
+|Venezuela|            Ccs|  19795791|
++---------+---------------+----------+
+|   Brazil|   São Paulo   |  12341418|
++---------+---------------+----------+
+|    Spain|        ~Madrid|   6489162|
++---------+---------------+----------+
 
 DataFrameTransformer.explodeTable(coldId, col, newColFeature)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1243,22 +1324,29 @@ See the example bellow to more explanations:
 
     df.show()
 
-.. code:: python
+New DF:
 
-
-    #+-------+---------+
-    #|bill id|    foods|
-    #+-------+---------+
-    #|      1|    Pizza|
-    #|      2|    Pizza|
-    #|      2|     Beer|
-    #|      3|Hamburger|
-    #|      3|     Beer|
-    #|      3|     Beer|
-    #|      3|     Beer|
-    #|      4|    Pizza|
-    #|      4|     Beer|
-    #+-------+---------+
++-------+---------+
+|bill id|    foods|
++-------+---------+
+|      1|    Pizza|
++-------+---------+
+|      2|    Pizza|
++-------+---------+
+|      2|     Beer|
++-------+---------+
+|      3|Hamburger|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      4|    Pizza|
++-------+---------+
+|      4|     Beer|
++-------+---------+
 
 .. code:: python
 
@@ -1276,32 +1364,43 @@ See the example bellow to more explanations:
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
-    Original dataFrame:
-    #+-------+---------+
-    #|bill id|    foods|
-    #+-------+---------+
-    #|      1|    Pizza|
-    #|      2|    Pizza|
-    #|      2|     Beer|
-    #|      3|Hamburger|
-    #|      3|     Beer|
-    #|      3|     Beer|
-    #|      3|     Beer|
-    #|      4|    Pizza|
-    #|      4|     Beer|
-    #+-------+---------+
++-------+---------+
+|bill id|    foods|
++-------+---------+
+|      1|    Pizza|
++-------+---------+
+|      2|    Pizza|
++-------+---------+
+|      2|     Beer|
++-------+---------+
+|      3|Hamburger|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      4|    Pizza|
++-------+---------+
+|      4|     Beer|
++-------+---------+
 
-    New dataFrame:
-    #+-------+---------+----+
-    #|bill id|    foods|Beer|
-    #+-------+---------+----+
-    #|      1|    Pizza|   0|
-    #|      2|    Pizza|   1|
-    #|      3|Hamburger|   3|
-    #|      4|    Pizza|   1|
-    #+-------+---------+----+
+New dataFrame:
+
++-------+---------+----+
+|bill id|    foods|Beer|
++-------+---------+----+
+|      1|    Pizza|   0|
++-------+---------+----+
+|      2|    Pizza|   1|
++-------+---------+----+
+|      3|Hamburger|   3|
++-------+---------+----+
+|      4|    Pizza|   1|
++-------+---------+----+
 
 DataFrameTransformer.dateTransform(column, currentFormat, outputFormat)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1340,17 +1439,19 @@ dateTransform(self, column, currentFormat, outputFormat)
 
     df.show()
 
-.. code:: python
+New DF:
 
-
-    #+---------------+----------+----------+
-    #|           city|     dates|population|
-    #+---------------+----------+----------+
-    #|        Caracas|1991/02/25|  37800000|
-    #|            Ccs|1998/05/10|  19795791|
-    #|   São Paulo   |1993/03/15|  12341418|
-    #|        ~Madrid|1992/07/17|   6489162|
-    #+---------------+----------+----------+
++---------------+----------+----------+
+|           city|     dates|population|
++---------------+----------+----------+
+|        Caracas|1991/02/25|  37800000|
++---------------+----------+----------+
+|            Ccs|1998/05/10|  19795791|
++---------------+----------+----------+
+|   São Paulo   |1993/03/15|  12341418|
++---------------+----------+----------+
+|        ~Madrid|1992/07/17|   6489162|
++---------------+----------+----------+
 
 .. code:: python
 
@@ -1371,28 +1472,33 @@ dateTransform(self, column, currentFormat, outputFormat)
     print('New dataFrame:')
     transformer.getDataframe().show()
 
-.. code:: python
+Original dataFrame:
 
++---------------+----------+----------+
+|           city|     dates|population|
++---------------+----------+----------+
+|        Caracas|1991/02/25|  37800000|
++---------------+----------+----------+
+|            Ccs|1998/05/10|  19795791|
++---------------+----------+----------+
+|   São Paulo   |1993/03/15|  12341418|
++---------------+----------+----------+
+|        ~Madrid|1992/07/17|   6489162|
++---------------+----------+----------+
 
-    Original dataFrame:
-    #+---------------+----------+----------+
-    #|           city|     dates|population|
-    #+---------------+----------+----------+
-    #|        Caracas|1991/02/25|  37800000|
-    #|            Ccs|1998/05/10|  19795791|
-    #|   São Paulo   |1993/03/15|  12341418|
-    #|        ~Madrid|1992/07/17|   6489162|
-    #+---------------+----------+----------+
+New dataFrame:
 
-    New dataFrame:
-    #+---------------+----------+----------+
-    #|           city|     dates|population|
-    #+---------------+----------+----------+
-    #|        Caracas|25-02-1991|  37800000|
-    #|            Ccs|10-05-1998|  19795791|
-    #|   São Paulo   |15-03-1993|  12341418|
-    #|        ~Madrid|17-07-1992|   6489162|
-    #+---------------+----------+----------+
++---------------+----------+----------+
+|           city|     dates|population|
++---------------+----------+----------+
+|        Caracas|25-02-1991|  37800000|
++---------------+----------+----------+
+|            Ccs|10-05-1998|  19795791|
++---------------+----------+----------+
+|   São Paulo   |15-03-1993|  12341418|
++---------------+----------+----------+
+|        ~Madrid|17-07-1992|   6489162|
++---------------+----------+----------+
     
 Library mantained by `Favio Vazquez`_
 -------
