@@ -280,7 +280,7 @@ end of __analyze 4.292513847351074
 end of __analyze 1.180891990661621
 
 +-----------+----------+------------+------------------------+
-|           |          |            | Column name: prince    |
+|           |          |            | Column name: price    |
 +-----------+----------+------------+------------------------+
 |           |          |            | Column datatype: int   |
 +-----------+----------+------------+------------------------+
@@ -357,28 +357,6 @@ Total execution time:  17.98968768119812
 | Rows      | 19               |                     |
 +-----------+------------------+---------------------+
 
-
-Analyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This function builds the histogram (bins) of an categorical column dataframe.
-
-Input: 
-
-``dfOneCol``: A dataFrame of one column.
-
-``histDict``: Python dictionary with histogram values.
-
-``typeHist``: type of histogram to be generated, numerical or categorical.
-
-``numBars``: Number of bars in histogram.
-
-``valuesBar``: If valuesBar is True, values of frequency are plotted over bars.
-        
-The method outputs a dictionary of the histogram generated.
-
-Example:
-
 Analyzer.getCategoricalHist(dfOneCol, numBars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -393,6 +371,21 @@ Input:
 The method outputs a dictionary with bins and values of frequency for only type strings colmuns.
 
 Example:
+
+Lets say we want to plot a histogram of frecuencies for the ``product`` column. We first need to obtain the dictionary of the frecuencies for each one. This is what this function does for categorical data. Remember that if you run the ``columnAnalyze()`` method with ``plots = True`` this is done for you.
+
+.. code:: python 
+
+  productDf = analyzer.getDataframe().select("product") #or df.select("product")
+  histDict = analyzer.getCategoricalHist(dfOneCol=productDf, numBars=10)
+  print(histDict)
+
+.. code:: python
+    
+    #Output
+    """[{'cont': 4, 'value': 'pizza'}, {'cont': 3, 'value': 'taco'}, {'cont': 2, 'value': 'pasta'}, {'cont': 1, 'value':         'hamburguer'}, {'cont': 1, 'value': 'BEER'}, {'cont': 1, 'value': 'Rice'}, {'cont': 1, 'value': 'piza'}, {'cont': 1,         'value': 'Cake'}, {'cont': 1, 'value': 'arepa'}, {'cont': 1, 'value': '110790'}]"""
+
+Now that we have the dictionary we just need to call ``plotHist()``.
 
 Analyzer.getNumericalHist(dfOneCol, numBars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -409,6 +402,47 @@ The method outputs a dictionary with bins and values of frequency for only numer
 
 Example:
 
+Lets say we want to plot a histogram of frecuencies for the ``price`` column. We first need to obtain the dictionary of the frecuencies for each one. This is what this function does for numerical data. Remember that if you run the ``columnAnalyze()`` method with ``plots = True`` this is done for you.
+
+.. code:: python
+
+  priceDf = analyzer.getDataframe().select("price") #or df.select("price")
+  histDict = analyzer.getNumericalHist(dfOneCol=priceDf, numBars=10)
+  print(histDict)
+  
+.. code:: python
+
+  #Output
+  """[{'cont': 2, 'value': 9.55}, {'cont': 2, 'value': 8.649999999999999}, {'cont': 6, 'value': 7.749999999999999}, {'cont':   2, 'value': 5.05}, {'cont': 1, 'value': 4.1499999999999995}, {'cont': 4, 'value': 3.25}, {'cont': 1, 'value':               2.3499999999999996}, {'cont': 1, 'value': 1.45}]"""
+
+
+Analyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function builds the histogram (bins) of a categorical or numerical column dataframe.
+
+Input: 
+
+``dfOneCol``: A dataFrame of one column.
+
+``histDict``: Python dictionary with histogram values.
+
+``typeHist``: type of histogram to be generated, numerical or categorical.
+
+``numBars``: Number of bars in histogram.
+
+``valuesBar``: If valuesBar is True, values of frequency are plotted over bars.
+        
+The method outputs a plot of the histogram for a categorical or numerical column.
+
+Example:
+
+.. code:: python
+
+  # For a cateorical DF
+  analyzer.plotHist(dfOneCol=productDf,histDict= histDict, typeHist='categorical')
+  
+
 Analyzer.uniqueValuesCol(column)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -419,6 +453,19 @@ Input:
 ``column``: Name of column dataFrame, this argument must be string type.
 
 The method outputs a dictionary of values counted, as an example: ``{'unique': 10, 'total': 15}``.
+
+Example:
+
+.. code:: python
+
+  print(analyzer.uniqueValuesCol("product"))
+  print(analyzer.uniqueValuesCol("price"))
+  
+.. code:: python 
+
+  #Output
+  {'unique': 13, 'total': 19} 
+  {'unique': 8, 'total': 19}
 
 Analyzer.writeJson(jsonCols, pathToJsonFile)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -441,8 +488,9 @@ And you will have the desired dictionary to pass to the writeJson function.
 
 Example:
 
+.. code:: python
 
-
+  analyzer.writeJson(jsonCols=jsonCols, pathToJsonFile= os.getcwd() + "/foo.json")
 
 DataFrameTransformer class
 --------------------------
