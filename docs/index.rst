@@ -377,8 +377,8 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 .. code:: python 
 
   productDf = analyzer.getDataframe().select("product") #or df.select("product")
-  histDict = analyzer.getCategoricalHist(dfOneCol=productDf, numBars=10)
-  print(histDict)
+  histDictPro = analyzer.getCategoricalHist(dfOneCol=productDf, numBars=10)
+  print(histDictPro)
 
 .. code:: python
     
@@ -407,8 +407,8 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 .. code:: python
 
   priceDf = analyzer.getDataframe().select("price") #or df.select("price")
-  histDict = analyzer.getNumericalHist(dfOneCol=priceDf, numBars=10)
-  print(histDict)
+  histDictPri = analyzer.getNumericalHist(dfOneCol=priceDf, numBars=10)
+  print(histDictPri)
   
 .. code:: python
 
@@ -439,9 +439,17 @@ Example:
 
 .. code:: python
 
-  # For a cateorical DF
-  analyzer.plotHist(dfOneCol=productDf,histDict= histDict, typeHist='categorical')
+  # For a categorical DF
+  analyzer.plotHist(dfOneCol=productDf,histDict= histDictPro, typeHist='categorical')
   
+.. image:: images/productHist.png
+
+.. code:: python
+
+  # For a numerical DF
+  analyzer.plotHist(dfOneCol=priceDf,histDict= histDictPri, typeHist='categorical')
+  
+.. image:: images/priceHist.png
 
 Analyzer.uniqueValuesCol(column)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
