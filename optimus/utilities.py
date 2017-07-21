@@ -82,7 +82,6 @@ class Utilites():
         else:
             df.write.parquet(outputPath)
 
-    # hadoop fs -ls hdfs://server.mcbo.mood.com.ve:8020/pruebas
     def setCheckPointFolder(self, path, fileSystem):
         """Function that receives a workspace path where a folder is created.
         This folder will store temporal
