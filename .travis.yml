@@ -14,6 +14,7 @@ before_install:
     - pip install findspark
     - pip install matplotlib
     - pip install ipython
+    - pip install pytest-spark
     
 install:
     - ./install-spark-1-6.sh
