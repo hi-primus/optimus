@@ -17,7 +17,7 @@ def readme():
     with open('Readme.txt') as f:
         return f.read()
 
-install_requires = ['pytest', 'findspark']
+install_requires = ['pytest', 'findspark','pytest-spark']
 lint_requires = [
     'pep8',
     'pyflakes'
