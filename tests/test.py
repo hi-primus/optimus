@@ -3,7 +3,14 @@ from optimus.DfTransf import DataFrameTransformer
 # Import spark types
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField
 
+# Create contexts
+from pyspark.sql import SQLContext
+from pyspark import SparkContext, SparkConf
 
+sc = SparkContext()
+sqlContext = SQLContext(sc)
+
+# Define Dataframe
 schema = StructType([
         StructField("city", StringType(), True),
         StructField("country", StringType(), True),
