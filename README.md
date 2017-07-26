@@ -37,3 +37,13 @@ In your terminal just type:
 ```
 pip install optimuspyspark
 ```
+
+## Contributors: 
+
+ - Original Developers: [Andrea Rosales](https://github.com/andrearosr), [Hugo Reyes](https://github.com/hugounavez)
+ - Principal developer and maintainer: [Favio Vázquez](https://github.com/faviovazquez)
+ 
+## License:
+
+Apache © [Iron](https://github.com/ironmussa)
+ 
