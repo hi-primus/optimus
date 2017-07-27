@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)
  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)
- [![Python 3](https://pyup.io/repos/github/ironmussa/Optimus/python-3-shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/) [![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![release](http://github-release-version.herokuapp.com/github/ironmussa/optimus/release.svg?style=flat)](https://github.com/ironmussa/optimus/releases/latest) 
+ [![Python 3](https://pyup.io/repos/github/ironmussa/Optimus/python-3-shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/) [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/)
 
 
 ## Click below for the official documentation
@@ -37,3 +37,13 @@ In your terminal just type:
 ```
 pip install optimuspyspark
 ```
+
+## Contributors: 
+
+ - Original Developers: [Andrea Rosales](https://github.com/andrearosr), [Hugo Reyes](https://github.com/hugounavez)
+ - Principal developer and maintainer: [Favio Vázquez](https://github.com/faviovazquez)
+ 
+## License:
+
+Apache © [Iron](https://github.com/ironmussa)
+ 

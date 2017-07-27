@@ -17,7 +17,7 @@ def readme():
     with open('Readme.txt') as f:
         return f.read()
 
-install_requires = []
+install_requires = ['pytest', 'findspark','pytest-spark']
 lint_requires = [
     'pep8',
     'pyflakes'
@@ -36,7 +36,7 @@ setup(
     author='Favio Vazquez',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url = 'https://github.com/ironmussa/Optimus/archive/0.1.6.tar.gz',
+    download_url = 'https://github.com/ironmussa/Optimus/archive/0.2.4.tar.gz',
     description=('Optimus is the missing library for cleaning and preprocessing data in a distributed fashion with pyspark.'),
     long_description=readme(),
     license='APACHE',
