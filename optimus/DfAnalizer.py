@@ -14,6 +14,9 @@ import time
 from json import dumps
 import pyspark.sql.dataframe
 
+#Import profiler
+import spark_df_profiling_optimus
+
 plt.style.use('ggplot')
 
 class ColumnTables():
@@ -145,6 +148,39 @@ class DataTypeTable():
 
         self.html.append("</table>")
         return ''.join(self.html)
+
+class DataFrameProfiler():
+
+    def __init__(self, df, pathFile, pu=0.1, seed=13):
+        # Asserting if df is dataFrame datatype.
+        assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
+            "Error, df argument must be a pyspark.sql.dataframe.DataFrame instance"
+        # Asserting if path specified is string datatype
+        assert (isinstance(pathFile, str)), \
+            "Error, pathFile argument must be string datatype."
+        # Asserting if path includes the type of filesystem
+        assert (("file:///" == pathFile[0:8]) or ("hdfs:///" == pathFile[0:8])), \
+            "Error: path must be with a 'file://' prefix \
+            if the file is in the local disk or a 'path://' \
+            prefix if the file is in the Hadood file system"
+
+        # Asserting if seed is integer
+        assert isinstance(seed, int), "Error, seed must be an integer"
+
+        # Asserting pu is between 0 and 1.
+        assert (pu <= 1) and (pu >= 0), "Error, pu argument must be between 0 and 1"
+
+        # Dataframe
+        self.__rowNumber = 0
+        self.__pathFile = pathFile
+        self.__currentlyObserved = 0  # 0 => whole 1 => partition
+        self.__df = df
+        self.__df.cache()
+        self.__sample = df.sample(False, pu, seed)
+
+    def profiler(self):
+        dfProfiler = self.__df
+        return spark_df_profiling_optimus.ProfileReport(dfProfiler)
 
 
 # This class makes an analisis of dataframe datatypes and its different general features.
