@@ -15,6 +15,7 @@ before_install:
     - pip install matplotlib
     - pip install ipython
     - pip install pytest-spark
+    - pip install spark-df-profiling-optimus
     
 install:
     - ./install-spark-1-6.sh
