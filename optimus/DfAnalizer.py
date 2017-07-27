@@ -17,8 +17,6 @@ import pyspark.sql.dataframe
 #Import profiler
 import spark_df_profiling_optimus
 
-plt.style.use('ggplot')
-
 class ColumnTables():
     """This class builds a table to describe the number of the different dataTypes in a column dataFrame.
 
