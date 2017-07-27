@@ -147,6 +147,8 @@ class DataTypeTable():
         self.html.append("</table>")
         return ''.join(self.html)
 
+# This class makes a profile for a given dataframe and its different general features.
+# Based on spark-df-profiling
 class DataFrameProfiler():
 
     def __init__(self, df):
@@ -159,6 +161,11 @@ class DataFrameProfiler():
         self.__df.cache()
 
     def profiler(self):
+        """
+        This function calls the ProfileReport method from spark-df-profiling-optimus,
+        it gets the current DF in the analyzer and them returns the HTML profile"
+        :return: Profile of the DF in HTML format embedded in the Notebook
+        """
         dfProfiler = self.__df
         return spark_df_profiling_optimus.ProfileReport(dfProfiler)
 
