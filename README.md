@@ -45,5 +45,5 @@ pip install optimuspyspark
  
 ## License:
 
-Apache © [Iron](https://github.com/ironmussa)
+Apache 2.0 © [Iron](https://github.com/ironmussa)
  
