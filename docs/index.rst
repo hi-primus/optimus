@@ -1,6 +1,8 @@
 Optimus (By Iron_)
 =======
 
+.. image:: images/logoOptimus.png
+
 
 .. _Iron: https://github.com/ironmussa
 
