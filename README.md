@@ -40,8 +40,8 @@ pip install optimuspyspark
 
 ## Contributors: 
 
- - Main original developer: [Alberto Bonsanto](https://github.com/Bonsanto)
- - Original developers: [Andrea Rosales](https://github.com/andrearosr), [Hugo Reyes](https://github.com/hugounavez)
+ - Project Manager: [Argenis León](https://github.com/argenisleon) 
+ - Original developers: [Andrea Rosales](https://github.com/andrearosr), [Hugo Reyes](https://github.com/hugounavez), [Alberto Bonsanto](https://github.com/Bonsanto)
  - Principal developer and maintainer: [Favio Vázquez](https://github.com/faviovazquez)
  
 ## License:
