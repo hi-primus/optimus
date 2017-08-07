@@ -209,11 +209,14 @@ class DataFrameAnalizer():
 
         dicc = {}
         # Assert if keys is a string, if not, the string is placed it inside a list
-        if isinstance(keys, str) == True: keys = [keys]
+        if isinstance(keys, str):
+            keys = [keys]
         # If values is not a list, place it inside a list also
-        if not type(values) == type([]): values = [values]
+        if not isinstance(values, list):
+            values = [values]
         # Making dictionary
-        for index in range(len(keys)): dicc[keys[index]] = values[index]
+        for index in range(len(keys)):
+            dicc[keys[index]] = values[index]
         # Return dictionary built
         return dicc
 

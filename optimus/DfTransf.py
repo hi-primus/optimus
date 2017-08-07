@@ -444,7 +444,8 @@ class DataFrameTransformer():
         if (columns == "*"): columns = validCols[:]
 
         # If columns is string, make a list:
-        if type(columns) == type(' '): columns = [columns]
+        if isinstance(columns, str):
+            columns = [columns]
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
@@ -542,7 +543,7 @@ class DataFrameTransformer():
         assert (colNotValids == set()), 'Error: The column provided is not a column string: %s' % colNotValids
 
         # User defined function to search cell value in list provide by user:
-        if type(strToReplace) == type('str') and listStr is not None:
+        if isinstance(strToReplace, str) and listStr is not None:
 
             def revisar(cell):
                 if cell is not None and (cell in listStr):
@@ -642,7 +643,7 @@ class DataFrameTransformer():
         """
         # Asserting if position is string or list:
 
-        assert type(listToAssign) == type([]), "Error: listToAssign argument must be a list"
+        assert isinstance(listToAssign, list), "Error: listToAssign argument must be a list"
 
         # Asserting parameters are not empty strings:
         assert (
