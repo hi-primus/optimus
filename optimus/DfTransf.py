@@ -28,6 +28,7 @@ class DataFrameTransformer():
         self.__sqlContext = self.__df.sql_ctx
         self.__numberOfTransformations = 0
 
+    @classmethod
     def __assertTypeStrOrList(self, variable, nameArg):
         """This function asserts if variable is a string or a list dataType."""
         assert (type(variable) == type('str') or type(variable) == type([])), \

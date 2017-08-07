@@ -98,6 +98,7 @@ class DataTypeTable():
         # self.tuples = tuples
         self.html = ""
 
+    @classmethod
     def colTable(self, lista):
         html = []
         html.append("<table width=100%>")
@@ -199,6 +200,7 @@ class DataFrameAnalizer():
         self.__df.cache()
         self.__sample = df.sample(False, pu, seed)
 
+    @classmethod
     def __createDict(self, keys, values):
         """This functions is a helper to build dictionaries. The first argument must be a list of keys but it
         can be a string also (in this case the string will be packaged into a list. The keys provided

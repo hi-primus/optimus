@@ -248,6 +248,7 @@ class Airtable():
         """This function return the dataframe of the class"""
         return self.__airtable
 
+    @classmethod
     def extractColFromDF(self, df, column):
         """This function extract column from dataFrame.
         Returns a list of elements of column specified.
