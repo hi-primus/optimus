@@ -277,7 +277,8 @@ class DataFrameTransformer():
             exprs = [function(col(c)).alias(c) if c in columns else c for (c, t) in self.__df.dtypes]
             try:
                 self.__df = self.__df.select(*exprs)
-            except:
+            except Exception as e:
+                print(e)
                 assert False, "Error: Make sure if operation is compatible with row datatype."
 
         # Check if columns argument must be a string or list datatype:
