@@ -405,7 +405,6 @@ class DataFrameAnalizer():
 
     def __plotNumHist(self, histDict, column, valuesBar):
         values = [list(lista) for lista in list(zip(*[(dic['value'], dic['cont']) for dic in histDict]))]
-        index = np.arange(len(values[0]))
 
         bins = values[0]
 
@@ -686,7 +685,6 @@ class DataFrameAnalizer():
 
         # Si la cantidad de bins es menor que los valores unicos, entonces se toman los valores unicos como bin.
         if len(binsValues) < len(uniValues):
-            binValues = uniValues
 
         # This function search over columnName dataFrame to which interval belongs each cell
         # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
