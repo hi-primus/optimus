@@ -865,10 +865,12 @@ class DataFrameTransformer():
             # Cheking if column name is string datatype:
             self.__assertTypeStr(column, "columnName")
             # Checking if column exists in dataframe:
-            assert column in self.__df.columns, "Error: Column %s specified as columnName argument does not exist in dataframe" % column
+            assert column in self.__df.columns, \
+                "Error: Column %s specified as columnName argument does not exist in dataframe" % column
             # Checking if column has a valid datatype:
             assert (dataType in ['integer', 'float', 'string',
-                                 'null']), "Error: dataType only can be one of the followings options: integer, float, string, null."
+                                 'null']), \
+                "Error: dataType only can be one of the followings options: integer, float, string, null."
             # Checking if func parameters is func dataType or None
             assert isinstance(func, type(None)) or isinstance(func, type(lambda x: x)), \
                 "func argument must be a function or NoneType"
@@ -878,7 +880,9 @@ class DataFrameTransformer():
 
             if isinstance(func, str) or isinstance(func, int) or isinstance(func, float):
                 assert [x[1] in Types[type(func)] for x in filter(lambda x: x[0] == columnName, self.__df.dtypes)][
-                    0], "Error: Column of operation and func argument must be the same global type. Check column type by df.printSchema()"
+                    0], \
+                    "Error: Column of operation and func argument must be the same global type. " \
+                    "Check column type by df.printSchema()"
                 funcUdf = udf(lambda x: func if checkDataType(x) == dataType else x)
 
             if func is None:
