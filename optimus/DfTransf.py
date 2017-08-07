@@ -1,9 +1,8 @@
 # Importing sql types
-from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, StructType, StructField, ArrayType
+from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, ArrayType
 # Importing sql functions
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
     current_date, abs as mag
-from pyspark.mllib.linalg import Vectors
 from pyspark.ml.feature import MinMaxScaler, VectorAssembler
 import re
 import string

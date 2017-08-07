@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Importing numeric module
 import numpy as np
 # Importing features to build tables
-from IPython.display import display, HTML
+from IPython.display import display
 # Importing time librarie to measure time
 import time
 # Importing dumps
