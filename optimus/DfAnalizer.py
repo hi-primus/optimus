@@ -405,7 +405,6 @@ class DataFrameAnalizer():
 
     def __plotNumHist(self, histDict, column, valuesBar):
         values = [list(lista) for lista in list(zip(*[(dic['value'], dic['cont']) for dic in histDict]))]
-        index = np.arange(len(values[0]))
 
         bins = values[0]
 
@@ -686,17 +685,16 @@ class DataFrameAnalizer():
 
         # Si la cantidad de bins es menor que los valores unicos, entonces se toman los valores unicos como bin.
         if len(binsValues) < len(uniValues):
-            binValues = uniValues
 
         # This function search over columnName dataFrame to which interval belongs each cell
         # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
-        def generateExpr(columnName, listIntervals):
-            if (len(listIntervals) == 1):
-                return when(col(columnName).between(listIntervals[0][0], listIntervals[0][1]), 0).otherwise(None)
-            else:
-                return (when((col(columnName) >= listIntervals[0][0]) & (col(columnName) < listIntervals[0][1]),
+            def generateExpr(columnName, listIntervals):
+                if (len(listIntervals) == 1):
+                    return when(col(columnName).between(listIntervals[0][0], listIntervals[0][1]), 0).otherwise(None)
+                else:
+                    return (when((col(columnName) >= listIntervals[0][0]) & (col(columnName) < listIntervals[0][1]),
                              len(listIntervals) - 1)
-                        .otherwise(generateExpr(columnName, listIntervals[1:])))
+                            .otherwise(generateExpr(columnName, listIntervals[1:])))
 
                 # +--------+--------------------+
                 # |columns |Number of list pairs|
