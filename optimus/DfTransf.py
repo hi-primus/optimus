@@ -31,13 +31,13 @@ class DataFrameTransformer():
     @classmethod
     def __assertTypeStrOrList(self, variable, nameArg):
         """This function asserts if variable is a string or a list dataType."""
-        assert (type(variable) == type('str') or type(variable) == type([])), \
+        assert isinstance(variable, (str, list)), \
             "Error: %s argument must be a string or a list." % nameArg
 
     @classmethod
     def __assertTypeStr(self, variable, nameArg):
         """This function asserts if variable is a string or a list dataType."""
-        assert (type(variable) == type('str')), \
+        assert isinstance(variable, str), \
             "Error: %s argument must be a string." % nameArg
 
     @classmethod
@@ -206,8 +206,7 @@ class DataFrameTransformer():
                                                                                       int), "Error: changeTo parameter must be a number or string"
 
         # Asserting search and changeTo have same type
-        assert type(search) == type(
-            changeTo), 'Error: Search and ChangeTo must have same datatype: Integer, String, Float'
+        assert isinstance(search, type(changeTo)), 'Error: Search and ChangeTo must have same datatype: Integer, String, Float'
 
         # Change
         types = {type(''): 'string', type(int(1)): 'int', type(float(1.2)): 'float', type(1.2): 'double'};
@@ -399,7 +398,8 @@ class DataFrameTransformer():
         if (columns == "*"): columns = validCols[:]
 
         # If columns is string, make a list:
-        if type(columns) == type(' '): columns = [columns]
+        if isinstance(columns, str):
+            columns = [columns]
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
@@ -477,8 +477,9 @@ class DataFrameTransformer():
 
         """
         # Asserting columns is string or list:
-        assert (type(columns) == type([])) and (
-            type(columns[0]) == type((1, 2))), "Error: Column argument must be a list of tuples"
+        assert isinstance(columns, list) and isinstance(columns[0], tuple), \
+            "Error: Column argument must be a list of tuples"
+
 
         colNotValids = (
             set([column[0] for column in columns]).difference(set([column for column in self.__df.columns])))
@@ -512,26 +513,26 @@ class DataFrameTransformer():
         self.__assertTypeStr(column, "column")
 
         # Asserting columns is string or list:
-        assert type(strToReplace) == type('') or (
-            type(strToReplace) == type({})), "Error: StrToReplace argument must be a string or a dict"
+        assert isinstance(strToReplace, (str, dict)), "Error: StrToReplace argument must be a string or a dict"
 
-        if type(strToReplace) == type({}):
+        if  isinstance(strToReplace,dict):
             assert (strToReplace != {}), "Error, StrToReplace must be a string or a non empty python dictionary"
             assert (
                 listStr == None), "Error, If a python dictionary if specified, listStr argument must be None: listStr=None"
 
         # Asserting columns is string or list:
-        assert (type(listStr) == type([]) and listStr != []) or (
+        assert isinstance(listStr, list) and listStr != [] or (
             listStr == None), "Error: Column argument must be a non empty list"
 
-        if type(strToReplace) == type(''):
+        if isinstance(strToReplace, str):
             assert listStr != None, "Error: listStr cannot be None if StrToReplace is a String, please you need to specify \
              the listStr string"
 
         # Filters all string columns in dataFrame
         validCols = [c for (c, t) in filter(lambda t: t[1] == 'string', self.__df.dtypes)]
 
-        if type(column) == type('str'): column = [column]
+        if isinstance(column, str):
+            column = [column]
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=column, columnsDF=self.__df.columns)
@@ -706,7 +707,8 @@ class DataFrameTransformer():
         # Check if columns argument must be a string or list datatype:
         self.__assertTypeStrOrList(columns, "columns")
 
-        if type(columns) == type('str'): columns = [columns]
+        if isinstance(columns, str):
+            columns = [columns]
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
@@ -772,10 +774,10 @@ class DataFrameTransformer():
                  'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
 
         # Asserting colsAndTypes is string or list:
-        assert type(colsAndTypes) == type('s') or type(colsAndTypes) == type(
-            []), "Error: Column argument must be a string or a list."
+        assert isinstance(colsAndTypes, (str, list)), "Error: Column argument must be a string or a list."
 
-        if type(colsAndTypes) == type(''): colsAndTypes = [colsAndTypes]
+        if isinstance(colsAndTypes, str):
+            colsAndTypes = [colsAndTypes]
 
         columnNames = [column[0] for column in colsAndTypes]
 
@@ -868,8 +870,8 @@ class DataFrameTransformer():
             assert (dataType in ['integer', 'float', 'string',
                                  'null']), "Error: dataType only can be one of the followings options: integer, float, string, null."
             # Checking if func parameters is func dataType or None
-            assert (type(func) == type(None) or (
-                type(func) == type(lambda x: x))), "func argument must be a function or NoneType"
+            assert isinstance(func, type(None)) or isinstance(func, type(lambda x: x)), \
+                "func argument must be a function or NoneType"
 
             if 'function' in str(type(func)):
                 funcUdf = udf(lambda x: func(x) if checkDataType(x) == dataType else x)

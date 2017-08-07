@@ -526,13 +526,13 @@ class DataFrameAnalizer():
         # values: a list containing the number of the different datatypes [nulls, strings, integers, floats]
         """
         # Asserting data variable columnList:
-        assert type(columnList) == type([1, 2]) or type(columnList) == type(' '), "Error: columnList has to be a list."
+        assert isinstance(columnList, list), "Error: columnList has to be a list."
 
         # Asserting if valuesBar is type Boolean
-        assert type(valuesBar) == type(True), "Error: valuesBar must be boolean, True or False."
+        assert isinstance(valuesBar, bool), "Error: valuesBar must be boolean, True or False."
 
-        # Asserting if printType is "string", "integer" or "float"
-        assert (type(printType) == type(True)), "Error: printType must be boolean. True or False."
+        # Asserting if printType is type Boolean
+        assert isinstance(printType, bool), "Error: printType must be boolean. True or False."
 
         # Counting
         time1 = time.time()
@@ -543,7 +543,7 @@ class DataFrameAnalizer():
         columns = []
 
         # If columnList is a string, convert it in a list:
-        if type(columnList) == type(' '):
+        if isinstance(columnList, str):
             if columnList == "*":
                 columns = dfColAnalizer.columns
             else:
@@ -658,7 +658,7 @@ class DataFrameAnalizer():
         tempDf = dfOneCol.withColumn(column, col(column).cast('float')).na.drop(subset=column)
 
         # If we obtain a null column:
-        assert (type(tempDf.first()) != type(None)), \
+        assert not isinstance(tempDf.first(), type(None)), \
             "Error, Make sure column dataframe has numerical features. One of the first actions \
         getNumericalHist function does is a convertion dataType from original datatype \
         to float. If the column provided has only values that are \
