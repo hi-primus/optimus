@@ -34,11 +34,13 @@ class DataFrameTransformer():
         assert (type(variable) == type('str') or type(variable) == type([])), \
             "Error: %s argument must be a string or a list." % nameArg
 
+    @classmethod
     def __assertTypeStr(self, variable, nameArg):
         """This function asserts if variable is a string or a list dataType."""
         assert (type(variable) == type('str')), \
             "Error: %s argument must be a string." % nameArg
 
+    @classmethod
     def __assertColsInDF(self, columnsProvided, columnsDF):
         """This function asserts if columnsProvided exists in dataFrame.
         Inputs:

@@ -217,6 +217,7 @@ class DataFrameAnalizer():
         # Return dictionary built
         return dicc
 
+    @classmethod
     def __verification(self, tempDf, columnName):
         # Function for determine if register value is float or int or string:
         def dataType(value):
@@ -388,6 +389,7 @@ class DataFrameAnalizer():
 
 
     # This function, place values of frequency in histogram bars.
+    @classmethod
     def __valuesOnBar(self, plotFig):
         rects = plotFig.patches
         for rect in rects:
@@ -760,6 +762,7 @@ class DataFrameAnalizer():
 
         return {'total': total, 'unique': distincts}
 
+    @classmethod
     def writeJson(self, jsonCols, pathToJsonFile):
 
         # assert isinstance(jsonCols, dict), "Error: columnAnalyse must be run before writeJson function."
