@@ -2,13 +2,15 @@
 # Importing os module for system operative utilities
 import os
 # Importing SQLContext:
-from pyspark.sql import SQLContext
+from pyspark.sql.session import SparkSession
 # Importando modulo para eliminar carpetas
 from shutil import rmtree
 # Importando modulo para trabajar con urls
 import urllib.request
 # Importando modulo de expresiones regulares
 import re
+# Import SparkContext
+import pyspark
 
 class Utilites():
     def __init__(self, sc):
@@ -20,9 +22,9 @@ class Utilites():
         """
 
         # Setting SQLContext as a global variable of the class
-        self.sqlContext = SQLContext(sc)
+        self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         # Setting SparkContent as a global variable of the class
-        self.__sc = sc
+        self.__sc = self.spark.sparkContext
 
     def readDatasetCsv(self, path, delimiterMark=';', header='true'):
         """This funcion read a dataset from a csv file.
@@ -39,12 +41,10 @@ class Utilites():
 
         assert isinstance(path, str), "Error, path argument must be string datatype."
 
-        return self.sqlContext \
-                .read \
-                .format('com.databricks.spark.csv') \
-                .options(header=header) \
-                .options(delimiter=delimiterMark) \
-                .options(inferSchema='true') \
+        return self.spark.read   \
+                .option(header=header) \
+                .option(delimiter=delimiterMark) \
+                .option(inferSchema='true') \
                 .load(path)
 
     def readDatasetParquet(self, path):
@@ -57,7 +57,7 @@ class Utilites():
         assert isinstance(path, str), "Error: path argument must be string dataType."
         assert (("file:///" == path[0:8]) or ("hdfs:///" == path[0:8])), "Error: path must be with a 'file://' prefix \
         if the file is in the local disk or a 'path://' prefix if the file is in the Hadood file system"
-        return sqlContext.read.parquet(path)
+        return self.spark.read.parquet(path)
 
 
     def csvToParquet(self, inputPath, outputPath, delimiterMarkCsv, headerCsv, numPartitions=None):
@@ -195,11 +195,12 @@ class Utilites():
 
 
 class Airtable():
-    def __init__(self, sc, path):
+    def __init__(self, path):
         # Setting airtable dataset variable
         self.__airtable = 0
         # Setting SQLContext as a global variable of the class
-        self.sqlContext = SQLContext(sc)
+        self.spark = SparkSession()
+        self.sc = self.spark.sparkContext
         # Reading dataset
         self.readAirtableCsv(path)
 
@@ -224,16 +225,15 @@ class Airtable():
             values =  [line.replace("\"", "").split(",") for line in text.split("\n")]
 
             # Airtable datafra that corresponds to airtable table:
-            self.__airtable = sc.parallelize(values[1:]).toDF(values[0])
+            self.__airtable = self.sc.parallelize(values[1:]).toDF(values[0])
             print("Done")
 
         else:
             print("Reading local file...")
-            self.__airtable = self.sqlContext.read \
-            .format('com.databricks.spark.csv') \
-            .options(header='true') \
-            .options(delimiter=",") \
-            .options(inferSchema='true') \
+            self.__airtable = self.spark.read \
+            .option(header='true') \
+            .option(delimiter=",") \
+            .option(inferSchema='true') \
             .load(path)
             print("Done")
 
