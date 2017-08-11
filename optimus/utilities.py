@@ -232,9 +232,10 @@ class Airtable():
         else:
             print("Reading local file...")
             self.__airtable = self.spark.read \
-            .option(header='true') \
-            .option(delimiter=",") \
-            .option(inferSchema='true') \
+            .format('csv') \
+            .options(header='true') \
+            .options(delimiter=",") \
+            .options(inferSchema='true') \
             .load(path)
             print("Done")
 
