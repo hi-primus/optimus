@@ -652,6 +652,8 @@ class DataFrameAnalizer():
         """This function analyzes a dataframe of a single column (only numerical columns) and
         returns a dictionary with bins and values of frequency."""
 
+        global generateExpr
+
         assert len(dfOneCol.columns) == 1, "Error, Dataframe provided must have only one column."
 
         # Column Name
