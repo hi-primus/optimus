@@ -652,8 +652,6 @@ class DataFrameAnalizer():
         """This function analyzes a dataframe of a single column (only numerical columns) and
         returns a dictionary with bins and values of frequency."""
 
-        global generateExpr
-
         assert len(dfOneCol.columns) == 1, "Error, Dataframe provided must have only one column."
 
         # Column Name
@@ -710,45 +708,45 @@ class DataFrameAnalizer():
                 # |       4|                   6|
                 # +--------+--------------------+
 
-        # Getting ranges from list: i.e. [(0,1),(1,2),(2,3),(3,4)]
-        funcPairs = lambda liste: [(liste[x], liste[x + 1]) for x in range(0, len(liste) - 1)]
-        ranges = funcPairs(binsValues)
+            # Getting ranges from list: i.e. [(0,1),(1,2),(2,3),(3,4)]
+            funcPairs = lambda liste: [(liste[x], liste[x + 1]) for x in range(0, len(liste) - 1)]
+            ranges = funcPairs(binsValues)
 
-        # Identifying to which group belongs each cell of column Dataframe and count them in order to get frequencies
-        # for each searh interval.
-        freqDf = tempDf.select(col(column), generateExpr(column, ranges).alias("value")) \
-            .groupBy("value").count()
+            # Identifying to which group belongs each cell of column Dataframe and count them in order to get frequencies
+            # for each searh interval.
+            freqDf = tempDf.select(col(column), generateExpr(column, ranges).alias("value")) \
+                    .groupBy("value").count()
 
-        # +-----------+-----+
-        # |intervals  |count|
-        # +-----------+-----+
-        # |          0|    2|
-        # |          1|    3|
-        # |          4|    2|
-        # |          5|    1|
-        # |          6|    1|
-        # |         10|    1|
-        # +-----------+-----+
+            # +-----------+-----+
+            # |intervals  |count|
+            # +-----------+-----+
+            # |          0|    2|
+            # |          1|    3|
+            # |          4|    2|
+            # |          5|    1|
+            # |          6|    1|
+            # |         10|    1|
+            # +-----------+-----+
 
-        # Reverting the order of the list ranges, because 0 in the last interval in list provided to get FreqDF
-        # so it is more intuitive if the list of ranges is reverted. Then the first and second pair interval in ranges1
-        # correspond to 0 and 1 interval in list
-        ranges1 = list(reversed(ranges))
+            # Reverting the order of the list ranges, because 0 in the last interval in list provided to get FreqDF
+            # so it is more intuitive if the list of ranges is reverted. Then the first and second pair interval in ranges1
+            # correspond to 0 and 1 interval in list
+            ranges1 = list(reversed(ranges))
 
-        # From intervals, bins are calculated as the average of min and max interval.
-        bins = [np.mean([rmin, rmax]) for (rmin, rmax) in ranges1]
+            # From intervals, bins are calculated as the average of min and max interval.
+            bins = [np.mean([rmin, rmax]) for (rmin, rmax) in ranges1]
 
-        func = udf(lambda x: float(bins[x]), DoubleType())
+            func = udf(lambda x: float(bins[x]), DoubleType())
 
-        # Setting position of bars according to bins and group intervals:
-        freqDf = freqDf.na.drop().withColumn('value', func(col('value')))
+            # Setting position of bars according to bins and group intervals:
+            freqDf = freqDf.na.drop().withColumn('value', func(col('value')))
 
-        # Extracting information dataframe into a python dictionary:
-        histDict = []
-        for row in freqDf.collect():
-            histDict.append(self.__createDict(['value', 'cont'], [row[0], row[1]]))
+            # Extracting information dataframe into a python dictionary:
+            histDict = []
+            for row in freqDf.collect():
+                histDict.append(self.__createDict(['value', 'cont'], [row[0], row[1]]))
 
-        return histDict
+            return histDict
 
     def uniqueValuesCol(self, column):
         """This function counts the number of values that are unique and also the total number of values.
