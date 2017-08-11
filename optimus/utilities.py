@@ -13,7 +13,7 @@ import re
 import pyspark
 
 class Utilites():
-    def __init__(self, sc):
+    def __init__(self):
         """
 
         :param SparkContext:
@@ -41,10 +41,11 @@ class Utilites():
 
         assert isinstance(path, str), "Error, path argument must be string datatype."
 
-        return self.spark.read   \
-                .option(header=header) \
-                .option(delimiter=delimiterMark) \
-                .option(inferSchema='true') \
+        return self.spark.read \
+                .format('csv') \
+                .options(header=header) \
+                .options(delimiter=delimiterMark) \
+                .options(inferSchema='true') \
                 .load(path)
 
     def readDatasetParquet(self, path):
@@ -141,7 +142,7 @@ class Utilites():
                 os.mkdir(folderPath)
                 print ("Listo.")
 
-            self.__sc.setCheckpointDir("file://" + folderPath)
+            self.__sc.setCheckpointDir(dirName = "file://" + folderPath)
 
 
 
