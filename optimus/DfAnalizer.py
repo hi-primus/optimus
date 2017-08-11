@@ -528,7 +528,7 @@ class DataFrameAnalizer():
         # values: a list containing the number of the different datatypes [nulls, strings, integers, floats]
         """
         # Asserting data variable columnList:
-        assert isinstance(columnList, list), "Error: columnList has to be a list."
+        assert isinstance(columnList, (str, list)), "Error: columnList has to be a string or list."
 
         # Asserting if valuesBar is type Boolean
         assert isinstance(valuesBar, bool), "Error: valuesBar must be boolean, True or False."
