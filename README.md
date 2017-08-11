@@ -26,8 +26,16 @@ The following schema shows the structure class organization of the whole library
   </li>
 </ul>
 
+## Announcement!!
+
+We are very happy to annouce that Optimus main stable branch will 
+work now for Spark 2.2.0 The 1.6.x version is now under maintenance, 
+the last tag release for this Spark version is the 0.4.0. We strongly 
+suggest that you use the >2.x version of the library because the 
+new improvements and features will be added now on this version.
+
 ## Requirements
-* Apache Spark 1.6
+* Apache Spark 2.2.0
 * Python 3.5
 
 ## Installation (pip):
