@@ -315,7 +315,7 @@ class DataFrameAnalizer():
             typeslabels = ['integer', 'float', 'string']
             listOfEachtype = [dtypeNumbers[0].where(col('types') == tipo).where(col(column) != '') \
                                   .drop('types').select(column).distinct() \
-                                  .limit(numBars).map(lambda x: x[column]).collect() for tipo in typeslabels]
+                                  .limit(numBars).rdd.map(lambda x: x[column]).collect() for tipo in typeslabels]
             display(DataTypeTable(listOfEachtype))
             sampleTableDict = self.__createDict(typeslabels, listOfEachtype)
 
