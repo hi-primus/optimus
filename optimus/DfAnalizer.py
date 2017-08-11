@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Importing numeric module
 import numpy as np
 # Importing features to build tables
-from IPython.display import display, HTML
+from IPython.display import display
 # Importing time librarie to measure time
 import time
 # Importing dumps
@@ -98,6 +98,7 @@ class DataTypeTable():
         # self.tuples = tuples
         self.html = ""
 
+    @classmethod
     def colTable(self, lista):
         html = []
         html.append("<table width=100%>")
@@ -199,6 +200,7 @@ class DataFrameAnalizer():
         self.__df.cache()
         self.__sample = df.sample(False, pu, seed)
 
+    @classmethod
     def __createDict(self, keys, values):
         """This functions is a helper to build dictionaries. The first argument must be a list of keys but it
         can be a string also (in this case the string will be packaged into a list. The keys provided
@@ -207,14 +209,18 @@ class DataFrameAnalizer():
 
         dicc = {}
         # Assert if keys is a string, if not, the string is placed it inside a list
-        if isinstance(keys, str) == True: keys = [keys]
+        if isinstance(keys, str):
+            keys = [keys]
         # If values is not a list, place it inside a list also
-        if not type(values) == type([]): values = [values]
+        if not isinstance(values, list):
+            values = [values]
         # Making dictionary
-        for index in range(len(keys)): dicc[keys[index]] = values[index]
+        for index in range(len(keys)):
+            dicc[keys[index]] = values[index]
         # Return dictionary built
         return dicc
 
+    @classmethod
     def __verification(self, tempDf, columnName):
         # Function for determine if register value is float or int or string:
         def dataType(value):
@@ -386,6 +392,7 @@ class DataFrameAnalizer():
 
 
     # This function, place values of frequency in histogram bars.
+    @classmethod
     def __valuesOnBar(self, plotFig):
         rects = plotFig.patches
         for rect in rects:
@@ -398,7 +405,6 @@ class DataFrameAnalizer():
 
     def __plotNumHist(self, histDict, column, valuesBar):
         values = [list(lista) for lista in list(zip(*[(dic['value'], dic['cont']) for dic in histDict]))]
-        index = np.arange(len(values[0]))
 
         bins = values[0]
 
@@ -522,13 +528,13 @@ class DataFrameAnalizer():
         # values: a list containing the number of the different datatypes [nulls, strings, integers, floats]
         """
         # Asserting data variable columnList:
-        assert type(columnList) == type([1, 2]) or type(columnList) == type(' '), "Error: columnList has to be a list."
+        assert isinstance(columnList, list), "Error: columnList has to be a list."
 
         # Asserting if valuesBar is type Boolean
-        assert type(valuesBar) == type(True), "Error: valuesBar must be boolean, True or False."
+        assert isinstance(valuesBar, bool), "Error: valuesBar must be boolean, True or False."
 
-        # Asserting if printType is "string", "integer" or "float"
-        assert (type(printType) == type(True)), "Error: printType must be boolean. True or False."
+        # Asserting if printType is type Boolean
+        assert isinstance(printType, bool), "Error: printType must be boolean. True or False."
 
         # Counting
         time1 = time.time()
@@ -539,7 +545,7 @@ class DataFrameAnalizer():
         columns = []
 
         # If columnList is a string, convert it in a list:
-        if type(columnList) == type(' '):
+        if isinstance(columnList, str):
             if columnList == "*":
                 columns = dfColAnalizer.columns
             else:
@@ -654,7 +660,7 @@ class DataFrameAnalizer():
         tempDf = dfOneCol.withColumn(column, col(column).cast('float')).na.drop(subset=column)
 
         # If we obtain a null column:
-        assert (type(tempDf.first()) != type(None)), \
+        assert not isinstance(tempDf.first(), type(None)), \
             "Error, Make sure column dataframe has numerical features. One of the first actions \
         getNumericalHist function does is a convertion dataType from original datatype \
         to float. If the column provided has only values that are \
@@ -679,17 +685,16 @@ class DataFrameAnalizer():
 
         # Si la cantidad de bins es menor que los valores unicos, entonces se toman los valores unicos como bin.
         if len(binsValues) < len(uniValues):
-            binValues = uniValues
 
         # This function search over columnName dataFrame to which interval belongs each cell
         # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
-        def generateExpr(columnName, listIntervals):
-            if (len(listIntervals) == 1):
-                return when(col(columnName).between(listIntervals[0][0], listIntervals[0][1]), 0).otherwise(None)
-            else:
-                return (when((col(columnName) >= listIntervals[0][0]) & (col(columnName) < listIntervals[0][1]),
+            def generateExpr(columnName, listIntervals):
+                if (len(listIntervals) == 1):
+                    return when(col(columnName).between(listIntervals[0][0], listIntervals[0][1]), 0).otherwise(None)
+                else:
+                    return (when((col(columnName) >= listIntervals[0][0]) & (col(columnName) < listIntervals[0][1]),
                              len(listIntervals) - 1)
-                        .otherwise(generateExpr(columnName, listIntervals[1:])))
+                            .otherwise(generateExpr(columnName, listIntervals[1:])))
 
                 # +--------+--------------------+
                 # |columns |Number of list pairs|
@@ -758,6 +763,7 @@ class DataFrameAnalizer():
 
         return {'total': total, 'unique': distincts}
 
+    @classmethod
     def writeJson(self, jsonCols, pathToJsonFile):
 
         # assert isinstance(jsonCols, dict), "Error: columnAnalyse must be run before writeJson function."

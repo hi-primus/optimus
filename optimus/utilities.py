@@ -48,6 +48,7 @@ class Utilites():
                 .options(inferSchema='true') \
                 .load(path)
 
+    @classmethod
     def readDatasetParquet(self, path):
         """This function allows user to read parquet files. It is import to clarify that this method is just based
         on the sqlContext.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
@@ -144,8 +145,7 @@ class Utilites():
 
             self.__sc.setCheckpointDir(dirName = "file://" + folderPath)
 
-
-
+    @classmethod
     def deleteCheckPointFolder(self, path, fileSystem):
         """Function that deletes the temporal folder where temp files were stored.
         The path required is the same provided by user in setCheckPointFolder().
@@ -180,6 +180,7 @@ class Utilites():
                 print ("Folder deleted. \n")
                 pass
 
+    @classmethod
     def getColumnNamesbyType(self, df, dataType):
         """This function returns column names of dataFrame which have the same
         datatype provided. It analyses column datatype by dataFrame.dtypes method.
@@ -250,6 +251,7 @@ class Airtable():
         """This function return the dataframe of the class"""
         return self.__airtable
 
+    @classmethod
     def extractColFromDF(self, df, column):
         """This function extract column from dataFrame.
         Returns a list of elements of column specified.
