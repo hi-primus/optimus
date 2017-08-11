@@ -4,7 +4,7 @@ findspark.init()
 import logging
 import pytest
 
-from pyspark import HiveContext
+from pyspark.sql.session import SparkSession
 from pyspark import SparkConf
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
@@ -39,7 +39,7 @@ def hive_context(spark_context):
     Returns:
         HiveContext for tests
     """
-    return HiveContext(spark_context)
+    return SparkSession.builder.getOrCreate()
 
 
 @pytest.fixture(scope="session")
