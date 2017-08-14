@@ -569,7 +569,7 @@ class DataFrameAnalizer():
         # In case first is not set, this will analize all columns
         for column in columns:
             # Calling function analize:
-            invCol, _, dtypeNumbers, d = self.__analize(
+            invCol, _, _, d = self.__analize(
                 dfColAnalizer.select(column),
                 column,
                 rowNumber,
