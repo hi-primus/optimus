@@ -1059,7 +1059,7 @@ class DataFrameTransformer():
 
         assert (column in self.__df.columns), "Error: column specified does not exist in dataFrame."
 
-        assert (type(featureNames) == type([])), "Error: featureNames must be a list of strings."
+        assert (isinstance(featureNames, list)), "Error: featureNames must be a list of strings."
 
         # Setting a udf that split the string into a list of strings.
         # This is "word, foo" ----> ["word", "foo"]
