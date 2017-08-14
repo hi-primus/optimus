@@ -456,7 +456,7 @@ class DataFrameTransformer():
             colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
 
         def rmSpecCharsRegex(inputStr,regex):
-            for s in set(inputStr):
+            for _ in set(inputStr):
                 inputStr = re.sub(regex, '', inputStr)
             return inputStr
 
