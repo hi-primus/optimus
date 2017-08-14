@@ -125,7 +125,7 @@ class DataTypeTable():
 
         # First row of table:
         self.html.append("<tr>")
-        for x, idx in enumerate(headers):
+        for x, _ in enumerate(headers):
             if ver[x]:  # If list is not empty, print its head
                 self.html.append("<th style='text-align: center'>")
                 self.html.append(str(headers[x]))
@@ -216,7 +216,7 @@ class DataFrameAnalizer():
         if not isinstance(values, list):
             values = [values]
         # Making dictionary
-        for index, value in enumerate(keys):
+        for index, _ in enumerate(keys):
             dicc[keys[index]] = values[index]
         # Return dictionary built
         return dicc

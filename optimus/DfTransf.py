@@ -676,7 +676,7 @@ class DataFrameTransformer():
         # Left join:
         newColumn = newColumn.withColumnRenamed(colId, colId + '_other')
 
-        for x, idx in enumerate(listToAssign):
+        for x, _ in enumerate(listToAssign):
             if x == 0:
                 exprs = (dfMod[colId] == newColumn[colId + '_other']) & (dfMod[col1] == listToAssign[x])
             else:
