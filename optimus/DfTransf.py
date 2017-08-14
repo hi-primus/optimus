@@ -676,7 +676,7 @@ class DataFrameTransformer():
         # Left join:
         newColumn = newColumn.withColumnRenamed(colId, colId + '_other')
 
-        for x in range(len(listToAssign)):
+        for x, idx in enumerate(listToAssign):
             if x == 0:
                 exprs = (dfMod[colId] == newColumn[colId + '_other']) & (dfMod[col1] == listToAssign[x])
             else:
@@ -795,10 +795,9 @@ class DataFrameTransformer():
 
         return self
 
+    # This function replace a string specified
     def emptyStrToStr(self, columns, customStr):
-        """
-        This function replace a string specified 
-        """
+
         # Check if customStr argument a string datatype:
         self.__assertTypeStr(customStr, "customStr")
 
@@ -812,7 +811,8 @@ class DataFrameTransformer():
         if (columns == "*"): columns = validCols[:]
 
         # If columns is string, make a list:
-        if type(columns) == type(' '): columns = [columns]
+        if isinstance(columns, str):
+            columns = [columns]
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
@@ -961,7 +961,7 @@ class DataFrameTransformer():
 
         assert (column in self.__df.columns), "Error: column specified does not exist in dataFrame."
 
-        assert (type(featureNames) == type([])), "Error: featureNames must be a list of strings."
+        assert (isinstance(featureNames, list)), "Error: featureNames must be a list of strings."
         # Function to extract value from list column:
         func = udf(lambda x, index: x[index])
 

@@ -114,6 +114,7 @@ class DataTypeTable():
         html.append("</table>")
         return "".join(html)
 
+    @property
     def _repr_html_(self):
         self.html = ["<table width=50%>"]
         headers = ['integers', 'floats', 'strings']
@@ -124,7 +125,7 @@ class DataTypeTable():
 
         # First row of table:
         self.html.append("<tr>")
-        for x in range(len(headers)):
+        for x, idx in enumerate(headers):
             if ver[x]:  # If list is not empty, print its head
                 self.html.append("<th style='text-align: center'>")
                 self.html.append(str(headers[x]))
@@ -215,7 +216,7 @@ class DataFrameAnalizer():
         if not isinstance(values, list):
             values = [values]
         # Making dictionary
-        for index in range(len(keys)):
+        for index, value in enumerate(keys):
             dicc[keys[index]] = values[index]
         # Return dictionary built
         return dicc

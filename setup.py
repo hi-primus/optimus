@@ -7,7 +7,7 @@ def get_version():
     with open('optimus/version.py') as version_file:
         return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
                          version_file.read()).group('version')
-                         
+
 import sys
 if sys.version_info < (3, 5):
     raise RuntimeError('This version requires Python 3.5+')  # pragma: no cover
