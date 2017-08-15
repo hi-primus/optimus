@@ -155,7 +155,7 @@ class DataFrameTransformer():
         self.__assertTypeStrOrList(columns, "columns")
 
         # Filters all string columns in dataFrame
-        validCols = [c for (c, t) in filter(lambda t: t[1] == '', self.__df.dtypes)]
+        validCols = [c for (c, t) in filter(lambda t: t[1] == 'string', self.__df.dtypes)]
 
         # If None or [] is provided with column parameter:
         if (columns == "*"): columns = validCols
