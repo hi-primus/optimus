@@ -99,9 +99,9 @@ class DataFrameTransformer():
         # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
         # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
         print ("Saving changes at disk by checkpoint...")
-        self.__df.rdd.checkpoint()
-        self.__df.rdd.count()
-        self.__df = self.__sqlContext.createDataFrame(self.__df.rdd, self.__df.schema)
+        self.__df.checkpoint()
+        self.__df.count()
+        self.__df = self.__sqlContext.createDataFrame(self.__df, self.__df.schema)
         print ("Done.")
 
     execute = checkPoint
