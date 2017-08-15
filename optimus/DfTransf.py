@@ -110,6 +110,8 @@ class DataFrameTransformer():
             model = imputer.setStrategy(strategy).fit(self.__df)
             self.__df = model.transform(self.__df)
 
+        impute(columns)
+
         return self
 
     def checkPoint(self):
