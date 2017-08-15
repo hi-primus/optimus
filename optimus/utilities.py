@@ -48,7 +48,6 @@ class Utilites():
                 .options(inferSchema='true') \
                 .load(path)
 
-    @classmethod
     def readDatasetParquet(self, path):
         """This function allows user to read parquet files. It is import to clarify that this method is just based
         on the sqlContext.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
@@ -73,7 +72,7 @@ class Utilites():
         :param  headerCsv   This argument specifies if csv file has header or not.
         :param  numParitions Specifies the number of partitions the user wants to write the dataset."""
 
-        df = self.readDatasetCsv(inputPath, delimiterMarkCsv, 'true')
+        df = self.readDatasetCsv(inputPath, delimiterMarkCsv, header=headerCsv)
 
         if numPartitions != None:
             assert (numPartitions <= df.rdd.getNumPartitions()), "Error: numPartitions specified is greater that the" \
@@ -143,7 +142,7 @@ class Utilites():
                 os.mkdir(folderPath)
                 print ("Listo.")
 
-            self.__sc.setCheckpointDir(dirName = "file://" + folderPath)
+            self.__sc.setCheckpointDir(dirName="file://" + folderPath)
 
     @classmethod
     def deleteCheckPointFolder(self, path, fileSystem):
