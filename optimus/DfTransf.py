@@ -8,6 +8,9 @@ import re
 import string
 import unicodedata
 import pyspark.sql.dataframe
+from pyspark.ml.feature import Imputer
+
+
 
 
 class DataFrameTransformer():
@@ -32,6 +35,12 @@ class DataFrameTransformer():
         """This function asserts if variable is a string or a list dataType."""
         assert isinstance(variable, (str, list)), \
             "Error: %s argument must be a string or a list." % nameArg
+
+    @classmethod
+    def __assertTypeIntOrFloat(self, variable, nameArg):
+        """This function asserts if variable is a string or a list dataType."""
+        assert isinstance(variable, (int, float)), \
+            "Error: %s argument must be a int or a float." % nameArg
 
     @classmethod
     def __assertTypeStr(self, variable, nameArg):
@@ -83,6 +92,26 @@ class DataFrameTransformer():
         self.setCol(columns, func, 'string')
         return self
 
+    def imputeMissing(self, columns, outCols, strategy):
+
+        # Check if columns to be process are in dataframe
+        self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
+
+        assert isinstance(outCols, list), "Error: outCols argument must be a list"
+
+        # Check if columns argument a string datatype:
+        self.__assertTypeStr(strategy, "strategy")
+
+        # Check if columns argument must be a int or float datatype:
+        self.__assertTypeIntOrFloat(columns, "columns")
+
+        def impute(cols):
+            imputer = Imputer(inputCols=cols, outputCols=outCols)
+            model = imputer.setStrategy(strategy).fit(self.__df)
+            self.__df = model.transform(self.__df)
+
+        return self
+
     def checkPoint(self):
         """This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
         evaluation approach in processing data: transformation functions are not computed into an action is called.
@@ -126,7 +155,7 @@ class DataFrameTransformer():
         self.__assertTypeStrOrList(columns, "columns")
 
         # Filters all string columns in dataFrame
-        validCols = [c for (c, t) in filter(lambda t: t[1] == 'string', self.__df.dtypes)]
+        validCols = [c for (c, t) in filter(lambda t: t[1] == '', self.__df.dtypes)]
 
         # If None or [] is provided with column parameter:
         if (columns == "*"): columns = validCols
