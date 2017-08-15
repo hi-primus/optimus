@@ -8,6 +8,9 @@ import re
 import string
 import unicodedata
 import pyspark.sql.dataframe
+from pyspark.ml.feature import Imputer
+
+
 
 
 class DataFrameTransformer():
@@ -32,6 +35,12 @@ class DataFrameTransformer():
         """This function asserts if variable is a string or a list dataType."""
         assert isinstance(variable, (str, list)), \
             "Error: %s argument must be a string or a list." % nameArg
+
+    @classmethod
+    def __assertTypeIntOrFloat(self, variable, nameArg):
+        """This function asserts if variable is a string or a list dataType."""
+        assert isinstance(variable, (int, float)), \
+            "Error: %s argument must be a int or a float." % nameArg
 
     @classmethod
     def __assertTypeStr(self, variable, nameArg):
@@ -81,6 +90,28 @@ class DataFrameTransformer():
         dataframe, columns must be equal to '*'"""
         func = lambda cell: cell.upper() if cell is not None else cell
         self.setCol(columns, func, 'string')
+        return self
+
+    def imputeMissing(self, columns, outCols, strategy):
+
+        # Check if columns to be process are in dataframe
+        self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
+
+        assert isinstance(outCols, list), "Error: outCols argument must be a list"
+
+        # Check if columns argument a string datatype:
+        self.__assertTypeStr(strategy, "strategy")
+
+        # Check if columns argument must be a int or float datatype:
+        self.__assertTypeIntOrFloat(columns, "columns")
+
+        def impute(cols):
+            imputer = Imputer(inputCols=cols, outputCols=outCols)
+            model = imputer.setStrategy(strategy).fit(self.__df)
+            self.__df = model.transform(self.__df)
+
+        impute(columns)
+
         return self
 
     def checkPoint(self):
