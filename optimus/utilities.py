@@ -142,7 +142,7 @@ class Utilites():
                 os.mkdir(folderPath)
                 print ("Listo.")
 
-            self.__sc.setCheckpointDir(dirName="file://" + folderPath)
+            self.__sc.setCheckpointDir(dirName="file:///" + folderPath)
 
     @classmethod
     def deleteCheckPointFolder(self, path, fileSystem):
