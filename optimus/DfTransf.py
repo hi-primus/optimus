@@ -93,17 +93,25 @@ class DataFrameTransformer():
         return self
 
     def imputeMissing(self, columns, outCols, strategy):
+        """
+        Imputes missing data from specified columns using the mean or median.
+        :param columns: List of columns to be analyze.
+        :param outCols: List of output columns with missing values imputed.
+        :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
+        :return: Transformer object (DF with columns that has the imputed values).
+        """
 
         # Check if columns to be process are in dataframe
         self.__assertColsInDF(columnsProvided=columns, columnsDF=self.__df.columns)
+
+        assert isinstance(columns, list), "Error: columns argument must be a list"
 
         assert isinstance(outCols, list), "Error: outCols argument must be a list"
 
         # Check if columns argument a string datatype:
         self.__assertTypeStr(strategy, "strategy")
 
-        # Check if columns argument must be a int or float datatype:
-        self.__assertTypeIntOrFloat(columns, "columns")
+        assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
 
         def impute(cols):
             imputer = Imputer(inputCols=cols, outputCols=outCols)
