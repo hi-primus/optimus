@@ -28,7 +28,7 @@ library:
 Requirements
 ------------
 
--  Apache Spark 1.6
+-  Apache Spark 2.2.0
 -  Python 3.5
 
 Installation
