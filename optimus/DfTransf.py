@@ -237,17 +237,20 @@ class DataFrameTransformer():
 
         # Asserting search parameter is a string or a number
         assert isinstance(search, str) or isinstance(search, float) or isinstance(search,
-                                                                                  int), "Error: Search parameter must be a number or string"
+                                                                                  int), \
+            "Error: Search parameter must be a number or string"
 
         # Asserting changeTo parameter is a string or a number
         assert isinstance(changeTo, str) or isinstance(changeTo, float) or isinstance(changeTo,
-                                                                                      int), "Error: changeTo parameter must be a number or string"
+                                                                                      int),\
+            "Error: changeTo parameter must be a number or string"
 
         # Asserting search and changeTo have same type
-        assert isinstance(search, type(changeTo)), 'Error: Search and ChangeTo must have same datatype: Integer, String, Float'
+        assert isinstance(search, type(changeTo)), \
+            'Error: Search and ChangeTo must have same datatype: Integer, String, Float'
 
         # Change
-        types = {type(''): 'string', type(int(1)): 'int', type(float(1.2)): 'float', type(1.2): 'double'};
+        types = {type(''): 'string', type(int(1)): 'int', type(float(1.2)): 'float', type(1.2): 'double'}
 
         validCols = [c for (c, t) in filter(lambda t: t[1] == types[type(search)], self.__df.dtypes)]
 
@@ -263,7 +266,8 @@ class DataFrameTransformer():
         colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
 
         assert (
-            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % \
+                                    colNotValids
 
         colReplace(columns)
 
@@ -338,7 +342,8 @@ class DataFrameTransformer():
         colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
 
         assert (
-            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
+                                    % colNotValids
 
         colSet(columns, function)
 
@@ -402,7 +407,8 @@ class DataFrameTransformer():
         colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
 
         assert (
-            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
+                                    % colNotValids
 
         # Receives  a string as an argument
         def remove_accents(inputStr):
@@ -446,7 +452,8 @@ class DataFrameTransformer():
         colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
 
         assert (
-            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
+                                    % colNotValids
 
         def rmSpecChars(inputStr):
             # Remove all punctuation and control characters
@@ -492,7 +499,8 @@ class DataFrameTransformer():
         colNotValids = (set([column for column in columns]).difference(set([column for column in validCols])))
 
         assert (
-            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % colNotValids
+            colNotValids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
+                                    % colNotValids
 
         def rmSpecCharsRegex(inputStr,regex):
             for _ in set(inputStr):
@@ -942,12 +950,14 @@ class DataFrameTransformer():
         # Check if columnName argument a string datatype:
         self.__assertTypeStr(columnName, "columnName")
         # Asserting if columnName exits in dataframe:
-        assert columnName in self.__df.columns, "Error: Column specified as columnName argument does not exist in dataframe"
+        assert columnName in self.__df.columns, \
+            "Error: Column specified as columnName argument does not exist in dataframe"
         # Check if typeToDelete argument a string datatype:
         self.__assertTypeStr(typeToDelete, "typeToDelete")
         # Asserting if dataType argument has a valid type:
         assert (typeToDelete in ['integer', 'float', 'string',
-                                 'null']), "Error: dataType only can be one of the followings options: integer, float, string, null."
+                                 'null']), \
+            "Error: dataType only can be one of the followings options: integer, float, string, null."
 
         # Function for determine if register value is float or int or string:
         def dataType(value):
