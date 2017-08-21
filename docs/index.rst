@@ -68,12 +68,12 @@ dataFrames.
 
 **DataFrameAnalyzer methods**
 
--  DataFrameAnalyzer.columnAnalize(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
--  DataFrameAnalyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
--  DataFrameAnalyzer.getCategoricalHist(dfOneCol, numBars)
--  DataFrameAnalyzer.getNumericalHist(dfOneCol, numBars)
--  DataFrameAnalyzer.uniqueValuesCol(column)
--  DataFrameAnalyzer.writeJson(jsonCols, pathToJsonFile)
+-  DataFrameAnalyzer.column_analyze(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
+-  DataFrameAnalyzer.plot_hist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+-  DataFrameAnalyzer.get_categorical_hist(dfOneCol, numBars)
+-  DataFrameAnalyzer.get_numerical_hist(dfOneCol, numBars)
+-  DataFrameAnalyzer.unique_values_col(column)
+-  DataFrameAnalyzer.write_json(jsonCols, pathToJsonFile)
 
 Lets assume you have the following dataset, called foo.csv, in your current directory:
 
@@ -140,14 +140,14 @@ The following code shows how to instanciate the class to analyze a dataFrame:
   # case, local file system (hard drive of the pc) is used.
   filePath = "file:///" + os.getcwd() + "/foo.csv"
   
-  df = tools.readDatasetCsv(path=filePath, delimiterMark=',')
+  df = tools.read_dataset_csv(path=filePath, delimiter_mark=',')
 
   analyzer = DataFrameAnalizer(df=df,pathFile=filePath)
 
 Methods
 --------
 
-Analyzer.columnAnalize(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
+Analyzer.column_analyze(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function counts the number of registers in a column that are numbers (integers, floats) and the number of string registers.
@@ -171,7 +171,7 @@ Example:
 
 .. code:: python
 
-  analyzer.columnAnalize("*", plots=False, valuesBar=True, printType=False, numBars=10)
+  analyzer.column_analyze("*", plots=False, valuesBar=True, printType=False, numBars=10)
   
 +-----------+----------+------------+----------------------+
 |           |          |            | Column name: id      |
@@ -359,7 +359,7 @@ Total execution time:  17.98968768119812
 | Rows      | 19               |                     |
 +-----------+------------------+---------------------+
 
-Analyzer.getCategoricalHist(dfOneCol, numBars)
+Analyzer.get_categorical_hist(dfOneCol, numBars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only string type columns) and returns a dictionary with bins and values of frequency.
@@ -378,8 +378,8 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 
 .. code:: python 
 
-  productDf = analyzer.getDataframe().select("product") #or df.select("product")
-  histDictPro = analyzer.getCategoricalHist(dfOneCol=productDf, numBars=10)
+  productDf = analyzer.get_data_frame().select("product") #or df.select("product")
+  histDictPro = analyzer.get_categorical_hist(dfOneCol=productDf, numBars=10)
   print(histDictPro)
 
 .. code:: python
@@ -387,9 +387,9 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
     #Output
     """[{'cont': 4, 'value': 'pizza'}, {'cont': 3, 'value': 'taco'}, {'cont': 2, 'value': 'pasta'}, {'cont': 1, 'value':         'hamburguer'}, {'cont': 1, 'value': 'BEER'}, {'cont': 1, 'value': 'Rice'}, {'cont': 1, 'value': 'piza'}, {'cont': 1,         'value': 'Cake'}, {'cont': 1, 'value': 'arepa'}, {'cont': 1, 'value': '110790'}]"""
 
-Now that we have the dictionary we just need to call ``plotHist()``.
+Now that we have the dictionary we just need to call ``plot_hist()``.
 
-Analyzer.getNumericalHist(dfOneCol, numBars)
+Analyzer.get_numerical_hist(dfOneCol, numBars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only numerical columns) and returns a dictionary with bins and values of frequency.
@@ -408,8 +408,8 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 
 .. code:: python
 
-  priceDf = analyzer.getDataframe().select("price") #or df.select("price")
-  histDictPri = analyzer.getNumericalHist(dfOneCol=priceDf, numBars=10)
+  priceDf = analyzer.get_data_frame().select("price") #or df.select("price")
+  histDictPri = analyzer.get_numerical_hist(dfOneCol=priceDf, numBars=10)
   print(histDictPri)
   
 .. code:: python
@@ -418,7 +418,7 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
   """[{'cont': 2, 'value': 9.55}, {'cont': 2, 'value': 8.649999999999999}, {'cont': 6, 'value': 7.749999999999999}, {'cont':   2, 'value': 5.05}, {'cont': 1, 'value': 4.1499999999999995}, {'cont': 4, 'value': 3.25}, {'cont': 1, 'value':               2.3499999999999996}, {'cont': 1, 'value': 1.45}]"""
 
 
-Analyzer.plotHist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+Analyzer.plot_hist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function builds the histogram (bins) of a categorical or numerical column dataframe.
@@ -442,18 +442,18 @@ Example:
 .. code:: python
 
   # For a categorical DF
-  analyzer.plotHist(dfOneCol=productDf,histDict= histDictPro, typeHist='categorical')
+  analyzer.plot_hist(dfOneCol=productDf,histDict= histDictPro, typeHist='categorical')
   
 .. image:: images/productHist.png
 
 .. code:: python
 
   # For a numerical DF
-  analyzer.plotHist(dfOneCol=priceDf,histDict= histDictPri, typeHist='categorical')
+  analyzer.plot_hist(dfOneCol=priceDf,histDict= histDictPri, typeHist='categorical')
   
 .. image:: images/priceHist.png
 
-Analyzer.uniqueValuesCol(column)
+Analyzer.unique_values_col(column)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function counts the number of values that are unique and also the total number of values. Then, returns the values obtained.
@@ -468,8 +468,8 @@ Example:
 
 .. code:: python
 
-  print(analyzer.uniqueValuesCol("product"))
-  print(analyzer.uniqueValuesCol("price"))
+  print(analyzer.unique_values_col("product"))
+  print(analyzer.unique_values_col("price"))
   
 .. code:: python 
 
@@ -477,7 +477,7 @@ Example:
   {'unique': 13, 'total': 19} 
   {'unique': 8, 'total': 19}
 
-Analyzer.writeJson(jsonCols, pathToJsonFile)
+Analyzer.write_json(jsonCols, pathToJsonFile)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This functions ... and outputs a JSON in the specified path.
@@ -492,15 +492,15 @@ The method outputs the dataFrame as a JSON. To use it in a simple way first run
 
 .. code:: python
 
-  jsonCols = analyzer.columnAnalize(columnList="*", printType=False, plots=False) 
+  jsonCols = analyzer.column_analyze(columnList="*", printType=False, plots=False)
 
-And you will have the desired dictionary to pass to the writeJson function.
+And you will have the desired dictionary to pass to the write_json function.
 
 Example:
 
 .. code:: python
 
-  analyzer.writeJson(jsonCols=jsonCols, pathToJsonFile= os.getcwd() + "/foo.json")
+  analyzer.write_json(jsonCols=jsonCols, pathToJsonFile= os.getcwd() + "/foo.json")
 
 DataFrameTransformer class
 --------------------------
@@ -511,32 +511,32 @@ DataFrameTransformer class
 
 * **Column operations**:
 
-  - DataFrameTransformer.dropCol(columns)
-  - DataFrameTransformer.replaceCol(search, changeTo, columns)
-  - DataFrameTransformer.keepCol(columns)
-  - DataFrameTransformer.renameCol(column, newName)
-  - DataFrameTransformer.moveCol(column, refCol, position)
+  - DataFrameTransformer.drop_col(columns)
+  - DataFrameTransformer.replace_col(search, changeTo, columns)
+  - DataFrameTransformer.keep_col(columns)
+  - DataFrameTransformer.rename_col(column, newName)
+  - DataFrameTransformer.move_col(column, refCol, position)
 
 * **Row operations** :
 
   - DataFrameTransformer.dropRow(columns)
-  - DataFrameTransformer.deleteRow(func)
+  - DataFrameTransformer.delete_row(func)
 
 * **String operations**:
 
-  - DataFrameTransformer.trimCol(columns)
-  - DataFrameTransformer.clearAccents(columns)
+  - DataFrameTransformer.trim_col(columns)
+  - DataFrameTransformer.clear_accents(columns)
   - DataFrameTransformer.lookup(column, listStr, StrToReplace)
-  - DataFrameTransformer.removeSpecialChars(columns)
-  - DataFrameTransformer.dateTransform(column, dateFormat)
+  - DataFrameTransformer.remove_special_chars(columns)
+  - DataFrameTransformer.date_transform(column, dateFormat)
 
 * **General operation function**: 
 
-  - DataFrameTransformer.setCol(columns, func, dataType)
+  - DataFrameTransformer.set_col(columns, func, dataType)
 
 * **Others**:
-  - DataFrameTransformer.explodeTable(coldId, col, newColFeature)
-  - DataFrameTransformer.ageCalculate(column)
+  - DataFrameTransformer.explode_table(coldId, col, newColFeature)
+  - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
 class has all methods listed aboved.
@@ -570,7 +570,7 @@ dataFrame:
     # DataFrameTransformer Instanciation:
     transformer = DataFrameTransformer(df)
 
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
     
 Output:
  
@@ -589,7 +589,7 @@ Output:
 Methods
 -------
 
-Transformer.trimCol(columns)
+Transformer.trim_col(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This methods cut left and right extra spaces in column strings provided
@@ -610,14 +610,14 @@ operation in whole dataframe.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Triming string blank spaces:
-    transformer.trimCol("*")
+    transformer.trim_col("*")
 
     # Printing trimmed dataFrame:
     print('Trimmed dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -647,7 +647,7 @@ Trimmed dataFrame:
 |  Madrid|  Spain|   6489162|
 +--------+-------+----------+
 
-Transformer.dropCol(columns)
+Transformer.drop_col(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method eliminate the list of columns provided by user.
@@ -664,14 +664,14 @@ names.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # drop column specified:
-    transformer.dropCol("country")
+    transformer.drop_col("country")
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 
 Original dataFrame:
@@ -702,7 +702,7 @@ New dataFrame:
 |     Madrid|   6489162|
 +-----------+----------+
 
-Transformer.keepCol(columns)
+Transformer.keep_col(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method keep only columns specified by user with ``columns``
@@ -719,14 +719,14 @@ argument in DataFrame.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Keep columns specified by user:
-    transformer.keepCol(['city', 'population'])
+    transformer.keep_col(['city', 'population'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -756,7 +756,7 @@ New dataFrame:
 |     Madrid|   6489162|
 +-----------+----------+
 
-Transformer.replaceCol(search, changeTo, columns)
+Transformer.replace_col(search, changeTo, columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method search the ``search`` value argument in the DataFrame
@@ -779,14 +779,14 @@ in all columns of DataFrame that have same dataType of ``search`` and
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Replace values in columns specified by user:
-    transformer.replaceCol(search='Tokyo', changeTo='Maracaibo', columns='city')
+    transformer.replace_col(search='Tokyo', changeTo='Maracaibo', columns='city')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -816,13 +816,13 @@ New dataFrame:
 |     Madrid|  Spain|   6489162|
 +-----------+-------+----------+
 
-Transformer.deleteRow(func)
+Transformer.delete_row(func)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method deletes rows in columns according to condition provided by
 user.
 
-``deleteRow`` method receives a function ``func`` as an input parameter.
+``delete_row`` method receives a function ``func`` as an input parameter.
 
 ``func`` is required to be a ``lambda`` function, which is a native
 python feature.
@@ -840,15 +840,15 @@ python feature.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Replace values in columns specified by user:
     func = lambda pop: (pop > 6500000) & (pop <= 30000000)
-    transformer.deleteRow(func(col('population')))
+    transformer.delete_row(func(col('population')))
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -887,16 +887,16 @@ New dataFrame:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Delect rows where Tokyo isn't found in city
     # column or France isn't found in country column:
     func = lambda city, country: (city == 'Tokyo')  | (country == 'France')
-    transformer.deleteRow(func(col('city'), col('country')))
+    transformer.delete_row(func(col('city'), col('country')))
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -922,7 +922,7 @@ New dataFrame:
 |   Paris   | France|  12341418|
 +-----------+-------+----------+
 
-Transformer.setCol(columns, func, dataType)
+Transformer.set_col(columns, func, dataType)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method can be used to make math operations or string manipulations
@@ -953,17 +953,17 @@ Here some examples:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     print (' Replacing a number if value in cell is greater than 5:')
 
     # Replacing a number:   
     func = lambda cell: (cell * 2) if (cell > 14000000 ) else cell
-    transformer.setCol(['population'], func, 'integer')
+    transformer.set_col(['population'], func, 'integer')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1004,15 +1004,15 @@ New dataFrame:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Capital letters:
     func = lambda cell: cell.upper()
-    transformer.setCol(['city'], func, 'string')
+    transformer.set_col(['city'], func, 'string')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1042,13 +1042,13 @@ New dataFrame:
 |     MADRID|  Spain|   6489162|
 +-----------+-------+----------+
 
-Transformer.clearAccents(columns)
+Transformer.clear_accents(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function deletes accents in strings dataFrames, it does not
 eliminate main character, but only deletes special tildes.
 
-``clearAccents`` method receives column names (``column``) as argument.
+``clear_accents`` method receives column names (``column``) as argument.
 ``columns`` must be a string or a list of column names.
 
 E.g:
@@ -1098,14 +1098,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Clear accents:
-    transformer.clearAccents(columns='*')
+    transformer.clear_accents(columns='*')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1135,13 +1135,13 @@ New dataFrame:
 |        ~Madrid|   Spain|   6489162|
 +---------------+--------+----------+
 
-DataFrameTransformer.removeSpecialChars(columns)
+DataFrameTransformer.remove_special_chars(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method remove special characters (i.e. !"#$%&/()=?) in columns of
 dataFrames.
 
-``removeSpecialChars`` method receives ``columns`` as input. ``columns``
+``remove_special_chars`` method receives ``columns`` as input. ``columns``
 must be a string or a list of strings.
 
 E.g:
@@ -1154,14 +1154,14 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Remove special characters:
-    transformer.removeSpecialChars(columns=['city', 'country'])
+    transformer.remove_special_chars(columns=['city', 'country'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1191,7 +1191,7 @@ New dataFrame:
 |         Madrid|   Spain|   6489162|
 +---------------+--------+----------+
 
-DataFrameTransformer.renameCol(column, newName)
+DataFrameTransformer.rename_col(column, newName)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method changes name of column specified by ``column`` argument.
@@ -1206,15 +1206,15 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     names = [('city', 'villes')]
     # Changing name of columns:
-    transformer.renameCol(names)
+    transformer.rename_col(names)
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1301,14 +1301,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Capital letters:
     transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1338,7 +1338,7 @@ New dataFrame:
 |        ~Madrid|    Spain|   6489162|
 +---------------+---------+----------+
 
-DataFrameTransformer.moveCol(column, refCol, position)
+DataFrameTransformer.move_col(column, refCol, position)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function move a column from one position to another according to
@@ -1358,14 +1358,14 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Capital letters:
-    transformer.moveCol('city', 'country', position='after')
+    transformer.move_col('city', 'country', position='after')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1395,7 +1395,7 @@ New dataFrame:
 |    Spain|        ~Madrid|   6489162|
 +---------+---------------+----------+
 
-DataFrameTransformer.explodeTable(coldId, col, newColFeature)
+DataFrameTransformer.explode_table(coldId, col, newColFeature)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -1457,14 +1457,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Transformation:
-    transformer.explodeTable('bill id', 'foods', 'Beer')
+    transformer.explode_table('bill id', 'foods', 'Beer')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
@@ -1504,7 +1504,7 @@ New dataFrame:
 |      4|    Pizza|   1|
 +-------+---------+----+
 
-DataFrameTransformer.dateTransform(column, currentFormat, outputFormat)
+DataFrameTransformer.date_transform(column, currentFormat, outputFormat)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method changes date format in ``column`` from ``currentFormat`` to
@@ -1512,11 +1512,11 @@ This method changes date format in ``column`` from ``currentFormat`` to
 
 The column of dataFrame is expected to be StringType or DateType.
 
-``dateTransform`` returns column name.
+``date_transform`` returns column name.
 
 E.g.
 
-dateTransform(self, column, currentFormat, outputFormat)
+date_transform(self, column, currentFormat, outputFormat)
 
 .. code:: python
 
@@ -1563,16 +1563,16 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
     # Tranform string date format:
-    transformer.dateTransform(columns="dates",
+    transformer.date_transform(columns="dates",
                               currentFormat="yyyy/mm/dd",
                               outputFormat="dd-mm-yyyy")
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.getDataframe().show()
+    transformer.get_data_frame().show()
 
 Original dataFrame:
 
