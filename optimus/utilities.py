@@ -14,12 +14,6 @@ import pyspark
 
 class Utilites():
     def __init__(self):
-        """
-
-        :param SparkContext:
-         A Spark context is essentially a client of Spark’s execution environment and acts as the master of your
-         Spark application (don’t get confused with the other meaning of Master in Spark, though).
-        """
 
         # Setting SQLContext as a global variable of the class
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
