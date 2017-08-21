@@ -786,12 +786,12 @@ class DataFrameTransformer:
         assert column in self._df.columns, "Error: Column assigned in column argument does not exist in dataFrame"
 
         # Output format date
-        format = "yyyy-MM-dd"  # Some SimpleDateFormat string
+        Format = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
         exprs = format_number(
             mag(
                 months_between(date_format(
-                    unix_timestamp(column, date_format).cast("timestamp"), format), current_date()) / 12), 4).alias(
+                    unix_timestamp(column, date_format).cast("timestamp"), Format), current_date()) / 12), 4).alias(
             name_col_age)
 
         self._df = self._df.withColumn(name_col_age, exprs)
