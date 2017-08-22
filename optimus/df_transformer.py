@@ -768,19 +768,19 @@ class DataFrameTransformer:
 
         return self
 
-    def age_calculate(self, column, date_format, name_col_age):
+    def age_calculate(self, column, dates_format, name_col_age):
         """
         This method compute the age of clients based on their born dates.
         :param  column      Name of the column born dates column.
-        :param  date_format  String format date of the column provided.
+        :param  dates_format  String format date of the column provided.
         :param  name_col_age  Name of the new column, the new columns is the resulting column of ages.
 
         """
         # Check if column argument a string datatype:
         self._assert_type_str(column, "column")
 
-        # Check if date_format argument a string datatype:
-        self._assert_type_str(date_format, "date_format")
+        # Check if dates_format argument a string datatype:
+        self._assert_type_str(dates_format, "dates_format")
 
         # Asserting if column if in dataFrame:
         assert column in self._df.columns, "Error: Column assigned in column argument does not exist in dataFrame"
@@ -790,8 +790,8 @@ class DataFrameTransformer:
 
         exprs = format_number(
             mag(
-                months_between(date_format(
-                    unix_timestamp(column, date_format).cast("timestamp"), Format), current_date()) / 12), 4).alias(
+                months_between(dates_format(
+                    unix_timestamp(column, dates_format).cast("timestamp"), Format), current_date()) / 12), 4).alias(
             name_col_age)
 
         self._df = self._df.withColumn(name_col_age, exprs)
