@@ -790,7 +790,7 @@ class DataFrameTransformer:
 
         exprs = format_number(
             mag(
-                months_between(dates_format(
+                months_between(date_format(
                     unix_timestamp(column, dates_format).cast("timestamp"), Format), current_date()) / 12), 4).alias(
             name_col_age)
 
