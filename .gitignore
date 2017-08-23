@@ -25,19 +25,13 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
+# Optimus
+
 metastore_db/*
 checkPointFolder/*
 *.crc
 examples/metastore_db/*
-
-
-
-
-
-
-
-
-
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
