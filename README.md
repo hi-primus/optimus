@@ -25,7 +25,7 @@ The following schema shows the structure class organization of the whole library
   </li>
 
   <li>
-      utilities
+      Utilities
   </li>
 </ul>
 
