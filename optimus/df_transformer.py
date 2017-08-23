@@ -544,11 +544,11 @@ class DataFrameTransformer:
         return self
 
     def lookup(self, column, str_to_replace, list_str=None):
-        """This method search a list of strings specified in `listStr` argument among rows
-        in column dataFrame and replace them for `StrToReplace`.
+        """This method search a list of strings specified in `list_str` argument among rows
+        in column dataFrame and replace them for `str_to_replace`.
 
         :param  column      Column name, this variable must be string dataType.
-        :param  str_to_replace    string that going to replace all others present in listStr argument
+        :param  str_to_replace    string that going to replace all others present in list_str argument
         :param  list_str     List of strings to be replaced
 
         `lookup` can only be runned in StringType columns.
@@ -559,10 +559,10 @@ class DataFrameTransformer:
         self._assert_type_str(column, "column")
 
         # Asserting columns is string or list:
-        assert isinstance(str_to_replace, (str, dict)), "Error: StrToReplace argument must be a string or a dict"
+        assert isinstance(str_to_replace, (str, dict)), "Error: str_to_replace argument must be a string or a dict"
 
         if  isinstance(str_to_replace, dict):
-            assert (str_to_replace != {}), "Error, StrToReplace must be a string or a non empty python dictionary"
+            assert (str_to_replace != {}), "Error, str_to_replace must be a string or a non empty python dictionary"
             assert (
                 list_str is None), "Error, If a python dictionary if specified, list_str argument must be None: list_str=None"
 
@@ -571,7 +571,7 @@ class DataFrameTransformer:
             list_str is None), "Error: Column argument must be a non empty list"
 
         if isinstance(str_to_replace, str):
-            assert list_str is not None, "Error: list_str cannot be None if StrToReplace is a String, please you need to specify \
+            assert list_str is not None, "Error: list_str cannot be None if str_to_replace is a String, please you need to specify \
              the list_str string"
 
         # Filters all string columns in dataFrame
@@ -622,7 +622,7 @@ class DataFrameTransformer:
         :param ref_col   Name of reference column in dataFrame. This column will be a reference to place the
                         column to be moved.
         :param position Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
-                        provided will be placed just after the refCol selected."""
+                        provided will be placed just after the ref_col selected."""
         # Columns of dataFrame
         columns = self._df.columns
 
@@ -673,14 +673,14 @@ class DataFrameTransformer:
 
         return self
 
-    def explode_table(self, colId, col1, newColFeature, listToAssign):
+    def explode_table(self, colId, col1, new_col_feature, listToAssign):
         """
         This function can be used to split a feature with some extra information in order
         to make a new column feature.
 
         :param colId    column name of the columnId of dataFrame
         :param col1     column name of the column to be split.
-        :param newColFeature        Name of the new column.
+        :param new_col_feature        Name of the new column.
         :param listToAssign         List of values to be counted.
 
         Please, see documentation for more explanations about this method.
@@ -692,13 +692,13 @@ class DataFrameTransformer:
 
         # Asserting parameters are not empty strings:
         assert (
-            (colId != '') and (col1 != '') and (newColFeature != '')), "Error: Input parameters can't be empty strings"
+            (colId != '') and (col1 != '') and (new_col_feature != '')), "Error: Input parameters can't be empty strings"
 
         # Check if col1 argument is string datatype:
         self._assert_type_str(col1, "col1")
 
-        # Check if newColFeature argument is a string datatype:
-        self._assert_type_str(newColFeature, "newColFeature")
+        # Check if new_col_feature argument is a string datatype:
+        self._assert_type_str(new_col_feature, "new_col_feature")
 
         # Check if colId argument is a string datatype:
         self._assert_type_str(colId, "colId")
@@ -713,10 +713,10 @@ class DataFrameTransformer:
         subdf = self._df.select(colId, col1)
 
         # dataframe Filtered:
-        df_mod = self._df.where(self._df[col1] != newColFeature)
+        df_mod = self._df.where(self._df[col1] != new_col_feature)
 
         # subset de
-        new_column = subdf.where(subdf[col1] == newColFeature).groupBy(colId).count()
+        new_column = subdf.where(subdf[col1] == new_col_feature).groupBy(colId).count()
 
         # Left join:
         new_column = new_column.withColumnRenamed(colId, colId + '_other')
@@ -730,26 +730,26 @@ class DataFrameTransformer:
         df_mod = df_mod.join(new_column, exprs, 'left_outer')
 
         # Cleaning dataframe:
-        df_mod = df_mod.drop(colId + '_other').na.fill(0).withColumnRenamed('count', newColFeature)
+        df_mod = df_mod.drop(colId + '_other').na.fill(0).withColumnRenamed('count', new_col_feature)
         self._df = df_mod
 
         self._add_transformation()  # checkpoint in case
 
         return self
 
-    def date_transform(self, columns, currentFormat, outputFormat):
+    def date_transform(self, columns, current_format, output_format):
         """
         :param  columns     Name date columns to be transformed. Columns ha
-        :param  currentFormat   currentFormat is the current string dat format of columns specified. Of course,
+        :param  current_format   current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
                                 different formats will fail.
-        :param  outputFormat    output date string format to be expected.
+        :param  output_format    output date string format to be expected.
         """
-        # Check if currentFormat argument a string datatype:
-        self._assert_type_str(currentFormat, "currentFormat")
-        # Check if outputFormat argument a string datatype:
-        self._assert_type_str(outputFormat, "outputFormat")
+        # Check if current_format argument a string datatype:
+        self._assert_type_str(current_format, "current_format")
+        # Check if output_format argument a string datatype:
+        self._assert_type_str(output_format, "output_format")
         # Check if columns argument must be a string or list datatype:
         self._assert_type_str_or_list(columns, "columns")
 
@@ -759,7 +759,7 @@ class DataFrameTransformer:
         # Check if columns to be process are in dataframe
         self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
 
-        exprs = [date_format(unix_timestamp(c, currentFormat).cast("timestamp"), outputFormat).alias(
+        exprs = [date_format(unix_timestamp(c, current_format).cast("timestamp"), output_format).alias(
             c) if c in columns else c for c in self._df.columns]
 
         self._df = self._df.select(*exprs)
@@ -1122,5 +1122,5 @@ class DataFrameTransformer:
         p = re.sub("}\'", "}", re.sub("\'{", "{", str(self._df.toJSON().collect())))
 
         with open(path, 'w') as outfile:
-            # outfile.write(str(jsonCols).replace("'", "\""))
+            # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(p)

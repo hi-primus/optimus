@@ -626,7 +626,7 @@ class DataFrameAnalizer:
 
         :param df_one_col     One column dataFrame.
         :param num_bars      Number of bars or histogram bins.
-        :return histDict    Python dictionary with histogram values and bins."""
+        :return hist_dict    Python dictionary with histogram values and bins."""
 
         assert isinstance(num_bars, int), "Error, num_bars argument must be a string dataType."
         assert len(df_one_col.columns) == 1, "Error, Dataframe provided must have only one column."

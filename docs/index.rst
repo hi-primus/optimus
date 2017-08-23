@@ -68,12 +68,12 @@ dataFrames.
 
 **DataFrameAnalyzer methods**
 
--  DataFrameAnalyzer.column_analyze(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
--  DataFrameAnalyzer.plot_hist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
--  DataFrameAnalyzer.get_categorical_hist(dfOneCol, numBars)
--  DataFrameAnalyzer.get_numerical_hist(dfOneCol, numBars)
+-  DataFrameAnalyzer.column_analyze(column_list, plots=True, values_bar=True, print_type=False, num_bars=10)
+-  DataFrameAnalyzer.plot_hist(df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True)
+-  DataFrameAnalyzer.get_categorical_hist(df_one_col, num_bars)
+-  DataFrameAnalyzer.get_numerical_hist(df_one_col, num_bars)
 -  DataFrameAnalyzer.unique_values_col(column)
--  DataFrameAnalyzer.write_json(jsonCols, pathToJsonFile)
+-  DataFrameAnalyzer.write_json(json_cols, path_to_json_file)
 
 Lets assume you have the following dataset, called foo.csv, in your current directory:
 
@@ -124,7 +124,7 @@ The following code shows how to instanciate the class to analyze a dataFrame:
 .. code:: python
 
   # Importing DataFrameAnalyzer library
-  from optimus.DfAnalizer import DataFrameAnalizer
+  from optimus.df_analyzer import DataFrameAnalizer
   # Importing Utility library
   from optimus.utilities import *
   # Setting notebook to show plots inline
@@ -147,23 +147,23 @@ The following code shows how to instanciate the class to analyze a dataFrame:
 Methods
 --------
 
-Analyzer.column_analyze(columnList, plots=True, valuesBar=True, printType=False, numBars=10)
+Analyzer.column_analyze(column_list, plots=True, values_bar=True, print_type=False, num_bars=10)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function counts the number of registers in a column that are numbers (integers, floats) and the number of string registers.
 
 Input:
 
-``columnList``: A list or a string column name.
+``column_list``: A list or a string column name.
 
 ``plots``: Can be True or False. If true it will output the predefined plots.
 
-``valuesBar (optional)``: Can be True or False. If it is True, frequency values are placed over each bar.
+``values_bar (optional)``: Can be True or False. If it is True, frequency values are placed over each bar.
 
-``printType (optional)``: Can be one of the following strings: 'integer', 'string', 'float'. Depending of what string
+``print_type (optional)``: Can be one of the following strings: 'integer', 'string', 'float'. Depending of what string
 is provided, a list of distinct values of that type is printed.
 
-``numBars``: number of bars printed in histogram
+``num_bars``: number of bars printed in histogram
 
 The method outputs a list containing the number of the different datatypes [nulls, strings, integers, floats].
 
@@ -171,7 +171,7 @@ Example:
 
 .. code:: python
 
-  analyzer.column_analyze("*", plots=False, valuesBar=True, printType=False, numBars=10)
+  analyzer.column_analyze("*", plots=False, values_bar=True, print_type=False, num_bars=10)
   
 +-----------+----------+------------+----------------------+
 |           |          |            | Column name: id      |
@@ -359,16 +359,16 @@ Total execution time:  17.98968768119812
 | Rows      | 19               |                     |
 +-----------+------------------+---------------------+
 
-Analyzer.get_categorical_hist(dfOneCol, numBars)
+Analyzer.get_categorical_hist(df_one_col, num_bars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only string type columns) and returns a dictionary with bins and values of frequency.
 
 Input:
 
-``dfOneCol``:One column dataFrame.
+``df_one_col``:One column dataFrame.
 
-``numBars``: Number of bars or histogram bins.
+``num_bars``: Number of bars or histogram bins.
 
 The method outputs a dictionary with bins and values of frequency for only type strings colmuns.
 
@@ -379,8 +379,8 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 .. code:: python 
 
   productDf = analyzer.get_data_frame().select("product") #or df.select("product")
-  histDictPro = analyzer.get_categorical_hist(dfOneCol=productDf, numBars=10)
-  print(histDictPro)
+  hist_dictPro = analyzer.get_categorical_hist(df_one_col=productDf, num_bars=10)
+  print(hist_dictPro)
 
 .. code:: python
     
@@ -389,16 +389,16 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 
 Now that we have the dictionary we just need to call ``plot_hist()``.
 
-Analyzer.get_numerical_hist(dfOneCol, numBars)
+Analyzer.get_numerical_hist(df_one_col, num_bars)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only numerical columns) and returns a dictionary with bins and values of frequency.
 
 Input:
 
-``dfOneCol``:One column dataFrame.
+``df_one_col``:One column dataFrame.
 
-``numBars``: Number of bars or histogram bins.
+``num_bars``: Number of bars or histogram bins.
 
 The method outputs a dictionary with bins and values of frequency for only numerical colmuns.
 
@@ -409,8 +409,8 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 .. code:: python
 
   priceDf = analyzer.get_data_frame().select("price") #or df.select("price")
-  histDictPri = analyzer.get_numerical_hist(dfOneCol=priceDf, numBars=10)
-  print(histDictPri)
+  hist_dictPri = analyzer.get_numerical_hist(df_one_col=priceDf, num_bars=10)
+  print(hist_dictPri)
   
 .. code:: python
 
@@ -418,22 +418,22 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
   """[{'cont': 2, 'value': 9.55}, {'cont': 2, 'value': 8.649999999999999}, {'cont': 6, 'value': 7.749999999999999}, {'cont':   2, 'value': 5.05}, {'cont': 1, 'value': 4.1499999999999995}, {'cont': 4, 'value': 3.25}, {'cont': 1, 'value':               2.3499999999999996}, {'cont': 1, 'value': 1.45}]"""
 
 
-Analyzer.plot_hist(dfOneCol, histDict, typeHist, numBars=20, valuesBar=True)
+Analyzer.plot_hist(df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function builds the histogram (bins) of a categorical or numerical column dataframe.
 
 Input: 
 
-``dfOneCol``: A dataFrame of one column.
+``df_one_col``: A dataFrame of one column.
 
-``histDict``: Python dictionary with histogram values.
+``hist_dict``: Python dictionary with histogram values.
 
-``typeHist``: type of histogram to be generated, numerical or categorical.
+``type_hist``: type of histogram to be generated, numerical or categorical.
 
-``numBars``: Number of bars in histogram.
+``num_bars``: Number of bars in histogram.
 
-``valuesBar``: If valuesBar is True, values of frequency are plotted over bars.
+``values_bar``: If values_bar is True, values of frequency are plotted over bars.
         
 The method outputs a plot of the histogram for a categorical or numerical column.
 
@@ -442,14 +442,14 @@ Example:
 .. code:: python
 
   # For a categorical DF
-  analyzer.plot_hist(dfOneCol=productDf,histDict= histDictPro, typeHist='categorical')
+  analyzer.plot_hist(df_one_col=productDf,hist_dict= hist_dictPro, type_hist='categorical')
   
 .. image:: images/productHist.png
 
 .. code:: python
 
   # For a numerical DF
-  analyzer.plot_hist(dfOneCol=priceDf,histDict= histDictPri, typeHist='categorical')
+  analyzer.plot_hist(df_one_col=priceDf,hist_dict= hist_dictPri, type_hist='categorical')
   
 .. image:: images/priceHist.png
 
@@ -477,22 +477,22 @@ Example:
   {'unique': 13, 'total': 19} 
   {'unique': 8, 'total': 19}
 
-Analyzer.write_json(jsonCols, pathToJsonFile)
+Analyzer.write_json(json_cols, path_to_json_file)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This functions ... and outputs a JSON in the specified path.
 
 Input:
 
-``jsonCols``: Dictionary that represents the dataframe.
+``json_cols``: Dictionary that represents the dataframe.
 
-``pathToJsonFile``: Specified path to write the returned JSON.
+``path_to_json_file``: Specified path to write the returned JSON.
 
 The method outputs the dataFrame as a JSON. To use it in a simple way first run 
 
 .. code:: python
 
-  jsonCols = analyzer.column_analyze(columnList="*", printType=False, plots=False)
+  json_cols = analyzer.column_analyze(column_list="*", print_type=False, plots=False)
 
 And you will have the desired dictionary to pass to the write_json function.
 
@@ -500,7 +500,7 @@ Example:
 
 .. code:: python
 
-  analyzer.write_json(jsonCols=jsonCols, pathToJsonFile= os.getcwd() + "/foo.json")
+  analyzer.write_json(json_cols=json_cols, path_to_json_file= os.getcwd() + "/foo.json")
 
 DataFrameTransformer class
 --------------------------
@@ -515,7 +515,7 @@ DataFrameTransformer class
   - DataFrameTransformer.replace_col(search, changeTo, columns)
   - DataFrameTransformer.keep_col(columns)
   - DataFrameTransformer.rename_col(column, newName)
-  - DataFrameTransformer.move_col(column, refCol, position)
+  - DataFrameTransformer.move_col(column, ref_col, position)
 
 * **Row operations** :
 
@@ -526,7 +526,7 @@ DataFrameTransformer class
 
   - DataFrameTransformer.trim_col(columns)
   - DataFrameTransformer.clear_accents(columns)
-  - DataFrameTransformer.lookup(column, listStr, StrToReplace)
+  - DataFrameTransformer.lookup(column, list_str, str_to_replace)
   - DataFrameTransformer.remove_special_chars(columns)
   - DataFrameTransformer.date_transform(column, dateFormat)
 
@@ -535,7 +535,7 @@ DataFrameTransformer class
   - DataFrameTransformer.set_col(columns, func, dataType)
 
 * **Others**:
-  - DataFrameTransformer.explode_table(coldId, col, newColFeature)
+  - DataFrameTransformer.explode_table(coldId, col, new_col_feature)
   - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
@@ -552,7 +552,7 @@ dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from optimus.DfTransf import DataFrameTransformer
+    from optimus.df_transformer import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -595,8 +595,7 @@ Transformer.trim_col(columns)
 This methods cut left and right extra spaces in column strings provided
 by user.
 
-``columns`` argument is expected to be a string o a list of column names
-.
+``columns`` argument is expected to be a string o a list of column names.
 
 If a string ``"*"`` is provided, the method will do the trimming
 operation in whole dataframe.
@@ -1060,7 +1059,7 @@ Building a dummy dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from optimus.DfTransf import DataFrameTransformer
+    from optimus.df_transformer import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1191,11 +1190,11 @@ New dataFrame:
 |         Madrid|   Spain|   6489162|
 +---------------+--------+----------+
 
-DataFrameTransformer.rename_col(column, newName)
+DataFrameTransformer.rename_col(columns)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This method changes name of column specified by ``column`` argument.
-``newName`` is the name to be set in column dataFrame.
+This method changes name of column specified by ``columns`` argument.
+``columns`` Is a List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
 
 E.g:
 
@@ -1244,11 +1243,11 @@ New dataFrame:
 |        ~Madrid|   Spain|   6489162|
 +---------------+--------+----------+
 
-DataFrameTransformer.lookup(column, listStr, StrToReplace)
+DataFrameTransformer.lookup(column, list_str, str_to_replace)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This method search a list of strings specified in ``listStr`` argument
-among rows in column dataFrame and replace them for ``StrToReplace``.
+This method search a list of strings specified in ``list_str`` argument
+among rows in column dataFrame and replace them for ``str_to_replace``.
 
 ``lookup`` can only be runned in StringType columns.
 
@@ -1262,7 +1261,7 @@ Building a dummy dataFrame:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from optimus.DfTransf import DataFrameTransformer
+    from optimus.df_transformer import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1338,15 +1337,15 @@ New dataFrame:
 |        ~Madrid|    Spain|   6489162|
 +---------------+---------+----------+
 
-DataFrameTransformer.move_col(column, refCol, position)
+DataFrameTransformer.move_col(column, ref_col, position)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function move a column from one position to another according to
-the reference column ``refCol`` and ``position`` argument.
+the reference column ``ref_col`` and ``position`` argument.
 
 ``position`` argument must be the following string: 'after' or 'before'.
 If ``position = 'after'`` then, ``column`` is placed just ``after`` the
-reference column ``refCol`` provided by user.
+reference column ``ref_col`` provided by user.
 
 E.g:
 
@@ -1395,7 +1394,7 @@ New dataFrame:
 |    Spain|        ~Madrid|   6489162|
 +---------+---------------+----------+
 
-DataFrameTransformer.explode_table(coldId, col, newColFeature)
+DataFrameTransformer.explode_table(coldId, col, new_col_feature)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -1410,7 +1409,7 @@ See the example bellow to more explanations:
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from optimus.DfTransf import DataFrameTransformer
+    from optimus.df_transformer import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1504,11 +1503,11 @@ New dataFrame:
 |      4|    Pizza|   1|
 +-------+---------+----+
 
-DataFrameTransformer.date_transform(column, currentFormat, outputFormat)
+DataFrameTransformer.date_transform(column, current_format, output_format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This method changes date format in ``column`` from ``currentFormat`` to
-``outputFormat``.
+This method changes date format in ``column`` from ``current_format`` to
+``output_format``.
 
 The column of dataFrame is expected to be StringType or DateType.
 
@@ -1516,7 +1515,7 @@ The column of dataFrame is expected to be StringType or DateType.
 
 E.g.
 
-date_transform(self, column, currentFormat, outputFormat)
+date_transform(self, column, current_format, output_format)
 
 .. code:: python
 
@@ -1524,7 +1523,7 @@ date_transform(self, column, currentFormat, outputFormat)
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing DataFrameTransformer library
-    from optimus.DfTransf import DataFrameTransformer
+    from optimus.df_transformer import DataFrameTransformer
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1567,8 +1566,8 @@ New DF:
 
     # Tranform string date format:
     transformer.date_transform(columns="dates",
-                              currentFormat="yyyy/mm/dd",
-                              outputFormat="dd-mm-yyyy")
+                              current_format="yyyy/mm/dd",
+                              output_format="dd-mm-yyyy")
 
     # Printing new dataFrame:
     print('New dataFrame:')
