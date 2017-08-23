@@ -1,55 +1,57 @@
 # Importing DataFrameTransformer library
-from optimus.DfTransf import DataFrameTransformer
+from optimus.df_transformer import DataFrameTransformer
 # Importing DataFrameAnalyzer library
-from optimus.DfAnalizer import DataFrameAnalizer
+from optimus.df_analyzer import DataFrameAnalizer
+from pyspark.sql.dataframe import DataFrame
 
 
-class Optimus():
+class Optimus:
     """This class can be considered as a wrapper of DataFrameTransformer and
     DataFrameAnalyzer classes.
     """
-    def __init__(self, df, pathFile, pu=1):
+    def __init__(self, df, path_file, pu=1):
         """Constructor.
         In this method DataFrameTransformer and DataFrameAnalyzer classes are
         instantiated.
         """
         # Path file:
-        self.__pathFile = pathFile
+        self._path_file = path_file
 
         # Pu file:
-        self.__pu = pu
+        self._pu = pu
 
         # Instance of transformer class:
         self.transformer = DataFrameTransformer(df)
 
         # Instance of analyzer class:
-        self.analyzer = DataFrameAnalizer(df, self.__pathFile, self.__pu)
+        self.analyzer = DataFrameAnalizer(df, self._path_file, self._pu)
 
-    def getDataframe(self):
+    def get_data_frame(self):
         """This function return the dataframe of the class"""
-        return self.transformer.getDataframe()
+        return self.transformer.get_data_frame()
 
-    def setDataframe(self, df):
+    def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
-        assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
-        self.transformer.setDataframe(df)
+        assert isinstance(df, DataFrame), "Error: df argument must a pyspark.sql.dataframe.DataFrame type"
+        self.transformer.set_data_frame(df)
 
-    def __executeAnalyzer(self, columns):
+    def _execute_analyzer(self, columns):
         # First
-        self.analyzer.unpersistDF()
+        self.analyzer.unpersist_df()
         del self.analyzer
         # Instance of analyzer class:
-        self.analyzer = DataFrameAnalizer(self.transformer.getDataframe(), self.__pathFile, self.__pu)
+        self.analyzer = DataFrameAnalizer(self.transformer.get_data_frame(), self._path_file, self._pu)
         # Sampling if it is specified (this method is depedent to the pu argument)
-        self.analyzer.analyzeSample()
+        self.analyzer.analyze_sample()
         # Analize column specified by user:
-        self.analyzer.columnAnalize(columnList=columns,
-                                    plots=True,
-                                    valuesBar=False,
-                                    printType=True,
-                                    numBars=50)
-    def trimCol(self, columns):
+        self.analyzer.column_analyze(column_list=columns,
+                                     plots=True,
+                                     values_bar=False,
+                                     print_type=True,
+                                     num_bars=50)
+
+    def trim_col(self, columns):
         """This methods cut left and right extra spaces in column strings provided by user.
         :param columns   list of column names of dataFrame.
                         If a string "*" is provided, the method
@@ -58,11 +60,11 @@ class Optimus():
         :return transformer object
         """
         # Calling trimCol
-        self.transformer.trimCol(columns=columns)
+        self.transformer.trim_col(columns=columns)
         # Execute analyzer:
-        self.__executeAnalyzer(columns)
+        self._execute_analyzer(columns)
 
-    def dropCol(self, df, columns):
+    def drop_col(self, df, columns):
         """This method eliminate the list of columns provided by user.
         :param columns      list of columns names or a string (a column name).
 
@@ -70,31 +72,31 @@ class Optimus():
         """
 
         # Calling dropCol
-        self.transformer.dropCol(columns=columns)
+        self.transformer.drop_col(columns=columns)
         # Execute analyzer:
-        self.__executeAnalyzer(columns)
+        self._execute_analyzer(columns)
 
-    def lowerCase(self, columns):
+    def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
         Columns argument must be a string or a list of string. In order to apply this
         function to all dataframe, columns must be equal to '*'"""
 
         # Calling lowerCase
-        self.transformer.lowerCase(columns=columns)
+        self.transformer.lower_case(columns=columns)
         # Execute analyzer:
-        self.__executeAnalyzer(columns)
+        self._execute_analyzer(columns)
 
-    def upperCase(self, columns):
+    def upper_case(self, columns):
         """This function set all strings in columns of dataframe specified to uppercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
         dataframe, columns must be equal to '*'"""
 
         # Calling lowerCase
-        self.transformer.upperCase(columns=columns)
+        self.transformer.upper_case(columns=columns)
         # Execute analyzer:
-        self.__executeAnalyzer(columns)
+        self._execute_analyzer(columns)
 
-    def keepCol(self, columns):
+    def keep_col(self, columns):
         """This method keep only columns specified by user with columns argument in DataFrame.
         :param columns list of columns or a string (column name).
 
@@ -102,6 +104,6 @@ class Optimus():
         """
 
         # Calling keepCol
-        self.transformer.keepCol(columns=columns)
+        self.transformer.keep_col(columns=columns)
         # Execute analyzer:
-        self.__executeAnalyzer(columns)
+        self._execute_analyzer(columns)
