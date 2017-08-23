@@ -31,6 +31,8 @@ metastore_db/*
 checkPointFolder/*
 *.crc
 examples/metastore_db/*
+
+# Mac
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
