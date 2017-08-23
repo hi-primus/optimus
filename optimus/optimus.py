@@ -42,9 +42,9 @@ class Optimus:
         del self.analyzer
         # Instance of analyzer class:
         self.analyzer = DataFrameAnalizer(self.transformer.get_data_frame(), self._path_file, self._pu)
-        # Sampling if it is specified (this method is depedent to the pu argument)
+        # Sampling if it is specified (this method is dependent to the pu argument)
         self.analyzer.analyze_sample()
-        # Analize column specified by user:
+        # Analyze column specified by user:
         self.analyzer.column_analyze(column_list=columns,
                                      plots=True,
                                      values_bar=False,
@@ -64,7 +64,7 @@ class Optimus:
         # Execute analyzer:
         self._execute_analyzer(columns)
 
-    def drop_col(self, df, columns):
+    def drop_col(self, columns):
         """This method eliminate the list of columns provided by user.
         :param columns      list of columns names or a string (a column name).
 
