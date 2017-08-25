@@ -590,13 +590,13 @@ class DataFrameTransformer:
         # User defined function to search cell value in list provide by user:
         if isinstance(str_to_replace, str) and list_str is not None:
 
-            def revisar(cell):
+            def check(cell):
                 if cell is not None and (cell in list_str):
                     return str_to_replace
                 else:
                     return cell
 
-            func = udf(lambda cell: revisar(cell), StringType())
+            func = udf(lambda cell: check(cell), StringType())
         else:
             def replace_from_dic(strTest):
                 for key in str_to_replace.keys():
