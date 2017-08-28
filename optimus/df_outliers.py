@@ -1,7 +1,4 @@
 from pyspark.sql.session import SparkSession
-
-spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-
 from pyspark.sql.functions import col, abs
 
 class OutlierDetector:
@@ -9,6 +6,7 @@ class OutlierDetector:
     Outlier detection for pyspark dataframes.
     """
     def __init__(self, df, column):
+        self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._df = df
         self._column = column
 
@@ -28,11 +26,10 @@ class OutlierDetector:
         self._limits.append(round((self.medianValue - self.threshold * self.madValue), 2))
         self._limits.append(round((self.medianValue + self.threshold * self.madValue), 2))
 
-    @staticmethod
-    def median(df, column):
+    def median(self, df, column):
         df.registerTempTable("table")
 
-        return (spark
+        return (self.spark
                 .sql("SELECT \
                         ROUND( \
                         PERCENTILE_APPROX(" + column + ", 0.5), 2) AS " + column + " FROM table")
