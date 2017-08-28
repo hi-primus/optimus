@@ -4,5 +4,5 @@ def _safe_int(string):
     except ValueError:
         return string
 
-__version__ = '0.7.6'
+__version__ = '0.7.7'
 VERSION = tuple(_safe_int(x) for x in __version__.split('.'))

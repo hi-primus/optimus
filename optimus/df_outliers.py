@@ -11,7 +11,7 @@ class OutlierDetector:
         self._df = df
         self._column = column
 
-        self.medianValue = self.median(self._df, self._column)
+        self.medianValue = median(self._df, self._column)
 
         absolute_deviation = (self._df
                              .select(self._column)
@@ -19,23 +19,13 @@ class OutlierDetector:
                              .withColumn(self._column, abs(col(self._column) - self.medianValue))
                              .cache())
 
-        self.madValue = self.median(absolute_deviation, column)
+        self.madValue = median(absolute_deviation, column)
 
         self.threshold = 2
 
         self._limits = []
         self._limits.append(round((self.medianValue - self.threshold * self.madValue), 2))
         self._limits.append(round((self.medianValue + self.threshold * self.madValue), 2))
-
-    def median(self, df, column):
-        df.registerTempTable("table")
-
-        return (self.spark
-                .sql("SELECT \
-                        ROUND( \
-                        PERCENTILE_APPROX(" + column + ", 0.5), 2) AS " + column + " FROM table")
-                .rdd.map(lambda x: x[column])
-                .first())
 
     def run(self):
         """
@@ -79,3 +69,13 @@ class OutlierDetector:
         self._df = self._df.filter(func(col(column)))
 
         return self._df
+
+    def get_data_frame(self):
+        """
+        :rtype: pyspark.sql.dataframe.DataFrame
+        """
+        self.get_data_frame()
+
+
+def median(df, column):
+    return df.approxQuantile(column, [0.5], 0.01)[0]
