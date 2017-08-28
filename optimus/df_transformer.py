@@ -70,7 +70,9 @@ class DataFrameTransformer:
         self._df = df
 
     def get_data_frame(self):
-        """This function return the dataframe of the class"""
+        """This function return the dataframe of the class
+        :rtype: pyspark.sql.dataframe.DataFrame
+        """
         return self._df
 
     def lower_case(self, columns):
