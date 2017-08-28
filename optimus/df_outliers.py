@@ -1,6 +1,7 @@
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import col, abs
 
+
 class OutlierDetector:
     """
     Outlier detection for pyspark dataframes.
@@ -66,7 +67,7 @@ class OutlierDetector:
 
         return values_without_range
 
-    def deleteOutliers(self):
+    def delete_outliers(self):
         """
         Deletes all rows where values in the column are outliers
         """
