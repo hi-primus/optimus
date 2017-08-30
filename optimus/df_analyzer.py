@@ -2,13 +2,16 @@
 # Importing sql functions
 from pyspark.sql.functions import udf, when, col, min as cmin, max as cmax
 from pyspark.sql.types import StringType, DoubleType
+# Import stat functions
+from pyspark.ml.stat import Correlation
 # Importing plotting libraries
 import matplotlib.pyplot as plt
+import seaborn as sns
 # Importing numeric module
 import numpy as np
 # Importing features to build tables
 from IPython.display import display
-# Importing time librarie to measure time
+# Importing time libraries to measure time
 import time
 # Importing dumps
 from json import dumps
@@ -761,6 +764,27 @@ class DataFrameAnalizer:
         distincts = self._df.select(column).distinct().count()
 
         return {'total': total, 'unique': distincts}
+
+    def correlation(self, vec_col, method="pearson"):
+        """
+        Compute the correlation matrix for the input dataset of Vectors using the specified method. Method
+        mapped from  pyspark.ml.stat.Correlation.
+
+        :param vec_col: The name of the column of vectors for which the correlation coefficient needs to be computed.
+        This must be a column of the dataset, and it must contain Vector objects.
+        :param method: String specifying the method to use for computing correlation. Supported: pearson (default),
+        spearman.
+        :return: Heatmap plot of the corr matrix using seaborn.
+        """
+
+        assert isinstance(method, str), "Error, method argument provided must be a string."
+
+        assert method == 'pearson' or (
+               method == 'spearman'), "Error, type_hist only can be 'pearson' or 'sepearman'."
+
+        cor = Correlation.corr(self._df, vec_col, method).head()[0].toArray()
+        return sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
+                           as_cmap=True))
 
     @classmethod
     def write_json(cls, json_cols, path_to_json_file):
