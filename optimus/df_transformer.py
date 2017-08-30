@@ -1120,6 +1120,20 @@ class DataFrameTransformer:
 
         return self
 
+    def remove_empty_rows(self, how="all"):
+        """
+        Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
+        'any' of the values is null.
+
+        :param how: ‘any’ or ‘all’. If ‘any’, drop a row if it contains any nulls. If ‘all’, drop a row only if all its
+        values are null. The default is 'all'.
+        :return: Returns a new DataFrame omitting rows with null values.
+        """
+
+        self._df = self._df.dropna(how)
+
+        return self
+
     def write_df_as_json(self, path):
         p = re.sub("}\'", "}", re.sub("\'{", "{", str(self._df.toJSON().collect())))
 
