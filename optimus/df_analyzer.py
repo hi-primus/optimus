@@ -178,7 +178,7 @@ class DataFrameProfiler:
 
 
 # This class makes an analisis of dataframe datatypes and its different general features.
-class DataFrameAnalizer:
+class DataFrameAnalyzer:
     def __init__(self, df, path_file, pu=0.1, seed=13):
         # Asserting if df is dataFrame datatype.
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
