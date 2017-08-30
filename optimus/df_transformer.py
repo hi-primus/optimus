@@ -1130,7 +1130,26 @@ class DataFrameTransformer:
         :return: Returns a new DataFrame omitting rows with null values.
         """
 
+        assert isinstance(how, str), "Error, how argument provided must be a string."
+
+        assert how == 'all' or (
+               how == 'any'), "Error, how only can be 'all' or 'any'."
+
         self._df = self._df.dropna(how)
+
+        return self
+
+    def remove_duplicates(self, cols=None):
+        """
+
+        :param cols: List of columns to make the comparison, this only  will consider this subset of columns,
+        for dropping duplicates. The default behavior will only drop the identical rows.
+        :return: Return a new DataFrame with duplicate rows removed
+        """
+
+        assert isinstance(cols, list), "Error, cols argument provided must be a list."
+
+        self._df = self._df.drop_duplicates(cols)
 
         return self
 
