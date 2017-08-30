@@ -1,7 +1,7 @@
 # Importing DataFrameTransformer library
 from optimus.df_transformer import DataFrameTransformer
 # Importing DataFrameAnalyzer library
-from optimus.df_analyzer import DataFrameAnalizer
+from optimus.df_analyzer import DataFrameAnalyzer
 from pyspark.sql.dataframe import DataFrame
 
 
@@ -24,7 +24,7 @@ class Optimus:
         self.transformer = DataFrameTransformer(df)
 
         # Instance of analyzer class:
-        self.analyzer = DataFrameAnalizer(df, self._path_file, self._pu)
+        self.analyzer = DataFrameAnalyzer(df, self._path_file, self._pu)
 
     def get_data_frame(self):
         """This function return the dataframe of the class"""
@@ -41,7 +41,7 @@ class Optimus:
         self.analyzer.unpersist_df()
         del self.analyzer
         # Instance of analyzer class:
-        self.analyzer = DataFrameAnalizer(self.transformer.get_data_frame(), self._path_file, self._pu)
+        self.analyzer = DataFrameAnalyzer(self.transformer.get_data_frame(), self._path_file, self._pu)
         # Sampling if it is specified (this method is dependent to the pu argument)
         self.analyzer.analyze_sample()
         # Analyze column specified by user:
