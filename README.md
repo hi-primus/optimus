@@ -12,9 +12,9 @@
 
 [![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://optimus-ironmussa.readthedocs.io/en/latest/)
 
-Optimus is the missing library for cleaning and pre-processing data in a distributed fashion. It uses all the power of Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
+Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library or framework is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
 
-The following schema shows the structure class organization of the whole library:
+The following schema shows the structure class organization of the whole framework:
 
 <ul>
   <li> Optimus
@@ -34,7 +34,7 @@ The following schema shows the structure class organization of the whole library
 We are very happy to annouce that Optimus main stable branch will 
 work now for Spark 2.2.0 The 1.6.x version is now under maintenance, 
 the last tag release for this Spark version is the 0.4.0. We strongly 
-suggest that you use the >2.x version of the library because the 
+suggest that you use the >2.x version of the framework because the 
 new improvements and features will be added now on this version.
 
 ## Requirements

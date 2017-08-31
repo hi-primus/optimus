@@ -9,14 +9,14 @@ Optimus (By Iron_)
 Description
 ------------
 
-Optimus is the missing library for cleaning and pre-processing data in a distributed fashion. It uses all the power of `Apache Spark`_ (optimized via Catalyst_) to do it. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
+Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of `Apache Spark`_ (optimized via Catalyst_) to do it. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library or framerwork is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
 
 .. _Apache Spark: https://spark.apache.
 
 .. _Catalyst: https://static.javadoc.io/org.apache.spark/spark-catalyst_2.10/1.0.1/index.html#org.apache.spark.sql.catalyst.package
 
 The following schema shows the structure class organization of the whole
-library:
+framework:
 
 * Optimus
 
