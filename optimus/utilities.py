@@ -11,15 +11,20 @@ import urllib.request
 import re
 # Import SparkContext
 import pyspark
+# URL reading
+import tempfile
+from urllib.request import Request, urlopen
 
 
-class Utilites:
+class Utilities:
     def __init__(self):
 
         # Setting SQLContext as a global variable of the class
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         # Setting SparkContent as a global variable of the class
         self.__sc = self.spark.sparkContext
+        # Set empty container for url
+        self.url = ""
 
     def read_dataset_csv(self, path, delimiter_mark=';', header='true'):
         """This funcion read a dataset from a csv file.
@@ -42,6 +47,59 @@ class Utilites:
             .options(delimiter=delimiter_mark) \
             .options(inferSchema='true') \
             .load(path)
+
+    def read_dataset_url(self, path=None, ty="csv"):
+        """
+        Reads dataset from URL.
+        :param path: string for URL to read
+        :param ty: type of the URL backend (can be csv or json)
+        :return: pyspark dataframe from URL.
+        """
+        if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
+            if ty is 'json':
+                self.url = str(path)
+                return self.json_load_spark_data_frame_from_url(str(path))
+            else:
+                return self.load_spark_data_frame_from_url(str(path))
+        else:
+            print("Unknown sample data identifier. Please choose an id from the list below")
+
+    def json_data_loader(self, path):
+        res = open(path, 'r').read()
+        print("Loading file using a pyspark dataframe for spark 2")
+        dataRDD = self.__sc.parallelize([res])
+        return self.spark.read.json(dataRDD)
+
+    def data_loader(self, path):
+
+        print("Loading file using 'SparkSession'")
+        csvload = self.spark.builder.getOrCreate() \
+                .read \
+                .format("csv") \
+                .options(header=True) \
+                .options(mode="DROPMALFORMED")
+
+        return csvload.option("inferSchema", "true").load(path)
+
+    def load_spark_data_frame_from_url(self, data_url):
+        i = data_url.rfind('/')
+        data_name = data_url[(i + 1):]
+        data_def = {
+            "displayName": data_name,
+            "url": data_url
+        }
+
+        return Downloader(data_def).download(self.data_loader)
+
+    def json_load_spark_data_frame_from_url(self, data_url):
+        i = data_url.rfind('/')
+        data_name = data_url[(i + 1):]
+        data_def = {
+            "displayName": data_name,
+            "url": data_url
+        }
+
+        return Downloader(data_def).download(self.json_data_loader)
 
     def read_dataset_parquet(self, path):
         """This function allows user to read parquet files. It is import to clarify that this method is just based
@@ -71,7 +129,7 @@ class Utilites:
         if num_partitions is not None:
             assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                                   "partitions in file store in memory."
-            # Writting dataset:
+            # Writing dataset:
             df.coalesce(num_partitions).write.parquet(output_path)
 
         else:
@@ -182,6 +240,50 @@ class Utilites:
         dicc = {'string': 'string', 'integer': 'int', 'float': 'float', 'double': 'double'}
 
         return list(y[0] for y in filter(lambda x: x[1] == dicc[data_type], df.dtypes))
+
+
+class Downloader(object):
+    def __init__(self, data_def):
+        self.data_def = data_def
+        self.headers = {"User-Agent": "PixieDust Sample Data Downloader/1.0"}
+
+    def download(self, data_loader):
+        displayName = self.data_def["displayName"]
+        bytesDownloaded = 0
+        if "path" in self.data_def:
+            path = self.data_def["path"]
+        else:
+            url = self.data_def["url"]
+            req = Request(url, None, self.headers)
+            print("Downloading '{0}' from {1}".format(displayName, url))
+            with tempfile.NamedTemporaryFile(delete=False) as f:
+                bytesDownloaded = self.write(urlopen(req), f)
+                path = f.name
+                self.data_def["path"] = path = f.name
+        if path:
+            try:
+                if bytesDownloaded > 0:
+                   print("Downloaded {} bytes".format(bytesDownloaded))
+                print("Creating {1} DataFrame for '{0}'. Please wait...".format(displayName, 'pySpark'))
+                return data_loader(path)
+            finally:
+                print("Successfully created {1} DataFrame for '{0}'".format(displayName, 'pySpark'))
+
+    @staticmethod
+    def write(response, file, chunk_size=8192):
+        total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100
+        total_size = int(total_size)
+        bytes_so_far = 0
+
+        while 1:
+            chunk = response.read(chunk_size)
+            bytes_so_far += len(chunk)
+            if not chunk:
+                break
+            file.write(chunk)
+            total_size = bytes_so_far if bytes_so_far > total_size else total_size
+
+        return bytes_so_far
 
 
 class Airtable:
