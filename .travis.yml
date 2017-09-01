@@ -35,7 +35,7 @@ jdk:
     
 script:
     - py.test
-    - sonnar-scanner
+    - sonar-scanner
     
 notifications:
   email: false
