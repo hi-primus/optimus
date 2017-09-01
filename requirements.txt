@@ -1,8 +1,9 @@
-findspark==1.1.0
 pytest==3.2.1
+matplotlib==2.0.2
+pyspark==2.2.0
+findspark==1.1.0
 spark_df_profiling_optimus==0.0.5
 numpy==1.13.1
-matplotlib==2.0.2
 ipython==6.1.0
-pyspark==2.2.0
-setuptools==36.2.7
+seaborn==0.8
+setuptools==36.3.0
