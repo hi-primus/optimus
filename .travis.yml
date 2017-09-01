@@ -27,7 +27,9 @@ addons:
     organization: "ironmussa"
     token:
       secure: "lF6xKDkh57MC+dlkiovdBA2MPPt7wcH4ANqc07Xyiqnwr898Gy2hwURvqroqm2EFcDQUwd4VJC4+idEjXADP1ugM+FjtHdr4wqDZXXGbO7wCrTdVTYHmPm+0cvmNXyl/JkshWmwktilhYK8Lw+WO3e9NM/WdUKCtY3s1PI2/aFli5XfurySph7jl6wWch/mUO0gBOhKJja5yDc6LPSSx0W+Eczk5FRMOqEAF5OOWFr4baZCLiCr4Fq46JJsNO71Jb/LVGarpo2KUsWOoBYtBldgCcoGK2PQdOSqAG+ObxgFEvZpmi1IeGDDsO26N6vLBfrDmTwS+xB7NEUjrUVpeDLhN9RpoBFyAqOI42UDxbj0lczEIQeze5AHLbxKjmokGxWa8WeGaIzRJqmjTn/ekNLoXpFMLZY4RFxkmAf5puCoOdbIXb8VfhbO/JAiT6O51Xb4zVxDmUETiwYPMKWlZ3ug+Xal/nTTmcZWKBl7GAO1cZAUHg8/EI/SE5SrXxrieo0rmXZ8vZdhp8BFIz0aO5evXnObiwHqeXq5xV8xqhrnSi/mR8uTnqi8Rc/0EaQTMdBTSkBFyCjVDidhwBxGemjSfxXERiEFopumSrvN0K+dS2NJV8JQmgyGPovow4cFYUHE1IiQ5KvRBIT+cSwuvvbjC/i7EL11mCZbtk1pBaKo="
-
+    branches:
+      - master
+      - develop
 jdk:
   - oraclejdk8
 
