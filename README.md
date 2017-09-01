@@ -25,7 +25,7 @@ The following schema shows the structure class organization of the whole framewo
   </li>
 
   <li>
-      utilities
+      Utilities
   </li>
 </ul>
 
