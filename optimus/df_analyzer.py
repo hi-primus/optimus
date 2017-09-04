@@ -517,7 +517,7 @@ class DataFrameAnalyzer:
                                  [file_name, 500, col_number, row_number, data_types])
 
     # Funtion to analize column datatypes, it also plot proportion datatypes and histograms:
-    def column_analyze(self, column_list, plots=True, values_bar=True, print_type=False, num_bars=10):
+    def column_analyze(self, column_list, plots=True, values_bar=True, print_type=False, num_bars=10, print_all=False):
         """
         # This function counts the number of registers in a column that are numbers (integers, floats) and the number of
         # string registers.
@@ -591,7 +591,8 @@ class DataFrameAnalyzer:
         invalid_cols = list(filter(lambda x: x != False, invalid_cols))
 
         json_cols = self._create_dict(["summary", "columns"], [self.general_description(), json_cols])
-        return invalid_cols, json_cols
+        if print_all:
+            return invalid_cols, json_cols
 
     def plot_hist(self, df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True):
         """
@@ -796,3 +797,4 @@ class DataFrameAnalyzer:
         with open(path_to_json_file, 'w') as outfile:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(json_cols)
+
