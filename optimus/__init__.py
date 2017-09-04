@@ -10,7 +10,7 @@ from optimus.utilities import *
 from optimus.df_outliers import *
 
 # module level doc-string
-"""
+__doc__ = """
 Optimus = Optimus is the missing framework for cleansing (cleaning and much more), pre-processing and exploratory data 
 analysis in a distributed fashion with Apache Spark.
 =====================================================================
