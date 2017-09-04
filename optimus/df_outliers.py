@@ -1,5 +1,6 @@
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import col, abs
+from pyspark.sql.functions import col
+from pyspark.sql.functions import abs as absspark
 
 
 class OutlierDetector:
@@ -16,7 +17,7 @@ class OutlierDetector:
         absolute_deviation = (self._df
                              .select(self._column)
                              .orderBy(self._column)
-                             .withColumn(self._column, abs(col(self._column) - self.medianValue))
+                             .withColumn(self._column, absspark(col(self._column) - self.medianValue))
                              .cache())
 
         self.madValue = median(absolute_deviation, column)
