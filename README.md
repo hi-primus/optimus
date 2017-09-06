@@ -55,7 +55,10 @@ pip install optimuspyspark
  - Original developers: [Andrea Rosales](https://github.com/andrearosr), [Hugo Reyes](https://github.com/hugounavez), [Alberto Bonsanto](https://github.com/Bonsanto)
  - Principal developer and maintainer: [Favio Vázquez](https://github.com/faviovazquez)
  
+[![Logo Data](https://www.bbvadata.com/wp-content/uploads/2016/07/bbvada_logo.png)](https://www.bbvadata.com)
+ 
 ## License:
 
 Apache 2.0 © [Iron](https://github.com/ironmussa)
- 
+
+[![Logo Iron](https://ironmussa.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)
