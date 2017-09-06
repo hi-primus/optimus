@@ -23,7 +23,7 @@ def spark_context(request):
         request: pytest.FixtureRequest object
     """
     conf = (SparkConf().setMaster("local[*]"))
-    sc = SparkContext(conf=conf)
+    sc = SparkContext(conf=conf).getOrCreate()
     request.addfinalizer(lambda: sc.stop())
 
     quiet_py4j()
