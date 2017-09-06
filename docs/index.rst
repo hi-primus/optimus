@@ -15,16 +15,6 @@ Optimus is the missing framework for cleaning and pre-processing data in a distr
 
 .. _Catalyst: https://static.javadoc.io/org.apache.spark/spark-catalyst_2.10/1.0.1/index.html#org.apache.spark.sql.catalyst.package
 
-The following schema shows the structure class organization of the whole
-framework:
-
-* Optimus
-
-  - DataFrameTransformer
-  - DataFrameAnalyzer
-  
-* Utilities
-
 Requirements
 ------------
 
@@ -54,11 +44,82 @@ Since functions in this library are mounted in the Spark SQL Context, it
 offers not only the high performance of original Spark SQL functions but
 also an easier usability.
 
-Optimus
--------
+DataFrameProfiler class
+-----------------------
 
-Optimus is a class that wraps DataFrameAnalyzer and DataFrameTransformer
-classes.
+This class makes a profile for a given dataframe and its different general features.
+Based on spark-df-profiling by Julio Soto.
+
+Initially it is a good idea to see a general view of the DataFrame to be analyzed.
+
+Lets assume you have the following dataset, called foo.csv, in your current directory:
+
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| id | firstName            | lastName    | billingId | product    | price | birth      | dummyCol |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 1  | Luis                 | Alvarez$$%! | 123       | Cake       | 10    | 1980/07/07 | never    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 2  | André                | Ampère      | 423       | piza       | 8     | 1950/07/08 | gonna    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 3  | NiELS                | Böhr//((%%  | 551       | pizza      | 8     | 1990/07/09 | give     |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 4  | PAUL                 | dirac$      | 521       | pizza      | 8     | 1954/07/10 | you      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 5  | Albert               | Einstein    | 634       | pizza      | 8     | 1990/07/11 | up       |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 6  | Galileo              | GALiLEI     | 672       | arepa      | 5     | 1930/08/12 | never    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 7  | CaRL                 | Ga%%%uss    | 323       | taco       | 3     | 1970/07/13 | gonna    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 8  | David                | H$$$ilbert  | 624       | taaaccoo   | 3     | 1950/07/14 | let      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 9  | Johannes             | KEPLER      | 735       | taco       | 3     | 1920/04/22 | you      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 10 | JaMES                | M$$ax%%well | 875       | taco       | 3     | 1923/03/12 | down     |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 11 | Isaac                | Newton      | 992       | pasta      | 9     | 1999/02/15 | never    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 12 | Emmy%%               | Nöether$    | 234       | pasta      | 9     | 1993/12/08 | gonna    |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 13 | Max!!!               | Planck!!!   | 111       | hamburguer | 4     | 1994/01/04 | run      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 14 | Fred                 | Hoy&&&le    | 553       | pizzza     | 8     | 1997/06/27 | around   |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 15 | (((   Heinrich ))))) | Hertz       | 116       | pizza      | 8     | 1956/11/30 | and      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 16 | William              | Gilbert###  | 886       | BEER       | 2     | 1958/03/26 | desert   |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 17 | Marie                | CURIE       | 912       | Rice       | 1     | 2000/03/22 | you      |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 18 | Arthur               | COM%%%pton  | 812       | 110790     | 5     | 1899/01/01 | #        |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+| 19 | JAMES                | Chadwick    | 467       | null       | 10    | 1921/05/03 | #        |
++----+----------------------+-------------+-----------+------------+-------+------------+----------+
+
+.. code:: python
+
+    # Import optimus
+    import optimus as op
+    #Import os module for system tools
+    import os
+
+    # Reading dataframe. os.getcwd() returns de current directory of the notebook
+    # 'file:///' is a prefix that specifies the type of file system used, in this
+    # case, local file system (hard drive of the pc) is used.
+    filePath = "file:///" + os.getcwd() + "/foo.csv"
+
+    df = tools.read_dataset_csv(path=filePath,
+                                delimiter_mark=',')
+
+    # Instance of profiler class
+    profiler = op.DataFrameProfiler(df)
+    profiler.profiler()
+
+This overview presents basic information about the DataFrame, like number of variable it has,
+how many are missing values and in which column, the types of each varaible, also some statistical information
+that describes the variable plus a frecuency plot. table that specifies the existing datatypes in each column
+dataFrame and other features. Also, for this particular case, the table of dataType is shown in order to visualize
+a sample of column content.
 
 DataFrameAnalyzer class
 -----------------------
@@ -123,26 +184,19 @@ The following code shows how to instanciate the class to analyze a dataFrame:
 
 .. code:: python
 
-  # Importing DataFrameAnalyzer library
-  from optimus.df_analyzer import DataFrameAnalizer
-  # Importing Utility library
-  from optimus.utilities import *
-  # Setting notebook to show plots inline
-  %matplotlib inline 
-  # Import module for system tools 
-  import os
-  
-  # Instance of Utilities class
-  tools = Utilites(sc)
-  
-  # Reading dataframe. os.getcwd() returns de current directory of the notebook 
-  # 'file:///' is a prefix that specifies the type of file system used, in this
-  # case, local file system (hard drive of the pc) is used.
-  filePath = "file:///" + os.getcwd() + "/foo.csv"
-  
-  df = tools.read_dataset_csv(path=filePath, delimiter_mark=',')
+    # Import optimus
+    import optimus as op
+    # Instance of Utilities class
+    tools = op.Utilites()
 
-  analyzer = DataFrameAnalizer(df=df,pathFile=filePath)
+    # Reading dataframe. os.getcwd() returns de current directory of the notebook
+    # 'file:///' is a prefix that specifies the type of file system used, in this
+    # case, local file system (hard drive of the pc) is used.
+    filePath = "file:///" + os.getcwd() + "/foo.csv"
+  
+    df = tools.read_dataset_csv(path=filePath, delimiter_mark=',')
+
+    analyzer = op.DataFrameAnalizer(df=df,pathFile=filePath)
 
 Methods
 --------
@@ -551,8 +605,8 @@ dataFrame:
 
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
-    # Importing DataFrameTransformer library
-    from optimus.df_transformer import DataFrameTransformer
+    # Importing optimus
+    import optimus as op
 
     # Building a simple dataframe:
     schema = StructType([
@@ -568,7 +622,7 @@ dataFrame:
     df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     # DataFrameTransformer Instanciation:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     transformer.get_data_frame().show()
     
@@ -605,7 +659,7 @@ operation in whole dataframe.
 .. code:: python
 
     # Instantiation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -659,7 +713,7 @@ names.
 .. code:: python
 
     # Instantiation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -714,7 +768,7 @@ argument in DataFrame.
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -774,7 +828,7 @@ in all columns of DataFrame that have same dataType of ``search`` and
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -835,7 +889,7 @@ python feature.
     from pyspark.sql.functions import col
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -882,7 +936,7 @@ New dataFrame:
     from pyspark.sql.functions import col
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -948,7 +1002,7 @@ Here some examples:
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -999,7 +1053,7 @@ New dataFrame:
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1058,8 +1112,8 @@ Building a dummy dataFrame:
 
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
-    # Importing DataFrameTransformer library
-    from optimus.df_transformer import DataFrameTransformer
+    # Importing optimus
+    import optimus as op
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1093,7 +1147,7 @@ New DF:
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1149,7 +1203,7 @@ E.g:
 
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1201,7 +1255,7 @@ E.g:
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1260,8 +1314,8 @@ Building a dummy dataFrame:
 
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
-    # Importing DataFrameTransformer library
-    from optimus.df_transformer import DataFrameTransformer
+    # Importing optimus
+    import optimus as op
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1296,7 +1350,7 @@ New DF:
 
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1353,7 +1407,7 @@ E.g:
 
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1408,8 +1462,8 @@ See the example bellow to more explanations:
 
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
-    # Importing DataFrameTransformer library
-    from optimus.df_transformer import DataFrameTransformer
+    # Importing optimus
+    import optimus as op
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1452,7 +1506,7 @@ New DF:
 .. code:: python
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
@@ -1522,8 +1576,8 @@ date_transform(self, column, current_format, output_format)
 
     # Importing sql types
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
-    # Importing DataFrameTransformer library
-    from optimus.df_transformer import DataFrameTransformer
+    # Importing optimus
+    import optimus as op
 
     # Building a simple dataframe:
     schema = StructType([
@@ -1558,7 +1612,7 @@ New DF:
 
 
     # Instanciation of DataTransformer class:
-    transformer = DataFrameTransformer(df)
+    transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
