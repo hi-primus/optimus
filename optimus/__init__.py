@@ -10,11 +10,17 @@ from optimus.utilities import *
 from optimus.df_outliers import *
 # Import iPython
 from IPython.display import display, HTML
+# Import Spark session
+from pyspark.sql.session import SparkSession
 
 
 def printHTML(html):
     display(HTML(html))
 
+printHTML("<div>Starting or getting SparkSession and SparkContext</div>")
+
+spark = SparkSession.builder.enableHiveSupport().getOrCreate()
+sc = spark.sparkContext
 
 message = "Optimus successfully imported. Have fun :)"
 
