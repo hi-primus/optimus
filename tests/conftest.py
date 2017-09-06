@@ -5,6 +5,8 @@ import logging
 import pytest
 
 from pyspark.sql.session import SparkSession
+from pyspark import SparkConf
+from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 
 
@@ -15,12 +17,15 @@ def quiet_py4j():
 
 
 @pytest.fixture(scope="session")
-def spark_context():
+def spark_context(request):
     """ fixture for creating a spark context
     Args:
         request: pytest.FixtureRequest object
     """
-    sc = SparkSession.sparkContext
+    conf = (SparkConf().setMaster("local[*]"))
+    sc = SparkContext(conf=conf)
+    request.addfinalizer(lambda: sc.stop())
+
     quiet_py4j()
     return sc
 
