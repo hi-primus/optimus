@@ -72,10 +72,10 @@ class OutlierDetector:
         return self._df
 
     def get_data_frame(self):
-        """
+        """This function return the dataframe of the class
         :rtype: pyspark.sql.dataframe.DataFrame
         """
-        self.get_data_frame()
+        return self._df
 
 
 def median(df, column):
