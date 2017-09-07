@@ -798,12 +798,13 @@ class DataFrameAnalyzer:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(json_cols)
 
-    def display_optimus(self, df):
+    @classmethod
+    def display_optimus(cls, df):
         """
         Lets you visualize your Spark object in different ways: table, charts, maps, etc.
         :param df: spark dataframe to be analyzed
         :return: Amazing visualizations for your spark dataframes.
         """
-        # Import pixiedust
+        # Import pixiedust-optimus
         from pixiedust_optimus.display import display
         display(df)
