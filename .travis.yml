@@ -17,6 +17,7 @@ before_install:
     - pip install ipython
     - pip install pytest-spark
     - pip install spark-df-profiling-optimus
+    - pip install pixiedust-optimus
     
 install:
     - ./install-spark-2-2.sh
