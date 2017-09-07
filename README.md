@@ -14,24 +14,15 @@
 
 Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library or framework is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
 
-The following schema shows the structure class organization of the whole framework:
-
-<ul>
-  <li> Optimus
-      <ul>
-          <li>DataFrameTransformer</li>
-          <li>DataFrameAnalyzer</li>
-      </ul>
-  </li>
-
-  <li>
-      Utilities
-  </li>
-</ul>
-
 ## Announcement!!
 
-We are very happy to annouce that Optimus main stable branch will 
+The first version of Optimus is out now! Check out the new examples and documentation to see all the changes. 
+We want to thank the projects we rely on: pixiedust and spark-df-profiling and the help from our amazing 
+community. We hope that you find the framework useful and interesting. Have fun!
+
+### Optimus for Spark 1.6.x
+
+Optimus main stable branch will 
 work now for Spark 2.2.0 The 1.6.x version is now under maintenance, 
 the last tag release for this Spark version is the 0.4.0. We strongly 
 suggest that you use the >2.x version of the framework because the 
