@@ -99,7 +99,6 @@ class GeneralDescripTable:
 class DataTypeTable:
     def __init__(self, lis):
         self.lis = lis
-        # self.tuples = tuples
         self.html = ""
 
     @classmethod
@@ -470,11 +469,11 @@ class DataFrameAnalyzer:
 
     def _exchange_data(self):  # Swaps the data among DF and the Sample
         if self._currently_observed == 0:
-            self._hiddenData = self._df
+            self._hidden_data = self._df
             self._df = self._sample
 
         else:
-            self._df = self._hiddenData
+            self._df = self._hidden_data
 
     def analyze_sample(self):
         if self._currently_observed == 0:
