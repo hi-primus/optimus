@@ -1,5 +1,5 @@
 findspark==1.1.0
-pytest==3.2.1
+pytest==3.2.2
 spark_df_profiling_optimus==0.1.1
 numpy==1.13.1
 matplotlib==2.0.2
