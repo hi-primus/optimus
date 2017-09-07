@@ -30,9 +30,9 @@ class ColumnTables:
     def __init__(self, col_name, data_type_inferred, qtys, percents):
         self.qtys = qtys
         self.percents = percents
-        self.colName = col_name
-        self.dataTypeInferred = data_type_inferred
-        self.labelsTable = ["None", "Empty str", "String", "Integer", "Float"]
+        self.col_name = col_name
+        self.data_type_inferred = data_type_inferred
+        self.labels_table = ["None", "Empty str", "String", "Integer", "Float"]
 
     def _repr_html_(self):
         # Creation of blank table:
@@ -40,12 +40,12 @@ class ColumnTables:
 
         # Adding a row:
         html.append("<tr>")
-        html.append("<td colspan=3 >{0}</td>".format("<b> Column name: </b>" + self.colName))
+        html.append("<td colspan=3 >{0}</td>".format("<b> Column name: </b>" + self.col_name))
         html.append("</tr>")
 
         # Adding a row:
         html.append("<tr>")
-        html.append("<td colspan=3 >{0}</td>".format("<b> Column datatype: </b>" + self.dataTypeInferred))
+        html.append("<td colspan=3 >{0}</td>".format("<b> Column datatype: </b>" + self.data_type_inferred))
         html.append("</tr>")
 
         # Adding a row:
@@ -55,9 +55,9 @@ class ColumnTables:
         html.append("<th>{0}</td>".format('Percentage'))
         html.append("</tr>")
 
-        for ind in range(len(self.labelsTable)):
+        for ind in range(len(self.labels_table)):
             html.append("<tr>")
-            html.append("<td>{0}</td>".format(self.labelsTable[ind]))
+            html.append("<td>{0}</td>".format(self.labels_table[ind]))
             html.append("<td>{0}</td>".format(self.qtys[ind + 1]))
             html.append("<td>{0}</td>".format("%0.2f" % self.percents[ind] + " %"))
             html.append("</tr>")
@@ -94,20 +94,19 @@ class GeneralDescripTable:
             html.append("</tr>")
 
         return ''.join(html)
-        # self.body =  ''.join(html)
 
 
 class DataTypeTable:
-    def __init__(self, lista):
-        self.lista = lista
+    def __init__(self, lis):
+        self.lis = lis
         # self.tuples = tuples
         self.html = ""
 
     @classmethod
-    def col_table(cls, lista):
+    def col_table(cls, lis):
         html = []
         html.append("<table width=100%>")
-        for x in lista:
+        for x in lis:
             html.append("<tr >")
             html.append("<td style='text-align: center'>")
 
@@ -126,7 +125,7 @@ class DataTypeTable:
 
         # This verify is some of list of types is empty.
         # The idea is not to draw an empty table.
-        ver = [x != [] for x in self.lista]
+        ver = [x != [] for x in self.lis]
 
         # First row of table:
         self.html.append("<tr>")
@@ -139,14 +138,14 @@ class DataTypeTable:
 
         # Adding the second row:
         self.html.append("<tr>")
-        for x in range(len(self.lista)):
+        for x in range(len(self.lis)):
             if ver[x]:
                 # Adding a td
                 self.html.append("<td style='vertical-align: top;text-align: center;'>")
                 # Adding a table:
 
 
-                self.html.append(self.col_table(self.lista[x]))
+                self.html.append(self.col_table(self.lis[x]))
 
                 self.html.append("</td>")
         self.html.append("</tr>")
@@ -290,8 +289,8 @@ class DataFrameAnalyzer:
 
             # Verifying if there is a column with different datatypes:
             # Sum the first and the second number:
-            sum_first_and_second = lambda lista: [lista[x] + lista[0] if x == 1 else lista[x] for x in
-                                                  range(len(lista))][
+            sum_first_and_second = lambda lis: [lis[x] + lis[0] if x == 1 else lis[x] for x in
+                                                  range(len(lis))][
                                                  1:]
             # Check if the column has different datatypes:
             different_types = sum([1 if x == 0 else 0 for x in sum_first_and_second(f[1:])]) < 2
@@ -395,8 +394,8 @@ class DataFrameAnalyzer:
 
     # This function, place values of frequency in histogram bars.
     @classmethod
-    def _values_on_bar(cls, plotFig):
-        rects = plotFig.patches
+    def _values_on_bar(cls, plot_fig):
+        rects = plot_fig.patches
         for rect in rects:
             # Getting height of bars:
             height = rect.get_height()
@@ -406,7 +405,7 @@ class DataFrameAnalyzer:
                      va='bottom', rotation=90)
 
     def _plot_num_hist(self, hist_dict, column, values_bar):
-        values = [list(lista) for lista in list(zip(*[(dic['value'], dic['cont']) for dic in hist_dict]))]
+        values = [list(lis) for lis in list(zip(*[(dic['value'], dic['cont']) for dic in hist_dict]))]
 
         bins = values[0]
 
@@ -437,7 +436,7 @@ class DataFrameAnalyzer:
         # Extracting values from dictionary
         k = list(filter(lambda k: k != 'cont', hist_dict[0].keys()))[0]
 
-        values = [list(lista) for lista in list(zip(*[(dic[k], dic['cont']) for dic in hist_dict]))]
+        values = [list(lis) for lis in list(zip(*[(dic[k], dic['cont']) for dic in hist_dict]))]
         index = np.arange(len(values[0]))
 
         # Plot settings
@@ -471,11 +470,11 @@ class DataFrameAnalyzer:
 
     def _exchange_data(self):  # Swaps the data among DF and the Sample
         if self._currently_observed == 0:
-            self.__hiddenData = self._df
+            self._hiddenData = self._df
             self._df = self._sample
 
         else:
-            self._df = self.__hiddenData
+            self._df = self._hiddenData
 
     def analyze_sample(self):
         if self._currently_observed == 0:
@@ -491,7 +490,6 @@ class DataFrameAnalyzer:
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
-        # assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
 
     def get_data_frame(self):

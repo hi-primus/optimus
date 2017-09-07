@@ -12,21 +12,21 @@ class OutlierDetector:
         self._df = df
         self._column = column
 
-        self.medianValue = median(self._df, self._column)
+        self.median_value = median(self._df, self._column)
 
         absolute_deviation = (self._df
                              .select(self._column)
                              .orderBy(self._column)
-                             .withColumn(self._column, absspark(col(self._column) - self.medianValue))
+                             .withColumn(self._column, absspark(col(self._column) - self.median_value))
                              .cache())
 
-        self.madValue = median(absolute_deviation, column)
+        self.mad_value = median(absolute_deviation, column)
 
         self.threshold = 2
 
         self._limits = []
-        self._limits.append(round((self.medianValue - self.threshold * self.madValue), 2))
-        self._limits.append(round((self.medianValue + self.threshold * self.madValue), 2))
+        self._limits.append(round((self.median_value - self.threshold * self.mad_value), 2))
+        self._limits.append(round((self.median_value + self.threshold * self.mad_value), 2))
 
     def run(self):
         """

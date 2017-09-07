@@ -6,25 +6,25 @@ from optimus.df_analyzer import DataFrameAnalyzer
 from optimus.df_analyzer import DataFrameProfiler
 # Importing Utility library
 from optimus.utilities import *
-# Import Outliers library
+# Importing Outliers library
 from optimus.df_outliers import *
-# Import iPython
+# Importing iPython
 from IPython.display import display, HTML
-# Import Spark session
+# Importing Spark session
 from pyspark.sql.session import SparkSession
 
 
-def printHTML(html):
+def print_html(html):
     display(HTML(html))
 
-printHTML("<div>Starting or getting SparkSession and SparkContext</div>")
+print_html("<div>Starting or getting SparkSession and SparkContext</div>")
 
 spark = SparkSession.builder.enableHiveSupport().getOrCreate()
 sc = spark.sparkContext
 
 message = "Optimus successfully imported. Have fun :)"
 
-printHTML(
+print_html(
     """
     <div style="margin:10px">
         <a href="https://github.com/ironmussa/Optimus" target="_new">
