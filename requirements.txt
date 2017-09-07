@@ -1,4 +1,4 @@
-pytest==3.2.1
+pytest==3.2.2
 matplotlib==2.0.2
 pyspark==2.2.0
 findspark==1.1.0
