@@ -189,7 +189,7 @@ class Utilities:
 
                 # Creates new folder:
                 os.mkdir(folder_path)
-                print("Listo.")
+                print("Done.")
 
             self.__sc.setCheckpointDir(dirName="file:///" + folder_path)
 
