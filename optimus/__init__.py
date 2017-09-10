@@ -12,28 +12,45 @@ from optimus.df_outliers import *
 from IPython.display import display, HTML
 # Importing Spark session
 from pyspark.sql.session import SparkSession
+# Basic imports
+import os
 
+try:
+    get_ipython
 
-def print_html(html):
-    display(HTML(html))
+    def print_html(html):
+        display(HTML(html))
 
-print_html("<div>Starting or getting SparkSession and SparkContext</div>")
+    print_html("<div>Starting or getting SparkSession and SparkContext.</div>")
 
-spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-sc = spark.sparkContext
+    spark = SparkSession.builder.enableHiveSupport().getOrCreate()
+    sc = spark.sparkContext
 
-message = "Optimus successfully imported. Have fun :)"
+    print_html("<div>Setting checkpoint folder (local). If you are in a cluster change it with "
+               "set_check_point_folder(path,'hadoop').</div>")
 
-print_html(
-    """
-    <div style="margin:10px">
-        <a href="https://github.com/ironmussa/Optimus" target="_new">
-            <img src="http://optimus-ironmussa.readthedocs.io/en/latest/_images/logoOptimus.png" style="float:left;margin-right:10px" height="50" width="50"/>
-        </a>
-        <span>{0}</span>
-    </div>
-    """.format(message)
-)
+    Utilities().set_check_point_folder(os.getcwd(), "local")
+
+    message = "Optimus successfully imported. Have fun :)."
+
+    print_html(
+        """
+        <div style="margin:10px">
+            <a href="https://github.com/ironmussa/Optimus" target="_new">
+                <img src="http://optimus-ironmussa.readthedocs.io/en/latest/_images/logoOptimus.png" style="float:left;margin-right:10px" height="50" width="50"/>
+            </a>
+            <span>{0}</span>
+        </div>
+        """.format(message)
+    )
+except:
+    print("Starting or getting SparkSession and SparkContext.")
+    spark = SparkSession.builder.enableHiveSupport().getOrCreate()
+    sc = spark.sparkContext
+    print("Setting checkpoint folder (local). If you are in a cluster change it with set_check_point_"
+          "folder(path,'hadoop').")
+    Utilities().set_check_point_folder(os.getcwd(), "local")
+    print("SparkSession and Context initialized. CheckPoint folder created. Optimus successfully imported. Have fun :).")
 
 # module level doc-string
 __doc__ = """
