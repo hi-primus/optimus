@@ -177,18 +177,19 @@ class DataFrameProfiler:
 
 # This class makes an analisis of dataframe datatypes and its different general features.
 class DataFrameAnalyzer:
-    def __init__(self, df, path_file, pu=0.1, seed=13):
+    def __init__(self, df, path_file=None, pu=0.1, seed=13):
         # Asserting if df is dataFrame datatype.
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
             "Error, df argument must be a pyspark.sql.dataframe.DataFrame instance"
         # Asserting if path specified is string datatype
-        assert (isinstance(path_file, str)), \
-            "Error, path_file argument must be string datatype."
+        assert isinstance(path_file, (str, type(None))), \
+            "Error, path_file argument must be string datatype or NoneType."
         # Asserting if path includes the type of filesystem
-        assert (("file:///" == path_file[0:8]) or ("hdfs:///" == path_file[0:8])), \
-            "Error: path must be with a 'file://' prefix \
-            if the file is in the local disk or a 'path://' \
-            prefix if the file is in the Hadood file system"
+        if isinstance(path_file, type(None)):
+            assert (("file:///" == path_file[0:8]) or ("hdfs:///" == path_file[0:8])), \
+                "Error: path must be with a 'file://' prefix \
+                if the file is in the local disk or a 'path://' \
+                prefix if the file is in the Hadood file system"
 
         # Asserting if seed is integer
         assert isinstance(seed, int), "Error, seed must be an integer"
@@ -198,7 +199,10 @@ class DataFrameAnalyzer:
 
         # Dataframe
         self._row_number = 0
-        self._path_file = path_file
+        if path_file is not None:
+            self._path_file = path_file
+        elif path_file is None:
+            self._path_file = None
         self._currently_observed = 0  # 0 => whole 1 => partition
         self._df = df
         self._df.cache()
@@ -499,7 +503,10 @@ class DataFrameAnalyzer:
     def general_description(self):
         # General data description:
         # Filename:
-        file_name = self._path_file.split('/')[-1]
+        if self._path_file is None:
+            file_name = "file with no path"
+        else:
+            file_name = self._path_file.split('/')[-1]
         # Counting the number of columns:
         row_number = self._df.count()
         # Counting the number of rows:
