@@ -43,7 +43,8 @@ try:
         </div>
         """.format(message)
     )
-except:
+except Exception:
+    print("Shell detected")
     print("Starting or getting SparkSession and SparkContext.")
     spark = SparkSession.builder.enableHiveSupport().getOrCreate()
     sc = spark.sparkContext
