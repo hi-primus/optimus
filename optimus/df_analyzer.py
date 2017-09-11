@@ -30,9 +30,9 @@ class ColumnTables:
     def __init__(self, col_name, data_type_inferred, qtys, percents):
         self.qtys = qtys
         self.percents = percents
-        self.colName = col_name
-        self.dataTypeInferred = data_type_inferred
-        self.labelsTable = ["None", "Empty str", "String", "Integer", "Float"]
+        self.col_name = col_name
+        self.data_type_inferred = data_type_inferred
+        self.labels_table = ["None", "Empty str", "String", "Integer", "Float"]
 
     def _repr_html_(self):
         # Creation of blank table:
@@ -40,12 +40,12 @@ class ColumnTables:
 
         # Adding a row:
         html.append("<tr>")
-        html.append("<td colspan=3 >{0}</td>".format("<b> Column name: </b>" + self.colName))
+        html.append("<td colspan=3 >{0}</td>".format("<b> Column name: </b>" + self.col_name))
         html.append("</tr>")
 
         # Adding a row:
         html.append("<tr>")
-        html.append("<td colspan=3 >{0}</td>".format("<b> Column datatype: </b>" + self.dataTypeInferred))
+        html.append("<td colspan=3 >{0}</td>".format("<b> Column datatype: </b>" + self.data_type_inferred))
         html.append("</tr>")
 
         # Adding a row:
@@ -55,9 +55,9 @@ class ColumnTables:
         html.append("<th>{0}</td>".format('Percentage'))
         html.append("</tr>")
 
-        for ind in range(len(self.labelsTable)):
+        for ind in range(len(self.labels_table)):
             html.append("<tr>")
-            html.append("<td>{0}</td>".format(self.labelsTable[ind]))
+            html.append("<td>{0}</td>".format(self.labels_table[ind]))
             html.append("<td>{0}</td>".format(self.qtys[ind + 1]))
             html.append("<td>{0}</td>".format("%0.2f" % self.percents[ind] + " %"))
             html.append("</tr>")
@@ -94,20 +94,18 @@ class GeneralDescripTable:
             html.append("</tr>")
 
         return ''.join(html)
-        # self.body =  ''.join(html)
 
 
 class DataTypeTable:
-    def __init__(self, lista):
-        self.lista = lista
-        # self.tuples = tuples
+    def __init__(self, lis):
+        self.lis = lis
         self.html = ""
 
     @classmethod
-    def col_table(cls, lista):
+    def col_table(cls, lis):
         html = []
         html.append("<table width=100%>")
-        for x in lista:
+        for x in lis:
             html.append("<tr >")
             html.append("<td style='text-align: center'>")
 
@@ -126,7 +124,7 @@ class DataTypeTable:
 
         # This verify is some of list of types is empty.
         # The idea is not to draw an empty table.
-        ver = [x != [] for x in self.lista]
+        ver = [x != [] for x in self.lis]
 
         # First row of table:
         self.html.append("<tr>")
@@ -139,14 +137,14 @@ class DataTypeTable:
 
         # Adding the second row:
         self.html.append("<tr>")
-        for x in range(len(self.lista)):
+        for x in range(len(self.lis)):
             if ver[x]:
                 # Adding a td
                 self.html.append("<td style='vertical-align: top;text-align: center;'>")
                 # Adding a table:
 
 
-                self.html.append(self.col_table(self.lista[x]))
+                self.html.append(self.col_table(self.lis[x]))
 
                 self.html.append("</td>")
         self.html.append("</tr>")
@@ -179,18 +177,19 @@ class DataFrameProfiler:
 
 # This class makes an analisis of dataframe datatypes and its different general features.
 class DataFrameAnalyzer:
-    def __init__(self, df, path_file, pu=0.1, seed=13):
+    def __init__(self, df, path_file=None, pu=0.1, seed=13):
         # Asserting if df is dataFrame datatype.
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
             "Error, df argument must be a pyspark.sql.dataframe.DataFrame instance"
         # Asserting if path specified is string datatype
-        assert (isinstance(path_file, str)), \
-            "Error, path_file argument must be string datatype."
+        assert isinstance(path_file, (str, type(None))), \
+            "Error, path_file argument must be string datatype or NoneType."
         # Asserting if path includes the type of filesystem
-        assert (("file:///" == path_file[0:8]) or ("hdfs:///" == path_file[0:8])), \
-            "Error: path must be with a 'file://' prefix \
-            if the file is in the local disk or a 'path://' \
-            prefix if the file is in the Hadood file system"
+        if isinstance(path_file, type(None)):
+            assert (("file:///" == path_file[0:8]) or ("hdfs:///" == path_file[0:8])), \
+                "Error: path must be with a 'file://' prefix \
+                if the file is in the local disk or a 'path://' \
+                prefix if the file is in the Hadood file system"
 
         # Asserting if seed is integer
         assert isinstance(seed, int), "Error, seed must be an integer"
@@ -200,7 +199,10 @@ class DataFrameAnalyzer:
 
         # Dataframe
         self._row_number = 0
-        self._path_file = path_file
+        if path_file is not None:
+            self._path_file = path_file
+        elif path_file is None:
+            self._path_file = None
         self._currently_observed = 0  # 0 => whole 1 => partition
         self._df = df
         self._df.cache()
@@ -290,8 +292,8 @@ class DataFrameAnalyzer:
 
             # Verifying if there is a column with different datatypes:
             # Sum the first and the second number:
-            sum_first_and_second = lambda lista: [lista[x] + lista[0] if x == 1 else lista[x] for x in
-                                                  range(len(lista))][
+            sum_first_and_second = lambda lis: [lis[x] + lis[0] if x == 1 else lis[x] for x in
+                                                  range(len(lis))][
                                                  1:]
             # Check if the column has different datatypes:
             different_types = sum([1 if x == 0 else 0 for x in sum_first_and_second(f[1:])]) < 2
@@ -395,8 +397,8 @@ class DataFrameAnalyzer:
 
     # This function, place values of frequency in histogram bars.
     @classmethod
-    def _values_on_bar(cls, plotFig):
-        rects = plotFig.patches
+    def _values_on_bar(cls, plot_fig):
+        rects = plot_fig.patches
         for rect in rects:
             # Getting height of bars:
             height = rect.get_height()
@@ -406,7 +408,7 @@ class DataFrameAnalyzer:
                      va='bottom', rotation=90)
 
     def _plot_num_hist(self, hist_dict, column, values_bar):
-        values = [list(lista) for lista in list(zip(*[(dic['value'], dic['cont']) for dic in hist_dict]))]
+        values = [list(lis) for lis in list(zip(*[(dic['value'], dic['cont']) for dic in hist_dict]))]
 
         bins = values[0]
 
@@ -437,7 +439,7 @@ class DataFrameAnalyzer:
         # Extracting values from dictionary
         k = list(filter(lambda k: k != 'cont', hist_dict[0].keys()))[0]
 
-        values = [list(lista) for lista in list(zip(*[(dic[k], dic['cont']) for dic in hist_dict]))]
+        values = [list(lis) for lis in list(zip(*[(dic[k], dic['cont']) for dic in hist_dict]))]
         index = np.arange(len(values[0]))
 
         # Plot settings
@@ -471,11 +473,11 @@ class DataFrameAnalyzer:
 
     def _exchange_data(self):  # Swaps the data among DF and the Sample
         if self._currently_observed == 0:
-            self.__hiddenData = self._df
+            self._hidden_data = self._df
             self._df = self._sample
 
         else:
-            self._df = self.__hiddenData
+            self._df = self._hidden_data
 
     def analyze_sample(self):
         if self._currently_observed == 0:
@@ -491,7 +493,6 @@ class DataFrameAnalyzer:
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
-        # assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
 
     def get_data_frame(self):
@@ -502,7 +503,10 @@ class DataFrameAnalyzer:
     def general_description(self):
         # General data description:
         # Filename:
-        file_name = self._path_file.split('/')[-1]
+        if self._path_file is None:
+            file_name = "file with no path"
+        else:
+            file_name = self._path_file.split('/')[-1]
         # Counting the number of columns:
         row_number = self._df.count()
         # Counting the number of rows:
@@ -517,7 +521,7 @@ class DataFrameAnalyzer:
                                  [file_name, 500, col_number, row_number, data_types])
 
     # Funtion to analize column datatypes, it also plot proportion datatypes and histograms:
-    def column_analyze(self, column_list, plots=True, values_bar=True, print_type=False, num_bars=10):
+    def column_analyze(self, column_list, plots=True, values_bar=True, print_type=False, num_bars=10, print_all=False):
         """
         # This function counts the number of registers in a column that are numbers (integers, floats) and the number of
         # string registers.
@@ -591,7 +595,8 @@ class DataFrameAnalyzer:
         invalid_cols = list(filter(lambda x: x != False, invalid_cols))
 
         json_cols = self._create_dict(["summary", "columns"], [self.general_description(), json_cols])
-        return invalid_cols, json_cols
+        if print_all:
+            return invalid_cols, json_cols
 
     def plot_hist(self, df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True):
         """
@@ -796,3 +801,14 @@ class DataFrameAnalyzer:
         with open(path_to_json_file, 'w') as outfile:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(json_cols)
+
+    @classmethod
+    def display_optimus(cls, df):
+        """
+        Lets you visualize your Spark object in different ways: table, charts, maps, etc.
+        :param df: spark dataframe to be analyzed
+        :return: Amazing visualizations for your spark dataframes.
+        """
+        # Import pixiedust-optimus
+        from pixiedust_optimus.display import display
+        display(df)

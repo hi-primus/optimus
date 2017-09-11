@@ -1,5 +1,6 @@
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import col, abs
+from pyspark.sql.functions import col
+from pyspark.sql.functions import abs as absspark
 
 
 class OutlierDetector:
@@ -11,21 +12,21 @@ class OutlierDetector:
         self._df = df
         self._column = column
 
-        self.medianValue = median(self._df, self._column)
+        self.median_value = median(self._df, self._column)
 
         absolute_deviation = (self._df
                              .select(self._column)
                              .orderBy(self._column)
-                             .withColumn(self._column, abs(col(self._column) - self.medianValue))
+                             .withColumn(self._column, absspark(col(self._column) - self.median_value))
                              .cache())
 
-        self.madValue = median(absolute_deviation, column)
+        self.mad_value = median(absolute_deviation, column)
 
         self.threshold = 2
 
         self._limits = []
-        self._limits.append(round((self.medianValue - self.threshold * self.madValue), 2))
-        self._limits.append(round((self.medianValue + self.threshold * self.madValue), 2))
+        self._limits.append(round((self.median_value - self.threshold * self.mad_value), 2))
+        self._limits.append(round((self.median_value + self.threshold * self.mad_value), 2))
 
     def run(self):
         """
@@ -71,10 +72,10 @@ class OutlierDetector:
         return self._df
 
     def get_data_frame(self):
-        """
+        """This function return the dataframe of the class
         :rtype: pyspark.sql.dataframe.DataFrame
         """
-        self.get_data_frame()
+        return self._df
 
 
 def median(df, column):

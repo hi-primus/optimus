@@ -5,7 +5,7 @@ It uses all the power of Apache Spark (optimized via Catalyst) to do it. It impl
 
 * Apache Spark 2.2.0
 
-* Python 3.5
+* Python>=3.5
 
 - Installation:
 

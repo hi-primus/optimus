@@ -3,13 +3,13 @@
 import os
 # Importing SQLContext:
 from pyspark.sql.session import SparkSession
-# Importando modulo para eliminar carpetas
+# Importing module to delete folders
 from shutil import rmtree
-# Importando modulo para trabajar con urls
+# Importing module to work with urls
 import urllib.request
-# Importando modulo de expresiones regulares
+# Importing module for regex
 import re
-# Import SparkContext
+# Importing SparkContext
 import pyspark
 # URL reading
 import tempfile
@@ -67,8 +67,8 @@ class Utilities:
     def json_data_loader(self, path):
         res = open(path, 'r').read()
         print("Loading file using a pyspark dataframe for spark 2")
-        dataRDD = self.__sc.parallelize([res])
-        return self.spark.read.json(dataRDD)
+        data_rdd = self.__sc.parallelize([res])
+        return self.spark.read.json(data_rdd)
 
     def data_loader(self, path):
 
@@ -189,7 +189,7 @@ class Utilities:
 
                 # Creates new folder:
                 os.mkdir(folder_path)
-                print("Listo.")
+                print("Done.")
 
             self.__sc.setCheckpointDir(dirName="file:///" + folder_path)
 
@@ -248,26 +248,26 @@ class Downloader(object):
         self.headers = {"User-Agent": "PixieDust Sample Data Downloader/1.0"}
 
     def download(self, data_loader):
-        displayName = self.data_def["displayName"]
-        bytesDownloaded = 0
+        display_name = self.data_def["displayName"]
+        bytes_downloaded = 0
         if "path" in self.data_def:
             path = self.data_def["path"]
         else:
             url = self.data_def["url"]
             req = Request(url, None, self.headers)
-            print("Downloading '{0}' from {1}".format(displayName, url))
+            print("Downloading '{0}' from {1}".format(display_name, url))
             with tempfile.NamedTemporaryFile(delete=False) as f:
-                bytesDownloaded = self.write(urlopen(req), f)
+                bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
         if path:
             try:
-                if bytesDownloaded > 0:
-                   print("Downloaded {} bytes".format(bytesDownloaded))
-                print("Creating {1} DataFrame for '{0}'. Please wait...".format(displayName, 'pySpark'))
+                if bytes_downloaded > 0:
+                   print("Downloaded {} bytes".format(bytes_downloaded))
+                print("Creating {1} DataFrame for '{0}'. Please wait...".format(display_name, 'pySpark'))
                 return data_loader(path)
             finally:
-                print("Successfully created {1} DataFrame for '{0}'".format(displayName, 'pySpark'))
+                print("Successfully created {1} DataFrame for '{0}'".format(display_name, 'pySpark'))
 
     @staticmethod
     def write(response, file, chunk_size=8192):

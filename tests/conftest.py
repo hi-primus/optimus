@@ -5,7 +5,6 @@ import logging
 import pytest
 
 from pyspark.sql.session import SparkSession
-from pyspark import SparkConf
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 
@@ -22,8 +21,7 @@ def spark_context(request):
     Args:
         request: pytest.FixtureRequest object
     """
-    conf = (SparkConf().setMaster("local[2]").setAppName("pytest-pyspark-local-testing"))
-    sc = SparkContext(conf=conf)
+    sc = SparkContext.getOrCreate()
     request.addfinalizer(lambda: sc.stop())
 
     quiet_py4j()
@@ -31,11 +29,9 @@ def spark_context(request):
 
 
 @pytest.fixture(scope="session")
-def hive_context(spark_context):
+def hive_context():
     """  fixture for creating a Hive Context. Creating a fixture enables it to be reused across all
         tests in a session
-    Args:
-        spark_context: spark_context fixture
     Returns:
         HiveContext for tests
     """
