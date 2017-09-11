@@ -1,4 +1,4 @@
-[![Logo Optimus](https://github.com/ironmussa/Optimus/blob/master/images/logoOptimus.png)](https://github.com/ironmussa/Optimus)
+[![Logo Optimus](https://github.com/ironmussa/Optimus/blob/master/images/logoOptimus.png)](https://hioptimus.com)
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)
  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)
@@ -7,12 +7,24 @@
 [![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Dependency Status](https://gemnasium.com/badges/github.com/ironmussa/Optimus.svg)](https://gemnasium.com/github.com/ironmussa/Optimus) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=ironmussa-optimus:optimus)](https://sonarqube.com/dashboard/index/ironmussa-optimus:optimus)
 
 
+Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of 
+Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will 
+make your life much easier. The first obvious advantage over any other public data cleaning library or framework is that 
+it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
+
+Click on Optimus to enter our Website:
+
+<a href="https://hioptimus.com"><img src="https://github.com/ironmussa/Optimus/blob/master/images/robotOptimus.png" alt="Click Me!" border="0" height="220"></a>
 
 ## Click below for the official documentation
 
 [![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://optimus-ironmussa.readthedocs.io/en/latest/)
 
-Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will make your life much easier. The first obvious advantage over any other public data cleaning library or framework is that it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
+## Survey 
+
+Please take a couple of minutes to help shape the Optimus' Roadmap:
+
+### https://optimusdata.typeform.com/to/aEnYRY
 
 ## Announcement!!
 
@@ -53,3 +65,5 @@ pip install optimuspyspark
 Apache 2.0 © [Iron](https://github.com/ironmussa)
 
 [![Logo Iron](https://ironmussa.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)
+
+<a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
