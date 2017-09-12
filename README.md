@@ -12,7 +12,7 @@ Apache Spark (optimized via Catalyst) to do so. It implements several handy tool
 make your life much easier. The first obvious advantage over any other public data cleaning library or framework is that 
 it will work on your laptop or your big cluster, and second, it is amazingly easy to install, use and understand.
 
-Click on Optimus to enter our Website:
+Click on Optimus to enter in our Website:
 
 <a href="https://hioptimus.com"><img src="https://github.com/ironmussa/Optimus/blob/master/images/robotOptimus.png" alt="Click Me!" border="0" height="220"></a>
 
