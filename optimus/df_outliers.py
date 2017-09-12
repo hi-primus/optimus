@@ -77,6 +77,12 @@ class OutlierDetector:
         """
         return self._df
 
+    def show(self):
+        """This function shows the dataframe of the class
+        :rtype: pyspark.sql.dataframe.DataFrame.show()
+        """
+        return self._df.show()
+
 
 def median(df, column):
     return df.approxQuantile(column, [0.5], 0.01)[0]
