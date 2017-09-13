@@ -1,6 +1,7 @@
 import airbrake
 import optimus as op
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField
+from pyspark.sql.functions import col
 import pyspark
 import sys
 
@@ -24,9 +25,17 @@ def create_df(spark_session):
         df = spark_session.createDataFrame(list(zip(cities, countries, population)), schema=schema)
         assert isinstance(df, pyspark.sql.dataframe.DataFrame)
         return df
-    except RuntimeError as err:
-        logger.exception('Could not run trim_col().')
-        print(err)
+    except RuntimeError:
+        logger.exception('Could not create dataframe.')
+        sys.exit(1)
+
+
+def test_transformer(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+    except RuntimeError:
+        logger.exception('Could not create transformer.')
         sys.exit(1)
 
 
@@ -35,9 +44,8 @@ def test_trim_col(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.trim_col("*")
         assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
-    except RuntimeError as err:
+    except RuntimeError:
         logger.exception('Could not run trim_col().')
-        print(err)
         sys.exit(1)
 
 
@@ -46,7 +54,37 @@ def test_drop_col(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.drop_col("country")
         assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
-    except RuntimeError as err:
+    except RuntimeError:
         logger.exception('Could not run drop_col().')
-        print(err)
+        sys.exit(1)
+
+
+def test_keep_col(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.keep_col(['city', 'population'])
+        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+    except RuntimeError:
+        logger.exception('Could not run keep_col().')
+        sys.exit(1)
+
+
+def test_replace_col(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.replace_col(search='Tokyo', change_to='Maracaibo', columns='city')
+        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+    except RuntimeError:
+        logger.exception('Could not run keep_col().')
+        sys.exit(1)
+
+
+def test_delete_row(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        func = lambda pop: (pop > 6500000) & (pop <= 30000000)
+        transformer.delete_row(func(col('population')))
+        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+    except RuntimeError:
+        logger.exception('Could not run keep_col().')
         sys.exit(1)
