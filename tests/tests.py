@@ -10,8 +10,3 @@ try:
 
 except Exception:
     logger.exception("Bad math.")
-
-try:
-    1/0
-except Exception:
-    logger.exception("Bad math part 2.")
