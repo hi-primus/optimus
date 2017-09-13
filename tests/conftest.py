@@ -6,7 +6,6 @@ import pytest
 
 from pyspark.sql.session import SparkSession
 from pyspark import SparkContext
-from pyspark.streaming import StreamingContext
 
 
 def quiet_py4j():
@@ -40,8 +39,3 @@ def spark_session(request):
 
     quiet_py4j()
     return spark
-
-
-@pytest.fixture(scope="session")
-def streaming_context(spark_context):
-    return StreamingContext(spark_context, 1)
