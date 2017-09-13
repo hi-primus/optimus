@@ -2,3 +2,7 @@
 omit =
     optimus/*
     setup.py
+[report]
+exclude_lines =
+    pragma: no cover
+    except RuntimeError as err:
