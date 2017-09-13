@@ -174,8 +174,15 @@ class DataFrameProfiler:
         df_profiler = self._df
         return spark_df_profiling_optimus.ProfileReport(df_profiler)
 
+    @property
+    def show(self):
+        """This function shows the dataframe of the class
+        :rtype: pyspark.sql.dataframe.DataFrame.show()
+        """
+        return self._df.show()
 
-# This class makes an analisis of dataframe datatypes and its different general features.
+
+# This class makes an analysis of dataframe datatypes and its different general features.
 class DataFrameAnalyzer:
     def __init__(self, df, path_file=None, pu=0.1, seed=13):
         # Asserting if df is dataFrame datatype.
@@ -498,6 +505,12 @@ class DataFrameAnalyzer:
     def get_data_frame(self):
         """This function return the dataframe of the class"""
         return self._df
+
+    def show(self):
+        """This function shows the dataframe of the class
+        :rtype: pyspark.sql.dataframe.DataFrame.show()
+        """
+        return self._df.show()
 
     # Function to give general features of dataFrame:
     def general_description(self):

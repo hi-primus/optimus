@@ -75,6 +75,12 @@ class DataFrameTransformer:
         """
         return self._df
 
+    def show(self):
+        """This function shows the dataframe of the class
+        :rtype: pyspark.sql.dataframe.DataFrame.show()
+        """
+        return self._df.show()
+
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
