@@ -29,13 +29,17 @@ def spark_context(request):
 
 
 @pytest.fixture(scope="session")
-def hive_context():
-    """  fixture for creating a Hive Context. Creating a fixture enables it to be reused across all
-        tests in a session
-    Returns:
-        HiveContext for tests
-    """
-    return SparkSession.builder.getOrCreate()
+def spark_session(request):
+    """Fixture for creating a spark session."""
+
+    spark = (SparkSession
+             .builder
+             .enableHiveSupport()
+             .getOrCreate())
+    request.addfinalizer(lambda: spark.stop())
+
+    quiet_py4j()
+    return spark
 
 
 @pytest.fixture(scope="session")
