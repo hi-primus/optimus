@@ -8,5 +8,5 @@ def test_spark_context_fixture(spark_context):
 
     try:
         assert test_rdd.count() == 4
-    except Exception:
-        logger.exception("Wrong count.")
+    except AssertionError:
+        logger.exception("Wrong count for RDD.")
