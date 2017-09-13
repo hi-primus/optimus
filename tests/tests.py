@@ -9,6 +9,10 @@ import sys
 logger = airbrake.getLogger()
 
 
+def assert_spark_df(df):
+    assert (isinstance(df, pyspark.sql.dataframe.DataFrame))
+
+
 def create_df(spark_session):
     try:
         # Building a simple dataframe:
@@ -23,7 +27,7 @@ def create_df(spark_session):
 
         # Dataframe:
         df = spark_session.createDataFrame(list(zip(cities, countries, population)), schema=schema)
-        assert isinstance(df, pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(df)
         return df
     except RuntimeError:
         logger.exception('Could not create dataframe.')
@@ -43,7 +47,7 @@ def test_trim_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.trim_col("*")
-        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(transformer.get_data_frame())
     except RuntimeError:
         logger.exception('Could not run trim_col().')
         sys.exit(1)
@@ -53,7 +57,7 @@ def test_drop_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.drop_col("country")
-        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(transformer.get_data_frame())
     except RuntimeError:
         logger.exception('Could not run drop_col().')
         sys.exit(1)
@@ -63,7 +67,7 @@ def test_keep_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.keep_col(['city', 'population'])
-        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(transformer.get_data_frame())
     except RuntimeError:
         logger.exception('Could not run keep_col().')
         sys.exit(1)
@@ -73,9 +77,9 @@ def test_replace_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.replace_col(search='Tokyo', change_to='Maracaibo', columns='city')
-        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(transformer.get_data_frame())
     except RuntimeError:
-        logger.exception('Could not run keep_col().')
+        logger.exception('Could not run replace_col().')
         sys.exit(1)
 
 
@@ -84,7 +88,7 @@ def test_delete_row(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         func = lambda pop: (pop > 6500000) & (pop <= 30000000)
         transformer.delete_row(func(col('population')))
-        assert isinstance(transformer.get_data_frame(), pyspark.sql.dataframe.DataFrame)
+        assert_spark_df(transformer.get_data_frame())
     except RuntimeError:
-        logger.exception('Could not run keep_col().')
+        logger.exception('Could not run delete_row().')
         sys.exit(1)
