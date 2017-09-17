@@ -52,6 +52,20 @@ In your terminal just type:
 pip install optimuspyspark
 ```
 
+# Contribute to Optimus (based on Webpack)
+
+Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions 
+including:
+
+* [Documentation](https://github.com/ironmussa/Optimus/blob/master/docs/index.rst) updates, enhancements, designs, or 
+bugfixes.
+* Spelling or grammar fixes.
+* README.md corrections or redesigns.
+* Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests) 
+* Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
+* [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.
+* Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).
+
 ## Contributors: 
 
  - Project Manager: [Argenis León](https://github.com/argenisleon) 
