@@ -6,6 +6,7 @@
 
 [![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Dependency Status](https://gemnasium.com/badges/github.com/ironmussa/Optimus.svg)](https://gemnasium.com/github.com/ironmussa/Optimus) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=ironmussa-optimus:optimus)](https://sonarqube.com/dashboard/index/ironmussa-optimus:optimus) 
 
+[![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of 
 Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will 
@@ -52,7 +53,7 @@ In your terminal just type:
 pip install optimuspyspark
 ```
 
-# Contribute to Optimus (based on Webpack)
+## Contributing to Optimus (based on Webpack)
 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions 
 including:
