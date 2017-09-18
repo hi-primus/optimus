@@ -28,7 +28,7 @@ class Optimus:
 
     def get_data_frame(self):
         """This function return the dataframe of the class"""
-        return self.transformer.get_data_frame()
+        return self.transformer.get_data_frame
 
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
