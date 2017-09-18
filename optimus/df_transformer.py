@@ -69,17 +69,19 @@ class DataFrameTransformer:
         assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
 
+    @property
     def get_data_frame(self):
         """This function return the dataframe of the class
         :rtype: pyspark.sql.dataframe.DataFrame
         """
         return self._df
 
-    def show(self):
+    def show(self, n=10):
         """This function shows the dataframe of the class
+        :param n: number or rows to show
         :rtype: pyspark.sql.dataframe.DataFrame.show()
         """
-        return self._df.show()
+        return self._df.show(n)
 
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.

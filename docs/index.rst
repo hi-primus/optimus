@@ -432,7 +432,7 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 
 .. code:: python 
 
-  productDf = analyzer.get_data_frame().select("product") #or df.select("product")
+  productDf = analyzer.get_data_frame.select("product") #or df.select("product")
   hist_dictPro = analyzer.get_categorical_hist(df_one_col=productDf, num_bars=10)
   print(hist_dictPro)
 
@@ -462,7 +462,7 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 
 .. code:: python
 
-  priceDf = analyzer.get_data_frame().select("price") #or df.select("price")
+  priceDf = analyzer.get_data_frame.select("price") #or df.select("price")
   hist_dictPri = analyzer.get_numerical_hist(df_one_col=priceDf, num_bars=10)
   print(hist_dictPri)
   
@@ -624,7 +624,7 @@ dataFrame:
     # DataFrameTransformer Instanciation:
     transformer = op.DataFrameTransformer(df)
 
-    transformer.get_data_frame().show()
+    transformer.show()
     
 Output:
  
@@ -663,14 +663,14 @@ operation in whole dataframe.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Triming string blank spaces:
     transformer.trim_col("*")
 
     # Printing trimmed dataFrame:
     print('Trimmed dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -717,14 +717,14 @@ names.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # drop column specified:
     transformer.drop_col("country")
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 
 Original dataFrame:
@@ -772,14 +772,14 @@ argument in DataFrame.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Keep columns specified by user:
     transformer.keep_col(['city', 'population'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -832,14 +832,14 @@ in all columns of DataFrame that have same dataType of ``search`` and
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Replace values in columns specified by user:
     transformer.replace_col(search='Tokyo', changeTo='Maracaibo', columns='city')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -893,7 +893,7 @@ python feature.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Replace values in columns specified by user:
     func = lambda pop: (pop > 6500000) & (pop <= 30000000)
@@ -901,7 +901,7 @@ python feature.
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -940,7 +940,7 @@ New dataFrame:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Delect rows where Tokyo isn't found in city
     # column or France isn't found in country column:
@@ -949,7 +949,7 @@ New dataFrame:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1006,7 +1006,7 @@ Here some examples:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     print (' Replacing a number if value in cell is greater than 5:')
 
@@ -1016,7 +1016,7 @@ Here some examples:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1057,7 +1057,7 @@ New dataFrame:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
     func = lambda cell: cell.upper()
@@ -1065,7 +1065,7 @@ New dataFrame:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1151,14 +1151,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Clear accents:
     transformer.clear_accents(columns='*')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1207,14 +1207,14 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Remove special characters:
     transformer.remove_special_chars(columns=['city', 'country'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1259,7 +1259,7 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     names = [('city', 'villes')]
     # Changing name of columns:
@@ -1267,7 +1267,7 @@ E.g:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1354,14 +1354,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
     transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1411,14 +1411,14 @@ E.g:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
     transformer.move_col('city', 'country', position='after')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1510,14 +1510,14 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Transformation:
     transformer.explode_table('bill id', 'foods', 'Beer')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1616,7 +1616,7 @@ New DF:
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Tranform string date format:
     transformer.date_transform(columns="dates",
@@ -1625,7 +1625,7 @@ New DF:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 

@@ -2,10 +2,11 @@
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)
  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)
- [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e01572e2af5640fcbcdd58e7408f3ea0)](https://www.codacy.com/app/favio.vazquezp/Optimus?utm_source=github.com&utm_medium=referral&utm_content=ironmussa/Optimus&utm_campaign=badger) 
+ [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e01572e2af5640fcbcdd58e7408f3ea0)](https://www.codacy.com/app/favio.vazquezp/Optimus?utm_source=github.com&utm_medium=referral&utm_content=ironmussa/Optimus&utm_campaign=badger) [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/iron-mussa/devops)
 
-[![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Dependency Status](https://gemnasium.com/badges/github.com/ironmussa/Optimus.svg)](https://gemnasium.com/github.com/ironmussa/Optimus) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=ironmussa-optimus:optimus)](https://sonarqube.com/dashboard/index/ironmussa-optimus:optimus)
+[![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Dependency Status](https://gemnasium.com/badges/github.com/ironmussa/Optimus.svg)](https://gemnasium.com/github.com/ironmussa/Optimus) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=ironmussa-optimus:optimus)](https://sonarqube.com/dashboard/index/ironmussa-optimus:optimus) 
 
+[![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of 
 Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will 
@@ -51,6 +52,20 @@ In your terminal just type:
 ```
 pip install optimuspyspark
 ```
+
+## Contributing to Optimus (based on Webpack)
+
+Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions 
+including:
+
+* [Documentation](https://github.com/ironmussa/Optimus/blob/master/docs/index.rst) updates, enhancements, designs, or 
+bugfixes.
+* Spelling or grammar fixes.
+* README.md corrections or redesigns.
+* Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests) 
+* Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
+* [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.
+* Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).
 
 ## Contributors: 
 
