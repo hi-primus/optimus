@@ -432,7 +432,7 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 
 .. code:: python 
 
-  productDf = analyzer.get_data_frame().select("product") #or df.select("product")
+  productDf = analyzer.get_data_frame.select("product") #or df.select("product")
   hist_dictPro = analyzer.get_categorical_hist(df_one_col=productDf, num_bars=10)
   print(hist_dictPro)
 
@@ -462,7 +462,7 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 
 .. code:: python
 
-  priceDf = analyzer.get_data_frame().select("price") #or df.select("price")
+  priceDf = analyzer.get_data_frame.select("price") #or df.select("price")
   hist_dictPri = analyzer.get_numerical_hist(df_one_col=priceDf, num_bars=10)
   print(hist_dictPri)
   
