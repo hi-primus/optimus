@@ -17,6 +17,10 @@ Click on Optimus to enter in our Website:
 
 <a href="https://hioptimus.com"><img src="https://github.com/ironmussa/Optimus/blob/master/images/robotOptimus.png" alt="Click Me!" border="0" height="220"></a>
 
+And if you want to see some cool information and tutorials for Optimus check out our blog:
+
+https://hioptimus.com/category/blog/
+
 ## Click below for the official documentation
 
 [![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://optimus-ironmussa.readthedocs.io/en/latest/)
