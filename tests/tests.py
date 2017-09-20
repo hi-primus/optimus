@@ -92,3 +92,34 @@ def test_delete_row(spark_session):
     except RuntimeError:
         logger.exception('Could not run delete_row().')
         sys.exit(1)
+
+
+def test_set_col(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        func = lambda cell: (cell * 2) if (cell > 14000000) else cell
+        transformer.set_col(['population'], func, 'integer')
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run set_col().')
+        sys.exit(1)
+
+
+def test_clear_accents(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.clear_accents(columns='*')
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run clear_accents().')
+        sys.exit(1)
+
+
+def test_remove_special_chars(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.remove_special_chars(columns=['city', 'country'])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run clear_accents().')
+        sys.exit(1)
