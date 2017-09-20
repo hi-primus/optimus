@@ -69,6 +69,8 @@ bugfixes.
 * Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests) 
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.
+* [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) 
+about Optimus and its many features.
 * Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).
 
 ## Contributors: 
