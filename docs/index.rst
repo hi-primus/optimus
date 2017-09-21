@@ -593,12 +593,12 @@ DataFrameTransformer class
   - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
-class has all methods listed aboved.
+class has all methods listed above.
 
 Note: Every possible transformation make changes over this dataFrame and
 overwrites it.
 
-The following code shows how to instanciate the class to transform a
+The following code shows how to instantiate the class to transform a
 dataFrame:
 
 .. code:: python
@@ -621,7 +621,7 @@ dataFrame:
     # Dataframe:
     df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
-    # DataFrameTransformer Instanciation:
+    # DataFrameTransformer Instantiation:
     transformer = op.DataFrameTransformer(df)
 
     transformer.show()
@@ -767,7 +767,7 @@ argument in DataFrame.
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -827,7 +827,7 @@ in all columns of DataFrame that have same dataType of ``search`` and
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -888,7 +888,7 @@ python feature.
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -935,7 +935,7 @@ New dataFrame:
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1001,7 +1001,7 @@ Here some examples:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1052,7 +1052,7 @@ New dataFrame:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1146,7 +1146,7 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1202,7 +1202,7 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1254,7 +1254,7 @@ E.g:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1349,7 +1349,7 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1406,7 +1406,7 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1505,7 +1505,7 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1611,7 +1611,7 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
