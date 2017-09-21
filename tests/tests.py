@@ -128,7 +128,7 @@ def test_remove_special_chars(spark_session):
 def test_remove_special_chars_regex(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
-        transformer.remove_special_chars_regex(columns=['city', 'country'])
+        transformer.remove_special_chars_regex(columns=['city', 'country'], regex='[^\w\s]')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run remove_special_chars_regex().')
