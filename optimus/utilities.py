@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Importing os module for system operative utilities
 import os
-# Importing SQLContext:
+# Importing SparkSession:
 from pyspark.sql.session import SparkSession
 # Importing module to delete folders
 from shutil import rmtree
@@ -19,7 +19,7 @@ from urllib.request import Request, urlopen
 class Utilities:
     def __init__(self):
 
-        # Setting SQLContext as a global variable of the class
+        # Setting spark as a global variable of the class
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         # Setting SparkContent as a global variable of the class
         self.__sc = self.spark.sparkContext
@@ -103,7 +103,7 @@ class Utilities:
 
     def read_dataset_parquet(self, path):
         """This function allows user to read parquet files. It is import to clarify that this method is just based
-        on the sqlContext.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
+        on the spark.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
         ensure user has more hints about what happened when something goes wrong.
         :param  path    Path or location of the file. Must be string dataType.
 
@@ -290,7 +290,7 @@ class Airtable:
     def __init__(self, path):
         # Setting airtable dataset variable
         self._air_table = None
-        # Setting SQLContext as a global variable of the class
+        # Setting spark as a global variable of the class
         self.spark = SparkSession()
         self.sc = self.spark.sparkContext
         # Reading dataset

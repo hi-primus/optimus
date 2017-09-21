@@ -619,7 +619,7 @@ dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     # DataFrameTransformer Instanciation:
     transformer = op.DataFrameTransformer(df)
@@ -1126,7 +1126,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1328,7 +1328,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1357,7 +1357,7 @@ New DF:
     transformer.show()
 
     # Capital letters:
-    transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
+    transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
@@ -1475,7 +1475,7 @@ See the example bellow to more explanations:
 
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(id_, foods)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(id_, foods)), schema=schema)
 
     df.show()
 
@@ -1590,7 +1590,7 @@ date_transform(self, column, current_format, output_format)
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 

@@ -149,7 +149,7 @@ def test_rename_col(spark_session):
 def test_lookup(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
-        transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
+        transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run lookup().')

@@ -24,7 +24,6 @@ class DataFrameTransformer:
         # Dataframe
         self._df = df
         # SparkContext:
-        # self._sql_context = SQLContext(self._df.sql_ctx)
         self._sql_context = self._df.sql_ctx
         self._number_of_transformations = 0
 
