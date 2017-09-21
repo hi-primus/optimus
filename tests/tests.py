@@ -121,5 +121,16 @@ def test_remove_special_chars(spark_session):
         transformer.remove_special_chars(columns=['city', 'country'])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run clear_accents().')
+        logger.exception('Could not run remove_special_chars().')
         sys.exit(1)
+
+
+def test_remove_special_chars_regex(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.remove_special_chars_regex(columns=['city', 'country'])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run remove_special_chars_regex().')
+        sys.exit(1)
+
