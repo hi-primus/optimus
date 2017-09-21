@@ -1585,12 +1585,12 @@ date_transform(self, column, current_format, output_format)
             StructField("dates", StringType(), True),
             StructField("population", IntegerType(), True)])
 
-    countries = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
+    dates = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
     cities = ['Caracas', 'Ccs', '   São Paulo   ', '~Madrid']
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, dates, population)), schema=schema)
 
     df.show()
 
