@@ -134,3 +134,25 @@ def test_remove_special_chars_regex(spark_session):
         logger.exception('Could not run remove_special_chars_regex().')
         sys.exit(1)
 
+
+def test_rename_col(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        names = [('city', 'villes')]
+        transformer.rename_col(names)
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run rename_col().')
+        sys.exit(1)
+
+
+def test_lookup(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run lookup().')
+        sys.exit(1)
+
+
