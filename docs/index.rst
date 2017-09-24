@@ -1448,7 +1448,7 @@ New dataFrame:
 |    Spain|        ~Madrid|   6489162|
 +---------+---------------+----------+
 
-DataFrameTransformer.explode_table(coldId, col, new_col_feature)
+DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -1467,7 +1467,7 @@ See the example bellow to more explanations:
 
     # Building a simple dataframe:
     schema = StructType([
-            StructField("bill id", IntegerType(), True),
+            StructField("bill_id", IntegerType(), True),
             StructField("foods", StringType(), True)])
 
     id_ = [1, 2, 2, 3, 3, 3, 3, 4, 4]
@@ -1513,7 +1513,7 @@ New DF:
     transformer.show()
 
     # Transformation:
-    transformer.explode_table('bill id', 'foods', 'Beer')
+    transformer.count_items(col_id="bill_id",col_search="foods",new_col_feature="beer_count",search_string="Beer")
 
     # Printing new dataFrame:
     print('New dataFrame:')
@@ -1545,17 +1545,15 @@ Original dataFrame:
 
 New dataFrame:
 
-+-------+---------+----+
-|bill id|    foods|Beer|
-+-------+---------+----+
-|      1|    Pizza|   0|
-+-------+---------+----+
-|      2|    Pizza|   1|
-+-------+---------+----+
-|      3|Hamburger|   3|
-+-------+---------+----+
-|      4|    Pizza|   1|
-+-------+---------+----+
++-------+----------+
+|bill_id|beer_count|
++-------+----------+
+|      3|         3|
++-------+----------+
+|      4|         1|
++-------+----------+
+|      2|         1|
++-------+----------+
 
 DataFrameTransformer.date_transform(column, current_format, output_format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

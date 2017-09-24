@@ -192,7 +192,7 @@ class DataFrameAnalyzer:
         assert isinstance(path_file, (str, type(None))), \
             "Error, path_file argument must be string datatype or NoneType."
         # Asserting if path includes the type of filesystem
-        if isinstance(path_file, type(None)):
+        if not isinstance(path_file, type(None)):
             assert (("file:///" == path_file[0:8]) or ("hdfs:///" == path_file[0:8])), \
                 "Error: path must be with a 'file://' prefix \
                 if the file is in the local disk or a 'path://' \
