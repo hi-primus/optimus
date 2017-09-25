@@ -52,6 +52,14 @@ except Exception:
           "folder(path,'hadoop').")
     Utilities().set_check_point_folder(os.getcwd(), "local")
     print("SparkSession and Context initialized. CheckPoint folder created. Optimus successfully imported. Have fun :).")
+    print("""
+   ____        __  _                     
+  / __ \____  / /_(_)___ ___  __  _______
+ / / / / __ \/ __/ / __ `__ \/ / / / ___/
+/ /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
+\____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
+    /_/                                  
+    """)
 
 # module level doc-string
 __doc__ = """

@@ -593,12 +593,12 @@ DataFrameTransformer class
   - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
-class has all methods listed aboved.
+class has all methods listed above.
 
 Note: Every possible transformation make changes over this dataFrame and
 overwrites it.
 
-The following code shows how to instanciate the class to transform a
+The following code shows how to instantiate the class to transform a
 dataFrame:
 
 .. code:: python
@@ -619,9 +619,9 @@ dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
-    # DataFrameTransformer Instanciation:
+    # DataFrameTransformer Instantiation:
     transformer = op.DataFrameTransformer(df)
 
     transformer.show()
@@ -767,7 +767,7 @@ argument in DataFrame.
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -827,7 +827,7 @@ in all columns of DataFrame that have same dataType of ``search`` and
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -888,7 +888,7 @@ python feature.
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -935,7 +935,7 @@ New dataFrame:
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1001,7 +1001,7 @@ Here some examples:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1052,7 +1052,7 @@ New dataFrame:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1126,7 +1126,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1146,7 +1146,7 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1202,7 +1202,7 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1254,7 +1254,7 @@ E.g:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1328,7 +1328,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1349,7 +1349,7 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1357,7 +1357,7 @@ New DF:
     transformer.show()
 
     # Capital letters:
-    transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
+    transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
@@ -1406,7 +1406,7 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1448,7 +1448,7 @@ New dataFrame:
 |    Spain|        ~Madrid|   6489162|
 +---------+---------------+----------+
 
-DataFrameTransformer.explode_table(coldId, col, new_col_feature)
+DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -1467,7 +1467,7 @@ See the example bellow to more explanations:
 
     # Building a simple dataframe:
     schema = StructType([
-            StructField("bill id", IntegerType(), True),
+            StructField("bill_id", IntegerType(), True),
             StructField("foods", StringType(), True)])
 
     id_ = [1, 2, 2, 3, 3, 3, 3, 4, 4]
@@ -1475,7 +1475,7 @@ See the example bellow to more explanations:
 
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(id_, foods)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(id_, foods)), schema=schema)
 
     df.show()
 
@@ -1505,7 +1505,7 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
@@ -1513,7 +1513,7 @@ New DF:
     transformer.show()
 
     # Transformation:
-    transformer.explode_table('bill id', 'foods', 'Beer')
+    transformer.count_items(col_id="bill_id",col_search="foods",new_col_feature="beer_count",search_string="Beer")
 
     # Printing new dataFrame:
     print('New dataFrame:')
@@ -1545,17 +1545,15 @@ Original dataFrame:
 
 New dataFrame:
 
-+-------+---------+----+
-|bill id|    foods|Beer|
-+-------+---------+----+
-|      1|    Pizza|   0|
-+-------+---------+----+
-|      2|    Pizza|   1|
-+-------+---------+----+
-|      3|Hamburger|   3|
-+-------+---------+----+
-|      4|    Pizza|   1|
-+-------+---------+----+
++-------+----------+
+|bill_id|beer_count|
++-------+----------+
+|      3|         3|
++-------+----------+
+|      4|         1|
++-------+----------+
+|      2|         1|
++-------+----------+
 
 DataFrameTransformer.date_transform(column, current_format, output_format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1585,12 +1583,12 @@ date_transform(self, column, current_format, output_format)
             StructField("dates", StringType(), True),
             StructField("population", IntegerType(), True)])
 
-    countries = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
+    dates = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
     cities = ['Caracas', 'Ccs', '   São Paulo   ', '~Madrid']
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, dates, population)), schema=schema)
 
     df.show()
 
@@ -1611,7 +1609,7 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
