@@ -108,7 +108,7 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
     # case, local file system (hard drive of the pc) is used.
     filePath = "file:///" + os.getcwd() + "/foo.csv"
 
-    df = tools.read_dataset_csv(path=filePath,
+    df = tools.read_csv(path=filePath,
                                 delimiter_mark=',')
 
     # Instance of profiler class
@@ -194,7 +194,7 @@ The following code shows how to instanciate the class to analyze a dataFrame:
     # case, local file system (hard drive of the pc) is used.
     filePath = "file:///" + os.getcwd() + "/foo.csv"
   
-    df = tools.read_dataset_csv(path=filePath, delimiter_mark=',')
+    df = tools.read_csv(path=filePath, delimiter_mark=',')
 
     analyzer = op.DataFrameAnalizer(df=df,pathFile=filePath)
 
