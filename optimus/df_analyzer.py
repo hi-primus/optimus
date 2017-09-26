@@ -502,6 +502,7 @@ class DataFrameAnalyzer:
         """
         self._df = df
 
+    @property
     def get_data_frame(self):
         """This function return the dataframe of the class"""
         return self._df
@@ -825,3 +826,50 @@ class DataFrameAnalyzer:
         # Import pixiedust-optimus
         from pixiedust_optimus.display import display
         display(df)
+
+    def get_frequency(self, columns, sort_by_count=True):
+        """
+        Get frequencies for values inside columns.
+
+        :param columns: String or List of columns to analyze
+        :param sort_by_count: Boolean if true the counts will be sort desc.
+        :return: Dataframe of counts per existing values in each column.
+        """
+        # Asserting data variable is string or list:
+        assert isinstance(columns, (str, list)), "Error: Column argument must be a string or a list."
+
+        # If None or [] is provided with column parameter:
+        assert columns != [], "Error: Column can not be a empty list []"
+
+        # Columns
+        if isinstance(columns, str):
+            columns = [columns]
+
+        # Columns
+        assert all(col in self._df.columns for col in columns), \
+            'Error: Columns or column does not exist in the dataFrame'
+
+        def frequency(columns, sort_by_count):
+            if sort_by_count:
+                for column in columns:
+                    freq = (self._df
+                            .groupBy(column)
+                            .count()
+                            .orderBy("count", ascending=False))
+
+                    if freq.where("count > 1").count() == 0:
+                        print("No values to group in column", column)
+                    else:
+                        freq.show()
+            else:
+                for column in columns:
+                    freq = (self._df
+                            .groupBy(column)
+                            .count())
+
+                    if freq.where("count > 1").count() == 0:
+                        print("No values to group in column", column)
+                    else:
+                        freq.show()
+
+        return frequency(columns, sort_by_count)

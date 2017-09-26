@@ -55,6 +55,27 @@ def create_other_df(spark_session):
         sys.exit(1)
 
 
+def create_another_df(spark_session):
+    try:
+        # Building a simple dataframe:
+        schema = StructType([
+            StructField("city", StringType(), True),
+            StructField("dates", StringType(), True),
+            StructField("population", IntegerType(), True)])
+
+        dates = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
+        cities = ['Caracas', 'Caracas', '   Maracaibo   ', 'Madrid']
+        population = [37800000, 19795791, 12341418, 6489162]
+
+        # Dataframe:
+        df = spark_session.createDataFrame(list(zip(cities, dates, population)), schema=schema)
+        assert_spark_df(df)
+        return df
+    except RuntimeError:
+        logger.exception('Could not create other dataframe.')
+        sys.exit(1)
+
+
 def test_transformer(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
@@ -196,4 +217,14 @@ def test_date_transform(spark_session):
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run date_transform().')
+        sys.exit(1)
+
+
+def test_get_frequency(spark_session):
+    try:
+        analyzer = op.DataFrameAnalyzer(create_another_df(spark_session))
+        analyzer.get_frequency(columns="city", sort_by_count=True)
+        assert_spark_df(analyzer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run get_frequency().')
         sys.exit(1)
