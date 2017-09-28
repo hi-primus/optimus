@@ -833,7 +833,7 @@ class DataFrameAnalyzer:
 
         :param columns: String or List of columns to analyze
         :param sort_by_count: Boolean if true the counts will be sort desc.
-        :return: Dataframe of counts per existing values in each column.
+        :return: Dataframe with counts per existing values in each column.
         """
         # Asserting data variable is string or list:
         assert isinstance(columns, (str, list)), "Error: Column argument must be a string or a list."

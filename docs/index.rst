@@ -135,6 +135,7 @@ dataFrames.
 -  DataFrameAnalyzer.get_numerical_hist(df_one_col, num_bars)
 -  DataFrameAnalyzer.unique_values_col(column)
 -  DataFrameAnalyzer.write_json(json_cols, path_to_json_file)
+-  DataFrameAnalyzer.get_frequency(columns, sort_by_count=True)
 
 Lets assume you have the following dataset, called foo.csv, in your current directory:
 
@@ -180,14 +181,14 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
 | 19 | JAMES                | Chadwick    | 467       | null       | 10    | 1921/05/03 | #        |
 +----+----------------------+-------------+-----------+------------+-------+------------+----------+
 
-The following code shows how to instanciate the class to analyze a dataFrame:
+The following code shows how to instantiate the class to analyze a dataFrame:
 
 .. code:: python
 
     # Import optimus
     import optimus as op
     # Instance of Utilities class
-    tools = op.Utilites()
+    tools = op.Utilities()
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
@@ -196,7 +197,7 @@ The following code shows how to instanciate the class to analyze a dataFrame:
   
     df = tools.read_csv(path=filePath, delimiter_mark=',')
 
-    analyzer = op.DataFrameAnalizer(df=df,pathFile=filePath)
+    analyzer = op.DataFrameAnalyzer(df=df,pathFile=filePath)
 
 Methods
 --------
@@ -534,7 +535,7 @@ Example:
 Analyzer.write_json(json_cols, path_to_json_file)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This functions ... and outputs a JSON in the specified path.
+This functions outputs a JSON for the DataFrame in the specified path.
 
 Input:
 
@@ -555,6 +556,101 @@ Example:
 .. code:: python
 
   analyzer.write_json(json_cols=json_cols, path_to_json_file= os.getcwd() + "/foo.json")
+
+Analyzer.get_frequency(self, columns, sort_by_count=True)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function gets the frequencies for values inside the specified columns.
+
+Input:
+
+``columns``: String or List of columns to analyze
+
+``sort_by_count``: Boolean if true the counts will be sort desc.
+
+The method outputs a Spark Dataframe with counts per existing values in each column.
+
+Tu use it, first lets create a sample DataFrame:
+
+.. code:: python
+
+    import random
+    import optimus as op
+    from pyspark.sql.types import StringType, StructType, IntegerType, FloatType, DoubleType, StructField
+
+    schema = StructType(
+            [
+            StructField("strings", StringType(), True),
+            StructField("integers", IntegerType(), True),
+            StructField("integers2", IntegerType(), True),
+            StructField("floats",  FloatType(), True),
+            StructField("double",  DoubleType(), True)
+            ]
+    )
+
+    size = 200
+    # Generating strings column:
+    foods = ['    pizza!       ', 'pizza', 'PIZZA;', 'pizza', 'pízza¡', 'Pizza', 'Piz;za']
+    foods = [foods[random.randint(0,6)] for count in range(size)]
+    # Generating integer column:
+    num_col_1 = [random.randint(0,9) for number in range(size)]
+    # Generating integer column:
+    num_col_2 = [random.randint(0,9) for number in range(size)]
+    # Generating integer column:
+    num_col_3 = [random.random() for number in range(size)]
+    # Generating integer column:
+    num_col_4 = [random.random() for number in range(size)]
+
+    # Building DataFrame
+    df = op.spark.createDataFrame(list(zip(foods, num_col_1, num_col_2, num_col_3, num_col_4)),schema=schema)
+
+    # Instantiate Analyzer
+    analyzer = op.DataFrameAnalyzer(df)
+
+    # Get frequency DataFrame
+    df_counts = analyzer.get_frequency(["strings", "integers"], True)
+
+And you will get (note that these are random generated values):
+
++-----------------+-----+
+|          strings|count|
++-----------------+-----+
+|            pizza|   48|
++-----------------+-----+
+|           Piz;za|   38|
++-----------------+-----+
+|            Pizza|   37|
++-----------------+-----+
+|           pízza¡|   29|
++-----------------+-----+
+|    pizza!       |   25|
++-----------------+-----+
+|           PIZZA;|   23|
++-----------------+-----+
+
++--------+-----+
+|integers|count|
++--------+-----+
+|       8|   31|
++--------+-----+
+|       5|   24|
++--------+-----+
+|       1|   24|
++--------+-----+
+|       9|   20|
++--------+-----+
+|       6|   20|
++--------+-----+
+|       2|   19|
++--------+-----+
+|       3|   19|
++--------+-----+
+|       0|   17|
++--------+-----+
+|       4|   14|
++--------+-----+
+|       7|   12|
++--------+-----+
 
 DataFrameTransformer class
 --------------------------
