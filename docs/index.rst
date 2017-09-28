@@ -589,7 +589,7 @@ DataFrameTransformer class
   - DataFrameTransformer.set_col(columns, func, dataType)
 
 * **Others**:
-  - DataFrameTransformer.explode_table(coldId, col, new_col_feature)
+  - DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string)
   - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
