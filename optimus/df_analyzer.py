@@ -612,14 +612,13 @@ class DataFrameAnalyzer:
         if print_all:
             return invalid_cols, json_cols
 
-    def plot_hist(self, df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True):
+    def plot_hist(self, df_one_col, hist_dict, type_hist, values_bar=True):
         """
         This function builds the histogram (bins) of an categorical column dataframe.
         Inputs:
         df_one_col: A dataFrame of one column.
         hist_dict: Python dictionary with histogram values
         type_hist: type of histogram to be generated, numerical or categorical
-        num_bars: Number of bars in histogram.
         values_bar: If values_bar is True, values of frequency are plotted over bars.
         Outputs: dictionary of the histogram generated
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -637,10 +636,10 @@ class DataFrameAnalyzer:
 
         if type_hist == 'categorical':
             # Plotting histogram
-            self._plot_cat_hist(hist_dict, column, values_bar=True)
+            self._plot_cat_hist(hist_dict, column, values_bar)
         else:
             # Plotting histogram
-            self._plot_num_hist(hist_dict, column, values_bar=True)
+            self._plot_num_hist(hist_dict, column, values_bar)
 
     def get_categorical_hist(self, df_one_col, num_bars):
         """This function analyzes a dataframe of a single column (only string type columns) and
