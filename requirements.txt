@@ -4,7 +4,7 @@ pyspark==2.2.0
 findspark==1.1.0
 spark_df_profiling_optimus==0.1.1
 numpy==1.13.3
-ipython==6.2.0
+ipython==6.2.1
 seaborn==0.8.1
 setuptools==36.5.0
 pixiedust-optimus==1.4.0
