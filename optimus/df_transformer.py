@@ -684,13 +684,15 @@ class DataFrameTransformer:
 
     def count_items(self, col_id, col_search, new_col_feature, search_string):
         """
-        This function can be used to split a feature with some extra information in order
-        to make a new column feature.
+        This function can be used to create Spark DataFrames with frequencies for picked values of
+        selected columns.
 
         :param col_id    column name of the columnId of dataFrame
         :param col_search     column name of the column to be split.
         :param new_col_feature        Name of the new column.
         :param search_string         string of value to be counted.
+
+        :returns Spark Dataframe.
 
         Please, see documentation for more explanations about this method.
 
@@ -733,8 +735,8 @@ class DataFrameTransformer:
         df_mod = subdf.join(new_column, exprs, 'left_outer')
 
         # Cleaning dataframe:
-        df_mod = df_mod.drop(col_id + '_other').drop(col_search).withColumnRenamed('count', new_col_feature)\
-                 .dropna("any")
+        df_mod = df_mod.drop(col_id + '_other').drop(col_search).withColumnRenamed('count', new_col_feature) \
+            .dropna("any")
 
         print("Counting existing "+search_string + " in "+col_search)
         return df_mod.sort(col_id).drop_duplicates([col_id])
