@@ -26,7 +26,7 @@ class Utilities:
         # Set empty container for url
         self.url = ""
 
-    def read_dataset_csv(self, path, delimiter_mark=';', header='true'):
+    def read_csv(self, path, delimiter_mark=';', header='true'):
         """This funcion read a dataset from a csv file.
 
         :param path     Path or location of the file.
@@ -124,7 +124,7 @@ class Utilities:
         :param  header_csv   This argument specifies if csv file has header or not.
         :param  num_partitions Specifies the number of partitions the user wants to write the dataset."""
 
-        df = self.read_dataset_csv(input_path, delimiter_mark_csv, header=header_csv)
+        df = self.read_csv(input_path, delimiter_mark_csv, header=header_csv)
 
         if num_partitions is not None:
             assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \

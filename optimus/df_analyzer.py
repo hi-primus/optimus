@@ -300,8 +300,8 @@ class DataFrameAnalyzer:
             # Verifying if there is a column with different datatypes:
             # Sum the first and the second number:
             sum_first_and_second = lambda lis: [lis[x] + lis[0] if x == 1 else lis[x] for x in
-                                                  range(len(lis))][
-                                                 1:]
+                                                range(len(lis))][
+                                               1:]
             # Check if the column has different datatypes:
             different_types = sum([1 if x == 0 else 0 for x in sum_first_and_second(f[1:])]) < 2
 
@@ -350,10 +350,8 @@ class DataFrameAnalyzer:
 
             if plots:
                 self.plot_hist(
-                    df_one_col=df_col_analyzer.select(column),
-                    hist_dict=hist_dict,
+                    column=column,
                     type_hist='categorical',
-                    num_bars=num_bars,
                     values_bar=values_bar)
                 plt.show()
         elif string_qty < number_qty:
@@ -363,11 +361,9 @@ class DataFrameAnalyzer:
 
             if plots:
                 # Create the general blog and the "subplots" i.e. the bars
-                hist_plot = self.plot_hist(df_col_analyzer.select(column),
-                                           hist_dict=hist_dict,
-                                           type_hist='numerical',
-                                           num_bars=num_bars,
-                                           values_bar=values_bar)
+                self.plot_hist(column=column,
+                               type_hist='numerical',
+                               values_bar=values_bar)
                 plt.show()
 
         else:
@@ -502,6 +498,7 @@ class DataFrameAnalyzer:
         """
         self._df = df
 
+    @property
     def get_data_frame(self):
         """This function return the dataframe of the class"""
         return self._df
@@ -558,7 +555,7 @@ class DataFrameAnalyzer:
         # Counting
         time1 = time.time()
 
-        df_col_analizer = self._df
+        df_col_analyzer = self._df
 
         # Column assignation:
         columns = []
@@ -566,7 +563,7 @@ class DataFrameAnalyzer:
         # If column_list is a string, convert it in a list:
         if isinstance(column_list, str):
             if column_list == "*":
-                columns = df_col_analizer.columns
+                columns = df_col_analyzer.columns
             else:
                 columns = [column_list]
 
@@ -576,7 +573,8 @@ class DataFrameAnalyzer:
 
         # Asserting if columns provided are in dataFrame:
         assert all(
-            col in df_col_analizer.columns for col in columns), 'Error: Columns or column does not exist in the dataFrame'
+            col in df_col_analyzer.columns for col in
+            columns), 'Error: Columns or column does not exist in the dataFrame'
 
         types = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
 
@@ -584,11 +582,11 @@ class DataFrameAnalyzer:
 
         invalid_cols = []
         json_cols = []
-        # In case first is not set, this will analize all columns
+        # In case first is not set, this will analyze all columns
         for column in columns:
-            # Calling function analize:
+            # Calling function analyze:
             inv_col, _, _, d = self._analyze(
-                df_col_analizer.select(column),
+                df_col_analyzer.select(column),
                 column,
                 row_number,
                 plots,
@@ -611,14 +609,13 @@ class DataFrameAnalyzer:
         if print_all:
             return invalid_cols, json_cols
 
-    def plot_hist(self, df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True):
+    def plot_hist(self, column, type_hist, values_bar=True):
         """
         This function builds the histogram (bins) of an categorical column dataframe.
         Inputs:
         df_one_col: A dataFrame of one column.
         hist_dict: Python dictionary with histogram values
         type_hist: type of histogram to be generated, numerical or categorical
-        num_bars: Number of bars in histogram.
         values_bar: If values_bar is True, values of frequency are plotted over bars.
         Outputs: dictionary of the histogram generated
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -631,15 +628,19 @@ class DataFrameAnalyzer:
         assert type_hist == 'categorical' or (
             type_hist == 'numerical'), "Error, type_hist only can be 'categorical' or 'numerical'."
 
+        df_one_col = self._df.select(column)
+
         # Getting column of dataframe provided
-        column = df_one_col.columns[0]
+        column_plot = df_one_col.columns[0]
 
         if type_hist == 'categorical':
             # Plotting histogram
-            self._plot_cat_hist(hist_dict, column, values_bar=True)
+            hist_dict = self.get_categorical_hist(df_one_col, num_bars=10)
+            self._plot_cat_hist(hist_dict, column_plot, values_bar)
         else:
             # Plotting histogram
-            self._plot_num_hist(hist_dict, column, values_bar=True)
+            hist_dict = self.get_numerical_hist(df_one_col, num_bars=10)
+            self._plot_num_hist(hist_dict, column_plot, values_bar)
 
     def get_categorical_hist(self, df_one_col, num_bars):
         """This function analyzes a dataframe of a single column (only string type columns) and
@@ -682,7 +683,7 @@ class DataFrameAnalyzer:
         # If we obtain a null column:
         assert not isinstance(temp_df.first(), type(None)), \
             "Error, Make sure column dataframe has numerical features. One of the first actions \
-        getNumericalHist function does is a convertion dataType from original datatype \
+        getNumericalHist function does is a change dataType from original datatype \
         to float. If the column provided has only values that are \
         not numbers parseables to float, it will flag this error."
 
@@ -705,68 +706,69 @@ class DataFrameAnalyzer:
 
         # Si la cantidad de bins es menor que los valores unicos, entonces se toman los valores unicos como bin.
         if len(bins_values) < len(uni_values):
+            bins_values = uni_values
 
-            # This function search over columnName dataFrame to which interval belongs each cell
-            # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
-            def generate_expr(column_name, list_intervals):
-                if len(list_intervals) == 1:
-                    return when(col(column_name).between(list_intervals[0][0], list_intervals[0][1]), 0).otherwise(None)
-                else:
-                    return (when((col(column_name) >= list_intervals[0][0]) & (col(column_name) < list_intervals[0][1]),
-                                 len(list_intervals) - 1)
-                            .otherwise(generate_expr(column_name, list_intervals[1:])))
+        # This function search over columnName dataFrame to which interval belongs each cell
+        # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
+        def generate_expr(column_name, list_intervals):
+            if len(list_intervals) == 1:
+                return when(col(column_name).between(list_intervals[0][0], list_intervals[0][1]), 0).otherwise(None)
+            else:
+                return (when((col(column_name) >= list_intervals[0][0]) & (col(column_name) < list_intervals[0][1]),
+                             len(list_intervals) - 1)
+                        .otherwise(generate_expr(column_name, list_intervals[1:])))
 
-                    # +--------+--------------------+
-                    # |columns |Number of list pairs|
-                    # +--------+--------------------+
-                    # |       5|                   4|
-                    # |       3|                   7|
-                    # |       6|                   3|
-                    # |       9|                   0|
-                    # |       1|                   9|
-                    # |       6|                   3|
-                    # |       4|                   6|
-                    # +--------+--------------------+
+                # +--------+--------------------+
+                # |columns |Number of list pairs|
+                # +--------+--------------------+
+                # |       5|                   4|
+                # |       3|                   7|
+                # |       6|                   3|
+                # |       9|                   0|
+                # |       1|                   9|
+                # |       6|                   3|
+                # |       4|                   6|
+                # +--------+--------------------+
 
-            # Getting ranges from list: i.e. [(0,1),(1,2),(2,3),(3,4)]
-            func_pairs = lambda liste: [(liste[x], liste[x + 1]) for x in range(0, len(liste) - 1)]
-            ranges = func_pairs(bins_values)
+        # Getting ranges from list: i.e. [(0,1),(1,2),(2,3),(3,4)]
+        func_pairs = lambda liste: [(liste[x], liste[x + 1]) for x in range(0, len(liste) - 1)]
+        ranges = func_pairs(bins_values)
 
-            # Identifying to which group belongs each cell of column Dataframe and count them in order to get frequencies
-            # for each searh interval.
-            freq_df = temp_df.select(col(column), generate_expr(column, ranges).alias("value")) \
-                .groupBy("value").count()
+        # Identifying to which group belongs each cell of column Dataframe and count them in order to get frequencies
+        # for each searh interval.
+        freq_df = temp_df.select(col(column), generate_expr(column, ranges).alias("value")) \
+            .groupBy("value").count()
 
-            # +-----------+-----+
-            # |intervals  |count|
-            # +-----------+-----+
-            # |          0|    2|
-            # |          1|    3|
-            # |          4|    2|
-            # |          5|    1|
-            # |          6|    1|
-            # |         10|    1|
-            # +-----------+-----+
+        # +-----------+-----+
+        # |intervals  |count|
+        # +-----------+-----+
+        # |          0|    2|
+        # |          1|    3|
+        # |          4|    2|
+        # |          5|    1|
+        # |          6|    1|
+        # |         10|    1|
+        # +-----------+-----+
 
-            # Reverting the order of the list ranges, because 0 in the last interval in list provided to get FreqDF
-            # so it is more intuitive if the list of ranges is reverted. Then the first and second pair interval in ranges1
-            # correspond to 0 and 1 interval in list
-            ranges1 = list(reversed(ranges))
+        # Reverting the order of the list ranges, because 0 in the last interval in list provided to get FreqDF
+        # so it is more intuitive if the list of ranges is reverted. Then the first and second pair interval in ranges1
+        # correspond to 0 and 1 interval in list
+        ranges1 = list(reversed(ranges))
 
-            # From intervals, bins are calculated as the average of min and max interval.
-            bins = [np.mean([rmin, rmax]) for (rmin, rmax) in ranges1]
+        # From intervals, bins are calculated as the average of min and max interval.
+        bins = [np.mean([rmin, rmax]) for (rmin, rmax) in ranges1]
 
-            func = udf(lambda x: float(bins[x]), DoubleType())
+        func = udf(lambda x: float(bins[x]), DoubleType())
 
-            # Setting position of bars according to bins and group intervals:
-            freq_df = freq_df.na.drop().withColumn('value', func(col('value')))
+        # Setting position of bars according to bins and group intervals:
+        freq_df = freq_df.na.drop().withColumn('value', func(col('value')))
 
-            # Extracting information dataframe into a python dictionary:
-            hist_dict = []
-            for row in freq_df.collect():
-                hist_dict.append(self._create_dict(['value', 'cont'], [row[0], row[1]]))
+        # Extracting information dataframe into a python dictionary:
+        hist_dict = []
+        for row in freq_df.collect():
+            hist_dict.append(self._create_dict(['value', 'cont'], [row[0], row[1]]))
 
-            return hist_dict
+        return hist_dict
 
     def unique_values_col(self, column):
         """This function counts the number of values that are unique and also the total number of values.
@@ -798,11 +800,11 @@ class DataFrameAnalyzer:
         assert isinstance(method, str), "Error, method argument provided must be a string."
 
         assert method == 'pearson' or (
-               method == 'spearman'), "Error, method only can be 'pearson' or 'sepearman'."
+            method == 'spearman'), "Error, method only can be 'pearson' or 'sepearman'."
 
         cor = Correlation.corr(self._df, vec_col, method).head()[0].toArray()
         return sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
-                           as_cmap=True))
+                                                                                                   as_cmap=True))
 
     @classmethod
     def write_json(cls, json_cols, path_to_json_file):
@@ -825,3 +827,50 @@ class DataFrameAnalyzer:
         # Import pixiedust-optimus
         from pixiedust_optimus.display import display
         display(df)
+
+    def get_frequency(self, columns, sort_by_count=True):
+        """
+        Get frequencies for values inside columns.
+
+        :param columns: String or List of columns to analyze
+        :param sort_by_count: Boolean if true the counts will be sort desc.
+        :return: Dataframe with counts per existing values in each column.
+        """
+        # Asserting data variable is string or list:
+        assert isinstance(columns, (str, list)), "Error: Column argument must be a string or a list."
+
+        # If None or [] is provided with column parameter:
+        assert columns != [], "Error: Column can not be a empty list []"
+
+        # Columns
+        if isinstance(columns, str):
+            columns = [columns]
+
+        # Columns
+        assert all(col in self._df.columns for col in columns), \
+            'Error: Columns or column does not exist in the dataFrame'
+
+        def frequency(columns, sort_by_count):
+            if sort_by_count:
+                for column in columns:
+                    freq = (self._df
+                            .groupBy(column)
+                            .count()
+                            .orderBy("count", ascending=False))
+
+                    if freq.where("count > 1").count() == 0:
+                        print("No values to group in column", column)
+                    else:
+                        freq.show()
+            else:
+                for column in columns:
+                    freq = (self._df
+                            .groupBy(column)
+                            .count())
+
+                    if freq.where("count > 1").count() == 0:
+                        print("No values to group in column", column)
+                    else:
+                        freq.show()
+
+        return frequency(columns, sort_by_count)
