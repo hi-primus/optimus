@@ -108,7 +108,7 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
     # case, local file system (hard drive of the pc) is used.
     filePath = "file:///" + os.getcwd() + "/foo.csv"
 
-    df = tools.read_dataset_csv(path=filePath,
+    df = tools.read_csv(path=filePath,
                                 delimiter_mark=',')
 
     # Instance of profiler class
@@ -135,6 +135,7 @@ dataFrames.
 -  DataFrameAnalyzer.get_numerical_hist(df_one_col, num_bars)
 -  DataFrameAnalyzer.unique_values_col(column)
 -  DataFrameAnalyzer.write_json(json_cols, path_to_json_file)
+-  DataFrameAnalyzer.get_frequency(columns, sort_by_count=True)
 
 Lets assume you have the following dataset, called foo.csv, in your current directory:
 
@@ -180,23 +181,23 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
 | 19 | JAMES                | Chadwick    | 467       | null       | 10    | 1921/05/03 | #        |
 +----+----------------------+-------------+-----------+------------+-------+------------+----------+
 
-The following code shows how to instanciate the class to analyze a dataFrame:
+The following code shows how to instantiate the class to analyze a dataFrame:
 
 .. code:: python
 
     # Import optimus
     import optimus as op
     # Instance of Utilities class
-    tools = op.Utilites()
+    tools = op.Utilities()
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
     # case, local file system (hard drive of the pc) is used.
     filePath = "file:///" + os.getcwd() + "/foo.csv"
   
-    df = tools.read_dataset_csv(path=filePath, delimiter_mark=',')
+    df = tools.read_csv(path=filePath, delimiter_mark=',')
 
-    analyzer = op.DataFrameAnalizer(df=df,pathFile=filePath)
+    analyzer = op.DataFrameAnalyzer(df=df,pathFile=filePath)
 
 Methods
 --------
@@ -432,7 +433,7 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 
 .. code:: python 
 
-  productDf = analyzer.get_data_frame().select("product") #or df.select("product")
+  productDf = analyzer.get_data_frame.select("product") #or df.select("product")
   hist_dictPro = analyzer.get_categorical_hist(df_one_col=productDf, num_bars=10)
   print(hist_dictPro)
 
@@ -462,7 +463,7 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 
 .. code:: python
 
-  priceDf = analyzer.get_data_frame().select("price") #or df.select("price")
+  priceDf = analyzer.get_data_frame.select("price") #or df.select("price")
   hist_dictPri = analyzer.get_numerical_hist(df_one_col=priceDf, num_bars=10)
   print(hist_dictPri)
   
@@ -534,7 +535,7 @@ Example:
 Analyzer.write_json(json_cols, path_to_json_file)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This functions ... and outputs a JSON in the specified path.
+This functions outputs a JSON for the DataFrame in the specified path.
 
 Input:
 
@@ -555,6 +556,101 @@ Example:
 .. code:: python
 
   analyzer.write_json(json_cols=json_cols, path_to_json_file= os.getcwd() + "/foo.json")
+
+Analyzer.get_frequency(self, columns, sort_by_count=True)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function gets the frequencies for values inside the specified columns.
+
+Input:
+
+``columns``: String or List of columns to analyze
+
+``sort_by_count``: Boolean if true the counts will be sort desc.
+
+The method outputs a Spark Dataframe with counts per existing values in each column.
+
+Tu use it, first lets create a sample DataFrame:
+
+.. code:: python
+
+    import random
+    import optimus as op
+    from pyspark.sql.types import StringType, StructType, IntegerType, FloatType, DoubleType, StructField
+
+    schema = StructType(
+            [
+            StructField("strings", StringType(), True),
+            StructField("integers", IntegerType(), True),
+            StructField("integers2", IntegerType(), True),
+            StructField("floats",  FloatType(), True),
+            StructField("double",  DoubleType(), True)
+            ]
+    )
+
+    size = 200
+    # Generating strings column:
+    foods = ['    pizza!       ', 'pizza', 'PIZZA;', 'pizza', 'pízza¡', 'Pizza', 'Piz;za']
+    foods = [foods[random.randint(0,6)] for count in range(size)]
+    # Generating integer column:
+    num_col_1 = [random.randint(0,9) for number in range(size)]
+    # Generating integer column:
+    num_col_2 = [random.randint(0,9) for number in range(size)]
+    # Generating integer column:
+    num_col_3 = [random.random() for number in range(size)]
+    # Generating integer column:
+    num_col_4 = [random.random() for number in range(size)]
+
+    # Building DataFrame
+    df = op.spark.createDataFrame(list(zip(foods, num_col_1, num_col_2, num_col_3, num_col_4)),schema=schema)
+
+    # Instantiate Analyzer
+    analyzer = op.DataFrameAnalyzer(df)
+
+    # Get frequency DataFrame
+    df_counts = analyzer.get_frequency(["strings", "integers"], True)
+
+And you will get (note that these are random generated values):
+
++-----------------+-----+
+|          strings|count|
++-----------------+-----+
+|            pizza|   48|
++-----------------+-----+
+|           Piz;za|   38|
++-----------------+-----+
+|            Pizza|   37|
++-----------------+-----+
+|           pízza¡|   29|
++-----------------+-----+
+|    pizza!       |   25|
++-----------------+-----+
+|           PIZZA;|   23|
++-----------------+-----+
+
++--------+-----+
+|integers|count|
++--------+-----+
+|       8|   31|
++--------+-----+
+|       5|   24|
++--------+-----+
+|       1|   24|
++--------+-----+
+|       9|   20|
++--------+-----+
+|       6|   20|
++--------+-----+
+|       2|   19|
++--------+-----+
+|       3|   19|
++--------+-----+
+|       0|   17|
++--------+-----+
+|       4|   14|
++--------+-----+
+|       7|   12|
++--------+-----+
 
 DataFrameTransformer class
 --------------------------
@@ -589,16 +685,16 @@ DataFrameTransformer class
   - DataFrameTransformer.set_col(columns, func, dataType)
 
 * **Others**:
-  - DataFrameTransformer.explode_table(coldId, col, new_col_feature)
+  - DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string)
   - DataFrameTransformer.age_calculate(column)
 
 DataFrameTransformer class receives a dataFrame as an argument. This
-class has all methods listed aboved.
+class has all methods listed above.
 
 Note: Every possible transformation make changes over this dataFrame and
 overwrites it.
 
-The following code shows how to instanciate the class to transform a
+The following code shows how to instantiate the class to transform a
 dataFrame:
 
 .. code:: python
@@ -619,12 +715,12 @@ dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
-    # DataFrameTransformer Instanciation:
+    # DataFrameTransformer Instantiation:
     transformer = op.DataFrameTransformer(df)
 
-    transformer.get_data_frame().show()
+    transformer.show()
     
 Output:
  
@@ -663,14 +759,14 @@ operation in whole dataframe.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Triming string blank spaces:
     transformer.trim_col("*")
 
     # Printing trimmed dataFrame:
     print('Trimmed dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -717,14 +813,14 @@ names.
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # drop column specified:
     transformer.drop_col("country")
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 
 Original dataFrame:
@@ -767,19 +863,19 @@ argument in DataFrame.
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Keep columns specified by user:
     transformer.keep_col(['city', 'population'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -827,19 +923,19 @@ in all columns of DataFrame that have same dataType of ``search`` and
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Replace values in columns specified by user:
     transformer.replace_col(search='Tokyo', changeTo='Maracaibo', columns='city')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -888,12 +984,12 @@ python feature.
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Replace values in columns specified by user:
     func = lambda pop: (pop > 6500000) & (pop <= 30000000)
@@ -901,7 +997,7 @@ python feature.
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -935,12 +1031,12 @@ New dataFrame:
     # Importing sql functions
     from pyspark.sql.functions import col
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Delect rows where Tokyo isn't found in city
     # column or France isn't found in country column:
@@ -949,7 +1045,7 @@ New dataFrame:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1001,12 +1097,12 @@ Here some examples:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     print (' Replacing a number if value in cell is greater than 5:')
 
@@ -1016,7 +1112,7 @@ Here some examples:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1052,12 +1148,12 @@ New dataFrame:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
     func = lambda cell: cell.upper()
@@ -1065,7 +1161,7 @@ New dataFrame:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1126,7 +1222,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1146,19 +1242,19 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Clear accents:
     transformer.clear_accents(columns='*')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1202,19 +1298,19 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Remove special characters:
     transformer.remove_special_chars(columns=['city', 'country'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1254,12 +1350,12 @@ E.g:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     names = [('city', 'villes')]
     # Changing name of columns:
@@ -1267,7 +1363,7 @@ E.g:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1328,7 +1424,7 @@ Building a dummy dataFrame:
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
 
     df.show()
 
@@ -1349,19 +1445,19 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
-    transformer.lookup('city', ['Caracas', 'Ccs'], 'Caracas')
+    transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1406,19 +1502,19 @@ E.g:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Capital letters:
     transformer.move_col('city', 'country', position='after')
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1448,7 +1544,7 @@ New dataFrame:
 |    Spain|        ~Madrid|   6489162|
 +---------+---------------+----------+
 
-DataFrameTransformer.explode_table(coldId, col, new_col_feature)
+DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
@@ -1467,7 +1563,7 @@ See the example bellow to more explanations:
 
     # Building a simple dataframe:
     schema = StructType([
-            StructField("bill id", IntegerType(), True),
+            StructField("bill_id", IntegerType(), True),
             StructField("foods", StringType(), True)])
 
     id_ = [1, 2, 2, 3, 3, 3, 3, 4, 4]
@@ -1475,7 +1571,7 @@ See the example bellow to more explanations:
 
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(id_, foods)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(id_, foods)), schema=schema)
 
     df.show()
 
@@ -1505,19 +1601,19 @@ New DF:
 
 .. code:: python
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Transformation:
-    transformer.explode_table('bill id', 'foods', 'Beer')
+    transformer.count_items(col_id="bill_id",col_search="foods",new_col_feature="beer_count",search_string="Beer")
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 
@@ -1545,17 +1641,15 @@ Original dataFrame:
 
 New dataFrame:
 
-+-------+---------+----+
-|bill id|    foods|Beer|
-+-------+---------+----+
-|      1|    Pizza|   0|
-+-------+---------+----+
-|      2|    Pizza|   1|
-+-------+---------+----+
-|      3|Hamburger|   3|
-+-------+---------+----+
-|      4|    Pizza|   1|
-+-------+---------+----+
++-------+----------+
+|bill_id|beer_count|
++-------+----------+
+|      3|         3|
++-------+----------+
+|      4|         1|
++-------+----------+
+|      2|         1|
++-------+----------+
 
 DataFrameTransformer.date_transform(column, current_format, output_format)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1585,12 +1679,12 @@ date_transform(self, column, current_format, output_format)
             StructField("dates", StringType(), True),
             StructField("population", IntegerType(), True)])
 
-    countries = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
+    dates = ['1991/02/25', '1998/05/10', '1993/03/15', '1992/07/17']
     cities = ['Caracas', 'Ccs', '   São Paulo   ', '~Madrid']
     population = [37800000,19795791,12341418,6489162]
 
     # Dataframe:
-    df = sqlContext.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+    df = op.spark.createDataFrame(list(zip(cities, dates, population)), schema=schema)
 
     df.show()
 
@@ -1611,12 +1705,12 @@ New DF:
 .. code:: python
 
 
-    # Instanciation of DataTransformer class:
+    # Instantiation of DataTransformer class:
     transformer = op.DataFrameTransformer(df)
 
     # Printing of original dataFrame:
     print('Original dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
     # Tranform string date format:
     transformer.date_transform(columns="dates",
@@ -1625,7 +1719,7 @@ New DF:
 
     # Printing new dataFrame:
     print('New dataFrame:')
-    transformer.get_data_frame().show()
+    transformer.show()
 
 Original dataFrame:
 

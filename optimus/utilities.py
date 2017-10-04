@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Importing os module for system operative utilities
 import os
-# Importing SQLContext:
+# Importing SparkSession:
 from pyspark.sql.session import SparkSession
 # Importing module to delete folders
 from shutil import rmtree
@@ -19,14 +19,14 @@ from urllib.request import Request, urlopen
 class Utilities:
     def __init__(self):
 
-        # Setting SQLContext as a global variable of the class
+        # Setting spark as a global variable of the class
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         # Setting SparkContent as a global variable of the class
         self.__sc = self.spark.sparkContext
         # Set empty container for url
         self.url = ""
 
-    def read_dataset_csv(self, path, delimiter_mark=';', header='true'):
+    def read_csv(self, path, delimiter_mark=';', header='true'):
         """This funcion read a dataset from a csv file.
 
         :param path     Path or location of the file.
@@ -103,7 +103,7 @@ class Utilities:
 
     def read_dataset_parquet(self, path):
         """This function allows user to read parquet files. It is import to clarify that this method is just based
-        on the sqlContext.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
+        on the spark.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
         ensure user has more hints about what happened when something goes wrong.
         :param  path    Path or location of the file. Must be string dataType.
 
@@ -124,7 +124,7 @@ class Utilities:
         :param  header_csv   This argument specifies if csv file has header or not.
         :param  num_partitions Specifies the number of partitions the user wants to write the dataset."""
 
-        df = self.read_dataset_csv(input_path, delimiter_mark_csv, header=header_csv)
+        df = self.read_csv(input_path, delimiter_mark_csv, header=header_csv)
 
         if num_partitions is not None:
             assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
@@ -290,7 +290,7 @@ class Airtable:
     def __init__(self, path):
         # Setting airtable dataset variable
         self._air_table = None
-        # Setting SQLContext as a global variable of the class
+        # Setting spark as a global variable of the class
         self.spark = SparkSession()
         self.sc = self.spark.sparkContext
         # Reading dataset

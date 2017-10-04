@@ -31,13 +31,13 @@ try:
 
     Utilities().set_check_point_folder(os.getcwd(), "local")
 
-    message = "Optimus successfully imported. Have fun :)."
+    message = "<b><h2>Optimus successfully imported. Have fun :).</h2></b>"
 
     print_html(
         """
         <div style="margin:10px">
             <a href="https://github.com/ironmussa/Optimus" target="_new">
-                <img src="http://optimus-ironmussa.readthedocs.io/en/latest/_images/logoOptimus.png" style="float:left;margin-right:10px" height="50" width="50"/>
+                <img src="https://github.com/ironmussa/Optimus/raw/master/images/robotOptimus.png" style="float:left;margin-right:10px;vertical-align:top;text-align:center" height="50" width="50"/>
             </a>
             <span>{0}</span>
         </div>
@@ -52,6 +52,14 @@ except Exception:
           "folder(path,'hadoop').")
     Utilities().set_check_point_folder(os.getcwd(), "local")
     print("SparkSession and Context initialized. CheckPoint folder created. Optimus successfully imported. Have fun :).")
+    print("""
+   ____        __  _                     
+  / __ \____  / /_(_)___ ___  __  _______
+ / / / / __ \/ __/ / __ `__ \/ / / / ___/
+/ /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
+\____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
+    /_/                                  
+    """)
 
 # module level doc-string
 __doc__ = """
