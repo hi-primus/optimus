@@ -26,7 +26,7 @@ class Utilities:
         # Set empty container for url
         self.url = ""
 
-    def read_csv(self, path, delimiter_mark=';', header='true'):
+    def read_csv(self, path, delimiter_mark=',', header='true'):
         """This funcion read a dataset from a csv file.
 
         :param path     Path or location of the file.
