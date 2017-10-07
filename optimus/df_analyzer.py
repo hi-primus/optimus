@@ -817,8 +817,7 @@ class DataFrameAnalyzer:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(json_cols)
 
-    @classmethod
-    def display_optimus(cls, df):
+    def display_optimus(self):
         """
         Lets you visualize your Spark object in different ways: table, charts, maps, etc.
         :param df: spark dataframe to be analyzed
@@ -826,7 +825,7 @@ class DataFrameAnalyzer:
         """
         # Import pixiedust-optimus
         from pixiedust_optimus.display import display
-        display(df)
+        display(self._df)
 
     def get_frequency(self, columns, sort_by_count=True):
         """
