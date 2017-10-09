@@ -1177,4 +1177,4 @@ class DataFrameTransformer:
         :return: Dataframe in a CSV format in the specified path.
         """
 
-        return self._df.write.options(header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
+        return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
