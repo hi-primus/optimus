@@ -1748,6 +1748,86 @@ New dataFrame:
 +---------------+----------+----------+
 |        ~Madrid|17-07-1992|   6489162|
 +---------------+----------+----------+
+
+DataFrameTransformer.to_csv(path_name, header=True, mode="overwrite", sep=",", *args, **kargs)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This functions writes a Spark dataframe as a CSV in the specified path.
+
+This method require the ``path_name`` to be specified by the user with the name and path of the file to
+be saved.
+
+With the ``mode`` Specifies the behavior of the save operation when data already exists:
+
+    - "append": Append contents of this DataFrame to existing data.
+    - "overwrite" (default case): Overwrite existing data.
+    - "ignore": Silently ignore this operation if data already exists.
+    - "error": Throw an exception if data already exists.
+
+And with the ``sep`` argument you can set the single character as a separator for each field and value. If None is set,
+it uses the default value (",").
+
+You can also pass all the options that Spark allows as **kargs to the function.
+
+E.g.
+
+.. code:: python
+
+    # Importing sql types
+    from pyspark.sql.types import StringType, IntegerType, StructType, StructField
+    # Importing optimus
+    import optimus as op
+
+    # Building a simple dataframe:
+    schema = StructType([
+            StructField("bill_id", IntegerType(), True),
+            StructField("foods", StringType(), True)])
+
+    id_ = [1, 2, 2, 3, 3, 3, 3, 4, 4]
+    foods = ['Pizza', 'Pizza', 'Beer', 'Hamburger', 'Beer', 'Beer', 'Beer', 'Pizza', 'Beer']
+
+
+    # Dataframe:
+    df = op.spark.createDataFrame(list(zip(id_, foods)), schema=schema)
+
+    df.show()
+
+DF:
+
++-------+---------+
+|bill id|    foods|
++-------+---------+
+|      1|    Pizza|
++-------+---------+
+|      2|    Pizza|
++-------+---------+
+|      2|     Beer|
++-------+---------+
+|      3|Hamburger|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      3|     Beer|
++-------+---------+
+|      4|    Pizza|
++-------+---------+
+|      4|     Beer|
++-------+---------+
+
+Now lets write this DF as a CSV
+
+.. code:: python
+
+    # Instantiation of DataTransformer class:
+    transformer = op.DataFrameTransformer(df)
+
+    # Write DF as CSV
+    transformer.to_csv("test.csv")
+
+This will create a folder with the name "test.csv" in the current path, and inside it will be te CSV with the
+concept. But with the ``read_csv`` function you can just pass the name "test.csv" and Optimus will understand. 
     
 Library mantained by `Favio Vazquez`_
 -------
