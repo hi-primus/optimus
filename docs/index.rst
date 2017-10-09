@@ -1,5 +1,5 @@
 Optimus (By Iron_)
-=======
+=====================
 
 .. image:: images/logoOptimus.png
 
@@ -203,7 +203,7 @@ Methods
 --------
 
 Analyzer.column_analyze(column_list, plots=True, values_bar=True, print_type=False, num_bars=10)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function counts the number of registers in a column that are numbers (integers, floats) and the number of string registers.
 
@@ -337,7 +337,7 @@ end of __analyze 4.292513847351074
 end of __analyze 1.180891990661621
 
 +-----------+----------+------------+------------------------+
-|           |          |            | Column name: price    |
+|           |          |            | Column name: price     |
 +-----------+----------+------------+------------------------+
 |           |          |            | Column datatype: int   |
 +-----------+----------+------------+------------------------+
@@ -415,7 +415,7 @@ Total execution time:  17.98968768119812
 +-----------+------------------+---------------------+
 
 Analyzer.get_categorical_hist(df_one_col, num_bars)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only string type columns) and returns a dictionary with bins and values of frequency.
 
@@ -445,7 +445,7 @@ Lets say we want to plot a histogram of frecuencies for the ``product`` column. 
 Now that we have the dictionary we just need to call ``plot_hist()``.
 
 Analyzer.get_numerical_hist(df_one_col, num_bars)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function analyzes a dataframe of a single column (only numerical columns) and returns a dictionary with bins and values of frequency.
 
@@ -474,7 +474,7 @@ Lets say we want to plot a histogram of frecuencies for the ``price`` column. We
 
 
 Analyzer.plot_hist(df_one_col, hist_dict, type_hist, num_bars=20, values_bar=True)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function builds the histogram (bins) of a categorical or numerical column dataframe.
 
@@ -509,7 +509,7 @@ Example:
 .. image:: images/priceHist.png
 
 Analyzer.unique_values_col(column)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function counts the number of values that are unique and also the total number of values. Then, returns the values obtained.
 
@@ -533,7 +533,7 @@ Example:
   {'unique': 8, 'total': 19}
 
 Analyzer.write_json(json_cols, path_to_json_file)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This functions outputs a JSON for the DataFrame in the specified path.
 
@@ -558,7 +558,7 @@ Example:
   analyzer.write_json(json_cols=json_cols, path_to_json_file= os.getcwd() + "/foo.json")
 
 Analyzer.get_frequency(self, columns, sort_by_count=True)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function gets the frequencies for values inside the specified columns.
 
@@ -740,7 +740,7 @@ Methods
 -------
 
 Transformer.trim_col(columns)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This methods cut left and right extra spaces in column strings provided
 by user.
@@ -1071,7 +1071,7 @@ New dataFrame:
 |   Paris   | France|  12341418|
 +-----------+-------+----------+
 
-Transformer.set_col(columns, func, dataType)
+Transformer.set_col(columns, func, data_type)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method can be used to make math operations or string manipulations
@@ -1079,7 +1079,7 @@ in row of dataFrame columns.
 
 The method receives a list of columns (or a single column) of dataFrame
 in ``columns`` argument. A ``lambda`` function default called ``func``
-and a string which describe the ``dataType`` that ``func`` function
+and a string which describe the ``data_type`` that ``func`` function
 should return.
 
 ``columns`` argument is expected to be a string or a list of columns
@@ -1089,7 +1089,7 @@ names and ``dataType`` a string indicating one of the following options:
 It is a requirement for this method that the dataType provided must be
 the same to dataType of ``columns``. On the other hand, if user writes
 ``columns == '*'`` the method makes operations in ``func`` if only if
-columns have same dataType that ``dataType`` argument.
+columns have same dataType that ``data_type`` argument.
 
 Here some examples:
 
@@ -1394,7 +1394,7 @@ New dataFrame:
 +---------------+--------+----------+
 
 DataFrameTransformer.lookup(column, list_str, str_to_replace)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method search a list of strings specified in ``list_str`` argument
 among rows in column dataFrame and replace them for ``str_to_replace``.
@@ -1488,7 +1488,7 @@ New dataFrame:
 +---------------+---------+----------+
 
 DataFrameTransformer.move_col(column, ref_col, position)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function move a column from one position to another according to
 the reference column ``ref_col`` and ``position`` argument.
@@ -1545,7 +1545,7 @@ New dataFrame:
 +---------+---------------+----------+
 
 DataFrameTransformer.count_items(col_id, col_search, new_col_feature, search_string):
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function can be used to split a feature with some extra information
 in order to make a new column feature.
@@ -1652,7 +1652,7 @@ New dataFrame:
 +-------+----------+
 
 DataFrameTransformer.date_transform(column, current_format, output_format)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method changes date format in ``column`` from ``current_format`` to
 ``output_format``.
@@ -1750,7 +1750,7 @@ New dataFrame:
 +---------------+----------+----------+
 
 DataFrameTransformer.to_csv(path_name, header=True, mode="overwrite", sep=",", *args, **kargs)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This functions writes a Spark dataframe as a CSV in the specified path.
 
@@ -1827,8 +1827,8 @@ Now lets write this DF as a CSV
     transformer.to_csv("test.csv")
 
 This will create a folder with the name "test.csv" in the current path, and inside it will be te CSV with the
-concept. But with the ``read_csv`` function you can just pass the name "test.csv" and Optimus will understand. 
+concept. But with the ``read_csv`` function you can just pass the name "test.csv" and Optimus will understand.
     
 Library mantained by `Favio Vazquez`_
--------
+------------------------------------------
 .. _Favio Vazquez: https://github.com/faviovazquez
