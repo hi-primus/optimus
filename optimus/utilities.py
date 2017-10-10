@@ -31,7 +31,7 @@ class Utilities:
 
         :param path     Path or location of the file.
         :param sep   Usually delimiter mark are ',' or ';'.
-        :param  header:     Tell the function is the dataset has a header row.
+        :param  header:     Tell the function whether dataset has a header row.
 
         :return dataFrame
         """
