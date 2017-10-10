@@ -243,7 +243,7 @@ def test_to_csv(spark_session):
 def test_read_csv():
     try:
         tools = op.Utilities()
-        df = tools.read_csv("foo.csv", header="true", sep=",")
+        df = tools.read_csv("tests/foo.csv", header="true", sep=",")
         assert_spark_df(df)
     except RuntimeError:
         logger.exception('Could not run read_csv().')
