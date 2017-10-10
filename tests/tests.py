@@ -238,3 +238,13 @@ def test_to_csv(spark_session):
     except RuntimeError:
         logger.exception('Could not run to_csv().')
         sys.exit(1)
+
+
+def test_read_csv():
+    try:
+        tools = op.Utilities()
+        df = tools.read_csv("foo.csv", header=True, sep=",")
+        assert_spark_df(df)
+    except RuntimeError:
+        logger.exception('Could not run read_csv().')
+        sys.exit(1)
