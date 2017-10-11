@@ -407,7 +407,7 @@ class DataFrameAnalyzer:
             height = rect.get_height()
             # Plotting texts on bars:
             plt.text(rect.get_x() + rect.get_width() / 2.,
-                     1.001 * height, "%.2e" % int(height),
+                     1.001 * height, "{}".format(height),
                      va='bottom', rotation=90)
 
     def _plot_num_hist(self, hist_dict, column, values_bar):
@@ -873,3 +873,4 @@ class DataFrameAnalyzer:
                         freq.show()
 
         return frequency(columns, sort_by_count)
+
