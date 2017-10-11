@@ -1161,3 +1161,20 @@ class DataFrameTransformer:
         with open(path, 'w') as outfile:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(p)
+
+    def to_csv(self, path_name, header=True, mode="overwrite", sep=",", *args, **kargs):
+        """
+        Write dataframe as CSV.
+        :param path_name: Path to write the DF and the name of the output CSV file.
+        :param header: True or False to include header
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                    "append": Append contents of this DataFrame to existing data.
+                    "overwrite" (default case): Overwrite existing data.
+                    "ignore": Silently ignore this operation if data already exists.
+                    "error": Throw an exception if data already exists.
+        :param sep: sets the single character as a separator for each field and value. If None is set,
+        it uses the default value.
+        :return: Dataframe in a CSV format in the specified path.
+        """
+
+        return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)

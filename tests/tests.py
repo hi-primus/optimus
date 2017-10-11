@@ -228,3 +228,23 @@ def test_get_frequency(spark_session):
     except RuntimeError:
         logger.exception('Could not run get_frequency().')
         sys.exit(1)
+
+
+def test_to_csv(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_other_df(spark_session))
+        transformer.to_csv("test.csv")
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run to_csv().')
+        sys.exit(1)
+
+
+def test_read_csv():
+    try:
+        tools = op.Utilities()
+        df = tools.read_csv("tests/foo.csv", header="true", sep=",")
+        assert_spark_df(df)
+    except RuntimeError:
+        logger.exception('Could not run read_csv().')
+        sys.exit(1)
