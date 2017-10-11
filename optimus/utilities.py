@@ -26,25 +26,25 @@ class Utilities:
         # Set empty container for url
         self.url = ""
 
-    def read_csv(self, path, delimiter_mark=';', header='true'):
+    def read_csv(self, path, sep=',', header='true'):
         """This funcion read a dataset from a csv file.
 
         :param path     Path or location of the file.
-        :param delimiter_mark   Usually delimiter mark are ',' or ';'.
-        :param  header:     Tell the function is the dataset has a header row.
+        :param sep   Usually delimiter mark are ',' or ';'.
+        :param  header:     Tell the function whether dataset has a header row.
 
         :return dataFrame
         """
         assert ((header == 'true') or (header == 'false')), "Error, header argument must be 'true' or 'false'. " \
                                                             "header must be string dataType, i.e: header='true'"
-        assert isinstance(delimiter_mark, str), "Error, delimiter mark argumen must be string dataType."
+        assert isinstance(sep, str), "Error, delimiter mark argumen must be string dataType."
 
         assert isinstance(path, str), "Error, path argument must be string datatype."
 
         return self.spark.read \
             .format('csv') \
             .options(header=header) \
-            .options(delimiter=delimiter_mark) \
+            .options(delimiter=sep) \
             .options(inferSchema='true') \
             .load(path)
 
@@ -113,18 +113,18 @@ class Utilities:
         if the file is in the local disk or a 'path://' prefix if the file is in the Hadood file system"
         return self.spark.read.parquet(path)
 
-    def csv_to_parquet(self, input_path, output_path, delimiter_mark_csv, header_csv, num_partitions=None):
+    def csv_to_parquet(self, input_path, output_path, sep_csv, header_csv, num_partitions=None):
         """This method transform a csv dataset file into a parquet.
 
-        The method reads a existing csv file using the inputPath, delimiter_mark_csv and headerCsv arguments.
+        The method reads a existing csv file using the inputPath, sep_csv and headerCsv arguments.
 
         :param  input_path   Address location of the csv file.
         :param  output_path  Address where the new parquet file will be stored.
-        :param  delimiter_mark_csv    Delimiter mark of the csv file, usually is ',' or ';'.
+        :param  sep_csv    Delimiter mark of the csv file, usually is ',' or ';'.
         :param  header_csv   This argument specifies if csv file has header or not.
         :param  num_partitions Specifies the number of partitions the user wants to write the dataset."""
 
-        df = self.read_csv(input_path, delimiter_mark_csv, header=header_csv)
+        df = self.read_csv(input_path, sep_csv, header=header_csv)
 
         if num_partitions is not None:
             assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
