@@ -8,12 +8,5 @@ Welcome to Optimus's documentation!
 
 .. toctree::
    :maxdepth: 2
+
    sections/Overview
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
