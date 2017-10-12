@@ -157,7 +157,7 @@ The following code shows how to instantiate the class to analyze a dataFrame:
     analyzer = op.DataFrameAnalyzer(df=df,pathFile=filePath)
 
 Methods
---------
+~~~~~~~~~
 
 Analyzer.column_analyze(column_list, plots=True, values_bar=True, print_type=False, num_bars=10)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
