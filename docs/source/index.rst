@@ -6,7 +6,7 @@
 Welcome to Optimus's documentation!
 ===================================
 
-.. image:: source/sections/images/logoOptimus.png
+.. image:: sections/images/logoOptimus.png
 
 .. toctree::
    :maxdepth: 2
