@@ -1,5 +1,5 @@
-Analyzing your Data Frame
-===========================
+Analyzing your Data
+====================
 
 DataFrameProfiler class
 -----------------------

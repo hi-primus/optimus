@@ -1,5 +1,5 @@
-Transforming your Data Frame
-=============================
+Transforming your Data
+=======================
 
 DataFrameTransformer class
 --------------------------
