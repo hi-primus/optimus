@@ -14,4 +14,5 @@ Welcome to Optimus's documentation!
    sections/overview
    sections/installing
    sections/analyzing
+   sections/transforming
 
