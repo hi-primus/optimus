@@ -12,6 +12,12 @@ As data scientists, we care about extracting the best information out of our dat
 
 Data preparation accounts for about 80% of the work of data scientists, so having a solution that connects to your database or file system, uses the most important framework for machine learning and data science at the moment (Apache Spark) and that can handle lots of information, working both in a cluster in a parallelized fashion or locally on your laptop is really important to have.
 
+Say Hi! to Optimus_ and visit out web page.
+
+.. _Optimus: https://hioptimus.com
+
+Prepare, process and explore your Big Data with fastest open source library on the planet using Apache Spark and Python (PySpark).
+
 .. toctree::
    :maxdepth: 2
 
