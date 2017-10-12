@@ -11,4 +11,6 @@ Welcome to Optimus's documentation!
 .. toctree::
    :maxdepth: 2
 
-   sections/Overview
+   sections/overview
+   sections/installing
+
