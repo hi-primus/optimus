@@ -1178,3 +1178,22 @@ class DataFrameTransformer:
         """
 
         return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
+
+    def indexer(self, input_cols):
+        """
+        Maps a string column of labels to an ML column of label indices. If the input column is
+        numeric, we cast it to string and index the string values
+        :param input_cols: Columns to be indexed.
+        :return: Dataframe with indexed columns.
+        """
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import StringIndexer
+
+        indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(self._df) for column in
+                    list(set(input_cols))]
+
+        pipeline = Pipeline(stages=indexers)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
