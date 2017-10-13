@@ -248,3 +248,16 @@ def test_read_csv():
     except RuntimeError:
         logger.exception('Could not run read_csv().')
         sys.exit(1)
+
+
+def test_create_data_frame():
+    try:
+        tools = op.Utilities()
+        data = [('Japan', 'Tokyo', 37800000), ('USA', 'New York', 19795791), ('France', 'Paris', 12341418),
+                ('Spain', 'Madrid', 6489162)]
+        names = ["country", "city", "population"]
+        df = tools.create_data_frame(data=data, names=names)
+        assert_spark_df(df)
+    except RuntimeError:
+        logger.exception('Could not run create_data_frame().')
+        sys.exit(1)
