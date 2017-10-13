@@ -268,7 +268,7 @@ def test_indexer(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.indexer(["city", "country"])
         assert_spark_df(transformer.get_data_frame)
-        assert transformer.get_data_frame.columns == ['country', 'city', 'population', 'city_index', 'country_index']
+        assert transformer.get_data_frame.columns == ['city', 'country', 'population', 'city_index', 'country_index']
     except RuntimeError:
         logger.exception('Could not run indexer().')
         sys.exit(1)
