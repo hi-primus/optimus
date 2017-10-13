@@ -16,6 +16,7 @@ dist/
 .eggs/
 *.egg-info/
 optimus/__pycache__/
+__pycache__/
 
 # Spark-Package release
 *.zip

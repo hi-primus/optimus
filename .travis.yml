@@ -39,7 +39,7 @@ jdk:
   - oraclejdk8
     
 script:
-    - py.test
+    - py.test -v
     - sonar-scanner
 
 deploy:
