@@ -6,7 +6,6 @@ from pyspark.sql.functions import col
 import pyspark
 import sys
 
-
 logger = airbrake.getLogger()
 
 
@@ -83,8 +82,8 @@ def create_vector_df(spark_session):
 
 def create_assembler_df(spark_session):
     try:
-        df = spark_session.createDataFrame([
-            [(0, 18, 1.0, Vectors.dense([0.0, 10.0, 0.5]), 1.0)]],
+        df = spark_session.createDataFrame(
+            [(0, 18, 1.0, Vectors.dense([0.0, 10.0, 0.5]), 1.0)],
             ["id", "hour", "mobile", "userFeatures", "clicked"])
         return df
     except RuntimeError:
