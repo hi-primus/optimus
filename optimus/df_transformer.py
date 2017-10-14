@@ -76,12 +76,13 @@ class DataFrameTransformer:
         """
         return self._df
 
-    def show(self, n=10):
+    def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
+        :param truncate: If set to True, truncate strings longer than 20 chars by default.
         :rtype: pyspark.sql.dataframe.DataFrame.show()
         """
-        return self._df.show(n)
+        return self._df.show(n, truncate)
 
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
@@ -1252,5 +1253,24 @@ class DataFrameTransformer:
         sql_trans = SQLTransformer(statement=sql_expression)
 
         self._df = sql_trans.transform(self._df)
+
+        return self
+
+    def vector_assembler(self, input_cols):
+        """
+        Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
+        either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
+        ML attributes).
+        :param input_cols: Columns to be indexed.
+        :return: Dataframe with indexed columns.
+        """
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import VectorAssembler
+
+        assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
+
+        pipeline = Pipeline(stages=assembler)
+        self._df = pipeline.fit(self._df).transform(self._df)
 
         return self

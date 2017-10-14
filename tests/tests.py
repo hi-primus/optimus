@@ -57,10 +57,11 @@ def create_other_df(spark_session):
 
 def create_sql_df(spark_session):
     try:
-        spark_session.createDataFrame([
+        df = spark_session.createDataFrame([
             (0, 1.0, 3.0),
             (2, 2.0, 5.0)
         ], ["id", "v1", "v2"])
+        return df
     except RuntimeError:
         logger.exception('Could not create other dataframe.')
         sys.exit(1)

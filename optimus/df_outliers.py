@@ -78,12 +78,13 @@ class OutlierDetector:
         """
         return self._df
 
-    def show(self, n=10):
+    def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
+        :param truncate: If set to True, truncate strings longer than 20 chars by default.
         :rtype: pyspark.sql.dataframe.DataFrame.show()
         """
-        return self._df.show(n)
+        return self._df.show(n, truncate)
 
 
 def median(df, column):
