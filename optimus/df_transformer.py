@@ -1230,10 +1230,10 @@ class DataFrameTransformer:
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import OneHotEncoder
 
-        indexers = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
-                    list(set(input_cols))]
+        encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
+                  list(set(input_cols))]
 
-        pipeline = Pipeline(stages=indexers)
+        pipeline = Pipeline(stages=encode)
         self._df = pipeline.fit(self._df).transform(self._df)
 
         return self

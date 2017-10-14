@@ -297,8 +297,8 @@ def test_index_to_string(spark_session):
 
 def test_one_hot_encoder(spark_session):
     try:
-        transformer = op.DataFrameTransformer(create_df(spark_session))
-        transformer.one_hot_encoder(["population"])
+        transformer = op.DataFrameTransformer(create_sql_df(spark_session))
+        transformer.one_hot_encoder(["id"])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run one_hot_encoder().')
