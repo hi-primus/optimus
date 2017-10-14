@@ -263,10 +263,31 @@ def test_create_data_frame():
         sys.exit(1)
 
 
-def test_indexer(spark_session):
+def test_string_to_index(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
-        transformer.indexer(["city", "country"])
+        transformer.string_to_index(["city", "country"])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run string_to_index().')
+        sys.exit(1)
+
+
+def test_index_to_string(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.string_to_index(["city", "country"])
+        transformer.index_to_string(["city_index", "country_index"])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run indexer().')
+        sys.exit(1)
+
+
+def test_one_hot_encoder(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_df(spark_session))
+        transformer.one_hot_encoder(["population"])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run indexer().')
