@@ -1237,3 +1237,20 @@ class DataFrameTransformer:
         self._df = pipeline.fit(self._df).transform(self._df)
 
         return self
+
+    def sql(self, sql_expression):
+        """
+        Implements the transformations which are defined by SQL statement. Currently we only support
+        SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
+        underlying table of the input dataframe.
+        :param sql_expression: SQL expression.
+        :return: Dataframe with indexed columns.
+        """
+
+        from pyspark.ml.feature import SQLTransformer
+
+        sql_trans = SQLTransformer(statement=sql_expression)
+
+        self._df = sql_trans.transform(self._df)
+
+        return self

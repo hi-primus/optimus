@@ -55,6 +55,17 @@ def create_other_df(spark_session):
         sys.exit(1)
 
 
+def create_sql_df(spark_session):
+    try:
+        spark_session.createDataFrame([
+            (0, 1.0, 3.0),
+            (2, 2.0, 5.0)
+        ], ["id", "v1", "v2"])
+    except RuntimeError:
+        logger.exception('Could not create other dataframe.')
+        sys.exit(1)
+
+
 def create_another_df(spark_session):
     try:
         # Building a simple dataframe:
@@ -280,7 +291,7 @@ def test_index_to_string(spark_session):
         transformer.index_to_string(["city_index", "country_index"])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run indexer().')
+        logger.exception('Could not run index_to_string().')
         sys.exit(1)
 
 
@@ -288,6 +299,16 @@ def test_one_hot_encoder(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.one_hot_encoder(["population"])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run one_hot_encoder().')
+        sys.exit(1)
+
+
+def test_sql(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_sql_df(spark_session))
+        transformer.sql("SELECT *, (v1 + v2) AS v3, (v1 * v2) AS v4 FROM __THIS__")
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run indexer().')
