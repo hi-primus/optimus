@@ -1,6 +1,7 @@
 import airbrake
 import optimus as op
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField
+from pyspark.ml.linalg import Vectors
 from pyspark.sql.functions import col
 import pyspark
 import sys
@@ -61,6 +62,30 @@ def create_sql_df(spark_session):
             (0, 1.0, 3.0),
             (2, 2.0, 5.0)
         ], ["id", "v1", "v2"])
+        return df
+    except RuntimeError:
+        logger.exception('Could not create other dataframe.')
+        sys.exit(1)
+
+
+def create_vector_df(spark_session):
+    try:
+        df = spark_session.createDataFrame([
+            (0, Vectors.dense([1.0, 0.5, -1.0]),),
+            (1, Vectors.dense([2.0, 1.0, 1.0]),),
+            (2, Vectors.dense([4.0, 10.0, 2.0]),)
+        ], ["id", "features"])
+        return df
+    except RuntimeError:
+        logger.exception('Could not create other dataframe.')
+        sys.exit(1)
+
+
+def create_assembler_df(spark_session):
+    try:
+        df = spark_session.createDataFrame([
+            [(0, 18, 1.0, Vectors.dense([0.0, 10.0, 0.5]), 1.0)]],
+            ["id", "hour", "mobile", "userFeatures", "clicked"])
         return df
     except RuntimeError:
         logger.exception('Could not create other dataframe.')
@@ -313,4 +338,24 @@ def test_sql(spark_session):
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         logger.exception('Could not run indexer().')
+        sys.exit(1)
+
+
+def test_assembler(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_assembler_df(spark_session))
+        transformer.vector_assembler(["hour", "mobile", "userFeatures"])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run assembler().')
+        sys.exit(1)
+
+
+def test_normalizer(spark_session):
+    try:
+        transformer = op.DataFrameTransformer(create_vector_df(spark_session))
+        transformer.normalizer(["features"])
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        logger.exception('Could not run normalizer().')
         sys.exit(1)

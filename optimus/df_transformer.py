@@ -1221,11 +1221,9 @@ class DataFrameTransformer:
 
     def one_hot_encoder(self, input_cols):
         """
-        Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
-        either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
-        ML attributes).
-        :param input_cols: Columns to be indexed.
-        :return: Dataframe with indexed columns.
+        Maps a column of label indices to a column of binary vectors, with at most a single one-value.
+        :param input_cols: Columns to be encoded.
+        :return: Dataframe with encoded columns.
         """
 
         from pyspark.ml import Pipeline
@@ -1245,7 +1243,7 @@ class DataFrameTransformer:
         SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
         underlying table of the input dataframe.
         :param sql_expression: SQL expression.
-        :return: Dataframe with indexed columns.
+        :return: Dataframe with columns changed by SQL statement.
         """
 
         from pyspark.ml.feature import SQLTransformer
@@ -1258,11 +1256,9 @@ class DataFrameTransformer:
 
     def vector_assembler(self, input_cols):
         """
-        Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
-        either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
-        ML attributes).
-        :param input_cols: Columns to be indexed.
-        :return: Dataframe with indexed columns.
+        Combines a given list of columns into a single vector column.
+        :param input_cols: Columns to be assembled.
+        :return: Dataframe with assembled column.
         """
 
         from pyspark.ml import Pipeline
@@ -1271,6 +1267,26 @@ class DataFrameTransformer:
         assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
 
         pipeline = Pipeline(stages=assembler)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
+
+    def normalizer(self, input_cols, p=2.0):
+        """
+        Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+        specifies the p-norm used for normalization. (p=2) by default.
+        :param input_cols: Columns to be normalized.
+        :param p:  p-norm used for normalization.
+        :return: Dataframe with normalized columns.
+        """
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import Normalizer
+
+        normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
+                  list(set(input_cols))]
+
+        pipeline = Pipeline(stages=normal)
         self._df = pipeline.fit(self._df).transform(self._df)
 
         return self
