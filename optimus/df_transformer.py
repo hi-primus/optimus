@@ -628,10 +628,10 @@ class DataFrameTransformer:
 
     def move_col(self, column, ref_col, position):
         """This funcion change column position in dataFrame.
-        :param column   Name of the column to be moved in dataFrame. column argument must be a string.
-        :param ref_col   Name of reference column in dataFrame. This column will be a reference to place the
+        :param column:   Name of the column to be moved in dataFrame. column argument must be a string.
+        :param ref_col:   Name of reference column in dataFrame. This column will be a reference to place the
                         column to be moved.
-        :param position Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
+        :param position: Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
                         provided will be placed just after the ref_col selected."""
         # Columns of dataFrame
         columns = self._df.columns
@@ -1163,7 +1163,7 @@ class DataFrameTransformer:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(p)
 
-    def to_csv(self, path_name, header=True, mode="overwrite", sep=",", *args, **kargs):
+    def to_csv(self, path_name, header="true", mode="overwrite", sep=",", *args, **kargs):
         """
         Write dataframe as CSV.
         :param path_name: Path to write the DF and the name of the output CSV file.
@@ -1178,6 +1178,15 @@ class DataFrameTransformer:
         :return: Dataframe in a CSV format in the specified path.
         """
 
+        self._assert_type_str(path_name, "path_name")
+
+        assert header == "true" or header == "false", "Error header must be 'true' or 'false'"
+
+        if header == 'true':
+            header = True
+        else:
+            header = False
+
         return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
 
     def string_to_index(self, input_cols):
@@ -1187,6 +1196,12 @@ class DataFrameTransformer:
         :param input_cols: Columns to be indexed.
         :return: Dataframe with indexed columns.
         """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
 
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import StringIndexer
@@ -1208,6 +1223,12 @@ class DataFrameTransformer:
         :return: Dataframe with indexed columns.
         """
 
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import IndexToString
 
@@ -1225,6 +1246,12 @@ class DataFrameTransformer:
         :param input_cols: Columns to be encoded.
         :return: Dataframe with encoded columns.
         """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
 
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import OneHotEncoder
@@ -1246,6 +1273,8 @@ class DataFrameTransformer:
         :return: Dataframe with columns changed by SQL statement.
         """
 
+        self._assert_type_str(sql_expression, "sql_expression")
+
         from pyspark.ml.feature import SQLTransformer
 
         sql_trans = SQLTransformer(statement=sql_expression)
@@ -1261,8 +1290,13 @@ class DataFrameTransformer:
         :return: Dataframe with assembled column.
         """
 
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
         from pyspark.ml import Pipeline
-        from pyspark.ml.feature import VectorAssembler
 
         assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
 
@@ -1279,6 +1313,14 @@ class DataFrameTransformer:
         :param p:  p-norm used for normalization.
         :return: Dataframe with normalized columns.
         """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
 
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import Normalizer
