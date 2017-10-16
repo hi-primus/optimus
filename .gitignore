@@ -19,3 +19,7 @@ optimus/__pycache__/
 
 # Spark-Package release
 *.zip
+
+__pycache__
+test.csv
+.cache

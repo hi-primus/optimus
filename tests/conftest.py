@@ -1,17 +1,10 @@
 import findspark
 findspark.init()
 
-import logging
 import pytest
 
 from pyspark.sql.session import SparkSession
 from pyspark import SparkContext
-
-
-def quiet_py4j():
-    """ turn down spark logging for the test context """
-    logger = logging.getLogger('py4j')
-    logger.setLevel(logging.WARN)
 
 
 @pytest.fixture(scope="session")
@@ -23,7 +16,6 @@ def spark_context(request):
     sc = SparkContext.getOrCreate()
     request.addfinalizer(lambda: sc.stop())
 
-    quiet_py4j()
     return sc
 
 
@@ -37,5 +29,4 @@ def spark_session(request):
              .getOrCreate())
     request.addfinalizer(lambda: spark.stop())
 
-    quiet_py4j()
     return spark
