@@ -1,10 +1,9 @@
-import pytest
-
 from optimus.spark import get_spark
 import optimus as op
 
 class TestDataFrameTransformer(object):
 
+    @classmethod
     def test_lower_case(self):
         source_data = [
             ("BOB", 1),
@@ -29,6 +28,7 @@ class TestDataFrameTransformer(object):
 
         assert(expected_df.collect() == actual_df.collect())
 
+    @classmethod
     def test_upper_case(self):
         source_data = [
             ("BOB", 1),
