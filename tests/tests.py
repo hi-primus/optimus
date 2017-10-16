@@ -1,12 +1,8 @@
-import airbrake
 import optimus as op
 from pyspark.sql.types import StringType, IntegerType, StructType, StructField
 from pyspark.sql.functions import col
 import pyspark
 import sys
-
-
-logger = airbrake.getLogger()
 
 
 def assert_spark_df(df):
@@ -30,7 +26,6 @@ def create_df(spark_session):
         assert_spark_df(df)
         return df
     except RuntimeError:
-        logger.exception('Could not create dataframe.')
         sys.exit(1)
 
 
@@ -51,7 +46,6 @@ def create_other_df(spark_session):
         assert_spark_df(df)
         return df
     except RuntimeError:
-        logger.exception('Could not create other dataframe.')
         sys.exit(1)
 
 
@@ -72,7 +66,6 @@ def create_another_df(spark_session):
         assert_spark_df(df)
         return df
     except RuntimeError:
-        logger.exception('Could not create other dataframe.')
         sys.exit(1)
 
 
@@ -81,7 +74,6 @@ def test_transformer(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         assert isinstance(transformer.get_data_frame, pyspark.sql.dataframe.DataFrame)
     except RuntimeError:
-        logger.exception('Could not create transformer.')
         sys.exit(1)
 
 
@@ -91,7 +83,6 @@ def test_trim_col(spark_session):
         transformer.trim_col("*")
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run trim_col().')
         sys.exit(1)
 
 
@@ -101,7 +92,6 @@ def test_drop_col(spark_session):
         transformer.drop_col("country")
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run drop_col().')
         sys.exit(1)
 
 
@@ -111,7 +101,6 @@ def test_keep_col(spark_session):
         transformer.keep_col(['city', 'population'])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run keep_col().')
         sys.exit(1)
 
 
@@ -121,7 +110,6 @@ def test_replace_col(spark_session):
         transformer.replace_col(search='Tokyo', change_to='Maracaibo', columns='city')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run replace_col().')
         sys.exit(1)
 
 
@@ -132,7 +120,6 @@ def test_delete_row(spark_session):
         transformer.delete_row(func(col('population')))
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run delete_row().')
         sys.exit(1)
 
 
@@ -143,7 +130,6 @@ def test_set_col(spark_session):
         transformer.set_col(['population'], func, 'integer')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run set_col().')
         sys.exit(1)
 
 
@@ -153,7 +139,6 @@ def test_clear_accents(spark_session):
         transformer.clear_accents(columns='*')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run clear_accents().')
         sys.exit(1)
 
 
@@ -163,7 +148,6 @@ def test_remove_special_chars(spark_session):
         transformer.remove_special_chars(columns=['city', 'country'])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run remove_special_chars().')
         sys.exit(1)
 
 
@@ -173,7 +157,6 @@ def test_remove_special_chars_regex(spark_session):
         transformer.remove_special_chars_regex(columns=['city', 'country'], regex='[^\w\s]')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run remove_special_chars_regex().')
         sys.exit(1)
 
 
@@ -184,7 +167,6 @@ def test_rename_col(spark_session):
         transformer.rename_col(names)
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run rename_col().')
         sys.exit(1)
 
 
@@ -194,7 +176,6 @@ def test_lookup(spark_session):
         transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run lookup().')
         sys.exit(1)
 
 
@@ -204,7 +185,6 @@ def test_move_col(spark_session):
         transformer.move_col('city', 'country', position='after')
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run move_col().')
         sys.exit(1)
 
 
@@ -216,7 +196,6 @@ def test_date_transform(spark_session):
                                    output_format="dd-mm-yyyy")
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run date_transform().')
         sys.exit(1)
 
 
@@ -226,7 +205,6 @@ def test_get_frequency(spark_session):
         analyzer.get_frequency(columns="city", sort_by_count=True)
         assert_spark_df(analyzer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run get_frequency().')
         sys.exit(1)
 
 
@@ -236,7 +214,6 @@ def test_to_csv(spark_session):
         transformer.to_csv("test.csv")
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
-        logger.exception('Could not run to_csv().')
         sys.exit(1)
 
 
@@ -246,5 +223,4 @@ def test_read_csv():
         df = tools.read_csv("tests/foo.csv", header="true", sep=",")
         assert_spark_df(df)
     except RuntimeError:
-        logger.exception('Could not run read_csv().')
         sys.exit(1)
