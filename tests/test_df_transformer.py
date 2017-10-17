@@ -1,54 +1,62 @@
 from optimus.spark import get_spark
 import optimus as op
+from quinn.extensions import *
+from pyspark.sql.types import *
 
 class TestDataFrameTransformer(object):
 
-    @classmethod
     def test_lower_case(self):
-        source_data = [
-            ("BOB", 1),
-            ("JoSe", 2)
-        ]
-        source_df = get_spark().createDataFrame(
-            source_data,
-            ["name", "age"]
+        source_df = get_spark().create_df(
+            [
+                ("BOB", 1),
+                ("JoSe", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
         )
 
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.lower_case("*").get_data_frame
 
-        expected_data = [
-            ("bob", 1),
-            ("jose", 2)
-        ]
-        expected_df = get_spark().createDataFrame(
-            expected_data,
-            ["name", "age"]
+        expected_df = get_spark().create_df(
+            [
+                ("bob", 1),
+                ("jose", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
         )
 
         assert(expected_df.collect() == actual_df.collect())
 
-    @classmethod
     def test_upper_case(self):
-        source_data = [
-            ("BOB", 1),
-            ("JoSe", 2)
-        ]
-        source_df = get_spark().createDataFrame(
-            source_data,
-            ["name", "age"]
+        source_df = get_spark().create_df(
+            [
+                ("BOB", 1),
+                ("JoSe", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
         )
 
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.upper_case("name").get_data_frame
 
-        expected_data = [
-            ("BOB", 1),
-            ("JOSE", 2)
-        ]
-        expected_df = get_spark().createDataFrame(
-            expected_data,
-            ["name", "age"]
+        expected_df = get_spark().create_df(
+            [
+                ("BOB", 1),
+                ("JOSE", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
         )
 
         assert(expected_df.collect() == actual_df.collect())
