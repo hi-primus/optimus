@@ -60,3 +60,31 @@ class TestDataFrameTransformer(object):
         )
 
         assert(expected_df.collect() == actual_df.collect())
+
+    def test_trim_col(self):
+        source_df = get_spark().create_df(
+            [
+                ("  ron", 1),
+                ("      bill     ", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
+        )
+
+        transformer = op.DataFrameTransformer(source_df)
+        actual_df = transformer.trim_col("name").get_data_frame
+
+        expected_df = get_spark().create_df(
+            [
+                ("ron", 1),
+                ("bill", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
+        )
+
+        assert(expected_df.collect() == actual_df.collect())
