@@ -8,4 +8,4 @@ ipython==6.2.1
 seaborn==0.8.1
 setuptools==36.6.0
 pixiedust-optimus==1.4.0
-airbrake==2.1.0
+quinn==0.2.0

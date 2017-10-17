@@ -23,4 +23,4 @@ optimus/__pycache__/
 __pycache__
 test.csv
 .cache
-.coverage
+.coverage*

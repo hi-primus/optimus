@@ -1,7 +1,7 @@
 
 language: python
 python:
-    - "3.5"
+    - "3.6"
 
 env:
     global:
@@ -21,8 +21,7 @@ before_install:
     - pip install pytest-spark
     - pip install spark-df-profiling-optimus
     - pip install pixiedust-optimus
-    - pip install airbrake
-    
+
 install:
     - ./install-spark-2-2.sh
     - "pip install -r requirements-test.txt"
