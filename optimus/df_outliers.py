@@ -7,7 +7,12 @@ class OutlierDetector:
     """
     Outlier detection for pyspark dataframes.
     """
-    def __init__(self, df, column):
+    def __init__(self, df, column, threshold=2):
+        """
+        :param df: Spark Dataframe to analyze
+        :param column: Column in dataframe to get outliers
+        :param threshold: Threshold for MAD. Default = 2.
+        """
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._df = df
         self._column = column
@@ -22,7 +27,7 @@ class OutlierDetector:
 
         self.mad_value = median(absolute_deviation, column)
 
-        self.threshold = 2
+        self.threshold = threshold
 
         self._limits = []
         self._limits.append(round((self.median_value - self.threshold * self.mad_value), 2))
