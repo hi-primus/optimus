@@ -26,3 +26,6 @@ Prepare, process and explore your Big Data with fastest open source library on t
    sections/analyzing
    sections/transforming
 
+Library mantained by `Favio Vazquez`_
+------------------------------------------
+.. _Favio Vazquez: https://github.com/faviovazquez
