@@ -131,6 +131,40 @@ class DataFrameTransformer:
 
         return self
 
+    def replace_na(self, value, columns=None):
+        """
+        Replace nulls with specified value.
+        :param columns: optional list of column names to consider. Columns specified in subset that do not have
+        matching data type are ignored. For example, if value is a string, and subset contains a non-string column,
+         then the non-string column is simply ignored.
+        :param value: Value to replace null values with. If the value is a dict, then subset is ignored and value
+         must be a mapping from column name (string) to replacement value. The replacement
+         value must be an int, long, float, or string.
+        :return: Transformer object (DF with columns with replaced null values).
+        """
+
+        if columns == "*":
+            columns = None
+
+        # Columns to list
+        if isinstance(columns, str):
+            columns = [columns]
+
+        if columns is not None:
+            assert isinstance(columns, list), "Error: columns argument must be a list"
+
+        assert isinstance(value, (int, float, str, dict)), "Error: value argument must be an " \
+                                                           "int, long, float, string, or dict"
+
+        def replace_it(val, col):
+            self._df = self._df.fillna(val, subset=col)
+
+        replace_it(val=value, col=columns)
+
+        self._add_transformation()
+
+        return self
+
     def check_point(self):
         """This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
         evaluation approach in processing data: transformation functions are not computed into an action is called.

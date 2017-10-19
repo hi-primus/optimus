@@ -325,3 +325,14 @@ def test_normalizer(spark_session):
         assert_spark_df(transformer.get_data_frame)
     except RuntimeError:
         sys.exit(1)
+
+
+def replace_na():
+    try:
+        tools = op.Utilities()
+        df = tools.read_csv("tests/impute_data.csv", header="true", sep=",")
+        transformer = op.DataFrameTransformer(df)
+        transformer.replace_na(10, columns="*")
+        assert_spark_df(transformer.get_data_frame)
+    except RuntimeError:
+        sys.exit(1)
