@@ -1226,7 +1226,7 @@ class DataFrameTransformer:
     def string_to_index(self, input_cols):
         """
         Maps a string column of labels to an ML column of label indices. If the input column is
-        numeric, we cast it to string and index the string values
+        numeric, we cast it to string and index the string values.
         :param input_cols: Columns to be indexed.
         :return: Dataframe with indexed columns.
         """

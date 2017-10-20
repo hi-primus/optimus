@@ -1,0 +1,69 @@
+Feature Engineering with Optimus
+==================================
+
+Now with Optimus we have made easy the process of Feature Engineering.
+
+
+When we talk about Feature Engineering we refer to creating new features from your existing ones to improve model
+performance. Sometimes this is the case, or sometimes you need to do it because a certain model doesn't recognize
+the data as you have it, so these transformations let you run most of Machine and Deep Learning algorithms.
+
+These methods are part of the DataFrameTransformer, and they are a high level of abstraction for Spark Feature
+Engineering methods. You'll see how easy it is to prepare your data with Optimus for Machine Learning.
+
+
+Methods for Feature Engineering
+---------------------------------
+
+Transformer.string_to_index(input_cols)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method maps a string column of labels to an ML column of label indices. If the input column is numeric, we cast it
+to string and index the string values.
+
+``input_cols`` argument receives a list of columns to be indexed.
+
+Let's start by creating a DataFrame with Optimus.
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+
+    # Creating DF with Optimus
+    data = [('Japan', 'Tokyo', 37800000),('USA', 'New York', 19795791),('France', 'Paris', 12341418),
+                  ('Spain','Madrid',6489162)]
+    df = tools.create_data_frame(data, ["country", "city", "population"])
+
+    # Instantiating transformer
+    transformer = op.DataFrameTransformer(df)
+
+    # Show DF
+    transformer.show()
+
+    +-------+--------+----------+
+    |country|    city|population|
+    +-------+--------+----------+
+    |  Japan|   Tokyo|  37800000|
+    |    USA|New York|  19795791|
+    | France|   Paris|  12341418|
+    |  Spain|  Madrid|   6489162|
+    +-------+--------+----------+
+
+    # Indexing columns 'city" and 'country'
+    transformer.string_to_index(["city", "country"])
+
+    # Show indexed DF
+    transformer.show()
+
+    +-------+--------+----------+----------+-------------+
+    |country|    city|population|city_index|country_index|
+    +-------+--------+----------+----------+-------------+
+    |  Japan|   Tokyo|  37800000|       1.0|          1.0|
+    |    USA|New York|  19795791|       2.0|          3.0|
+    | France|   Paris|  12341418|       3.0|          2.0|
+    |  Spain|  Madrid|   6489162|       0.0|          0.0|
+    +-------+--------+----------+----------+-------------+
+
