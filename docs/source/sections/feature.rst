@@ -131,3 +131,50 @@ Let's go back to strings with the DataFrame we created in the last step.
     |  Spain|  Madrid|   6489162|          0.0|       0.0|              Spain |
     +-------+--------+----------+-------------+----------+--------------------+
 
+
+Transformer.one_hot_encoder(input_cols)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method maps a column of label indices to a column of binary vectors, with at most a single one-value.
+
+``input_cols`` argument receives a list of columns to be encoded.
+
+Let's create a sample dataframe to see what does OHE does:
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+
+    # Creating DataFrame
+    data = [
+    (0, "a"),
+    (1, "b"),
+    (2, "c"),
+    (3, "a"),
+    (4, "a"),
+    (5, "c")
+    ]
+    df = tools.create_data_frame(data,["id", "category"])
+
+    # Instantiating the transformer
+    transformer = op.DataFrameTransformer(df)
+
+    # One Hot Encoding
+    transformer.one_hot_encoder(["id"])
+
+    # Show encoded dataframe
+    transformer.show()
+
+    +---+--------+-------------+
+    | id|category|   id_encoded|
+    +---+--------+-------------+
+    |  0|       a|(5,[0],[1.0])|
+    |  1|       b|(5,[1],[1.0])|
+    |  2|       c|(5,[2],[1.0])|
+    |  3|       a|(5,[3],[1.0])|
+    |  4|       a|(5,[4],[1.0])|
+    |  5|       c|    (5,[],[])|
+    +---+--------+-------------+
