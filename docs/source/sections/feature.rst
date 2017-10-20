@@ -67,3 +67,67 @@ Let's start by creating a DataFrame with Optimus.
     |  Spain|  Madrid|   6489162|       0.0|          0.0|
     +-------+--------+----------+----------+-------------+
 
+
+Transformer.index_to_string(input_cols)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method maps a column of indices back to a new column of corresponding string values. The index-string mapping is
+either from the ML (Spark) attributes of the input column, or from user-supplied labels (which take precedence over
+ML attributes).
+
+``input_cols`` argument receives a list of columns to be indexed.
+
+Let's go back to strings with the DataFrame we created in the last step.
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+
+    # Instantiating transformer
+    transformer = op.DataFrameTransformer(df)
+
+    # Show DF
+    transformer.show()
+
+    +-------+--------+----------+
+    |country|    city|population|
+    +-------+--------+----------+
+    |  Japan|   Tokyo|  37800000|
+    |    USA|New York|  19795791|
+    | France|   Paris|  12341418|
+    |  Spain|  Madrid|   6489162|
+    +-------+--------+----------+
+
+    # Indexing columns 'city" and 'country'
+    transformer.string_to_index(["city", "country"])
+
+    # Show indexed DF
+    transformer.show()
+
+    +-------+--------+----------+----------+-------------+
+    |country|    city|population|city_index|country_index|
+    +-------+--------+----------+----------+-------------+
+    |  Japan|   Tokyo|  37800000|       1.0|          1.0|
+    |    USA|New York|  19795791|       2.0|          3.0|
+    | France|   Paris|  12341418|       3.0|          2.0|
+    |  Spain|  Madrid|   6489162|       0.0|          0.0|
+    +-------+--------+----------+----------+-------------+
+
+    # Going back to strings from index
+    transformer.index_to_string(["country_index"])
+
+    # Show DF with column "county_index" back to string
+    transformer.show()
+
+    +-------+--------+----------+-------------+----------+--------------------+
+    |country|    city|population|country_index|city_index|country_index_string|
+    +-------+--------+----------+-------------+----------+--------------------+
+    |  Japan|   Tokyo|  37800000|          1.0|       1.0|              Japan |
+    |    USA|New York|  19795791|          3.0|       2.0|                USA |
+    | France|   Paris|  12341418|          2.0|       3.0|             France |
+    |  Spain|  Madrid|   6489162|          0.0|       0.0|              Spain |
+    +-------+--------+----------+-------------+----------+--------------------+
+
