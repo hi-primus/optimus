@@ -110,6 +110,7 @@ Let's go back to strings with the DataFrame we created in the last step.
 |  Spain|  Madrid|   6489162|
 +-------+--------+----------+
 
+.. code:: python
     # Indexing columns 'city" and 'country'
     transformer.string_to_index(["city", "country"])
 
@@ -127,6 +128,8 @@ Let's go back to strings with the DataFrame we created in the last step.
 +-------+--------+----------+----------+-------------+
 |  Spain|  Madrid|   6489162|       0.0|          0.0|
 +-------+--------+----------+----------+-------------+
+
+.. code:: python
 
     # Going back to strings from index
     transformer.index_to_string(["country_index"])
