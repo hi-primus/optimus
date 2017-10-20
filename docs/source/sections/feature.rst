@@ -55,6 +55,8 @@ Let's start by creating a DataFrame with Optimus.
 |  Spain|  Madrid|   6489162|
 +-------+--------+----------+
 
+.. code:: python
+
     # Indexing columns 'city" and 'country'
     transformer.string_to_index(["city", "country"])
 
