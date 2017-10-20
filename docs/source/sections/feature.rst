@@ -43,14 +43,17 @@ Let's start by creating a DataFrame with Optimus.
     # Show DF
     transformer.show()
 
-    +-------+--------+----------+
-    |country|    city|population|
-    +-------+--------+----------+
-    |  Japan|   Tokyo|  37800000|
-    |    USA|New York|  19795791|
-    | France|   Paris|  12341418|
-    |  Spain|  Madrid|   6489162|
-    +-------+--------+----------+
++-------+--------+----------+
+|country|    city|population|
++-------+--------+----------+
+|  Japan|   Tokyo|  37800000|
++-------+--------+----------+
+|    USA|New York|  19795791|
++-------+--------+----------+
+| France|   Paris|  12341418|
++-------+--------+----------+
+|  Spain|  Madrid|   6489162|
++-------+--------+----------+
 
     # Indexing columns 'city" and 'country'
     transformer.string_to_index(["city", "country"])
@@ -58,14 +61,17 @@ Let's start by creating a DataFrame with Optimus.
     # Show indexed DF
     transformer.show()
 
-    +-------+--------+----------+----------+-------------+
-    |country|    city|population|city_index|country_index|
-    +-------+--------+----------+----------+-------------+
-    |  Japan|   Tokyo|  37800000|       1.0|          1.0|
-    |    USA|New York|  19795791|       2.0|          3.0|
-    | France|   Paris|  12341418|       3.0|          2.0|
-    |  Spain|  Madrid|   6489162|       0.0|          0.0|
-    +-------+--------+----------+----------+-------------+
++-------+--------+----------+----------+-------------+
+|country|    city|population|city_index|country_index|
++-------+--------+----------+----------+-------------+
+|  Japan|   Tokyo|  37800000|       1.0|          1.0|
++-------+--------+----------+----------+-------------+
+|    USA|New York|  19795791|       2.0|          3.0|
++-------+--------+----------+----------+-------------+
+| France|   Paris|  12341418|       3.0|          2.0|
++-------+--------+----------+----------+-------------+
+|  Spain|  Madrid|   6489162|       0.0|          0.0|
++-------+--------+----------+----------+-------------+
 
 
 Transformer.index_to_string(input_cols)
@@ -92,14 +98,17 @@ Let's go back to strings with the DataFrame we created in the last step.
     # Show DF
     transformer.show()
 
-    +-------+--------+----------+
-    |country|    city|population|
-    +-------+--------+----------+
-    |  Japan|   Tokyo|  37800000|
-    |    USA|New York|  19795791|
-    | France|   Paris|  12341418|
-    |  Spain|  Madrid|   6489162|
-    +-------+--------+----------+
++-------+--------+----------+
+|country|    city|population|
++-------+--------+----------+
+|  Japan|   Tokyo|  37800000|
++-------+--------+----------+
+|    USA|New York|  19795791|
++-------+--------+----------+
+| France|   Paris|  12341418|
++-------+--------+----------+
+|  Spain|  Madrid|   6489162|
++-------+--------+----------+
 
     # Indexing columns 'city" and 'country'
     transformer.string_to_index(["city", "country"])
@@ -107,14 +116,17 @@ Let's go back to strings with the DataFrame we created in the last step.
     # Show indexed DF
     transformer.show()
 
-    +-------+--------+----------+----------+-------------+
-    |country|    city|population|city_index|country_index|
-    +-------+--------+----------+----------+-------------+
-    |  Japan|   Tokyo|  37800000|       1.0|          1.0|
-    |    USA|New York|  19795791|       2.0|          3.0|
-    | France|   Paris|  12341418|       3.0|          2.0|
-    |  Spain|  Madrid|   6489162|       0.0|          0.0|
-    +-------+--------+----------+----------+-------------+
++-------+--------+----------+----------+-------------+
+|country|    city|population|city_index|country_index|
++-------+--------+----------+----------+-------------+
+|  Japan|   Tokyo|  37800000|       1.0|          1.0|
++-------+--------+----------+----------+-------------+
+|    USA|New York|  19795791|       2.0|          3.0|
++-------+--------+----------+----------+-------------+
+| France|   Paris|  12341418|       3.0|          2.0|
++-------+--------+----------+----------+-------------+
+|  Spain|  Madrid|   6489162|       0.0|          0.0|
++-------+--------+----------+----------+-------------+
 
     # Going back to strings from index
     transformer.index_to_string(["country_index"])
@@ -122,14 +134,17 @@ Let's go back to strings with the DataFrame we created in the last step.
     # Show DF with column "county_index" back to string
     transformer.show()
 
-    +-------+--------+----------+-------------+----------+--------------------+
-    |country|    city|population|country_index|city_index|country_index_string|
-    +-------+--------+----------+-------------+----------+--------------------+
-    |  Japan|   Tokyo|  37800000|          1.0|       1.0|              Japan |
-    |    USA|New York|  19795791|          3.0|       2.0|                USA |
-    | France|   Paris|  12341418|          2.0|       3.0|             France |
-    |  Spain|  Madrid|   6489162|          0.0|       0.0|              Spain |
-    +-------+--------+----------+-------------+----------+--------------------+
++-------+--------+----------+-------------+----------+--------------------+
+|country|    city|population|country_index|city_index|country_index_string|
++-------+--------+----------+-------------+----------+--------------------+
+|  Japan|   Tokyo|  37800000|          1.0|       1.0|              Japan |
++-------+--------+----------+-------------+----------+--------------------+
+|    USA|New York|  19795791|          3.0|       2.0|                USA |
++-------+--------+----------+-------------+----------+--------------------+
+| France|   Paris|  12341418|          2.0|       3.0|             France |
++-------+--------+----------+-------------+----------+--------------------+
+|  Spain|  Madrid|   6489162|          0.0|       0.0|              Spain |
++-------+--------+----------+-------------+----------+--------------------+
 
 
 Transformer.one_hot_encoder(input_cols)
@@ -168,16 +183,21 @@ Let's create a sample dataframe to see what does OHE does:
     # Show encoded dataframe
     transformer.show()
 
-    +---+--------+-------------+
-    | id|category|   id_encoded|
-    +---+--------+-------------+
-    |  0|       a|(5,[0],[1.0])|
-    |  1|       b|(5,[1],[1.0])|
-    |  2|       c|(5,[2],[1.0])|
-    |  3|       a|(5,[3],[1.0])|
-    |  4|       a|(5,[4],[1.0])|
-    |  5|       c|    (5,[],[])|
-    +---+--------+-------------+
++---+--------+-------------+
+| id|category|   id_encoded|
++---+--------+-------------+
+|  0|       a|(5,[0],[1.0])|
++---+--------+-------------+
+|  1|       b|(5,[1],[1.0])|
++---+--------+-------------+
+|  2|       c|(5,[2],[1.0])|
++---+--------+-------------+
+|  3|       a|(5,[3],[1.0])|
++---+--------+-------------+
+|  4|       a|(5,[4],[1.0])|
++---+--------+-------------+
+|  5|       c|    (5,[],[])|
++---+--------+-------------+
 
 Transformer.sql(sql_expression)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
