@@ -178,3 +178,64 @@ Let's create a sample dataframe to see what does OHE does:
     |  4|       a|(5,[4],[1.0])|
     |  5|       c|    (5,[],[])|
     +---+--------+-------------+
+
+Transformer.sql(sql_expression)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method implements the transformations which are defined by SQL statement. Spark only support
+SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
+underlying table of the input dataframe. Thank Spark for this amazing function.
+
+`sql_expression`` argument receives a string that contains SQL expression.
+
+Let's create a sample DataFrame to test this function.
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+
+    # Creating DataFrame
+    data = [
+    (0, 1.0, 3.0),
+    (2, 2.0, 5.0)
+    ]
+
+    df = tools.create_data_frame(data,["id", "v1", "v2"])
+
+    # Instantiating the transformer
+    transformer = op.DataFrameTransformer(df)
+
+
+This dataframe is just this:
+
++---+---+---+
+| id| v1| v2|
++---+---+---+
+|  0|1.0|3.0|
++---+---+---+
+|  2|2.0|5.0|
++---+---+---+
+
+Now let's create two new columns from these ones. The first will be the sum of the columns `v1` and `v2`, and
+the second one will be the multiplication of this two columns. With the `sql()` function we just need to
+pass the sql expression and use at the end `FROM __THIS__` that will be the underlying table of the input dataframe.
+
+So:
+
+.. code:: python
+
+    transformer.sql("SELECT *, (v1 + v2) AS v3, (v1 * v2) AS v4 FROM __THIS__")
+
+
+And this will output:
+
++---+---+---+---+----+---+----+
+| id| v1| v2| v3|  v4| v3|  v4|
++---+---+---+---+----+---+----+
+|  0|1.0|3.0|4.0| 3.0|4.0| 3.0|
++---+---+---+---+----+---+----+
+|  2|2.0|5.0|7.0|10.0|7.0|10.0|
++---+---+---+---+----+---+----+
