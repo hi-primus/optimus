@@ -264,3 +264,93 @@ And this will output:
 +---+---+---+---+----+---+----+
 |  2|2.0|5.0|7.0|10.0|7.0|10.0|
 +---+---+---+---+----+---+----+
+
+Transformer.vector_assembler(input_cols)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method combines a given list of columns into a single vector column.
+
+``input_cols`` argument receives a list of columns to be encoded.
+
+This is very important because lots of Machine Learning algorithms in Spark need this format to work.
+
+Let's create a sample dataframe to see what does vector assembler does:
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+    # Import Vectors
+    from pyspark.ml.linalg import Vectors
+
+    # Creating DataFrame
+    data = [(0, 18, 1.0, Vectors.dense([0.0, 10.0, 0.5]), 1.0)]
+
+    df = tools.create_data_frame(data,["id", "hour", "mobile", "user_features", "clicked"]
+
+    # Instantiating the transformer
+    transformer = op.DataFrameTransformer(df)
+
+    # Assemble features
+    transformer.vector_assembler(["hour", "mobile", "userFeatures"])
+
+
+    # Show assembled df
+    print("Assembled columns 'hour', 'mobile', 'userFeatures' to vector column 'features'")
+    transform.get_data_frame.select("features", "clicked").show(truncate=False)
+
+
++-----------------------+-------+
+|features               |clicked|
++-----------------------+-------+
+|[18.0,1.0,0.0,10.0,0.5]|1.0    |
++-----------------------+-------+
+
+Transformer.normalizer(input_cols,p=2.0)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+specifies the p-norm used for normalization. (p=2) by default.
+
+``input_cols`` argument receives a list of columns to be normalized.
+``p`` argument is the p-norm used for normalization.
+
+
+
+Let's create a sample dataframe to see what does normalizer does:
+
+.. code:: python
+
+    # Importing Optimus
+    import optimus as op
+    #Importing utilities
+    tools = op.Utilities()
+    # Import Vectors
+    from pyspark.ml.linalg import Vectors
+
+    data = [
+    (0, Vectors.dense([1.0, 0.5, -1.0]),),
+    (1, Vectors.dense([2.0, 1.0, 1.0]),),
+    (2, Vectors.dense([4.0, 10.0, 2.0]),)
+    ]
+
+    df = tools.create_data_frame(data,["id", "features"])
+
+    transformer.normalizer(["features"], p=2.0).show(truncate=False)
+
+    # Show normalized data
+    transformer.show(truncate=False)
+
+
++---+--------------+-----------------------------------------------------------+
+|id |features      |features_normalized                                        |
++---+--------------+-----------------------------------------------------------+
+|0  |[1.0,0.5,-1.0]|[0.6666666666666666,0.3333333333333333,-0.6666666666666666]|
++---+--------------+-----------------------------------------------------------+
+|1  |[2.0,1.0,1.0] |[0.8164965809277261,0.4082482904638631,0.4082482904638631] |
++---+--------------+-----------------------------------------------------------+
+|2  |[4.0,10.0,2.0]|[0.3651483716701107,0.9128709291752769,0.18257418583505536]|
++---+--------------+-----------------------------------------------------------+
+
