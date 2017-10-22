@@ -26,6 +26,22 @@ class Utilities:
         # Set empty container for url
         self.url = ""
 
+    def create_data_frame(self, data, names):
+        """
+        Create a spark Dataframe from a list of tuples. This will infer the type for each column.
+        :param data: List of tuples with data
+        :param names: List of names for the columns
+        :return: Spark dataframe
+        """
+
+        assert isinstance(data, list) and isinstance(data[0], tuple), \
+            "data should be a list of tuples"
+
+        assert isinstance(names, list) and isinstance(names[0], str), \
+            "names should be a list of strings"
+
+        return self.spark.createDataFrame(data, names)
+
     def read_csv(self, path, sep=',', header='true'):
         """This funcion read a dataset from a csv file.
 
@@ -48,7 +64,7 @@ class Utilities:
             .options(inferSchema='true') \
             .load(path)
 
-    def read_dataset_url(self, path=None, ty="csv"):
+    def read_url(self, path=None, ty="csv"):
         """
         Reads dataset from URL.
         :param path: string for URL to read

@@ -52,7 +52,8 @@ class DataFrameTransformer:
         columns_provided: the list of columns to be process.
         columns_df: list of columns's dataFrames
         """
-        col_not_valids = (set([column for column in columns_provided]).difference(set([column for column in columns_df])))
+        col_not_valids = (
+            set([column for column in columns_provided]).difference(set([column for column in columns_df])))
         assert (col_not_valids == set()), 'Error: The following columns do not exits in dataFrame: %s' % col_not_valids
 
     def _add_transformation(self):
@@ -75,12 +76,13 @@ class DataFrameTransformer:
         """
         return self._df
 
-    def show(self, n=10):
+    def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
+        :param truncate: If set to True, truncate strings longer than 20 chars by default.
         :rtype: pyspark.sql.dataframe.DataFrame.show()
         """
-        return self._df.show(n)
+        return self._df.show(n, truncate)
 
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
@@ -129,6 +131,40 @@ class DataFrameTransformer:
 
         return self
 
+    def replace_na(self, value, columns=None):
+        """
+        Replace nulls with specified value.
+        :param columns: optional list of column names to consider. Columns specified in subset that do not have
+        matching data type are ignored. For example, if value is a string, and subset contains a non-string column,
+         then the non-string column is simply ignored.
+        :param value: Value to replace null values with. If the value is a dict, then subset is ignored and value
+         must be a mapping from column name (string) to replacement value. The replacement
+         value must be an int, long, float, or string.
+        :return: Transformer object (DF with columns with replaced null values).
+        """
+
+        if columns == "*":
+            columns = None
+
+        # Columns to list
+        if isinstance(columns, str):
+            columns = [columns]
+
+        if columns is not None:
+            assert isinstance(columns, list), "Error: columns argument must be a list"
+
+        assert isinstance(value, (int, float, str, dict)), "Error: value argument must be an " \
+                                                           "int, long, float, string, or dict"
+
+        def replace_it(val, col):
+            self._df = self._df.fillna(val, subset=col)
+
+        replace_it(val=value, col=columns)
+
+        self._add_transformation()
+
+        return self
+
     def check_point(self):
         """This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
         evaluation approach in processing data: transformation functions are not computed into an action is called.
@@ -144,11 +180,11 @@ class DataFrameTransformer:
 
         # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
         # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
-        print ("Saving changes at disk by checkpoint...")
+        print("Saving changes at disk by checkpoint...")
         self._df.checkpoint()
         self._df.count()
         self._df = self._sql_context.createDataFrame(self._df, self._df.schema)
-        print ("Done.")
+        print("Done.")
 
     execute = check_point
 
@@ -249,7 +285,7 @@ class DataFrameTransformer:
 
         # Asserting change_to parameter is a string or a number
         assert isinstance(change_to, str) or isinstance(change_to, float) or isinstance(change_to,
-                                                                                        int),\
+                                                                                        int), \
             "Error: change_to parameter must be a number or string"
 
         # Asserting search and change_to have same type
@@ -274,7 +310,7 @@ class DataFrameTransformer:
 
         assert (
             col_not_valids == set()), 'Error: The following columns do not have same datatype argument provided: %s' % \
-                                    col_not_valids
+                                      col_not_valids
 
         col_replace(columns)
 
@@ -313,7 +349,7 @@ class DataFrameTransformer:
         :return transformer object
         """
         dict_types = {'string': StringType(), 'str': StringType(), 'integer': IntegerType(),
-                     'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(), 'Double': DoubleType()}
+                      'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(), 'Double': DoubleType()}
 
         types = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
                  'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
@@ -350,7 +386,7 @@ class DataFrameTransformer:
 
         assert (
             col_not_valids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
-                                    % col_not_valids
+                                      % col_not_valids
 
         col_set(columns, function)
 
@@ -415,7 +451,7 @@ class DataFrameTransformer:
 
         assert (
             col_not_valids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
-                                    % col_not_valids
+                                      % col_not_valids
 
         # Receives  a string as an argument
         def remove_accents(input_str):
@@ -460,7 +496,7 @@ class DataFrameTransformer:
 
         assert (
             col_not_valids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
-                                    % col_not_valids
+                                      % col_not_valids
 
         def rm_spec_chars(input_str):
             # Remove all punctuation and control characters
@@ -507,7 +543,7 @@ class DataFrameTransformer:
 
         assert (
             col_not_valids == set()), 'Error: The following columns do not have same datatype argument provided: %s' \
-                                    % col_not_valids
+                                      % col_not_valids
 
         def rm_spec_chars_regex(input_str, regex):
             for _ in set(input_str):
@@ -515,7 +551,7 @@ class DataFrameTransformer:
             return input_str
 
         # User define function that does operation in cells
-        function = udf(lambda cell: rm_spec_chars_regex(cell,regex) if cell is not None else cell, StringType())
+        function = udf(lambda cell: rm_spec_chars_regex(cell, regex) if cell is not None else cell, StringType())
 
         exprs = [function(c).alias(c) if (c in columns) and (c in valid_cols)  else c for c in self._df.columns]
 
@@ -534,7 +570,6 @@ class DataFrameTransformer:
         # Asserting columns is string or list:
         assert isinstance(columns, list) and isinstance(columns[0], tuple), \
             "Error: Column argument must be a list of tuples"
-
 
         col_not_valids = (
             set([column[0] for column in columns]).difference(set([column for column in self._df.columns])))
@@ -570,7 +605,7 @@ class DataFrameTransformer:
         # Asserting columns is string or list:
         assert isinstance(str_to_replace, (str, dict)), "Error: str_to_replace argument must be a string or a dict"
 
-        if  isinstance(str_to_replace, dict):
+        if isinstance(str_to_replace, dict):
             assert (str_to_replace != {}), "Error, str_to_replace must be a string or a non empty python dictionary"
             assert (
                 list_str is None), "Error, If a python dictionary if specified, list_str argument must be None: list_str=None"
@@ -627,10 +662,10 @@ class DataFrameTransformer:
 
     def move_col(self, column, ref_col, position):
         """This funcion change column position in dataFrame.
-        :param column   Name of the column to be moved in dataFrame. column argument must be a string.
-        :param ref_col   Name of reference column in dataFrame. This column will be a reference to place the
+        :param column:   Name of the column to be moved in dataFrame. column argument must be a string.
+        :param ref_col:   Name of reference column in dataFrame. This column will be a reference to place the
                         column to be moved.
-        :param position Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
+        :param position: Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
                         provided will be placed just after the ref_col selected."""
         # Columns of dataFrame
         columns = self._df.columns
@@ -738,7 +773,7 @@ class DataFrameTransformer:
         df_mod = df_mod.drop(col_id + '_other').drop(col_search).withColumnRenamed('count', new_col_feature) \
             .dropna("any")
 
-        print("Counting existing "+search_string + " in "+col_search)
+        print("Counting existing " + search_string + " in " + col_search)
         return df_mod.sort(col_id).drop_duplicates([col_id])
 
     def date_transform(self, columns, current_format, output_format):
@@ -818,7 +853,7 @@ class DataFrameTransformer:
         """
 
         dict_types = {'string': StringType(), 'str': StringType(), 'integer': IntegerType(),
-                     'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(), 'Double': DoubleType()}
+                      'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(), 'Double': DoubleType()}
 
         types = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
                  'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
@@ -919,7 +954,7 @@ class DataFrameTransformer:
                 "Error: Column %s specified as columnName argument does not exist in dataframe" % column
             # Checking if column has a valid datatype:
             assert (data_type in ['integer', 'float', 'string',
-                                 'null']), \
+                                  'null']), \
                 "Error: data_type only can be one of the followings options: integer, float, string, null."
             # Checking if func parameters is func data_type or None
             assert isinstance(func, type(None)) or isinstance(func, type(lambda x: x)), \
@@ -958,7 +993,7 @@ class DataFrameTransformer:
         self._assert_type_str(type_to_delete, "type_to_delete")
         # Asserting if dataType argument has a valid type:
         assert (type_to_delete in ['integer', 'float', 'string',
-                                 'null']), \
+                                   'null']), \
             "Error: dataType only can be one of the followings options: integer, float, string, null."
 
         # Function for determine if register value is float or int or string:
@@ -1135,7 +1170,7 @@ class DataFrameTransformer:
         assert isinstance(how, str), "Error, how argument provided must be a string."
 
         assert how == 'all' or (
-               how == 'any'), "Error, how only can be 'all' or 'any'."
+            how == 'any'), "Error, how only can be 'all' or 'any'."
 
         self._df = self._df.dropna(how)
 
@@ -1162,7 +1197,7 @@ class DataFrameTransformer:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(p)
 
-    def to_csv(self, path_name, header=True, mode="overwrite", sep=",", *args, **kargs):
+    def to_csv(self, path_name, header="true", mode="overwrite", sep=",", *args, **kargs):
         """
         Write dataframe as CSV.
         :param path_name: Path to write the DF and the name of the output CSV file.
@@ -1177,4 +1212,157 @@ class DataFrameTransformer:
         :return: Dataframe in a CSV format in the specified path.
         """
 
+        self._assert_type_str(path_name, "path_name")
+
+        assert header == "true" or header == "false", "Error header must be 'true' or 'false'"
+
+        if header == 'true':
+            header = True
+        else:
+            header = False
+
         return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
+
+    def string_to_index(self, input_cols):
+        """
+        Maps a string column of labels to an ML column of label indices. If the input column is
+        numeric, we cast it to string and index the string values.
+        :param input_cols: Columns to be indexed.
+        :return: Dataframe with indexed columns.
+        """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import StringIndexer
+
+        indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(self._df) for column in
+                    list(set(input_cols))]
+
+        pipeline = Pipeline(stages=indexers)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
+
+    def index_to_string(self, input_cols):
+        """
+        Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
+        either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
+        ML attributes).
+        :param input_cols: Columns to be indexed.
+        :return: Dataframe with indexed columns.
+        """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import IndexToString
+
+        indexers = [IndexToString(inputCol=column, outputCol=column + "_string") for column in
+                    list(set(input_cols))]
+
+        pipeline = Pipeline(stages=indexers)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
+
+    def one_hot_encoder(self, input_cols):
+        """
+        Maps a column of label indices to a column of binary vectors, with at most a single one-value.
+        :param input_cols: Columns to be encoded.
+        :return: Dataframe with encoded columns.
+        """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import OneHotEncoder
+
+        encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
+                  list(set(input_cols))]
+
+        pipeline = Pipeline(stages=encode)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
+
+    def sql(self, sql_expression):
+        """
+        Implements the transformations which are defined by SQL statement. Currently we only support
+        SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
+        underlying table of the input dataframe.
+        :param sql_expression: SQL expression.
+        :return: Dataframe with columns changed by SQL statement.
+        """
+
+        self._assert_type_str(sql_expression, "sql_expression")
+
+        from pyspark.ml.feature import SQLTransformer
+
+        sql_trans = SQLTransformer(statement=sql_expression)
+
+        self._df = sql_trans.transform(self._df)
+
+        return self
+
+    def vector_assembler(self, input_cols):
+        """
+        Combines a given list of columns into a single vector column.
+        :param input_cols: Columns to be assembled.
+        :return: Dataframe with assembled column.
+        """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        from pyspark.ml import Pipeline
+
+        assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
+
+        pipeline = Pipeline(stages=assembler)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self
+
+    def normalizer(self, input_cols, p=2.0):
+        """
+        Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+        specifies the p-norm used for normalization. (p=2) by default.
+        :param input_cols: Columns to be normalized.
+        :param p:  p-norm used for normalization.
+        :return: Dataframe with normalized columns.
+        """
+
+        # Check if columns argument must be a string or list datatype:
+        self._assert_type_str_or_list(input_cols, "input_cols")
+
+        if isinstance(input_cols, str):
+            input_cols = [input_cols]
+
+        assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
+
+        from pyspark.ml import Pipeline
+        from pyspark.ml.feature import Normalizer
+
+        normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
+                  list(set(input_cols))]
+
+        pipeline = Pipeline(stages=normal)
+        self._df = pipeline.fit(self._df).transform(self._df)
+
+        return self

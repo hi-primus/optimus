@@ -7,7 +7,12 @@ class OutlierDetector:
     """
     Outlier detection for pyspark dataframes.
     """
-    def __init__(self, df, column):
+    def __init__(self, df, column, threshold=2):
+        """
+        :param df: Spark Dataframe to analyze
+        :param column: Column in dataframe to get outliers
+        :param threshold: Threshold for MAD. Default = 2.
+        """
         self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._df = df
         self._column = column
@@ -22,7 +27,7 @@ class OutlierDetector:
 
         self.mad_value = median(absolute_deviation, column)
 
-        self.threshold = 2
+        self.threshold = threshold
 
         self._limits = []
         self._limits.append(round((self.median_value - self.threshold * self.mad_value), 2))
@@ -78,12 +83,39 @@ class OutlierDetector:
         """
         return self._df
 
-    def show(self, n=10):
+    def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
+        :param truncate: If set to True, truncate strings longer than 20 chars by default.
         :rtype: pyspark.sql.dataframe.DataFrame.show()
         """
-        return self._df.show(n)
+        return self._df.show(n, truncate)
+
+    def to_csv(self, path_name, header="true", mode="overwrite", sep=",", *args, **kargs):
+        """
+        Write dataframe as CSV.
+        :param path_name: Path to write the DF and the name of the output CSV file.
+        :param header: True or False to include header
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                    "append": Append contents of this DataFrame to existing data.
+                    "overwrite" (default case): Overwrite existing data.
+                    "ignore": Silently ignore this operation if data already exists.
+                    "error": Throw an exception if data already exists.
+        :param sep: sets the single character as a separator for each field and value. If None is set,
+        it uses the default value.
+        :return: Dataframe in a CSV format in the specified path.
+        """
+
+        assert isinstance(path_name, str), "Error: path_name argument must be a string."
+
+        assert header == "true" or header == "false", "Error header must be 'true' or 'false'."
+
+        if header == 'true':
+            header = True
+        else:
+            header = False
+
+        return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
 
 
 def median(df, column):
