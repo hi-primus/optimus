@@ -64,7 +64,7 @@ class Utilities:
             .options(inferSchema='true') \
             .load(path)
 
-    def read_dataset_url(self, path=None, ty="csv"):
+    def read_url(self, path=None, ty="csv"):
         """
         Reads dataset from URL.
         :param path: string for URL to read

@@ -1174,3 +1174,73 @@ Now lets write this DF as a CSV
 
 This will create a folder with the name "test.csv" in the current path, and inside it will be te CSV with the
 concept. But with the ``read_csv`` function you can just pass the name "test.csv" and Optimus will understand.
+
+DataFrameTransformer.replace_na(value, columns=None)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method replace nulls with specified value.
+
+``columns`` argument is an optional list of column names to consider. Columns specified in subset that do not have
+matching data type are ignored. For example, if value is a string, and subset contains a non-string column,
+then the non-string column is simply ignored. If `columns == "*"` then it will choose all columns.
+
+``value`` argument is the value to replace nulls with. If the value is a dict, then subset is ignored and value
+must be a mapping from column name (string) to replacement value. The replacement value must be an int, long,
+float, or string.
+
+Let's download a sample data using our amazing `read_url` function.
+
+
+.. code:: python
+    # Import optimus
+    import optimus as op
+    # Instance of Utilities class
+    tools = op.Utilities()
+    # Reading df from web
+    url = "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/impute_data.csv"
+    df = tools.read_dataset_url(path=url)
+
+If we examine this DF we see that there are some missing values.
+
++---+---+
+|  a|  b|
++---+---+
+|1.0|NaN|
++---+---+
+|2.0|NaN|
++---+---+
+|NaN|3.0|
++---+---+
+|4.0|4.0|
++---+---+
+|5.0|5.0|
++---+---+
+
+Remember that we have the `impute_missing` function that lets you choose to use the mean or the median of the columns in
+which the missing values are located for your imputation. But with `replace_na` you can say replace the nulls in one,
+or all columns in the dataframe with a specific value. For this example we will replace NA with 0's.
+
+.. code:: python
+
+    # Instantiation of DataTransformer class:
+    transformer = op.DataFrameTransformer(df)
+    # Replace NA with 0's
+    transformer.replace_na(0.0, columns="*")
+    # Show DF
+    transformer.show()
+
++---+---+
+|  a|  b|
++---+---+
+|0.0|0.0|
++---+---+
+|0.0|0.0|
++---+---+
+|0.0|3.0|
++---+---+
+|4.0|4.0|
++---+---+
+|5.0|5.0|
++---+---+
+
+And that's it!
