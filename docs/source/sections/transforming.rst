@@ -1232,9 +1232,9 @@ or all columns in the dataframe with a specific value. For this example we will 
 +---+---+
 |  a|  b|
 +---+---+
-|0.0|0.0|
+|1.0|0.0|
 +---+---+
-|0.0|0.0|
+|2.0|0.0|
 +---+---+
 |0.0|3.0|
 +---+---+
