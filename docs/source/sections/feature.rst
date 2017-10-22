@@ -315,6 +315,7 @@ This method transforms a dataset of Vector rows, normalizing each Vector to have
 specifies the p-norm used for normalization. (p=2) by default.
 
 ``input_cols`` argument receives a list of columns to be normalized.
+
 ``p`` argument is the p-norm used for normalization.
 
 
