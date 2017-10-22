@@ -159,7 +159,7 @@ This method maps a column of label indices to a column of binary vectors, with a
 
 ``input_cols`` argument receives a list of columns to be encoded.
 
-Let's create a sample dataframe to see what does OHE does:
+Let's create a sample dataframe to see what OHE does:
 
 .. code:: python
 
@@ -274,7 +274,7 @@ This method combines a given list of columns into a single vector column.
 
 This is very important because lots of Machine Learning algorithms in Spark need this format to work.
 
-Let's create a sample dataframe to see what does vector assembler does:
+Let's create a sample dataframe to see what vector assembler does:
 
 .. code:: python
 
@@ -320,7 +320,7 @@ specifies the p-norm used for normalization. (p=2) by default.
 
 
 
-Let's create a sample dataframe to see what does normalizer does:
+Let's create a sample dataframe to see what normalizer does:
 
 .. code:: python
 
@@ -354,4 +354,3 @@ Let's create a sample dataframe to see what does normalizer does:
 +---+--------------+-----------------------------------------------------------+
 |2  |[4.0,10.0,2.0]|[0.3651483716701107,0.9128709291752769,0.18257418583505536]|
 +---+--------------+-----------------------------------------------------------+
-
