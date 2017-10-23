@@ -745,7 +745,7 @@ DataFrameTransformer.lookup(column, list_str, str_to_replace)
 This method search a list of strings specified in ``list_str`` argument
 among rows in column dataFrame and replace them for ``str_to_replace``.
 
-``lookup`` can only be runned in StringType columns.
+``lookup`` can only be run in StringType columns.
 
 E.g:
 
@@ -1198,7 +1198,7 @@ Let's download a sample data using our amazing `read_url` function.
     tools = op.Utilities()
     # Reading df from web
     url = "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/impute_data.csv"
-    df = tools.read_dataset_url(path=url)
+    df = tools.read_url(path=url)
 
 If we examine this DF we see that there are some missing values.
 
