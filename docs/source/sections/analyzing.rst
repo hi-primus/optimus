@@ -73,8 +73,8 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
     profiler.profiler()
 
 This overview presents basic information about the DataFrame, like number of variable it has,
-how many are missing values and in which column, the types of each varaible, also some statistical information
-that describes the variable plus a frecuency plot. table that specifies the existing datatypes in each column
+how many are missing values and in which column, the types of each variable, also some statistical information
+that describes the variable plus a frequency plot. table that specifies the existing datatypes in each column
 dataFrame and other features. Also, for this particular case, the table of dataType is shown in order to visualize
 a sample of column content.
 
@@ -413,7 +413,7 @@ The method outputs a dictionary with bins and values of frequency for only numer
 
 Example:
 
-Lets say we want to plot a histogram of frecuencies for the ``price`` column. We first need to obtain the dictionary of the frecuencies for each one. This is what this function does for numerical data. Remember that if you run the ``columnAnalyze()`` method with ``plots = True`` this is done for you.
+Lets say we want to plot a histogram of frequencies for the ``price`` column. We first need to obtain the dictionary of the frequencies for each one. This is what this function does for numerical data. Remember that if you run the ``columnAnalyze()`` method with ``plots = True`` this is done for you.
 
 .. code:: python
 
