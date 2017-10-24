@@ -6,7 +6,7 @@ MAINTAINER Jupyter Project <jupyter@googlegroups.com>
 
 USER root
 
-RUN pip --no-cache-dir install optimuspyspark
+RUN pip install --no-cache-dir optimuspyspark
 RUN git clone https://github.com/ironmussa/Optimus-examples.git /home/jovyan/work
 RUN chmod -R 777 /home/jovyan/work
 
