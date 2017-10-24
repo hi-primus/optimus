@@ -63,7 +63,7 @@ pip install optimuspyspark
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions 
 including:
 
-* [Documentation](https://github.com/ironmussa/Optimus/blob/master/docs/index.rst) updates, enhancements, designs, or 
+* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or 
 bugfixes.
 * Spelling or grammar fixes.
 * README.md corrections or redesigns.
