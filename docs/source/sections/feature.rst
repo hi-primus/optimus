@@ -1,3 +1,5 @@
+.. _feature-engineering:
+
 Feature Engineering with Optimus
 ==================================
 
