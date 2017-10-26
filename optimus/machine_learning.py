@@ -7,7 +7,6 @@ from pyspark.ml.param.shared import HasFeaturesCol, HasInputCol, \
     HasRawPredictionCol, HasProbabilityCol
 
 from pyspark.ml import feature, classification
-from pyspark.sql import types
 
 from pyspark.ml import Pipeline
 

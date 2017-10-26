@@ -16,9 +16,9 @@ from pyspark.sql.session import SparkSession
 import os
 
 # -*- coding: utf-8 -*-
-"""
-pyspark_pipes: build Spark ML pipelines easily
-"""
+
+# pyspark_pipes: build Spark ML pipelines easily
+
 from .machine_learning import patch
 from .display_pipes import print_stage
 
