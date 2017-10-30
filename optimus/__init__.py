@@ -19,7 +19,7 @@ import os
 
 # pyspark_pipes: build Spark ML pipelines easily
 
-from .machine_learning import patch
+from .ml import patch
 from .display_pipes import print_stage
 
 patch()
