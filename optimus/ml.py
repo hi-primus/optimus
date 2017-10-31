@@ -216,17 +216,18 @@ def logistic_regression_text(df, input_col):
     return ml_model.transform(df)
 
 
-def n_gram(df, n=2):
+def n_gram(df, input_col, n=2):
     """
     Converts the input array of strings inside of a Spark DF into an array of n-grams.
     :param df: Pyspark dataframe to analyze
+    :param input_col: Column to analyzer.
     :param n: number of elements per n-gram >=1.
     :return: Spark DataFrame with n-grams calculated.
     """
 
     assert_spark_df(df)
 
-    tokenizer = feature.Tokenizer().setInputCol('sentence') | feature.StopWordsRemover()
+    tokenizer = feature.Tokenizer().setInputCol(input_col) | feature.StopWordsRemover()
     count = feature.CountVectorizer()
     gram = feature.NGram(n=n) | feature.CountVectorizer()
     tf = tokenizer | (count, gram) | feature.VectorAssembler()
