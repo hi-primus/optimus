@@ -2,6 +2,8 @@
 Code based on pyspark_pipes by Daniel Acuña
 """
 
+import pyspark
+
 from pyspark.ml.param.shared import HasFeaturesCol, HasInputCol, \
     HasInputCols, HasLabelCol, HasPredictionCol, HasOutputCol, Params, \
     HasRawPredictionCol, HasProbabilityCol
@@ -13,6 +15,9 @@ from pyspark.ml import Pipeline
 ALLOWED_TYPES = (HasFeaturesCol, HasInputCol, HasInputCols, HasLabelCol,
                  HasPredictionCol, HasOutputCol)
 
+def assert_spark_df(df):
+    assert (isinstance(df, pyspark.sql.dataframe.DataFrame))
+
 
 def set_default_colnames(pipe_stage):
     """
@@ -22,13 +27,13 @@ def set_default_colnames(pipe_stage):
     """
     # pylint: disable=protected-access
     if isinstance(pipe_stage, HasFeaturesCol) and not pipe_stage.isSet('featuresCol'):
-        pipe_stage._setDefault(featuresCol=pipe_stage.uid.split('_')[0] + '__features')
+        pipe_stage._setDefault(featuresCol=pipe_stage.uid + '__features')
     if isinstance(pipe_stage, HasRawPredictionCol) and not pipe_stage.isSet('rawPredictionCol'):
-        pipe_stage._setDefault(rawPredictionCol=pipe_stage.uid.split('_')[0] + '__rawPrediction')
+        pipe_stage._setDefault(rawPredictionCol=pipe_stage.uid + '__rawPrediction')
     if isinstance(pipe_stage, HasProbabilityCol) and not pipe_stage.isSet('probabilityCol'):
-        pipe_stage._setDefault(probabilityCol=pipe_stage.uid.split('_')[0] + '__probability')
+        pipe_stage._setDefault(probabilityCol=pipe_stage.uid + '__probability')
     if isinstance(pipe_stage, HasPredictionCol) and not pipe_stage.isSet('predictionCol'):
-        pipe_stage._setDefault(predictionCol=pipe_stage.uid.split('_')[0] + '__prediction')
+        pipe_stage._setDefault(predictionCol=pipe_stage.uid + '__prediction')
     return pipe_stage
 
 
@@ -194,8 +199,39 @@ def patch():
 
 
 def logistic_regression_text(df, input_col):
+    """
+    Runs a logistic regression for input (text) DataFrame.
+    :param df: Pyspark array to analyze
+    :param input_col: Column to predict
+    :return: DataFrame with logistic regression and prediction run.
+    """
+
+    assert_spark_df(df)
+
     pl = feature.Tokenizer().setInputCol(input_col) | feature.CountVectorizer()
     ml = pl | classification.LogisticRegression()
     ml_model = ml.fit(df)
     return ml_model.transform(df)
+
+
+def n_gram(df, n=2):
+    """
+    Converts the input array of strings inside of a Spark DF into an array of n-grams.
+    :param df: Pyspark array to analyze
+    :param n: number of elements per n-gram >=1.
+    :return: Spark DataFrame with n-grams calculated.
+    """
+
+    assert_spark_df(df)
+
+    tokenizer = feature.Tokenizer().setInputCol('sentence') | feature.StopWordsRemover()
+    count = feature.CountVectorizer()
+    gram = feature.NGram(n=n) | feature.CountVectorizer()
+    tf = tokenizer | (count, gram) | feature.VectorAssembler()
+    tfidf = tf | feature.IDF().setOutputCol('features')
+
+    tfidf_model = tfidf.fit(df)
+    df_model = tfidf_model.transform(df)
+    return df_model
+
 
