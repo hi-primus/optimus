@@ -9,7 +9,7 @@ from pyspark.ml.param.shared import HasFeaturesCol, HasInputCol, \
     HasRawPredictionCol, HasProbabilityCol
 
 from pyspark.ml import feature, classification
-from pyspark.ml.classification import RandomForestClassifier
+from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
 from pyspark.ml import Pipeline
 
 import optimus as op
@@ -264,4 +264,57 @@ def random_forest(df, columns, input_col):
     rf_model = model.fit(transformer.get_data_frame)
     return rf_model.transform(transformer.get_data_frame)
 
+
+def decision_tree(df, columns, input_col):
+    """
+    Runs a random forest for input DataFrame.
+    :param df: Pyspark dataframe to analyze.
+    :param columns: List of columns to select for prediction.
+    :param input_col: Column to predict.
+    :return: DataFrame with random forest and prediction run.
+    """
+
+    assert_spark_df(df)
+
+    assert isinstance(columns,list), "Error, columns must be a list"
+
+    assert isinstance(input_col, str), "Error, input column must be a string"
+
+    data = df.select(columns)
+    feats = data.columns
+    feats.remove(input_col)
+    transformer = op.DataFrameTransformer(data)
+    transformer.string_to_index(input_cols=input_col)
+    transformer.vector_assembler(input_cols=feats)
+    model = DecisionTreeClassifier()
+    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    rf_model = model.fit(transformer.get_data_frame)
+    return rf_model.transform(transformer.get_data_frame)
+
+
+def gbt(df, columns, input_col):
+    """
+    Runs a random forest for input DataFrame.
+    :param df: Pyspark dataframe to analyze.
+    :param columns: List of columns to select for prediction.
+    :param input_col: Column to predict.
+    :return: DataFrame with random forest and prediction run.
+    """
+
+    assert_spark_df(df)
+
+    assert isinstance(columns,list), "Error, columns must be a list"
+
+    assert isinstance(input_col, str), "Error, input column must be a string"
+
+    data = df.select(columns)
+    feats = data.columns
+    feats.remove(input_col)
+    transformer = op.DataFrameTransformer(data)
+    transformer.string_to_index(input_cols=input_col)
+    transformer.vector_assembler(input_cols=feats)
+    model = GBTClassifier()
+    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    rf_model = model.fit(transformer.get_data_frame)
+    return rf_model.transform(transformer.get_data_frame)
 
