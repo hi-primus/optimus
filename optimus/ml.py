@@ -9,8 +9,10 @@ from pyspark.ml.param.shared import HasFeaturesCol, HasInputCol, \
     HasRawPredictionCol, HasProbabilityCol
 
 from pyspark.ml import feature, classification
-
+from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml import Pipeline
+
+import optimus as op
 
 ALLOWED_TYPES = (HasFeaturesCol, HasInputCol, HasInputCols, HasLabelCol,
                  HasPredictionCol, HasOutputCol)
@@ -201,7 +203,7 @@ def patch():
 def logistic_regression_text(df, input_col):
     """
     Runs a logistic regression for input (text) DataFrame.
-    :param df: Pyspark array to analyze
+    :param df: Pyspark dataframe to analyze
     :param input_col: Column to predict
     :return: DataFrame with logistic regression and prediction run.
     """
@@ -217,7 +219,7 @@ def logistic_regression_text(df, input_col):
 def n_gram(df, n=2):
     """
     Converts the input array of strings inside of a Spark DF into an array of n-grams.
-    :param df: Pyspark array to analyze
+    :param df: Pyspark dataframe to analyze
     :param n: number of elements per n-gram >=1.
     :return: Spark DataFrame with n-grams calculated.
     """
@@ -233,5 +235,32 @@ def n_gram(df, n=2):
     tfidf_model = tfidf.fit(df)
     df_model = tfidf_model.transform(df)
     return df_model
+
+
+def random_forest(df, columns, input_col):
+    """
+    Runs a random forest for input DataFrame.
+    :param df: Pyspark dataframe to analyze.
+    :param columns: List of columns to select for prediction.
+    :param input_col: Column to predict.
+    :return: DataFrame with random forest and prediction run.
+    """
+
+    assert_spark_df(df)
+
+    assert isinstance(columns,list), "Error, columns must be a list"
+
+    assert isinstance(input_col, str), "Error, input column must be a string"
+
+    data = df.select(columns)
+    feats = data.columns
+    feats.remove(input_col)
+    transformer = op.DataFrameTransformer(data)
+    transformer.string_to_index(input_cols=input_col)
+    transformer.vector_assembler(input_cols=feats)
+    model = RandomForestClassifier()
+    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    rf_model = model.fit(transformer.get_data_frame)
+    return rf_model.transform(transformer.get_data_frame)
 
 
