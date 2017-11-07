@@ -5,7 +5,6 @@ from nose.tools import assert_equal
 import pyspark
 
 
-
 def test_ml_pipe():
     df = op.sc. \
         parallelize([Row(sentence='this is a test', label=0.),
