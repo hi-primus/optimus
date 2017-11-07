@@ -12,11 +12,11 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
 
 
 def assert_spark_df(df):
-    assert (isinstance(df, pyspark.sql.dataframe.DataFrame), "Not a Spark DF")
+    assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Not a Spark DF"
 
 
 def assert_spark_model(df):
-    assert (isinstance(df, pyspark.ml.PipelineModel), "Not a model")
+    assert isinstance(df, pyspark.ml.PipelineModel), "Not a model"
 
 
 def test_ml_pipe():
