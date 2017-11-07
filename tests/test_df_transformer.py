@@ -1,3 +1,4 @@
+from optimus.spark import get_spark
 import optimus as op
 from quinn.extensions import *
 from pyspark.sql.types import *
@@ -6,7 +7,7 @@ from pyspark.sql.types import *
 class TestDataFrameTransformer(object):
 
     def test_lower_case(self):
-        source_df = op.spark.create_df(
+        source_df = get_spark().create_df(
             [
                 ("BOB", 1),
                 ("JoSe", 2)
@@ -20,7 +21,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.lower_case("*").get_data_frame
 
-        expected_df = op.spark.create_df(
+        expected_df = get_spark().create_df(
             [
                 ("bob", 1),
                 ("jose", 2)
@@ -34,7 +35,7 @@ class TestDataFrameTransformer(object):
         assert(expected_df.collect() == actual_df.collect())
 
     def test_upper_case(self):
-        source_df = op.spark.create_df(
+        source_df = get_spark().create_df(
             [
                 ("BOB", 1),
                 ("JoSe", 2)
@@ -48,7 +49,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.upper_case("name").get_data_frame
 
-        expected_df = op.spark.create_df(
+        expected_df = get_spark().create_df(
             [
                 ("BOB", 1),
                 ("JOSE", 2)
@@ -62,7 +63,7 @@ class TestDataFrameTransformer(object):
         assert(expected_df.collect() == actual_df.collect())
 
     def test_trim_col(self):
-        source_df = op.spark.create_df(
+        source_df = get_spark().create_df(
             [
                 ("  ron", 1),
                 ("      bill     ", 2)
@@ -76,7 +77,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.trim_col("name").get_data_frame
 
-        expected_df = op.spark.create_df(
+        expected_df = get_spark().create_df(
             [
                 ("ron", 1),
                 ("bill", 2)
