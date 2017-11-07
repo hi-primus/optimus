@@ -15,8 +15,8 @@ def assert_spark_df(df):
     assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Not a Spark DF"
 
 
-def assert_spark_model(df):
-    assert isinstance(df, pyspark.ml.PipelineModel), "Not a model"
+def assert_spark_model(model):
+    assert isinstance(model, pyspark.ml.PipelineModel), "Not a model"
 
 
 def test_ml_pipe():
@@ -65,4 +65,4 @@ def test_random_fores():
 
     assert_spark_df(df_model)
 
-    assert_spark_model(rf_model)
+    assert isinstance(rf_model, pyspark.ml.classification.RandomForestClassificationModel), "Not a RF model"
