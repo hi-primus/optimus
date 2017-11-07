@@ -60,9 +60,25 @@ def test_n_gram():
     assert_equal(df_model.select('sentence', 'features').count(), 2)
 
 
-def test_random_fores():
-    df_model, rf_model = op.ml.decision_tree(df_cancer, columns, "diagnosis")
+def test_random_forest():
+    df_model, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
     assert isinstance(rf_model, pyspark.ml.classification.RandomForestClassificationModel), "Not a RF model"
+
+
+def test_decision_tree():
+    df_model, rf_model = op.ml.decision_tree(df_cancer, columns, "diagnosis")
+
+    assert_spark_df(df_model)
+
+    assert isinstance(rf_model, pyspark.ml.classification.DecisionTreeClassificationModel), "Not a DT model"
+
+
+def test_gbt():
+    df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
+
+    assert_spark_df(df_model)
+
+    assert isinstance(rf_model, pyspark.ml.classification.GBTClassificationModel), "Not a GBT model"
