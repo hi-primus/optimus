@@ -1,5 +1,5 @@
 import optimus as op
-from pyspark.sql import Row
+from pyspark.sql import Row, types
 from pyspark.ml import feature, classification
 from nose.tools import assert_equal
 import pyspark
@@ -29,3 +29,16 @@ def test_logistic_regression_text():
     assert isinstance(df_predict, pyspark.sql.dataframe.DataFrame),  "Error for df_predict"
 
     assert isinstance(ml_model, pyspark.ml.PipelineModel), "Error for ml_model"
+
+
+def test_n_gram():
+    df = op.sc. \
+        parallelize([['this is the best sentence ever'],
+                     ['this is however the worst sentence available']]). \
+        toDF(schema=types.StructType().add('sentence', types.StringType()))
+
+    df_model = op.ml.n_gram(df, input_col="sentence", n=2)
+
+    assert isinstance(df_model, pyspark.sql.dataframe.DataFrame), "Error for df_model"
+
+    assert_equal(df_model.select('sentence', 'features').count(), 2)
