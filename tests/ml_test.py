@@ -51,7 +51,11 @@ def test_n_gram():
                      ['this is however the worst sentence available']]). \
         toDF(schema=types.StructType().add('sentence', types.StringType()))
 
-    df_model = op.ml.n_gram(df, input_col="sentence", n=2)
+    df_model, tfidf_model = op.ml.n_gram(df, input_col="sentence", n=2)
+
+    assert_spark_df(df_model)
+
+    assert_spark_model(tfidf_model)
 
     assert_equal(df_model.select('sentence', 'features').count(), 2)
 
