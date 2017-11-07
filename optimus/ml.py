@@ -265,7 +265,7 @@ def random_forest(df, columns, input_col):
     transformer.rename_col(columns=[(input_col+"_index", "label")])
     rf_model = model.fit(transformer.get_data_frame)
     df_model = rf_model.transform(transformer.get_data_frame)
-    return rf_model, df_model
+    return df_model, rf_model
 
 
 def decision_tree(df, columns, input_col):

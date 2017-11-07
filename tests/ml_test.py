@@ -4,6 +4,20 @@ from pyspark.ml import feature, classification
 from nose.tools import assert_equal
 import pyspark
 
+tools = op.Utilities()
+df_cancer = tools.read_csv("tests/data_cancer.csv", header="true", sep=",")
+columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+
+
+def assert_spark_df(df):
+    assert (isinstance(df, pyspark.sql.dataframe.DataFrame), "Not a Spark DF")
+
+
+def assert_spark_model(df):
+    assert (isinstance(df, pyspark.ml.PipelineModel), "Not a model")
+
 
 def test_ml_pipe():
     df = op.sc. \
@@ -26,9 +40,9 @@ def test_logistic_regression_text():
 
     df_predict, ml_model = op.ml.logistic_regression_text(df, "sentence")
 
-    assert isinstance(df_predict, pyspark.sql.dataframe.DataFrame),  "Error for df_predict"
+    assert_spark_df(df_predict)
 
-    assert isinstance(ml_model, pyspark.ml.PipelineModel), "Error for ml_model"
+    assert_spark_model(ml_model)
 
 
 def test_n_gram():
@@ -40,3 +54,11 @@ def test_n_gram():
     df_model = op.ml.n_gram(df, input_col="sentence", n=2)
 
     assert_equal(df_model.select('sentence', 'features').count(), 2)
+
+
+def test_random_fores():
+    df_model, rf_model = op.ml.decision_tree(df_cancer, columns, "diagnosis")
+
+    assert_spark_df(df_model)
+
+    assert_spark_model(rf_model)
