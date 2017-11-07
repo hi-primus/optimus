@@ -39,6 +39,4 @@ def test_n_gram():
 
     df_model = op.ml.n_gram(df, input_col="sentence", n=2)
 
-    assert isinstance(df_model, pyspark.sql.dataframe.DataFrame), "Error for df_model"
-
     assert_equal(df_model.select('sentence', 'features').count(), 2)
