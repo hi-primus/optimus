@@ -17,6 +17,7 @@ import optimus as op
 ALLOWED_TYPES = (HasFeaturesCol, HasInputCol, HasInputCols, HasLabelCol,
                  HasPredictionCol, HasOutputCol)
 
+
 def assert_spark_df(df):
     assert (isinstance(df, pyspark.sql.dataframe.DataFrame))
 
