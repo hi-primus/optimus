@@ -213,7 +213,8 @@ def logistic_regression_text(df, input_col):
     pl = feature.Tokenizer().setInputCol(input_col) | feature.CountVectorizer()
     ml = pl | classification.LogisticRegression()
     ml_model = ml.fit(df)
-    return ml_model.transform(df)
+    df_model = ml_model.transform(df)
+    return df_model, ml_model
 
 
 def n_gram(df, input_col, n=2):
@@ -235,7 +236,7 @@ def n_gram(df, input_col, n=2):
 
     tfidf_model = tfidf.fit(df)
     df_model = tfidf_model.transform(df)
-    return df_model
+    return df_model, tfidf_model
 
 
 def random_forest(df, columns, input_col):
@@ -262,7 +263,8 @@ def random_forest(df, columns, input_col):
     model = RandomForestClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
     rf_model = model.fit(transformer.get_data_frame)
-    return rf_model.transform(transformer.get_data_frame)
+    df_model = rf_model.transform(transformer.get_data_frame)
+    return rf_model, df_model
 
 
 def decision_tree(df, columns, input_col):
@@ -288,8 +290,9 @@ def decision_tree(df, columns, input_col):
     transformer.vector_assembler(input_cols=feats)
     model = DecisionTreeClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
-    rf_model = model.fit(transformer.get_data_frame)
-    return rf_model.transform(transformer.get_data_frame)
+    dt_model = model.fit(transformer.get_data_frame)
+    df_model = dt_model.transform(transformer.get_data_frame)
+    return df_model, dt_model
 
 
 def gbt(df, columns, input_col):
@@ -315,6 +318,7 @@ def gbt(df, columns, input_col):
     transformer.vector_assembler(input_cols=feats)
     model = GBTClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
-    rf_model = model.fit(transformer.get_data_frame)
-    return rf_model.transform(transformer.get_data_frame)
+    gbt_model = model.fit(transformer.get_data_frame)
+    df_model = gbt_model.transform(transformer.get_data_frame)
+    return df_model, gbt_model
 
