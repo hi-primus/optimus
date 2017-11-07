@@ -6,7 +6,8 @@ from nose.tools import assert_equal
 
 class TestML(object):
 
-    def test_ml_pipe(self):
+    @classmethod
+    def test_ml_pipe(cls):
         df = op.sc. \
             parallelize([Row(sentence='this is a test', label=0.),
                          Row(sentence='this is another test', label=1.)]). \
