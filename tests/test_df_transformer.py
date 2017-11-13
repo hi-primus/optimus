@@ -181,8 +181,8 @@ class TestDataFrameTransformer(object):
                 ("Jose", 2)
             ],
             [
-                ("name", StringType(), True),
-                ("age", IntegerType(), True)
+                ("name"),
+                ("age")
             ]
         )
 
@@ -195,7 +195,7 @@ class TestDataFrameTransformer(object):
                 ("Jose")
             ],
             [
-                ("name", StringType(), True)
+                ("name")
             ]
         )
         assert (expected_df.collect() == actual_df.collect())
@@ -207,8 +207,8 @@ class TestDataFrameTransformer(object):
                 ("Jose", 2)
             ],
             [
-                ("name", StringType(), True),
-                ("age", IntegerType(), True)
+                ("name"),
+                ("age")
             ]
         )
 
@@ -221,7 +221,7 @@ class TestDataFrameTransformer(object):
                 ("Jose")
             ],
             [
-                ("name", StringType(), True)
+                ("name")
             ]
         )
         assert (expected_df.collect() == actual_df.collect())
@@ -233,8 +233,8 @@ class TestDataFrameTransformer(object):
                 ("Jose", 2)
             ],
             [
-                ("name", StringType(), True),
-                ("age", IntegerType(), True)
+                ("name"),
+                ("age")
             ]
         )
 
@@ -247,7 +247,7 @@ class TestDataFrameTransformer(object):
                 ("Jose")
             ],
             [
-                ("name", StringType(), True)
+                ("name")
             ]
         )
         assert (expected_df.collect() == actual_df.collect())
