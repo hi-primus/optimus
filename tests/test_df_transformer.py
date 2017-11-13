@@ -175,7 +175,7 @@ class TestDataFrameTransformer(object):
         assert(expected_df.collect() == actual_df.collect())
 
     def test_select(self):
-        source_df = get_spark().create_df(
+        source_df = op.spark.createDataFrame(
             [
                 ("Bob", 1),
                 ("Jose", 2)
@@ -189,7 +189,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.select("name").df
 
-        expected_df = get_spark().create_df(
+        expected_df = op.spark.createDataFrame(
             [
                 ("Bob"),
                 ("Jose")
@@ -201,7 +201,7 @@ class TestDataFrameTransformer(object):
         assert (expected_df.collect() == actual_df.collect())
 
     def test_select_idx(self):
-        source_df = get_spark().create_df(
+        source_df = op.spark.createDataFrame(
             [
                 ("Bob", 1),
                 ("Jose", 2)
@@ -215,7 +215,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.select_idx([0])
 
-        expected_df = get_spark().create_df(
+        expected_df = op.spark.createDataFrame(
             [
                 ("Bob"),
                 ("Jose")
@@ -227,7 +227,7 @@ class TestDataFrameTransformer(object):
         assert (expected_df.collect() == actual_df.collect())
 
     def test_iloc(self):
-        source_df = get_spark().create_df(
+        source_df = op.spark.createDataFrame(
             [
                 ("Bob", 1),
                 ("Jose", 2)
@@ -241,7 +241,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.iloc([0])
 
-        expected_df = get_spark().create_df(
+        expected_df = op.spark.createDataFrame(
             [
                 ("Bob"),
                 ("Jose")
