@@ -3,6 +3,7 @@ import optimus as op
 from quinn.extensions import *
 from pyspark.sql.types import *
 
+
 class TestDataFrameTransformer(object):
 
     def test_lower_case(self):
