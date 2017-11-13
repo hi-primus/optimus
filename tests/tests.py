@@ -327,7 +327,7 @@ def test_normalizer(spark_session):
         sys.exit(1)
 
 
-def replace_na():
+def test_replace_na():
     try:
         tools = op.Utilities()
         df = tools.read_csv("tests/impute_data.csv", header="true", sep=",")
@@ -336,3 +336,84 @@ def replace_na():
         assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
+
+
+def test_select(spark_session):
+    source_df = spark_session.createDataFrame(
+        [
+            ("Bob", 1),
+            ("Jose", 2)
+        ],
+        [
+            ("name"),
+            ("age")
+        ]
+    )
+
+    transformer = op.DataFrameTransformer(source_df)
+    actual_df = transformer.select("name").df
+
+    expected_df = spark_session.createDataFrame(
+        [
+            "Bob",
+            "Jose"
+        ],
+        [
+            "name"
+        ]
+    )
+    assert (expected_df.collect() == actual_df.collect())
+
+
+def test_select_idx(spark_session):
+    source_df = spark_session.createDataFrame(
+        [
+            ("Bob", 1),
+            ("Jose", 2)
+        ],
+        [
+            "name",
+            "age"
+        ]
+    )
+
+    transformer = op.DataFrameTransformer(source_df)
+    actual_df = transformer.select_idx([0])
+
+    expected_df =spark_session.createDataFrame(
+        [
+            "Bob",
+            "Jose"
+        ],
+        [
+            "name",
+        ]
+    )
+    assert (expected_df.collect() == actual_df.collect())
+
+
+def test_iloc(spark_session):
+    source_df = spark_session.createDataFrame(
+        [
+            ("Bob", 1),
+            ("Jose", 2)
+        ],
+        [
+            "name",
+            "age"
+        ]
+    )
+
+    transformer = op.DataFrameTransformer(source_df)
+    actual_df = transformer.iloc([0])
+
+    expected_df = spark_session.createDataFrame(
+        [
+            "Bob",
+            "Jose"
+        ],
+        [
+            "name"
+        ]
+    )
+    assert (expected_df.collect() == actual_df.collect())
