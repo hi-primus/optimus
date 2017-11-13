@@ -263,8 +263,8 @@ def random_forest(df, columns, input_col):
     transformer.vector_assembler(input_cols=feats)
     model = RandomForestClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
-    rf_model = model.fit(transformer.get_data_frame)
-    df_model = rf_model.transform(transformer.get_data_frame)
+    rf_model = model.fit(transformer.df)
+    df_model = rf_model.transform(transformer.df)
     return df_model, rf_model
 
 
@@ -291,8 +291,8 @@ def decision_tree(df, columns, input_col):
     transformer.vector_assembler(input_cols=feats)
     model = DecisionTreeClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
-    dt_model = model.fit(transformer.get_data_frame)
-    df_model = dt_model.transform(transformer.get_data_frame)
+    dt_model = model.fit(transformer.df)
+    df_model = dt_model.transform(transformer.df)
     return df_model, dt_model
 
 
@@ -319,7 +319,7 @@ def gbt(df, columns, input_col):
     transformer.vector_assembler(input_cols=feats)
     model = GBTClassifier()
     transformer.rename_col(columns=[(input_col+"_index", "label")])
-    gbt_model = model.fit(transformer.get_data_frame)
-    df_model = gbt_model.transform(transformer.get_data_frame)
+    gbt_model = model.fit(transformer.df)
+    df_model = gbt_model.transform(transformer.df)
     return df_model, gbt_model
 

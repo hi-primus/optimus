@@ -19,7 +19,7 @@ class TestDataFrameTransformer(object):
         )
 
         transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.lower_case("*").get_data_frame
+        actual_df = transformer.lower_case("*").df
 
         expected_df = get_spark().create_df(
             [
@@ -47,7 +47,7 @@ class TestDataFrameTransformer(object):
         )
 
         transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.upper_case("name").get_data_frame
+        actual_df = transformer.upper_case("name").df
 
         expected_df = get_spark().create_df(
             [
@@ -75,7 +75,7 @@ class TestDataFrameTransformer(object):
         )
 
         transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.trim_col("name").get_data_frame
+        actual_df = transformer.trim_col("name").df
 
         expected_df = get_spark().create_df(
             [
@@ -104,7 +104,7 @@ class TestDataFrameTransformer(object):
         )
 
         transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.drop_col("num1").get_data_frame
+        actual_df = transformer.drop_col("num1").df
 
         expected_df = get_spark().create_df(
             [
@@ -117,7 +117,6 @@ class TestDataFrameTransformer(object):
             ]
         )
         assert(expected_df.collect() == actual_df.collect())
-
 
     def test_replace_col(self):
         source_df = get_spark().create_df(
@@ -132,7 +131,7 @@ class TestDataFrameTransformer(object):
         )
 
         transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.replace_col("happy", "elated", "emotion").get_data_frame
+        actual_df = transformer.replace_col("happy", "elated", "emotion").df
 
         expected_df = get_spark().create_df(
             [
@@ -160,7 +159,7 @@ class TestDataFrameTransformer(object):
 
         transformer = op.DataFrameTransformer(source_df)
         func = lambda num: num * 2
-        actual_df = transformer.set_col("num1", func, "integer").get_data_frame
+        actual_df = transformer.set_col("num1", func, "integer").df
 
         expected_df = get_spark().create_df(
             [
@@ -175,3 +174,80 @@ class TestDataFrameTransformer(object):
 
         assert(expected_df.collect() == actual_df.collect())
 
+    def test_select(self):
+        source_df = get_spark().create_df(
+            [
+                ("Bob", 1),
+                ("Jose", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
+        )
+
+        transformer = op.DataFrameTransformer(source_df)
+        actual_df = transformer.select("name").df
+
+        expected_df = get_spark().create_df(
+            [
+                "Bob",
+                "Jose"
+            ],
+            [
+                ("name", StringType(), True),
+            ]
+        )
+        assert (expected_df.collect() == actual_df.collect())
+
+    def test_select_idx(self):
+        source_df = get_spark().create_df(
+            [
+                ("Bob", 1),
+                ("Jose", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
+        )
+
+        transformer = op.DataFrameTransformer(source_df)
+        actual_df = transformer.select_idx([0])
+
+        expected_df = get_spark().create_df(
+            [
+                "Bob",
+                "Jose"
+            ],
+            [
+                ("name", StringType(), True),
+            ]
+        )
+        assert (expected_df.collect() == actual_df.collect())
+
+    def test_iloc(self):
+        source_df = get_spark().create_df(
+            [
+                ("Bob", 1),
+                ("Jose", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False)
+            ]
+        )
+
+        transformer = op.DataFrameTransformer(source_df)
+        actual_df = transformer.iloc([0])
+
+        expected_df = get_spark().create_df(
+            [
+                "Bob",
+                "Jose"
+            ],
+            [
+                ("name", StringType(), True),
+            ]
+        )
+        assert (expected_df.collect() == actual_df.collect())

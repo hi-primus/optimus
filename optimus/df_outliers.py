@@ -77,7 +77,7 @@ class OutlierDetector:
         return self._df
 
     @property
-    def get_data_frame(self):
+    def df(self):
         """This function return the dataframe of the class
         :rtype: pyspark.sql.dataframe.DataFrame
         """
