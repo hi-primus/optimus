@@ -1403,11 +1403,6 @@ class DataFrameTransformer:
         :return: Dataframe with selected columns.
         """
 
-        assert isinstance(indices, list), "Error: indices must a list"
-
-        if isinstance(indices, int):
-            indices = [indices]
-
         self._df = self.select_idx(indices)
 
         return self

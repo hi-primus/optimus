@@ -191,8 +191,8 @@ class TestDataFrameTransformer(object):
 
         expected_df = get_spark().create_df(
             [
-                "Bob",
-                "Jose"
+                ("Bob"),
+                ("Jose")
             ],
             [
                 ("name", StringType(), True),
@@ -217,8 +217,8 @@ class TestDataFrameTransformer(object):
 
         expected_df = get_spark().create_df(
             [
-                "Bob",
-                "Jose"
+                ("Bob"),
+                ("Jose")
             ],
             [
                 ("name", StringType(), True),
@@ -243,8 +243,8 @@ class TestDataFrameTransformer(object):
 
         expected_df = get_spark().create_df(
             [
-                "Bob",
-                "Jose"
+                ("Bob"),
+                ("Jose")
             ],
             [
                 ("name", StringType(), True),
