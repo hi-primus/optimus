@@ -182,7 +182,7 @@ class TestDataFrameTransformer(object):
             ],
             [
                 ("name", StringType(), True),
-                ("age", IntegerType(), False)
+                ("age", IntegerType(), True)
             ]
         )
 
@@ -208,7 +208,7 @@ class TestDataFrameTransformer(object):
             ],
             [
                 ("name", StringType(), True),
-                ("age", IntegerType(), False)
+                ("age", IntegerType(), True)
             ]
         )
 
@@ -234,7 +234,7 @@ class TestDataFrameTransformer(object):
             ],
             [
                 ("name", StringType(), True),
-                ("age", IntegerType(), False)
+                ("age", IntegerType(), True)
             ]
         )
 
