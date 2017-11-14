@@ -45,6 +45,38 @@ def create_other_df(spark_session):
         # Dataframe:
         df = spark_session.createDataFrame(list(zip(cities, dates, population)), schema=schema)
         assert_spark_df(df)
+        assert_spark_df(df)
+    except RuntimeError:
+        sys.exit(1)
+
+
+def create_select_df(spark_session):
+    try:
+        # Building a simple dataframe:
+        schema = StructType([
+            StructField("name", StringType(), True),
+            StructField("age", IntegerType(), True)])
+
+        names = ["Bob", "Jose"]
+        ages = [1,2]
+
+        df = spark_session.createDataFrame(list(zip(names, ages)), schema=schema)
+        assert_spark_df(df)
+        return df
+    except RuntimeError:
+        sys.exit(1)
+
+
+def create_select_sample_df(spark_session):
+    try:
+        # Building a simple dataframe:
+        schema = StructType([
+            StructField("name", StringType(), True)])
+
+        names = ["Bob", "Jose"]
+
+        df = spark_session.createDataFrame(list(zip(names)), schema=schema)
+        assert_spark_df(df)
         return df
     except RuntimeError:
         sys.exit(1)
@@ -339,81 +371,27 @@ def test_replace_na():
 
 
 def test_select(spark_session):
-    source_df = spark_session.createDataFrame(
-        [
-            ("Bob", 1),
-            ("Jose", 2)
-        ],
-        [
-            ("name"),
-            ("age")
-        ]
-    )
 
-    transformer = op.DataFrameTransformer(source_df)
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
     actual_df = transformer.select("name").df
 
-    expected_df = spark_session.createDataFrame(
-        [
-            "Bob",
-            "Jose"
-        ],
-        [
-            "name"
-        ]
-    )
+    expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
 
 
 def test_select_idx(spark_session):
-    source_df = spark_session.createDataFrame(
-        [
-            ("Bob", 1),
-            ("Jose", 2)
-        ],
-        [
-            "name",
-            "age"
-        ]
-    )
 
-    transformer = op.DataFrameTransformer(source_df)
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
     actual_df = transformer.select_idx([0])
 
-    expected_df =spark_session.createDataFrame(
-        [
-            "Bob",
-            "Jose"
-        ],
-        [
-            "name",
-        ]
-    )
+    expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
 
 
 def test_iloc(spark_session):
-    source_df = spark_session.createDataFrame(
-        [
-            ("Bob", 1),
-            ("Jose", 2)
-        ],
-        [
-            "name",
-            "age"
-        ]
-    )
 
-    transformer = op.DataFrameTransformer(source_df)
+    transformer = op.DataFrameTransformer(op.DataFrameTransformer(create_select_df(spark_session)))
     actual_df = transformer.iloc([0])
 
-    expected_df = spark_session.createDataFrame(
-        [
-            "Bob",
-            "Jose"
-        ],
-        [
-            "name"
-        ]
-    )
+    expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
