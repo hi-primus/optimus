@@ -382,7 +382,7 @@ def test_select(spark_session):
 def test_select_idx(spark_session):
 
     transformer = op.DataFrameTransformer(create_select_df(spark_session))
-    actual_df = transformer.select_idx([0])
+    actual_df = transformer.select_idx([0]).df
 
     expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
@@ -391,7 +391,7 @@ def test_select_idx(spark_session):
 def test_iloc(spark_session):
 
     transformer = op.DataFrameTransformer(op.DataFrameTransformer(create_select_df(spark_session)))
-    actual_df = transformer.iloc([0])
+    actual_df = transformer.iloc([0]).df
 
     expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
