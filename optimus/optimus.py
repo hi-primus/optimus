@@ -28,7 +28,7 @@ class Optimus:
 
     def get_data_frame(self):
         """This function return the dataframe of the class"""
-        return self.transformer.get_data_frame
+        return self.transformer.df
 
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
@@ -41,7 +41,7 @@ class Optimus:
         self.analyzer.unpersist_df()
         del self.analyzer
         # Instance of analyzer class:
-        self.analyzer = DataFrameAnalyzer(self.transformer.get_data_frame(), self._path_file, self._pu)
+        self.analyzer = DataFrameAnalyzer(self.transformer.df, self._path_file, self._pu)
         # Sampling if it is specified (this method is dependent to the pu argument)
         self.analyzer.analyze_sample()
         # Analyze column specified by user:

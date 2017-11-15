@@ -50,6 +50,38 @@ def create_other_df(spark_session):
         sys.exit(1)
 
 
+def create_select_df(spark_session):
+    try:
+        # Building a simple dataframe:
+        schema = StructType([
+            StructField("name", StringType(), True),
+            StructField("age", IntegerType(), True)])
+
+        names = ["Bob", "Jose"]
+        ages = [1,2]
+
+        df = spark_session.createDataFrame(list(zip(names, ages)), schema=schema)
+        assert_spark_df(df)
+        return df
+    except RuntimeError:
+        sys.exit(1)
+
+
+def create_select_sample_df(spark_session):
+    try:
+        # Building a simple dataframe:
+        schema = StructType([
+            StructField("name", StringType(), True)])
+
+        names = ["Bob", "Jose"]
+
+        df = spark_session.createDataFrame(list(zip(names)), schema=schema)
+        assert_spark_df(df)
+        return df
+    except RuntimeError:
+        sys.exit(1)
+
+
 def create_sql_df(spark_session):
     try:
         df = spark_session.createDataFrame([
@@ -106,7 +138,7 @@ def create_another_df(spark_session):
 def test_transformer(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
-        assert isinstance(transformer.get_data_frame, pyspark.sql.dataframe.DataFrame)
+        assert isinstance(transformer.df, pyspark.sql.dataframe.DataFrame)
     except RuntimeError:
         sys.exit(1)
 
@@ -115,7 +147,7 @@ def test_trim_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.trim_col("*")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -124,7 +156,7 @@ def test_drop_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.drop_col("country")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -133,7 +165,7 @@ def test_keep_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.keep_col(['city', 'population'])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -142,7 +174,7 @@ def test_replace_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.replace_col(search='Tokyo', change_to='Maracaibo', columns='city')
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -152,7 +184,7 @@ def test_delete_row(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         func = lambda pop: (pop > 6500000) & (pop <= 30000000)
         transformer.delete_row(func(col('population')))
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -162,7 +194,7 @@ def test_set_col(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         func = lambda cell: (cell * 2) if (cell > 14000000) else cell
         transformer.set_col(['population'], func, 'integer')
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -171,7 +203,7 @@ def test_clear_accents(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.clear_accents(columns='*')
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -180,7 +212,7 @@ def test_remove_special_chars(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.remove_special_chars(columns=['city', 'country'])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -189,7 +221,7 @@ def test_remove_special_chars_regex(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.remove_special_chars_regex(columns=['city', 'country'], regex='[^\w\s]')
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -199,7 +231,7 @@ def test_rename_col(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         names = [('city', 'villes')]
         transformer.rename_col(names)
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -208,7 +240,7 @@ def test_lookup(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.lookup('city', "Caracas", ['Caracas', 'Ccs'])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -217,7 +249,7 @@ def test_move_col(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.move_col('city', 'country', position='after')
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -228,7 +260,7 @@ def test_date_transform(spark_session):
         transformer.date_transform(columns="dates",
                                    current_format="yyyy/mm/dd",
                                    output_format="dd-mm-yyyy")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -237,7 +269,7 @@ def test_get_frequency(spark_session):
     try:
         analyzer = op.DataFrameAnalyzer(create_another_df(spark_session))
         analyzer.get_frequency(columns="city", sort_by_count=True)
-        assert_spark_df(analyzer.get_data_frame)
+        assert_spark_df(analyzer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -246,7 +278,7 @@ def test_to_csv(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_other_df(spark_session))
         transformer.to_csv("test.csv")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -276,7 +308,7 @@ def test_string_to_index(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.string_to_index(["city", "country"])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -286,7 +318,7 @@ def test_index_to_string(spark_session):
         transformer = op.DataFrameTransformer(create_df(spark_session))
         transformer.string_to_index(["city", "country"])
         transformer.index_to_string(["city_index", "country_index"])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -295,7 +327,7 @@ def test_one_hot_encoder(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_sql_df(spark_session))
         transformer.one_hot_encoder(["id"])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -304,7 +336,7 @@ def test_sql(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_sql_df(spark_session))
         transformer.sql("SELECT *, (v1 + v2) AS v3, (v1 * v2) AS v4 FROM __THIS__")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -313,7 +345,7 @@ def test_assembler(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_assembler_df(spark_session))
         transformer.vector_assembler(["hour", "mobile", "userFeatures"])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
@@ -322,17 +354,56 @@ def test_normalizer(spark_session):
     try:
         transformer = op.DataFrameTransformer(create_vector_df(spark_session))
         transformer.normalizer(["features"])
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
 
 
-def replace_na():
+def test_replace_na():
     try:
         tools = op.Utilities()
         df = tools.read_csv("tests/impute_data.csv", header="true", sep=",")
         transformer = op.DataFrameTransformer(df)
         transformer.replace_na(10, columns="*")
-        assert_spark_df(transformer.get_data_frame)
+        assert_spark_df(transformer.df)
     except RuntimeError:
         sys.exit(1)
+
+
+def test_select(spark_session):
+
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
+    actual_df = transformer.select("name").df
+
+    expected_df = create_select_sample_df(spark_session)
+    assert (expected_df.collect() == actual_df.collect())
+
+
+def test_select_idx(spark_session):
+
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
+    actual_df = transformer.select_idx([0]).df
+
+    expected_df = create_select_sample_df(spark_session)
+    assert (expected_df.collect() == actual_df.collect())
+
+
+def test_iloc(spark_session):
+
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
+    actual_df = transformer.iloc([0]).df
+
+    expected_df = create_select_sample_df(spark_session)
+    assert (expected_df.collect() == actual_df.collect())
+
+
+def test_collect(spark_session):
+
+    transformer = op.DataFrameTransformer(create_select_sample_df(spark_session))
+    actual = transformer.collect()
+
+    expected = create_select_sample_df(spark_session).collect()
+    assert (actual == expected)
+
+
+

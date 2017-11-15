@@ -303,7 +303,7 @@ Let's create a sample dataframe to see what vector assembler does:
 
     # Show assembled df
     print("Assembled columns 'hour', 'mobile', 'userFeatures' to vector column 'features'")
-    transform.get_data_frame.select("features", "clicked").show(truncate=False)
+    transform.df.select("features", "clicked").show(truncate=False)
 
 
 +-----------------------+-------+

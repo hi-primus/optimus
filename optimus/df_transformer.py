@@ -70,7 +70,7 @@ class DataFrameTransformer:
         self._df = df
 
     @property
-    def get_data_frame(self):
+    def df(self):
         """This function return the dataframe of the class
         :rtype: pyspark.sql.dataframe.DataFrame
         """
@@ -1366,3 +1366,43 @@ class DataFrameTransformer:
         self._df = pipeline.fit(self._df).transform(self._df)
 
         return self
+
+    def select(self, columns):
+        """
+        Select specified columns by name.
+        :param columns: String or List of columns to select.
+        :return: Dataframe with selected columns.
+        """
+
+        self._assert_type_str_or_list(columns, "columns")
+
+        self._df = self._df.select(columns)
+
+        return self
+
+    def select_idx(self, indices):
+        """
+        Select specified columns by index.
+        :param indices: Indices to select from DF.
+        :return: Dataframe with selected columns.
+        """
+
+        assert isinstance(indices, list), "Error: indices must a list"
+
+        if isinstance(indices, int):
+            indices = [indices]
+
+        self._df = self._df.select(*(self._df.columns[i] for i in indices))
+
+        return self
+
+    # Alias for select
+
+    iloc = select_idx
+
+    def collect(self):
+        """
+
+        :return:
+        """
+        return self._df.collect()
