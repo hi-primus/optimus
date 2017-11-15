@@ -45,7 +45,6 @@ def create_other_df(spark_session):
         # Dataframe:
         df = spark_session.createDataFrame(list(zip(cities, dates, population)), schema=schema)
         assert_spark_df(df)
-        assert_spark_df(df)
     except RuntimeError:
         sys.exit(1)
 
