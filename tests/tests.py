@@ -396,3 +396,14 @@ def test_iloc(spark_session):
     expected_df = create_select_sample_df(spark_session)
     assert (expected_df.collect() == actual_df.collect())
 
+
+def test_collect(spark_session):
+
+    transformer = op.DataFrameTransformer(create_select_sample_df(spark_session))
+    actual = transformer.collect()
+
+    expected = create_select_sample_df(spark_session).collect()
+    assert (actual == expected)
+
+
+
