@@ -1396,16 +1396,9 @@ class DataFrameTransformer:
 
         return self
 
-    def iloc(self, indices):
-        """
-        Select specified columns by index. Alias for select_idx.
-        :param indices: Indices to select from DF.
-        :return: Dataframe with selected columns.
-        """
+    # Alias for select
 
-        self._df = self.select_idx(indices)
-
-        return self
+    iloc = select_idx
 
     def collect(self):
         """
