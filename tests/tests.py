@@ -390,7 +390,7 @@ def test_select_idx(spark_session):
 
 def test_iloc(spark_session):
 
-    transformer = op.DataFrameTransformer(op.DataFrameTransformer(create_select_df(spark_session)))
+    transformer = op.DataFrameTransformer(create_select_df(spark_session))
     actual_df = transformer.iloc([0]).df
 
     expected_df = create_select_sample_df(spark_session)
