@@ -1406,3 +1406,10 @@ class DataFrameTransformer:
         self._df = self.select_idx(indices)
 
         return self
+
+    def collect(self):
+        """
+
+        :return:
+        """
+        return self._df.collect()
