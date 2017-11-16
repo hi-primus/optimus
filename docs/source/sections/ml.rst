@@ -184,7 +184,7 @@ Let's download some sample data for analysis.
 
 .. code:: python
 
-    df_predict, ml_model = op.ml.random_forest(df, "sentence")
+    df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Random Forest model.
 
@@ -273,7 +273,7 @@ Let's download some sample data for analysis.
 
 .. code:: python
 
-    df_predict, ml_model = op.ml.decision_tree(df, "sentence")
+    df_predict, dt_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Decision Tree model.
 
@@ -359,7 +359,7 @@ Let's download some sample data for analysis.
 
 .. code:: python
 
-    df_predict, ml_model = op.ml.gbt(df, "sentence")
+    df_predict, gbt_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Gradient Boosted Trees model.
 
