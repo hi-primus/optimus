@@ -15,5 +15,7 @@ def trim_col(colName):
 
 def remove_special_chars(colName):
     def inner(df):
-        return df.withColumn(colName, regexp_replace(colName, '(\.\!\"\#\$\%\&\/\(\))', ""))
+        special_chars = ["!", "&", "."]
+        regexp = "|".join(['\{0}'.format(i) for i in special_chars])
+        return df.withColumn(colName, regexp_replace(colName, regexp, ""))
     return inner
