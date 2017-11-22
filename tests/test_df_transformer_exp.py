@@ -6,7 +6,7 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import lit
 
 
-class TestDfTransformerExp(object):
+class TestDfTransformerExp:
 
     def test_lower_case(self):
         source_df = get_spark().create_df(
@@ -33,7 +33,7 @@ class TestDfTransformerExp(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
 
 
     def test_trim_col(self):
@@ -61,7 +61,7 @@ class TestDfTransformerExp(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
 
 
     def test_remove_special_chars(self):
@@ -89,7 +89,7 @@ class TestDfTransformerExp(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
 
 
     def test_chaining_with_new_interface(self):
@@ -122,7 +122,7 @@ class TestDfTransformerExp(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
 
 
     def test_existing_interface(self):
@@ -155,4 +155,4 @@ class TestDfTransformerExp(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
