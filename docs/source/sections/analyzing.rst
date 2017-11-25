@@ -57,10 +57,11 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
 
     # Import optimus
     import optimus as op
-    # Instance of Utilities class
-    tools = op.Utilities()
     # Import os for files
     import os
+
+    # Instance of Utilities class
+    tools = op.Utilities()
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
@@ -145,10 +146,12 @@ The following code shows how to instantiate the class to analyze a dataFrame:
 
     # Import optimus
     import optimus as op
-    # Instance of Utilities class
-    tools = op.Utilities()
     # Import os for files
     import os
+
+    # Instance of Utilities class
+    tools = op.Utilities()
+
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
