@@ -57,16 +57,17 @@ Lets assume you have the following dataset, called foo.csv, in your current dire
 
     # Import optimus
     import optimus as op
-    #Import os module for system tools
+    # Instance of Utilities class
+    tools = op.Utilities()
+    # Import os for files
     import os
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
     # case, local file system (hard drive of the pc) is used.
-    filePath = "file:///" + os.getcwd() + "/foo.csv"
+    file_path = "file:///" + os.getcwd() + "/foo.csv"
 
-    df = tools.read_csv(path=filePath,
-                                sep=',')
+    df = tools.read_csv(path=filePath, sep=',')
 
     # Instance of profiler class
     profiler = op.DataFrameProfiler(df)
@@ -146,13 +147,15 @@ The following code shows how to instantiate the class to analyze a dataFrame:
     import optimus as op
     # Instance of Utilities class
     tools = op.Utilities()
+    # Import os for files
+    import os
 
     # Reading dataframe. os.getcwd() returns de current directory of the notebook
     # 'file:///' is a prefix that specifies the type of file system used, in this
     # case, local file system (hard drive of the pc) is used.
-    filePath = "file:///" + os.getcwd() + "/foo.csv"
+    file_path = "file:///" + os.getcwd() + "/foo.csv"
 
-    df = tools.read_csv(path=filePath, sep=',')
+    df = tools.read_csv(path=file_path, sep=',')
 
     analyzer = op.DataFrameAnalyzer(df=df,pathFile=filePath)
 
