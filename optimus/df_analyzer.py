@@ -385,10 +385,16 @@ class DataFrameAnalyzer:
              ])
 
         # returns: [number of nulls, number of strings, number of integers, number of floats]
-        summary_dict = self._create_dict(
-            ["name", "type", "total", "valid_values", "missing_values"],
-            [column, types_dict[type_col], row_number, valid_values, missing_values
-             ])
+        try:
+            summary_dict = self._create_dict(
+                ["name", "type", "total", "valid_values", "missing_values"],
+                [column, types_dict[type_col], row_number, valid_values, missing_values
+                 ])
+        except KeyError:
+            summary_dict = self._create_dict(
+                ["name", "total", "valid_values", "missing_values"],
+                [column, row_number, valid_values, missing_values
+                 ])
 
         column_dict = self._create_dict(
             ["summary", "graph", "sample"],
