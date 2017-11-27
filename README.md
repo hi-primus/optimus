@@ -32,30 +32,247 @@ Please take a couple of minutes to help shape the Optimus' Roadmap:
 
 ### https://optimusdata.typeform.com/to/aEnYRY
 
-## Announcement!!
-
-The first version of Optimus is out now! Check out the new examples and documentation to see all the changes. 
-We want to thank the projects we rely on: pixiedust and spark-df-profiling and the help from our amazing 
-community. We hope that you find the framework useful and interesting. Have fun!
-
-### Optimus for Spark 1.6.x
-
-Optimus main stable branch will 
-work now for Spark 2.2.0 The 1.6.x version is now under maintenance, 
-the last tag release for this Spark version is the 0.4.0. We strongly 
-suggest that you use the >2.x version of the framework because the 
-new improvements and features will be added now on this version.
-
-## Requirements
-* Apache Spark 2.2.0
-* Python>=3.5
-
 ## Installation (pip):
 
 In your terminal just type:
 
 ```
 pip install optimuspyspark
+```
+
+## Requirements
+* Apache Spark 2.2.0
+* Python>=3.5
+
+## Basic Usage
+
+DataFrameTransformer class receives a dataFrame as an argument. This
+class has all methods listed above.
+
+**Note:** Every possible transformation make changes over this dataFrame and
+overwrites it.
+
+### Transformer.clear_accents(columns)
+
+This function deletes accents in strings dataFrames, it does not
+eliminate main character, but only deletes special tildes.
+
+``clear_accents`` method receives column names (``column``) as argument.
+``columns`` must be a string or a list of column names.
+
+E.g:
+
+Building a dummy dataFrame:
+
+```python
+
+    # Importing sql types
+    from pyspark.sql.types import StringType, IntegerType, StructType, StructField
+    # Importing optimus
+    import optimus as op
+
+    # Building a simple dataframe:
+    schema = StructType([
+            StructField("city", StringType(), True),
+            StructField("country", StringType(), True),
+            StructField("population", IntegerType(), True)])
+
+    countries = ['Colombia', 'US@A', 'Brazil', 'Spain']
+    cities = ['Bogotá', 'New York', '   São Paulo   ', '~Madrid']
+    population = [37800000,19795791,12341418,6489162]
+
+    # Dataframe:
+    df = op.spark.createDataFrame(list(zip(cities, countries, population)), schema=schema)
+
+    df.show()
+```
+
+New DF:
+
+```
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
+```
+
+```python
+
+    # Instantiation of DataTransformer class:
+    transformer = op.DataFrameTransformer(df)
+
+    # Printing of original dataFrame:
+    print('Original dataFrame:')
+    transformer.show()
+
+    # Clear accents:
+    transformer.clear_accents(columns='*')
+
+    # Printing new dataFrame:
+    print('New dataFrame:')
+    transformer.show()
+```
+
+Original dataFrame:
+```
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
+```
+New dataFrame:
+```
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogota|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   Sao Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
+```
+
+### Transformer.remove_special_chars(columns)
+
+This method remove special characters (i.e. !"#$%&/()=?) in columns of
+dataFrames.
+
+``remove_special_chars`` method receives ``columns`` as input. ``columns``
+must be a string or a list of strings.
+
+E.g:
+
+```python
+
+    # Instantiation of DataTransformer class:
+    transformer = op.DataFrameTransformer(df)
+
+    # Printing of original dataFrame:
+    print('Original dataFrame:')
+    transformer.show()
+
+    # Remove special characters:
+    transformer.remove_special_chars(columns=['city', 'country'])
+
+    # Printing new dataFrame:
+    print('New dataFrame:')
+    transformer.show()
+```
+
+Original dataFrame:
+```
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|    US@A|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|        ~Madrid|   Spain|   6489162|
++---------------+--------+----------+
+```
+New dataFrame:
+```
++---------------+--------+----------+
+|           city| country|population|
++---------------+--------+----------+
+|         Bogotá|Colombia|  37800000|
++---------------+--------+----------+
+|       New York|     USA|  19795791|
++---------------+--------+----------+
+|   São Paulo   |  Brazil|  12341418|
++---------------+--------+----------+
+|         Madrid|   Spain|   6489162|
++---------------+--------+----------+
+```
+
+### Transformer.replace_na(value, columns=None)
+
+This method replace nulls with specified value.
+
+``columns`` argument is an optional list of column names to consider. Columns specified in subset that do not have
+matching data type are ignored. For example, if value is a string, and subset contains a non-string column,
+then the non-string column is simply ignored. If `columns == "*"` then it will choose all columns.
+
+``value`` argument is the value to replace nulls with. If the value is a dict, then subset is ignored and value
+must be a mapping from column name (string) to replacement value. The replacement value must be an int, long,
+float, or string.
+
+Let's download a sample data using our amazing `read_url` function.
+
+
+```python
+    # Import optimus
+    import optimus as op
+    # Instance of Utilities class
+    tools = op.Utilities()
+    # Reading df from web
+    url = "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/impute_data.csv"
+    df = tools.read_url(path=url)
+```
+
+If we examine this DF we see that there are some missing values.
+```
++---+---+
+|  a|  b|
++---+---+
+|1.0|NaN|
++---+---+
+|2.0|NaN|
++---+---+
+|NaN|3.0|
++---+---+
+|4.0|4.0|
++---+---+
+|5.0|5.0|
++---+---+
+```
+Remember that we have the `impute_missing` function that lets you choose to use the mean or the median of the columns in
+which the missing values are located for your imputation. But with `replace_na` you can say replace the nulls in one,
+or all columns in the dataframe with a specific value. For this example we will replace NA with 0's.
+
+```python
+
+    # Instantiation of DataTransformer class:
+    transformer = op.DataFrameTransformer(df)
+    # Replace NA with 0's
+    transformer.replace_na(0.0, columns="*")
+    # Show DF
+    transformer.show()
+```
+```
++---+---+
+|  a|  b|
++---+---+
+|1.0|0.0|
++---+---+
+|2.0|0.0|
++---+---+
+|0.0|3.0|
++---+---+
+|4.0|4.0|
++---+---+
+|5.0|5.0|
++---+---+
 ```
 
 ## Contributing to Optimus (based on Webpack)
@@ -73,6 +290,14 @@ bugfixes.
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) 
 about Optimus and its many features.
 * Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).
+
+## Optimus for Spark 1.6.x
+
+Optimus main stable branch will 
+work now for Spark 2.2.0 The 1.6.x version is now under maintenance, 
+the last tag release for this Spark version is the 0.4.0. We strongly 
+suggest that you use the >2.x version of the framework because the 
+new improvements and features will be added now on this version.
 
 ## Contributors: 
 
