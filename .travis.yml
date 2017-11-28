@@ -11,7 +11,6 @@ env:
         - AIRBRAKE_ENVIRONMENT=development
 
 before_install:
-    - chmod +x install-spark-2-2.sh
     - pip install pytest pytest-cov
     - pip install coveralls
     - pip install findspark
@@ -23,7 +22,7 @@ before_install:
     - pip install pixiedust-optimus
 
 install:
-    - ./install-spark-2-2.sh
+    - "pip install pyspark"
     - "pip install -r requirements-test.txt"
 
 addons:
