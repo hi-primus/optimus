@@ -42,7 +42,7 @@ pip install optimuspyspark
 
 ## Requirements
 * Apache Spark 2.2.0
-* Python>=3.5
+* Python>=3.6
 
 ## Basic Usage
 
