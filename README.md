@@ -48,7 +48,7 @@ new improvements and features will be added now on this version.
 
 ## Requirements
 * Apache Spark 2.2.0
-* Python>=3.5
+* Python>=3.6
 
 ## Installation (pip):
 

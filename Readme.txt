@@ -8,7 +8,7 @@ use and understand.
 
 * Apache Spark 2.2.0
 
-* Python>=3.5
+* Python>=3.6
 
 - Installation:
 
