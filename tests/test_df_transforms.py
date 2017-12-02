@@ -1,12 +1,39 @@
 from optimus.spark import get_spark
-from optimus.df_transformer_exp import *
+from optimus.df_transforms import *
 import optimus as op
 from quinn.extensions import *
 from pyspark.sql.types import *
 from pyspark.sql.functions import lit
 
 
-class TestDfTransformerExp:
+class TestDfTransforms:
+
+    def test_reorder_columns(self):
+        source_df = get_spark().create_df(
+            [
+                ("bob", 1),
+                ("jose", 2),
+            ],
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), False),
+            ]
+        )
+
+        actual_df = reorder_columns("age", "name")(source_df)
+
+        expected_df = get_spark().create_df(
+            [
+                (1, "bob"),
+                (2, "jose"),
+            ],
+            [
+                ("age", IntegerType(), False),
+                ("name", StringType(), True),
+            ]
+        )
+
+        assert expected_df.collect() == actual_df.collect()
 
     def test_lower_case(self):
         source_df = get_spark().create_df(
@@ -64,7 +91,7 @@ class TestDfTransformerExp:
         assert expected_df.collect() == actual_df.collect()
 
 
-    def test_remove_special_chars(self):
+    def test_remove_chars(self):
         source_df = get_spark().create_df(
             [
                 ("bob!!", 1),
@@ -76,7 +103,8 @@ class TestDfTransformerExp:
             ]
         )
 
-        actual_df = remove_special_chars("name")(source_df)
+        special_chars = ("!", "&", ".")
+        actual_df = remove_chars("name", special_chars)(source_df)
 
         expected_df = get_spark().create_df(
             [
@@ -104,10 +132,11 @@ class TestDfTransformerExp:
             ]
         )
 
+        special_chars = ("!", "&", ".")
         actual_df = (source_df
-            .transform(remove_special_chars("name"))
+            .transform(remove_chars("name", special_chars))
             .withColumn("fun", lit("&AWESOME!"))
-            .transform(remove_special_chars("fun"))
+            .transform(remove_chars("fun", special_chars))
             .transform(lower_case("fun")))
 
         expected_df = get_spark().create_df(
