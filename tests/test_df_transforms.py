@@ -104,7 +104,7 @@ class TestDfTransforms:
         )
 
         special_chars = ("!", "&", ".")
-        actual_df = remove_chars("name", special_chars)(source_df)
+        actual_df = remove_chars(["name"], special_chars)(source_df)
 
         expected_df = get_spark().create_df(
             [
@@ -133,7 +133,7 @@ class TestDfTransforms:
         )
 
         special_chars = ("!", "&", ".")
-        actual_df = multi_remove_chars(["name", "greeting"], special_chars)(source_df)
+        actual_df = remove_chars(["name", "greeting"], special_chars)(source_df)
 
         expected_df = get_spark().create_df(
             [
@@ -164,9 +164,9 @@ class TestDfTransforms:
 
         special_chars = ("!", "&", ".")
         actual_df = (source_df
-            .transform(remove_chars("name", special_chars))
+            .transform(remove_chars(["name"], special_chars))
             .withColumn("fun", lit("&AWESOME!"))
-            .transform(remove_chars("fun", special_chars))
+            .transform(remove_chars(["fun"], special_chars))
             .transform(lower_case("fun")))
 
         expected_df = get_spark().create_df(

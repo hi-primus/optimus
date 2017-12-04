@@ -20,17 +20,18 @@ def trim_col(colName):
     return inner
 
 
-def remove_chars(colName, chars):
+def __remove_chars(col_name, removed_chars):
     def inner(df):
-        regexp = "|".join('\{0}'.format(i) for i in chars)
-        return df.withColumn(colName, regexp_replace(colName, regexp, ""))
+        regexp = "|".join('\{0}'.format(i) for i in removed_chars)
+        return df.withColumn(col_name, regexp_replace(col_name, regexp, ""))
     return inner
 
-def multi_remove_chars(colNames, chars):
+
+def remove_chars(col_names, removed_chars):
     def inner(df):
         return reduce(
-            lambda memo_df, col_name: remove_chars(col_name, chars)(memo_df),
-            colNames,
+            lambda memo_df, col_name: __remove_chars(col_name, removed_chars)(memo_df),
+            col_names,
             df
         )
     return inner
