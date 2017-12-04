@@ -94,34 +94,6 @@ class TestDfTransforms:
     def test_remove_chars(self):
         source_df = get_spark().create_df(
             [
-                ("bob!!", 1),
-                ("jo..se&&", 2)
-            ],
-            [
-                ("name", StringType(), True),
-                ("age", IntegerType(), False)
-            ]
-        )
-
-        special_chars = ("!", "&", ".")
-        actual_df = remove_chars(["name"], special_chars)(source_df)
-
-        expected_df = get_spark().create_df(
-            [
-                ("bob", 1),
-                ("jose", 2)
-            ],
-            [
-                ("name", StringType(), True),
-                ("age", IntegerType(), False)
-            ]
-        )
-
-        assert expected_df.collect() == actual_df.collect()
-
-    def test_multi_remove_chars(self):
-        source_df = get_spark().create_df(
-            [
                 ("bob!!", "!!ayo&&", 1),
                 ("jo..se&&", "s!u!p", 2)
             ],
