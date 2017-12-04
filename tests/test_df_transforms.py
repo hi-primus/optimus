@@ -119,6 +119,36 @@ class TestDfTransforms:
 
         assert expected_df.collect() == actual_df.collect()
 
+    def test_multi_remove_chars(self):
+        source_df = get_spark().create_df(
+            [
+                ("bob!!", "!!ayo&&", 1),
+                ("jo..se&&", "s!u!p", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("greeting", StringType(), True),
+                ("age", IntegerType(), False),
+            ]
+        )
+
+        special_chars = ("!", "&", ".")
+        actual_df = multi_remove_chars(["name", "greeting"], special_chars)(source_df)
+
+        expected_df = get_spark().create_df(
+            [
+                ("bob", "ayo", 1),
+                ("jose", "sup", 2)
+            ],
+            [
+                ("name", StringType(), True),
+                ("greeting", StringType(), True),
+                ("age", IntegerType(), False),
+            ]
+        )
+
+        assert expected_df.collect() == actual_df.collect()
+
 
     def test_chaining_with_new_interface(self):
         source_df = get_spark().create_df(
