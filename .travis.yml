@@ -7,8 +7,6 @@ python:
 env:
     global:
         - SPARK_HOME=/tmp/spark-2.2.0-bin-hadoop2.7
-        - secure:  "sQ3+ELlqK6QdAyH1J4HmtxtKKA4Bk4Hcu+Hmo3Tslynh0j55+CV2j73jYwch24yGHKheoSA8RVdoP52MoguWo+2ciKIZiumShRNKx1zsYWoJFSb0JlGHogauWNuKEPEzHz8nrw3Z8btyNVFGC25WxXJ490lZ43QnMQ2TpGWNtx7Un/LuZhFFEDJQcl4X5SClGbv8beImKGRHh/DNpjzaw9/EZhY+xT3p820dvm2jdDlKtz8IOE2H3XeAM7raQplio1l5zfSjDIhOy+ESo3uGol4PHjhVe2oIpPnBf0BrYIDYff4L9/TUmgWa875hy8CX4E1T6w89YHFVTI4gRa9YEVpgFRe8AW4XI3CdCTmYMcyf1R2xAW7xOXCBHJegx/kLO2yT3BBScjZc7QhRnXk4587P8t3ciOsPEU0U1LzKgftyvc+aJzBFal3IRaRLI1Ji03PY/JESmjKMz3eVT9bLb8aHdaGF+qH9AC8v1Zcek34ip98DP0qww1QK4AQ/F0IC4TFe6KAs1df8ub8x7hWd7rPEVBThKPatPyQ31oXYHlkuPbXI7/6QWylPBtRwX51Wp9QzgDevCOoIR7JnxYQynAf45TZmlAISBcwo1N2KoxaXOAtytxWFzcaXAoYTwvXTlR0CkhXeusyoabQrCYsmL2at0ZCfmHVVHc69IeGSYxQ="
-        - secure: "rbzcB7761B5wFTsWRQb7lQYKIift2X6XlLBgDCd0iQII+PO8stP8px4l0rb/ELfVdqBv9s4aoAinXlLdp99hjhrrtYhbuk5imc4oNy0WpbMAEqccB47zUhy8efCAd9VGNLj7LX+TBef0DShpRVcFS62m5Oa0Z835vmKQhXsRf8ILiczEbfD7FKx3bLc2WtMOz8A1hZBrnXST5q9PAvvpmRuEC5SPxbAvmvlqbGGJ08c0HnfeeKRcvPwpMq/MuL8H0HU8EKpOE95QOV5Qe7su/YQYcQTyMFWINJ5SrWN5HlA2LUxeOE6ijDllxdX8JKKo3e8cZdbJFQhff1h0jl/m+xhMoAFbnxfyzUjGtFg6uAiuTtLw4FvTBFKXMME2LRUothEhMTh6KknZZDlqxFyoAXfWwCN7dsjY/nT7TJa/BZh+024e5T6wTm8srRGMpVgu+r0gjB9dG2s0lMIzOj6K77PIxJDx45m5Cw7HwZPZwe1HIWyOoct7Er3pNKGFvt9AXLpj85sp6FWzzJC4cGJ0SV5UhWI75NujpVO8jKn1gOuYBdSrP6y9ytJiQIvh4YDSpF19v7qsYeRIg64yH5x16OnY03aUxEQytASOrAng6BeUVanJPa6EwSJRfNl0xWcmaj+MkyQPqapnKuiiqnLlJeDTH8pnr/GUMpSDeFD6sQg="
 
 before_install:
     - chmod +x install-spark-2-2.sh
@@ -18,7 +16,6 @@ before_install:
     - pip install seaborn
     - pip install matplotlib
     - pip install ipython
-    - pip install pytest-spark
     - pip install spark-df-profiling-optimus
     - pip install pixiedust-optimus
 
@@ -33,9 +30,7 @@ addons:
       secure: "lF6xKDkh57MC+dlkiovdBA2MPPt7wcH4ANqc07Xyiqnwr898Gy2hwURvqroqm2EFcDQUwd4VJC4+idEjXADP1ugM+FjtHdr4wqDZXXGbO7wCrTdVTYHmPm+0cvmNXyl/JkshWmwktilhYK8Lw+WO3e9NM/WdUKCtY3s1PI2/aFli5XfurySph7jl6wWch/mUO0gBOhKJja5yDc6LPSSx0W+Eczk5FRMOqEAF5OOWFr4baZCLiCr4Fq46JJsNO71Jb/LVGarpo2KUsWOoBYtBldgCcoGK2PQdOSqAG+ObxgFEvZpmi1IeGDDsO26N6vLBfrDmTwS+xB7NEUjrUVpeDLhN9RpoBFyAqOI42UDxbj0lczEIQeze5AHLbxKjmokGxWa8WeGaIzRJqmjTn/ekNLoXpFMLZY4RFxkmAf5puCoOdbIXb8VfhbO/JAiT6O51Xb4zVxDmUETiwYPMKWlZ3ug+Xal/nTTmcZWKBl7GAO1cZAUHg8/EI/SE5SrXxrieo0rmXZ8vZdhp8BFIz0aO5evXnObiwHqeXq5xV8xqhrnSi/mR8uTnqi8Rc/0EaQTMdBTSkBFyCjVDidhwBxGemjSfxXERiEFopumSrvN0K+dS2NJV8JQmgyGPovow4cFYUHE1IiQ5KvRBIT+cSwuvvbjC/i7EL11mCZbtk1pBaKo="
     github_token:
       secure: "L0q/F9syTHCio1/DSvmEy95N04lg9UgpmvRUgj2XJqCAIRpojIEdRE74mXlgfztgMEQ4Im9MJSXNN97ADzgQTvt/Cm9HM6op2xhUWp1F+zmkkONsEd95yO0ojHgx9LxGV7S8NoryQTBkGHQ9LzgDvnUoaN1XlThlDv+KyCAyRcQ95e4MttjE2l+vvtOCRjrxJWAIGUCLylJapzH2QHagUZE01MqHye80QzBqq4bajSK5FI38tsTgAW+ODczC4q+3ea2zNyup9uAdDgElygSP48VT3TWMb0CR8IZ1S+tEJLDuOUueJ89493vMaW6GBoXL/1vEWT7yJpfSb53qB2aH91RVH3utGpQC9/FS66gP68+mViLTbNrXfO4mhLxF1Ehi+qBa+u+N4FfkyMuOarhUKbWgS+pldMtFKBb5ah6DyiJB+eUMPXSZfTqlHysjg15w1xsf6VlFtCAVlcp4XDYRBaq3vv+WUlnpGcl7xBe0DGwH9zgSxH+RX84RCVVFTWmgTRySRSVvrjdCRru61YRVLiS6aGDqS3Yxt3dIjOuANY5TVm/XBb3xWTUSD4CieGUhCa1iEgG834LWuvjHVQRb5VJLVzauKIiWdPAmu/ghQJMe2cQUtEwqFdMcbu5WCagdcVjMzYqDXKmfiLghmfh5rGYjFRiH1jNl6xO7z4KWTIo="
-    branches:
-      - master
-      - develop
+
 jdk:
   - oraclejdk8
     
