@@ -291,6 +291,16 @@ bugfixes.
 about Optimus and its many features.
 * Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).
 
+
+## Backers
+[[Become a backer](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.
+[![OpenCollective](https://opencollective.com/optimus/backers/badge.svg)](#backers) 
+
+
+## Sponsors
+[[Become a sponsor](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.
+[![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)
+
 ## Optimus for Spark 1.6.x
 
 Optimus main stable branch will 
