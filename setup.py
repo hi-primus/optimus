@@ -1,6 +1,7 @@
 import re
-
+import sys
 from setuptools import setup, find_packages
+
 
 # Get version without importing, which avoids dependency issues
 def get_version():
@@ -8,13 +9,15 @@ def get_version():
         return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
                          version_file.read()).group('version')
 
-import sys
-if sys.version_info < (3, 5):
-    raise RuntimeError('This version requires Python 3.5+')  # pragma: no cover
+
+if sys.version_info < (3, 6):
+    raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
+
 
 def readme():
     with open('Readme.txt') as f:
         return f.read()
+
 
 install_requires = ['pytest', 'findspark', 'pytest-spark', 'spark-df-profiling-optimus', 'pyspark', 'seaborn',
                     'pixiedust-optimus']
