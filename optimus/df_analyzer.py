@@ -17,6 +17,9 @@ import time
 from json import dumps
 import pyspark.sql.dataframe
 
+# Import deprecated
+from deprecated import deprecated
+
 # Import profiler
 import spark_df_profiling_optimus
 
@@ -825,6 +828,7 @@ class DataFrameAnalyzer:
             # outfile.write(str(json_cols).replace("'", "\""))
             outfile.write(json_cols)
 
+    @deprecated
     def display_optimus(self):
         """
         Lets you visualize your Spark object in different ways: table, charts, maps, etc.
