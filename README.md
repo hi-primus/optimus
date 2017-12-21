@@ -24,7 +24,7 @@ https://hioptimus.com/category/blog/
 
 ## Click below for the official documentation
 
-[![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://optimus-ironmussa.readthedocs.io/en/latest/)
+[![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://docs.hioptimus.com/en/latest/)
 
 ## Survey 
 
