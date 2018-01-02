@@ -42,12 +42,14 @@ class Utilities:
 
         return self.spark.createDataFrame(data, names)
 
-    def read_csv(self, path, sep=',', header='true'):
+    def read_csv(self, path, sep=',', header='true', infer_schema='true', *args, **kargs):
         """This funcion read a dataset from a csv file.
 
         :param path     Path or location of the file.
         :param sep   Usually delimiter mark are ',' or ';'.
-        :param  header:     Tell the function whether dataset has a header row.
+        :param  header:     Tell the function whether dataset has a header row. 'true' default.
+        :param infer_schema:  infers the input schema automatically from data.
+        It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
         """
@@ -58,11 +60,10 @@ class Utilities:
         assert isinstance(path, str), "Error, path argument must be string datatype."
 
         return self.spark.read \
-            .format('csv') \
             .options(header=header) \
             .options(delimiter=sep) \
-            .options(inferSchema='true') \
-            .load(path)
+            .options(inferSchema=infer_schema) \
+            .csv(path, *args, **kargs)
 
     def read_url(self, path=None, ty="csv"):
         """
