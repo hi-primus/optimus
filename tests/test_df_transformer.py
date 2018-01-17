@@ -1,4 +1,5 @@
 from optimus.spark import get_spark
+from optimus.df_transformer import *
 import optimus as op
 from quinn.extensions import *
 from pyspark.sql.types import *
@@ -18,8 +19,7 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.lower_case("*").df
+        actual_df = lower_case("name")(source_df)
 
         expected_df = get_spark().create_df(
             [
@@ -32,7 +32,7 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert expected_df.collect() == actual_df.collect()
 
     def test_upper_case(self):
         source_df = get_spark().create_df(
