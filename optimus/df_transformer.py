@@ -1441,17 +1441,11 @@ def _assert_cols_in_df(columns_provided, columns_df):
     assert (col_not_valids == set()), 'Error: The following columns do not exits in dataFrame: %s' % col_not_valids
 
 
-def _lower_case(col_name):
-    """This function set all strings in columns of dataframe specified to lowercase.
-    Columns argument must be a string or a list of string. In order to apply this function to all
-    dataframe, columns must be equal to '*'"""
-
+def lower_case(col_name):
     def inner(df):
-        return df.withColumn(col_name, lower(col(col_name)))
-    return inner
-
-
-def lower_case(columns):
-    def inner(df):
-        return reduce(lambda memo_df, col_name: _lower_case(col_name)(memo_df), columns, df)
+        return (reduce(
+            lambda memo_df, column: memo_df.withColumn(column, lower(col(column))),
+            col_name,
+            df
+        ))
     return inner

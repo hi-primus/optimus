@@ -19,7 +19,7 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        actual_df = lower_case("name")(source_df)
+        actual_df = source_df.transform(lower_case(["name"]))
 
         expected_df = get_spark().create_df(
             [
