@@ -15,6 +15,7 @@ from functools import reduce
 from deprecated import deprecated
 
 
+@deprecated(reason="See new documentation for API 2.0")
 class DataFrameTransformer:
     """DataFrameTransformer is a class to make transformations in dataFrames"""
 
@@ -67,14 +68,12 @@ class DataFrameTransformer:
             self.check_point()
             self._number_of_transformations = 0
 
-    @deprecated
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
         assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
 
-    @deprecated
     @property
     def df(self):
         """This function return the dataframe of the class
@@ -82,7 +81,6 @@ class DataFrameTransformer:
         """
         return self._df
 
-    @deprecated
     def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
@@ -91,7 +89,6 @@ class DataFrameTransformer:
         """
         return self._df.show(n, truncate)
 
-    @deprecated
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
