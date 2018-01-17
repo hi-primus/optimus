@@ -46,8 +46,7 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.upper_case("name").df
+        actual_df = source_df.transform(upper_case(["name"]))
 
         expected_df = get_spark().create_df(
             [

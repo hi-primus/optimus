@@ -2,7 +2,7 @@
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, ArrayType
 # Importing sql functions
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
-    current_date, abs as mag, lower
+    current_date, abs as mag, lower, upper
 from pyspark.ml.feature import MinMaxScaler, VectorAssembler
 import re
 import string
@@ -67,12 +67,14 @@ class DataFrameTransformer:
             self.check_point()
             self._number_of_transformations = 0
 
+    @deprecated
     def set_data_frame(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
         assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
 
+    @deprecated
     @property
     def df(self):
         """This function return the dataframe of the class
@@ -80,6 +82,7 @@ class DataFrameTransformer:
         """
         return self._df
 
+    @deprecated
     def show(self, n=10, truncate=True):
         """This function shows the dataframe of the class
         :param n: number or rows to show
@@ -88,6 +91,7 @@ class DataFrameTransformer:
         """
         return self._df.show(n, truncate)
 
+    @deprecated
     def lower_case(self, columns):
         """This function set all strings in columns of dataframe specified to lowercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
@@ -1445,6 +1449,16 @@ def lower_case(col_name):
     def inner(df):
         return (reduce(
             lambda memo_df, column: memo_df.withColumn(column, lower(col(column))),
+            col_name,
+            df
+        ))
+    return inner
+
+
+def upper_case(col_name):
+    def inner(df):
+        return (reduce(
+            lambda memo_df, column: memo_df.withColumn(column, upper(col(column))),
             col_name,
             df
         ))
