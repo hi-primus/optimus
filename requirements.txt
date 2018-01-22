@@ -1,5 +1,5 @@
 numpy==1.14.0
-matplotlib==2.1.1
+matplotlib==2.1.2
 pyspark==2.2.1
 pytest==3.3.2
 findspark==1.1.0
