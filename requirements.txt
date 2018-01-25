@@ -9,5 +9,5 @@ ipython==6.2.1
 seaborn==0.8.1
 setuptools==38.4.0
 pixiedust-optimus==1.4.0
-quinn==0.2.0
+quinn==0.2.1
 deprecated==1.1.0
