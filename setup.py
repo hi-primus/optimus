@@ -20,7 +20,7 @@ def readme():
 
 
 install_requires = ['pytest', 'findspark', 'pytest-spark', 'spark-df-profiling-optimus', 'pyspark', 'seaborn',
-                    'pixiedust-optimus']
+                    'pixiedust-optimus', 'deprecated']
 lint_requires = [
     'pep8',
     'pyflakes'
@@ -39,7 +39,7 @@ setup(
     author='Favio Vazquez',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/1.2.4.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/1.2.5.tar.gz',
     description=('Optimus is the missing framework for cleaning and preprocessing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
