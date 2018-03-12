@@ -242,7 +242,7 @@ def n_gram(df, input_col, n=2):
 
 def random_forest(df, columns, input_col):
     """
-    Runs a random forest for input DataFrame.
+    Runs a random forest classifier for input DataFrame.
     :param df: Pyspark dataframe to analyze.
     :param columns: List of columns to select for prediction.
     :param input_col: Column to predict.
@@ -270,11 +270,11 @@ def random_forest(df, columns, input_col):
 
 def decision_tree(df, columns, input_col):
     """
-    Runs a random forest for input DataFrame.
+    Runs a decision tree classifier for input DataFrame.
     :param df: Pyspark dataframe to analyze.
     :param columns: List of columns to select for prediction.
     :param input_col: Column to predict.
-    :return: DataFrame with random forest and prediction run.
+    :return: DataFrame with decision tree and prediction run.
     """
 
     assert_spark_df(df)
@@ -298,11 +298,11 @@ def decision_tree(df, columns, input_col):
 
 def gbt(df, columns, input_col):
     """
-    Runs a random forest for input DataFrame.
+    Runs a gradient boosting tree classifier for input DataFrame.
     :param df: Pyspark dataframe to analyze.
     :param columns: List of columns to select for prediction.
     :param input_col: Column to predict.
-    :return: DataFrame with random forest and prediction run.
+    :return: DataFrame with gradient boosting tree and prediction run.
     """
 
     assert_spark_df(df)
