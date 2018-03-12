@@ -1,5 +1,5 @@
 numpy==1.14.2
-matplotlib==2.1.2
+matplotlib==2.2.0
 pyspark==2.2.1
 pytest==3.4.2
 findspark==1.1.0
@@ -7,7 +7,7 @@ spark_df_profiling_optimus==0.1.1
 nose==1.3.7
 ipython==6.2.1
 seaborn==0.8.1
-setuptools==38.5.1
+setuptools==38.5.2
 pixiedust-optimus==1.4.0
 quinn==0.2.1
 deprecated==1.1.0
