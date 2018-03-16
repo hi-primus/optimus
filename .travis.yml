@@ -23,16 +23,17 @@ install:
     - ./install-spark-2-2.sh
     - "pip install -r requirements-test.txt"
 
-addons:
-  sonarcloud:
-    organization: "ironmussa"
-    token:
-      secure: "lF6xKDkh57MC+dlkiovdBA2MPPt7wcH4ANqc07Xyiqnwr898Gy2hwURvqroqm2EFcDQUwd4VJC4+idEjXADP1ugM+FjtHdr4wqDZXXGbO7wCrTdVTYHmPm+0cvmNXyl/JkshWmwktilhYK8Lw+WO3e9NM/WdUKCtY3s1PI2/aFli5XfurySph7jl6wWch/mUO0gBOhKJja5yDc6LPSSx0W+Eczk5FRMOqEAF5OOWFr4baZCLiCr4Fq46JJsNO71Jb/LVGarpo2KUsWOoBYtBldgCcoGK2PQdOSqAG+ObxgFEvZpmi1IeGDDsO26N6vLBfrDmTwS+xB7NEUjrUVpeDLhN9RpoBFyAqOI42UDxbj0lczEIQeze5AHLbxKjmokGxWa8WeGaIzRJqmjTn/ekNLoXpFMLZY4RFxkmAf5puCoOdbIXb8VfhbO/JAiT6O51Xb4zVxDmUETiwYPMKWlZ3ug+Xal/nTTmcZWKBl7GAO1cZAUHg8/EI/SE5SrXxrieo0rmXZ8vZdhp8BFIz0aO5evXnObiwHqeXq5xV8xqhrnSi/mR8uTnqi8Rc/0EaQTMdBTSkBFyCjVDidhwBxGemjSfxXERiEFopumSrvN0K+dS2NJV8JQmgyGPovow4cFYUHE1IiQ5KvRBIT+cSwuvvbjC/i7EL11mCZbtk1pBaKo="
-    github_token:
-      secure: "L0q/F9syTHCio1/DSvmEy95N04lg9UgpmvRUgj2XJqCAIRpojIEdRE74mXlgfztgMEQ4Im9MJSXNN97ADzgQTvt/Cm9HM6op2xhUWp1F+zmkkONsEd95yO0ojHgx9LxGV7S8NoryQTBkGHQ9LzgDvnUoaN1XlThlDv+KyCAyRcQ95e4MttjE2l+vvtOCRjrxJWAIGUCLylJapzH2QHagUZE01MqHye80QzBqq4bajSK5FI38tsTgAW+ODczC4q+3ea2zNyup9uAdDgElygSP48VT3TWMb0CR8IZ1S+tEJLDuOUueJ89493vMaW6GBoXL/1vEWT7yJpfSb53qB2aH91RVH3utGpQC9/FS66gP68+mViLTbNrXfO4mhLxF1Ehi+qBa+u+N4FfkyMuOarhUKbWgS+pldMtFKBb5ah6DyiJB+eUMPXSZfTqlHysjg15w1xsf6VlFtCAVlcp4XDYRBaq3vv+WUlnpGcl7xBe0DGwH9zgSxH+RX84RCVVFTWmgTRySRSVvrjdCRru61YRVLiS6aGDqS3Yxt3dIjOuANY5TVm/XBb3xWTUSD4CieGUhCa1iEgG834LWuvjHVQRb5VJLVzauKIiWdPAmu/ghQJMe2cQUtEwqFdMcbu5WCagdcVjMzYqDXKmfiLghmfh5rGYjFRiH1jNl6xO7z4KWTIo="
-    branches:
-      - master
-      - develop
+#addons:
+#  sonarcloud:
+#    organization: "ironmussa"
+#    token:
+#      secure: "lF6xKDkh57MC+dlkiovdBA2MPPt7wcH4ANqc07Xyiqnwr898Gy2hwURvqroqm2EFcDQUwd4VJC4+idEjXADP1ugM+FjtHdr4wqDZXXGbO7wCrTdVTYHmPm+0cvmNXyl/JkshWmwktilhYK8Lw+WO3e9NM/WdUKCtY3s1PI2/aFli5XfurySph7jl6wWch/mUO0gBOhKJja5yDc6LPSSx0W+Eczk5FRMOqEAF5OOWFr4baZCLiCr4Fq46JJsNO71Jb/LVGarpo2KUsWOoBYtBldgCcoGK2PQdOSqAG+ObxgFEvZpmi1IeGDDsO26N6vLBfrDmTwS+xB7NEUjrUVpeDLhN9RpoBFyAqOI42UDxbj0lczEIQeze5AHLbxKjmokGxWa8WeGaIzRJqmjTn/ekNLoXpFMLZY4RFxkmAf5puCoOdbIXb8VfhbO/JAiT6O51Xb4zVxDmUETiwYPMKWlZ3ug+Xal/nTTmcZWKBl7GAO1cZAUHg8/EI/SE5SrXxrieo0rmXZ8vZdhp8BFIz0aO5evXnObiwHqeXq5xV8xqhrnSi/mR8uTnqi8Rc/0EaQTMdBTSkBFyCjVDidhwBxGemjSfxXERiEFopumSrvN0K+dS2NJV8JQmgyGPovow4cFYUHE1IiQ5KvRBIT+cSwuvvbjC/i7EL11mCZbtk1pBaKo="
+#    github_token:
+#      secure: "L0q/F9syTHCio1/DSvmEy95N04lg9UgpmvRUgj2XJqCAIRpojIEdRE74mXlgfztgMEQ4Im9MJSXNN97ADzgQTvt/Cm9HM6op2xhUWp1F+zmkkONsEd95yO0ojHgx9LxGV7S8NoryQTBkGHQ9LzgDvnUoaN1XlThlDv+KyCAyRcQ95e4MttjE2l+vvtOCRjrxJWAIGUCLylJapzH2QHagUZE01MqHye80QzBqq4bajSK5FI38tsTgAW+ODczC4q+3ea2zNyup9uAdDgElygSP48VT3TWMb0CR8IZ1S+tEJLDuOUueJ89493vMaW6GBoXL/1vEWT7yJpfSb53qB2aH91RVH3utGpQC9/FS66gP68+mViLTbNrXfO4mhLxF1Ehi+qBa+u+N4FfkyMuOarhUKbWgS+pldMtFKBb5ah6DyiJB+eUMPXSZfTqlHysjg15w1xsf6VlFtCAVlcp4XDYRBaq3vv+WUlnpGcl7xBe0DGwH9zgSxH+RX84RCVVFTWmgTRySRSVvrjdCRru61YRVLiS6aGDqS3Yxt3dIjOuANY5TVm/XBb3xWTUSD4CieGUhCa1iEgG834LWuvjHVQRb5VJLVzauKIiWdPAmu/ghQJMe2cQUtEwqFdMcbu5WCagdcVjMzYqDXKmfiLghmfh5rGYjFRiH1jNl6xO7z4KWTIo="
+#    branches:
+#      - master
+#      - develop
+
 jdk:
   - oraclejdk8
     
