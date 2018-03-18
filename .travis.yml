@@ -39,8 +39,8 @@ jdk:
     
 script:
     - py.test -v
-    - if [ "$TRAVIS_BRANCH" = "develop" ]; then sonar-scanner; fi
-    - if [ "$TRAVIS_BRANCH" = "master" ]; then sonar-scanner; fi
+    #- if [ "$TRAVIS_BRANCH" = "develop" ]; then sonar-scanner; fi
+    #- if [ "$TRAVIS_BRANCH" = "master" ]; then sonar-scanner; fi
 
 deploy:
   provider: pypi
