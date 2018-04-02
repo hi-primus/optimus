@@ -10,4 +10,4 @@ seaborn==0.8.1
 setuptools==39.0.1
 pixiedust-optimus==1.4.0
 quinn==0.2.1
-deprecated==1.1.0
+deprecated==1.2.0
