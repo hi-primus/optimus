@@ -1,4 +1,4 @@
-findspark==1.1.0
+findspark==1.2.0
 pytest==3.5.0
 spark_df_profiling_optimus==0.1.1
 numpy==1.14.2
