@@ -1,7 +1,7 @@
 findspark==1.2.0
 pytest==3.6.1
 spark_df_profiling_optimus==0.1.1
-numpy==1.14.3
+numpy==1.14.4
 matplotlib==2.2.2
 ipython==6.4.0
 ### pyspark==2.2.0 # it has no wheel
