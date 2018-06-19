@@ -6,7 +6,7 @@ python:
 
 env:
     global:
-        - SPARK_HOME=/tmp/spark-2.3.1-bin-hadoop2.7
+        - SPARK_HOME=/tmp/spark-2.2.1-bin-hadoop2.7
 
 before_install:
     - chmod +x install-spark-2-2.sh
