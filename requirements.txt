@@ -1,7 +1,7 @@
 numpy==1.14.4
 matplotlib==2.2.2
 pyspark==2.3.1
-pytest==3.6.1
+pytest==3.6.2
 findspark==1.2.0
 spark_df_profiling_optimus==0.1.1
 nose==1.3.7
