@@ -6,9 +6,10 @@ from pyspark.sql.dataframe import DataFrame
 
 
 class Optimus:
-    """This class can be considered as a wrapper of DataFrameTransformer and
-    DataFrameAnalyzer classes.
     """
+    This class can be considered as a wrapper of DataFrameTransformer and DataFrameAnalyzer classes.
+    """
+
     def __init__(self, df, path_file, pu=1):
         """Constructor.
         In this method DataFrameTransformer and DataFrameAnalyzer classes are
@@ -27,16 +28,28 @@ class Optimus:
         self.analyzer = DataFrameAnalyzer(df, self._path_file, self._pu)
 
     def get_data_frame(self):
-        """This function return the dataframe of the class"""
+        """
+        This function return the dataframe loaded in the class
+        :return:
+        """
+
         return self.transformer.df
 
     def set_data_frame(self, df):
-        """This function set a dataframe into the class for subsequent actions.
+        """
+        This function set a dataframe into the class for subsequent actions.
+        :param df:
+        :return:
         """
         assert isinstance(df, DataFrame), "Error: df argument must a pyspark.sql.dataframe.DataFrame type"
         self.transformer.set_data_frame(df)
 
     def _execute_analyzer(self, columns):
+        """
+
+        :param columns:
+        :return:
+        """
         # First
         self.analyzer.unpersist_df()
         del self.analyzer
@@ -52,12 +65,12 @@ class Optimus:
                                      num_bars=50)
 
     def trim_col(self, columns):
-        """This methods cut left and right extra spaces in column strings provided by user.
-        :param columns   list of column names of dataFrame.
+        """
+        This methods cut left and right extra spaces in column strings provided by user.
+        :param columns: list of column names of dataFrame.
                         If a string "*" is provided, the method
                         will do the trimming operation in whole dataFrame.
-
-        :return transformer object
+        :return: transformer object
         """
         # Calling trimCol
         self.transformer.trim_col(columns=columns)
@@ -65,10 +78,11 @@ class Optimus:
         self._execute_analyzer(columns)
 
     def drop_col(self, columns):
-        """This method eliminate the list of columns provided by user.
-        :param columns      list of columns names or a string (a column name).
+        """
+        This method eliminate the list of columns provided by user.
+        :param columns: list of columns names or a string (a column name).
 
-        :return transformer object
+        :return: transformer object
         """
 
         # Calling dropCol
