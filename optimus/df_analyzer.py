@@ -25,8 +25,8 @@ import spark_df_profiling_optimus
 
 
 class ColumnTables:
-    """This class builds a table to describe the number of the different dataTypes in a column dataFrame.
-
+    """
+    This class builds a table to describe the number of the different dataTypes in a column dataFrame.
     It is important to notice that this is not the best way to build a table. It will be better if a general
     building table class is built"""
 
@@ -156,9 +156,12 @@ class DataTypeTable:
         return ''.join(self.html)
 
 
-# This class makes a profile for a given dataframe and its different general features.
-# Based on spark-df-profiling
+
 class DataFrameProfiler:
+    """
+    This class makes a profile for a given dataframe and its different general features.
+    Based on spark-df-profiling
+    """
     def __init__(self, df):
         # Asserting if df is dataFrame datatype.
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
@@ -185,8 +188,10 @@ class DataFrameProfiler:
         return self._df.show(n)
 
 
-# This class makes an analysis of dataframe datatypes and its different general features.
 class DataFrameAnalyzer:
+    """
+    This class makes an analysis of dataframe datatypes and its different general features.
+    """
     def __init__(self, df, path_file=None, pu=0.1, seed=13):
         # Asserting if df is dataFrame datatype.
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
@@ -220,11 +225,15 @@ class DataFrameAnalyzer:
 
     @classmethod
     def _create_dict(cls, keys, values):
-        """This functions is a helper to build dictionaries. The first argument must be a list of keys but it
+        """
+        This functions is a helper to build dictionaries. The first argument must be a list of keys but it
         can be a string also (in this case the string will be packaged into a list. The keys provided
         will be the dictionary keys. The second argument represents the values of each key. values argument can
-        be a list or another dictionary."""
-
+        be a list or another dictionary.
+        :param keys:
+        :param values:
+        :return:
+        """
         dicc = {}
         # Assert if keys is a string, if not, the string is placed it inside a list
         if isinstance(keys, str):
@@ -240,7 +249,13 @@ class DataFrameAnalyzer:
 
     @classmethod
     def _verification(cls, temp_df, column_name):
-        # Function for determine if register value is float or int or string:
+        """
+        Function for determine if register value is float or int or string.
+        :param temp_df:
+        :param column_name:
+        :return:
+        """
+
         def data_type(value):
             if isinstance(value, int):  # Check if value is integer
                 return 'integer'
@@ -288,6 +303,18 @@ class DataFrameAnalyzer:
         # Analize of each column:
 
     def _analyze(self, df_col_analyzer, column, row_number, plots, print_type, values_bar, num_bars, types_dict):
+        """
+
+        :param df_col_analyzer:
+        :param column:
+        :param row_number:
+        :param plots:
+        :param print_type:
+        :param values_bar:
+        :param num_bars:
+        :param types_dict:
+        :return:
+        """
         t = time.time()
         sample_table_dict = {'string': 0., 'integer': 0, 'float': 0}
         # Calling verification ruotine to obtain datatype's counts
@@ -410,6 +437,11 @@ class DataFrameAnalyzer:
     # This function, place values of frequency in histogram bars.
     @classmethod
     def _values_on_bar(cls, plot_fig):
+        """
+
+        :param plot_fig:
+        :return:
+        """
         rects = plot_fig.patches
         for rect in rects:
             # Getting height of bars:
@@ -420,6 +452,13 @@ class DataFrameAnalyzer:
                      va='bottom', rotation=90)
 
     def _plot_num_hist(self, hist_dict, column, values_bar):
+        """
+
+        :param hist_dict:
+        :param column:
+        :param values_bar:
+        :return:
+        """
         values = [list(lis) for lis in list(zip(*[(dic['value'], dic['cont']) for dic in hist_dict]))]
 
         bins = values[0]
@@ -448,6 +487,13 @@ class DataFrameAnalyzer:
         plt.show()
 
     def _plot_cat_hist(self, hist_dict, column, values_bar):
+        """
+
+        :param hist_dict:
+        :param column:
+        :param values_bar:
+        :return:
+        """
         # Extracting values from dictionary
         k = list(filter(lambda k: k != 'cont', hist_dict[0].keys()))[0]
 
@@ -503,13 +549,15 @@ class DataFrameAnalyzer:
         self._df.unpersist()
 
     def set_data_frame(self, df):
-        """This function set a dataframe into the class for subsequent actions.
+        """
+        This function set a dataframe into the class for subsequent actions.
         """
         self._df = df
 
     @property
     def df(self):
-        """This function return the dataframe of the class"""
+        """
+        This function return the dataframe of the class"""
         return self._df
 
     def show(self, n=10, truncate=True):
@@ -623,12 +671,11 @@ class DataFrameAnalyzer:
     def plot_hist(self, column, type_hist, values_bar=True):
         """
         This function builds the histogram (bins) of an categorical column dataframe.
-        Inputs:
-        df_one_col: A dataFrame of one column.
-        hist_dict: Python dictionary with histogram values
-        type_hist: type of histogram to be generated, numerical or categorical
-        values_bar: If values_bar is True, values of frequency are plotted over bars.
-        Outputs: dictionary of the histogram generated
+        :param df_one_col: A dataFrame of one column.
+        :param hist_dict: Python dictionary with histogram values
+        :param type_hist: type of histogram to be generated, numerical or categorical
+        :param values_bar: If values_bar is True, values of frequency are plotted over bars.
+        :return: dictionary of the histogram generated
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         Example:
         self.plotHist(df[column], type_hist='categorical', values_bar=True)
@@ -654,12 +701,12 @@ class DataFrameAnalyzer:
             self._plot_num_hist(hist_dict, column_plot, values_bar)
 
     def get_categorical_hist(self, df_one_col, num_bars):
-        """This function analyzes a dataframe of a single column (only string type columns) and
+        """
+        This function analyzes a dataframe of a single column (only string type columns) and
         returns a dictionary with bins and values of frequency.
-
-        :param df_one_col     One column dataFrame.
-        :param num_bars      Number of bars or histogram bins.
-        :return hist_dict    Python dictionary with histogram values and bins."""
+        :param df_one_col: One column dataFrame.
+        :param num_bars: Number of bars or histogram bins.
+        :return hist_dict: Python dictionary with histogram values and bins."""
 
         assert isinstance(num_bars, int), "Error, num_bars argument must be a string dataType."
         assert len(df_one_col.columns) == 1, "Error, Dataframe provided must have only one column."
@@ -681,8 +728,12 @@ class DataFrameAnalyzer:
         return hist_dict
 
     def get_numerical_hist(self, df_one_col, num_bars):
-        """This function analyzes a dataframe of a single column (only numerical columns) and
-        returns a dictionary with bins and values of frequency."""
+        """
+        This function analyzes a dataframe of a single column (only numerical columns) and
+        returns a dictionary with bins and values of frequency.
+        :param df_one_col: dataframe column name.
+        :param num_bars: number of bar in the plot.
+        """
 
         assert len(df_one_col.columns) == 1, "Error, Dataframe provided must have only one column."
 
@@ -782,11 +833,11 @@ class DataFrameAnalyzer:
         return hist_dict
 
     def unique_values_col(self, column):
-        """This function counts the number of values that are unique and also the total number of values.
+        """
+        This function counts the number of values that are unique and also the total number of values.
         Then, returns the values obtained.
-        :param  column      Name of column dataFrame, this argument must be string type.
-        :return         dictionary of values counted, as an example:
-                        {'unique': 10, 'total': 15}
+        :param column: Name of column dataFrame, this argument must be string type.
+        :return: dictionary of values counted, as an example: {'unique': 10, 'total': 15}
         """
 
         assert column, "Error, column name must be string type."
@@ -819,6 +870,12 @@ class DataFrameAnalyzer:
 
     @classmethod
     def write_json(cls, json_cols, path_to_json_file):
+        """
+        Export columns as a json file
+        :param json_cols:
+        :param path_to_json_file:
+        :return:
+        """
 
         # assert isinstance(json_cols, dict), "Error: columnAnalyse must be run before writeJson function."
 

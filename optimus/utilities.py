@@ -45,12 +45,11 @@ class Utilities:
     def read_csv(self, path, sep=',', header='true', infer_schema='true', *args, **kargs):
         """This funcion read a dataset from a csv file.
 
-        :param path     Path or location of the file.
-        :param sep   Usually delimiter mark are ',' or ';'.
-        :param  header:     Tell the function whether dataset has a header row. 'true' default.
-        :param infer_schema:  infers the input schema automatically from data.
+        :param path: Path or location of the file.
+        :param sep: Usually delimiter mark are ',' or ';'.
+        :param header: Tell the function whether dataset has a header row. 'true' default.
+        :param infer_schema: Infers the input schema automatically from data.
         It requires one extra pass over the data. 'true' default.
-
         :return dataFrame
         """
         assert ((header == 'true') or (header == 'false')), "Error, header argument must be 'true' or 'false'. " \
@@ -122,7 +121,7 @@ class Utilities:
         """This function allows user to read parquet files. It is import to clarify that this method is just based
         on the spark.read.parquet(path) Apache Spark method. Only assertion instructions has been added to
         ensure user has more hints about what happened when something goes wrong.
-        :param  path    Path or location of the file. Must be string dataType.
+        :param  path: Path or location of the file. Must be string dataType.
 
         :return dataFrame"""
         assert isinstance(path, str), "Error: path argument must be string dataType."
@@ -131,15 +130,14 @@ class Utilities:
         return self.spark.read.parquet(path)
 
     def csv_to_parquet(self, input_path, output_path, sep_csv, header_csv, num_partitions=None):
-        """This method transform a csv dataset file into a parquet.
-
+        """
+        This method transform a csv dataset file into a parquet.
         The method reads a existing csv file using the inputPath, sep_csv and headerCsv arguments.
-
-        :param  input_path   Address location of the csv file.
-        :param  output_path  Address where the new parquet file will be stored.
-        :param  sep_csv    Delimiter mark of the csv file, usually is ',' or ';'.
-        :param  header_csv   This argument specifies if csv file has header or not.
-        :param  num_partitions Specifies the number of partitions the user wants to write the dataset."""
+        :param input_path: Address location of the csv file.
+        :param output_path: Address where the new parquet file will be stored.
+        :param sep_csv: Delimiter mark of the csv file, usually is ',' or ';'.
+        :param header_csv: This argument specifies if csv file has header or not.
+        :param num_partitions: Specifies the number of partitions the user wants to write the dataset."""
 
         df = self.read_csv(input_path, sep_csv, header=header_csv)
 
@@ -153,7 +151,8 @@ class Utilities:
             df.write.parquet(output_path)
 
     def set_check_point_folder(self, path, file_system):
-        """Function that receives a workspace path where a folder is created.
+        """
+        Function that receives a workspace path where a folder is created.
         This folder will store temporal
         dataframes when user writes the DataFrameTransformer.checkPoint().
 
@@ -163,8 +162,8 @@ class Utilities:
         It is recommended that users deleted this folder after all transformations are completed
         and the final dataframe have been saved. This can be done with deletedCheckPointFolder function.
 
-        :param path     Location of the dataset (string).
-        :param file_system   Describes if file system is local or hadoop file system.
+        :param path: Location of the dataset (string).
+        :param file_system: Describes if file system is local or hadoop file system.
 
         """
 
@@ -212,7 +211,8 @@ class Utilities:
 
     @classmethod
     def delete_check_point_folder(cls, path, file_system):
-        """Function that deletes the temporal folder where temp files were stored.
+        """
+        Function that deletes the temporal folder where temp files were stored.
         The path required is the same provided by user in setCheckPointFolder().
 
         :param file_system   Describes if file system is local or hadoop file system.
@@ -246,10 +246,12 @@ class Utilities:
 
     @classmethod
     def get_column_names_by_type(cls, df, data_type):
-        """This function returns column names of dataFrame which have the same
-        datatype provided. It analyses column datatype by dataFrame.dtypes method.
-
-        :return    List of column names of a type specified.
+        """
+        This function returns column names of dataFrame which have the same datatype provided.
+        It analyses column datatype by dataFrame.dtypes method.
+        :param df: dataframe to be analyzed
+        :param data_type: column data type to be returned
+        :return: List of column names of a type specified.
         """
         assert (data_type in ['string', 'integer', 'float', 'date', 'double']), \
             "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"

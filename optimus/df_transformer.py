@@ -15,14 +15,16 @@ class DataFrameTransformer:
     """DataFrameTransformer is a class to make transformations in dataFrames"""
 
     def __init__(self, df):
-        """Class constructor.
-        :param  df      DataFrame to be transformed.
+        """
+        Class constructor.
+        :param df: DataFrame to be transformed.
         """
         assert (isinstance(df, pyspark.sql.dataframe.DataFrame)), \
             "Error, df argument must be a pyspark.sql.dataframe.DataFrame instance"
 
         # Dataframe
         self._df = df
+
         # SparkContext:
         self._sql_context = self._df.sql_ctx
         self._number_of_transformations = 0
@@ -47,10 +49,11 @@ class DataFrameTransformer:
 
     @classmethod
     def _assert_cols_in_df(cls, columns_provided, columns_df):
-        """This function asserts if columns_provided exists in dataFrame.
-        Inputs:
-        columns_provided: the list of columns to be process.
-        columns_df: list of columns's dataFrames
+        """
+        This function asserts if columns_provided exists in dataFrame.
+        :param columns_provided: columns_provided: the list of columns to be process.
+        :param columns_df: columns_df: list of columns's dataFrames
+        :return:
         """
         col_not_valids = (
             set([column for column in columns_provided]).difference(set([column for column in columns_df])))
@@ -64,10 +67,15 @@ class DataFrameTransformer:
             self._number_of_transformations = 0
 
     def set_data_frame(self, df):
-        """This function set a dataframe into the class for subsequent actions.
         """
+        This function set a dataframe into the class for subsequent actions.
+        :param df: dataframe object to
+        :return:
+        """
+
         assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
         self._df = df
+        return
 
     @property
     def df(self):
@@ -77,7 +85,8 @@ class DataFrameTransformer:
         return self._df
 
     def show(self, n=10, truncate=True):
-        """This function shows the dataframe of the class
+        """
+        This function shows the dataframe loaded in the class
         :param n: number or rows to show
         :param truncate: If set to True, truncate strings longer than 20 chars by default.
         :rtype: pyspark.sql.dataframe.DataFrame.show()
@@ -85,18 +94,25 @@ class DataFrameTransformer:
         return self._df.show(n, truncate)
 
     def lower_case(self, columns):
-        """This function set all strings in columns of dataframe specified to lowercase.
+        """
+        This function set all strings in columns of dataframe specified to lowercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
-        dataframe, columns must be equal to '*'"""
+        dataframe, columns must be equal to '*'
+        :param: column: to be transformed to lowercase
+        :return:
+        """
 
         func = lambda cell: cell.lower() if cell is not None else cell
         self.set_col(columns, func, 'string')
         return self
 
     def upper_case(self, columns):
-        """This function set all strings in columns of dataframe specified to uppercase.
+
+        """
+        This function set all strings in columns of dataframe specified to uppercase.
         Columns argument must be a string or a list of string. In order to apply this function to all
         dataframe, columns must be equal to '*'"""
+
         func = lambda cell: cell.upper() if cell is not None else cell
         self.set_col(columns, func, 'string')
         return self
@@ -166,7 +182,9 @@ class DataFrameTransformer:
         return self
 
     def check_point(self):
-        """This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
+
+        """
+        This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
         evaluation approach in processing data: transformation functions are not computed into an action is called.
         Sometimes when transformations are numerous, the computations are very extensive because the high number of
         operations that spark needs to run in order to get the results.
@@ -185,15 +203,17 @@ class DataFrameTransformer:
         self._df.count()
         self._df = self._sql_context.createDataFrame(self._df, self._df.schema)
         print("Done.")
+        return
 
     execute = check_point
 
     def trim_col(self, columns):
-        """This methods cut left and right extra spaces in column strings provided by user.
-        :param columns   list of column names of dataFrame.
+        """
+        This methods cut left and right extra spaces in column strings provided by user.
+        :param columns: list of column names of dataFrame.
                 If a string "*" is provided, the method will do the trimming operation in whole dataFrame.
 
-        :return transformer object
+        :return: transformer object
         """
 
         # Function to trim spaces in columns with strings datatype
@@ -256,20 +276,15 @@ class DataFrameTransformer:
         return self
 
     def replace_col(self, search, change_to, columns):
-        """This method search the 'search' value in DataFrame columns specified in 'columns' in order to replace it
+        """
+        This method search the 'search' value in DataFrame columns specified in 'columns' in order to replace it
         for 'change_to' value.
-
-
-        :param search       value to search in dataFrame.
-        :param change_to     value used to replace the old one in dataFrame.
-        :param columns      list of string column names or a string (column name). If columns = '*' is provided,
-                            searching and replacing action is made in all columns of DataFrame that have same
-                            dataType of search and change_to.
-
-        search and change_to arguments are expected to be numbers and same dataType ('integer', 'string', etc) each other.
-        olumns argument is expected to be a string or list of string column names.
-
-        :return transformer object
+        :param search: searchvalue to search in dataFrame.
+        :param change_to: value used to replace the old one in dataFrame.
+        :param columns: list of string column names or a string (column name). If columns = '*' is provided,
+                        searching and replacing action is made in all columns of DataFrame that have same
+                        dataType of search and change_to.
+        :return: transformer object
         """
 
         def col_replace(columns):
@@ -320,8 +335,9 @@ class DataFrameTransformer:
         return self
 
     def delete_row(self, func):
-        """This function is an alias of filter and where spark functions.
-        :param func     func must be an expression with the following form:
+        """
+        This function is an alias of filter and where spark functions.
+        :param func: func must be an expression with the following form:
 
                 func = col('col_name') > value.
 
@@ -337,9 +353,9 @@ class DataFrameTransformer:
     def set_col(self, columns, func, data_type):
         """This method can be used to make math operations or string manipulations in row of dataFrame columns.
 
-        :param columns      list of columns (or a single column) of dataFrame.
-        :param func         function or string type which describe the data_type that func function should return.
-        :param data_type     string indicating one of the following options: 'integer', 'string', 'double','float'.
+        :param columns:      list of columns (or a single column) of dataFrame.
+        :param func:         function or string type which describe the data_type that func function should return.
+        :param data_type:    string indicating one of the following options: 'integer', 'string', 'double','float'.
 
         'columns' argument is expected to be a string or a list of columns names.
         It is a requirement for this method that the data_type provided must be the same to data_type of columns.
@@ -397,10 +413,11 @@ class DataFrameTransformer:
 
     # Drop
     def keep_col(self, columns):
-        """This method keep only columns specified by user with columns argument in DataFrame.
-        :param columns list of columns or a string (column name).
+        """
+        This method keep only columns specified by user with columns argument in DataFrame.
+        :param columns: list of columns or a string (column name).
 
-        :return transformer object
+        :return: transformer object
         """
 
         def col_keep(columns):
@@ -425,11 +442,11 @@ class DataFrameTransformer:
         return self
 
     def clear_accents(self, columns):
-        """This function deletes accents in strings column dataFrames, it does not eliminate main characters,
+        """
+        This function deletes accents in strings column dataFrames, it does not eliminate main characters,
         but only deletes special tildes.
 
-        :param columns  String or a list of column names.
-
+        :param columns:  String or a list of column names.
         """
 
         # Check if columns argument must be a string or list datatype:
@@ -517,11 +534,13 @@ class DataFrameTransformer:
         return self
 
     def remove_special_chars_regex(self, columns, regex):
-        """This function remove special chars in string columns using a regex, such as: .!"#$%&/()
-        :param columns      list of names columns to be processed.
-        :param regex        string that contains the regular expression
+        """
+        This function remove special chars in string columns using a regex, such as: .!"#$%&/()
+        :param columns: list of names columns to be processed.
+        :type: string or a list of strings.
+        :param regex:   string that contains the regular expression
 
-        columns argument can be a string or a list of strings."""
+        """
 
         # Check if columns argument must be a string or list datatype:
         self._assert_type_str_or_list(columns, "columns")
@@ -563,8 +582,9 @@ class DataFrameTransformer:
         return self
 
     def rename_col(self, columns):
-        """"This functions change the name of columns datraFrame.
-        :param columns      List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+        """"
+        This functions change the name of columns datraFrame.
+        :param columns: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
 
         """
         # Asserting columns is string or list:
@@ -588,7 +608,8 @@ class DataFrameTransformer:
         return self
 
     def lookup(self, column, str_to_replace, list_str=None):
-        """This method search a list of strings specified in `list_str` argument among rows
+        """
+        This method search a list of strings specified in `list_str` argument among rows
         in column dataFrame and replace them for `str_to_replace`.
 
         :param  column      Column name, this variable must be string dataType.
@@ -661,9 +682,10 @@ class DataFrameTransformer:
         return self
 
     def move_col(self, column, ref_col, position):
-        """This funcion change column position in dataFrame.
-        :param column:   Name of the column to be moved in dataFrame. column argument must be a string.
-        :param ref_col:   Name of reference column in dataFrame. This column will be a reference to place the
+        """
+        This funcion change column position in dataFrame.
+        :param column: Name of the column to be moved in dataFrame. column argument must be a string.
+        :param ref_col: Name of reference column in dataFrame. This column will be a reference to place the
                         column to be moved.
         :param position: Can be one of the following options: 'after' or 'before'. If 'after' is provided, column
                         provided will be placed just after the ref_col selected."""
@@ -722,12 +744,12 @@ class DataFrameTransformer:
         This function can be used to create Spark DataFrames with frequencies for picked values of
         selected columns.
 
-        :param col_id    column name of the columnId of dataFrame
-        :param col_search     column name of the column to be split.
-        :param new_col_feature        Name of the new column.
-        :param search_string         string of value to be counted.
-
-        :returns Spark Dataframe.
+        :param col_id: column name of the columnId of dataFrame
+        :param col_search: column name of the column to be split.
+        :param new_col_feature: Name of the new column.
+        :param search_string: String of value to be counted.
+        :returns
+        :rtype: Spark Dataframe.
 
         Please, see documentation for more explanations about this method.
 
@@ -778,12 +800,13 @@ class DataFrameTransformer:
 
     def date_transform(self, columns, current_format, output_format):
         """
-        :param  columns     Name date columns to be transformed. Columns ha
-        :param  current_format   current_format is the current string dat format of columns specified. Of course,
+        Tranform a column date format
+        :param  columns: Name date columns to be transformed. Columns ha
+        :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
                                 different formats will fail.
-        :param  output_format    output date string format to be expected.
+        :param  output_format: output date string format to be expected.
         """
         # Check if current_format argument a string datatype:
         self._assert_type_str(current_format, "current_format")
@@ -809,10 +832,10 @@ class DataFrameTransformer:
 
     def age_calculate(self, column, dates_format, name_col_age):
         """
-        This method compute the age of clients based on their born dates.
-        :param  column      Name of the column born dates column.
-        :param  dates_format  String format date of the column provided.
-        :param  name_col_age  Name of the new column, the new columns is the resulting column of ages.
+        This method compute the age based on a born date.
+        :param  column: Name of the column born dates column.
+        :param  dates_format: String format date of the column provided.
+        :param  name_col_age: Name of the new column, the new columns is the resulting column of ages.
 
         """
         # Check if column argument a string datatype:
@@ -912,7 +935,8 @@ class DataFrameTransformer:
         return self
 
     def operation_in_type(self, parameters):
-        """ This function makes operations in a columnType of dataframe. It is well know that DataFrames are consistent,
+        """
+        This function makes operations in a columnType of dataframe. It is well know that DataFrames are consistent,
         but it in this context, operation are based in types recognized by the dataframe analyzer, types are identified
         according if the value is parsable to int or float, etc.
 
@@ -920,9 +944,9 @@ class DataFrameTransformer:
         argument provided in the input function.
 
         Columns provided in list of tuples cannot be repeated
-        :param parameters   List of columns in the following form: [(columnName, data_type, func),
+        :param parameters: List of columns in the following form: [(columnName, data_type, func),
                                                                     (columnName1, dataType1, func1)]
-        :return None
+        :return: None
         """
 
         def check_data_type(value):
@@ -983,7 +1007,12 @@ class DataFrameTransformer:
         return self
 
     def row_filter_by_type(self, column_name, type_to_delete):
-        """This function has built in order to deleted some type of dataframe """
+        """
+        This function has built in order to deleted some type of dataframe
+        :param column_name:
+        :param type_to_delete:
+        :return:
+        """
         # Check if column_name argument a string datatype:
         self._assert_type_str(column_name, "column_name")
         # Asserting if column_name exits in dataframe:
@@ -1129,12 +1158,13 @@ class DataFrameTransformer:
         return self
 
     def split_str_col(self, column, feature_names, mark):
-        """This functions split a column into different ones. In the case of this method, the column provided should
+        """
+        This functions split a column into different ones. In the case of this method, the column provided should
         be a string of the following form 'word,foo'.
 
-        :param column       Name of the target column, this column is going to be replaced.
-        :param feature_names     List of strings of the new column names after splitting the strings.
-        :param mark         String that specifies the splitting mark of the string, this frequently is ',' or ';'.
+        :param column: Name of the target column, this column is going to be replaced.
+        :param feature_names: List of strings of the new column names after splitting the strings.
+        :param mark: String that specifies the splitting mark of the string, this frequently is ',' or ';'.
         """
 
         # Check if column argument is a string datatype:
