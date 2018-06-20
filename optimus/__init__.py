@@ -22,25 +22,52 @@ import os
 from .ml import patch
 from .display_pipes import print_stage
 
+sc = None
+spark = None
+
+# Messages strings
+STARTING = "Starting or getting SparkSession and SparkContext..."
+CHECK_POINT_CONFIG = "Setting checkpoint folder (local). If you are in a cluster change it with set_check_point_ " \
+              "folder(path,'hadoop')."
+SUCCESS = "Optimus successfully imported. Have fun :)."
+
+def init_spark():
+    """
+        Initialize Spark
+        :return:
+    """
+    print("Just checking that all necesary environments vars are present...")
+    print("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
+    print("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
+    print("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
+    print("-----")
+    print(STARTING)
+
+    global spark
+    spark = SparkSession.builder.enableHiveSupport().getOrCreate()
+
+    global sc
+    sc = spark.sparkContext
+
+    print(CHECK_POINT_CONFIG)
+
+    Utilities().set_check_point_folder(os.getcwd(), "local")
+
+
+def print_html(html):
+    """
+    Just a display() helper to print html code
+    :param html: html code to be printed
+    :return:
+    """
+    display(HTML(html))
+
 patch()
 
 try:
     get_ipython
 
-    def print_html(html):
-        display(HTML(html))
-
-    print_html("<div>Starting or getting SparkSession and SparkContext.</div>")
-
-    spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-    sc = spark.sparkContext
-
-    print_html("<div>Setting checkpoint folder (local). If you are in a cluster change it with "
-               "set_check_point_folder(path,'hadoop').</div>")
-
-    Utilities().set_check_point_folder(os.getcwd(), "local")
-
-    message = "<b><h2>Optimus successfully imported. Have fun :).</h2></b>"
+    init_spark()
 
     print_html(
         """
@@ -50,17 +77,14 @@ try:
             </a>
             <span>{0}</span>
         </div>
-        """.format(message)
+        """.format("<b><h2>" + SUCCESS + "</h2></b>")
     )
 except Exception:
     print("Shell detected")
-    print("Starting or getting SparkSession and SparkContext.")
-    spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-    sc = spark.sparkContext
-    print("Setting checkpoint folder (local). If you are in a cluster change it with set_check_point_"
-          "folder(path,'hadoop').")
-    Utilities().set_check_point_folder(os.getcwd(), "local")
-    print("SparkSession and Context initialized. CheckPoint folder created. Optimus successfully imported. Have fun :).")
+
+    init_spark()
+
+    print(SUCCESS)
     print("""
    ____        __  _                     
   / __ \____  / /_(_)___ ___  __  _______
