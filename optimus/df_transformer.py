@@ -1358,6 +1358,23 @@ class DataFrameTransformer:
 
         from pyspark.ml import Pipeline
         from pyspark.ml.feature import Normalizer
+        from pyspark.ml.linalg import DenseVector, VectorUDT
+
+        # Convert ArrayType() column to DenseVector
+        def arr_to_vec(arr_column):
+            """
+            :param arr_column: Column name
+            :return: Returns DenseVector by converting an ArrayType() column
+            """
+            return DenseVector(arr_column)
+
+        # User-Defined function
+        udf_arr_to_vec = udf(arr_to_vec, VectorUDT())
+
+        # Check for columns which are not DenseVector types and convert them into DenseVector
+        for col in input_cols:
+            if not isinstance(self._df[col], DenseVector):
+                self._df = self._df.withColumn(col, udf_arr_to_vec(self._df[col]))
 
         normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
                   list(set(input_cols))]
