@@ -7,17 +7,27 @@ import unicodedata
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
     current_date, abs as mag
 
+
 class Optimus:
+    """
+
+    """
     # Reference https://medium.com/@mgarod/dynamically-add-a-method-to-a-class-in-python-c49204b85bd6
     def __init__(self):
         print("init")
 
-    def assert_type_str_or_list(var):
-        """This function asserts if variable is a string or a list dataType."""
-        assert isinstance(var, (str, list)), \
-            "Error: argument must be a string or a list."
+    def create_df(self, rows_data, col_specs):
+        """
+        Helper to create a Spark dataframe
+        :param rows_data:
+        :param col_specs:
+        :return:
+        """
+        struct_fields = list(map(lambda x: StructField(*x), col_specs))
+        return spark.createDataFrame(rows_data, StructType(struct_fields))
 
     # Decorator to attach a custom functions to a class
+    @classmethod
     def add_method(cls):
         def decorator(func):
             @wraps(func)
@@ -101,6 +111,7 @@ class Optimus:
         # Return the min value
         return list(map(lambda c: self._df.agg({c: agg}).collect()[0][0], columns))
 
+    @add_method(DataFrame)
     def min(self, columns):
         """
         Return the min value from a column dataframe
@@ -109,6 +120,7 @@ class Optimus:
         """
         return self._agg("min", columns)
 
+    @add_method(DataFrame)
     def max(self, columns):
         """
         Return the max value from a column dataframe
@@ -117,6 +129,7 @@ class Optimus:
         """
         return self._agg("max", columns)
 
+    @add_method(DataFrame)
     def range(self, columns):
         """
         Return the range form the min to the max value
@@ -137,6 +150,7 @@ class Optimus:
         min_val = self.min(columns)
         [x - y for x, y in zip(max_val, min_val)]
 
+    @add_method(DataFrame)
     def median(self, columns):
         """
         Return the median of a column dataframe
@@ -146,9 +160,8 @@ class Optimus:
 
         return self.approxQuantile(columns, [0.5], 0)
 
-
-        # Descriptive Analytics
-
+    # Descriptive Analytics
+    @add_method(DataFrame)
     def stddev(self, columns):
         """
         Return the standard deviation of a column dataframe
@@ -157,6 +170,7 @@ class Optimus:
         """
         return self._agg("stddev", columns)
 
+    @add_method(DataFrame)
     def kurt(self, columns):
         """
         Return the kurtosis of a column dataframe
@@ -165,14 +179,16 @@ class Optimus:
         """
         return self._agg("kurtosis", columns)
 
+    @add_method(DataFrame)
     def mean(self, columns):
         """
         Return the mean of a column dataframe
         :param columns:
         :return:
         """
-        self._agg("mean", columns)
+        return self._agg("mean", columns)
 
+    @add_method(DataFrame)
     def skewness(self, columns):
         """
         Return the skewness of a column dataframe
@@ -181,6 +197,7 @@ class Optimus:
         """
         return self._agg("skewness", columns)
 
+    @add_method(DataFrame)
     def sum(self, columns):
         """
         Return the sum of a column dataframe
@@ -189,6 +206,7 @@ class Optimus:
         """
         return self._agg("skewness", columns)
 
+    @add_method(DataFrame)
     def variance(self, columns):
         """
         Return the variance of a column dataframe
@@ -215,45 +233,6 @@ class Optimus:
 
         return columns
 
-    @classmethod
-    def _assert_type_str_or_list(cls, variable):
-        """
-
-        :param variable:
-        :param name_arg:
-        :return:
-        """
-        assert isinstance(variable, (str, list)), \
-            "Error: Argument must be a string or a list."
-
-    @classmethod
-    def _assert_columns_names(cls, columns):
-        """
-        Check if a string or list of string are valid dataframe columns
-        :param columns: columns names
-        :return:
-        """
-
-        assert len(columns) > 0, "Error: columns can be empty"
-
-        # Remove duplicated columns
-        if isinstance(columns, list):
-            columns = set(columns)
-
-        # if string convert to list. Because we always return a list
-        if isinstance(columns, str):
-            columns = [columns]
-
-        # Check if the columns you want to select exits in the dataframe
-        r = []
-        for column in columns:
-            if column not in self.columns:
-                r.append(column)
-
-        assert len(r) == 0, "Error:%s column(s) not exist(s)" % r
-
-
-    @add_method(DataFrame)
     def parse_columns(self, columns):
         """
         Return a valid list of columns.
@@ -272,7 +251,6 @@ class Optimus:
 
         return columns
 
-    @add_method(DataFrame)
     def apply_to_row(self, columns, func):
         """
         Apply the func function to a serie of row in specific columns
@@ -287,6 +265,7 @@ class Optimus:
             self = self.withColumn(column, func(col(column)))
         return self
 
+    @add_method(DataFrame)
     def drop(self, columns):
         """
 
@@ -298,6 +277,7 @@ class Optimus:
             self = self.drop(column)
         return self
 
+    @add_method(DataFrame)
     def keep(self, columns):
         """
 
@@ -308,6 +288,7 @@ class Optimus:
         columns = self.parse_columns(columns)
         return self.select(*columns)
 
+    @add_method(DataFrame)
     def rename(self, columns_pair):
         """"
         This functions change the name of a column(s) datraFrame.
