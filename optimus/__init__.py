@@ -1,17 +1,17 @@
-# Importing DataFrameTransformer library
-from optimus.df_transformer import DataFrameTransformer
 # Importing DataFrameAnalyzer library
 from optimus.df_analyzer import DataFrameAnalyzer
-# Importing DfProfiler library
-from optimus.df_analyzer import DataFrameProfiler
-# Importing Utility library
+
+# Importing Utilities
 from optimus.utilities import *
+
 # Importing Outliers library
 from optimus.df_outliers import *
 # Importing iPython
+
 from IPython.display import display, HTML
 # Importing Spark session
 from pyspark.sql.session import SparkSession
+
 # Basic imports
 import os
 
@@ -39,7 +39,7 @@ def init_spark():
         Initialize Spark
         :return:
     """
-    print("Just checking that all necesary environments vars are present...")
+    print("Just checking that all necessary environments vars are present...")
     print("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
     print("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
     print("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
