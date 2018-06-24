@@ -17,7 +17,7 @@ class Optimus:
         assert isinstance(var, (str, list)), \
             "Error: argument must be a string or a list."
 
-    # decorator to attach a custom fuction to a class
+    # Decorator to attach a custom functions to a class
     def add_method(cls):
         def decorator(func):
             @wraps(func)
@@ -88,6 +88,114 @@ class Optimus:
         """
         return self.apply_to_row(columns, self._remove_accents)
 
+    # Quantile statistics
+    def _agg(self, agg, columns):
+        """
+        Helper function to manage aggregation functions
+        :param agg: Aggregation function from spark
+        :param columns: list of columns names or a string (a column name).
+        :return:
+        """
+        columns = self.parse_columns(columns)
+
+        # Return the min value
+        return list(map(lambda c: self._df.agg({c: agg}).collect()[0][0], columns))
+
+    def min(self, columns):
+        """
+        Return the min value from a column dataframe
+        :param columns: '*', list of columns names or a string (a column name).
+        :return:
+        """
+        return self._agg("min", columns)
+
+    def max(self, columns):
+        """
+        Return the max value from a column dataframe
+        :param columns: '*', list of columns names or a string (a column name).
+        :return:
+        """
+        return self._agg("max", columns)
+
+    def range(self, columns):
+        """
+        Return the range form the min to the max value
+        :param columns:
+        :return:
+        """
+        # Check if columns argument is a string or list datatype:
+        self._assert_type_str_or_list(columns, "columns")
+
+        # Columns
+        if isinstance(columns, str):
+            columns = [columns]
+
+        # Check if columns to be process are in dataframe
+        self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
+
+        max_val = self.max(columns)
+        min_val = self.min(columns)
+        [x - y for x, y in zip(max_val, min_val)]
+
+    def median(self, columns):
+        """
+        Return the median of a column dataframe
+        :param columns:
+        :return:
+        """
+
+        return self.approxQuantile(columns, [0.5], 0)
+
+
+        # Descriptive Analytics
+
+    def stddev(self, columns):
+        """
+        Return the standard deviation of a column dataframe
+        :param columns:
+        :return:
+        """
+        return self._agg("stddev", columns)
+
+    def kurt(self, columns):
+        """
+        Return the kurtosis of a column dataframe
+        :param columns:
+        :return:
+        """
+        return self._agg("kurtosis", columns)
+
+    def mean(self, columns):
+        """
+        Return the mean of a column dataframe
+        :param columns:
+        :return:
+        """
+        self._agg("mean", columns)
+
+    def skewness(self, columns):
+        """
+        Return the skewness of a column dataframe
+        :param columns:
+        :return:
+        """
+        return self._agg("skewness", columns)
+
+    def sum(self, columns):
+        """
+        Return the sum of a column dataframe
+        :param columns:
+        :return:
+        """
+        return self._agg("skewness", columns)
+
+    def variance(self, columns):
+        """
+        Return the variance of a column dataframe
+        :param columns:
+        :return:
+        """
+        return self._agg("variance", columns)
 
     def _check_columns_tuples(self, columns_pair):
         """
