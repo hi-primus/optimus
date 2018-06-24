@@ -15,12 +15,15 @@ from pyspark.sql.session import SparkSession
 # Basic imports
 import os
 
+
 # -*- coding: utf-8 -*-
 
 # pyspark_pipes: build Spark ML pipelines easily
 
 from .ml import patch
 from .display_pipes import print_stage
+
+from .assertion_helpers import *
 
 sc = None
 spark = None
