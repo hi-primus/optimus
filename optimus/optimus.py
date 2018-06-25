@@ -34,29 +34,6 @@ class Optimus:
     def __init__(self):
         print("init")
 
-    def _remove_accents(input_str):
-        """
-        Remove accents to a string
-        :return:
-        """
-        # first, normalize strings:
-        nfkd_str = unicodedata.normalize('NFKD', input_str)
-
-        # Keep chars that has no other char combined (i.e. accents chars)
-        with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-
-        return with_out_accents
-
-    def remove_accents(self, columns):
-        """
-        Remove accents in specific columns
-        :param columns:
-        :return:
-        """
-        return self.apply_to_row(columns, self._remove_accents)
-
-
-
     def query(self):
         """
         Select row depende
@@ -233,12 +210,12 @@ def _parse_columns(self, columns, index=None):
     if isinstance(columns, str):
         columns = [columns]
 
-    # Verify if we have a list with tupples inside
+    # Verify if we have a list
     elif isinstance(columns, list):
-        for c in columns:
-            assert isinstance(c, tuple)
-        # Extract the columns for a specific position
-        columns = [c[index] for c in columns]
+        # Verify that we have list inside the tuples
+        if all(isinstance(x, tuple) for x in columns):
+            # Extract a specific position in the tupple
+            columns = [c[index] for c in columns]
 
     # Validate that all the columns exist
     validate_columns_names(self, columns)
@@ -303,7 +280,7 @@ def apply_to_row(self, columns, func):
 
 
 @add_method(DataFrame)
-# FIX: We must a find the best approach to fix the collition between the spark dataframe
+# FIX: We must a find the best approach to fix the collition between the spark dataframe and optimus
 # drop method and the optimus methods
 def drop_(self, columns):
     """
@@ -344,6 +321,29 @@ def rename(self, columns_pair):
     return self.select(columns)
 
 
+def _remove_accents(input_str):
+    """
+    Remove accents to a string
+    :return:
+    """
+    # first, normalize strings:
+
+    nfkd_str = unicodedata.normalize('NFKD', input_str)
+
+    # Keep chars that has no other char combined (i.e. accents chars)
+    with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+
+    return with_out_accents
+
+@add_method(DataFrame)
+def remove_accents(self, columns):
+    """
+    Remove accents in specific columns
+    :param columns:
+    :return:
+    """
+    return self.apply_to_row(columns, _remove_accents)
+
 # Quantile statistics
 @add_method(DataFrame)
 def _agg(self, agg, columns):
@@ -356,7 +356,11 @@ def _agg(self, agg, columns):
     columns = self._parse_columns(columns)
 
     # Return the min value
-    return list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
+    r = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
+
+    # if the list has one elment return just a single element
+    return one_list_to_val(r)
+
 
 @add_method(DataFrame)
 def min(self, columns):
@@ -365,7 +369,7 @@ def min(self, columns):
     :param columns: '*', list of columns names or a string (a column name).
     :return:
     """
-    return self._agg("min", columns)[0]
+    return self._agg("min", columns)
 
 
 @add_method(DataFrame)
@@ -385,20 +389,15 @@ def range(self, columns):
     :param columns:
     :return:
     """
-    # Check if columns argument is a string or list datatype:
-    assert_type_str_or_list(columns, "columns")
 
-    # Columns
-    if isinstance(columns, str):
-        columns = [columns]
+    columns = self._parse_columns(columns)
 
-    # Check if columns to be process are in dataframe
-    self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
+    # if max_val, min_val has 1 element convert to a list
+    max_val = val_to_list(self.max(columns))
+    min_val = val_to_list(self.min(columns))
 
-    max_val = self.max(columns)
-    min_val = self.min(columns)
-    [x - y for x, y in zip(max_val, min_val)]
-
+    # Substract max and min lists to get the range
+    return one_list_to_val([x - y for x, y in zip(max_val, min_val)])
 
 @add_method(DataFrame)
 def median(self, columns):
@@ -408,7 +407,7 @@ def median(self, columns):
     :return:
     """
 
-    return self.approxQuantile(columns, [0.5], 0)
+    return self.approxQuantile(columns, [0.5], 0)[0]
 
 
 # Descriptive Analytics

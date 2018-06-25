@@ -36,18 +36,29 @@ def validate_columns_names(df, required_col_names):
     assert len(missing_col_names) == 0, "Error:%s column(s) not exist(s)" % error_message
 
 
-def validate_columns_names_list(df, required_col_names):
+def one_list_to_val(l):
     """
-    Given a list of two element extract a list of columns for the first and every element.
-    :param df:
-    :param required_col_names:
+    Convert a single list element to val
+    :param l:
     :return:
     """
-    # Asserting columns is string or list:
-    assert isinstance(required_col_names, list), \
-        "Error: Column argument must be a tuple(s)"
+    if isinstance(l, list) and len(l) == 1:
+        result = l[0]
+    else:
+        result = l
 
-    # Check that the columns are valid
-    validate_columns_names(df, columns)
+    return result
 
-    return columns
+
+def val_to_list(val):
+    """
+    Convert a single value string or number to a list
+    :param val:
+    :return:
+    """
+    if isinstance(val, (int, float, str)):
+        result = [val]
+    else:
+        result = val
+
+    return result
