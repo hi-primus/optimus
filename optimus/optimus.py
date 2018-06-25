@@ -1,4 +1,5 @@
-from functools import wraps  # This convenience func preserves name and docstring
+# Used in decorators. This convenience func preserves name and docstring
+from functools import wraps
 
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -7,74 +8,31 @@ import unicodedata
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
     current_date, abs as mag
 
+from pyspark.sql.types import StructType, StructField
+
+from optimus.spark import *
+
+from optimus.assertion_helpers import *
+
+
+def create_df(rows_data, col_specs):
+    """
+    Helper to create a Spark dataframe
+    :param rows_data:
+    :param col_specs:
+    :return:
+    """
+    struct_fields = list(map(lambda x: StructField(*x), col_specs))
+    return get_spark().createDataFrame(rows_data, StructType(struct_fields))
+
 
 class Optimus:
     """
 
     """
-    # Reference https://medium.com/@mgarod/dynamically-add-a-method-to-a-class-in-python-c49204b85bd6
+
     def __init__(self):
         print("init")
-
-    def create_df(self, rows_data, col_specs):
-        """
-        Helper to create a Spark dataframe
-        :param rows_data:
-        :param col_specs:
-        :return:
-        """
-        struct_fields = list(map(lambda x: StructField(*x), col_specs))
-        return spark.createDataFrame(rows_data, StructType(struct_fields))
-
-    # Decorator to attach a custom functions to a class
-    @classmethod
-    def add_method(cls):
-        def decorator(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                return func(self, *args, **kwargs)
-
-            setattr(cls, func.__name__, wrapper)
-            # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-            return func  # returning func means func can still be used normally
-
-        return decorator
-
-    @add_method(DataFrame)
-    def lower(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-        return self.apply_to_row(columns, F.lower)
-
-    @add_method(DataFrame)
-    def upper(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-        return self.apply_to_row(columns, F.upper)
-
-    @add_method(DataFrame)
-    def trim(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-        return self.apply_to_row(columns, F.trim)
-
-    @add_method(DataFrame)
-    def reverse(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-        return self.apply_to_row(columns, F.reverse)
 
     def _remove_accents(input_str):
         """
@@ -89,7 +47,6 @@ class Optimus:
 
         return with_out_accents
 
-    @add_method(DataFrame)
     def remove_accents(self, columns):
         """
         Remove accents in specific columns
@@ -98,209 +55,7 @@ class Optimus:
         """
         return self.apply_to_row(columns, self._remove_accents)
 
-    # Quantile statistics
-    def _agg(self, agg, columns):
-        """
-        Helper function to manage aggregation functions
-        :param agg: Aggregation function from spark
-        :param columns: list of columns names or a string (a column name).
-        :return:
-        """
-        columns = self.parse_columns(columns)
 
-        # Return the min value
-        return list(map(lambda c: self._df.agg({c: agg}).collect()[0][0], columns))
-
-    @add_method(DataFrame)
-    def min(self, columns):
-        """
-        Return the min value from a column dataframe
-        :param columns: '*', list of columns names or a string (a column name).
-        :return:
-        """
-        return self._agg("min", columns)
-
-    @add_method(DataFrame)
-    def max(self, columns):
-        """
-        Return the max value from a column dataframe
-        :param columns: '*', list of columns names or a string (a column name).
-        :return:
-        """
-        return self._agg("max", columns)
-
-    @add_method(DataFrame)
-    def range(self, columns):
-        """
-        Return the range form the min to the max value
-        :param columns:
-        :return:
-        """
-        # Check if columns argument is a string or list datatype:
-        self._assert_type_str_or_list(columns, "columns")
-
-        # Columns
-        if isinstance(columns, str):
-            columns = [columns]
-
-        # Check if columns to be process are in dataframe
-        self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
-
-        max_val = self.max(columns)
-        min_val = self.min(columns)
-        [x - y for x, y in zip(max_val, min_val)]
-
-    @add_method(DataFrame)
-    def median(self, columns):
-        """
-        Return the median of a column dataframe
-        :param columns:
-        :return:
-        """
-
-        return self.approxQuantile(columns, [0.5], 0)
-
-    # Descriptive Analytics
-    @add_method(DataFrame)
-    def stddev(self, columns):
-        """
-        Return the standard deviation of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("stddev", columns)
-
-    @add_method(DataFrame)
-    def kurt(self, columns):
-        """
-        Return the kurtosis of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("kurtosis", columns)
-
-    @add_method(DataFrame)
-    def mean(self, columns):
-        """
-        Return the mean of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("mean", columns)
-
-    @add_method(DataFrame)
-    def skewness(self, columns):
-        """
-        Return the skewness of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("skewness", columns)
-
-    @add_method(DataFrame)
-    def sum(self, columns):
-        """
-        Return the sum of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("skewness", columns)
-
-    @add_method(DataFrame)
-    def variance(self, columns):
-        """
-        Return the variance of a column dataframe
-        :param columns:
-        :return:
-        """
-        return self._agg("variance", columns)
-
-    def _check_columns_tuples(self, columns_pair):
-        """
-        Given a tuple extract a list of columns for the first and every element of the tuple
-        :param columns_pair: a list of tuples with the first element as a column name
-        :return:
-        """
-        # Asserting columns is string or list:
-        assert isinstance(columns_pair[0], tuple), \
-            "Error: Column argument must be a tuple(s)"
-
-        # Extract the columns to be renamed from the tupple
-        columns = [c[0] for c in columns_pair]
-
-        # Check that the columns are valid
-        columns = self._assert_columns_names(columns)
-
-        return columns
-
-    def parse_columns(self, columns):
-        """
-        Return a valid list of columns.
-        :param columns:  Acepts * as param to return all the string columns in the dataframe
-        :return: A list of columns string names
-        """
-
-        # Verify that columns are a string or list of string
-        self._assert_type_str_or_list(columns)
-
-        # if columns value is *, get all columns
-        if columns == "*":
-            columns = list(map(lambda t: t[0], self.dtypes))
-        else:
-            columns = self._assert_columns_names(columns)
-
-        return columns
-
-    def apply_to_row(self, columns, func):
-        """
-        Apply the func function to a serie of row in specific columns
-        :param columns:
-        :param func:
-        :return:
-        """
-
-        columns = self.parse_columns(self, columns)
-
-        for column in columns:
-            self = self.withColumn(column, func(col(column)))
-        return self
-
-    @add_method(DataFrame)
-    def drop(self, columns):
-        """
-
-        :param columns: *, string or string or columns list to be dropped
-        :return: Dataframe
-        """
-        columns = self.parse_columns(columns)
-        for column in columns:
-            self = self.drop(column)
-        return self
-
-    @add_method(DataFrame)
-    def keep(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-
-        columns = self.parse_columns(columns)
-        return self.select(*columns)
-
-    @add_method(DataFrame)
-    def rename(self, columns_pair):
-        """"
-        This functions change the name of a column(s) datraFrame.
-        :param columns_pair: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
-
-        """
-        columns = self._check_columns_tuples(columns_pair)
-
-        # Rename cols
-        columns = [col(column[0]).alias(column[1]) for column in columns]
-
-        return self.select(columns)
 
     def query(self):
         """
@@ -348,7 +103,7 @@ class Optimus:
 
         # Asserting if position is 'after' or 'before'
         assert (position == 'after') or (
-            position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
+                position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
 
         # Get dataframe columns
         columns = self.columns
@@ -441,3 +196,277 @@ class Optimus:
         print(1)
 
 
+# Reference https://medium.com/@mgarod/dynamically-add-a-method-to-a-class-in-python-c49204b85bd6
+# Decorator to attach a custom functions to a class
+
+
+def add_method(cls):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            return func(self, *args, **kwargs)
+
+        setattr(cls, func.__name__, wrapper)
+        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
+        return func  # returning func means func can still be used normally
+
+    return decorator
+
+
+@add_method(DataFrame)
+def _parse_columns(self, columns, index=None):
+    """
+    Check that a column list is a valis list of columns.
+    :param columns:  Acepts * as param to return all the string columns in the dataframe
+    :return: A list of columns string names
+    """
+
+    # Verify that columns are a string or list of string
+    assert_type_str_or_list(columns)
+
+    # if columns value is * get all dataframes columns
+    if columns == "*":
+        columns = list(map(lambda t: t[0], self.dtypes))
+
+    # if string convert to list. Because we always return a list
+
+    if isinstance(columns, str):
+        columns = [columns]
+
+    # Verify if we have a list with tupples inside
+    elif isinstance(columns, list):
+        for c in columns:
+            assert isinstance(c, tuple)
+        # Extract the columns for a specific position
+        columns = [c[index] for c in columns]
+
+    # Validate that all the columns exist
+    validate_columns_names(self, columns)
+
+    return columns
+
+
+@add_method(DataFrame)
+def lower(self, columns):
+    """
+    Lowercase all the string in a column
+    :param columns:
+    :return:
+    """
+    return self.apply_to_row(columns, F.lower)
+
+
+@add_method(DataFrame)
+def upper(self, columns):
+    """
+    Uppercase all the strings column
+    :param columns:
+    :return:
+    """
+    return self.apply_to_row(columns, F.upper)
+
+
+@add_method(DataFrame)
+def trim(self, columns):
+    """
+    Trim the string in a column
+    :param columns:
+    :return:
+    """
+    return self.apply_to_row(columns, F.trim)
+
+
+@add_method(DataFrame)
+def reverse(self, columns):
+    """
+    Reverse the order of all the string in a column
+    :param columns:
+    :return:
+    """
+    return self.apply_to_row(columns, F.reverse)
+
+
+@add_method(DataFrame)
+def apply_to_row(self, columns, func):
+    """
+    Apply the func function to a serie of row in specific columns
+    :param columns:
+    :param func:
+    :return:
+    """
+
+    columns = self._parse_columns(columns)
+
+    for column in columns:
+        self = self.withColumn(column, func(col(column)))
+    return self
+
+
+@add_method(DataFrame)
+# FIX: We must a find the best approach to fix the collition between the spark dataframe
+# drop method and the optimus methods
+def drop_(self, columns):
+    """
+
+    :param columns: *, string or string or columns list to be dropped
+    :return: Dataframe
+    """
+    columns = self._parse_columns(columns)
+    for column in columns:
+        self = self.drop(column)
+    return self
+
+
+@add_method(DataFrame)
+def keep(self, columns):
+    """
+    Just Keep the columns and drop.
+    :param columns:
+    :return:
+    """
+
+    columns = self._parse_columns(columns)
+    return self.select(*columns)
+
+
+@add_method(DataFrame)
+def rename(self, columns_pair):
+    """"
+    This functions change the name of a column(s) datraFrame.
+    :param columns_pair: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+    """
+    # Check that the 1st element in the tuple is a valis set of columns
+    columns = self._parse_columns(columns_pair, 0)
+
+    # Rename cols
+    columns = [col(column[0]).alias(column[1]) for column in columns_pair]
+
+    return self.select(columns)
+
+
+# Quantile statistics
+@add_method(DataFrame)
+def _agg(self, agg, columns):
+    """
+    Helper function to manage aggregation functions
+    :param agg: Aggregation function from spark
+    :param columns: list of columns names or a string (a column name).
+    :return:
+    """
+    columns = self._parse_columns(columns)
+
+    # Return the min value
+    return list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
+
+@add_method(DataFrame)
+def min(self, columns):
+    """
+    Return the min value from a column dataframe
+    :param columns: '*', list of columns names or a string (a column name).
+    :return:
+    """
+    return self._agg("min", columns)[0]
+
+
+@add_method(DataFrame)
+def max(self, columns):
+    """
+    Return the max value from a column dataframe
+    :param columns: '*', list of columns names or a string (a column name).
+    :return:
+    """
+    return self._agg("max", columns)
+
+
+@add_method(DataFrame)
+def range(self, columns):
+    """
+    Return the range form the min to the max value
+    :param columns:
+    :return:
+    """
+    # Check if columns argument is a string or list datatype:
+    assert_type_str_or_list(columns, "columns")
+
+    # Columns
+    if isinstance(columns, str):
+        columns = [columns]
+
+    # Check if columns to be process are in dataframe
+    self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
+
+    max_val = self.max(columns)
+    min_val = self.min(columns)
+    [x - y for x, y in zip(max_val, min_val)]
+
+
+@add_method(DataFrame)
+def median(self, columns):
+    """
+    Return the median of a column dataframe
+    :param columns:
+    :return:
+    """
+
+    return self.approxQuantile(columns, [0.5], 0)
+
+
+# Descriptive Analytics
+@add_method(DataFrame)
+def stddev(self, columns):
+    """
+    Return the standard deviation of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("stddev", columns)
+
+
+@add_method(DataFrame)
+def kurt(self, columns):
+    """
+    Return the kurtosis of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("kurtosis", columns)
+
+
+@add_method(DataFrame)
+def mean(self, columns):
+    """
+    Return the mean of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("mean", columns)
+
+
+@add_method(DataFrame)
+def skewness(self, columns):
+    """
+    Return the skewness of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("skewness", columns)
+
+
+@add_method(DataFrame)
+def sum(self, columns):
+    """
+    Return the sum of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("skewness", columns)
+
+
+@add_method(DataFrame)
+def variance(self, columns):
+    """
+    Return the variance of a column dataframe
+    :param columns:
+    :return:
+    """
+    return self._agg("variance", columns)

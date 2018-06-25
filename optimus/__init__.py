@@ -6,11 +6,16 @@ from optimus.utilities import *
 
 # Importing Outliers library
 from optimus.df_outliers import *
-# Importing iPython
 
-from IPython.display import display, HTML
+# Importing Outliers library
+from optimus.optimus import *
+
+
 # Importing Spark session
 from pyspark.sql.session import SparkSession
+
+# Importing iPython
+from IPython.display import display, HTML
 
 # Basic imports
 import os
