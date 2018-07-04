@@ -8,11 +8,18 @@ import unicodedata
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
     current_date, abs as mag
 
-from pyspark.sql.types import StructType, StructField
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType
 
 from optimus.spark import *
-
 from optimus.assertion_helpers import *
+
+
+# You can use string, str or String as param
+TYPES = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
+         'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
+
+# Instead StringType() just use string
+DICT_TYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
 
 
 def create_df(rows_data, col_specs):
@@ -36,7 +43,7 @@ class Optimus:
 
     def query(self):
         """
-        Select row depende
+        Select row depending of a query
         :return:
         """
         # https://stackoverflow.com/questions/11869910/pandas-filter-rows-of-dataframe-with-operator-chaining
@@ -61,49 +68,6 @@ class Optimus:
             assert (replace_by != {}), "Error, str_to_replace must be a string or a non empty python dictionary"
             assert (
                     look_up_key is None), "Error, If a python dictionary if specified, list_str argument must be None: list_str=None"
-
-    def move_col(self, column, ref_col, position):
-        """
-        This function change column position in dataFrame.
-        :param column:
-        :param ref_col:
-        :param position:
-        :return:
-        """
-
-        # Check that column is a string or a list
-        column = self._assert_columns_names(column)
-        assert len(column) == 1, "Error: Columns must be a string or a list of one element"
-
-        # Check if columns argument a string datatype:
-        ref_col = self._assert_columns_names(ref_col)
-
-        # Asserting if position is 'after' or 'before'
-        assert (position == 'after') or (
-                position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
-
-        # Get dataframe columns
-        columns = self.columns
-
-        # Finding position of column to move:
-        find_col = lambda columns, column: [index for index, c in enumerate(columns) if c == column]
-        new_index = find_col(columns, ref_col)
-        old_index = find_col(columns, column)
-
-        # if position is 'after':
-        if position == 'after':
-            # Check if the movement is from right to left:
-            if new_index[0] >= old_index[0]:
-                columns.insert(new_index[0], columns.pop(old_index[0]))  # insert and delete a element
-            else:  # the movement is form left to right:
-                columns.insert(new_index[0] + 1, columns.pop(old_index[0]))
-        else:  # If position if before:
-            if new_index[0] >= old_index[0]:  # Check if the movement if from right to left:
-                columns.insert(new_index[0] - 1, columns.pop(old_index[0]))
-            elif new_index[0] < old_index[0]:  # Check if the movement if from left to right:
-                columns.insert(new_index[0], columns.pop(old_index[0]))
-
-        return self[columns]
 
     # Not sure if this function is helpfull
     def count_items(self, col_id, col_search, new_col_feature, search_string):
@@ -139,36 +103,6 @@ class Optimus:
 
         return self.withColumn(name_col_age, exprs)
 
-    def astype(self, cols_and_types):
-        """
-        Cast columns to a specific type
-        :param cols_and_types: List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-        :return:
-        """
-
-        dict_types = {'string': StringType(), 'str': StringType(), 'integer': IntegerType(),
-                      'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(), 'Double': DoubleType()}
-
-        types = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
-                 'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
-
-        # Asserting cols_and_types is string or list:
-        columns = self._check_columns_tuples(cols_and_types)
-
-        not_specified_columns = filter(lambda c: c not in columns, self.columns)
-
-        exprs = [col(column[0]).cast(dict_types[types[column[1]]]).alias(column[0]) for column in cols_and_types] + [
-            col(column) for column in not_specified_columns]
-
-        return self.select(*exprs)
-
-    ## Not sure about this
     def empty_str_to_str(self, columns, custom_str):
         print(1)
 
@@ -188,6 +122,77 @@ def add_method(cls):
         return func  # returning func means func can still be used normally
 
     return decorator
+
+
+@add_method(DataFrame)
+def astype(self, cols_and_types):
+    """
+
+    :param self:
+    :param cols_and_types:
+            List of tuples of column names and types to be casted. This variable should have the
+            following structure:
+
+            colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+
+            The first parameter in each tuple is the column name, the second is the final datatype of column after
+            the transformation is made.
+    :return:
+    """
+
+    # Check if columnNames to be process are in dataframe
+    column_names = self._parse_columns(cols_and_types, 0)
+
+    not_specified_columns = filter(lambda c: c not in column_names, self.columns)
+
+    exprs = [col(column[0]).cast(DICT_TYPES[TYPES[column[1]]]).alias(column[0]) for column in cols_and_types] + [
+        col(column) for column in not_specified_columns]
+
+    return self.select(*exprs)
+
+
+@add_method(DataFrame)
+def move_col(self, column, ref_col, position):
+    """
+    This function change a column position in dataFrame.
+    :param self:
+    :param column:
+    :param ref_col:
+    :param position: before and after the reference column
+    :return:
+    """
+
+    # Check that column is a string or a list
+    column = self._parse_columns(column)
+    ref_col = self._parse_columns(ref_col)
+
+    assert len(column) == 1, "Error: column must be a string or a list of one element"
+    assert len(ref_col) == 1, "Error: ref_col must be a string or a list of one element"
+
+    # Asserting if position is 'after' or 'before'
+    assert (position == 'after') or (
+            position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
+
+    # Get dataframe columns
+    columns = self.columns
+
+    new_index = columns.index(ref_col[0])
+    old_index = columns.index(column[0])
+
+    # if position is 'after':
+    if position == 'after':
+        # Check if the movement is from right to left:
+        if new_index >= old_index:
+            columns.insert(new_index, columns.pop(old_index))  # insert and delete a element
+        else:  # the movement is form left to right:
+            columns.insert(new_index + 1, columns.pop(old_index))
+    else:  # If position if before:
+        if new_index[0] >= old_index:  # Check if the movement if from right to left:
+            columns.insert(new_index - 1, columns.pop(old_index))
+        elif new_index[0] < old_index:  # Check if the movement if from left to right:
+            columns.insert(new_index, columns.pop(old_index))
+
+    return self[columns]
 
 
 @add_method(DataFrame)
@@ -335,6 +340,7 @@ def _remove_accents(input_str):
 
     return with_out_accents
 
+
 @add_method(DataFrame)
 def remove_accents(self, columns):
     """
@@ -343,6 +349,7 @@ def remove_accents(self, columns):
     :return:
     """
     return self.apply_to_row(columns, _remove_accents)
+
 
 # Quantile statistics
 @add_method(DataFrame)
@@ -398,6 +405,7 @@ def range(self, columns):
 
     # Substract max and min lists to get the range
     return one_list_to_val([x - y for x, y in zip(max_val, min_val)])
+
 
 @add_method(DataFrame)
 def median(self, columns):
