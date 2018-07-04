@@ -2,7 +2,7 @@
 from optimus.df_analyzer import DataFrameAnalyzer
 
 # Importing Utilities
-from optimus.utilities import *
+from optimus.util.utilities import *
 
 # Importing Outliers library
 from optimus.df_outliers import *

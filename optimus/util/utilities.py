@@ -33,7 +33,6 @@ class Utilities:
         self.url = ""
 
 
-
     @classmethod
     def get_column_names_by_type(cls, df, data_type):
         """
