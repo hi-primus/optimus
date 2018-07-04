@@ -13,7 +13,6 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 from optimus.spark import *
 from optimus.assertion_helpers import *
 
-
 # You can use string, str or String as param
 TYPES = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
          'int': 'int', 'float': 'float', 'double': 'double', 'Double': 'double'}
@@ -143,12 +142,21 @@ def astype(self, cols_and_types):
     # Check if columnNames to be process are in dataframe
     column_names = self._parse_columns(cols_and_types, 0)
 
-    not_specified_columns = filter(lambda c: c not in column_names, self.columns)
+    # With need to handle the cols that we are not to cast
+    new_col = ""
 
-    exprs = [col(column[0]).cast(DICT_TYPES[TYPES[column[1]]]).alias(column[0]) for column in cols_and_types] + [
-        col(column) for column in not_specified_columns]
+    columns = []
+    for c in self.columns:
+        for t in cols_and_types:
+            # if the column is in cols_and_types
+            if t[0] == c:
+                new_col = col(c).cast(DICT_TYPES[TYPES[t[1]]]).alias(c)
+            else:
+                # Else, Add the column without modification
+                new_col = col(c)
+        columns.append(new_col)
 
-    return self.select(*exprs)
+    return self[columns]
 
 
 @add_method(DataFrame)
