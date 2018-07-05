@@ -44,7 +44,7 @@ def init_spark():
         Initialize Spark
         :return:
     """
-    print("Just checking that all necessary environments vars are present...")
+    print("Just checking that all necessary environment vars are present...")
     print("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
     print("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
     print("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
