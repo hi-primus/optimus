@@ -323,3 +323,299 @@ def gbt(df, columns, input_col):
     df_model = gbt_model.transform(transformer.df)
     return df_model, gbt_model
 
+def string_to_index(self, input_cols):
+    """
+    Maps a string column of labels to an ML column of label indices. If the input column is
+    numeric, we cast it to string and index the string values.
+    :param input_cols: Columns to be indexed.
+    :return: Dataframe with indexed columns.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(input_cols, "input_cols")
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
+
+    from pyspark.ml import Pipeline
+    from pyspark.ml.feature import StringIndexer
+
+    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(self._df) for column in
+                list(set(input_cols))]
+
+    pipeline = Pipeline(stages=indexers)
+    self._df = pipeline.fit(self._df).transform(self._df)
+
+    return self
+
+def index_to_string(self, input_cols):
+    """
+    Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
+    either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
+    ML attributes).
+    :param input_cols: Columns to be indexed.
+    :return: Dataframe with indexed columns.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(input_cols, "input_cols")
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
+
+    from pyspark.ml import Pipeline
+    from pyspark.ml.feature import IndexToString
+
+    indexers = [IndexToString(inputCol=column, outputCol=column + "_string") for column in
+                list(set(input_cols))]
+
+    pipeline = Pipeline(stages=indexers)
+    self._df = pipeline.fit(self._df).transform(self._df)
+
+    return self
+
+def one_hot_encoder(self, input_cols):
+    """
+    Maps a column of label indices to a column of binary vectors, with at most a single one-value.
+    :param input_cols: Columns to be encoded.
+    :return: Dataframe with encoded columns.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(input_cols, "input_cols")
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
+
+    from pyspark.ml import Pipeline
+    from pyspark.ml.feature import OneHotEncoder
+
+    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
+              list(set(input_cols))]
+
+    pipeline = Pipeline(stages=encode)
+    self._df = pipeline.fit(self._df).transform(self._df)
+
+    return self
+
+def sql(self, sql_expression):
+    """
+    Implements the transformations which are defined by SQL statement. Currently we only support
+    SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
+    underlying table of the input dataframe.
+    :param sql_expression: SQL expression.
+    :return: Dataframe with columns changed by SQL statement.
+    """
+
+    self._assert_type_str(sql_expression, "sql_expression")
+
+    from pyspark.ml.feature import SQLTransformer
+
+    sql_trans = SQLTransformer(statement=sql_expression)
+
+    self._df = sql_trans.transform(self._df)
+
+    return self
+
+def vector_assembler(self, input_cols):
+    """
+    Combines a given list of columns into a single vector column.
+    :param input_cols: Columns to be assembled.
+    :return: Dataframe with assembled column.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(input_cols, "input_cols")
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
+
+    from pyspark.ml import Pipeline
+
+    assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
+
+    pipeline = Pipeline(stages=assembler)
+    self._df = pipeline.fit(self._df).transform(self._df)
+
+    return self
+
+def normalizer(self, input_cols, p=2.0):
+    """
+    Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+    specifies the p-norm used for normalization. (p=2) by default.
+    :param input_cols: Columns to be normalized.
+    :param p:  p-norm used for normalization.
+    :return: Dataframe with normalized columns.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(input_cols, "input_cols")
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
+
+    assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
+
+    from pyspark.ml import Pipeline
+    from pyspark.ml.feature import Normalizer
+    from pyspark.ml.linalg import DenseVector, VectorUDT
+
+    # Convert ArrayType() column to DenseVector
+    def arr_to_vec(arr_column):
+        """
+        :param arr_column: Column name
+        :return: Returns DenseVector by converting an ArrayType() column
+        """
+        return DenseVector(arr_column)
+
+    # User-Defined function
+    udf_arr_to_vec = udf(arr_to_vec, VectorUDT())
+
+    # Check for columns which are not DenseVector types and convert them into DenseVector
+    for col in input_cols:
+        if not isinstance(self._df[col], DenseVector):
+            self._df = self._df.withColumn(col, udf_arr_to_vec(self._df[col]))
+
+    normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
+              list(set(input_cols))]
+
+    pipeline = Pipeline(stages=normal)
+    self._df = pipeline.fit(self._df).transform(self._df)
+
+    return self
+
+def undo_vec_assembler(self, column, feature_names):
+    """This function unpack a column of list arrays into different columns.
+    +-------------------+-------+
+    |           features|columna|
+    +-------------------+-------+
+    |[11, 2, 1, 1, 1, 1]|   hola|
+    | [0, 1, 1, 1, 1, 1]|  salut|
+    |[31, 1, 1, 1, 1, 1]|  hello|
+    +-------------------+-------+
+                  |
+                  |
+                  V
+    +-------+---+---+-----+----+----+---+
+    |columna|one|two|three|four|five|six|
+    +-------+---+---+-----+----+----+---+
+    |   hola| 11|  2|    1|   1|   1|  1|
+    |  salut|  0|  1|    1|   1|   1|  1|
+    |  hello| 31|  1|    1|   1|   1|  1|
+    +-------+---+---+-----+----+----+---+
+    """
+    # Check if column argument a string datatype:
+    self._assert_type_str(column, "column")
+
+    assert (column in self._df.columns), "Error: column specified does not exist in dataFrame."
+
+    assert (isinstance(feature_names, list)), "Error: feature_names must be a list of strings."
+    # Function to extract value from list column:
+    func = udf(lambda x, index: x[index])
+
+    exprs = []
+
+    # Recursive function:
+    def exprs_func(column, exprs, feature_names, index):
+        if index == 0:
+            return [func(col(column), lit(index)).alias(feature_names[index])]
+        else:
+            return exprs_func(column, exprs, feature_names, index - 1) + [
+                func(col(column), lit(index)).alias(feature_names[index])]
+
+    self._df = self._df.select(
+        [x for x in self._df.columns] + [*exprs_func(column, exprs, feature_names, len(feature_names) - 1)]).drop(
+        column)
+    self._add_transformation()  # checkpoint in case
+
+    return self
+
+def scale_vec_col(self, columns, name_output_col):
+    """
+    This function groups the columns specified and put them in a list array in one column, then a scale
+    process is made. The scaling proccedure is spark scaling default (see the example
+    bellow).
+
+    +---------+----------+
+    |Price    |AreaLiving|
+    +---------+----------+
+    |1261706.9|16        |
+    |1263607.9|16        |
+    |1109960.0|19        |
+    |978277.0 |19        |
+    |885000.0 |19        |
+    +---------+----------+
+
+                |
+                |
+                |
+                V
+    +----------------------------------------+
+    |['Price', 'AreaLiving']                 |
+    +----------------------------------------+
+    |[0.1673858972637624,0.5]                |
+    |[0.08966137157852398,0.3611111111111111]|
+    |[0.11587093205757598,0.3888888888888889]|
+    |[0.1139820728616421,0.3888888888888889] |
+    |[0.12260126542983639,0.4722222222222222]|
+    +----------------------------------------+
+    only showing top 5 rows
+
+    """
+
+    # Check if columns argument must be a string or list datatype:
+    self._assert_type_str_or_list(columns, "columns")
+
+    # Check if columns to be process are in dataframe
+    self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
+
+    # Check if name_output_col argument a string datatype:
+    self._assert_type_str(name_output_col, "nameOutpuCol")
+
+    # Model to use vectorAssember:
+    vec_assembler = VectorAssembler(inputCols=columns, outputCol="features_assembler")
+    # Model for scaling feature column:
+    mm_scaler = MinMaxScaler(inputCol="features_assembler", outputCol=name_output_col)
+    # Dataframe with feature_assembler column
+    temp_df = vec_assembler.transform(self._df)
+    # Fitting scaler model with transformed dataframe
+    model = mm_scaler.fit(temp_df)
+
+    exprs = list(filter(lambda x: x not in columns, self._df.columns))
+
+    exprs.extend([name_output_col])
+
+    self._df = model.transform(temp_df).select(*exprs)
+    self._add_transformation()  # checkpoint in case
+
+    return self
+
+def impute_missing(self, columns, out_cols, strategy):
+    """
+    Imputes missing data from specified columns using the mean or median.
+    :param columns: List of columns to be analyze.
+    :param out_cols: List of output columns with missing values imputed.
+    :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
+    :return: Transformer object (DF with columns that has the imputed values).
+    """
+
+    # Check if columns to be process are in dataframe
+    self._assert_cols_in_df(columns_provided=columns, columns_df=self._df.columns)
+
+    assert isinstance(columns, list), "Error: columns argument must be a list"
+
+    assert isinstance(out_cols, list), "Error: out_cols argument must be a list"
+
+    # Check if columns argument a string datatype:
+    self._assert_type_str(strategy, "strategy")
+
+    assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
+
+    def impute(cols):
+        imputer = Imputer(inputCols=cols, outputCols=out_cols)
+        model = imputer.setStrategy(strategy).fit(self._df)
+        self._df = model.transform(self._df)
+
+    impute(columns)
+
+    return self
