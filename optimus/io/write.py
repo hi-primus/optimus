@@ -1,18 +1,18 @@
 class Write:
-    def json(self, path):
+    def __init__(self, sc):
+        self.sc = sc
+
+    def json(self, path_name):
         """
 
         :param self:
-        :param path:
+        :param path_name:
         :return:
         """
-        p = re.sub("}\'", "}", re.sub("\'{", "{", str(self._df.toJSON().collect())))
 
-        with open(path, 'w') as outfile:
-            # outfile.write(str(json_cols).replace("'", "\""))
-            outfile.write(p)
+        return self._df.repartition(1).write.format('json').save(path_name)
 
-    def csv(self, path_name, header="true", mode="overwrite", sep=",", *args, **kargs):
+    def csv(self, path_name, header="true", mode="overwrite", sep=","):
         """
         Write dataframe as CSV.
         :param path_name: Path to write the DF and the name of the output CSV file.
@@ -36,4 +36,4 @@ class Write:
         else:
             header = False
 
-        return self._df.write.options(header=header).mode(mode).csv(path_name, sep=sep, *args, **kargs)
+        return self._df.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)

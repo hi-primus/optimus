@@ -1,4 +1,6 @@
-class Load:
+class Read:
+    def __init__(self, sc):
+        self.sc = sc
 
     def url(self, path=None, ty="csv"):
         """

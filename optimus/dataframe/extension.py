@@ -3,7 +3,7 @@ from pyspark.sql.types import StructField, StructType
 
 class Create:
     def __init__(self, spark=None):
-        self.sc = spark
+        self.spark = spark
 
     def dataframe(self, rows_data, col_specs):
         """
@@ -13,4 +13,7 @@ class Create:
         :return:
         """
         struct_fields = list(map(lambda x: StructField(*x), col_specs))
-        return self.sc.createDataFrame(rows_data, StructType(struct_fields))
+        return self.spark.createDataFrame(rows_data, StructType(struct_fields))
+
+    # Alias
+    df = dataframe
