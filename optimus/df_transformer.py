@@ -2,15 +2,20 @@
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, ArrayType
 # Importing sql functions
 from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
-    current_date, abs as mag
+    current_date, abs as mag, lower, upper
 from pyspark.ml.feature import MinMaxScaler, VectorAssembler
 import re
 import string
 import unicodedata
 import pyspark.sql.dataframe
 from pyspark.ml.feature import Imputer
+from functools import reduce
+
+# Import deprecated
+from deprecated import deprecated
 
 
+@deprecated(reason="See new documentation for API 2.0")
 class DataFrameTransformer:
     """DataFrameTransformer is a class to make transformations in dataFrames"""
 
@@ -1453,3 +1458,52 @@ class DataFrameTransformer:
         :return:
         """
         return self._df.collect()
+
+
+def _assert_type_str_or_list(variable, name_arg):
+    """This function asserts if variable is a string or a list dataType."""
+    assert isinstance(variable, (str, list)), \
+        "Error: %s argument must be a string or a list." % name_arg
+
+
+def _assert_type_int_or_float(variable, name_arg):
+    """This function asserts if variable is a string or a list dataType."""
+    assert isinstance(variable, (int, float)), \
+        "Error: %s argument must be a int or a float." % name_arg
+
+
+def _assert_type_str(variable, name_arg):
+    """This function asserts if variable is a string or a list dataType."""
+    assert isinstance(variable, str), \
+        "Error: %s argument must be a string." % name_arg
+
+
+def _assert_cols_in_df(columns_provided, columns_df):
+    """This function asserts if columns_provided exists in dataFrame.
+    Inputs:
+    columns_provided: the list of columns to be process.
+    columns_df: list of columns's dataFrames
+    """
+    col_not_valids = (
+        set([column for column in columns_provided]).difference(set([column for column in columns_df])))
+    assert (col_not_valids == set()), 'Error: The following columns do not exits in dataFrame: %s' % col_not_valids
+
+
+def lower_case(col_name):
+    def inner(df):
+        return (reduce(
+            lambda memo_df, column: memo_df.withColumn(column, lower(col(column))),
+            col_name,
+            df
+        ))
+    return inner
+
+
+def upper_case(col_name):
+    def inner(df):
+        return (reduce(
+            lambda memo_df, column: memo_df.withColumn(column, upper(col(column))),
+            col_name,
+            df
+        ))
+    return inner
