@@ -1,3 +1,10 @@
+def isfunction(obj):
+    """
+    check if a param is a function
+    :param obj: object to check for
+    :return:
+    """
+    return hasattr(obj, '__call__')
 
 
 def validate_columns_names(df, col_names, index=None):
@@ -10,12 +17,14 @@ def validate_columns_names(df, col_names, index=None):
     """
 
     if index is not None:
-        assert isinstance(col_names, list), "col_names must be a list"
+        assert isinstance(col_names, list), "Error: col_names must be a list"
         columns = [c[index] for c in col_names]
     else:
         columns = col_names
 
-    assert len(columns) > 0, "Error: columns can not be empty"
+    assert len(columns) > 0, "Error: columns param can not be empty"
+
+    assert columns is not None, "Error: columns para is none"
 
     # Remove duplicated columns
     if isinstance(columns, list):
@@ -43,7 +52,7 @@ def parse_columns(df, columns, index=None):
     :return: A list of columns string names
     """
 
-    #assert isinstance(df, (Dataframe))
+    # assert isinstance(df, (Dataframe))
 
     # Verify that columns are a string or list of string
     assert isinstance(columns, (str, list)), "columns param must be a string or a list"
