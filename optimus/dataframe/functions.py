@@ -102,41 +102,6 @@ def lookup(self, columns, look_up_key=None, replace_by=None):
     return self
 
 
-@add_method(DataFrame)
-def astype(self, cols_and_types):
-    """
-    Cast a column to a var type
-    :param self:
-    :param cols_and_types:
-            List of tuples of column names and types to be casted. This variable should have the
-            following structure:
-
-            colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-            The first parameter in each tuple is the column name, the second is the final datatype of column after
-            the transformation is made.
-    :return:
-    """
-
-    # Check if columnNames to be process are in dataframe
-    column_names = self._parse_columns(cols_and_types, 0)
-
-    # With need to handle the cols that we are not to cast
-    new_col = ""
-
-    columns = []
-    for c in self.columns:
-        for t in cols_and_types:
-            # if the column is in cols_and_types
-            if t[0] == c:
-                new_col = col(c).cast(DICT_TYPES[TYPES[t[1]]]).alias(c)
-            else:
-                # Else, Add the column without modification
-                new_col = col(c)
-        columns.append(new_col)
-
-    return self[columns]
-
 
 @add_method(DataFrame)
 def replace(self, search, change_to, columns):
@@ -152,54 +117,6 @@ def replace(self, search, change_to, columns):
     columns = self._parse_columns(columns)
 
     return self.replace(search, change_to, subset=columns)
-
-
-@add_method(DataFrame)
-def move_col(self, column, ref_col, position):
-    """
-    This function change a column position in dataFrame.
-    :param self:
-    :param column:
-    :param ref_col:
-    :param position: before and after the reference column
-    :return:
-    """
-
-    # Check that column is a string or a list
-    column = self._parse_columns(column)
-    ref_col = self._parse_columns(ref_col)
-
-    assert len(column) == 1, "Error: column must be a string or a list of one element"
-    assert len(ref_col) == 1, "Error: ref_col must be a string or a list of one element"
-
-    # Asserting if position is 'after' or 'before'
-    assert (position == 'after') or (
-            position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
-
-    # Get dataframe columns
-    columns = self.columns
-
-    # Get source and reference column index position
-    new_index = columns.index(ref_col[0])
-    old_index = columns.index(column[0])
-
-    # if position is 'after':
-    if position == 'after':
-        # Check if the movement is from right to left:
-        if new_index >= old_index:
-            columns.insert(new_index, columns.pop(old_index))  # insert and delete a element
-        else:  # the movement is form left to right:
-            columns.insert(new_index + 1, columns.pop(old_index))
-    else:  # If position if before:
-        if new_index[0] >= old_index:  # Check if the movement if from right to left:
-            columns.insert(new_index - 1, columns.pop(old_index))
-        elif new_index[0] < old_index:  # Check if the movement if from left to right:
-            columns.insert(new_index, columns.pop(old_index))
-
-    return self[columns]
-
-
-@add_method(DataFrame)
 
 
 @add_method(DataFrame)
@@ -285,21 +202,6 @@ def apply_to_row(self, columns, func):
 
 
 @add_method(DataFrame)
-# FIX: We must find the better approach to fix the collition between the spark dataframe and optimus
-def drop_column(self, columns):
-    """
-
-    :param columns: *, string or string or columns list to be dropped
-    :return: Dataframe
-    """
-    columns = self._parse_columns(columns)
-
-    for column in columns:
-        self = self.drop(column)
-    return self
-
-
-@add_method(DataFrame)
 def drop(self, func):
     """This function is an alias of filter and where spark functions.
            :param func     func must be an expression with the following form:
@@ -349,31 +251,6 @@ def drop_empty_rows(self, columns, how="all"):
     return self._df.dropna(how, columns)
 
 
-@add_method(DataFrame)
-def keep(self, columns):
-    """
-    Just Keep the columns and drop.
-    :param columns:
-    :return:
-    """
-
-    columns = self._parse_columns(columns)
-    return self.select(*columns)
-
-
-@add_method(DataFrame)
-def rename(self, columns_pair):
-    """"
-    This functions change the name of a column(s) datraFrame.
-    :param columns_pair: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
-    """
-    # Check that the 1st element in the tuple is a valis set of columns
-    columns = self._parse_columns(columns_pair, 0)
-
-    # Rename cols
-    columns = [col(column[0]).alias(column[1]) for column in columns_pair]
-
-    return self.select(columns)
 
 
 # Quantile statistics
@@ -502,28 +379,6 @@ def variance(self, columns):
     :return:
     """
     return self._agg("variance", columns)
-
-
-@add_method(DataFrame)
-def select_idx(self, indexes):
-    """
-    Select specified columns by index.
-    :param indexes: Indices to select from DF.
-    :return: Dataframe with selected columns.
-    """
-
-    assert isinstance(indexes, list), "Error: indices must a list"
-
-    if isinstance(indexes, int):
-        indexes = [indexes]
-
-    self._df = self._df.select(*(self._df.columns[i] for i in indexes))
-
-    return self
-
-
-# Alias for select_idx
-iloc = select_idx
 
 
 def operation_in_type(self, parameters):
