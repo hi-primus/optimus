@@ -25,8 +25,3 @@ class Optimus:
         self.write = Write(self.sc)
 
         print("Done.")
-
-    def cast(self):
-        print("Cast")
-
-

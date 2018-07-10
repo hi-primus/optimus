@@ -1,17 +1,14 @@
 # Used in decorators. This convenience func preserves name and docstring
-from functools import wraps
 
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 import unicodedata
-from pyspark.sql.functions import col, udf, trim, lit, format_number, months_between, date_format, unix_timestamp, \
-    current_date, abs as mag
+from pyspark.sql.functions import col, udf
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType
+from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType
 
-from optimus.spark import *
-from optimus.assertion_helpers import *
+from optimus.helpers.validators import *
 
 # You can use string, str or String as param
 TYPES = {'string': 'string', 'str': 'string', 'String': 'string', 'integer': 'int',
@@ -203,36 +200,6 @@ def move_col(self, column, ref_col, position):
 
 
 @add_method(DataFrame)
-def _parse_columns(self, columns, index=None):
-    """
-    Check that a column list is a valis list of columns.
-    :param columns:  Acepts * as param to return all the string columns in the dataframe
-    :return: A list of columns string names
-    """
-
-    # Verify that columns are a string or list of string
-    assert_type_str_or_list(columns)
-
-    # if columns value is * get all dataframes columns
-    if columns == "*":
-        columns = list(map(lambda t: t[0], self.dtypes))
-
-    # if string convert to list. Because we always return a list
-
-    if isinstance(columns, str):
-        columns = [columns]
-
-    # Verify if we have a list
-    elif isinstance(columns, list):
-        # Verify that we have list inside the tuples
-        if all(isinstance(x, tuple) for x in columns):
-            # Extract a specific position in the tupple
-            columns = [c[index] for c in columns]
-
-    # Validate that all the columns exist
-    validate_columns_names(self, columns)
-
-    return columns
 
 
 @add_method(DataFrame)

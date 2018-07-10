@@ -6,7 +6,7 @@ class Rows:
     def __init__(self):
         spark = get_spark()
         self.sc = spark.sparkContext
-        
+
     def create(self):
         print("Row Created")
 
