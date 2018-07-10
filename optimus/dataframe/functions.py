@@ -349,8 +349,6 @@ def drop_empty_rows(self, columns, how="all"):
     return self._df.dropna(how, columns)
 
 
-
-
 @add_method(DataFrame)
 def keep(self, columns):
     """

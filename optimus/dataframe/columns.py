@@ -1,8 +1,6 @@
 from optimus.helpers.decorators import add_method
 from pyspark.sql import DataFrame
 
-from pyspark.sql.column import Column
-# from pyspark.sql.functions import lit
 from pyspark.sql.functions import *
 import re
 
@@ -14,13 +12,10 @@ from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 
 
-class Columns:
-    def __init__(self, df):
-
-        self._df = df
-
+@add_method(DataFrame)
+def cols(self):
     @dispatch(str, object)
-    def create(self, name=None, value=None):
+    def create(name=None, value=None):
         """
 
         :param name:
@@ -34,24 +29,27 @@ class Columns:
         if isinstance(value, (int, str, float)):
             value = lit(value)
 
-        return self._df.withColumn(name, value)
+        return self.withColumn(name, value)
 
     @dispatch(list)
-    def create(self, columns=None):
+    def create(col_names=None):
         """
 
-        :param columns:
+        :param col_names:
         :return:
         """
+        df = self
+        for c in col_names:
+            value = c[1]
+            name = c[0]
 
-        for c in columns:
-            self._df = self.create(
-                c[0],
-                c[1]
-            )
-        return self._df
+            # Create a column if necessary
+            if isinstance(value, (int, str, float)):
+                value = lit(value)
+            df = df.withColumn(name, value)
+        return df
 
-    def select(self, columns=None, regex=None):
+    def select(columns=None, regex=None):
         """
 
         :param columns:
@@ -61,37 +59,65 @@ class Columns:
 
         if regex:
             r = re.compile(regex)
-            columns = list(filter(r.match, self._df.columns))
+            columns = list(filter(r.match, self.columns))
 
         def get_column(column):
             if isinstance(column, int):
-                col_name = self._df.columns[column]
+                col_name = self.columns[column]
             elif isinstance(column, str):
                 col_name = column
             return col_name
 
-        return self._df.select(list(map(get_column, columns)))
+        return self.select(list(map(get_column, columns)))
 
-    def rename(self, columns_pair):
+    def rename(columns_pair):
         """"
         This functions change the name of a column(s) dataFrame.
         :param columns_pair: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
         """
         # Check that the 1st element in the tuple is a valis set of columns
-        assert validate_columns_names(self._df, columns_pair, 0)
+        assert validate_columns_names(self, columns_pair, 0)
 
         # Rename cols
         def _rename(column, t):
-            return col(column[0]).alias(column[1])
+            return col(column).alias(t)
 
-        columns = self._recreate_columns(columns_pair, _rename)
-        #print(columns)
-        return self._df.select(columns)
+        columns = _recreate_columns(columns_pair, _rename)
 
-    def move(self, from_column, to_column):
-        print("Column Moved. int params")
+        return self.select(columns)
 
-    def cast(self, cols_and_types):
+    def move(column, ref_col, position):
+        # Check that column is a string or a list
+        column = parse_columns(self, column)
+        ref_col = parse_columns(self, ref_col)
+
+        # Asserting if position is 'after' or 'before'
+        assert (position == 'after') or (
+                position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
+
+        # Get dataframe columns
+        columns = self.columns
+
+        # Get source and reference column index position
+        new_index = columns.index(ref_col[0])
+        old_index = columns.index(column[0])
+
+        # if position is 'after':
+        if position == 'after':
+            # Check if the movement is from right to left:
+            if new_index >= old_index:
+                columns.insert(new_index, columns.pop(old_index))  # insert and delete a element
+            else:  # the movement is form left to right:
+                columns.insert(new_index + 1, columns.pop(old_index))
+        else:  # If position if before:
+            if new_index[0] >= old_index:  # Check if the movement if from right to left:
+                columns.insert(new_index - 1, columns.pop(old_index))
+            elif new_index[0] < old_index:  # Check if the movement if from left to right:
+                columns.insert(new_index, columns.pop(old_index))
+
+        return self[columns]
+
+    def cast(cols_and_types):
         """
         Cast a column to a var type
         :param self:
@@ -106,20 +132,43 @@ class Columns:
         :return:
         """
 
-        # Check if columnNames to be process are in the dataframe
-        assert validate_columns_names(cols_and_types, 0)
+        assert validate_columns_names(self, cols_and_types, 0)
 
         def _cast(column, t):
-            return col(column).cast(DICT_TYPES[TYPES[t[1]]]).alias(column)
+            return col(column).cast(DICT_TYPES[TYPES[t]]).alias(column)
 
-        columns = self._recreate_columns(cols_and_types, _cast)
+        columns = _recreate_columns(cols_and_types, _cast)
 
         return self[columns]
 
-    def drop(self, by_index=None, by_name=None, regex=None):
-        print("Drop column")
+    def keep(columns, regex=None):
+        """
+        Just Keep the columns and drop.
+        :param columns:
+        :param regex:
+        :return:
+        """
 
-    def _recreate_columns(self, col_pair, func):
+        if regex:
+            r = re.compile(regex)
+            columns = list(filter(r.match, self.columns))
+
+        columns = parse_columns(self, columns)
+        return self.select(*columns)
+
+    def drop(columns=None, regex=None):
+        df = self
+        if regex:
+            r = re.compile(regex)
+            columns = list(filter(r.match, self.columns))
+
+        columns = parse_columns(self, columns)
+
+        for column in columns:
+            df = df.drop(column)
+        return df
+
+    def _recreate_columns(col_pair, func):
         """
         Operation as rename or cast need to reconstruct the columns with new types or names.
         This is a helper function handle it
@@ -127,22 +176,26 @@ class Columns:
         :param func:
         :return:
         """
-        print(self._df.columns)
         columns = []
-        for c in self._df.columns:
+        for c in self.columns:
+            new_col = ""
             for t in col_pair:
                 # if the column is in cols_and_types
                 if t[0] == c:
-                    new_col = func(c, t)
+                    new_col = func(c, t[1])
                 else:
                     # Else, Add the column without modification
                     new_col = col(c)
             columns.append(new_col)
         return columns
 
-@add_method(DataFrame)
-def cols(self):
-    if not hasattr(self, 'columns_'):
-        self.columns_ = Columns(self)
-        #print(self.columns)
-    return self.columns_
+    cols.create = create
+    cols.select = select
+    cols.rename = rename
+    cols.cast = cast
+    cols.move = move
+    cols.drop = drop
+    cols.keep = keep
+    cols._recreate_columns = _recreate_columns
+
+    return cols

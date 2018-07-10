@@ -1,13 +1,19 @@
-def validate_columns_names(df, col_names, index= None):
+
+
+def validate_columns_names(df, col_names, index=None):
     """
     Check if a string or list of string are valid dataframe columns
     :param df:
     :param col_names:
+    :param index:
     :return:
     """
 
     if index is not None:
+        assert isinstance(col_names, list), "col_names must be a list"
         columns = [c[index] for c in col_names]
+    else:
+        columns = col_names
 
     assert len(columns) > 0, "Error: columns can not be empty"
 
@@ -20,7 +26,7 @@ def validate_columns_names(df, col_names, index= None):
     # Check if the columns you want to select exits in the dataframe
     missing_col_names = [x for x in columns if x not in all_col_names]
 
-    error_message = "The {missing_col_names} columns are not included in the DataFrame with the following columns " \
+    error_message = "The {missing_col_names} columns do not exists in the DataFrame with the following columns " \
                     "{all_col_names}".format(
         missing_col_names=missing_col_names,
         all_col_names=all_col_names)
@@ -30,15 +36,17 @@ def validate_columns_names(df, col_names, index= None):
     return True
 
 
-def parse_columns(columns, index=None):
+def parse_columns(df, columns, index=None):
     """
     Check that a column list is a valis list of columns.
     :param columns:  Acepts * as param to return all the string columns in the dataframe
     :return: A list of columns string names
     """
 
+    #assert isinstance(df, (Dataframe))
+
     # Verify that columns are a string or list of string
-    assert isinstance(columns, (str, list))
+    assert isinstance(columns, (str, list)), "columns param must be a string or a list"
 
     # if columns value is * get all dataframes columns
     if columns == "*":
@@ -57,7 +65,7 @@ def parse_columns(columns, index=None):
             columns = [c[index] for c in columns]
 
     # Validate that all the columns exist
-    validate_columns_names(self, columns)
+    validate_columns_names(df, columns)
 
     return columns
 
