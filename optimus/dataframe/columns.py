@@ -12,10 +12,13 @@ from multipledispatch import dispatch
 # Helpers
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
+from optimus.helpers.decorators import *
+
 
 
 @add_method(DataFrame)
 def cols(self):
+    @add_attr(cols)
     @dispatch(str, object)
     def create(name=None, value=None):
         """
@@ -33,6 +36,7 @@ def cols(self):
 
         return self.withColumn(name, value)
 
+    @add_attr(cols)
     @dispatch(list)
     def create(col_names=None):
         """
@@ -51,6 +55,7 @@ def cols(self):
             df = df.withColumn(name, value)
         return df
 
+    @add_attr(cols)
     def select(columns=None, regex=None):
         """
         SElect columns using index or column name
@@ -72,6 +77,7 @@ def cols(self):
 
         return self.select(list(map(get_column, columns)))
 
+    @add_attr(cols)
     def rename(columns=None, func=None):
         """"
         This functions change the name of a column(s) dataFrame.
@@ -92,6 +98,7 @@ def cols(self):
             columns = _recreate_columns(columns, _rename)
         return self.select(columns)
 
+    @add_attr(cols)
     def move(column, ref_col, position):
         """
         Move a column to specific position
@@ -130,6 +137,7 @@ def cols(self):
 
         return self[columns]
 
+    @add_attr(cols)
     def cast(cols_and_types):
         """
         Cast a column to a var type
@@ -154,6 +162,7 @@ def cols(self):
 
         return self[columns]
 
+    @add_attr(cols)
     def keep(columns, regex=None):
         """
         Just Keep the columns and drop.
@@ -169,11 +178,13 @@ def cols(self):
         columns = parse_columns(self, columns)
         return self.select(*columns)
 
+    @add_attr(cols)
     def sort(reverse=False):
         columns = sorted(self.columns, reverse=reverse)
         return self.select(columns)
         pass
 
+    @add_attr(cols)
     def drop(columns=None, regex=None):
         df = self
         if regex:
@@ -186,6 +197,7 @@ def cols(self):
             df = df.drop(column)
         return df
 
+    @add_attr(cols)
     def _recreate_columns(col_pair, func):
         """
         Operation as rename or cast need to reconstruct the columns with new types or names.
@@ -208,13 +220,6 @@ def cols(self):
         return columns
 
     cols.create = create
-    cols.select = select
-    cols.rename = rename
-    cols.cast = cast
-    cols.move = move
-    cols.drop = drop
-    cols.keep = keep
-    cols.sort = sort
-    cols._recreate_columns = _recreate_columns
+
 
     return cols

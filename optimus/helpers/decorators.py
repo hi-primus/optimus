@@ -20,3 +20,17 @@ def add_method(class_):
         return func  # returning func means func can still be used normally
 
     return decorator
+
+
+def add_attr(class_):
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        setattr(class_, func.__name__, wrapper)
+        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
+        return func  # returning func means func can still be used normally
+
+    return decorator
