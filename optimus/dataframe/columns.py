@@ -1,7 +1,9 @@
 from optimus.helpers.decorators import add_method
 from pyspark.sql import DataFrame
+from pyspark.sql.dataframe import Column
 
 from pyspark.sql.functions import *
+from pyspark.sql.functions import lit
 import re
 
 # Library used for method overloading using decorators
@@ -51,7 +53,7 @@ def cols(self):
 
     def select(columns=None, regex=None):
         """
-
+        SElect columns using index or column name
         :param columns:
         :param regex:
         :return:
@@ -70,23 +72,34 @@ def cols(self):
 
         return self.select(list(map(get_column, columns)))
 
-    def rename(columns_pair):
+    def rename(columns=None, func=None):
         """"
         This functions change the name of a column(s) dataFrame.
-        :param columns_pair: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+        :param columns: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
         """
-        # Check that the 1st element in the tuple is a valis set of columns
-        assert validate_columns_names(self, columns_pair, 0)
 
-        # Rename cols
-        def _rename(column, t):
-            return col(column).alias(t)
+        # Apply a transformation function to the param string
+        if isfunction(func):
+            columns = [col(c).alias(func(c)) for c in self.columns]
 
-        columns = _recreate_columns(columns_pair, _rename)
+        else:
+            # Rename columns based on the columns tupple
+            def _rename(column, t):
+                return col(column).alias(t)
 
+            # Check that the 1st element in the tuple is a valid set of columns
+            assert validate_columns_names(self, columns, 0)
+            columns = _recreate_columns(columns, _rename)
         return self.select(columns)
 
     def move(column, ref_col, position):
+        """
+        Move a column to specific position
+        :param column:
+        :param ref_col:
+        :param position:
+        :return:
+        """
         # Check that column is a string or a list
         column = parse_columns(self, column)
         ref_col = parse_columns(self, ref_col)
@@ -156,6 +169,11 @@ def cols(self):
         columns = parse_columns(self, columns)
         return self.select(*columns)
 
+    def sort(reverse=False):
+        columns = sorted(self.columns, reverse=reverse)
+        return self.select(columns)
+        pass
+
     def drop(columns=None, regex=None):
         df = self
         if regex:
@@ -196,6 +214,7 @@ def cols(self):
     cols.move = move
     cols.drop = drop
     cols.keep = keep
+    cols.sort = sort
     cols._recreate_columns = _recreate_columns
 
     return cols
