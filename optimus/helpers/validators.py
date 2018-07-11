@@ -30,6 +30,10 @@ def validate_columns_names(df, col_names, index=None):
     if isinstance(columns, list):
         columns = set(columns)
 
+    # if str or int convert
+    if isinstance(columns, (str, int)):
+        columns = val_to_list(columns)
+
     all_col_names = df.columns
 
     # Check if the columns you want to select exits in the dataframe
@@ -62,7 +66,6 @@ def parse_columns(df, columns, index=None):
         columns = list(map(lambda t: t[0], df.dtypes))
 
     # if string convert to list. Because we always return a list
-
     if isinstance(columns, str):
         columns = [columns]
 

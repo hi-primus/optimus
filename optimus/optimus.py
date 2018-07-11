@@ -5,7 +5,8 @@ from optimus.io.read import Read
 from optimus.spark import get_spark
 
 # Bound columns operation to the DataFrame Class
-from optimus.dataframe.columns import *
+from optimus.dataframe import columns, rows
+
 
 class Optimus:
     def __init__(self, spark=None):

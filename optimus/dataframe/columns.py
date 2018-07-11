@@ -3,7 +3,6 @@ from pyspark.sql.dataframe import *
 
 from pyspark.sql import functions as F
 
-
 import re
 
 # Library used for method overloading using decorators
@@ -13,6 +12,8 @@ from multipledispatch import dispatch
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
+
+import builtins
 
 
 @add_method(DataFrame)
@@ -267,8 +268,8 @@ def cols(self):
 
         range = []
         for c in columns:
-            max_val = max(c)[0][1]
-            min_val = min(c)[0][1]
+            max_val = max(c)
+            min_val = min(c)
             range.append({c: {'min': min_val, 'max': max_val}})
 
         return range
@@ -416,6 +417,20 @@ def cols(self):
         df = self
         for column in columns:
             df = self.withColumn(column, func(F.col(column)))
+        return df
+
+    @add_attr(cols)
+    def split(column, mark, get=None, n=None):
+        df = self
+        split_col = F.split(df[column], mark)
+
+        # assert isinstance(get, int), "Error: get must be an integer"
+        if get:
+            df = df.withColumn('COL_' + str(get), split_col.getItem(get))
+        if n:
+            for p in builtins.range(n):
+                df = df.withColumn('COL_' + str(p), split_col.getItem(p))
+
         return df
 
     return cols
