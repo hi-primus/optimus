@@ -1,9 +1,9 @@
-from optimus.helpers.decorators import add_method
 from pyspark.sql import DataFrame
-from pyspark.sql.dataframe import Column
+from pyspark.sql.dataframe import *
 
-from pyspark.sql.functions import *
-from pyspark.sql.functions import lit
+from pyspark.sql import functions as F
+
+
 import re
 
 # Library used for method overloading using decorators
@@ -13,7 +13,6 @@ from multipledispatch import dispatch
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-
 
 
 @add_method(DataFrame)
@@ -32,7 +31,7 @@ def cols(self):
         assert isinstance(value, (int, float, str, Column)), "object param must be a number, str or a Column "
 
         if isinstance(value, (int, str, float)):
-            value = lit(value)
+            value = F.lit(value)
 
         return self.withColumn(name, value)
 
@@ -51,7 +50,7 @@ def cols(self):
 
             # Create a column if necessary
             if isinstance(value, (int, str, float)):
-                value = lit(value)
+                value = F.lit(value)
             df = df.withColumn(name, value)
         return df
 
@@ -219,7 +218,204 @@ def cols(self):
             columns.append(new_col)
         return columns
 
-    cols.create = create
+    # Quantile statistics
+    @add_attr(cols)
+    def _agg(agg, columns):
+        """
+        Helper function to manage aggregation functions
+        :param agg: Aggregation function from spark
+        :param columns: list of columns names or a string (a column name).
+        :return:
+        """
+        columns = parse_columns(self, columns)
 
+        # Aggregate
+        result = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
+
+        column_result = dict(zip(columns, result))
+
+        # if the list has one elment return just a single element
+        return column_result
+
+    @add_attr(cols)
+    def min(columns):
+        """
+        Return the min value from a column dataframe
+        :param columns: '*', list of columns names or a string (a column name).
+        :return:
+        """
+        return _agg("min", columns)
+
+    @add_attr(cols)
+    def max(columns):
+        """
+        Return the max value from a column dataframe
+        :param columns: '*', list of columns names or a string (a column name).
+        :return:
+        """
+        return _agg("max", columns)
+
+    @add_attr(cols)
+    def range(columns):
+        """
+        Return the range form the min to the max value
+        :param columns:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+
+        range = []
+        for c in columns:
+            max_val = max(c)[0][1]
+            min_val = min(c)[0][1]
+            range.append({c: {'min': min_val, 'max': max_val}})
+
+        return range
+
+    @add_attr(cols)
+    def median(columns):
+        """
+        Return the median of a column dataframe
+        :param columns:
+        :return:
+        """
+
+        result = list(map(lambda c: self.approxQuantile(columns, [0.5], 0)[0][0], columns))
+
+        result = val_to_list(result)
+        columns = val_to_list(columns)
+
+        return dict(zip(columns, result))
+
+    # Descriptive Analytics
+    @add_attr(cols)
+    def stddev(columns):
+        """
+        Return the standard deviation of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("stddev", columns)
+
+    @add_attr(cols)
+    def kurt(columns):
+        """
+        Return the kurtosis of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("kurtosis", columns)
+
+    @add_attr(cols)
+    def mean(columns):
+        """
+        Return the mean of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("mean", columns)
+
+    @add_attr(cols)
+    def skewness(columns):
+        """
+        Return the skewness of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("skewness", columns)
+
+    @add_attr(cols)
+    def sum(columns):
+        """
+        Return the sum of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("skewness", columns)
+
+    @add_attr(cols)
+    def variance(columns):
+        """
+        Return the variance of a column dataframe
+        :param columns:
+        :return:
+        """
+        return _agg("variance", columns)
+
+    # String Operations
+    @add_attr(cols)
+    def lower(columns):
+        """
+        Lowercase all the string in a column
+        :param columns:
+        :return:
+        """
+        return apply_to_row(columns, F.lower)
+
+    @add_attr(cols)
+    def upper(columns):
+        """
+        Uppercase all the strings column
+        :param columns:
+        :return:
+        """
+        return apply_to_row(columns, F.upper)
+
+    @add_attr(cols)
+    def trim(columns):
+        """
+        Trim the string in a column
+        :param columns:
+        :return:
+        """
+        return apply_to_row(columns, F.trim)
+
+    @add_attr(cols)
+    def reverse(columns):
+        """
+        Reverse the order of all the string in a column
+        :param columns:
+        :return:
+        """
+        return apply_to_row(columns, F.reverse)
+
+    def _remove_accents(input_str):
+        """
+        Remove accents to a string
+        :return:
+        """
+        # first, normalize strings:
+
+        nfkd_str = unicodedata.normalize('NFKD', input_str)
+
+        # Keep chars that has no other char combined (i.e. accents chars)
+        with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+
+        return with_out_accents
+
+    @add_attr(cols)
+    def remove_accents(columns):
+        """
+        Remove accents in specific columns
+        :param columns:
+        :return:
+        """
+        return apply_to_row(columns, _remove_accents)
+
+    @add_attr(cols)
+    def apply_to_row(columns, func):
+        """
+        Apply the func function to a serie of row in specific columns
+        :param columns:
+        :param func:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+        df = self
+        for column in columns:
+            df = self.withColumn(column, func(F.col(column)))
+        return df
 
     return cols

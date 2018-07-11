@@ -59,7 +59,7 @@ def parse_columns(df, columns, index=None):
 
     # if columns value is * get all dataframes columns
     if columns == "*":
-        columns = list(map(lambda t: t[0], self.dtypes))
+        columns = list(map(lambda t: t[0], df.dtypes))
 
     # if string convert to list. Because we always return a list
 

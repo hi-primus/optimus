@@ -1,7 +1,6 @@
 # Used in decorators. This convenience func preserves name and docstring
 
 from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
 
 import unicodedata
 from pyspark.sql.functions import col, udf
@@ -101,8 +100,6 @@ def lookup(self, columns, look_up_key=None, replace_by=None):
 
     return self
 
-
-
 @add_method(DataFrame)
 def replace(self, search, change_to, columns):
     """
@@ -117,89 +114,6 @@ def replace(self, search, change_to, columns):
     columns = self._parse_columns(columns)
 
     return self.replace(search, change_to, subset=columns)
-
-
-@add_method(DataFrame)
-def lower(self, columns):
-    """
-    Lowercase all the string in a column
-    :param columns:
-    :return:
-    """
-    return self.apply_to_row(columns, F.lower)
-
-
-@add_method(DataFrame)
-def upper(self, columns):
-    """
-    Uppercase all the strings column
-    :param columns:
-    :return:
-    """
-    return self.apply_to_row(columns, F.upper)
-
-
-@add_method(DataFrame)
-def trim(self, columns):
-    """
-    Trim the string in a column
-    :param columns:
-    :return:
-    """
-    return self.apply_to_row(columns, F.trim)
-
-
-@add_method(DataFrame)
-def reverse(self, columns):
-    """
-    Reverse the order of all the string in a column
-    :param columns:
-    :return:
-    """
-    return self.apply_to_row(columns, F.reverse)
-
-
-def _remove_accents(input_str):
-    """
-    Remove accents to a string
-    :return:
-    """
-    # first, normalize strings:
-
-    nfkd_str = unicodedata.normalize('NFKD', input_str)
-
-    # Keep chars that has no other char combined (i.e. accents chars)
-    with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-
-    return with_out_accents
-
-
-@add_method(DataFrame)
-def remove_accents(self, columns):
-    """
-    Remove accents in specific columns
-    :param columns:
-    :return:
-    """
-    return self.apply_to_row(columns, _remove_accents)
-
-
-
-@add_method(DataFrame)
-def apply_to_row(self, columns, func):
-    """
-    Apply the func function to a serie of row in specific columns
-    :param columns:
-    :param func:
-    :return:
-    """
-
-    columns = self._parse_columns(columns)
-
-    for column in columns:
-        self = self.withColumn(column, func(col(column)))
-    return self
-
 
 @add_method(DataFrame)
 def drop(self, func):
@@ -249,10 +163,6 @@ def drop_empty_rows(self, columns, how="all"):
     columns = self._parse_columns(columns)
 
     return self._df.dropna(how, columns)
-
-
-
-
 
 
 def operation_in_type(self, parameters):
