@@ -16,18 +16,18 @@ remove_special_chars		moved to utilities
 remove_special_chars_regex	moved to utilities
 rename_col			        renamed to rename
 lookup				        checking
-move_col			        checking
+move_col			        reimplemented
 count_items			        checking
-date_transform			    moved to utilities
+date_transform			    moved to utilities checking
 age_calculate			    moved to utilities
 cast_func			        renamed as astype
 empty_str_to_str		    removed. replace or fillna form Spark can be used
 
 operation_in_type		    checking
-row_filter_by_type		    checking
-split_str_col			    checking
-remove_empty_rows		    rename to drop_empty_rows
-remove_duplicates		    rename to drop duplicated
+row_filter_by_type		    Merged with filter
+split_str_col			    reimplemented using split form spark
+remove_empty_rows		    replaced by dropna
+remove_duplicates		    replaced by drop_duplicates
 select				        Not changes
 select_idx			        Not changes
 collect				        removed.
