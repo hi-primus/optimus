@@ -100,69 +100,7 @@ def lookup(self, columns, look_up_key=None, replace_by=None):
 
     return self
 
-@add_method(DataFrame)
-def replace(self, search, change_to, columns):
-    """
 
-    :param self:
-    :param search:
-    :param change_to:
-    :param columns:
-    :return:
-    """
-
-    columns = self._parse_columns(columns)
-
-    return self.replace(search, change_to, subset=columns)
-
-@add_method(DataFrame)
-def drop(self, func):
-    """This function is an alias of filter and where spark functions.
-           :param func     func must be an expression with the following form:
-
-                   func = col('col_name') > value.
-
-                   func is an expression where col is a pyspark.sql.function.
-           """
-    self = self.filter(func)
-
-    # Returning the transformer object for able chaining operations
-    return self
-
-
-@add_method(DataFrame)
-def drop_duplicates(self, columns=None):
-    """
-
-    :param cols: List of columns to make the comparison, this only  will consider this subset of columns,
-    for dropping duplicates. The default behavior will only drop the identical rows.
-    :return: Return a new DataFrame with duplicate rows removed
-    """
-
-    columns = self._parse_columns(columns)
-
-    return self.drop_duplicates(columns)
-
-
-@add_method(DataFrame)
-def drop_empty_rows(self, columns, how="all"):
-    """
-    Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
-    'any' of the values is null.
-
-    :param how: ‘any’ or ‘all’. If ‘any’, drop a row if it contains any nulls. If ‘all’, drop a row only if all its
-    values are null. The default is 'all'.
-    :return: Returns a new DataFrame omitting rows with null values.
-    """
-
-    assert isinstance(how, str), "Error, how argument provided must be a string."
-
-    assert how == 'all' or (
-            how == 'any'), "Error, how only can be 'all' or 'any'."
-
-    columns = self._parse_columns(columns)
-
-    return self._df.dropna(how, columns)
 
 
 def operation_in_type(self, parameters):
@@ -232,75 +170,6 @@ def operation_in_type(self, parameters):
     col_not_provided = [x for x in self._df.columns if x not in [column[0] for column in parameters]]
 
     self._df = self._df.select(col_not_provided + [*exprs])
-    self._add_transformation()  # checkpoint in case
-
-    return self
-
-def row_filter_by_type(self, column_name, type_to_delete):
-    """This function has built in order to deleted some type of dataframe """
-    # Check if column_name argument a string datatype:
-    self._assert_type_str(column_name, "column_name")
-    # Asserting if column_name exits in dataframe:
-    assert column_name in self._df.columns, \
-        "Error: Column specified as column_name argument does not exist in dataframe"
-    # Check if type_to_delete argument a string datatype:
-    self._assert_type_str(type_to_delete, "type_to_delete")
-    # Asserting if dataType argument has a valid type:
-    assert (type_to_delete in ['integer', 'float', 'string',
-                               'null']), \
-        "Error: dataType only can be one of the followings options: integer, float, string, null."
-
-    # Function for determine if register value is float or int or string:
-    def data_type(value):
-
-        try:  # Try to parse (to int) register value
-            int(value)
-            # Add 1 if suceed:
-            return 'integer'
-        except ValueError:
-            try:
-                # Try to parse (to float) register value
-                float(value)
-                # Add 1 if suceed:
-                return 'float'
-            except ValueError:
-                # Then, it is a string
-                return 'string'
-        except TypeError:
-            return 'null'
-
-    func = udf(data_type, StringType())
-    self._df = self._df.withColumn('types', func(col(column_name))).where((col('types') != type_to_delete)).drop(
-        'types')
-    self._add_transformation()  # checkpoint in case
-
-    return self
-
-def split_str_col(self, column, feature_names, mark):
-    """This functions split a column into different ones. In the case of this method, the column provided should
-    be a string of the following form 'word,foo'.
-
-    :param column       Name of the target column, this column is going to be replaced.
-    :param feature_names     List of strings of the new column names after splitting the strings.
-    :param mark         String that specifies the splitting mark of the string, this frequently is ',' or ';'.
-    """
-
-    # Check if column argument is a string datatype:
-    self._assert_type_str(column, "column")
-
-    # Check if mark argument is a string datatype:
-    self._assert_type_str(mark, "mark")
-
-    assert (column in self._df.columns), "Error: column specified does not exist in dataFrame."
-
-    assert (isinstance(feature_names, list)), "Error: feature_names must be a list of strings."
-
-    # Setting a udf that split the string into a list of strings.
-    # This is "word, foo" ----> ["word", "foo"]
-    func = udf(lambda x: x.split(mark), ArrayType(StringType()))
-
-    self._df = self._df.withColumn(column, func(col(column)))
-    self.undo_vec_assembler(column=column, feature_names=feature_names)
     self._add_transformation()  # checkpoint in case
 
     return self
