@@ -138,6 +138,7 @@ def operation_in_type(self, parameters):
     types = {type('str'): 'string', type(1): 'int', type(1.0): 'float'}
 
     exprs = []
+
     for column, data_type, func in parameters:
         # Cheking if column name is string datatype:
         self._assert_type_str(column, "columnName")
