@@ -2,8 +2,12 @@ from pyspark.sql import DataFrame
 from pyspark.sql.dataframe import *
 
 from pyspark.sql import functions as F
-
+# from pyspark.sql.functions import *
+from pyspark.sql.functions import Column
+import builtins
 import re
+import unicodedata
+import string
 
 # Library used for method overloading using decorators
 from multipledispatch import dispatch
@@ -12,10 +16,6 @@ from multipledispatch import dispatch
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-
-from pyspark.sql.functions import Column
-
-import builtins
 
 
 @add_method(DataFrame)
@@ -80,7 +80,7 @@ def cols(self):
         return self.select(list(map(get_column, columns)))
 
     @add_attr(cols)
-    def apply(col_and_attr, func, col_as_params=False):
+    def apply(col_and_attr, func):
         """
         Operation as rename or cast need to reconstruct the columns with new types or names.
         This is a helper function handle it
@@ -90,14 +90,15 @@ def cols(self):
         :return:
         """
 
-        if col_as_params:
-            params = col_and_attr[0]
+        if isinstance(col_and_attr, list) and isinstance(col_and_attr[0], tuple):
+            params = col_and_attr
         else:
-            params = parse_columns(self, col_and_attr)
+            params = col_and_attr
 
         df = self
         for param in params:
-            df = df.withColumn(param, func(df[param]))
+            col_name = param[0]
+            df = df.withColumn(col_name, func(param))
         return df
 
     @add_attr(cols)
@@ -139,14 +140,13 @@ def cols(self):
         :return:
         """
 
-        assert validate_columns_names(self, cols_and_types, 0)
+        # assert validate_columns_names(self, cols_and_types, 0)
 
         def _cast(attr):
-            return F.col(attr[0]) \
-                .cast(DICT_TYPES[TYPES[attr[1]]]) \
-                .alias(attr[0])
+            col_name = attr[0]
+            return F.col(col_name).cast(DICT_TYPES[TYPES[attr[1]]])
 
-        df = apply(cols_and_types, _cast, True)
+        df = apply(cols_and_types, _cast)
 
         return df
 
@@ -387,20 +387,6 @@ def cols(self):
         """
         return apply(columns, F.reverse)
 
-    def _remove_accents(input_str):
-        """
-        Remove accents to a string
-        :return:
-        """
-        # first, normalize strings:
-
-        nfkd_str = unicodedata.normalize('NFKD', input_str)
-
-        # Keep chars that has no other char combined (i.e. accents chars)
-        with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-
-        return with_out_accents
-
     @add_attr(cols)
     def remove_accents(columns):
         """
@@ -408,7 +394,44 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, _remove_accents)
+
+        columns = parse_columns(self, columns)
+
+        def _remove_accents(attr):
+            cell_str = attr
+            # first, normalize strings:
+            nfkd_str = unicodedata.normalize('NFKD', cell_str)
+            # Keep chars that has no other char combined (i.e. accents chars)
+            with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+            return with_out_accents
+
+        udf_function = F.udf(_remove_accents)
+        df = self
+        for c in columns:
+            df = df.withColumn("thing", udf_function(df[c]))
+        return df
+
+    @add_attr(cols)
+    def remove_special_chars(columns):
+        """
+        Remove accents in specific columns
+        :param columns:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+
+        def _remove_special_chars(attr):
+            # Remove all punctuation and control characters
+            for punct in (set(attr) & set(string.punctuation)):
+                attr = attr.replace(punct, "")
+            return attr
+
+        udf_function = F.udf(_remove_special_chars)
+        df = self
+        for c in columns:
+            df = df.withColumn("thing", udf_function(df[c]))
+        return df
 
     @add_attr(cols)
     def split(column, mark, get=None, n=None):
@@ -421,6 +444,79 @@ def cols(self):
         if n:
             for p in builtins.range(n):
                 df = df.withColumn('COL_' + str(p), split_col.getItem(p))
+
+        return df
+
+    @add_attr(cols)
+    def date_transform(columns, current_format, output_format):
+        """
+        Tranform a column date format
+        :param  columns: Name date columns to be transformed. Columns ha
+        :param  current_format: current_format is the current string dat format of columns specified. Of course,
+                                all columns specified must have the same format. Otherwise the function is going
+                                to return tons of null values because the transformations in the columns with
+                                different formats will fail.
+        :param  output_format: output date string format to be expected.
+        """
+        # Check if current_format argument a string datatype:
+        assert isinstance(current_format, str)
+
+        # Check if output_format argument a string datatype:
+        assert isinstance(output_format, str)
+
+        # Check if columns argument must be a string or list datatype:
+        columns = parse_columns(self, columns)
+
+        df = self
+
+        exprs = [F.date_format(F.unix_timestamp(c, current_format).cast("timestamp"), output_format).alias(
+            c) if c in columns else c for c in df.columns]
+
+        return df.select(*exprs)
+
+    @add_attr(cols)
+    def age_from_date(name_col_age, dates_format, column):
+        """
+        This method compute the age based on a born date.
+        :param  column: Name of the column born dates column.
+        :param  dates_format: String format date of the column provided.
+        :param  name_col_age: Name of the new column, the new columns is the resulting column of ages.
+        """
+        # Check if column argument a string datatype:
+        assert isinstance(dates_format, str)
+
+        # Check if dates_format argument a string datatype:
+        assert isinstance(name_col_age, str)
+
+        # Asserting if column if in dataFrame:
+        # validate_columns_names(self, cols_and_types, 2)
+        validate_columns_names(self, column)
+
+        # Output format date
+        format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
+
+        df = self
+
+        # df.withColumn("date", exprs)
+
+        def _age(attr):
+            name_col_age = attr[0]
+            dates_format = attr[1]
+            col_name = attr[2]
+
+            return F.format_number(
+                F.abs(
+                    F.months_between(
+                        F.date_format(
+                            F.unix_timestamp(
+                                col_name,
+                                dates_format).cast("timestamp"),
+                            format_dt),
+                        F.current_date()) / 12), 4) \
+                .alias(
+                name_col_age)
+
+        df = apply([(name_col_age, "yyyyMMdd", "date")], _age)
 
         return df
 
