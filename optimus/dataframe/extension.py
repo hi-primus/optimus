@@ -2,11 +2,11 @@ from pyspark.sql.types import StructField, StructType
 
 # Helpers
 from optimus.helpers.constants import *
-
+from optimus.spark import get_spark
 
 class Create:
-    def __init__(self, spark=None):
-        self.spark = spark
+    def __init__(self):
+        self.spark = get_spark()
 
     def dataframe(self, rows_data, col_specs):
         """
