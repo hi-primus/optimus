@@ -98,9 +98,13 @@ def rows(self):
 
         return df
 
-    # Function for determine if register value is float or int or string:
     @add_attr(rows)
     def check_data_type(value):
+        """
+        Retunr if value is float, int or string
+        :param value: value to be checked
+        :return:
+        """
         try:  # Try to parse (to int) register value
             int(value)
             # Add 1 if suceed:
