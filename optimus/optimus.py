@@ -1,7 +1,7 @@
 from pyspark.sql.session import SparkSession
 from optimus.dataframe.extension import Create
-from optimus.io.write import Write
-from optimus.io.read import Read
+from optimus.io.save import Save
+from optimus.io.load import Load
 from optimus.spark import get_spark
 
 # Bound columns operation to the DataFrame Class
@@ -21,8 +21,8 @@ class Optimus:
         self.sc = self.spark.sparkContext
 
         #
-        self.create = Create(self.spark)
-        self.read = Read(self.sc)
-        self.write = Write(self.sc)
+        self.create = Create()
+        self.load = Load()
+        self.save = Save()
 
         print("Done.")
