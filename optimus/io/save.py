@@ -15,9 +15,8 @@ class Save:
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                               "partitions in file store in memory."
-        df.repartition(num_partitions).write.format('json').save(path_name)
+        return df.repartition(num_partitions).write.format('json').save(path_name)
 
-        return True
 
     @staticmethod
     def csv(df, path_name, header="true", mode="overwrite", sep=",", num_partitions=1):
@@ -46,9 +45,8 @@ class Save:
         else:
             header = False
 
-        df.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+        return df.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
 
-        return True
 
     @staticmethod
     def parquet(df, path_name, num_partitions=1):
@@ -56,6 +54,5 @@ class Save:
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                               "partitions in file store in memory."
-        df.coalesce(num_partitions).write.parquet(path_name)
+        return df.coalesce(num_partitions).write.parquet(path_name)
 
-        return True
