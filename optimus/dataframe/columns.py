@@ -13,6 +13,8 @@ from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 
+from pyspark.sql.functions import Column
+
 import builtins
 
 
@@ -78,25 +80,75 @@ def cols(self):
         return self.select(list(map(get_column, columns)))
 
     @add_attr(cols)
-    def rename(columns=None, func=None):
-        """"
-        This functions change the name of a column(s) dataFrame.
-        :param columns: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+    def apply(col_and_attr, func, col_as_params=False):
+        """
+        Operation as rename or cast need to reconstruct the columns with new types or names.
+        This is a helper function handle it
+        :param col_and_attr:
+        :param func:
+        :param col_as_params: send all the col_and_attr info to the function
+        :return:
         """
 
+        if col_as_params:
+            params = col_and_attr[0]
+        else:
+            params = parse_columns(self, col_and_attr)
+
+        df = self
+        for param in params:
+            df = df.withColumn(param, func(df[param]))
+        return df
+
+    @add_attr(cols)
+    def rename(columns_old_new=None, func=None):
+        """"
+        This functions change the name of a column(s) dataFrame.
+        :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+        :param func: can be lower, upper or any string transformation function
+        """
+
+        df = self
         # Apply a transformation function to the param string
         if isfunction(func):
-            columns = [col(c).alias(func(c)) for c in self.columns]
-
+            exprs = [
+                F.col(c).alias(func(c)) for c in df.columns
+            ]
+            df = df.select(*exprs)
         else:
-            # Rename columns based on the columns tupple
-            def _rename(column, t):
-                return col(column).alias(t)
-
             # Check that the 1st element in the tuple is a valid set of columns
-            assert validate_columns_names(self, columns, 0)
-            columns = _recreate_columns(columns, _rename)
-        return self.select(columns)
+            assert validate_columns_names(self, columns_old_new, 0)
+            for c in columns_old_new:
+                df = df.withColumnRenamed(c[0], c[1])
+
+        return df
+
+    @add_attr(cols)
+    def cast(cols_and_types):
+        """
+        Cast a column to a var type
+        :param self:
+        :param cols_and_types:
+                List of tuples of column names and types to be casted. This variable should have the
+                following structure:
+
+                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+
+                The first parameter in each tuple is the column name, the second is the final datatype of column after
+                the transformation is made.
+        :return:
+        """
+
+        assert validate_columns_names(self, cols_and_types, 0)
+
+        def _cast(attr):
+            return F.col(attr[0]) \
+                .cast(DICT_TYPES[TYPES[attr[1]]]) \
+                .alias(attr[0])
+
+        df = apply(cols_and_types, _cast, True)
+
+        return df
 
     @add_attr(cols)
     def move(column, ref_col, position):
@@ -138,31 +190,6 @@ def cols(self):
         return self[columns]
 
     @add_attr(cols)
-    def cast(cols_and_types):
-        """
-        Cast a column to a var type
-        :param self:
-        :param cols_and_types:
-                List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-        :return:
-        """
-
-        assert validate_columns_names(self, cols_and_types, 0)
-
-        def _cast(column, t):
-            return col(column).cast(DICT_TYPES[TYPES[t]]).alias(column)
-
-        columns = _recreate_columns(cols_and_types, _cast)
-
-        return self[columns]
-
-    @add_attr(cols)
     def keep(columns, regex=None):
         """
         Just Keep the columns and drop.
@@ -198,27 +225,6 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def _recreate_columns(col_pair, func):
-        """
-        Operation as rename or cast need to reconstruct the columns with new types or names.
-        This is a helper function handle it
-        :param col_pair:
-        :param func:
-        :return:
-        """
-        columns = []
-        for c in self.columns:
-            new_col = ""
-            for t in col_pair:
-                # if the column is in cols_and_types
-                if t[0] == c:
-                    new_col = func(c, t[1])
-                else:
-                    # Else, Add the column without modification
-                    new_col = col(c)
-            columns.append(new_col)
-        return columns
-
     # Quantile statistics
     @add_attr(cols)
     def _agg(agg, columns):
@@ -268,8 +274,8 @@ def cols(self):
 
         range = []
         for c in columns:
-            max_val = max(c)
-            min_val = min(c)
+            max_val = max(c)[c]
+            min_val = min(c)[c]
             range.append({c: {'min': min_val, 'max': max_val}})
 
         return range
@@ -352,7 +358,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_to_row(columns, F.lower)
+        return apply(columns, F.lower)
 
     @add_attr(cols)
     def upper(columns):
@@ -361,7 +367,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_to_row(columns, F.upper)
+        return apply(columns, F.upper)
 
     @add_attr(cols)
     def trim(columns):
@@ -370,7 +376,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_to_row(columns, F.trim)
+        return apply(columns, F.trim)
 
     @add_attr(cols)
     def reverse(columns):
@@ -379,7 +385,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_to_row(columns, F.reverse)
+        return apply(columns, F.reverse)
 
     def _remove_accents(input_str):
         """
@@ -402,22 +408,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_to_row(columns, _remove_accents)
-
-    @add_attr(cols)
-    def apply_to_row(columns, func):
-        """
-        Apply the func function to a serie of row in specific columns
-        :param columns:
-        :param func:
-        :return:
-        """
-
-        columns = parse_columns(self, columns)
-        df = self
-        for column in columns:
-            df = self.withColumn(column, func(F.col(column)))
-        return df
+        return apply(columns, _remove_accents)
 
     @add_attr(cols)
     def split(column, mark, get=None, n=None):
