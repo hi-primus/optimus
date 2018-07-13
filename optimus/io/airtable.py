@@ -46,7 +46,7 @@ class Airtable:
     def set_air_table_df(self, df):
         """This function set a dataframe into the class for subsequent actions.
         """
-        assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Error: df argument must a sql.dataframe type"
+        assert isinstance(df, pyspark.sql.data_frame.DataFrame), "Error: df argument must a sql.dataframe type"
         self._air_table = df
 
     def get_air_table_df(self):

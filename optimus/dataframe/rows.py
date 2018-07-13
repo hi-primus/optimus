@@ -8,20 +8,42 @@ from pyspark.sql.functions import pandas_udf, PandasUDFType
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-
+import optimus.dataframe.extension as op
 import builtins
+
+
+# from beartype import beartype
 
 @add_method(DataFrame)
 def rows(self):
     @add_attr(rows)
-    def create(name=None, value=None):
+    def append(row):
         """
-        Create a row
+        Append a row at the endo of the dataframe
         :param name:
         :param value:
         :return:
         """
-        pass
+        df = self
+
+        assert isinstance(row, list), "Error: row must me a list"
+        assert len(row) > 0, "Error: row list must be greater that 0"
+
+        assert len(df.dtypes) == len(row), "Error row must be the same lenght of the dataframe"
+
+        cols = []
+        values = []
+        for d, r in zip(df.dtypes, row):
+            col_name = d[0]
+            data_type = d[1]
+            if data_type in DICT_TYPES:
+                cols.append((col_name, (DICT_TYPES[data_type]), True))
+                values.append(r)
+
+        values = [tuple(values)]
+        new_row = op.Create.data_frame(cols, values)
+
+        return df.union(new_row)
 
     @add_attr(rows)
     def replace(search, change_to, columns):
@@ -35,22 +57,7 @@ def rows(self):
         """
 
         columns = self._parse_columns(columns)
-
         return self.replace(search, change_to, subset=columns)
-
-    @add_attr(rows)
-    def drop(func):
-        """This function is an alias of filter and where spark functions.
-               :param func     func must be an expression with the following form:
-
-                       func = col('col_name') > value.
-
-                       func is an expression where col is a pyspark.sql.function.
-               """
-        self = self.filter(func)
-
-        # Returning the transformer object for able chaining operations
-        return self
 
     @add_attr(rows)
     def apply_by_type(parameters):
