@@ -4,22 +4,22 @@ from pyspark.sql.types import StructField, StructType
 from optimus.helpers.constants import *
 from optimus.spark import get_spark
 
-class Create:
-    def __init__(self):
-        self.spark = get_spark()
 
-    def dataframe(self, rows_data, col_specs):
+class Create:
+
+    @staticmethod
+    def data_frame(col_specs, rows_data):
         """
         Helper to create a Spark dataframe
-        :param rows_data:
         :param col_specs:
+        :param rows_data:
         :return:
         """
         specs = []
         for c in col_specs:
             value = c[1]
             # Try to find if the type var is a Spark datatype
-            if isinstance(value, (VAR_TYPES)):
+            if isinstance(value, VAR_TYPES):
                 var_type = value
             # else, try to parse a str, int, float ......
             else:
@@ -29,7 +29,7 @@ class Create:
 
         struct_fields = list(map(lambda x: StructField(*x), specs))
 
-        return self.spark.createDataFrame(rows_data, StructType(struct_fields))
+        return get_spark().createDataFrame(rows_data, StructType(struct_fields))
 
     # Alias
-    df = dataframe
+    df = data_frame
