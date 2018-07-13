@@ -77,29 +77,23 @@ def rows(self):
         validate_columns_names(self, parameters, 0)
 
         df = self
-        for column, data_type, func in parameters:
+        for column, data_type, var_or_func in parameters:
 
             # Checking if column has a valid datatype:
             assert (data_type in ['integer', 'float', 'string',
                                   'null']), \
                 "Error: data_type only can be one of the followings options: integer, float, string, null."
 
-            # Checking if func parameters is func data_type or None
-            assert isinstance(func, (type(None),
-                                     type(lambda x: x))), "Error: func argument must be a function or NoneType"
+            if isfunction(var_or_func):
+                def _apply_by_type(x):
+                    return var_or_func(x) if check_data_type(x) == data_type else x
 
-            if isfunction(func):
-                func_udf = F.udf(lambda x: func(x) if check_data_type(x) == data_type else x)
+            else:
 
-            elif isinstance(func, (str, int, float)):
-                assert [x[1] in TYPES[type(func)] for x in filter(lambda x: x[0] == columnName, self.dtypes)][
-                    0], \
-                    "Error: Column of operation and func argument must be the same global type. " \
-                    "Check column type by df.printSchema()"
-                func_udf = F.udf(lambda x: func if check_data_type(x) == data_type else x)
+                def _apply_by_type(x):
+                    return var_or_func if check_data_type(x) == data_type else x
 
-            if func is None:
-                func_udf = F.udf(lambda x: None if check_data_type(x) == data_type else x)
+            func_udf = F.udf(_apply_by_type)
 
             df = df.withColumn(column, func_udf(F.col(column).alias(column)))
 
