@@ -1,5 +1,5 @@
 from pyspark.sql import types as t
-
+from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType
 
 # You can use string, str or String as param
 TYPES = {'string': 'string',
@@ -14,7 +14,8 @@ TYPES = {'string': 'string',
 # Instead StringType() just use string
 DICT_TYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
 
-VAR_TYPES = t.__all__
+# FIX: We should get all the datatypes from pyspark.sql.types something like tuple(t.__all__)
+VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
 
 JUST_CHECKING = "Just checking that all necessary environments vars are present..."
 STARTING = "Starting or getting SparkSession and SparkContext..."
