@@ -12,6 +12,8 @@ import string
 # Library used for method overloading using decorators
 from multipledispatch import dispatch
 
+from pyspark.ml.feature import Imputer
+
 # Helpers
 from optimus.helpers.validators import *
 from optimus.helpers.constants import *
@@ -519,5 +521,55 @@ def cols(self):
         df = apply([(name_col_age, "yyyyMMdd", "date")], _age)
 
         return df
+
+    @add_attr(cols)
+    def impute(columns, out_cols, strategy):
+        """
+        Imputes missing data from specified columns using the mean or median.
+        :param self:
+        :param columns: List of columns to be analyze.
+        :param out_cols: List of output columns with missing values imputed.
+        :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
+        :return: Transformer object (DF with columns that has the imputed values).
+        """
+
+        # Check if columns to be process are in dataframe
+        columns = parse_columns(self, columns)
+
+        assert isinstance(columns, list), "Error: columns argument must be a list"
+
+        assert isinstance(out_cols, list), "Error: out_cols argument must be a list"
+
+        # Check if columns argument a string datatype:
+        assert isinstance(strategy, str)
+
+        assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
+
+        # def _impute(cols):
+
+        imputer = Imputer(inputCols=columns, outputCols=out_cols)
+
+        df = self
+        model = imputer.setStrategy(strategy).fit(df)
+        df = model.transform(df)
+
+        return df
+
+    @add_attr(cols)
+    def get_column_names_by_type(data_type):
+        """
+        This function returns column names of dataFrame which have the same
+        datatype provided. It analyses column datatype by dataFrame.dtypes method.
+
+        :return    List of column names of a type specified.
+
+        :param df:
+        :param data_type:
+        :return:
+        """
+        assert (data_type in ['string', 'integer', 'float', 'date', 'double']), \
+            "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
+
+        return list(y[0] for y in filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
 
     return cols
