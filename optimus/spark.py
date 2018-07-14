@@ -1,30 +1,22 @@
-from pyspark.sql import SparkSession
 from functools import lru_cache
-
 import os
 
-# Messages strings
-STARTING = "Starting or getting SparkSession and SparkContext..."
-CHECK_POINT_CONFIG = "Setting checkpoint folder (local). If you are in a cluster change it with set_check_point_ " \
-                     "folder(path,'hadoop')."
-SUCCESS = "Optimus successfully imported. Have fun :)."
+from pyspark.sql import SparkSession
+
+from optimus.helpers.constants import *
 
 
 class Spark:
     def __init__(self, master="local", app_name="optimus"):
-        """
-        Initialize Optimus and create the Spark Dataframe
-        :param master:
-        :param app_name:
-        """
 
         if master is not None:
             assert isinstance(master, str), "Error: master must be a string"
-        if app_name:
+        if app_name is not None:
             assert isinstance(app_name, str), "Error: app_name must be a string"
 
         self.master = master
         self.app_name = app_name
+
         print("""
              ____        __  _                     
             / __ \____  / /_(_)___ ___  __  _______
@@ -34,7 +26,7 @@ class Spark:
               /_/                                  
               """)
 
-        print("Just checking that all necessary environments vars are present...")
+        print(JUST_CHECKING)
         print("-----")
         print("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
         print("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
@@ -44,7 +36,6 @@ class Spark:
         self.get_ss()
         print(CHECK_POINT_CONFIG)
 
-    @lru_cache(maxsize=None)
     def get_ss(self):
         """
         Return the Spark Session

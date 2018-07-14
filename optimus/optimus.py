@@ -6,12 +6,14 @@ from optimus.df_outliers import *
 import os
 from shutil import rmtree
 
+from optimus.helpers.constants import *
+
 # Bound columns and row operations to the DataFrame Spark Class
 from optimus.dataframe import columns, rows
 
 
 class Optimus:
-    def __init__(self, master=None, app_name=None, path=None, file_system="local"):
+    def __init__(self, master="local", app_name="optimus", path=None, file_system="local"):
         """
 
         :param master:
@@ -20,16 +22,16 @@ class Optimus:
         :param file_system:
         """
 
-        Spark.instance = Spark(master, app_name)
+        if path is None:
+            path = os.getcwd()
 
         self.create = Create()
         self.load = Load()
         self.save = Save()
 
-        if path is None:
-            path = os.getcwd()
-
+        Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
+        print(SUCCESS)
 
     @staticmethod
     def get_ss():

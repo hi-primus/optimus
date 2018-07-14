@@ -146,7 +146,6 @@ class DataTypeTable:
                 self.html.append("<td style='vertical-align: top;text-align: center;'>")
                 # Adding a table:
 
-
                 self.html.append(self.col_table(self.lis[x]))
 
                 self.html.append("</td>")
@@ -637,7 +636,7 @@ class DataFrameAnalyzer:
 
         assert isinstance(type_hist, str), "Error, type_hist argument provided must be a string."
         assert type_hist == 'categorical' or (
-            type_hist == 'numerical'), "Error, type_hist only can be 'categorical' or 'numerical'."
+                type_hist == 'numerical'), "Error, type_hist only can be 'categorical' or 'numerical'."
 
         df_one_col = self._df.select(column)
 
@@ -811,7 +810,7 @@ class DataFrameAnalyzer:
         assert isinstance(method, str), "Error, method argument provided must be a string."
 
         assert method == 'pearson' or (
-            method == 'spearman'), "Error, method only can be 'pearson' or 'sepearman'."
+                method == 'spearman'), "Error, method only can be 'pearson' or 'sepearman'."
 
         cor = Correlation.corr(self._df, vec_col, method).head()[0].toArray()
         return sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
@@ -885,4 +884,3 @@ class DataFrameAnalyzer:
                         freq.show()
 
         return frequency(columns, sort_by_count)
-
