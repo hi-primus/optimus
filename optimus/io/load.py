@@ -11,7 +11,7 @@ class Load:
 
     def data_loader(self, url, type_of):
         """
-
+        Load data in csv or json format from a url
         :param url:
         :param type_of:
         :return:
@@ -43,6 +43,7 @@ class Load:
         else:
             print("Unknown sample data identifier. Please choose an id from the list below")
 
+    @staticmethod
     def csv_data_loader(self, path):
         """
 
@@ -60,6 +61,7 @@ class Load:
 
         return csvload.option("inferSchema", "true").load(path)
 
+    @staticmethod
     def json_data_loader(self, path):
         """
 
@@ -72,6 +74,8 @@ class Load:
         return Spark.instance.get_ss().read.json(data_rdd)
 
         print(SUCCESS)
+
+
 class Downloader(object):
     def __init__(self, data_def):
         self.data_def = data_def

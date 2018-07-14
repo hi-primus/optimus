@@ -1,3 +1,5 @@
+import re
+
 
 class Airtable:
     def __init__(self, path):
@@ -13,7 +15,7 @@ class Airtable:
         """This function reads the airtable or csv file that user have to fill when the original dataframe
         is analyzed.
 
-        The path could be a dowload link or a path from a local directory.
+        The path could be a download link or a path from a local directory.
         When a local directory is provided, it is necessary to write the corresponding prefix. i.e.:
         file://.... or hdfs://...
         """

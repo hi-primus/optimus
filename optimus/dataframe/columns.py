@@ -422,7 +422,6 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
-
         def _remove_accents(attr):
             cell_str = attr
             # first, normalize strings:
@@ -433,8 +432,9 @@ def cols(self):
 
         udf_function = F.udf(_remove_accents)
         df = self
+
         for c in columns:
-            df = df.withColumn("thing", udf_function(df[c]))
+            df = df.withColumn(c, udf_function(df[c]))
         return df
 
     @add_attr(cols)
@@ -456,7 +456,7 @@ def cols(self):
         udf_function = F.udf(_remove_special_chars)
         df = self
         for c in columns:
-            df = df.withColumn("thing", udf_function(df[c]))
+            df = df.withColumn(c, udf_function(df[c]))
         return df
 
     @add_attr(cols)

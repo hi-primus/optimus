@@ -72,6 +72,12 @@ class ColumnTables:
 # Input data:
 class GeneralDescripTable:
     def __init__(self, file_name, column_number, row_number):
+        """
+
+        :param file_name:
+        :param column_number:
+        :param row_number:
+        """
         self.labels = ['File Name', "Columns", "Rows"]
         self.dat = [file_name, column_number, row_number]
 
@@ -718,9 +724,14 @@ class DataFrameAnalyzer:
         if len(bins_values) < len(uni_values):
             bins_values = uni_values
 
-        # This function search over columnName dataFrame to which interval belongs each cell
-        # It returns the columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
         def generate_expr(column_name, list_intervals):
+            """
+            This function search over columnName dataFrame to which interval belongs each cell. It returns the
+            columnName dataFrame with an additional columnName which describes intervals of each columnName cell.
+            :param column_name:
+            :param list_intervals:
+            :return:
+            """
             if len(list_intervals) == 1:
                 return when(col(column_name).between(list_intervals[0][0], list_intervals[0][1]), 0).otherwise(None)
             else:
@@ -781,10 +792,11 @@ class DataFrameAnalyzer:
         return hist_dict
 
     def unique_values_col(self, column):
-        """This function counts the number of values that are unique and also the total number of values.
+        """
+        This function counts the number of values that are unique and also the total number of values.
         Then, returns the values obtained.
-        :param  column      Name of column dataFrame, this argument must be string type.
-        :return         dictionary of values counted, as an example:
+        :param  column: Name of column dataFrame, this argument must be string type.
+        :return dictionary of values counted, as an example:
                         {'unique': 10, 'total': 15}
         """
 
