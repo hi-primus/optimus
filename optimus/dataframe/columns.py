@@ -346,11 +346,35 @@ def cols(self):
     @add_attr(cols)
     def variance(columns):
         """
-        Return the variance of a column dataframe
+        Return the column variance
         :param columns:
         :return:
         """
         return _agg("variance", columns)
+
+    @add_attr(cols)
+    def mode(columns):
+        """
+        Return the the column mode
+        :param columns:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+        mode_result = []
+
+        for c in columns:
+            cnts = self.groupBy(c).count()
+            mode_df = cnts.join(
+                cnts.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
+            )
+
+            # if none of the values are repeated we not have mode
+            mode_list = mode_df.filter(mode_df["count"] > 1).select(c).collect()
+
+            mode_result.append({c: filter_list(mode_list)})
+
+        return mode_result
 
     # String Operations
     @add_attr(cols)
