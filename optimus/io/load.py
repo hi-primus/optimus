@@ -4,13 +4,10 @@ import urllib.request
 # URL reading
 import tempfile
 from urllib.request import Request, urlopen
-from optimus.spark import *
+from optimus.spark import Spark
 
 
 class Load:
-    def __init__(self):
-        self.spark = get_spark()
-        self.sc = get_sc()
 
     def data_loader(self, url, type_of):
         """
@@ -55,7 +52,7 @@ class Load:
 
         print("path")
         print("Loading file using 'SparkSession'")
-        csvload = self.spark \
+        csvload = Spark.instance.get_ss() \
             .read \
             .format("csv") \
             .options(header=True) \
@@ -71,10 +68,10 @@ class Load:
         """
         res = open(path, 'r').read()
         print("Loading file using a pyspark dataframe for spark")
-        data_rdd = self.sc.parallelize([res])
-        return self.spark.read.json(data_rdd)
+        data_rdd = Spark.instace.get_sc().parallelize([res])
+        return Spark.instance.get_ss().read.json(data_rdd)
 
-
+        print(SUCCESS)
 class Downloader(object):
     def __init__(self, data_def):
         self.data_def = data_def

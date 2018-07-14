@@ -7,7 +7,7 @@ impute_missing:			    moved to ml.py
 check_point
 trim_col:			        renamed to trim
 drop_col:			        renamed to drop
-replace_col:			    renamed to replace. I just wipeout the implementacion. it just only checking if columns are valid and run df.replace
+replace_col:			    renamed to replace. I just wipeout the implementation. it just only checking if columns are valid and run df.replace
 delete_row			        renamed to filter
 set_col				        checking
 keep_col			        renamed to keep

@@ -1,8 +1,8 @@
 from pyspark.sql.types import StructField, StructType
+from optimus.spark import Spark
 
 # Helpers
 from optimus.helpers.constants import *
-from optimus.spark import get_spark
 
 
 class Create:
@@ -29,7 +29,7 @@ class Create:
 
         struct_fields = list(map(lambda x: StructField(*x), specs))
 
-        return get_spark().createDataFrame(rows_data, StructType(struct_fields))
+        return Spark.instance.get_ss().createDataFrame(rows_data, StructType(struct_fields))
 
     # Alias
     df = data_frame

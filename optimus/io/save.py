@@ -1,9 +1,4 @@
-from optimus.spark import get_spark
-
-
 class Save:
-    def __init__(self):
-        self.sc = get_spark()
 
     @staticmethod
     def json(df, path_name, num_partitions=1):
@@ -16,7 +11,6 @@ class Save:
         assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                               "partitions in file store in memory."
         return df.repartition(num_partitions).write.format('json').save(path_name)
-
 
     @staticmethod
     def csv(df, path_name, header="true", mode="overwrite", sep=",", num_partitions=1):
@@ -47,7 +41,6 @@ class Save:
 
         return df.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
 
-
     @staticmethod
     def parquet(df, path_name, num_partitions=1):
 
@@ -55,4 +48,3 @@ class Save:
         assert (num_partitions <= df.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                               "partitions in file store in memory."
         return df.coalesce(num_partitions).write.parquet(path_name)
-
