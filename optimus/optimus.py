@@ -3,10 +3,13 @@ from optimus.io.save import Save
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.df_outliers import *
+from optimus.helpers.constants import *
+
+from pyspark.sql import DataFrame
+
 import os
 from shutil import rmtree
-
-from optimus.helpers.constants import *
+from functools import reduce
 
 # Bound columns and row operations to the DataFrame Spark Class
 from optimus.dataframe import columns, rows
@@ -40,6 +43,9 @@ class Optimus:
     @staticmethod
     def get_sc():
         return Spark.instance.get_sc()
+
+    def concat(self, *dfs):
+        return reduce(DataFrame.union, dfs)
 
     def set_check_point_folder(self, path, file_system):
         """
