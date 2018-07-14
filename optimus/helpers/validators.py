@@ -53,6 +53,7 @@ def parse_columns(df, columns, index=None):
     """
     Check that a column list is a valis list of columns.
     :param columns:  Acepts * as param to return all the string columns in the dataframe
+    :param index: if a tuple get the column from a specific index
     :return: A list of columns string names
     """
 
@@ -82,16 +83,16 @@ def parse_columns(df, columns, index=None):
     return columns
 
 
-def one_list_to_val(l):
+def one_list_to_val(val):
     """
     Convert a single list element to val
-    :param l:
+    :param val:
     :return:
     """
-    if isinstance(l, list) and len(l) == 1:
-        result = l[0]
+    if isinstance(val, list) and len(val) == 1:
+        result = val[0]
     else:
-        result = l
+        result = val
 
     return result
 
@@ -108,3 +109,16 @@ def val_to_list(val):
         result = val
 
     return result
+
+
+def filter_list(val, index=0):
+    """
+    Convert a list to None, int or a list
+    :param val:
+    :param index:
+    :return:
+    """
+    if len(val) == 0:
+        return None
+    else:
+        return one_list_to_val([column[index] for column in val])
