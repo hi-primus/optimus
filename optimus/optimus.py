@@ -11,20 +11,32 @@ from optimus.dataframe import columns, rows
 
 
 class Optimus:
-    def __init__(self, master=None, app_name=None):
-        #
+    def __init__(self, master=None, app_name=None, path=None, file_system="local"):
+        """
+
+        :param master:
+        :param app_name:
+        :param path:
+        :param file_system:
+        """
+
         Spark.instance = Spark(master, app_name)
 
         self.create = Create()
         self.load = Load()
         self.save = Save()
 
-        self.set_check_point_folder(os.getcwd(), "local")
+        if path is None:
+            path = os.getcwd()
 
-    def get_ss(self):
+        self.set_check_point_folder(path, file_system)
+
+    @staticmethod
+    def get_ss():
         return Spark.instance.get_ss()
 
-    def get_sc(self):
+    @staticmethod
+    def get_sc():
         return Spark.instance.get_sc()
 
     def set_check_point_folder(self, path, file_system):
@@ -55,14 +67,14 @@ class Optimus:
             self.delete_check_point_folder(path=path, file_system=file_system)
 
             # Creating file:
-            print("Creation of hadoop folder...")
+            print("Creating the hadoop folder...")
             command = "hadoop fs -mkdir " + folder_path
             print("$" + command)
             os.system(command)
             print("Hadoop folder created. \n")
 
             print("Setting created folder as checkpoint folder...")
-            spark.get_sc().setCheckpointDir(folder_path)
+            Spark.instance.get_sc().setCheckpointDir(folder_path)
             print("Done.")
         else:
             # Folder path:
@@ -70,15 +82,14 @@ class Optimus:
             # Checking if tempFolder exits:
             print("Deleting previous folder if exists...")
             if os.path.isdir(folder_path):
-
                 # Deletes folder if exits:
                 rmtree(folder_path)
-                print("Creation of checkpoint directory...")
+                print("Creating the checkpoint directory...")
                 # Creates new folder:
                 os.mkdir(folder_path)
                 print("Done.")
             else:
-                print("Creation of checkpoint directory...")
+                print("Creating the checkpoint directory...")
 
                 # Creates new folder:
                 os.mkdir(folder_path)
@@ -86,7 +97,8 @@ class Optimus:
 
             Spark.instance.get_sc().setCheckpointDir(dirName="file:///" + folder_path)
 
-    def delete_check_point_folder(self, path, file_system):
+    @staticmethod
+    def delete_check_point_folder(path, file_system):
         """
         Function that deletes the temporal folder where temp files were stored.
         The path required is the same provided by user in setCheckPointFolder().

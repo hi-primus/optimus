@@ -11,17 +11,17 @@ SUCCESS = "Optimus successfully imported. Have fun :)."
 
 
 class Spark:
-    def __init__(self, master=None, app_name=None):
+    def __init__(self, master="local", app_name="optimus"):
+        """
+        Initialize Optimus and create the Spark Dataframe
+        :param master:
+        :param app_name:
+        """
 
         if master is not None:
             assert isinstance(master, str), "Error: master must be a string"
         if app_name:
             assert isinstance(app_name, str), "Error: app_name must be a string"
-
-        # If not param are defined set the values to get the local cluster
-        if master is None and app_name is None:
-            self.master = "local"
-            self.app_name = "optimus"
 
         self.master = master
         self.app_name = app_name
