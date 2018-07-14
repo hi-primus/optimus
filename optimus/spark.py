@@ -34,7 +34,7 @@ class Spark:
         print("-----")
         print(STARTING)
         self.get_ss()
-        print(CHECK_POINT_CONFIG)
+
 
     def get_ss(self):
         """

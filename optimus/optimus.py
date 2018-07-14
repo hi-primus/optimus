@@ -2,8 +2,9 @@ from optimus.dataframe.extension import Create
 from optimus.io.save import Save
 from optimus.io.load import Load
 from optimus.spark import Spark
-from optimus.df_outliers import *
 from optimus.helpers.constants import *
+from optimus.df_analyser import DataFrameAnalyzer
+from optimus.df_outliers import *
 
 from pyspark.sql import DataFrame
 
@@ -31,6 +32,8 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.save = Save()
+
+
 
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
@@ -63,12 +66,13 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-
         assert (isinstance(file_system, str)), \
             "Error: file_system argument must be a string."
 
         assert (file_system == "hadoop") or (file_system == "local"), \
             "Error, file_system argument only can be 'local' or 'hadoop'"
+
+        print_check_point_config(file_system)
 
         if file_system == "hadoop":
             folder_path = path + "/" + "checkPointFolder"
@@ -83,7 +87,6 @@ class Optimus:
 
             print("Setting created folder as checkpoint folder...")
             Spark.instance.get_sc().setCheckpointDir(folder_path)
-            print("Done.")
         else:
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
@@ -92,16 +95,10 @@ class Optimus:
             if os.path.isdir(folder_path):
                 # Deletes folder if exits:
                 rmtree(folder_path)
-                print("Creating the checkpoint directory...")
-                # Creates new folder:
-                os.mkdir(folder_path)
-                print("Done.")
-            else:
-                print("Creating the checkpoint directory...")
 
-                # Creates new folder:
-                os.mkdir(folder_path)
-                print("Done.")
+            print("Creating the checkpoint directory...")
+            # Creates new folder:
+            os.mkdir(folder_path)
 
             Spark.instance.get_sc().setCheckpointDir(dirName="file:///" + folder_path)
 

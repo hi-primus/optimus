@@ -19,6 +19,10 @@ VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
 
 JUST_CHECKING = "Just checking that all necessary environments vars are present..."
 STARTING = "Starting or getting SparkSession and SparkContext..."
-CHECK_POINT_CONFIG = "Setting checkpoint folder (local). If you are in a cluster change it with set_check_point_ " \
-                     "folder(path,'hadoop')."
+
+
+def print_check_point_config(filesystem):
+    print("Setting checkpoint folder (", filesystem,"). If you are in a cluster initialize optimus with")
+
+
 SUCCESS = "Optimus successfully imported. Have fun :)."
