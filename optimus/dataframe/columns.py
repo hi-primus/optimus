@@ -20,6 +20,13 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 
 
+@add_attr(DataFrame)
+def cells():
+    @add_attr(cells)
+    def print():
+        print("hola")
+
+
 @add_method(DataFrame)
 def cols(self):
     @add_attr(cols)
@@ -578,7 +585,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def count(columns, type=None):
+    def count_na(columns):
         """
 
         :param columns:
@@ -587,10 +594,21 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        if type is None:
-            # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
-            return df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
-                .collect()[0].asDict()
+        # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
+        return df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
+            .collect()[0].asDict()
+
+    @add_attr(cols)
+    def count_uniques(columns):
+        """
+        Return how many unique items exist in a columns
+        :param columns:
+        :param type: Accepts integer, float, string or None
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        return [{c: df.select(c).distinct().count()} for c in columns]
 
     @add_attr(cols)
     def get_column_names_by_type(data_type):
@@ -616,4 +634,5 @@ def cols(self):
         :return:
         """
         return self.distinct()
+
     return cols
