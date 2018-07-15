@@ -587,7 +587,7 @@ def cols(self):
     @add_attr(cols)
     def count_na(columns):
         """
-
+        Return the NAN and Null count in a Column
         :param columns:
         :param type: Accepts integer, float, string or None
         :return:
@@ -596,6 +596,20 @@ def cols(self):
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
+            .collect()[0].asDict()
+
+    @add_attr(cols)
+    def count_zeros(columns):
+        """
+        Return the NAN and Null count in a Column
+        :param columns:
+        :param type: Accepts integer, float, string or None
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
+        return df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
             .collect()[0].asDict()
 
     @add_attr(cols)
