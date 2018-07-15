@@ -15,10 +15,9 @@ from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer
 
 # Helpers
-from optimus.helpers.validators import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-
+from optimus.helpers.functions import *
 
 @add_attr(DataFrame)
 def cells():
@@ -595,8 +594,8 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
-        return df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
-            .collect()[0].asDict()
+        return collect_to_dict(df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
+            .collect())
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -609,8 +608,8 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
-        return df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
-            .collect()[0].asDict()
+        return collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
+            .collect())
 
     @add_attr(cols)
     def count_uniques(columns):
