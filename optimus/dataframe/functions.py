@@ -20,16 +20,15 @@ def execute(self):
     # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
     # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
     print("Saving changes at disk by checkpoint...")
-    df =self
+    df = self
 
     df.checkpoint()
     df.count()
     # self = self._sql_context.createDataFrame(self, self.schema)
     print("Done.")
 
-
     return None
 
-#@add_attr(DataFrame)
-#def head(self):
+# @add_attr(DataFrame)
+# def head(self):
 #    self.show()

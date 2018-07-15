@@ -1,5 +1,5 @@
 from optimus.dataframe.extension import Create
-from optimus.io.save import Save
+#from optimus.io.save import Save
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
@@ -15,7 +15,7 @@ from shutil import rmtree
 from functools import reduce
 
 # Bound columns and row operations to the DataFrame Spark Class
-from optimus.dataframe import columns, rows
+from optimus.dataframe import columns, rows, save
 
 
 class Optimus:
@@ -33,10 +33,11 @@ class Optimus:
 
         self.create = Create()
         self.load = Load()
-        self.save = Save()
+        #self.save = Save()
 
         # self.profiler = Profiler()
 
+        # Initializar Spark
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
         print(SUCCESS)

@@ -19,12 +19,6 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
 
-@add_attr(DataFrame)
-def cells():
-    @add_attr(cells)
-    def print():
-        print("hola")
-
 
 @add_method(DataFrame)
 def cols(self):
@@ -133,7 +127,6 @@ def cols(self):
     def cast(cols_and_types):
         """
         Cast a column to a var type
-        :param self:
         :param cols_and_types:
                 List of tuples of column names and types to be casted. This variable should have the
                 following structure:
@@ -595,7 +588,7 @@ def cols(self):
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
-            .collect())
+                               .collect())
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -609,7 +602,7 @@ def cols(self):
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
-            .collect())
+                               .collect())
 
     @add_attr(cols)
     def count_uniques(columns):

@@ -16,13 +16,11 @@ import builtins
 
 @add_method(DataFrame)
 def rows(self):
-
     @add_attr(rows)
     def append(row):
         """
-        Append a row at the endo of the dataframe
-        :param name:
-        :param value:
+        Append a row at the end of a dataframe
+        :param row:
         :return:
         """
         df = self
@@ -50,7 +48,6 @@ def rows(self):
     def replace(search, change_to, columns):
         """
 
-        :param self:
         :param search:
         :param change_to:
         :param columns:
@@ -90,7 +87,7 @@ def rows(self):
         argument provided in the input function.
 
         Columns provided in list of tuples cannot be repeated
-        :param parameters   List of columns in the following form: [(columnName, data_type, func),
+        :param parameters: List of columns in the following form: [(columnName, data_type, func),
                                                                     (columnName1, dataType1, func1)]
         :return None
         """
@@ -177,9 +174,9 @@ def rows(self):
             func(F.col(column_name))) \
             .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the type
 
-    @add_attr(rows)
-    ## FIX: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
 
+    ## FIX: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
+    @add_attr(rows)
     def lookup(columns, lookup_key=None, replace_by=None):
         """
         This method search a list of strings specified in `list_str` argument among rows
