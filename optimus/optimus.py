@@ -3,7 +3,9 @@ from optimus.io.save import Save
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
-from optimus.df_analyser import DataFrameAnalyzer
+
+from optimus.profiler.profiler import Profiler
+
 from optimus.df_outliers import *
 
 from pyspark.sql import DataFrame
@@ -33,11 +35,14 @@ class Optimus:
         self.load = Load()
         self.save = Save()
 
-
+        # self.profiler = Profiler()
 
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
         print(SUCCESS)
+
+    def profiler(self, df):
+        return Profiler(df)
 
     @staticmethod
     def get_ss():
