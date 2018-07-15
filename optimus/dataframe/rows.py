@@ -147,7 +147,7 @@ def rows(self):
             return 'null'
 
     @add_attr(rows)
-    def filter_by_type(column_name, type):
+    def filter_by_type(column_name, type=None):
         """
         This function has built in order to deleted some type of row depending of the var type detected by python
         for Example if you have a column with
@@ -156,7 +156,10 @@ def rows(self):
         | b |
 
         and you filter by type = integer the second row (1) will be eliminated
-         """
+        :param column_name:
+        :param type:
+        :return:
+        """
 
         validate_columns_names(self, column_name)
 
