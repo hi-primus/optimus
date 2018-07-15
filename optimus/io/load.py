@@ -1,6 +1,3 @@
-# Importing module to work with urls
-import urllib.request
-
 # URL reading
 import tempfile
 from urllib.request import Request, urlopen
@@ -8,6 +5,19 @@ from optimus.spark import Spark
 
 
 class Load:
+
+    def url(self, path=None, type_of="csv"):
+        """
+        Reads dataset from URL.
+        :param path: string for URL to read
+        :param type_of: type of the URL backend (can be csv or json)
+        :return: pyspark dataframe from URL.
+        """
+
+        if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
+            return self.data_loader(str(path), type_of)
+        else:
+            print("Unknown sample data identifier. Please choose an id from the list below")
 
     def data_loader(self, url, type_of):
         """
@@ -30,21 +40,8 @@ class Load:
 
         return Downloader(data_def).download(data_loader)
 
-    def url(self, path=None, type_of="csv"):
-        """
-        Reads dataset from URL.
-        :param path: string for URL to read
-        :param type_of: type of the URL backend (can be csv or json)
-        :return: pyspark dataframe from URL.
-        """
-
-        if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
-            return self.data_loader(str(path), type_of)
-        else:
-            print("Unknown sample data identifier. Please choose an id from the list below")
-
     @staticmethod
-    def csv_data_loader(self, path):
+    def csv_data_loader(path):
         """
 
         :param path:
@@ -62,18 +59,16 @@ class Load:
         return csvload.option("inferSchema", "true").load(path)
 
     @staticmethod
-    def json_data_loader(self, path):
+    def json_data_loader(path):
         """
 
         :param path:
         :return:
         """
         res = open(path, 'r').read()
-        print("Loading file using a pyspark dataframe for spark")
-        data_rdd = Spark.instace.get_sc().parallelize([res])
+        print("Loading file using a pyspark.read.json")
+        data_rdd = Spark.instance.get_sc().parallelize([res])
         return Spark.instance.get_ss().read.json(data_rdd)
-
-        print(SUCCESS)
 
 
 class Downloader(object):
