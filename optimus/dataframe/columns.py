@@ -82,25 +82,22 @@ def cols(self):
         return self.select(list(map(get_column, columns)))
 
     @add_attr(cols)
-    def apply(col_and_attr, func):
+    def apply(columns, func):
         """
         Operation as rename or cast need to reconstruct the columns with new types or names.
         This is a helper function handle it
-        :param col_and_attr:
+        :param columns:
         :param func:
-        :param col_as_params: send all the col_and_attr info to the function
         :return:
         """
 
-        if isinstance(col_and_attr, list) and isinstance(col_and_attr[0], tuple):
-            params = col_and_attr
-        else:
-            params = col_and_attr
+        columns = parse_columns(self, columns)
+
+        udf_function = F.udf(func)
 
         df = self
-        for param in params:
-            col_name = param[0]
-            df = df.withColumn(col_name, func(param))
+        for col_name in columns:
+            df = df.withColumn(col_name, udf_function(df[col_name]))
         return df
 
     @add_attr(cols)
@@ -422,6 +419,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
+
         def _remove_accents(attr):
             cell_str = attr
             # first, normalize strings:
@@ -580,6 +578,21 @@ def cols(self):
         return df
 
     @add_attr(cols)
+    def count(columns, type=None):
+        """
+
+        :param columns:
+        :param type: Accepts integer, float, string or None
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        if type is None:
+            # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
+            return df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
+                .collect()[0].asDict()
+
+    @add_attr(cols)
     def get_column_names_by_type(data_type):
         """
         This function returns column names of dataFrame which have the same
@@ -596,4 +609,11 @@ def cols(self):
 
         return list(y[0] for y in filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
 
+    @add_attr(cols)
+    def unique():
+        """
+        Just a wrapper for Apache Spark distinct function
+        :return:
+        """
+        return self.distinct()
     return cols
