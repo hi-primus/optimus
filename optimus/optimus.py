@@ -1,12 +1,14 @@
+from optimus.spark import Spark
+
+# We use this to save a reference to the Spark session at the module level
+Spark.instance = None
+
 from optimus.dataframe.extension import Create
-#from optimus.io.save import Save
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
 
 from optimus.profiler.profiler import Profiler
-
-from optimus.df_outliers import *
 
 from pyspark.sql import DataFrame
 
@@ -31,16 +33,16 @@ class Optimus:
         if path is None:
             path = os.getcwd()
 
-        self.create = Create()
-        self.load = Load()
-        #self.save = Save()
-
-        # self.profiler = Profiler()
-
-        # Initializar Spark
+        # Initialize Spark
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
         print(SUCCESS)
+
+        self.create = Create()
+        self.load = Load()
+
+        self.spark = self.get_ss()
+        self.read = self.spark.read
 
     def profiler(self, df):
         return Profiler(df)
