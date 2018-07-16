@@ -15,9 +15,9 @@ class Profiler:
 
         print(df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in df.columns]).show())
 
-        df.cols().count("*")
+        df.cols().count_na("*")
 
-
+        df.cols().count_na("*")
 
         print(df.dtypes)
 
