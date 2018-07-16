@@ -82,22 +82,26 @@ def cols(self):
         return self.select(list(map(get_column, columns)))
 
     @add_attr(cols)
-    def apply(columns, func):
+    def apply(columns, func, type="columnexp"):
         """
-        Operation as rename or cast need to reconstruct the columns with new types or names.
+        Apply a column expression of udf to a column
         This is a helper function handle it
-        :param columns:
+        :param columns: Columns in which the columns are going to be applied
         :param func:
+        :param type: columnexp or udf
         :return:
         """
+        assert type is "columnexp" or type is "udf", "Error: type must be columnexp or udf"
 
         columns = parse_columns(self, columns)
-
-        udf_function = F.udf(func)
+        if type == "columnsexp":
+            func_to_apply = func
+        elif type == "udf":
+            func_to_apply = F.udf(func)
 
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, udf_function(df[col_name]))
+            df = df.withColumn(col_name, func_to_apply(df[col_name]))
         return df
 
     @add_attr(cols)
@@ -109,7 +113,7 @@ def cols(self):
         """
 
         df = self
-        # Apply a transformation function to the param string
+        # Apply a transformation function to the param strincount_uniquesg
         if isfunction(func):
             exprs = [
                 F.col(c).alias(func(c)) for c in df.columns
@@ -147,6 +151,10 @@ def cols(self):
         df = apply(cols_and_types, _cast)
 
         return df
+
+    @add_attr(cols)
+    def astype():
+        return cast
 
     @add_attr(cols)
     def move(column, ref_col, position):
@@ -614,7 +622,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        return [{c: df.select(c).distinct().count()} for c in columns]
+        return [{c: df.select(c).distinct().count()} for c in columns][0]
 
     @add_attr(cols)
     def get_column_names_by_type(data_type):
