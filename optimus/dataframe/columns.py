@@ -82,26 +82,72 @@ def cols(self):
         return self.select(list(map(get_column, columns)))
 
     @add_attr(cols)
-    def apply(columns, func, type="columnexp"):
+    def _apply(columns, func):
         """
-        Apply a column expression of udf to a column
-        This is a helper function handle it
         :param columns: Columns in which the columns are going to be applied
         :param func:
-        :param type: columnexp or udf
         :return:
         """
-        assert type is "columnexp" or type is "udf", "Error: type must be columnexp or udf"
-
-        columns = parse_columns(self, columns)
-        if type == "columnsexp":
-            func_to_apply = func
-        elif type == "udf":
-            func_to_apply = F.udf(func)
-
+        columns = parse_columns(self, columns)[0]
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, func_to_apply(df[col_name]))
+            df = df.withColumn(col_name, func(df[col_name]))
+        return df
+
+    @add_attr(cols)
+    def apply(cols_attrs, func, func_type="columnexp"):
+        """
+        Apply a column expression function or udf function to a column
+        :param cols_attrs: Columns in which the function are going to be applied
+        Accepts:
+        '*' select all columns in a dataframe
+        A string 'col_name'
+        A list ['col_1', 'col_2','col_3']
+        Tuples ('col_1', 'param_1', 'param_2'),('col_2', 'param_1', 'param_2')
+
+        If a list of tuples return to list. The firts is a list of columns names the second is a list of params.
+        This params can me used to create custom transformation functions. You can find and example in cols().cast()
+
+        :param func: Functions to be applied to a columns
+        :param func_type: columnexp or udf
+        :return:
+        """
+
+        assert func_type is "columnexp" or func_type is "udf", "Error: type must be columnexp or udf"
+
+        cols, attrs = parse_columns(self, cols_attrs)
+
+        def func_factory(func_type):
+
+            def udf_func(attr, func):
+                return F.udf(lambda value: func(value, attr))
+
+            def expression_func(attr, func):
+                def inner(col_name):
+                    print(col_name)
+                    print(attr)
+                    print(type(func))
+                    return func(col_name, attr)
+                    ## return func(F.col(col_name))
+
+                return inner
+
+            if func_type is "udf":
+                return udf_func
+            else:
+                return expression_func
+
+        df_func = func_factory(func_type)
+        df = self
+
+        if attrs is None:
+            for col in cols:
+                df = df.withColumn(col, df_func(cols, func)(col))
+            return df
+        else:
+            for i, (col, attr) in enumerate(zip(cols, attrs)):
+                df = df.withColumn(col, df_func(attr, func)(col))
+
         return df
 
     @add_attr(cols)
@@ -142,11 +188,10 @@ def cols(self):
         :return:
         """
 
-        # assert validate_columns_names(self, cols_and_types, 0)
+        assert validate_columns_names(self, cols_and_types, 0)
 
-        def _cast(attr):
-            col_name = attr[0]
-            return F.col(col_name).cast(DICT_TYPES[TYPES[attr[1]]])
+        def _cast(col_name, attr):
+            return F.col(col_name).cast(DICT_TYPES[TYPES[attr[0]]])
 
         df = apply(cols_and_types, _cast)
 
@@ -166,8 +211,8 @@ def cols(self):
         :return:
         """
         # Check that column is a string or a list
-        column = parse_columns(self, column)
-        ref_col = parse_columns(self, ref_col)
+        column = parse_columns(self, column)[0]
+        ref_col = parse_columns(self, ref_col)[0]
 
         # Asserting if position is 'after' or 'before'
         assert (position == 'after') or (
@@ -177,6 +222,7 @@ def cols(self):
         columns = self.columns
 
         # Get source and reference column index position
+
         new_index = columns.index(ref_col[0])
         old_index = columns.index(column[0])
 
@@ -196,7 +242,7 @@ def cols(self):
         return self[columns]
 
     @add_attr(cols)
-    def keep(columns, regex=None):
+    def keep(columns=None, regex=None):
         """
         Just Keep the columns and drop.
         :param columns:
@@ -209,7 +255,7 @@ def cols(self):
             columns = list(filter(r.match, self.columns))
 
         columns = parse_columns(self, columns)
-        return self.select(*columns)
+        return self.select(*columns[0])
 
     @add_attr(cols)
     def sort(reverse=False):
@@ -224,7 +270,7 @@ def cols(self):
             r = re.compile(regex)
             columns = list(filter(r.match, self.columns))
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
         for column in columns:
             df = df.drop(column)
@@ -240,7 +286,7 @@ def cols(self):
         :param columns: list of columns names or a string (a column name).
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
         # Aggregate
         result = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
@@ -276,7 +322,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
         range = []
         for c in columns:
@@ -364,7 +410,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
         mode_result = []
 
         for c in columns:
@@ -388,7 +434,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.lower)
+        return _apply(columns, F.lower)
 
     @add_attr(cols)
     def upper(columns):
@@ -397,7 +443,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.upper)
+        return _apply(columns, F.upper)
 
     @add_attr(cols)
     def trim(columns):
@@ -406,7 +452,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.trim)
+        return _apply(columns, F.trim)
 
     @add_attr(cols)
     def reverse(columns):
@@ -415,7 +461,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.reverse)
+        return _apply(columns, F.reverse)
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -425,21 +471,17 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
-        def _remove_accents(attr):
-            cell_str = attr
+        def _remove_accents(col_name, attr):
+            cell_str = col_name
             # first, normalize strings:
             nfkd_str = unicodedata.normalize('NFKD', cell_str)
             # Keep chars that has no other char combined (i.e. accents chars)
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        udf_function = F.udf(_remove_accents)
-        df = self
-
-        for c in columns:
-            df = df.withColumn(c, udf_function(df[c]))
+        df = apply(columns, _remove_accents, "udf")
         return df
 
     @add_attr(cols)
@@ -450,18 +492,15 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
-        def _remove_special_chars(attr):
+        def _remove_special_chars(col_name, attr):
             # Remove all punctuation and control characters
-            for punct in (set(attr) & set(string.punctuation)):
-                attr = attr.replace(punct, "")
-            return attr
+            for punct in (set(col_name) & set(string.punctuation)):
+                col_name = col_name.replace(punct, "")
+            return col_name
 
-        udf_function = F.udf(_remove_special_chars)
-        df = self
-        for c in columns:
-            df = df.withColumn(c, udf_function(df[c]))
+        df = apply(columns, _remove_special_chars, "udf")
         return df
 
     @add_attr(cols)
@@ -506,7 +545,7 @@ def cols(self):
         return df.select(*exprs)
 
     @add_attr(cols)
-    def age_from_date(name_col_age, dates_format, column):
+    def years_since(name_col_age, dates_format, column):
         """
         This method compute the age based on a born date.
         :param  column: Name of the column born dates column.
@@ -530,10 +569,9 @@ def cols(self):
 
         # df.withColumn("date", exprs)
 
-        def _age(attr):
-            name_col_age = attr[0]
-            dates_format = attr[1]
-            col_name = attr[2]
+        def _age(name_col_age, attr):
+            dates_format = attr[0]
+            col_name = attr[1]
 
             return F.format_number(
                 F.abs(
@@ -563,7 +601,7 @@ def cols(self):
         """
 
         # Check if columns to be process are in dataframe
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
 
         assert isinstance(columns, list), "Error: columns argument must be a list"
 
@@ -592,7 +630,7 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
@@ -606,7 +644,7 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
@@ -620,12 +658,12 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns)[0]
         df = self
         return [{c: df.select(c).distinct().count()} for c in columns][0]
 
     @add_attr(cols)
-    def get_column_names_by_type(data_type):
+    def filter_by_type(data_type):
         """
         This function returns column names of dataFrame which have the same
         datatype provided. It analyses column datatype by dataFrame.dtypes method.
@@ -636,10 +674,12 @@ def cols(self):
         :param data_type:
         :return:
         """
-        assert (data_type in ['string', 'integer', 'float', 'date', 'double']), \
+        assert (data_type in TYPES), \
             "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
 
-        return list(y[0] for y in filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
+        columns = list(y[0] for y in filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
+
+        return self.select(*columns)
 
     @add_attr(cols)
     def unique():

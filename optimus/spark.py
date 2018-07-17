@@ -35,7 +35,6 @@ class Spark:
         print(STARTING)
         self.get_ss()
 
-
     def get_ss(self):
         """
         Return the Spark Session
