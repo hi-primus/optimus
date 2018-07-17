@@ -16,6 +16,8 @@ from optimus.profiler.profiler import Profiler
 
 from pyspark.sql import DataFrame
 
+from optimus.dataframe import rows, columns, dataframe
+
 
 class Optimus:
     def __init__(self, master="local", app_name="optimus", path=None, file_system="local"):
