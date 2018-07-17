@@ -71,8 +71,8 @@ Building a dummy dataFrame:
     from pyspark.sql.types import StringType, IntegerType, StructType, StructField
     # Importing optimus
     import optimus as op
-
-    # Building a simple dataframe:
+    
+    # Building a simple dataFrame:
     schema = StructType([
             StructField("city", StringType(), True),
             StructField("country", StringType(), True),
