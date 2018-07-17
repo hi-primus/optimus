@@ -198,3 +198,29 @@ def parse_columns(df, cols_attrs, index=None):
 
     return cols, attrs
 
+
+def check_data_type(value):
+    """
+    Return if a value is int, float or string. Also is string try to parse to int or float
+    :param value: value to be checked
+    :return:
+    """
+    if isinstance(value, int):  # Check if value is integer
+        return 'integer'
+    elif isinstance(value, float):
+        return 'float'
+    elif isinstance(value, str):
+        try:  # Try to parse (to int) register value
+            int(value)
+            return 'integer'
+        except ValueError:
+            try:
+                # Try to parse (to float) register value
+                float(value)
+                return 'float'
+            except ValueError:
+                # Then, it is a string
+                return 'string'
+    else:
+        return 'null'
+

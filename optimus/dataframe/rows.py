@@ -17,7 +17,7 @@ def rows(self):
     def append(row):
         """
         Append a row at the end of a dataframe
-        :param row:
+        :param row: List of values
         :return:
         """
         df = self
@@ -117,28 +117,7 @@ def rows(self):
 
         return df
 
-    @add_attr(rows)
-    def check_data_type(value):
-        """
-        Retunr if value is float, int or string
-        :param value: value to be checked
-        :return:
-        """
-        try:  # Try to parse (to int) register value
-            int(value)
-            # Add 1 if suceed:
-            return 'integer'
-        except ValueError:
-            try:
-                # Try to parse (to float) register value
-                float(value)
-                # Add 1 if suceed:
-                return 'float'
-            except ValueError:
-                # Then, it is a string
-                return 'string'
-        except TypeError:
-            return 'null'
+
 
     @add_attr(rows)
     def filter_by_type(column_name, type=None):
