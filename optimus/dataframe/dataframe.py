@@ -7,7 +7,6 @@ from pyspark.sql import DataFrame
 
 
 @add_method(DataFrame)
-#def melt(self, id_vars, value_vars, var_name, value_name):
 def melt(self, id_vars, value_vars, var_name="variable", value_name="value"):
     """
     Convert :class:'DataFrame' from wide to long format.
