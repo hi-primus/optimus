@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame
 
 def isfunction(obj):
     """
-    check if a param is a function
+    Check if a param is a function
     :param obj: object to check for
     :return:
     """
@@ -149,7 +149,7 @@ def validate_columns_names(df, col_names, index=None):
     return True
 
 
-def parse_columns(df, cols_attrs, index=None):
+def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False):
     """
     Check that a column list is a valid list of columns.
     Return a list of columns and check that columsn exists in the adtaframe
@@ -159,6 +159,7 @@ def parse_columns(df, cols_attrs, index=None):
     :param df: Dataframe in which the columns are going to be checked
     :param cols_attrs: Accepts * as param to return all the string columns in the dataframe
     :param index: if a tuple get the column from a specific index
+    :param validate: check if columns exist
     :return: A list of columns string names
     """
 
@@ -194,33 +195,48 @@ def parse_columns(df, cols_attrs, index=None):
         cols = val_to_list(cols_attrs)
 
     # Validate that all the columns exist
-    validate_columns_names(df, cols)
+    if validate:
+        validate_columns_names(df, cols, index)
 
-    return cols, attrs
+    # Return cols or cols an params
+    if get_attrs:
+        params = cols, attrs
+    else:
+        params = cols
+
+    return params
 
 
-def check_data_type(value):
+def check_data_type(value, attr):
     """
     Return if a value is int, float or string. Also is string try to parse to int or float
     :param value: value to be checked
     :return:
     """
+
     if isinstance(value, int):  # Check if value is integer
         return 'integer'
     elif isinstance(value, float):
         return 'float'
+    elif isinstance(value, bool):
+        return 'boolean'
+    # if string we try to parse it to int, float or bool
     elif isinstance(value, str):
-        try:  # Try to parse (to int) register value
+        try:  # Try to parse to int
             int(value)
             return 'integer'
         except ValueError:
-            try:
-                # Try to parse (to float) register value
-                float(value)
-                return 'float'
-            except ValueError:
-                # Then, it is a string
-                return 'string'
+            pass
+
+        try:  # Try to parse to float
+            float(value)
+            return 'float'
+        except ValueError:
+            pass
+        value = value.lower()
+        if value == 'true' or value == 'false':
+            return 'boolean'
+
+        return 'string'
     else:
         return 'null'
-
