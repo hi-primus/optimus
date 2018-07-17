@@ -12,18 +12,38 @@ def isfunction(obj):
 
 
 def is_list_of_strings(lst):
+    """
+    Check that all elements in a list are strings
+    :param lst:
+    :return:
+    """
     return bool(lst) and isinstance(lst, list) and all(isinstance(elem, str) for elem in lst)
 
 
 def is_list_of_numeric(lst):
+    """
+    Check that all elements in a list are int or float
+    :param lst:
+    :return:
+    """
     return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (int, float)) for elem in lst)
 
 
 def is_list_of_tuples(lst):
+    """
+    Check that all elements in a list are tuples
+    :param lst:
+    :return:
+    """
     return bool(lst) and isinstance(lst, list) and all(isinstance(elem, tuple) for elem in lst)
 
 
 def is_one_element(value):
+    """
+    Check that a var is a single element
+    :param value:
+    :return:
+    """
     return isinstance(value, (str, int))
 
 
@@ -176,11 +196,5 @@ def parse_columns(df, cols_attrs, index=None):
     # Validate that all the columns exist
     validate_columns_names(df, cols)
 
-    #if attrs is None:
-    #    result = cols
-    #else:
-    #    result = cols, attrs
-
-    #return result
     return cols, attrs
 
