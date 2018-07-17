@@ -505,13 +505,23 @@ def cols(self):
 
     @add_attr(cols)
     def split(column, mark, get=None, n=None):
+        """
+        Split a columns in multiple columns
+        :param column: Column to be split
+        :param mark: Which character is going to be used to split the column
+        :param get: Get a specific split
+        :param n: Is necessary to indicate how many split do you want
+        :return:
+        """
         df = self
         split_col = F.split(df[column], mark)
 
-        # assert isinstance(get, int), "Error: get must be an integer"
+        assert isinstance(get, int), "Error: get param must be an integer"
+        assert isinstance(n, int), "Error: get param must be an integer"
+
         if get:
             df = df.withColumn('COL_' + str(get), split_col.getItem(get))
-        if n:
+        elif n:
             for p in builtins.range(n):
                 df = df.withColumn('COL_' + str(p), split_col.getItem(p))
 
@@ -569,7 +579,7 @@ def cols(self):
 
         # df.withColumn("date", exprs)
 
-        def _age(name_col_age, attr):
+        def _years_since(name_col_age, attr):
             dates_format = attr[0]
             col_name = attr[1]
 
@@ -585,7 +595,7 @@ def cols(self):
                 .alias(
                 name_col_age)
 
-        df = apply([(name_col_age, "yyyyMMdd", "date")], _age)
+        df = apply([(name_col_age, "yyyyMMdd", "date")], _years_since)
 
         return df
 
@@ -593,7 +603,6 @@ def cols(self):
     def impute(columns, out_cols, strategy):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param self:
         :param columns: List of columns to be analyze.
         :param out_cols: List of output columns with missing values imputed.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
@@ -611,8 +620,6 @@ def cols(self):
         assert isinstance(strategy, str)
 
         assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
-
-        # def _impute(cols):
 
         imputer = Imputer(inputCols=columns, outputCols=out_cols)
 
