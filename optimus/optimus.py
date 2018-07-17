@@ -1,9 +1,13 @@
+import os
+from shutil import rmtree
+from functools import reduce
+
 from optimus.spark import Spark
 
 # We use this to save a reference to the Spark session at the module level
 Spark.instance = None
 
-from optimus.dataframe.extension import Create
+from optimus.create import Create
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
@@ -11,13 +15,6 @@ from optimus.helpers.constants import *
 from optimus.profiler.profiler import Profiler
 
 from pyspark.sql import DataFrame
-
-import os
-from shutil import rmtree
-from functools import reduce
-
-# Bound columns and row operations to the DataFrame Spark Class
-from optimus.dataframe import columns, rows, save
 
 
 class Optimus:
