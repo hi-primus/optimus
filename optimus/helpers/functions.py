@@ -58,11 +58,22 @@ def print_html(html):
 
 def collect_to_dict(value):
     """
-    Return a dict from a Collector result
+    Return a dict from a Collect result
     :param value:
     :return:
     """
-    return value[0].asDict()
+    dict_result = []
+
+    # if there is only an element in the dict just return the value
+    if len(dict_result) == 1:
+        dict_result = next(iter(dict_result.values()))
+    else:
+        dict_result = [v.asDict() for v in value]
+        # if there is only an element in the list return only de dict
+        if len(dict_result) == 1:
+            dict_result = dict_result[0]
+
+    return dict_result
 
 
 def one_list_to_val(val):

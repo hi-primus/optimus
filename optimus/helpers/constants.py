@@ -11,20 +11,24 @@ TYPES = {'string': 'string',
          'double': 'double',
          'Double': 'double'}
 
-# Instead StringType() just use string
+TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
+
 DICT_TYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
 
-# FIX: We should get all the datatypes from pyspark.sql.types something like tuple(t.__all__)
+# FIX: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
 VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
 
 TYPES_LEGEND = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
+
+# Strings Messages
 
 JUST_CHECKING = "Just checking that all necessary environments vars are present..."
 STARTING = "Starting or getting SparkSession and SparkContext..."
 
 
 def print_check_point_config(filesystem):
-    print("Setting checkpoint folder (", filesystem, "). If you are in a cluster initialize optimus with master='your_ip' as param")
+    print("Setting checkpoint folder (", filesystem,
+          "). If you are in a cluster initialize optimus with master='your_ip' as param")
 
 
 SUCCESS = "Optimus successfully imported. Have fun :)."

@@ -2,27 +2,12 @@
 
 import pyspark.sql.functions as F
 from optimus.helpers.functions import *
-from optimus.helpers.constants import *
+from optimus.profiler.functions import *
 
 
 class Profiler:
     def __init__(self, df):
         self._df = df
-
-    def column(self, columns):
-        df = self._df
-
-        # columns = parse_columns(df, columns)
-
-        print(df.columns)
-
-        print(df.cols().count_zeros(columns))
-
-        print(df.cols().count_uniques(columns))
-
-        print(df.dtypes)
-
-        return
 
     def dataset_info(self):
         df = self._df
@@ -73,9 +58,9 @@ class Profiler:
         # Count columns per higher max type
         result = {}
         for key, value in col_type.items():
-            result[value] = result[value] + 1 if value in result else 0
+            result[value] = result[value] + 1 if value in result else 1
 
-        return result
+        return fill_missing_var_types(result)
 
     def count_data_types(self, columns):
         """
@@ -95,14 +80,14 @@ class Profiler:
                 .count()
 
             # Convert the collect result to a list
+            # FIX: check if collect_to_dict function can be used here
+
             results = {}
             for row in types.collect():
                 results[row[0]] = row[1]
 
-            # Fill the not present data types with 0
-            for label in TYPES_PROFILER:
-                if label not in results:
-                    results[label] = 0
+            # Fill missing data types with 0
+            results = fill_missing_var_types(results)
 
             # Subtract white spaces to the total string count
             count_empty_strings = self._df.where(F.col(col_name) == '').count()
@@ -120,3 +105,53 @@ class Profiler:
         columns = parse_columns(self._df, columns)
 
         return {c: _count_data_types(c) for c in columns}
+
+    def columns(self, columns):
+        df = self._df
+
+        columns = parse_columns(df, columns)
+        # Distinct, % , missing , %
+        column_info = {}
+        column_info['columns'] = {}
+
+        # Total
+        rows_count = df.count()
+        column_info['rows_count'] = rows_count
+
+        uniques = df.cols().count_uniques(columns)
+
+        na = df.cols().count_na(columns)
+
+        for col_name in columns:
+            col = {}
+            # Check if column is numeric or categorical
+
+            # Uniques
+            col['uniques_count'] = uniques[col_name]
+            col['p_uniques'] = uniques[col_name] / rows_count * 100
+
+            # Missing
+            col['missing_count'] = na[col_name]
+            col['p_missing'] = na[col_name] / rows_count * 100
+
+            # Buckets: values, count, %
+
+            # col['f'] = collect_to_dict(df.groupBy(col_name).count().orderBy('count', ascending=False).limit(10) \
+            #                           .withColumn('%', F.col('count') / rows_count * 100).collect())
+
+            col['frequency'] = collect_to_dict(df.select(F.col("num").alias("value")).groupBy("value").count()
+                                       .orderBy('count', ascending=False).limit(10)
+                                       .withColumn('percentage', F.col('count') / rows_count * 100).collect())
+
+            # print(col)
+            # print(column_info)
+            # print(col_name)
+
+            column_info['columns'][col_name] = col
+
+        return column_info
+        # print(df.columns)
+
+        # print(df.cols().count_zeros(columns))
+
+        # print(df.dtypes)

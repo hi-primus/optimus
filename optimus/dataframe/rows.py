@@ -117,8 +117,6 @@ def rows(self):
 
         return df
 
-
-
     @add_attr(rows)
     def filter_by_type(column_name, type=None):
         """
@@ -149,7 +147,6 @@ def rows(self):
             temp_col_name,
             func(F.col(column_name))) \
             .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the type
-
 
     ## FIX: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
     @add_attr(rows)

@@ -115,7 +115,7 @@ def cols(self):
 
         assert func_type is "columnexp" or func_type is "udf", "Error: type must be columnexp or udf"
 
-        cols, attrs = parse_columns(self, cols_attrs)
+        cols, attrs = parse_columns(self, cols_attrs, get_attrs=True)
 
         def func_factory(func_type):
 
@@ -124,11 +124,7 @@ def cols(self):
 
             def expression_func(attr, func):
                 def inner(col_name):
-                    print(col_name)
-                    print(attr)
-                    print(type(func))
                     return func(col_name, attr)
-                    ## return func(F.col(col_name))
 
                 return inner
 
@@ -637,7 +633,7 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
@@ -651,9 +647,8 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
         df = self
-        # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         return collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
                                .collect())
 
@@ -665,9 +660,9 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
         df = self
-        return [{c: df.select(c).distinct().count()} for c in columns][0]
+        return {c: df.select(c).distinct().count() for c in columns}
 
     @add_attr(cols)
     def filter_by_type(data_type):
