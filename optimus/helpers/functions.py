@@ -11,6 +11,10 @@ def isfunction(obj):
     return hasattr(obj, '__call__')
 
 
+def is_list_of_str_or_int(lst):
+    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (int, str)) for elem in lst)
+
+
 def is_list_of_strings(lst):
     """
     Check that all elements in a list are strings
@@ -199,8 +203,8 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False):
         cols = [(i[0:1][0]) for i in cols_attrs]
         attrs = [(i[1:]) for i in cols_attrs]
 
-    elif is_list_of_numeric(cols_attrs) or is_list_of_strings(cols_attrs):
-        cols = cols_attrs
+    elif is_list_of_str_or_int(cols_attrs):
+        cols = [c if isinstance(c, str) else df[c] for c in cols_attrs]
 
     elif is_one_element(cols_attrs):
         cols = val_to_list(cols_attrs)
