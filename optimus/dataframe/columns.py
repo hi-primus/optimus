@@ -327,13 +327,33 @@ def cols(self):
         :param columns:
         :return:
         """
+        columns = parse_columns(self, columns)
 
         result = list(map(lambda c: self.approxQuantile(columns, [0.5], 0)[0][0], columns))
 
         result = val_to_list(result)
-        columns = val_to_list(columns)
+        # columns = val_to_list(columns)
 
         return dict(zip(columns, result))
+
+    @add_attr(cols)
+    def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95]):
+        """
+        
+        :param columns: 
+        :param percentile:
+        :return: 
+        """
+        columns = parse_columns(self, columns)
+
+        # Get percentiles
+        percentile_results = self.approxQuantile(columns, percentile, 0)
+
+        # Merge percentile and value
+        percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
+
+        # Merge percentile, values and columns
+        return dict(zip(columns, percentile_value))
 
     # Descriptive Analytics
     @add_attr(cols)
