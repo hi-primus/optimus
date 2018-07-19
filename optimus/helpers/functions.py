@@ -1,6 +1,8 @@
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
 
+import re
+
 
 def isfunction(obj):
     """
@@ -164,12 +166,12 @@ def validate_columns_names(df, col_names, index=None):
     return True
 
 
-def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False):
+def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, regex=None):
     """
-    Check that a column list is a valid list of columns.
-    Return a list of columns and check that columsn exists in the adtaframe
-    Accept '*' as parameter in which case return a list od all columns in the dataframe
-    If a list of tuples return to list. The firts is a list of columns names the second is a list of params.
+    Return a list of columns and check that columns exists in the dadaframe
+    Accept '*' as parameter in which case return a list of all columns in the dataframe.
+    Also accept a regex.
+    If a list of tuples return to list. The first element is the columns name the others element are params.
     This params can me used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_attrs: Accepts * as param to return all the string columns in the dataframe
@@ -203,14 +205,21 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False):
         cols = [(i[0:1][0]) for i in cols_attrs]
         attrs = [(i[1:]) for i in cols_attrs]
 
+    # if cols are string or int
     elif is_list_of_str_or_int(cols_attrs):
-        cols = [c if isinstance(c, str) else df[c] for c in cols_attrs]
+        cols = [c if isinstance(c, str) else df.columns[c] for c in cols_attrs]
 
     elif is_one_element(cols_attrs):
-        cols = val_to_list(cols_attrs)
+        # Verify if a regex
+        if regex:
+            r = re.compile(cols_attrs)
+            cols = list(filter(r.match, df.columns))
+        else:
+            cols = val_to_list(cols_attrs)
 
     # Validate that all the columns exist
     if validate:
+        print(cols)
         validate_columns_names(df, cols, index)
 
     # Return cols or cols an params

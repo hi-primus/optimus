@@ -8,6 +8,7 @@ import builtins
 import re
 import unicodedata
 import string
+from functools import reduce
 
 # Library used for method overloading using decorators
 from multipledispatch import dispatch
@@ -19,12 +20,14 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
 
+import builtins
+
 
 @add_method(DataFrame)
 def cols(self):
     @add_attr(cols)
     @dispatch(str, object)
-    def create(name=None, value=None):
+    def append(name=None, value=None):
         """
 
         :param name:
@@ -42,7 +45,7 @@ def cols(self):
 
     @add_attr(cols)
     @dispatch(list)
-    def create(col_names=None):
+    def append(col_names=None):
         """
 
         :param col_names:
@@ -60,26 +63,15 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def select(columns=None, regex=None):
+    def filter(columns=None, regex=None):
         """
-        SElect columns using index or column name
+        Select columns using index or column name
         :param columns:
         :param regex:
         :return:
         """
-
-        if regex:
-            r = re.compile(regex)
-            columns = list(filter(r.match, self.columns))
-
-        def get_column(column):
-            if isinstance(column, int):
-                col_name = self.columns[column]
-            elif isinstance(column, str):
-                col_name = column
-            return col_name
-
-        return self.select(list(map(get_column, columns)))
+        columns = parse_columns(self, columns, regex=regex)
+        return self.select(columns)
 
     @add_attr(cols)
     def _apply(columns, func):
@@ -690,5 +682,42 @@ def cols(self):
         :return:
         """
         return self.distinct()
+
+    # Operations between columns
+    @add_attr(cols)
+    def add(columns):
+        """
+        Add two or more columns
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        assert len(columns) >= 2, "Error 2 or more columns needed"
+        return self.select(reduce((lambda x, y: self[x] + self[y]), columns))
+
+    @add_attr(cols)
+    def sub(columns):
+        """
+        Subs two or more columns
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        return self.select(reduce((lambda x, y: self[x] - self[y]), columns))
+
+    @add_attr(cols)
+    def mul(columns):
+        """
+
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        return self.select(reduce((lambda x, y: self[x] * self[y]), columns))
+
+    @add_attr(cols)
+    def div(columns):
+        columns = parse_columns(self, columns)
+        return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
 
     return cols
