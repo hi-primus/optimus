@@ -80,7 +80,7 @@ def cols(self):
         :param func:
         :return:
         """
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
         df = self
         for col_name in columns:
             df = df.withColumn(col_name, func(df[col_name]))
@@ -199,8 +199,8 @@ def cols(self):
         :return:
         """
         # Check that column is a string or a list
-        column = parse_columns(self, column)[0]
-        ref_col = parse_columns(self, ref_col)[0]
+        column = parse_columns(self, column)
+        ref_col = parse_columns(self, ref_col)
 
         # Asserting if position is 'after' or 'before'
         assert (position == 'after') or (
@@ -243,7 +243,7 @@ def cols(self):
             columns = list(filter(r.match, self.columns))
 
         columns = parse_columns(self, columns)
-        return self.select(*columns[0])
+        return self.select(*columns)
 
     @add_attr(cols)
     def sort(reverse=False):
@@ -258,7 +258,7 @@ def cols(self):
             r = re.compile(regex)
             columns = list(filter(r.match, self.columns))
 
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         for column in columns:
             df = df.drop(column)
@@ -274,7 +274,7 @@ def cols(self):
         :param columns: list of columns names or a string (a column name).
         :return:
         """
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         # Aggregate
         result = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
@@ -310,7 +310,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         range = []
         for c in columns:
@@ -398,7 +398,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
         mode_result = []
 
         for c in columns:
@@ -459,7 +459,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         def _remove_accents(col_name, attr):
             cell_str = col_name
@@ -480,7 +480,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         def _remove_special_chars(col_name, attr):
             # Remove all punctuation and control characters
@@ -504,12 +504,11 @@ def cols(self):
         df = self
         split_col = F.split(df[column], mark)
 
-        assert isinstance(get, int), "Error: get param must be an integer"
-        assert isinstance(n, int), "Error: get param must be an integer"
-
         if get:
+            assert isinstance(get, int), "Error: get param must be an integer"
             df = df.withColumn('COL_' + str(get), split_col.getItem(get))
         elif n:
+            assert isinstance(n, int), "Error: n param must be an integer"
             for p in builtins.range(n):
                 df = df.withColumn('COL_' + str(p), split_col.getItem(p))
 
@@ -598,7 +597,7 @@ def cols(self):
         """
 
         # Check if columns to be process are in dataframe
-        columns = parse_columns(self, columns)[0]
+        columns = parse_columns(self, columns)
 
         assert isinstance(columns, list), "Error: columns argument must be a list"
 
@@ -671,7 +670,7 @@ def cols(self):
         assert (data_type in TYPES), \
             "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
 
-        columns = list(y[0] for y in filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
+        columns = list(y[0] for y in builtins.filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
 
         return self.select(*columns)
 
