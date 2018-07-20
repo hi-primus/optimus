@@ -156,6 +156,9 @@ def format_dict(val):
 
     # We apply 2 pass to the dict to procees internals dicts and the whole dict
 
+    if isinstance(val, dict) and len(val) == 1:
+        val= next(iter(val.values()))
+
     return repeat(_format_dict, 2, val)
 
 

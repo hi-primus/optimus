@@ -15,7 +15,7 @@ TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
 
 DICT_TYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
 
-# FIX: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
+# TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
 VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
 
 TYPES_LEGEND = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}

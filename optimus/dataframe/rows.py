@@ -8,7 +8,9 @@ from optimus.helpers.functions import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 import optimus.create as op
+
 import builtins
+
 
 
 @add_method(DataFrame)
@@ -148,7 +150,7 @@ def rows(self):
             func(F.col(column_name))) \
             .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the type
 
-    ## FIX: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
+    ## TODO: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
     @add_attr(rows)
     def lookup(columns, lookup_key=None, replace_by=None):
         """

@@ -2,7 +2,7 @@
 # Decorator to attach a custom functions to a class
 
 from functools import wraps
-
+import builtins
 
 def add_method(class_):
     """
