@@ -25,4 +25,4 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value"):
 @add_method(DataFrame)
 def hist(self, columns, bins=10):
     columns = parse_columns(self, columns)
-    return {c: self.select(c).rdd.flatMap(lambda x: x).histogram(bins) for c in columns}
+    return format_dict({c: self.select(c).rdd.flatMap(lambda x: x).histogram(bins) for c in columns})
