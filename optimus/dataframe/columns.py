@@ -674,8 +674,8 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        return collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
-                               .collect())
+        return format_dict(collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
+                               .collect()))
 
     @add_attr(cols)
     def count_uniques(columns):
