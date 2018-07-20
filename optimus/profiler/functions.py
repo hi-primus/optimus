@@ -2,8 +2,12 @@ from optimus.helpers.constants import *
 import json
 
 
-# Fill missing data types with 0
 def fill_missing_var_types(var_types):
+    """
+    Fill missing data types with 0
+    :param var_types:
+    :return:
+    """
     for label in TYPES_PROFILER:
         if label not in var_types:
             var_types[label] = 0
@@ -25,7 +29,7 @@ def sample_size(self, df):
         fraction = 0.1
     return fraction
 
-
+# TODO: Maybe use pprint instead of this
 def print_json(value):
     """
     Print beauty jsons

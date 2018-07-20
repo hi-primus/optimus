@@ -1,5 +1,7 @@
 # Reference http://nbviewer.jupyter.org/github/julioasotodv/spark-df-profiling/blob/master/examples/Demo.ipynb
 
+import io, json
+
 import pyspark.sql.functions as F
 from optimus.helpers.functions import *
 from optimus.profiler.functions import *
@@ -122,11 +124,23 @@ class Profiler:
 
         return fill_missing_var_types(result)
 
+    def write(self):
+        """
+        Write a json file with the profiler result
+        :return:
+        """
+
+        path = 'c://optimus//profile.json'
+        profiler_result = self.columns('id')
+
+        with io.open(path, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(profiler_result, sort_keys=True, indent=4, ensure_ascii=False))
+
     def columns(self, columns):
         """
         Get statistical information about a column
-        :param columns:
-        :return:
+        :param columns: Columns that you w
+        :return: json object
         """
         df = self._df
         columns = parse_columns(df, columns)
@@ -161,7 +175,7 @@ class Profiler:
 
             # Categorical column
             if column_type == "string":
-                col['frequency'] = collect_to_dict(df.select(F.col("num").alias("value")).groupBy("value").count()
+                col['frequency'] = collect_to_dict(df.select(F.col(col_name).alias("value")).groupBy("value").count()
                                                    .orderBy('count', ascending=False).limit(10)
                                                    .withColumn('percentage',
                                                                F.col('count') / rows_count * 100).collect())
@@ -191,6 +205,8 @@ class Profiler:
                 # Zeros
                 col['zeros'] = df.cols().count_zeros(col_name)
                 col['p_zeros'] = col['zeros'] / rows_count
+
+                col['hist'] = df.hist(col_name)
 
             elif column_type == "boolean":
                 print(column_type)
