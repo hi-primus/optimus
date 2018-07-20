@@ -112,7 +112,10 @@ def val_to_list(val):
 
 def filter_list(val, index=0):
     """
-    Convert a list to None, int,str or a list filtering a specific index
+    Convert a list to None, int, str or a list filtering a specific index
+    [] to None
+    ['test'] to test
+
     :param val:
     :param index:
     :return:
@@ -121,6 +124,39 @@ def filter_list(val, index=0):
         return None
     else:
         return one_list_to_val([column[index] for column in val])
+
+
+def repeat(f, n, x):
+    if n == 1:  # note 1, not 0
+        return f(x)
+    else:
+        return f(repeat(f, n - 1, x))  # call f with returned value
+
+
+# TODO: Maybe this can be done in a recursive way
+def format_dict(val):
+    """
+    This function clean a dict if it has only a
+    :param val:
+    :return:
+    """
+
+    def _format_dict(val):
+        if not isinstance(val, dict):
+            return val
+
+        for k, v in val.items():
+            if isinstance(v, dict):
+                if len(v) == 1:
+                    val[k] = next(iter(v.values()))
+            else:
+                if len(val) == 1:
+                    val = v
+        return val
+
+    # We apply 2 pass to the dict to procees internals dicts and the whole dict
+
+    return repeat(_format_dict, 2, val)
 
 
 def validate_columns_names(df, col_names, index=None):
@@ -177,6 +213,9 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
     :param cols_attrs: Accepts * as param to return all the string columns in the dataframe
     :param index: if a tuple get the column from a specific index
     :param validate: check if columns exist
+    :param get_attrs:
+    :param regex: True is col_attrs is a regex
+    :param
     :return: A list of columns string names
     """
 
@@ -192,8 +231,8 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
     if cols_attrs == "*":
         cols = list(map(lambda t: t[0], df.dtypes))
 
-    # In case we have tuples we use the first element as the column names and the rest as param  whatever
-    # custom function we need.
+    # In case we have a list of tuples we use the first element of the tuple is taken as the column name
+    # and the rest as params. We can use the param in a custom function as follow
     # def func(attrs): attrs return (1,2) and (3,4)
     #   return attrs[0] + 1
     # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
@@ -219,7 +258,6 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
 
     # Validate that all the columns exist
     if validate:
-        print(cols)
         validate_columns_names(df, cols, index)
 
     # Return cols or cols an params
