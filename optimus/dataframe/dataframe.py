@@ -1,9 +1,10 @@
 from pyspark.sql import DataFrame
 
-from optimus.helpers.decorators import *
-
 from pyspark.sql.functions import array, col, explode, lit, struct
 from pyspark.sql import DataFrame
+
+from optimus.helpers.decorators import *
+from optimus.helpers.functions import *
 
 
 @add_method(DataFrame)
@@ -19,3 +20,9 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value"):
     cols = id_vars + [col("_vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
 
     return tmp.select(*cols)
+
+
+@add_method(DataFrame)
+def hist(self, columns, bins=10):
+    columns = parse_columns(self, columns)
+    return {c: self.select(c).rdd.flatMap(lambda x: x).histogram(bins) for c in columns}
