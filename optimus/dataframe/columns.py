@@ -281,8 +281,8 @@ def cols(self):
 
         column_result = dict(zip(columns, result))
 
-        # if the list has one elment return just a single element
-        return column_result
+        # if the list has one element return just a single element
+        return format_dict(column_result)
 
     @add_attr(cols)
     def min(columns):
@@ -312,11 +312,11 @@ def cols(self):
 
         columns = parse_columns(self, columns)
 
-        range = []
+        range = {}
         for c in columns:
-            max_val = max(c)[c]
-            min_val = min(c)[c]
-            range.append({c: {'min': min_val, 'max': max_val}})
+            max_val = max(c)
+            min_val = min(c)
+            range[c] = {'min': min_val, 'max': max_val}
 
         return range
 
@@ -329,12 +329,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        result = list(map(lambda c: self.approxQuantile(columns, [0.5], 0)[0][0], columns))
-
-        result = val_to_list(result)
-        # columns = val_to_list(columns)
-
-        return dict(zip(columns, result))
+        return percentile(columns, [0.5])
 
     @add_attr(cols)
     def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95]):
@@ -349,15 +344,34 @@ def cols(self):
         # Get percentiles
         percentile_results = self.approxQuantile(columns, percentile, 0)
 
+        # TODO: Check if we can use the _agg function
         # Merge percentile and value
         percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
 
         # Merge percentile, values and columns
-        return dict(zip(columns, percentile_value))
+        return format_dict(dict(zip(columns, percentile_value)))
 
     # Descriptive Analytics
+
     @add_attr(cols)
-    def stddev(columns):
+    def mad(columns):
+        """
+        Return the Mean Absolute Deviation
+        :param columns:
+        :return:
+        """
+
+        median_value = self.cols().median(columns)
+
+        df = self.select(columns) \
+            .orderBy(columns) \
+            .withColumn(columns, F.abs(F.col(columns) - median_value)) \
+            .cache()
+
+        return df.cols().median(columns)
+
+    @add_attr(cols)
+    def std(columns):
         """
         Return the standard deviation of a column dataframe
         :param columns:
@@ -399,7 +413,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("skewness", columns)
+        return _agg("sum", columns)
 
     @add_attr(cols)
     def variance(columns):
