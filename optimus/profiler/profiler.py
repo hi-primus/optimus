@@ -88,21 +88,6 @@ class Profiler:
 
         return {c: _count_data_types(c) for c in columns}
 
-    def sample_size(self, df):
-        """
-        Get a size sample depending on the dataframe size
-        :param df:
-        :return:
-        """
-        count = df.count()
-        if count < 100:
-            fraction = 0.99
-        elif count < 1000:
-            fraction = 0.5
-        else:
-            fraction = 0.1
-        return fraction
-
     def columns_by_data_types(self, columns):
         """
         Infer the column data type. Because the data in the column can be mixed(int ,float. string)
@@ -158,7 +143,7 @@ class Profiler:
         for col_name in columns:
             col = {}
 
-            # Check if column is numeric or categorical
+            # Get if a column is numerical or categorical
             column_type = count_dtype[col_name]['type']
 
             # Get uniques
@@ -190,7 +175,8 @@ class Profiler:
                 col['max'] = max_value
                 col['quantile'] = df.cols().percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col['range'] = max_value - min_value
-                # q3 - q1
+                col['median'] = col['quantile'][0.5]
+                col['interquartile_range'] = col['quantile'][0.75] - col['quantile'][0.25]
 
                 # Descriptive statistic
                 col['stdev'] = df.cols().std(col_name)
@@ -202,7 +188,9 @@ class Profiler:
                 col['sum'] = df.cols().sum(col_name)
                 col['variance'] = df.cols().variance(col_name)
 
-                pass
+                # Zeros
+                col['zeros'] = df.cols().count_zeros(col_name)
+                col['p_zeros'] = col['zeros'] / rows_count
 
             elif column_type == "boolean":
                 print(column_type)
@@ -212,8 +200,3 @@ class Profiler:
             column_info['columns'][col_name] = col
 
         return column_info
-        # print(df.columns)
-
-        # print(df.cols().count_zeros(columns))
-
-        # print(df.dtypes)
