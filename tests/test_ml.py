@@ -1,11 +1,14 @@
-import optimus as op
 from pyspark.sql import Row, types
 from pyspark.ml import feature, classification
 from nose.tools import assert_equal
 import pyspark
 
-tools = op.Utilities()
-df_cancer = tools.read_csv("tests/data_cancer.csv", header="true", sep=",")
+from optimus import Optimus
+
+op = Optimus()
+spark = op.get_ss()
+
+df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
