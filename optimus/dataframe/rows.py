@@ -126,47 +126,4 @@ def rows(self):
             func(F.col(column_name))) \
             .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the type
 
-    ## TODO: check this where isin df = dfRawData.where(col("X").isin({"CB", "CI", "CR"}))
-    @add_attr(rows)
-    def lookup(columns, lookup_key=None, replace_by=None):
-        """
-        This method search a list of strings specified in `list_str` argument among rows
-                in column dataFrame and replace them for `str_to_replace`.
-        :param columns: Column name, this variable must be string dataType.
-        :param lookup_key: List of strings to be replaced
-        :param replace_by: string that going to replace all others present in list_str argument
-        :return:
-        """
-
-        # Asserting columns is string or list:
-        assert isinstance(replace_by, (str, dict)), "Error: str_to_replace argument must be a string or a dict"
-
-        # Asserting columns is string or list:
-        assert isinstance(lookup_key, list) and lookup_key != [] or (
-                lookup_key is None), "Error: Column argument must be a non empty list"
-
-        # Filters all string columns in dataFrame
-        valid_cols = [c for (c, t) in builtins.filter(lambda t: t[1] == 'string', self.dtypes)]
-
-        if isinstance(columns, str):
-            columns = [columns]
-
-        # Asserting if selected column datatype, lookup_key and replace_by parameters are the same:
-        col_not_valids = (set(columns).difference(set([column for column in valid_cols])))
-        assert (col_not_valids == set()), 'Error: The column provided is not a column string: %s' % col_not_valids
-
-        def check(cell):
-            if cell is not None and (cell in lookup_key):
-                return replace_by
-            else:
-                return cell
-
-        func = F.udf(lambda cell: check(cell), StringType())
-        # func = pandas_udf(lambda cell: check(cell), returnType=StringType())
-
-        # Calling udf for each row of column provided by user. The rest of dataFrame is maintained the same.
-        exprs = [func(F.col(c)).alias(c) if c == columns[0] else c for c in self.columns]
-
-        return self.select(*exprs)
-
     return rows
