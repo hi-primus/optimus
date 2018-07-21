@@ -1,6 +1,6 @@
 from optimus.helpers.constants import *
-import json
 
+import json
 
 def fill_missing_var_types(var_types):
     """
@@ -14,7 +14,7 @@ def fill_missing_var_types(var_types):
     return var_types
 
 
-def sample_size(self, df):
+def sample_size(df):
     """
     Get a size sample depending on the dataframe size
     :param df:
@@ -29,6 +29,7 @@ def sample_size(self, df):
         fraction = 0.1
     return fraction
 
+
 # TODO: Maybe use pprint instead of this
 def print_json(value):
     """
@@ -36,3 +37,15 @@ def print_json(value):
     :return:
     """
     print(json.dumps(value, indent=2))
+
+
+def write_json(data, path):
+    """
+    Write a json file with the profiler result
+    :param data:
+    :param path:
+    :return:
+    """
+    print(type(data))
+    with open(path, 'w') as outfile:
+        json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
