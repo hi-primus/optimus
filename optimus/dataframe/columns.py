@@ -66,24 +66,26 @@ def cols(self):
         :param regex:
         :return:
         """
-        columns = parse_columns(self, columns, regex=regex)
+        columns = parse_columns(self, columns, is_regex=regex)
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func):
+    def apply_exp(columns, func, column_data_type=None):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
+        :param column_data_type:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_type=column_data_type)
+
         df = self
         for col_name in columns:
             df = df.withColumn(col_name, func(df[col_name]))
         return df
 
     @add_attr(cols)
-    def apply(cols_attrs, func):
+    def apply(cols_attrs, func, func_type=None):
         """
         Apply a column expression function or udf function to a column
         :param cols_attrs: Columns in which the function are going to be applied
@@ -97,22 +99,31 @@ def cols(self):
         This params can me used to create custom transformation functions. You can find and example in cols().cast()
 
         :param func: Functions to be applied to a columns
-        :param func_type: columnexp or udf
+        :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
         :return:
         """
 
         cols, attrs = parse_columns(self, cols_attrs, get_attrs=True)
 
-        def pandas_udf_func(attr, func):
-            return F.pandas_udf(lambda value: func(value, attr))
+        def func_factory(func_type):
 
-        def udf_func(attr, func):
-            return F.udf(lambda value: func(value, attr))
+            def pandas_udf_func(attr, func):
+                return F.pandas_udf(lambda value: func(value, attr))
 
-        if is_pyarrow_installed():
-            df_func = pandas_udf_func
-        else:
-            df_func = udf_func
+            def udf_func(attr, func):
+                return F.udf(lambda value: func(value, attr))
+
+                return inner
+
+            if func_type is "udf":
+                return udf_func
+            else:
+                return pandas_udf_func
+
+        if func_type is None and is_pyarrow_installed():
+            func_type = "pandas_udf"
+
+        df_func = func_factory(func_type)
 
         df = self
 
@@ -169,7 +180,7 @@ def cols(self):
         def _cast(col_name, attr):
             return F.col(col_name).cast(DICT_TYPES[TYPES[attr[0]]])
 
-        df = apply(cols_and_types, _cast)
+        df = apply_exp(cols_and_types, _cast)
 
         return df
 
@@ -235,12 +246,22 @@ def cols(self):
 
     @add_attr(cols)
     def sort(reverse=False):
+        """
+
+        :param reverse:
+        :return:
+        """
         columns = sorted(self.columns, reverse=reverse)
         return self.select(columns)
-        pass
 
     @add_attr(cols)
     def drop(columns=None, regex=None):
+        """
+        Drop a list columns
+        :param columns:
+        :param regex:
+        :return:
+        """
         df = self
         if regex:
             r = re.compile(regex)
@@ -252,7 +273,6 @@ def cols(self):
             df = df.drop(column)
         return df
 
-    @add_attr(cols)
     # Quantile statistics
     @add_attr(cols)
     def _agg(agg, columns):
@@ -444,7 +464,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.lower)
+        return apply_exp(columns, F.lower, "str")
 
     @add_attr(cols)
     def upper(columns):
@@ -453,7 +473,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.upper)
+        return apply_exp(columns, F.upper, "str")
 
     @add_attr(cols)
     def trim(columns):
@@ -462,7 +482,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.trim)
+        return apply_exp(columns, F.trim, "str")
 
     @add_attr(cols)
     def reverse(columns):
@@ -471,7 +491,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.reverse)
+        return apply_exp(columns, F.reverse, "str")
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -491,7 +511,7 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(columns, _remove_accents)
+        df = apply(columns, _remove_accents, "str")
         return df
 
     @add_attr(cols)
@@ -510,7 +530,7 @@ def cols(self):
                 col_name = col_name.replace(punct, "")
             return col_name
 
-        df = apply(columns, _remove_special_chars)
+        df = apply(columns, _remove_special_chars, "str")
         return df
 
     @add_attr(cols)
@@ -564,7 +584,7 @@ def cols(self):
         return df.select(*exprs)
 
     @add_attr(cols)
-    def years_since(name_col_age, dates_format, column):
+    def years_between(name_col_age, dates_format, column):
         """
         This method compute the age based on a born date.
         :param  column: Name of the column born dates column.
@@ -578,15 +598,10 @@ def cols(self):
         assert isinstance(name_col_age, str)
 
         # Asserting if column if in dataFrame:
-        # validate_columns_names(self, cols_and_types, 2)
         validate_columns_names(self, column)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
-
-        df = self
-
-        # df.withColumn("date", exprs)
 
         def _years_since(name_col_age, attr):
             dates_format = attr[0]
@@ -604,9 +619,7 @@ def cols(self):
                 .alias(
                 name_col_age)
 
-        df = apply([(name_col_age, "yyyyMMdd", "date")], _years_since)
-
-        return df
+        return apply([(name_col_age, "yyyyMMdd", "date")], _years_since)
 
     @add_attr(cols)
     def impute(columns, out_cols, strategy):
@@ -619,6 +632,7 @@ def cols(self):
         """
 
         # Check if columns to be process are in dataframe
+        # TODO: this should filter only numeric values
         columns = parse_columns(self, columns)
 
         assert isinstance(columns, list), "Error: columns argument must be a list"
@@ -680,20 +694,13 @@ def cols(self):
     @add_attr(cols)
     def filter_by_type(data_type):
         """
-        This function returns column names of dataFrame which have the same
+        This function returns column of dataFrame which have the same
         datatype provided. It analyses column datatype by dataFrame.dtypes method.
 
-        :return    List of column names of a type specified.
-
-        :param df:
         :param data_type:
         :return:
         """
-        assert (data_type in TYPES), \
-            "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
-
-        columns = list(y[0] for y in builtins.filter(lambda x: x[1] == TYPES[data_type], self.dtypes))
-
+        columns = filter_col_name_by_type(self, data_type)
         return self.select(*columns)
 
     @add_attr(cols)
@@ -738,7 +745,51 @@ def cols(self):
 
     @add_attr(cols)
     def div(columns):
+        """
+
+        :param columns:
+        :return:
+        """
         columns = parse_columns(self, columns)
         return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
+
+    @add_attr(cols)
+    def lookup(column, search_by, replace_by, exact_match=None):
+        """
+
+        :param column:
+        :param search_by:
+        :param replace_by:
+        :return:
+        """
+        assert is_str_or_int(column), "Error: column must be only one element"
+
+        assert is_str_or_int(search_by) or is_list_of_str_or_num(
+            search_by), "Error: search_by must be int,str or a list"
+
+        assert is_str_or_int(replace_by), "Error: search_by must be int,str or a list"
+
+        column = parse_columns(self, column)
+
+        df = self
+        if exact_match:
+            if is_str(search_by) or is_list_of_strings(search_by):
+                df = df.withColumn(search_by, F.when(df[column].isin(replace_by), column).otherwise(column))
+
+            elif is_numeric(search_by) or is_list_of_numeric(search_by):
+
+                # Create condition string
+                condition = [("df['" + column + "'] ==" + str(n)) for n in search_by]
+                condition = '|'.join(map(str, condition))
+
+                expr = "F.when(" + condition + "," + replace_by + ")" + ".otherwise(" + df[column] + ")"
+                expr = eval(expr)
+
+                df = df.withColumn(search_by, expr)
+        elif is_one_element(search_by) and is_one_element(replace_by):
+            if is_str(search_by):
+                df = df.withColumn(column, F.regexp_replace(column, search_by, replace_by))
+
+        return df
 
     return cols
