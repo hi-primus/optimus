@@ -16,7 +16,7 @@ from optimus.profiler.profiler import Profiler
 
 from pyspark.sql import DataFrame
 
-from optimus.dataframe import rows, columns, dataframe
+from optimus.dataframe import rows, columns, extension
 
 
 class Optimus:
@@ -42,9 +42,6 @@ class Optimus:
 
         self.spark = self.get_ss()
         self.read = self.spark.read
-
-    def profiler(self, df):
-        return Profiler(df)
 
     @staticmethod
     def get_ss():
