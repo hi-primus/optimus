@@ -12,7 +12,6 @@ import optimus.create as op
 import builtins
 
 
-
 @add_method(DataFrame)
 def rows(self):
     @add_attr(rows)
@@ -55,29 +54,6 @@ def rows(self):
 
         columns = self._parse_columns(columns)
         return self.replace(search, change_to, subset=columns)
-
-    @add_attr(rows)
-    def apply(column, func):
-        """
-        This functions makes the operation in column elements that are recognized as the same type that the data_type
-        argument provided in the input function.
-
-        Columns provided in list of tuples cannot be repeated
-        :param parameters   List of columns in the following form: [(columnName, data_type, func),
-                                                                    (columnName1, dataType1, func1)]
-        :return None
-        """
-
-        validate_columns_names(self, column)
-        assert isfunction(func), "Error func must be a function"
-
-        df = self
-
-        func_udf = F.udf(func)
-
-        df = df.withColumn(column, func_udf(F.col(column).alias(column)))
-
-        return df
 
     @add_attr(rows)
     def apply_by_type(parameters):

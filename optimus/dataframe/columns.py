@@ -1,11 +1,7 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.dataframe import *
 
 from pyspark.sql import functions as F
-# from pyspark.sql.functions import *
 from pyspark.sql.functions import Column
-import builtins
-import re
 import unicodedata
 import string
 from functools import reduce
@@ -74,7 +70,7 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def _apply(columns, func):
+    def apply_exp(columns, func):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
@@ -87,7 +83,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply(cols_attrs, func, func_type="columnexp"):
+    def apply(cols_attrs, func):
         """
         Apply a column expression function or udf function to a column
         :param cols_attrs: Columns in which the function are going to be applied
@@ -105,27 +101,19 @@ def cols(self):
         :return:
         """
 
-        assert func_type is "columnexp" or func_type is "udf", "Error: type must be columnexp or udf"
-
         cols, attrs = parse_columns(self, cols_attrs, get_attrs=True)
 
-        def func_factory(func_type):
+        def pandas_udf_func(attr, func):
+            return F.pandas_udf(lambda value: func(value, attr))
 
-            def udf_func(attr, func):
-                return F.udf(lambda value: func(value, attr))
+        def udf_func(attr, func):
+            return F.udf(lambda value: func(value, attr))
 
-            def expression_func(attr, func):
-                def inner(col_name):
-                    return func(col_name, attr)
+        if is_pyarrow_installed():
+            df_func = pandas_udf_func
+        else:
+            df_func = udf_func
 
-                return inner
-
-            if func_type is "udf":
-                return udf_func
-            else:
-                return expression_func
-
-        df_func = func_factory(func_type)
         df = self
 
         if attrs is None:
@@ -334,7 +322,7 @@ def cols(self):
     @add_attr(cols)
     def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95]):
         """
-        
+        Return the percentile of a dataframe
         :param columns: 
         :param percentile:
         :return: 
@@ -456,7 +444,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _apply(columns, F.lower)
+        return apply_exp(columns, F.lower)
 
     @add_attr(cols)
     def upper(columns):
@@ -465,7 +453,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _apply(columns, F.upper)
+        return apply_exp(columns, F.upper)
 
     @add_attr(cols)
     def trim(columns):
@@ -474,7 +462,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _apply(columns, F.trim)
+        return apply_exp(columns, F.trim)
 
     @add_attr(cols)
     def reverse(columns):
@@ -483,7 +471,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _apply(columns, F.reverse)
+        return apply_exp(columns, F.reverse)
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -503,7 +491,7 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(columns, _remove_accents, "udf")
+        df = apply(columns, _remove_accents)
         return df
 
     @add_attr(cols)
@@ -522,7 +510,7 @@ def cols(self):
                 col_name = col_name.replace(punct, "")
             return col_name
 
-        df = apply(columns, _remove_special_chars, "udf")
+        df = apply(columns, _remove_special_chars)
         return df
 
     @add_attr(cols)
@@ -675,7 +663,7 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
         return format_dict(collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
-                               .collect()))
+                                           .collect()))
 
     @add_attr(cols)
     def count_uniques(columns):
