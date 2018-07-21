@@ -1,13 +1,14 @@
-from optimus.spark import get_spark
-import optimus as op
-from quinn.extensions import *
+from optimus import Optimus
 from pyspark.sql.types import *
+
+op = Optimus()
+spark = op.get_ss()
 
 
 class TestDataFrameTransformer(object):
 
     def test_lower_case(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("BOB", 1),
                 ("JoSe", 2)
@@ -21,7 +22,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.lower_case("*").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("bob", 1),
                 ("jose", 2)
@@ -32,10 +33,10 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
 
     def test_upper_case(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("BOB", 1),
                 ("JoSe", 2)
@@ -49,7 +50,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.upper_case("name").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("BOB", 1),
                 ("JOSE", 2)
@@ -60,10 +61,10 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
 
     def test_trim_col(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("  ron", 1),
                 ("      bill     ", 2)
@@ -77,7 +78,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.trim_col("name").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("ron", 1),
                 ("bill", 2)
@@ -88,10 +89,10 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
 
     def test_drop_col(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("happy", 1, 8),
                 ("excited", 2, 8)
@@ -106,7 +107,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.drop_col("num1").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("happy", 8),
                 ("excited", 8)
@@ -116,10 +117,10 @@ class TestDataFrameTransformer(object):
                 ("num2", IntegerType(), True)
             ]
         )
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
 
     def test_replace_col(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("happy", 1),
                 ("excited and happy", 2)
@@ -133,7 +134,7 @@ class TestDataFrameTransformer(object):
         transformer = op.DataFrameTransformer(source_df)
         actual_df = transformer.replace_col("happy", "elated", "emotion").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("elated", 1),
                 ("excited and happy", 2)
@@ -143,10 +144,10 @@ class TestDataFrameTransformer(object):
                 ("num1", IntegerType(), True)
             ]
         )
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
 
     def test_set_col(self):
-        source_df = get_spark().create_df(
+        source_df = spark.create_df(
             [
                 ("cafe", 1),
                 ("discoteca", 2)
@@ -161,7 +162,7 @@ class TestDataFrameTransformer(object):
         func = lambda num: num * 2
         actual_df = transformer.set_col("num1", func, "integer").df
 
-        expected_df = get_spark().create_df(
+        expected_df = spark.create_df(
             [
                 ("cafe", 2),
                 ("discoteca", 4)
@@ -172,4 +173,4 @@ class TestDataFrameTransformer(object):
             ]
         )
 
-        assert(expected_df.collect() == actual_df.collect())
+        assert (expected_df.collect() == actual_df.collect())
