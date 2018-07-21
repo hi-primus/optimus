@@ -1,6 +1,7 @@
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
 
+from optimus.helpers import constants as op_c
 import re
 
 
@@ -15,6 +16,10 @@ def isfunction(obj):
 
 def is_list_of_str_or_int(lst):
     return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (int, str)) for elem in lst)
+
+
+def is_list_of_str_or_num(lst):
+    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (str, int, float)) for elem in lst)
 
 
 def is_list_of_strings(lst):
@@ -50,7 +55,34 @@ def is_one_element(value):
     :param value:
     :return:
     """
+    return isinstance(value, (str, int, float))
+
+
+def is_str_or_int(value):
+    """
+    Check that a var is a single element
+    :param value:
+    :return:
+    """
     return isinstance(value, (str, int))
+
+
+def is_numeric(value):
+    """
+    Check that a var is a single element
+    :param value:
+    :return:
+    """
+    return isinstance(value, (int, float))
+
+
+def is_str(value):
+    """
+    Check that a var is a single element
+    :param value:
+    :return:
+    """
+    return isinstance(value, str)
 
 
 def print_html(html):
@@ -205,7 +237,7 @@ def validate_columns_names(df, col_names, index=None):
     return True
 
 
-def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, regex=None):
+def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type=None):
     """
     Return a list of columns and check that columns exists in the dadaframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
@@ -214,11 +246,9 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
     This params can me used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_attrs: Accepts * as param to return all the string columns in the dataframe
-    :param index: if a tuple get the column from a specific index
-    :param validate: check if columns exist
+    :param filter_by_type:
     :param get_attrs:
-    :param regex: True is col_attrs is a regex
-    :param
+    :param is_regex: Use True is col_attrs is a regex
     :return: A list of columns string names
     """
 
@@ -251,17 +281,17 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
     elif is_list_of_str_or_int(cols_attrs):
         cols = [c if isinstance(c, str) else df.columns[c] for c in cols_attrs]
 
-    elif is_one_element(cols_attrs):
+    elif is_str_or_int(cols_attrs):
         # Verify if a regex
-        if regex:
+        if is_regex:
             r = re.compile(cols_attrs)
             cols = list(filter(r.match, df.columns))
         else:
             cols = val_to_list(cols_attrs)
 
-    # Validate that all the columns exist
-    if validate:
-        validate_columns_names(df, cols, index)
+    # Filter columns by data type
+    if filter_by_type is not None:
+        cols = set(cols).intersection(filter_col_name_by_type(df, filter_by_type))
 
     # Return cols or cols an params
     if get_attrs:
@@ -274,7 +304,7 @@ def parse_columns(df, cols_attrs, index=None, validate=True, get_attrs=False, re
 
 def check_data_type(value, attr):
     """
-    Return if a value is int, float or string. Also is string try to parse to int or float
+    Return if a value is int, float or string. Also is string try to check if it's int or float
     :param value: value to be checked
     :return:
     """
@@ -307,6 +337,13 @@ def check_data_type(value, attr):
         return 'null'
 
 
+def filter_col_name_by_type(df, data_type):
+    assert (data_type in op_c.TYPES), \
+        "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
+
+    return [y[0] for y in filter(lambda x: x[1] == op_c.TYPES[data_type], df.dtypes)]
+
+
 def is_pyarrow_installed():
     """
     Check if pyarrow is installed
@@ -318,5 +355,3 @@ def is_pyarrow_installed():
     except ImportError:
         have_arrow = False
     return have_arrow
-
-
