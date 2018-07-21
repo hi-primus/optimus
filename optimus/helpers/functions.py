@@ -157,7 +157,7 @@ def format_dict(val):
     # We apply 2 pass to the dict to procees internals dicts and the whole dict
 
     if isinstance(val, dict) and len(val) == 1:
-        val= next(iter(val.values()))
+        val = next(iter(val.values()))
 
     return repeat(_format_dict, 2, val)
 
@@ -305,3 +305,16 @@ def check_data_type(value, attr):
         return 'string'
     else:
         return 'null'
+
+
+def is_pyarrow_installed():
+    """
+    Check if pyarrow is installed
+    :return:
+    """
+    try:
+        import pyarrow
+        have_arrow = True
+    except ImportError:
+        have_arrow = False
+    return have_arrow
