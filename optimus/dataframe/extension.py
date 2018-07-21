@@ -85,6 +85,7 @@ def size(self):
     :param self:
     :return:
     """
+
     def _to_java_object_rdd(rdd):
         """ Return a JavaRDD of Object by unpickling
         It will convert each Python object into Java object by Pyrolite, whenever the
@@ -100,7 +101,7 @@ def size(self):
 
 
 @add_attr(DataFrame)
-def execute(self):
+def run(self):
     """
     This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
     evaluation approach in processing data: transformation functions are not computed into an action is called.
@@ -116,12 +117,20 @@ def execute(self):
 
     # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
     # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
-    print("Saving changes at disk by checkpoint...")
-    df = self
 
-    df.checkpoint()
-    df.count()
-    # self = self._sql_context.createDataFrame(self, self.schema)
+    print("Saving changes at disk by checkpoint...")
+
+    self.cache().count
+
     print("Done.")
 
     return None
+
+
+def remove_head(self):
+    """
+    Remove first row
+    :param self:
+    :return:
+    """
+    self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
