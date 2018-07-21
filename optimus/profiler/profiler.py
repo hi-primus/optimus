@@ -116,6 +116,8 @@ class Profiler:
 
         count_dtype = Profiler.count_data_types(df, columns)
 
+        column_info['size'] = human_readable_bytes(df.size)
+
         for col_name in columns:
             col = {}
 
@@ -176,6 +178,7 @@ class Profiler:
             # Buckets: values, count, %
 
             column_info['columns'][col_name] = col
+
 
         path = Path.cwd() / "data.json"
         write_json(column_info, path=path)

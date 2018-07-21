@@ -2,6 +2,7 @@ from optimus.helpers.constants import *
 
 import json
 
+
 def fill_missing_var_types(var_types):
     """
     Fill missing data types with 0
@@ -49,3 +50,17 @@ def write_json(data, path):
     print(type(data))
     with open(path, 'w') as outfile:
         json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+
+
+def human_readable_bytes(num, suffix='B'):
+    """
+    Return a human readable file size
+    :param num:
+    :param suffix:
+    :return:
+    """
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)

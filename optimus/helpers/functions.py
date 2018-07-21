@@ -318,3 +318,5 @@ def is_pyarrow_installed():
     except ImportError:
         have_arrow = False
     return have_arrow
+
+
