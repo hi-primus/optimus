@@ -1,21 +1,23 @@
 # Reference http://nbviewer.jupyter.org/github/julioasotodv/spark-df-profiling/blob/master/examples/Demo.ipynb
 
-import io, json
 
 import pyspark.sql.functions as F
 from optimus.helpers.functions import *
 from optimus.profiler.functions import *
 
+from pathlib import Path
+
 
 class Profiler:
-    def __init__(self, df):
-        self._df = df
+    def __init__(self):
+        pass
 
-    def dataset_info(self):
-        df = self._df
+    @staticmethod
+    def dataset_info(df):
+
         columns = parse_columns(df, df.columns)
 
-        cols_count = len(self._df.columns)
+        cols_count = len(df.columns)
         rows_count = df.count()
         missing = df.cols().count_na(columns)
 
@@ -25,14 +27,15 @@ class Profiler:
              'missing': missing}
         )
 
-    def var_type_with_max_count(self, columns):
+    @staticmethod
+    def var_type_with_max_count(df, columns):
         """
         Return the count of columns by type
         :return:
         """
-        columns = parse_columns(self._df, columns)
+        columns = parse_columns(df, columns)
 
-        result = self.count_data_types(columns)
+        result = Profiler.count_data_types(columns)
 
         col_type = {}
         for key, value in result.items():
@@ -41,7 +44,8 @@ class Profiler:
 
         return col_type
 
-    def count_data_types(self, df, columns):
+    @staticmethod
+    def count_data_types(df, columns):
         """
         Count the number of int, float, string and bool in a column
         :param df:
@@ -78,71 +82,29 @@ class Profiler:
                                 "integer": count_by_data_type['integer'],
                                 "float": count_by_data_type['float']
                                 }
-            column_type = {"type": max(data_types_count, key=data_types_count.get)}
 
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
 
-            return {**data_types_count, **null_missed_count, **column_type}
+            col = {}
+            col['type'] = max(data_types_count, key=data_types_count.get)
+            col['details'] = {**data_types_count, **null_missed_count}
+
+            return col
 
         columns = parse_columns(df, columns)
 
         return {c: _count_data_types(c) for c in columns}
 
-    def columns_by_data_types(self, columns):
-        """
-        Infer the column data type. Because the data in the column can be mixed(int ,float. string)
-        we just take a sample
-        :param columns:
-        :return:
-        """
-        columns = parse_columns(self._df, columns)
-
-        # Sample the df
-        # TODO: I am not sure which sampling method is better/faster in this case.
-        # We use sample(), other option could be sampleBy()
-        df = self._df
-
-        # Get a size sample depending on the dataframe size
-        fraction = self.sample_size(df)
-
-        df_sampled = self._df.sample(False, fraction, seed=0).limit(1)
-
-        result = self.count_data_types(df_sampled, columns)
-
-        col_type = {}
-        # Get higher column count per var type
-        for key, value in result.items():
-            max_key = max(value, key=value.get)
-            col_type[key] = max_key
-
-        # Count columns per higher max type
-        result = {}
-        for key, value in col_type.items():
-            result[value] = result[value] + 1 if value in result else 1
-
-        return fill_missing_var_types(result)
-
-    def write(self):
-        """
-        Write a json file with the profiler result
-        :return:
-        """
-
-        path = 'c://optimus//profile.json'
-        profiler_result = self.columns('id')
-
-        with io.open(path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(profiler_result, sort_keys=True, indent=4, ensure_ascii=False))
-
-    def columns(self, columns):
+    @staticmethod
+    def columns(df, columns):
         """
         Get statistical information about a column
+        :param df:
         :param columns: Columns that you w
         :return: json object
         """
-        df = self._df
         columns = parse_columns(df, columns)
 
         # Initialize Objects
@@ -152,7 +114,7 @@ class Profiler:
         rows_count = df.count()
         column_info['rows_count'] = rows_count
 
-        count_dtype = self.count_data_types(df, columns)
+        count_dtype = Profiler.count_data_types(df, columns)
 
         for col_name in columns:
             col = {}
@@ -209,10 +171,12 @@ class Profiler:
                 col['hist'] = df.hist(col_name)
 
             elif column_type == "boolean":
-                print(column_type)
+                pass
 
             # Buckets: values, count, %
 
             column_info['columns'][col_name] = col
 
+        path = Path.cwd() / "data.json"
+        write_json(column_info, path=path)
         return column_info
