@@ -59,14 +59,15 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def filter(columns=None, regex=None):
+    def filter(columns=None, regex=None, data_type=None):
         """
-        Select columns using index or column name
+        Select columns using index, column name, regex to data type
         :param columns:
         :param regex:
+        :param data_type:
         :return:
         """
-        columns = parse_columns(self, columns, is_regex=regex)
+        columns = parse_columns(self, columns, is_regex=regex, filter_by_type=data_type)
         return self.select(columns)
 
     @add_attr(cols)
@@ -178,7 +179,7 @@ def cols(self):
         assert validate_columns_names(self, cols_and_types, 0)
 
         def _cast(col_name, attr):
-            return F.col(col_name).cast(DICT_TYPES[TYPES[attr[0]]])
+            return F.col(col_name).cast(TYPES_SPARK_FUNC[TYPES[attr[0]]])
 
         df = apply_exp(cols_and_types, _cast)
 
@@ -754,42 +755,54 @@ def cols(self):
         return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
 
     @add_attr(cols)
-    def lookup(column, search_by, replace_by, exact_match=None):
+    @dispatch(object, list)
+    def lookup(columns, search_and_replace):
         """
 
-        :param column:
-        :param search_by:
-        :param replace_by:
+        :param columns:
+        :param search_and_replace:
         :return:
         """
-        assert is_str_or_int(column), "Error: column must be only one element"
+        params = list(zip(*search_and_replace))
+        search = list(params[0])
+        replace = list(params[1])
 
-        assert is_str_or_int(search_by) or is_list_of_str_or_num(
-            search_by), "Error: search_by must be int,str or a list"
+        return lookup(columns, search, replace)
 
-        assert is_str_or_int(replace_by), "Error: search_by must be int,str or a list"
+    @add_attr(cols)
+    @dispatch(object, object, object)
+    def lookup(columns, search, replace):
+        """
+        This is an enhancement version of the Apache Spark replace version. It's works with multiple column datatype
+        :param columns:
+        :param search:
+        :param replace:
+        :return:
+        """
 
-        column = parse_columns(self, column)
+        columns = parse_columns(self, columns)
 
         df = self
-        if exact_match:
-            if is_str(search_by) or is_list_of_strings(search_by):
-                df = df.withColumn(search_by, F.when(df[column].isin(replace_by), column).otherwise(column))
-
-            elif is_numeric(search_by) or is_list_of_numeric(search_by):
-
-                # Create condition string
-                condition = [("df['" + column + "'] ==" + str(n)) for n in search_by]
-                condition = '|'.join(map(str, condition))
-
-                expr = "F.when(" + condition + "," + replace_by + ")" + ".otherwise(" + df[column] + ")"
-                expr = eval(expr)
-
-                df = df.withColumn(search_by, expr)
-        elif is_one_element(search_by) and is_one_element(replace_by):
-            if is_str(search_by):
-                df = df.withColumn(column, F.regexp_replace(column, search_by, replace_by))
+        for c in columns:
+            data_type = self.cols().dtypes(c)
+            search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
+            search = val_to_list(search)
+            search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
+            df = df.replace(search, replace, columns)
 
         return df
+
+    @add_attr(cols)
+    def dtypes(columns):
+        """
+        Return the column data type
+        :param columns:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+        dtypes = tuple_to_dict(self.dtypes)
+
+        return format_dict({c: dtypes[c] for c in columns})
 
     return cols
