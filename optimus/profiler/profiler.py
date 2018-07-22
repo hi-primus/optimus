@@ -116,7 +116,7 @@ class Profiler:
 
         count_dtype = Profiler.count_data_types(df, columns)
 
-        column_info['size'] = human_readable_bytes(df.size)
+        column_info['size'] = human_readable_bytes(df.size())
 
         for col_name in columns:
             col = {}
