@@ -71,14 +71,14 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func, column_data_type=None):
+    def apply_exp(columns, func):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
         :param column_data_type:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_type=column_data_type)
+        columns = parse_columns(self, columns)
 
         df = self
         for col_name in columns:
@@ -107,19 +107,24 @@ def cols(self):
         cols, attrs = parse_columns(self, cols_attrs, get_attrs=True)
 
         def func_factory(func_type):
-
             def pandas_udf_func(attr, func):
-                return F.pandas_udf(lambda value: func(value, attr))
+                return F.pandas_udf(lambda value: func(value, attr), F.PandasUDFType.SCALAR)
 
             def udf_func(attr, func):
                 return F.udf(lambda value: func(value, attr))
 
+            def expression_func(attr, func):
+                def inner(col_name):
+                    return func(col_name, attr)
+
                 return inner
 
-            if func_type is "udf":
-                return udf_func
-            else:
+            if func_type is "pandas_udf":
                 return pandas_udf_func
+            elif func_type is "udf":
+                return udf_func
+            elif func_type is "column_exp":
+                return expression_func
 
         if func_type is None and is_pyarrow_installed():
             func_type = "pandas_udf"
@@ -148,7 +153,7 @@ def cols(self):
 
         df = self
         # Apply a transformation function to the param strincount_uniquesg
-        if isfunction(func):
+        if is_function(func):
             exprs = [
                 F.col(c).alias(func(c)) for c in df.columns
             ]
@@ -181,7 +186,7 @@ def cols(self):
         def _cast(col_name, attr):
             return F.col(col_name).cast(TYPES_SPARK_FUNC[TYPES[attr[0]]])
 
-        df = apply_exp(cols_and_types, _cast)
+        df = apply(cols_and_types, _cast, func_type="column_exp")
 
         return df
 
@@ -465,7 +470,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.lower, "str")
+        return apply(columns, F.lower, "str", func_type="column_exp")
 
     @add_attr(cols)
     def upper(columns):
@@ -474,7 +479,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.upper, "str")
+        return apply(columns, F.upper, "str", func_type="column_exp")
 
     @add_attr(cols)
     def trim(columns):
@@ -483,7 +488,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.trim, "str")
+        return apply(columns, F.trim, "str", func_type="column_exp")
 
     @add_attr(cols)
     def reverse(columns):
@@ -492,7 +497,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply_exp(columns, F.reverse, "str")
+        return apply(columns, F.reverse, "str", func_type="column_exp")
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -755,40 +760,43 @@ def cols(self):
         return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
 
     @add_attr(cols)
-    @dispatch(object, list)
-    def lookup(columns, search_and_replace):
+    def replace(columns, search_and_replace=None, value=None, to_replace=None, regex=None):
         """
 
         :param columns:
         :param search_and_replace:
+        :param value:
         :return:
         """
-        params = list(zip(*search_and_replace))
-        search = list(params[0])
-        replace = list(params[1])
+        replace = None
+        search = None
 
-        return lookup(columns, search, replace)
+        if is_list_of_tuples(search_and_replace):
+            params = list(zip(*search_and_replace))
+            search = list(params[0])
+            replace = list(params[1])
 
-    @add_attr(cols)
-    @dispatch(object, object, object)
-    def lookup(columns, search, replace):
-        """
-        This is an enhancement version of the Apache Spark replace version. It's works with multiple column datatype
-        :param columns:
-        :param search:
-        :param replace:
-        :return:
-        """
+        elif is_list(search_and_replace):
+            search = search_and_replace
+            replace = value
+
+        elif is_one_element(search_and_replace):
+            search = val_to_list(search_and_replace)
+            replace = value
 
         columns = parse_columns(self, columns)
 
         df = self
-        for c in columns:
-            data_type = self.cols().dtypes(c)
-            search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
-            search = val_to_list(search)
-            search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
-            df = df.replace(search, replace, columns)
+
+        if regex:
+            for c in columns:
+                df = df.withColumn(c, F.regexp_replace(c, to_replace, value))
+
+        else:
+            for c in columns:
+                data_type = self.cols().dtypes(c)
+                search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
+                df = df.replace(search, replace, c)
 
         return df
 
