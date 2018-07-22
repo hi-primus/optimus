@@ -33,27 +33,14 @@ def rows(self):
         for d, r in zip(df.dtypes, row):
             col_name = d[0]
             data_type = d[1]
-            if data_type in DICT_TYPES:
-                cols.append((col_name, (DICT_TYPES[data_type]), True))
+            if data_type in TYPES_SPARK_FUNC:
+                cols.append((col_name, (TYPES_SPARK_FUNC[data_type]), True))
                 values.append(r)
 
         values = [tuple(values)]
         new_row = op.Create.data_frame(cols, values)
 
         return df.union(new_row)
-
-    @add_attr(rows)
-    def replace(search, change_to, columns):
-        """
-
-        :param search:
-        :param change_to:
-        :param columns:
-        :return:
-        """
-
-        columns = self._parse_columns(columns)
-        return self.replace(search, change_to, subset=columns)
 
     @add_attr(rows)
     def apply_by_type(parameters):
