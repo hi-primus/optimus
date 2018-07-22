@@ -67,7 +67,7 @@ def rows(self):
                                   'null']), \
                 "Error: data_type only can be one of the followings options: integer, float, string, null."
 
-            if isfunction(var_or_func):
+            if is_function(var_or_func):
                 def _apply_by_type(x):
                     return var_or_func(x) if check_data_type(x) == data_type else x
 
@@ -83,25 +83,46 @@ def rows(self):
         return df
 
     @add_attr(rows)
-    def filter_by_type(column_name, type=None):
+    def filter_by_type(columns, type=None):
         """
-        This function has built in order to deleted some type of row depending of the var type detected by python
+        This function has built in order to filter some type of row depending of the var type detected by python
         for Example if you have a column with
         | a |
         | 1 |
         | b |
 
-        and you filter by type = integer the second row (1) will be eliminated
-        :param column_name:
+        and you filter by type = integer the first and third row will be deleted
+        :param columns:
         :param type:
         :return:
         """
 
-        validate_columns_names(self, column_name)
+        validate_columns_names(self, columns)
 
         # Asserting if dataType argument has a valid type:
-        assert (type in ['integer', 'float', 'string',
-                         'null']), \
+        assert (type in TYPES_PROFILER), \
+            "Error: type only can be one of the followings options: integer, float, string, null."
+
+        # func = F.udf(check_data_type, StringType())
+
+        temp_col_name = "type_optimus"
+
+        return self.cols() \
+            .apply(temp_col_name, check_data_type) \
+            .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the data type
+
+        # return self.withColumn(
+        #    temp_col_name,
+        #    func(F.col(column_name))) \
+        #    .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the data type
+
+    @add_attr(rows)
+    def drop_by_type(columns, type=None):
+
+        validate_columns_names(self, columns)
+
+        # Asserting if dataType argument has a valid type:
+        assert (type in TYPES_PROFILER), \
             "Error: type only can be one of the followings options: integer, float, string, null."
 
         func = F.udf(check_data_type, StringType())
@@ -110,7 +131,7 @@ def rows(self):
 
         return self.withColumn(
             temp_col_name,
-            func(F.col(column_name))) \
-            .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the type
+            func(F.col(columns))) \
+            .where((F.col(temp_col_name) == type)).drop(temp_col_name)  # delete rows matching the data type
 
     return rows
