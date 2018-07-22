@@ -5,7 +5,7 @@ from optimus.helpers import constants as op_c
 import re
 
 
-def isfunction(obj):
+def is_function(obj):
     """
     Check if a param is a function
     :param obj: object to check for
@@ -14,39 +14,43 @@ def isfunction(obj):
     return hasattr(obj, '__call__')
 
 
-def is_list_of_str_or_int(lst):
-    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (int, str)) for elem in lst)
+def is_list(value):
+    return isinstance(value, list)
 
 
-def is_list_of_str_or_num(lst):
-    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (str, int, float)) for elem in lst)
+def is_list_of_str_or_int(value):
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, str)) for elem in value)
 
 
-def is_list_of_strings(lst):
+def is_list_of_str_or_num(value):
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
+
+
+def is_list_of_strings(value):
     """
     Check that all elements in a list are strings
-    :param lst:
+    :param value:
     :return:
     """
-    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, str) for elem in lst)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, str) for elem in value)
 
 
-def is_list_of_numeric(lst):
+def is_list_of_numeric(value):
     """
     Check that all elements in a list are int or float
-    :param lst:
+    :param value:
     :return:
     """
-    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, (int, float)) for elem in lst)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, float)) for elem in value)
 
 
-def is_list_of_tuples(lst):
+def is_list_of_tuples(value):
     """
     Check that all elements in a list are tuples
-    :param lst:
+    :param value:
     :return:
     """
-    return bool(lst) and isinstance(lst, list) and all(isinstance(elem, tuple) for elem in lst)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
 
 
 def is_one_element(value):
@@ -165,7 +169,6 @@ def repeat(f, n, x):
         return f(repeat(f, n - 1, x))  # call f with returned value
 
 
-# TODO: Maybe this can be done in a recursive way
 def format_dict(val):
     """
     This function clean a dict if it has only a
@@ -173,24 +176,24 @@ def format_dict(val):
     :return:
     """
 
-    def _format_dict(val):
-        if not isinstance(val, dict):
-            return val
+    def _format_dict(_val):
+        if not isinstance(_val, dict):
+            return _val
 
-        for k, v in val.items():
+        for k, v in _val.items():
             if isinstance(v, dict):
                 if len(v) == 1:
-                    val[k] = next(iter(v.values()))
+                    _val[k] = next(iter(v.values()))
             else:
-                if len(val) == 1:
-                    val = v
-        return val
+                if len(_val) == 1:
+                    _val = v
+        return _val
 
-    # We apply 2 pass to the dict to procees internals dicts and the whole dict
-
+    # We apply 2 pass to the dict to process internals dicts and the whole dict
     if isinstance(val, dict) and len(val) == 1:
         val = next(iter(val.values()))
 
+    # TODO: Maybe this can be done in a recursive way
     return repeat(_format_dict, 2, val)
 
 
@@ -291,7 +294,7 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
 
     # Filter columns by data type
     if filter_by_type is not None:
-        cols = set(cols).intersection(filter_col_name_by_type(df, filter_by_type))
+        cols = list(set(cols).intersection(filter_col_name_by_type(df, filter_by_type)))
 
     # Return cols or cols an params
     if get_attrs:
@@ -355,3 +358,13 @@ def is_pyarrow_installed():
     except ImportError:
         have_arrow = False
     return have_arrow
+
+
+def tuple_to_dict(value):
+    """
+    Convert tuple to dict
+    :param value: tuple to be converted
+    :return: 
+    """
+
+    return format_dict(dict((x, y) for x, y in value))
