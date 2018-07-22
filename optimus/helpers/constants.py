@@ -13,7 +13,9 @@ TYPES = {'string': 'string',
 
 TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
 
-DICT_TYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
+TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
+
+TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float}
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
 VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)

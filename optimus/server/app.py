@@ -1,10 +1,8 @@
-from flask import Flask
-import json
-from flask import jsonify
+from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-path = 'c://optimus/profile.json'
+path = '~//profile.json'
 
 
 @app.route("/")

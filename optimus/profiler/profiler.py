@@ -1,6 +1,3 @@
-# Reference http://nbviewer.jupyter.org/github/julioasotodv/spark-df-profiling/blob/master/examples/Demo.ipynb
-
-
 import pyspark.sql.functions as F
 from optimus.helpers.functions import *
 from optimus.profiler.functions import *
@@ -9,8 +6,6 @@ from pathlib import Path
 
 
 class Profiler:
-    def __init__(self):
-        pass
 
     @staticmethod
     def dataset_info(df):
@@ -28,7 +23,7 @@ class Profiler:
         )
 
     @staticmethod
-    def var_type_with_max_count(df, columns):
+    def count_column_by_type(df, columns):
         """
         Return the count of columns by type
         :return:
@@ -178,7 +173,6 @@ class Profiler:
             # Buckets: values, count, %
 
             column_info['columns'][col_name] = col
-
 
         path = Path.cwd() / "data.json"
         write_json(column_info, path=path)

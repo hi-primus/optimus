@@ -119,7 +119,7 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_replace_col(self):
+    def test_lookup_col(self):
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -131,8 +131,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        transformer = op.DataFrameTransformer(source_df)
-        actual_df = transformer.replace_col("happy", "elated", "emotion").df
+        actual_df = source_df.cols().lookup("emotion", [("happy", "elated")])
 
         expected_df = op.create.df(
             rows=[
