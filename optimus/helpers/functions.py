@@ -1,5 +1,7 @@
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
+from pyspark.sql.functions import pandas_udf, PandasUDFType
 
 from optimus.helpers import constants as op_c
 import re
@@ -305,7 +307,114 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
     return params
 
 
+def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
+    """
+    General User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
+    :param col:
+    :param func:
+    :param attrs:
+    :param func_return_type:
+    :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
+    :return:
+    """
+
+    attrs = val_to_list(attrs)
+
+    if func_type != "column_exp":
+
+        if func_type is None and is_pyarrow_installed():
+            func_type = "pandas_udf"
+        else:
+            func_type = "udf"
+
+    df_func = func_factory(func_type, func_return_type)
+    return df_func(attrs, func)(col)
+
+
+def func_factory(func_type=None, func_return_type=None):
+    """
+    Return column express, udf or pandas udf function.
+    :param func_type:
+    :param func_return_type:
+    :return:
+    """
+    if func_return_type is not None:
+        func_return_type = op_c.TYPES_SPARK_FUNC[op_c.TYPES[func_return_type]]
+
+    def pandas_udf_func(attr=None, func=None):
+        # TODO: Get the column type, so is not necessary to pass the return type a param
+
+        # Apply the function over the whole series
+        def apply_to_series(val, attr):
+            if attr is None:
+                args = dict(func=func, args=(None,))
+            else:
+                args = dict(func=func, args=tuple(attr))
+            return val.apply(**args)
+
+        return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
+
+    def udf_func(attr, func):
+        return F.udf(lambda value: func(value, attr))
+
+    def expression_func(attr, func):
+        def inner(col_name):
+            return func(col_name, attr)
+
+        return inner
+
+    if func_type is "pandas_udf":
+        return pandas_udf_func
+
+    elif func_type is "udf":
+        return udf_func
+
+    elif func_type is "column_exp":
+        return expression_func
+
+
 def check_data_type(value, attr):
+    """
+    Return if a value is int, float or string. Also is string try to check if it's int or float
+    :param value: value to be checked
+    :return:
+    """
+
+    data_type = None
+    if isinstance(value, int):  # Check if value is integer
+        data_type = 'integer'
+    elif isinstance(value, float):
+        data_type = 'float'
+    elif isinstance(value, bool):
+        data_type = 'boolean'
+    # if string we try to parse it to int, float or bool
+    elif isinstance(value, str):
+        try:  # Try to parse to int
+            int(value)
+            data_type = 'integer'
+        except ValueError:
+            pass
+
+        try:  # Try to parse to float
+            float(value)
+            data_type = 'float'
+        except ValueError:
+            pass
+        value = value.lower()
+        if value == 'true' or value == 'false':
+            data_type = 'boolean'
+
+        data_type = 'string'
+    else:
+        data_type = 'null'
+
+    if data_type == attr[0]:
+        return True
+    else:
+        return False
+
+
+def check_data_type_r(value, attr):
     """
     Return if a value is int, float or string. Also is string try to check if it's int or float
     :param value: value to be checked

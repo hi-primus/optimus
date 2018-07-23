@@ -1,6 +1,8 @@
 from pyspark.sql import DataFrame
 
 from pyspark.sql import functions as F
+from optimus.helpers.functions import abstract_udf as G
+
 from pyspark.sql.functions import Column
 import unicodedata
 import string
@@ -71,76 +73,41 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func):
+    def apply_exp(columns, func, attrs=None):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
         :param column_data_type:
+        :param  attrs:
         :return:
         """
         columns = parse_columns(self, columns)
 
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, func(df[col_name]))
+            df = df.withColumn(col_name, abstract_udf(col_name, func, attrs=attrs, func_type="column_exp"))
         return df
 
     @add_attr(cols)
-    def apply(cols_attrs, func, func_type=None):
+    def apply(columns, func, func_return_type, args=None, func_type=None):
         """
-        Apply a column expression function or udf function to a column
-        :param cols_attrs: Columns in which the function are going to be applied
-        Accepts:
-        '*' select all columns in a dataframe
-        A string 'col_name'
-        A list ['col_1', 'col_2','col_3']
-        Tuples ('col_1', 'param_1', 'param_2'),('col_2', 'param_1', 'param_2')
-
-        If a list of tuples return to list. The firts is a list of columns names the second is a list of params.
-        This params can me used to create custom transformation functions. You can find and example in cols().cast()
-
+        Apply a function using pandas udf or udf if apacha arrow is not available
+        :param columns:
         :param func: Functions to be applied to a columns
+        :param func_return_type
+        :param args:
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
         :return:
         """
-
-        cols, attrs = parse_columns(self, cols_attrs, get_attrs=True)
-
-        def func_factory(func_type):
-            def pandas_udf_func(attr, func):
-                return F.pandas_udf(lambda value: func(value, attr), F.PandasUDFType.SCALAR)
-
-            def udf_func(attr, func):
-                return F.udf(lambda value: func(value, attr))
-
-            def expression_func(attr, func):
-                def inner(col_name):
-                    return func(col_name, attr)
-
-                return inner
-
-            if func_type is "pandas_udf":
-                return pandas_udf_func
-            elif func_type is "udf":
-                return udf_func
-            elif func_type is "column_exp":
-                return expression_func
-
-        if func_type is None and is_pyarrow_installed():
-            func_type = "pandas_udf"
-
-        df_func = func_factory(func_type)
+        if func_type == "udf" or func_type == "pandas_udf":
+            raise TypeError("Expected pandas_udf or udf, got %s", func_type)
 
         df = self
 
-        if attrs is None:
-            for col in cols:
-                df = df.withColumn(col, df_func(cols, func)(col))
-            return df
-        else:
-            for i, (col, attr) in enumerate(zip(cols, attrs)):
-                df = df.withColumn(col, df_func(attr, func)(col))
-
+        columns = parse_columns(self, columns)
+        for c in columns:
+            df = df.withColumn(c,
+                               abstract_udf(c, func, func_return_type, args, func_type))
         return df
 
     @add_attr(cols)
@@ -760,12 +727,14 @@ def cols(self):
         return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
 
     @add_attr(cols)
-    def replace(columns, search_and_replace=None, value=None, to_replace=None, regex=None):
+    def replace(columns, search_and_replace=None, value=None, regex=None):
         """
 
         :param columns:
         :param search_and_replace:
         :param value:
+        :param replace_by:
+        :param regex:        
         :return:
         """
         replace = None
@@ -784,19 +753,31 @@ def cols(self):
             search = val_to_list(search_and_replace)
             replace = value
 
-        columns = parse_columns(self, columns)
+        if regex:
+            search = search_and_replace
+            replace = value
+
+        # if regex or normal replace we use regexp or replace functions
+        # TODO check if .contanins can be used instead of regexp
+        def func_regex(_df, _col_name, _search, _replace):
+            return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
+
+        def func_replace(_df, _col_name, _search, _replace):
+            data_type = self.cols().dtypes(_col_name)
+            _search = [TYPES_PYTHON_FUNC[data_type](s) for s in _search]
+            _df = _df.replace(_search, _replace, _col_name)
+            return _df
+
+        if regex:
+            func = func_regex
+        else:
+            func = func_replace
 
         df = self
 
-        if regex:
-            for c in columns:
-                df = df.withColumn(c, F.regexp_replace(c, to_replace, value))
-
-        else:
-            for c in columns:
-                data_type = self.cols().dtypes(c)
-                search = [TYPES_PYTHON_FUNC[data_type](s) for s in search]
-                df = df.replace(search, replace, c)
+        columns = parse_columns(self, columns)
+        for c in columns:
+            df = func(df, c, search, replace)
 
         return df
 
