@@ -1,11 +1,37 @@
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
-from pyspark.sql.functions import pandas_udf, PandasUDFType
 
-from optimus.helpers import constants as op_c
-from optimus.checkit import *
+from optimus.helpers.checkit import *
+from optimus.helpers.constants import *
+
 import re
+
+
+def parse_spark_dtypes(value):
+    """
+
+    :param value:
+    :return:
+    """
+    try:
+        data_type = TYPES_SPARK_FUNC[TYPES[value.lower()]]
+    except TypeError:
+        print("Expected {0}, got {1}".format(",".join([k for k in TYPES]), value))
+    return data_type
+
+
+def parse_python_dtypes(value):
+    """
+
+    :param value:
+    :return:
+    """
+    try:
+        data_type = TYPES_PYTHON_FUNC[TYPES[value.lower()]]
+    except TypeError:
+        print("Expected {0}, got {1}".format(",".join([k for k in TYPES]), value))
+    return data_type
+
 
 def print_html(html):
     """
@@ -14,6 +40,7 @@ def print_html(html):
     :return:
     """
     display(HTML(html))
+
 
 def collect_to_dict(value):
     """
@@ -211,6 +238,7 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
             cols = val_to_list(cols_attrs)
 
     # Filter columns by data type
+    filter_by_type = parse_spark_dtypes(filter_by_type)
     if filter_by_type is not None:
         cols = list(set(cols).intersection(filter_col_name_by_type(df, filter_by_type)))
 
@@ -233,7 +261,6 @@ def tuple_to_dict(value):
     return format_dict(dict((x, y) for x, y in value))
 
 
-
 def is_pyarrow_installed():
     """
     Check if pyarrow is installed
@@ -247,3 +274,6 @@ def is_pyarrow_installed():
     return have_arrow
 
 
+def filter_col_name_by_type(df, data_type):
+    data_type = parse_spark_dtypes(data_type)
+    return [y[0] for y in filter(lambda x: x[1] == data_type, df.dtypes)]
