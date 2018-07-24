@@ -1,7 +1,17 @@
+from optimus.helpers.functions import *
+from optimus.helpers import constants as op_c
+from optimus.helpers.checkit import is_data_type
+from pyspark.sql import functions as F
 
 
-
-def filter_by_data_type(col_name, data_type):
+def filter_column_by_data_type(col_name, data_type):
+    """
+    Filter a column using a Spark data type as reference
+    :param col_name:
+    :param data_type:
+    :return:
+    """
+    data_type = parse_python_dtypes(data_type)
     return abstract_udf(col_name, is_data_type, "bool", data_type)
 
 
@@ -16,7 +26,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     :return:
     """
 
-    attrs = val_to_list(attrs)
+    # attrs = val_to_list(attrs)
 
     if func_type != "column_exp":
         if func_type is None and is_pyarrow_installed():
@@ -25,6 +35,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
             func_type = "udf"
 
     df_func = func_factory(func_type, func_return_type)
+
     return df_func(attrs, func)(col)
 
 
@@ -36,7 +47,7 @@ def func_factory(func_type=None, func_return_type=None):
     :return:
     """
     if func_return_type is not None:
-        func_return_type = op_c.TYPES_SPARK_FUNC[op_c.TYPES[func_return_type]]
+        func_return_type = parse_spark_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
         # TODO: Get the column type, so is not necessary to pass the return type a param
@@ -44,10 +55,11 @@ def func_factory(func_type=None, func_return_type=None):
         # Apply the function over the whole series
         def apply_to_series(val, attr):
             if attr is None:
-                args = dict(func=func, args=(None,))
+                attr = (None,)
             else:
-                args = dict(func=func, args=tuple(attr))
-            return val.apply(**args)
+                attr = (attr,)
+
+            return val.apply(func, args=attr)
 
         return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
 
@@ -68,4 +80,3 @@ def func_factory(func_type=None, func_return_type=None):
 
     elif func_type is "column_exp":
         return expression_func
-
