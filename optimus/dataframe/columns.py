@@ -1,7 +1,8 @@
 from pyspark.sql import DataFrame
 
 from pyspark.sql import functions as F
-from optimus.helpers.functions import abstract_udf as G
+from optimus.functions import filter_by_data_type as fbdt
+from optimus.functions import abstract_udf
 
 from pyspark.sql.functions import Column
 import unicodedata
@@ -89,7 +90,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply(columns, func, func_return_type, args=None, func_type=None):
+    def apply(columns, func, func_return_type, args=None, func_type=None, filter_by_data_type=None):
         """
         Apply a function using pandas udf or udf if apacha arrow is not available
         :param columns:
@@ -99,15 +100,21 @@ def cols(self):
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
         :return:
         """
-        if func_type == "udf" or func_type == "pandas_udf":
-            raise TypeError("Expected pandas_udf or udf, got %s", func_type)
+
+        columns = parse_columns(self, columns)
 
         df = self
 
-        columns = parse_columns(self, columns)
+        def condition(data_type):
+            if data_type:
+                # Use the data type to filter the query
+                return F.when(fbdt(c, data_type),
+                              abstract_udf(c, func, func_return_type, args, func_type)).otherwise(F.col(c))
+            else:
+                return abstract_udf(c, func, func_return_type, args, func_type)
+
         for c in columns:
-            df = df.withColumn(c,
-                               abstract_udf(c, func, func_return_type, args, func_type))
+            df = df.withColumn(c, condition(filter_by_data_type))
         return df
 
     @add_attr(cols)
@@ -119,7 +126,7 @@ def cols(self):
         """
 
         df = self
-        # Apply a transformation function to the param strincount_uniquesg
+        # Apply a transformation function
         if is_function(func):
             exprs = [
                 F.col(c).alias(func(c)) for c in df.columns
@@ -674,7 +681,14 @@ def cols(self):
         :return:
         """
         columns = filter_col_name_by_type(self, data_type)
-        return self.select(*columns)
+
+        df = self
+        assert (data_type in op_c.TYPES), \
+            "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
+
+        columns = [y[0] for y in filter(lambda x: x[1] == op_c.TYPES[data_type], df.dtypes)]
+
+        return df.select(*columns)
 
     @add_attr(cols)
     def unique():
