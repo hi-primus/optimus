@@ -4,18 +4,21 @@ from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, F
 # You can use string, str or String as param
 TYPES = {'string': 'string',
          'str': 'string',
-         'String': 'string',
          'integer': 'int',
          'int': 'int',
          'float': 'float',
          'double': 'double',
-         'Double': 'double'}
+         'bool': 'boolean',
+         'boolean': 'boolean',
+
+         }
 
 TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
 
-TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType()}
+TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(),
+                    'boolean': BooleanType()}
 
-TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float}
+TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
 VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
