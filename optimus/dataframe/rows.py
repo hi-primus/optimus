@@ -8,6 +8,7 @@ from optimus.helpers.functions import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 import optimus.create as op
+from optimus.functions import filter_by_data_type as fbdt
 
 import builtins
 
@@ -42,48 +43,9 @@ def rows(self):
 
         return df.union(new_row)
 
-    @add_attr(rows)
-    def apply_by_type(parameters):
-        """
-        This functions makes the operation in column elements that are recognized as the same type that the data_type
-        argument provided in the input function.
-
-        Columns provided in list of tuples cannot be repeated
-        :param parameters: List of columns in the following form: [(columnName, data_type, func),
-                                                                    (columnName1, dataType1, func1)]
-        :return None
-        """
-
-        assert isinstance(parameters, list), 'Error: patrameters must be a list'
-        assert isinstance(parameters[0], tuple), 'Error: elements inside parameters should be a tuple'
-
-        validate_columns_names(self, parameters, 0)
-
-        df = self
-        for column, data_type, var_or_func in parameters:
-
-            # Checking if column has a valid datatype:
-            assert (data_type in ['integer', 'float', 'string',
-                                  'null']), \
-                "Error: data_type only can be one of the followings options: integer, float, string, null."
-
-            if is_function(var_or_func):
-                def _apply_by_type(x):
-                    return var_or_func(x) if check_data_type(x) == data_type else x
-
-            else:
-
-                def _apply_by_type(x):
-                    return var_or_func if check_data_type(x) == data_type else x
-
-            func_udf = F.udf(_apply_by_type)
-
-            df = df.withColumn(column, func_udf(F.col(column).alias(column)))
-
-        return df
 
     @add_attr(rows)
-    def filter_by_type(columns, type=None):
+    def filter_by_dtype(col_name, data_type=None):
         """
         This function has built in order to filter some type of row depending of the var type detected by python
         for Example if you have a column with
@@ -91,47 +53,41 @@ def rows(self):
         | 1 |
         | b |
 
-        and you filter by type = integer the first and third row will be deleted
-        :param columns:
-        :param type:
+        and you filter by type = integer you will get
+
+        | 1 |
+
+        :param col_name:
+        :param data_type:
         :return:
         """
 
-        validate_columns_names(self, columns)
+        validate_columns_names(self, col_name)
 
         # Asserting if dataType argument has a valid type:
-        assert (type in TYPES_PROFILER), \
+        assert (data_type in TYPES_PROFILER), \
             "Error: type only can be one of the followings options: integer, float, string, null."
 
-        # func = F.udf(check_data_type, StringType())
-
-        temp_col_name = "type_optimus"
-
-        return self.cols() \
-            .apply(temp_col_name, check_data_type) \
-            .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the data type
-
-        # return self.withColumn(
-        #    temp_col_name,
-        #    func(F.col(column_name))) \
-        #    .where((F.col(temp_col_name) != type)).drop(temp_col_name)  # delete rows not matching the data type
+        return self.where(fbdt(col_name, data_type))
 
     @add_attr(rows)
-    def drop_by_type(columns, type=None):
+    def drop_by_dtype(columns, data_type=None):
+        """
 
-        validate_columns_names(self, columns)
+        :param columns:
+        :param data_type:
+        :return:
+        """
 
         # Asserting if dataType argument has a valid type:
-        assert (type in TYPES_PROFILER), \
+        assert (data_type in TYPES_PROFILER), \
             "Error: type only can be one of the followings options: integer, float, string, null."
 
-        func = F.udf(check_data_type, StringType())
+        columns = parse_columns(self, columns)
 
-        temp_col_name = "type_optimus"
-
-        return self.withColumn(
-            temp_col_name,
-            func(F.col(columns))) \
-            .where((F.col(temp_col_name) == type)).drop(temp_col_name)  # delete rows matching the data type
+        df = self
+        for c in columns:
+            df.where(~fbdt(c, data_type))
+        return df
 
     return rows
