@@ -4,92 +4,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 
 from optimus.helpers import constants as op_c
+from optimus.checkit import *
 import re
-
-
-def is_function(obj):
-    """
-    Check if a param is a function
-    :param obj: object to check for
-    :return:
-    """
-    return hasattr(obj, '__call__')
-
-
-def is_list(value):
-    return isinstance(value, list)
-
-
-def is_list_of_str_or_int(value):
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, str)) for elem in value)
-
-
-def is_list_of_str_or_num(value):
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
-
-
-def is_list_of_strings(value):
-    """
-    Check that all elements in a list are strings
-    :param value:
-    :return:
-    """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, str) for elem in value)
-
-
-def is_list_of_numeric(value):
-    """
-    Check that all elements in a list are int or float
-    :param value:
-    :return:
-    """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, float)) for elem in value)
-
-
-def is_list_of_tuples(value):
-    """
-    Check that all elements in a list are tuples
-    :param value:
-    :return:
-    """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
-
-
-def is_one_element(value):
-    """
-    Check that a var is a single element
-    :param value:
-    :return:
-    """
-    return isinstance(value, (str, int, float))
-
-
-def is_str_or_int(value):
-    """
-    Check that a var is a single element
-    :param value:
-    :return:
-    """
-    return isinstance(value, (str, int))
-
-
-def is_numeric(value):
-    """
-    Check that a var is a single element
-    :param value:
-    :return:
-    """
-    return isinstance(value, (int, float))
-
-
-def is_str(value):
-    """
-    Check that a var is a single element
-    :param value:
-    :return:
-    """
-    return isinstance(value, str)
-
 
 def print_html(html):
     """
@@ -98,7 +14,6 @@ def print_html(html):
     :return:
     """
     display(HTML(html))
-
 
 def collect_to_dict(value):
     """
@@ -173,8 +88,9 @@ def repeat(f, n, x):
 
 def format_dict(val):
     """
-    This function clean a dict if it has only a
-    :param val:
+    This function format a dict. If the main dict or a deep dict has only on element
+     {"col_name":{0.5: 200}} we get 200
+    :param val: dict to be formated
     :return:
     """
 
@@ -307,153 +223,15 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
     return params
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
+def tuple_to_dict(value):
     """
-    General User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
-    :param col:
-    :param func:
-    :param attrs:
-    :param func_return_type:
-    :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
+    Convert tuple to dict
+    :param value: tuple to be converted
     :return:
     """
 
-    attrs = val_to_list(attrs)
+    return format_dict(dict((x, y) for x, y in value))
 
-    if func_type != "column_exp":
-
-        if func_type is None and is_pyarrow_installed():
-            func_type = "pandas_udf"
-        else:
-            func_type = "udf"
-
-    df_func = func_factory(func_type, func_return_type)
-    return df_func(attrs, func)(col)
-
-
-def func_factory(func_type=None, func_return_type=None):
-    """
-    Return column express, udf or pandas udf function.
-    :param func_type:
-    :param func_return_type:
-    :return:
-    """
-    if func_return_type is not None:
-        func_return_type = op_c.TYPES_SPARK_FUNC[op_c.TYPES[func_return_type]]
-
-    def pandas_udf_func(attr=None, func=None):
-        # TODO: Get the column type, so is not necessary to pass the return type a param
-
-        # Apply the function over the whole series
-        def apply_to_series(val, attr):
-            if attr is None:
-                args = dict(func=func, args=(None,))
-            else:
-                args = dict(func=func, args=tuple(attr))
-            return val.apply(**args)
-
-        return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
-
-    def udf_func(attr, func):
-        return F.udf(lambda value: func(value, attr))
-
-    def expression_func(attr, func):
-        def inner(col_name):
-            return func(col_name, attr)
-
-        return inner
-
-    if func_type is "pandas_udf":
-        return pandas_udf_func
-
-    elif func_type is "udf":
-        return udf_func
-
-    elif func_type is "column_exp":
-        return expression_func
-
-
-def check_data_type(value, attr):
-    """
-    Return if a value is int, float or string. Also is string try to check if it's int or float
-    :param value: value to be checked
-    :return:
-    """
-
-    data_type = None
-    if isinstance(value, int):  # Check if value is integer
-        data_type = 'integer'
-    elif isinstance(value, float):
-        data_type = 'float'
-    elif isinstance(value, bool):
-        data_type = 'boolean'
-    # if string we try to parse it to int, float or bool
-    elif isinstance(value, str):
-        try:  # Try to parse to int
-            int(value)
-            data_type = 'integer'
-        except ValueError:
-            pass
-
-        try:  # Try to parse to float
-            float(value)
-            data_type = 'float'
-        except ValueError:
-            pass
-        value = value.lower()
-        if value == 'true' or value == 'false':
-            data_type = 'boolean'
-
-        data_type = 'string'
-    else:
-        data_type = 'null'
-
-    if data_type == attr[0]:
-        return True
-    else:
-        return False
-
-
-def check_data_type_r(value, attr):
-    """
-    Return if a value is int, float or string. Also is string try to check if it's int or float
-    :param value: value to be checked
-    :return:
-    """
-
-    if isinstance(value, int):  # Check if value is integer
-        return 'integer'
-    elif isinstance(value, float):
-        return 'float'
-    elif isinstance(value, bool):
-        return 'boolean'
-    # if string we try to parse it to int, float or bool
-    elif isinstance(value, str):
-        try:  # Try to parse to int
-            int(value)
-            return 'integer'
-        except ValueError:
-            pass
-
-        try:  # Try to parse to float
-            float(value)
-            return 'float'
-        except ValueError:
-            pass
-        value = value.lower()
-        if value == 'true' or value == 'false':
-            return 'boolean'
-
-        return 'string'
-    else:
-        return 'null'
-
-
-def filter_col_name_by_type(df, data_type):
-    assert (data_type in op_c.TYPES), \
-        "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
-
-    return [y[0] for y in filter(lambda x: x[1] == op_c.TYPES[data_type], df.dtypes)]
 
 
 def is_pyarrow_installed():
@@ -469,11 +247,3 @@ def is_pyarrow_installed():
     return have_arrow
 
 
-def tuple_to_dict(value):
-    """
-    Convert tuple to dict
-    :param value: tuple to be converted
-    :return: 
-    """
-
-    return format_dict(dict((x, y) for x, y in value))
