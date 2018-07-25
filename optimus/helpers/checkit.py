@@ -104,11 +104,10 @@ def is_data_type(value, attr):
 
     :return:
     """
-
     data_type = "string"
 
     if isinstance(value, int):  # Check if value is integer
-        data_type = "integer"
+        data_type = "int"
     elif isinstance(value, float):
         data_type = "float"
     elif isinstance(value, bool):
@@ -117,7 +116,7 @@ def is_data_type(value, attr):
     elif isinstance(value, str):
         print("str")
         if str_to_int(value):
-            data_type = "integer"
+            data_type = "int"
 
         elif str_to_float(value):
             data_type = "float"
