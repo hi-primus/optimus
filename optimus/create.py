@@ -4,6 +4,7 @@ from optimus.spark import Spark
 
 # Helpers
 from optimus.helpers.constants import *
+from optimus.helpers.functions import *
 
 
 class Create:
@@ -24,7 +25,7 @@ class Create:
                 var_type = value
             # else, try to parse a str, int, float ......
             else:
-                var_type = TYPES_SPARK_FUNC[TYPES[c[1]]]
+                var_type = parse_spark_dtypes(c[1])
 
             specs.append([c[0], var_type, c[2]])
 

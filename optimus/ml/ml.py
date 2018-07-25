@@ -187,6 +187,7 @@ class NotBroadcasted:
     Wraps a Params object so that it doesn't broadcast it as part of a many to one
     pipe transformation
     """
+
     # pylint: disable=too-few-public-methods
     def __init__(self, params_object):
         self.object = params_object
@@ -251,7 +252,7 @@ def random_forest(df, columns, input_col):
 
     assert_spark_df(df)
 
-    assert isinstance(columns,list), "Error, columns must be a list"
+    assert isinstance(columns, list), "Error, columns must be a list"
 
     assert isinstance(input_col, str), "Error, input column must be a string"
 
@@ -262,7 +263,7 @@ def random_forest(df, columns, input_col):
     transformer.string_to_index(input_cols=input_col)
     transformer.vector_assembler(input_cols=feats)
     model = RandomForestClassifier()
-    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    transformer.rename_col(columns=[(input_col + "_index", "label")])
     rf_model = model.fit(transformer.df)
     df_model = rf_model.transform(transformer.df)
     return df_model, rf_model
@@ -279,7 +280,7 @@ def decision_tree(df, columns, input_col):
 
     assert_spark_df(df)
 
-    assert isinstance(columns,list), "Error, columns must be a list"
+    assert isinstance(columns, list), "Error, columns must be a list"
 
     assert isinstance(input_col, str), "Error, input column must be a string"
 
@@ -290,7 +291,7 @@ def decision_tree(df, columns, input_col):
     transformer.string_to_index(input_cols=input_col)
     transformer.vector_assembler(input_cols=feats)
     model = DecisionTreeClassifier()
-    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    transformer.rename_col(columns=[(input_col + "_index", "label")])
     dt_model = model.fit(transformer.df)
     df_model = dt_model.transform(transformer.df)
     return df_model, dt_model
@@ -307,7 +308,7 @@ def gbt(df, columns, input_col):
 
     assert_spark_df(df)
 
-    assert isinstance(columns,list), "Error, columns must be a list"
+    assert isinstance(columns, list), "Error, columns must be a list"
 
     assert isinstance(input_col, str), "Error, input column must be a string"
 
@@ -318,10 +319,11 @@ def gbt(df, columns, input_col):
     transformer.string_to_index(input_cols=input_col)
     transformer.vector_assembler(input_cols=feats)
     model = GBTClassifier()
-    transformer.rename_col(columns=[(input_col+"_index", "label")])
+    transformer.rename_col(columns=[(input_col + "_index", "label")])
     gbt_model = model.fit(transformer.df)
     df_model = gbt_model.transform(transformer.df)
     return df_model, gbt_model
+
 
 def string_to_index(self, input_cols):
     """
@@ -347,6 +349,7 @@ def string_to_index(self, input_cols):
     self._df = pipeline.fit(self._df).transform(self._df)
 
     return self
+
 
 def index_to_string(self, input_cols):
     """
@@ -374,6 +377,7 @@ def index_to_string(self, input_cols):
 
     return self
 
+
 def one_hot_encoder(self, input_cols):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
@@ -398,6 +402,7 @@ def one_hot_encoder(self, input_cols):
 
     return self
 
+
 def sql(self, sql_expression):
     """
     Implements the transformations which are defined by SQL statement. Currently we only support
@@ -416,6 +421,7 @@ def sql(self, sql_expression):
     self._df = sql_trans.transform(self._df)
 
     return self
+
 
 def vector_assembler(self, input_cols):
     """
@@ -438,6 +444,7 @@ def vector_assembler(self, input_cols):
     self._df = pipeline.fit(self._df).transform(self._df)
 
     return self
+
 
 def normalizer(self, input_cols, p=2.0):
     """
@@ -484,6 +491,7 @@ def normalizer(self, input_cols, p=2.0):
 
     return self
 
+
 def undo_vec_assembler(self, column, feature_names):
     """This function unpack a column of list arrays into different columns.
     +-------------------+-------+
@@ -529,6 +537,7 @@ def undo_vec_assembler(self, column, feature_names):
     self._add_transformation()  # checkpoint in case
 
     return self
+
 
 def scale_vec_col(self, columns, name_output_col):
     """
@@ -589,6 +598,7 @@ def scale_vec_col(self, columns, name_output_col):
     self._add_transformation()  # checkpoint in case
 
     return self
+
 
 def impute_missing(self, columns, out_cols, strategy):
     """

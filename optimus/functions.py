@@ -4,17 +4,6 @@ from optimus.helpers.checkit import is_data_type
 from pyspark.sql import functions as F
 
 
-def filter_column_by_data_type(col_name, data_type):
-    """
-    Filter a column using a Spark data type as reference
-    :param col_name:
-    :param data_type:
-    :return:
-    """
-    data_type = parse_python_dtypes(data_type)
-    return abstract_udf(col_name, is_data_type, "bool", data_type)
-
-
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     """
     General User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
@@ -35,7 +24,6 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
             func_type = "udf"
 
     df_func = func_factory(func_type, func_return_type)
-
     return df_func(attrs, func)(col)
 
 
@@ -64,6 +52,7 @@ def func_factory(func_type=None, func_return_type=None):
         return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
 
     def udf_func(attr, func):
+        print(attr)
         return F.udf(lambda value: func(value, attr))
 
     def expression_func(attr, func):
@@ -80,3 +69,14 @@ def func_factory(func_type=None, func_return_type=None):
 
     elif func_type is "column_exp":
         return expression_func
+
+
+def filter_row_by_data_type(col_name, data_type):
+    """
+    Filter a column using a Spark data type as reference
+    :param col_name:
+    :param data_type:
+    :return:
+    """
+    data_type = parse_python_dtypes(data_type)
+    return abstract_udf(col_name, is_data_type, "bool", data_type)

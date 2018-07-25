@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 
 from pyspark.sql import functions as F
-from optimus.functions import filter_by_data_type as fbdt
+from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf
 
 from pyspark.sql.functions import Column
@@ -34,7 +34,7 @@ def cols(self):
         :return:
         """
 
-        assert isinstance(name, str), "name param must be a string"
+        assert isinstance(name, str), "Error: name param must be a string"
         assert isinstance(value, (int, float, str, Column)), "object param must be a number, str or a Column "
 
         if isinstance(value, (int, str, float)):
@@ -82,6 +82,9 @@ def cols(self):
         :param  attrs:
         :return:
         """
+
+        # if isinstance(func, Column):
+
         columns = parse_columns(self, columns)
 
         df = self
@@ -90,31 +93,50 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply(columns, func, func_return_type, args=None, func_type=None, filter_by_data_type=None):
+    def apply(columns, func, func_return_type, args=None, func_type=None, when=None):
         """
-        Apply a function using pandas udf or udf if apacha arrow is not available
+        Apply a function using pandas udf or udf if apache arrow is not available
         :param columns:
         :param func: Functions to be applied to a columns
         :param func_return_type
         :param args:
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
+        :param when:
         :return:
         """
 
         columns = parse_columns(self, columns)
-
         df = self
 
-        def condition(data_type):
-            if data_type:
+        def condition(_when):
+            main_query = abstract_udf(c, func, func_return_type, args, func_type)
+            if when is not None:
                 # Use the data type to filter the query
-                return F.when(fbdt(c, data_type),
-                              abstract_udf(c, func, func_return_type, args, func_type)).otherwise(F.col(c))
-            else:
-                return abstract_udf(c, func, func_return_type, args, func_type)
+                main_query = F.when(_when, main_query).otherwise(F.col(c))
+
+            return main_query
 
         for c in columns:
-            df = df.withColumn(c, condition(filter_by_data_type))
+            df = df.withColumn(c, condition(when))
+        return df
+
+    @add_attr(cols)
+    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, filter_by_data_type=None):
+        """
+        Apply a function using pandas udf or udf if apache arrow is not available
+        :param columns:
+        :param func: Functions to be applied to a columns
+        :param func_return_type
+        :param args:
+        :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
+        :param filter_by_data_type:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        for c in columns:
+            df = self.cols().apply(c, func, func_return_type, args=args, func_type=func_type,
+                                   when=fbdt(c, filter_by_data_type))
         return df
 
     @add_attr(cols)
@@ -155,18 +177,21 @@ def cols(self):
         :return:
         """
 
-        assert validate_columns_names(self, cols_and_types, 0)
+        # assert validate_columns_names(self, cols_and_types, 0)
+        cols, attrs = parse_columns(self, cols_and_types, get_attrs=True)
 
         def _cast(col_name, attr):
-            return F.col(col_name).cast(TYPES_SPARK_FUNC[TYPES[attr[0]]])
+            return F.col(col_name).cast(parse_spark_dtypes(attr[0]))
 
-        df = apply(cols_and_types, _cast, func_type="column_exp")
+        df = self
+        for cols, attrs in zip(cols, attrs):
+            df = df.cols().apply_exp(cols, _cast, attrs)
 
         return df
 
     @add_attr(cols)
-    def astype():
-        return cast
+    def astype(*args, **kwargs):
+        return cast(*args, **kwargs)
 
     @add_attr(cols)
     def move(column, ref_col, position):
@@ -225,6 +250,7 @@ def cols(self):
         return self.select(*columns)
 
     @add_attr(cols)
+    # TODO: Sort by datatype?
     def sort(reverse=False):
         """
 
@@ -235,11 +261,12 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def drop(columns=None, regex=None):
+    def drop(columns=None, regex=None, data_type=None):
         """
         Drop a list columns
         :param columns:
         :param regex:
+        :param data_type:
         :return:
         """
         df = self
@@ -247,7 +274,7 @@ def cols(self):
             r = re.compile(regex)
             columns = list(filter(r.match, self.columns))
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_type=data_type)
 
         for column in columns:
             df = df.drop(column)
@@ -444,7 +471,11 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.lower, "str", func_type="column_exp")
+
+        def _lower(col, args):
+            return F.lower(F.col(col))
+
+        return apply_exp(columns, _lower)
 
     @add_attr(cols)
     def upper(columns):
@@ -453,7 +484,11 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.upper, "str", func_type="column_exp")
+
+        def _upper(col, args):
+            return F.upper(F.col(col))
+
+        return apply_exp(columns, _upper)
 
     @add_attr(cols)
     def trim(columns):
@@ -462,7 +497,11 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.trim, "str", func_type="column_exp")
+
+        def _trim(col, args):
+            return F.trim(F.col(col))
+
+        return apply_exp(columns, _trim)
 
     @add_attr(cols)
     def reverse(columns):
@@ -471,7 +510,11 @@ def cols(self):
         :param columns:
         :return:
         """
-        return apply(columns, F.reverse, "str", func_type="column_exp")
+
+        def _reverse(col, args):
+            return F.reverse(F.col(col))
+
+        return apply_exp(columns, _reverse)
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -537,10 +580,10 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def date_transform(columns, current_format, output_format):
+    def date_transform(col_name, new_col, current_format, output_format):
         """
         Tranform a column date format
-        :param  columns: Name date columns to be transformed. Columns ha
+        :param  col_name: Name date columns to be transformed. Columns ha
         :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
@@ -553,37 +596,40 @@ def cols(self):
         # Check if output_format argument a string datatype:
         assert isinstance(output_format, str)
 
-        # Check if columns argument must be a string or list datatype:
-        columns = parse_columns(self, columns)
+        # Asserting if column if in dataFrame:
+        validate_columns_names(self, col_name)
 
-        df = self
+        def _date_transform(col_name, attr):
+            new_col = attr[0]
+            current_format = attr[1]
+            output_format = attr[2]
+            return F.date_format(F.unix_timestamp(col_name, current_format).cast("timestamp"), output_format).alias(
+                new_col)
 
-        exprs = [F.date_format(F.unix_timestamp(c, current_format).cast("timestamp"), output_format).alias(
-            c) if c in columns else c for c in df.columns]
-
-        return df.select(*exprs)
+        return apply_exp(col_name, _date_transform, [new_col, current_format, output_format])
 
     @add_attr(cols)
-    def years_between(name_col_age, dates_format, column):
+    def years_between(col_name, new_col, format_date):
         """
         This method compute the age based on a born date.
-        :param  column: Name of the column born dates column.
-        :param  dates_format: String format date of the column provided.
-        :param  name_col_age: Name of the new column, the new columns is the resulting column of ages.
+        :param  new_col: Name of the new column, the new columns is the resulting column of ages.
+        :param  format_date: String format date of the column provided.
+        :param  col_name: Name of the column born dates column.
+
         """
         # Check if column argument a string datatype:
-        assert isinstance(dates_format, str)
+        assert isinstance(format_date, str)
 
         # Check if dates_format argument a string datatype:
-        assert isinstance(name_col_age, str)
+        assert isinstance(new_col, str)
 
         # Asserting if column if in dataFrame:
-        validate_columns_names(self, column)
+        validate_columns_names(self, col_name)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
-        def _years_since(name_col_age, attr):
+        def _years_between(name_col_age, attr):
             dates_format = attr[0]
             col_name = attr[1]
 
@@ -599,7 +645,7 @@ def cols(self):
                 .alias(
                 name_col_age)
 
-        return apply([(name_col_age, "yyyyMMdd", "date")], _years_since)
+        return apply_exp(new_col, _years_between, ["yyyyMMdd", col_name])
 
     @add_attr(cols)
     def impute(columns, out_cols, strategy):
@@ -672,7 +718,7 @@ def cols(self):
         return {c: df.select(c).distinct().count() for c in columns}
 
     @add_attr(cols)
-    def filter_by_type(data_type):
+    def filter_by_dtypes(data_type):
         """
         This function returns column of dataFrame which have the same
         datatype provided. It analyses column datatype by dataFrame.dtypes method.
@@ -680,15 +726,10 @@ def cols(self):
         :param data_type:
         :return:
         """
-        columns = filter_col_name_by_type(self, data_type)
 
-        df = self
-        assert (data_type in op_c.TYPES), \
-            "Error, data_type only can be one of the following values: 'string', 'integer', 'float', 'date', 'double'"
+        columns = parse_columns(self, '*', is_regex=None, filter_by_type=data_type)
 
-        columns = [y[0] for y in filter(lambda x: x[1] == op_c.TYPES[data_type], df.dtypes)]
-
-        return df.select(*columns)
+        return self.select(columns)
 
     @add_attr(cols)
     def unique():
@@ -804,8 +845,8 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
-        dtypes = tuple_to_dict(self.dtypes)
+        data_types = tuple_to_dict(self.dtypes)
 
-        return format_dict({c: dtypes[c] for c in columns})
+        return format_dict({c: data_types[c] for c in columns})
 
     return cols

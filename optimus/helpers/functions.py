@@ -27,7 +27,7 @@ def parse_python_dtypes(value):
     :return:
     """
     try:
-        data_type = TYPES_PYTHON_FUNC[TYPES[value.lower()]]
+        data_type = TYPES[value.lower()]
     except TypeError:
         print("Expected {0}, got {1}".format(",".join([k for k in TYPES]), value))
     return data_type
@@ -180,7 +180,7 @@ def validate_columns_names(df, col_names, index=None):
         missing_col_names=missing_col_names,
         all_col_names=all_col_names)
 
-    assert len(missing_col_names) == 0, "Error:%s column(s) not exist(s)" % error_message
+    assert len(missing_col_names) == 0, error_message
 
     return True
 
@@ -238,8 +238,8 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
             cols = val_to_list(cols_attrs)
 
     # Filter columns by data type
-    filter_by_type = parse_spark_dtypes(filter_by_type)
     if filter_by_type is not None:
+        filter_by_type = parse_python_dtypes(filter_by_type)
         cols = list(set(cols).intersection(filter_col_name_by_type(df, filter_by_type)))
 
     # Return cols or cols an params
@@ -275,5 +275,5 @@ def is_pyarrow_installed():
 
 
 def filter_col_name_by_type(df, data_type):
-    data_type = parse_spark_dtypes(data_type)
+    #data_type = parse_spark_dtypes(data_type)
     return [y[0] for y in filter(lambda x: x[1] == data_type, df.dtypes)]
