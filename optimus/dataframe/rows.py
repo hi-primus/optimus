@@ -4,11 +4,12 @@ from pyspark.sql.dataframe import *
 from pyspark.sql import functions as F
 
 # Helpers
+import optimus.create as op
 from optimus.helpers.functions import *
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-import optimus.create as op
-from optimus.functions import filter_by_data_type as fbdt
+
+from optimus.functions import filter_row_by_data_type as fbdt
 
 import builtins
 
@@ -43,9 +44,8 @@ def rows(self):
 
         return df.union(new_row)
 
-
     @add_attr(rows)
-    def filter_by_dtype(col_name, data_type=None):
+    def filter_by_dtypes(col_name, data_type=None):
         """
         This function has built in order to filter some type of row depending of the var type detected by python
         for Example if you have a column with
@@ -63,31 +63,31 @@ def rows(self):
         """
 
         validate_columns_names(self, col_name)
-
-        # Asserting if dataType argument has a valid type:
-        assert (data_type in TYPES_PROFILER), \
-            "Error: type only can be one of the followings options: integer, float, string, null."
-
         return self.where(fbdt(col_name, data_type))
 
     @add_attr(rows)
-    def drop_by_dtype(columns, data_type=None):
+    def filter(*args, **kwargs):
+        return self.filter(*args, **kwargs)
+
+    @add_attr(rows)
+    # https://chrisalbon.com/python/data_wrangling/pandas_dropping_column_and_rows/
+    def drop(where=None):
+        """
+        Drop a file depending
+        :param where:
+        :return:
+        """
+        return self.where(~where)
+
+    @add_attr(rows)
+    def drop_by_dtypes(col_name, data_type=None):
         """
 
-        :param columns:
+        :param col_name:
         :param data_type:
         :return:
         """
-
-        # Asserting if dataType argument has a valid type:
-        assert (data_type in TYPES_PROFILER), \
-            "Error: type only can be one of the followings options: integer, float, string, null."
-
-        columns = parse_columns(self, columns)
-
-        df = self
-        for c in columns:
-            df.where(~fbdt(c, data_type))
-        return df
+        validate_columns_names(self, col_name)
+        return self.where(~fbdt(col_name, data_type))
 
     return rows
