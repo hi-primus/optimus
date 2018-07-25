@@ -44,14 +44,14 @@ def cols(self):
 
     @add_attr(cols)
     @dispatch(list)
-    def append(col_names=None):
+    def append(cols_values=None):
         """
-
-        :param col_names:
+        Append a collumn to a Dataframe
+        :param cols_values:
         :return:
         """
         df = self
-        for c in col_names:
+        for c in cols_values:
             value = c[1]
             name = c[0]
 
@@ -336,6 +336,7 @@ def cols(self):
         return range
 
     @add_attr(cols)
+    # TODO: Use pandas for small datasets?!
     def median(columns):
         """
         Return the median of a column dataframe
@@ -369,21 +370,21 @@ def cols(self):
     # Descriptive Analytics
 
     @add_attr(cols)
-    def mad(columns):
+    def mad(col_name):
         """
-        Return the Mean Absolute Deviation
-        :param columns:
+        Return the Median Absolute Deviation
+        :param col_name:
         :return:
         """
 
-        median_value = self.cols().median(columns)
+        # return mean(absolute(data - mean(data, axis)), axis)
+        median_value = self.cols().median(col_name)
 
-        df = self.select(columns) \
-            .orderBy(columns) \
-            .withColumn(columns, F.abs(F.col(columns) - median_value)) \
-            .cache()
+        mad_value = self.select(col_name) \
+            .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+            .cols().median(col_name)
 
-        return df.cols().median(columns)
+        return mad_value
 
     @add_attr(cols)
     def std(columns):
@@ -848,5 +849,50 @@ def cols(self):
         data_types = tuple_to_dict(self.dtypes)
 
         return format_dict({c: data_types[c] for c in columns})
+
+    # Stats
+    @add_attr(cols)
+    def z_score(columns, new_col=None):
+        """
+        Return the column data type
+        :param columns:
+        :return:
+        """
+
+
+        columns = parse_columns(self, columns)
+
+        df = self
+        for c in columns:
+
+
+            new_col = "z_col_" + c
+
+            mean_value = self.cols().mean(columns)
+            stdev_value = self.cols().std(columns)
+
+            df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
+        return df
+
+    @add_attr(cols)
+    def iqr(columns, more=None):
+        """
+        Return the column data type
+        :param columns:
+        :param more: Return info about q1 and q3
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        for c in columns:
+            quartile = self.cols().percentile(c, [0.25, 0.75])
+            q1 = quartile[0.25]
+            q3 = quartile[0.75]
+
+        iqr_value = q3 - q1
+        if more:
+            result = {"iqr": iqr_value, "q1": q1, "q3": q3}
+        else:
+            result = iqr_value
+        return result
 
     return cols
