@@ -1,3 +1,7 @@
+## Helpers to check if an object belong to some kind
+
+from pyspark.sql import DataFrame
+
 
 def is_function(obj):
     """
@@ -33,6 +37,7 @@ def is_list_of_str_or_num(value):
     :return:
     """
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
+
 
 def is_list_of_strings(value):
     """
@@ -97,9 +102,18 @@ def is_str(value):
     return isinstance(value, str)
 
 
-def is_data_type(value, attr):
+def is_int(value):
     """
-    Return if a value is int, float or string. Also is string try to check if it"s int or float
+    Check if an object is an integer
+    :param value:
+    :return:
+    """
+    return isinstance(value, int)
+
+
+def is_data_type(value, data_type):
+    """
+    Check if a value can be casted to a specific
     :param value: value to be checked
 
     :return:
@@ -126,10 +140,19 @@ def is_data_type(value, attr):
     else:
         data_type = "null"
 
-    if data_type == attr:
+    if data_type == data_type:
         return True
     else:
         return False
+
+
+def is_dataframe(value):
+    """
+    Check if an object is a Spark DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, DataFrame)
 
 
 def str_to_int(value):
@@ -145,6 +168,7 @@ def str_to_int(value):
     except ValueError:
         pass
 
+
 def str_to_float(value):
     """
     Check if a str can be converted to float
@@ -157,6 +181,7 @@ def str_to_float(value):
 
     except ValueError:
         pass
+
 
 def str_to_boolean(value):
     """

@@ -1,7 +1,6 @@
-from pyspark.sql.session import SparkSession
 from pyspark.sql import functions as F
-
 from optimus.helpers.functions import parse_columns
+from optimus.helpers.checkit import *
 
 
 class OutlierDetector:
@@ -18,16 +17,22 @@ class OutlierDetector:
         :return:
         """
 
+        if not is_dataframe(df):
+            raise TypeError("Spark Dataframe expected")
+
         columns = parse_columns(df, columns)
 
         for c in columns:
             iqr = df.cols().iqr(c, more=True)
             lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
             upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
-            return df.where((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+
+            df = df.rows().drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+
+        return df
 
     @staticmethod
-    def z_score(df, columns, threshold=1):
+    def z_score(df, columns, threshold=None):
         """
         Delete outlier using z score
         :param df:
@@ -36,7 +41,14 @@ class OutlierDetector:
         :return:
         """
 
+        if not is_dataframe(df):
+            raise TypeError("Spark Dataframe expected")
+
+        if not is_int(threshold):
+            raise TypeError("Integer expected")
+
         columns = parse_columns(df, columns)
+
         for c in columns:
             # the column with the z_col value is always the string z_col plus the name of column
             z_col = "z_col_" + c
@@ -48,23 +60,26 @@ class OutlierDetector:
         return df
 
     @staticmethod
-    def mad():
-        self.spark = SparkSession.builder.enableHiveSupport().getOrCreate()
-        self._df = df
-        self._column = column
+    def mad(df, columns, threshold=None):
+        """
+        Delete outlier using mad
+        :param df:
+        :param columns:
+        :param threshold:
+        :return:
+        """
 
-        self.median_value = median(self._df, self._column)
+        if not is_dataframe(df):
+            raise TypeError("Spark Dataframe expected")
 
-        absolute_deviation = (self._df
-                              .select(self._column)
-                              .orderBy(self._column)
-                              .withColumn(self._column, absspark(col(self._column) - self.median_value))
-                              .cache())
+        if not is_int(threshold):
+            raise TypeError("Integer expected")
 
-        self.mad_value = median(absolute_deviation, column)
+        columns = parse_columns(df, columns)
+        for c in columns:
+            mad_value = df.cols().mad(c, more=True)
+            lower_bound = mad_value["median"] - threshold * mad_value["mad"]
+            upper_bound = mad_value["median"] + threshold * mad_value["mad"]
 
-        self.threshold = threshold
-
-        self._limits = []
-        self._limits.append(round((self.median_value - self.threshold * self.mad_value), 2))
-        self._limits.append(round((self.median_value + self.threshold * self.mad_value), 2))
+            df = df.rows().drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+        return df

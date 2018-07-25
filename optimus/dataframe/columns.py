@@ -370,7 +370,7 @@ def cols(self):
     # Descriptive Analytics
 
     @add_attr(cols)
-    def mad(col_name):
+    def mad(col_name, more = None):
         """
         Return the Median Absolute Deviation
         :param col_name:
@@ -384,7 +384,12 @@ def cols(self):
             .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
             .cols().median(col_name)
 
-        return mad_value
+        if more:
+            result = {"mad": mad_value, "median": median_value}
+        else:
+            result = mad_value
+
+        return result
 
     @add_attr(cols)
     def std(columns):

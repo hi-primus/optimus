@@ -5,6 +5,15 @@ from optimus.helpers.checkit import *
 from optimus.helpers.constants import *
 
 import re
+import random
+
+
+def random_name():
+    """
+    Create a unique filename
+    :return:
+    """
+    return str(random.randint(1, 100))
 
 
 def parse_spark_dtypes(value):
@@ -275,5 +284,5 @@ def is_pyarrow_installed():
 
 
 def filter_col_name_by_type(df, data_type):
-    #data_type = parse_spark_dtypes(data_type)
+    # data_type = parse_spark_dtypes(data_type)
     return [y[0] for y in filter(lambda x: x[1] == data_type, df.dtypes)]
