@@ -19,6 +19,9 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
 
+# from pyspark.ml.linalg import Vectors
+from pyspark.ml.feature import VectorAssembler
+
 import builtins
 
 
@@ -370,7 +373,7 @@ def cols(self):
     # Descriptive Analytics
 
     @add_attr(cols)
-    def mad(col_name, more = None):
+    def mad(col_name, more=None):
         """
         Return the Median Absolute Deviation
         :param col_name:
@@ -864,13 +867,10 @@ def cols(self):
         :return:
         """
 
-
         columns = parse_columns(self, columns)
 
         df = self
         for c in columns:
-
-
             new_col = "z_col_" + c
 
             mean_value = self.cols().mean(columns)
@@ -899,5 +899,63 @@ def cols(self):
         else:
             result = iqr_value
         return result
+
+    assembler = VectorAssembler(
+        inputCols=["hour", "mobile", "userFeatures"],
+        outputCol="features")
+
+    @add_attr(cols)
+    def nest(input_cols, output_cols):
+        """
+
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        validate_columns_names(self, input_cols)
+
+        if not is_str(output_cols):
+            raise TypeError("Expected string")
+
+        vector_assembler = VectorAssembler(
+            inputCols=input_cols,
+            outputCol=output_cols)
+
+        return vector_assembler.transform(self)
+
+    @add_attr(cols)
+    def unnest(features_col_name):
+        """
+        This function unpack a column of list arrays into different columns.
+        +-------------------+-------+
+        |           features|column |
+        +-------------------+-------+
+        |[11, 2, 1, 1, 1, 1]|   hola|
+        | [0, 1, 1, 1, 1, 1]|  salut|
+        |[31, 1, 1, 1, 1, 1]|  hello|
+        +-------------------+-------+
+                      |
+                      |
+                      V
+        +-------+---+---+-----+----+----+---+
+        |column |one|two|three|four|five|six|
+        +-------+---+---+-----+----+----+---+
+        |   hola| 11|  2|    1|   1|   1|  1|
+        |  salut|  0|  1|    1|   1|   1|  1|
+        |  hello| 31|  1|    1|   1|   1|  1|
+        +-------+---+---+-----+----+----+---+
+
+        Thanks https://stackoverflow.com/questions/38384347/how-to-split-vector-into-columns-using-pyspark
+
+        :param features_col_name:
+        """
+
+        # Check if column argument a string datatype:
+        def extract(row):
+            return (row.word,) + tuple(row.vector.toArray().tolist())
+
+        validate_columns_names(self, features_col_name)
+
+        return self.rdd.map(extract).toDF([features_col_name])
 
     return cols
