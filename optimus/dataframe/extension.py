@@ -133,4 +133,25 @@ def remove_head(self):
     :param self:
     :return:
     """
-    self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
+    return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
+
+
+def sql(self, sql_expression):
+    """
+    Implements the transformations which are defined by SQL statement. Currently we only support
+    SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
+    underlying table of the input dataframe.
+    :param self:
+    :param sql_expression: SQL expression.
+    :return: Dataframe with columns changed by SQL statement.
+    """
+
+    self._assert_type_str(sql_expression, "sql_expression")
+
+    from pyspark.ml.feature import SQLTransformer
+
+    sql_transformer = SQLTransformer(statement=sql_expression)
+
+    self._df = sql_transformer.transform(self)
+
+    return self
