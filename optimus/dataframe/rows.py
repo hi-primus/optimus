@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.dataframe import *
 
-#from pyspark.sql import functions as F
+# from pyspark.sql import functions as F
 
 # Helpers
 import optimus.create as op
@@ -10,6 +10,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 
 from optimus.functions import filter_row_by_data_type as fbdt
+
 
 @add_method(DataFrame)
 def rows(self):
@@ -20,11 +21,13 @@ def rows(self):
         :param row: List of values
         :return:
         """
+
+        #if is_list_of_dataframes(rows):
+        #    return reduce(DataFrame.union, dfs)
         df = self
 
         assert isinstance(row, list), "Error: row must me a list"
         assert len(row) > 0, "Error: row list must be greater that 0"
-
         assert len(df.dtypes) == len(row), "Error row must be the same lenght of the dataframe"
 
         cols = []
@@ -123,6 +126,14 @@ def rows(self):
         """
 
         columns = parse_columns(self, columns)
-        return self.drop_duplicates(columns, subset=columns)
+        return self.drop_duplicates(subset=columns)
+
+    @add_attr(rows)
+    def drop_first():
+        """
+        Remove first row in a dataframe
+        :return:
+        """
+        return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
     return rows
