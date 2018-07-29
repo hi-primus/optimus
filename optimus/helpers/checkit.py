@@ -39,6 +39,15 @@ def is_list_of_str_or_num(value):
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
 
 
+def is_list_of_dataframes(value):
+    """
+    Check if an object is a Spark DataFrame
+    :param value:
+    :return:
+    """
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, (DataFrame)) for elem in value)
+
+
 def is_list_of_strings(value):
     """
     Check that all elements in a list are strings
