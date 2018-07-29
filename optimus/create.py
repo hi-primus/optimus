@@ -1,10 +1,14 @@
+from functools import reduce
+
 from pyspark.sql.types import StructField, StructType
 from pyspark.sql import DataFrame
-from optimus.spark import Spark
+from pyspark.sql import functions as F
 
 # Helpers
-from optimus.helpers.constants import *
+# from optimus.helpers.constants import *
 from optimus.helpers.functions import *
+from optimus.spark import Spark
+
 
 
 class Create:
@@ -33,5 +37,29 @@ class Create:
 
         return Spark.instance.get_ss().createDataFrame(rows, StructType(struct_fields))
 
-    # Alias
+    @staticmethod
+    def concat(dfs, axis=0):
+        """
+        Concat columns or rows to a dataframe
+        :param dfs:
+        :param axis;
+        :return:
+        """
+        # Add increasing Ids, and they should be the same.
+        if axis == 1:
+            df_result = []
+            col_temp_name = "id_" + random_name()
+            for df in dfs:
+                df_result.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+            def _append_df(df1, df2):
+                return df2.join(df1, col_temp_name, "outer").drop(col_temp_name)
+
+            result = reduce(_append_df, df_result)
+        else:
+            result = reduce(DataFrame.union, dfs)
+        return result
+
+        # Alias
+
     df = data_frame

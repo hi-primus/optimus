@@ -11,6 +11,7 @@ from optimus.create import Create
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
+from optimus.helpers.functions import random_name
 
 from optimus.profiler.profiler import Profiler
 
@@ -35,7 +36,6 @@ class Optimus:
         # Initialize Spark
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
-        print(SUCCESS)
 
         self.create = Create()
         self.load = Load()
@@ -50,9 +50,6 @@ class Optimus:
     @staticmethod
     def get_sc():
         return Spark.instance.get_sc()
-
-    def concat(self, *dfs):
-        return reduce(DataFrame.union, dfs)
 
     def set_check_point_folder(self, path, file_system):
         """
