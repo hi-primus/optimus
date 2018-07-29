@@ -1,3 +1,14 @@
+"""
+Code based on pyspark_pipes by Daniel Acuña
+"""
+from pyspark.ml import Pipeline
+from pyspark.ml.param.shared import HasFeaturesCol, HasInputCol, \
+    HasInputCols, HasPredictionCol, HasOutputCol, HasLabelCol, Params, \
+    HasRawPredictionCol, HasProbabilityCol
+
+ALLOWED_TYPES = (HasFeaturesCol, HasInputCol, HasInputCols, HasLabelCol,
+                 HasPredictionCol, HasOutputCol)
+
 
 def set_default_colnames(pipe_stage):
     """
@@ -178,3 +189,27 @@ def patch():
     Params.__or__ = right_pipe_function
     Params.__ror__ = left_pipe_function
 
+
+def print_stage(pipe):
+    """
+    Print stage of a pipeline even recursively
+    :param pipe: Pipeline
+    :return: str
+    """
+    if isinstance(pipe, Pipeline):
+        return "[\n" + ','.join([print_stage(s) for s in pipe.getStages()]) + "\n]"
+    else:
+        result = ""
+        if isinstance(pipe, HasInputCol):
+            result += pipe.getInputCol()
+        elif isinstance(pipe, HasInputCols):
+            result += str(pipe.getInputCols())
+        elif isinstance(pipe, HasFeaturesCol):
+            result += pipe.getFeaturesCol()
+
+        result += " - "
+        if isinstance(pipe, HasOutputCol):
+            result += pipe.getOutputCol()
+        elif isinstance(pipe, HasPredictionCol):
+            result += pipe.getPredictionCol()
+        return result
