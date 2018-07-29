@@ -1,8 +1,6 @@
 from pyspark.sql import DataFrame
 
 from pyspark.sql import functions as F
-from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.functions import abstract_udf
 
 from pyspark.sql.functions import Column
 import unicodedata
@@ -13,11 +11,15 @@ from functools import reduce
 from multipledispatch import dispatch
 
 from pyspark.ml.feature import Imputer
+from pyspark.ml.feature import QuantileDiscretizer
 
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
+from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.functions import abstract_udf
+from optimus.create import Create
 
 # from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
@@ -49,20 +51,30 @@ def cols(self):
     @dispatch(list)
     def append(cols_values=None):
         """
-        Append a collumn to a Dataframe
+        Append a column or a Dataframe to a Dataframe
         :param cols_values:
         :return:
         """
-        df = self
-        for c in cols_values:
-            value = c[1]
-            name = c[0]
 
-            # Create a column if necessary
-            if isinstance(value, (int, str, float)):
-                value = F.lit(value)
-            df = df.withColumn(name, value)
-        return df
+        # Append a dataframe
+        if is_list_of_dataframes(cols_values):
+            dfs = cols_values
+            dfs.insert(0, self)
+            df_result = Create.concat(dfs, axis=1)
+
+        elif is_list_of_tuples(cols_values):
+            df_result = self
+            for c in cols_values:
+                name = c[0]
+                value = c[1]
+
+                # Create a column if necessary
+                # TODO: Check if we can add arrays and vectors
+                if is_numeric(value) or is_str(value):
+                    value = F.lit(value)
+                df_result = df_result.withColumn(name, value)
+
+        return df_result
 
     @add_attr(cols)
     def filter(columns=None, regex=None, data_type=None):
@@ -77,7 +89,7 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func, attrs=None):
+    def apply_exp(columns, func=None, attrs=None, col_exp=None):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
@@ -86,13 +98,19 @@ def cols(self):
         :return:
         """
 
-        # if isinstance(func, Column):
+        if isinstance(func, Column):
+            def func_col_exp(col_name, attr):
+                return func
+
+            _func = func_col_exp
+        else:
+            _func = func
 
         columns = parse_columns(self, columns)
 
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, abstract_udf(col_name, func, attrs=attrs, func_type="column_exp"))
+            df = df.withColumn(col_name, abstract_udf(col_name, _func, attrs=attrs, func_type="column_exp"))
         return df
 
     @add_attr(cols)
@@ -253,7 +271,7 @@ def cols(self):
         return self.select(*columns)
 
     @add_attr(cols)
-    # TODO: Sort by datatype?
+    # TODO: Create a function to sort by datatype?
     def sort(reverse=False):
         """
 
@@ -339,7 +357,7 @@ def cols(self):
         return range
 
     @add_attr(cols)
-    # TODO: Use pandas for small datasets?!
+    # TODO: Use pandas or rdd for small datasets?!
     def median(columns):
         """
         Return the median of a column dataframe
@@ -351,19 +369,19 @@ def cols(self):
         return percentile(columns, [0.5])
 
     @add_attr(cols)
-    def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95]):
+    def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95], error=0):
         """
         Return the percentile of a dataframe
         :param columns: 
         :param percentile:
         :return: 
         """
+
         columns = parse_columns(self, columns)
 
         # Get percentiles
-        percentile_results = self.approxQuantile(columns, percentile, 0)
+        percentile_results = self.approxQuantile(columns, percentile, error)
 
-        # TODO: Check if we can use the _agg function
         # Merge percentile and value
         percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
 
@@ -670,8 +688,6 @@ def cols(self):
         # TODO: this should filter only numeric values
         columns = parse_columns(self, columns)
 
-        assert isinstance(columns, list), "Error: columns argument must be a list"
-
         assert isinstance(out_cols, list), "Error: out_cols argument must be a list"
 
         # Check if columns argument a string datatype:
@@ -768,6 +784,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
+        assert len(columns) >= 2, "Error 2 or more columns needed"
         return self.select(reduce((lambda x, y: self[x] - self[y]), columns))
 
     @add_attr(cols)
@@ -778,6 +795,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
+        assert len(columns) >= 2, "Error 2 or more columns needed"
         return self.select(reduce((lambda x, y: self[x] * self[y]), columns))
 
     @add_attr(cols)
@@ -788,6 +806,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
+        assert len(columns) >= 2, "Error 2 or more columns needed"
         return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
 
     @add_attr(cols)
@@ -822,7 +841,7 @@ def cols(self):
             replace = value
 
         # if regex or normal replace we use regexp or replace functions
-        # TODO check if .contanins can be used instead of regexp
+        # TODO check if .contains can be used instead of regexp
         def func_regex(_df, _col_name, _search, _replace):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
@@ -900,10 +919,6 @@ def cols(self):
             result = iqr_value
         return result
 
-    assembler = VectorAssembler(
-        inputCols=["hour", "mobile", "userFeatures"],
-        outputCol="features")
-
     @add_attr(cols)
     def nest(input_cols, output_cols):
         """
@@ -926,7 +941,7 @@ def cols(self):
     @add_attr(cols)
     def unnest(features_col_name):
         """
-        This function unpack a column of list arrays into different columns.
+        This function unpack a column of list arrays to multiple columns.
         +-------------------+-------+
         |           features|column |
         +-------------------+-------+
@@ -951,11 +966,37 @@ def cols(self):
         """
 
         # Check if column argument a string datatype:
-        def extract(row):
+        def _unnest(row):
             return (row.word,) + tuple(row.vector.toArray().tolist())
 
         validate_columns_names(self, features_col_name)
 
-        return self.rdd.map(extract).toDF([features_col_name])
+        return self.rdd.map(_unnest).toDF([features_col_name])
+
+    @add_method(cols)
+    def _hist(column, bins=10):
+        """
+
+        :param column:
+        :param bins:
+        :return:
+        """
+
+        temp_col = "bucket_" + column
+        discretizer = QuantileDiscretizer(numBuckets=10, inputCol=column, outputCol=temp_col)
+        df = discretizer.fit(self).transform(self)
+        return collect_to_dict(df.groupBy(temp_col).agg(F.min(column).alias('min'), F.max(column).alias('max'),
+                                                        F.count(temp_col).alias('count')).orderBy(temp_col).collect())
+
+    @add_method(cols)
+    def hist(columns, bins=10):
+        """
+
+        :param columns:
+        :param bins:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        return format_dict({c: self._hist(c, bins) for c in columns})
 
     return cols
