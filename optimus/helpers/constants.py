@@ -1,5 +1,6 @@
 from pyspark.sql import types as t
-from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType
+from pyspark.sql.types import StringType, BooleanType, IntegerType, \
+    ArrayType, FloatType, DoubleType, StructType
 
 # You can use string, str or String as param
 TYPES = {'string': 'string',
@@ -15,8 +16,20 @@ TYPES = {'string': 'string',
 
 TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
 
-TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(), 'double': DoubleType(),
-                    'boolean': BooleanType()}
+SPARK_TYPES = {'string': 'string',
+               'str': 'string',
+               'integer': 'int',
+               'int': 'int',
+               'float': 'float',
+               'double': 'double',
+               'bool': 'boolean',
+               'boolean': 'boolean',
+               'struct': 'struct',
+               'array': '_array'
+
+               }
+TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
+                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType()}
 
 TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
 

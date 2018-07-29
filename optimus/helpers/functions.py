@@ -23,9 +23,9 @@ def parse_spark_dtypes(value):
     :return:
     """
     try:
-        data_type = TYPES_SPARK_FUNC[TYPES[value.lower()]]
+        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value.lower()]]
     except TypeError:
-        print("Expected {0}, got {1}".format(",".join([k for k in TYPES]), value))
+        print("Expected {0}, got {1}".format(",".join([k for k in SPARK_TYPES]), value))
     return data_type
 
 

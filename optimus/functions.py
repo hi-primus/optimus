@@ -56,6 +56,7 @@ def func_factory(func_type=None, func_return_type=None):
         return F.udf(lambda value: func(value, attr))
 
     def expression_func(attr, func):
+        # TODO: Check if we can the returned value for a col expression
         def inner(col_name):
             return func(col_name, attr)
 
