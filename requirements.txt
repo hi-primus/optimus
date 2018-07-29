@@ -5,7 +5,7 @@ pytest==3.6.3
 findspark==1.2.0
 spark_df_profiling_optimus==0.1.1
 nose==1.3.7
-ipython==6.4.0
+ipython==6.5.0
 seaborn==0.8.1
 setuptools==40.0.0
 pixiedust-optimus==1.4.0
