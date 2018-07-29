@@ -2,6 +2,8 @@ from pyspark.sql import types as t
 from pyspark.sql.types import StringType, BooleanType, IntegerType, \
     ArrayType, FloatType, DoubleType, StructType
 
+import logging
+
 # You can use string, str or String as param
 TYPES = {'string': 'string',
          'str': 'string',
@@ -45,8 +47,9 @@ STARTING = "Starting or getting SparkSession and SparkContext..."
 
 
 def print_check_point_config(filesystem):
-    print("Setting checkpoint folder (", filesystem,
-          "). If you are in a cluster initialize optimus with master='your_ip' as param")
+    return logging.info(
+        "Setting checkpoint folder %s. If you are in a cluster initialize Sptimus with master='your_ip' as param",
+        filesystem)
 
 
 SUCCESS = "Optimus successfully imported. Have fun :)."

@@ -1,27 +1,22 @@
 import os
 from shutil import rmtree
-from functools import reduce
+import logging
+import sys
 
 from optimus.spark import Spark
-
-# We use this to save a reference to the Spark session at the module level
-Spark.instance = None
-
 from optimus.create import Create
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
-from optimus.helpers.functions import random_name
-
-from optimus.profiler.profiler import Profiler
+from optimus.dataframe import rows, columns, extension
 
 from pyspark.sql import DataFrame
 
-from optimus.dataframe import rows, columns, extension
-
+# We use this to save a reference to the Spark session at the module level
+Spark.instance = None
 
 class Optimus:
-    def __init__(self, master="local", app_name="optimus", path=None, file_system="local"):
+    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
         """
 
         :param master:
@@ -29,6 +24,17 @@ class Optimus:
         :param path:
         :param file_system:
         """
+        if verbose:
+
+            level = logging.INFO
+            logging.basicConfig(format="%(message)s", level=level)
+        else:
+            level = logging.INFO
+            logging.propagate = False
+            logging.disable(logging.NOTSET)
+
+        #logging.basicConfig(format="%(levelname)s: %(message)s", level=level)
+
 
         if path is None:
             path = os.getcwd()
@@ -92,12 +98,12 @@ class Optimus:
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
-            print("Deleting previous folder if exists...")
+            logging.info("Deleting previous folder if exists...")
             if os.path.isdir(folder_path):
                 # Deletes folder if exits:
                 rmtree(folder_path)
 
-            print("Creating the checkpoint directory...")
+            logging.info("Creating the checkpoint directory...")
             # Creates new folder:
             os.mkdir(folder_path)
 

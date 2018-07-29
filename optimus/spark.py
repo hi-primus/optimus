@@ -1,5 +1,6 @@
-from functools import lru_cache
+# from functools import lru_cache
 import os
+import logging
 
 from pyspark.sql import SparkSession
 
@@ -17,7 +18,7 @@ class Spark:
         self.master = master
         self.app_name = app_name
 
-        print("""
+        logging.info("""
              ____        __  _                     
             / __ \____  / /_(_)___ ___  __  _______
            / / / / __ \/ __/ / __ `__ \/ / / / ___/
@@ -26,13 +27,13 @@ class Spark:
               /_/                                  
               """)
 
-        print(JUST_CHECKING)
-        print("-----")
-        print("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
-        print("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
-        print("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
-        print("-----")
-        print(STARTING)
+        logging.info(JUST_CHECKING)
+        logging.info("-----")
+        logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
+        logging.info("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
+        logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
+        logging.info("-----")
+        logging.info(STARTING)
         self.get_ss()
 
     def get_ss(self):

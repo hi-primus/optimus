@@ -1,5 +1,7 @@
 # URL reading
 import tempfile
+import logging
+
 from urllib.request import Request, urlopen
 from optimus.spark import Spark
 
@@ -33,7 +35,6 @@ class Load:
             "url": url
         }
         if type_of == "csv":
-            print("csv")
             data_loader = self.csv_data_loader
         else:
             data_loader = self.json_data_loader
@@ -48,8 +49,7 @@ class Load:
         :return:
         """
 
-        print("path")
-        print("Loading file using 'SparkSession'")
+        logging.info("Loading file using SparkSession")
         csvload = Spark.instance.get_ss() \
             .read \
             .format("csv") \
@@ -74,7 +74,7 @@ class Load:
 class Downloader(object):
     def __init__(self, data_def):
         self.data_def = data_def
-        self.headers = {"User-Agent": "PixieDust Sample Data Downloader/1.0"}
+        self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
 
     def download(self, data_loader):
         display_name = self.data_def["displayName"]
@@ -84,7 +84,7 @@ class Downloader(object):
         else:
             url = self.data_def["url"]
             req = Request(url, None, self.headers)
-            print("Downloading '{0}' from {1}".format(display_name, url))
+            logging.info("Downloading %s from %s", display_name, url)
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
@@ -92,11 +92,11 @@ class Downloader(object):
         if path:
             try:
                 if bytes_downloaded > 0:
-                    print("Downloaded {} bytes".format(bytes_downloaded))
-                print("Creating {1} DataFrame for '{0}'. Please wait...".format(display_name, 'pySpark'))
+                    logging.info("Downloaded %s bytes", bytes_downloaded)
+                logging.info("Creating DataFrame for %s. Please wait...", display_name)
                 return data_loader(path)
             finally:
-                print("Successfully created {1} DataFrame for '{0}'".format(display_name, 'pySpark'))
+                logging.info("Successfully created DataFrame for '%s'", display_name)
 
     @staticmethod
     def write(response, file, chunk_size=8192):
