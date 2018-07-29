@@ -1,3 +1,8 @@
+from pyspark.ml import feature, Pipeline
+from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler
+
+from optimus.helpers.functions import is_dataframe, parse_columns
+
 
 def n_gram(df, input_col, n=2):
     """
@@ -21,103 +26,80 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(self, input_cols):
+def string_to_index(df, input_cols):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
+    :param df:
     :param input_cols: Columns to be indexed.
     :return: Dataframe with indexed columns.
     """
 
-    # Check if columns argument must be a string or list datatype:
-    self._assert_type_str_or_list(input_cols, "input_cols")
+    input_cols = parse_columns(df, input_cols)
 
-    if isinstance(input_cols, str):
-        input_cols = [input_cols]
-
-    from pyspark.ml import Pipeline
-    from pyspark.ml.feature import StringIndexer
-
-    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(self._df) for column in
+    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(df) for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
-    self._df = pipeline.fit(self._df).transform(self._df)
+    df = pipeline.fit(df).transform(df)
 
-    return self
+    return df
 
 
-def index_to_string(self, input_cols):
+def index_to_string(df, input_cols):
     """
     Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
     ML attributes).
+    :param df:
     :param input_cols: Columns to be indexed.
     :return: Dataframe with indexed columns.
     """
 
-    # Check if columns argument must be a string or list datatype:
-    self._assert_type_str_or_list(input_cols, "input_cols")
-
-    if isinstance(input_cols, str):
-        input_cols = [input_cols]
-
-    from pyspark.ml import Pipeline
-    from pyspark.ml.feature import IndexToString
+    input_cols = parse_columns(df, input_cols)
 
     indexers = [IndexToString(inputCol=column, outputCol=column + "_string") for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
-    self._df = pipeline.fit(self._df).transform(self._df)
+    df = pipeline.fit(df).transform(df)
 
-    return self
+    return df
 
 
-def one_hot_encoder(self, input_cols):
+def one_hot_encoder(df, input_cols):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
+    :param df:
     :param input_cols: Columns to be encoded.
     :return: Dataframe with encoded columns.
     """
 
-    # Check if columns argument must be a string or list datatype:
-    self._assert_type_str_or_list(input_cols, "input_cols")
-
-    if isinstance(input_cols, str):
-        input_cols = [input_cols]
-
-    from pyspark.ml import Pipeline
-    from pyspark.ml.feature import OneHotEncoder
+    input_cols = parse_columns(df, input_cols)
 
     encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
               list(set(input_cols))]
 
     pipeline = Pipeline(stages=encode)
-    self._df = pipeline.fit(self._df).transform(self._df)
+    df = pipeline.fit(df).transform(df)
 
-    return self
+    return df
 
 
 # TODO: Must we use the pipeline version?
-def vector_assembler(self, input_cols):
+def vector_assembler(df, input_cols):
     """
     Combines a given list of columns into a single vector column.
+    :param df:
     :param input_cols: Columns to be assembled.
     :return: Dataframe with assembled column.
     """
 
-    # Check if columns argument must be a string or list datatype:
-    self._assert_type_str_or_list(input_cols, "input_cols")
-
-    if isinstance(input_cols, str):
-        input_cols = [input_cols]
-
-    from pyspark.ml import Pipeline
+    input_cols = parse_columns(df, input_cols)
 
     assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
 
     pipeline = Pipeline(stages=assembler)
-    self._df = pipeline.fit(self._df).transform(self._df)
+    df = pipeline.fit(df).transform(df)
 
-    return self
+    return df
