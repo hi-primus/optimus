@@ -2,18 +2,27 @@ import os
 from shutil import rmtree
 import logging
 import sys
+from functools import reduce
 
 from optimus.spark import Spark
+
+Spark.instance = None
+
+import operator
 from optimus.create import Create
 from optimus.io.load import Load
 from optimus.spark import Spark
 from optimus.helpers.constants import *
+from optimus.helpers.functions import random_name, is_str, is_list_of_dataframes, is_ip, is_filepath
+from optimus.helpers.raiseit import RaiseIfNot
 from optimus.dataframe import rows, columns, extension
 
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
+
 
 # We use this to save a reference to the Spark session at the module level
-Spark.instance = None
+
 
 class Optimus:
     def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
@@ -24,17 +33,23 @@ class Optimus:
         :param path:
         :param file_system:
         """
-        if verbose:
 
+        RaiseIfNot.type_error(master, is_str)
+        RaiseIfNot.value_error(master, ["master", "local"])
+
+        RaiseIfNot.type_error(app_name, is_str)
+
+        RaiseIfNot.type_error(path, is_str)
+        RaiseIfNot.value_error(path, is_filepath)
+
+        RaiseIfNot.value_error(master, ["local", "hadoop"])
+
+        if verbose:
             level = logging.INFO
             logging.basicConfig(format="%(message)s", level=level)
         else:
-            level = logging.INFO
             logging.propagate = False
             logging.disable(logging.NOTSET)
-
-        #logging.basicConfig(format="%(levelname)s: %(message)s", level=level)
-
 
         if path is None:
             path = os.getcwd()
@@ -57,6 +72,36 @@ class Optimus:
     def get_sc():
         return Spark.instance.get_sc()
 
+    @staticmethod
+    def concat(dfs, like="columns"):
+        """
+        Concat multiple dataframes as columns or rows way
+        :param dfs:
+        :param like: The way dataframes is going to be concat. like columns or rows
+        :return:
+        """
+        RaiseIfNot.type_error(dfs, is_list_of_dataframes)
+
+        RaiseIfNot.value_error(like, ["columns", "rows"])
+
+        # Add increasing Ids, and they should be the same.
+        if like == "columns":
+            temp_dfs = []
+            col_temp_name = "id_" + random_name()
+            for df in dfs:
+                temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+            def _append_df(df1, df2):
+                return df2.join(df1, col_temp_name, "outer").drop(col_temp_name)
+
+            df_result = reduce(_append_df, temp_dfs)
+        elif like == "rows":
+            df_result = reduce(DataFrame.union, dfs)
+
+        return df_result
+
+        # Alias
+
     def set_check_point_folder(self, path, file_system):
         """
         Function that receives a workspace path where a folder is created.
@@ -73,11 +118,7 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-        assert (isinstance(file_system, str)), \
-            "Error: file_system argument must be a string."
-
-        assert (file_system == "hadoop") or (file_system == "local"), \
-            "Error, file_system argument only can be 'local' or 'hadoop'"
+        RaiseIfNot.type_error(file_system, is_filepath)
 
         print_check_point_config(file_system)
 
@@ -86,15 +127,15 @@ class Optimus:
             self.delete_check_point_folder(path=path, file_system=file_system)
 
             # Creating file:
-            print("Creating the hadoop folder...")
+            logging.info("Creating the hadoop folder...")
             command = "hadoop fs -mkdir " + folder_path
-            print("$" + command)
+            logging.info("$" + command)
             os.system(command)
-            print("Hadoop folder created. \n")
+            logging.info("Hadoop folder created. \n")
 
-            print("Setting created folder as checkpoint folder...")
+            logging.info("Setting created folder as checkpoint folder...")
             Spark.instance.get_sc().setCheckpointDir(folder_path)
-        else:
+        elif file_system == "local":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
@@ -108,6 +149,8 @@ class Optimus:
             os.mkdir(folder_path)
 
             Spark.instance.get_sc().setCheckpointDir(dirName="file:///" + folder_path)
+        else:
+            raise ValueError("file_system must be 'local' or 'hadoop', received {0}".format(file_system))
 
     @staticmethod
     def delete_check_point_folder(path, file_system):
@@ -119,22 +162,20 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
+        RaiseIfNot.type_error(file_system, is_filepath)
 
-        assert (isinstance(file_system, str)), "Error: file_system argument must be a string."
-
-        assert (file_system == "hadoop") or (file_system == "local"), \
-            "Error, file_system argument only can be 'local' or 'hadoop'"
+        RaiseIfNot.value_error(file_system, ["hadoop", "local"])
 
         if file_system == "hadoop":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
-            print("Deleting checkpoint folder...")
+            logging.info("Deleting checkpoint folder...")
             command = "hadoop fs -rm -r " + folder_path
             os.system(command)
-            print("$" + command)
-            print("Folder deleted. \n")
-        else:
-            print("Deleting checkpoint folder...")
+            logging.info("$" + command)
+            logging.info("Folder deleted.")
+        elif file_system == "local":
+            logging.info("Deleting checkpoint folder...")
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
@@ -142,7 +183,7 @@ class Optimus:
                 # Deletes folder if exits:
                 rmtree(folder_path)
                 # Creates new folder:
-                print("Folder deleted. \n")
+                logging.info("Folder deleted.")
             else:
-                print("Folder deleted. \n")
+                logging.info("Folder deleted.")
                 pass
