@@ -1,6 +1,7 @@
 ## Helpers to check if an object belong to some kind
 
 from pyspark.sql import DataFrame
+import os
 
 
 def is_function(obj):
@@ -21,6 +22,7 @@ def is_list(value):
     return isinstance(value, list)
 
 
+@staticmethod
 def is_list_of_str_or_int(value):
     """
     Check if an object is a string or an integer
@@ -45,7 +47,39 @@ def is_list_of_dataframes(value):
     :param value:
     :return:
     """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, (DataFrame)) for elem in value)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, DataFrame) for elem in value)
+
+
+def is_filepath(file_path):
+    """
+    Check if a valid filepath
+    :param file_path:
+    :return:
+    """
+    # the file is there
+    if os.path.exists(file_path):
+        return True
+    # the file does not exists but write privileges are given
+    elif os.access(os.path.dirname(file_path), os.W_OK):
+        return True
+    # can not write there
+    else:
+        return False
+
+
+def is_ip(address):
+    """
+    Check is a valid ip
+    :param address:
+    :return:
+    """
+    parts = address.split(".")
+    if len(parts) != 4:
+        return False
+    for item in parts:
+        if not 0 <= int(item) <= 255:
+            return False
+    return True
 
 
 def is_list_of_strings(value):
