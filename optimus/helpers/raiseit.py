@@ -1,6 +1,9 @@
 from optimus.helpers import checkit as c
 import operator as operator_
 import inspect
+from functools import reduce
+
+from optimus.helpers.checkit import is_function
 
 
 class RaiseIfNot:
@@ -18,14 +21,6 @@ class RaiseIfNot:
         return None
 
     @staticmethod
-    def _apply(var, func, operator):
-        if operator == "not":
-            expr = operator_.not_(func(var))
-        else:
-            expr = func(var)
-        return expr
-
-    @staticmethod
     def type_error(var, func, operator="not"):
         """
         Raise a TypeError exception
@@ -35,27 +30,37 @@ class RaiseIfNot:
         :return:
         """
 
-        if RaiseIfNot._apply(var, func, operator):
-            raise TypeError(
-                "'{var_name}' must be {type}, received '{var_type}'{value}"
-                    .format(var_name=RaiseIfNot._get_name(var),
-                            type=str, var_type=var,
-                            value=type(var)))
-        pass
+        raise TypeError(
+            "'{var_name}' must be {type}, received '{var_type}'{value}"
+                .format(var_name=RaiseIfNot._get_name(var),
+                        type=str, var_type=var,
+                        value=type(var)))
 
     @staticmethod
-    def value_error(var, _list, operator="not"):
+    def value_error(var, _list):
         """
         Raise a ValueError exception
         :param var:
-        :param _list:
-        :param operator:
+        :param _list: string, value
         :return:
         """
 
-        if RaiseIfNot._apply(var, _list, operator):
+        r = []
+        for element in _list:
+            if is_function(element):
+                r.append(element(var))
+            else:
+                r.append(element == var)
+
+        if not any(r):
+            if len(_list) == 2:
+                divisor = " or "
+            elif len(_list) > 2:
+                divisor = ", "
+
+
             raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
                              .format(var_name=RaiseIfNot._get_name(var),
-                                     type=" or ".join(map(
+                                     type=divisor.join(map(
                                          lambda x: "'" + x + "'",
                                          _list)), var_type=var))

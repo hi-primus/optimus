@@ -24,7 +24,7 @@ from pyspark.sql import functions as F
 
 
 class Optimus:
-    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=True):
+    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
         """
 
         :param master: Master, local or ip address to a cluster

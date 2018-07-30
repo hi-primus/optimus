@@ -373,8 +373,8 @@ def cols(self):
 
         range = {}
         for c in columns:
-            max_val = max(c)
-            min_val = min(c)
+            max_val = self.max(c)
+            min_val = self.min(c)
             range[c] = {'min': min_val, 'max': max_val}
 
         return range
