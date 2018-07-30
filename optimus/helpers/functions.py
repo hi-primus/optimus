@@ -1,8 +1,10 @@
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
 
-from optimus.helpers.checkit import *
-from optimus.helpers.constants import *
+from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
+    is_list_of_str_or_int, is_str, is_str_or_int
+from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
+from optimus.helpers.raiseit import RaiseIfNot
 
 import re
 import random
@@ -151,7 +153,7 @@ def format_dict(val):
     return repeat(_format_dict, 2, val)
 
 
-def validate_columns_names(df, col_names, index=None):
+def validate_columns_names(df, col_names, index=0):
     """
     Check if a string or list of string are valid dataframe columns
     :param df:
@@ -160,41 +162,37 @@ def validate_columns_names(df, col_names, index=None):
     :return:
     """
 
-    # assert col_names is None, "Error: columns not defined"
+    columns = val_to_list(col_names)
+    print(is_one_element(columns))
+    if not is_list_of_one_element(columns):
+        columns = [c[index] for c in columns]
 
-    if index is not None:
-        assert isinstance(col_names, list), "Error: col_names must be a list"
-        columns = [c[index] for c in col_names]
-    else:
-        columns = col_names
-
-    # assert len(columns) > 0, "Error: columns param can not be empty"
-    assert columns is not None, "Error: columns param is none"
-
-    # Remove duplicated columns
-    if isinstance(columns, list):
+    print(columns)
+    # Remove duplicates in the list
+    if is_list_of_strings(columns):
         columns = set(columns)
 
-    # if str or int convert
-    if isinstance(columns, (str, int)):
-        columns = val_to_list(columns)
-
-    all_col_names = df.columns
-
-    # Check if the columns you want to select exits in the dataframe
-    missing_col_names = [x for x in columns if x not in all_col_names]
-
-    error_message = "The {missing_col_names} columns do not exists in the DataFrame with the following columns " \
-                    "{all_col_names}".format(
-        missing_col_names=missing_col_names,
-        all_col_names=all_col_names)
-
-    assert len(missing_col_names) == 0, error_message
+    check_for_missing_columns(df, columns)
 
     return True
 
 
-def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type=None):
+def check_for_missing_columns(df, col_names):
+    """
+    Check if the columns you want to select exits in the dataframe
+    :param df: Dataframe to be checked
+    :param col_names: cols names to
+    :return:
+    """
+    missing_columns = list(set(col_names) - set(df.columns))
+
+    if len(missing_columns) > 0:
+        RaiseIfNot.value_error(missing_columns, df.columns)
+
+    return False
+
+
+def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_dtypes=None):
     """
     Return a list of columns and check that columns exists in the dadaframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
@@ -202,9 +200,9 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
     If a list of tuples return to list. The first element is the columns name the others element are params.
     This params can me used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
-    :param cols_attrs: Accepts * as param to return all the string columns in the dataframe
-    :param filter_by_type:
-    :param get_attrs:
+    :param cols_args: Accepts * as param to return all the string columns in the dataframe
+    :param filter_by_dtypes:
+    :param get_args:
     :param is_regex: Use True is col_attrs is a regex
     :return: A list of columns string names
     """
@@ -212,14 +210,9 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
     cols = None
     attrs = None
 
-    assert isinstance(df, DataFrame), "Error: df is not a Dataframe"
-
-    # Verify that columns are a string or list of string
-    assert isinstance(cols_attrs, (str, list)), "Columns param must be a string or a list"
-
     # if columns value is * get all dataframes columns
-    if cols_attrs == "*":
-        cols = list(map(lambda t: t[0], df.dtypes))
+    if cols_args == "*":
+        cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -228,31 +221,38 @@ def parse_columns(df, cols_attrs, get_attrs=False, is_regex=None, filter_by_type
     # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
 
     # Verify if we have a list with tuples
-    elif is_list_of_tuples(cols_attrs):
+    elif is_list_of_tuples(cols_args):
         # Extract a specific position in the tuple
         # columns = [c[index] for c in columns]
-        cols = [(i[0:1][0]) for i in cols_attrs]
-        attrs = [(i[1:]) for i in cols_attrs]
+        cols = [(i[0:1][0]) for i in cols_args]
+        attrs = [(i[1:]) for i in cols_args]
 
     # if cols are string or int
-    elif is_list_of_str_or_int(cols_attrs):
-        cols = [c if isinstance(c, str) else df.columns[c] for c in cols_attrs]
+    elif is_list_of_str_or_int(cols_args):
+        cols = [c if is_str(c) else df.columns[c] for c in cols_args]
 
-    elif is_str_or_int(cols_attrs):
+    elif is_str_or_int(cols_args):
         # Verify if a regex
         if is_regex:
-            r = re.compile(cols_attrs)
+            r = re.compile(cols_args)
             cols = list(filter(r.match, df.columns))
         else:
-            cols = val_to_list(cols_attrs)
+            cols = val_to_list(cols_args)
+    else:
+
+        # Verify that columns are a string or list of string
+
+        assert isinstance(cols_args, (str, list)), "Columns param must be a string or a list"
+
+    check_for_missing_columns(df, cols)
 
     # Filter columns by data type
-    if filter_by_type is not None:
-        filter_by_type = parse_python_dtypes(filter_by_type)
-        cols = list(set(cols).intersection(filter_col_name_by_type(df, filter_by_type)))
+    if filter_by_dtypes is not None:
+        columns_filtered = parse_python_dtypes(filter_by_dtypes)
+        cols = list(set(cols).intersection(filter_col_name_by_type(df, columns_filtered)))
 
     # Return cols or cols an params
-    if get_attrs:
+    if get_args is True:
         params = cols, attrs
     else:
         params = cols
