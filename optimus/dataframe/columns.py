@@ -16,10 +16,15 @@ from pyspark.ml.feature import QuantileDiscretizer
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import *
+from optimus.helpers.functions \
+    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    parse_columns
+
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.functions import abstract_udf
+from optimus.functions import abstract_udf, concat
+
 from optimus.create import Create
+from optimus.helpers.raiseit import RaiseIfNot
 
 # from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
@@ -31,21 +36,33 @@ import builtins
 def cols(self):
     @add_attr(cols)
     @dispatch(str, object)
-    def append(name=None, value=None):
+    def append(col_name=None, value=None):
         """
-
-        :param name:
+        Append a Column to a Dataframe
+        :param col_name:
         :param value:
         :return:
         """
 
-        assert isinstance(name, str), "Error: name param must be a string"
-        assert isinstance(value, (int, float, str, Column)), "object param must be a number, str or a Column "
+        def lit_array(value):
+            temp = []
+            for v in value:
+                temp.append(F.lit(v))
+            return F.array(temp)
 
-        if isinstance(value, (int, str, float)):
+        df = self
+
+        if is_num_or_str(value):
             value = F.lit(value)
+        elif is_list(value):
+            value = lit_array(value)
+        elif is_tuple(value):
+            value = lit_array(list(value))
 
-        return self.withColumn(name, value)
+        if is_(value, Column):
+            df = df.withColumn(col_name, value)
+
+        return df
 
     @add_attr(cols)
     @dispatch(list)
@@ -60,19 +77,14 @@ def cols(self):
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
             dfs.insert(0, self)
-            df_result = Create.concat(dfs, axis=1)
+            df_result = concat(dfs, like="columns")
 
         elif is_list_of_tuples(cols_values):
             df_result = self
             for c in cols_values:
-                name = c[0]
+                col_name = c[0]
                 value = c[1]
-
-                # Create a column if necessary
-                # TODO: Check if we can add arrays and vectors
-                if is_numeric(value) or is_str(value):
-                    value = F.lit(value)
-                df_result = df_result.withColumn(name, value)
+                df_result = df_result.cols().append(col_name, value)
 
         return df_result
 
@@ -98,10 +110,10 @@ def cols(self):
         :return:
         """
 
-        if isinstance(func, Column):
-            def func_col_exp(col_name, attr):
-                return func
+        def func_col_exp(col_name, attr):
+            return func
 
+        if is_(func, Column):
             _func = func_col_exp
         else:
             _func = func
@@ -218,8 +230,8 @@ def cols(self):
     def move(column, ref_col, position):
         """
         Move a column to specific position
-        :param column:
-        :param ref_col:
+        :param column: Column to be moved
+        :param ref_col: Column taken as reference
         :param position:
         :return:
         """
@@ -272,14 +284,22 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
-    def sort(reverse=False):
+    def sort(order=False):
         """
-
-        :param reverse:
+        Sort dataframes columns asc or desc
+        :param order: Apache Spark Dataframe
         :return:
         """
-        columns = sorted(self.columns, reverse=reverse)
-        return self.select(columns)
+
+        RaiseIfNot.type_error(order, is_str)
+        RaiseIfNot.value_error(order, ["asc", "desc"])
+
+        if order == "asc":
+            sorted_col_names = sorted(self.columns)
+        elif order == "desc":
+            sorted_col_names = sorted(self.columns, reverse=True)
+
+        return self.select(sorted_col_names)
 
     @add_attr(cols)
     def drop(columns=None, regex=None, data_type=None):

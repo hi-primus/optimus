@@ -1,6 +1,9 @@
+from functools import reduce
 from optimus.helpers.functions import *
-from optimus.helpers import constants as op_c
 from optimus.helpers.checkit import is_data_type
+from optimus.helpers import raiseit as RaiseIfNot
+
+
 from pyspark.sql import functions as F
 
 
@@ -52,7 +55,6 @@ def func_factory(func_type=None, func_return_type=None):
         return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
 
     def udf_func(attr, func):
-        print(attr)
         return F.udf(lambda value: func(value, attr))
 
     def expression_func(attr, func):
@@ -81,3 +83,30 @@ def filter_row_by_data_type(col_name, data_type):
     """
     data_type = parse_python_dtypes(data_type)
     return abstract_udf(col_name, is_data_type, "bool", data_type)
+
+
+def concat(dfs, like="columns"):
+    """
+    Concat multiple dataframes as columns or rows way
+    :param dfs:
+    :param like: The way dataframes is going to be concat. like columns or rows
+    :return:
+    """
+    # Add increasing Ids, and they should be the same.
+    if like == "columns":
+        temp_dfs = []
+        col_temp_name = "id_" + random_name()
+        for df in dfs:
+            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+        def _append_df(df1, df2):
+            return df1.join(df2, col_temp_name, "outer")
+
+        df_result = reduce(_append_df, temp_dfs).drop(col_temp_name)
+
+    elif like == "rows":
+        df_result = reduce(DataFrame.union, dfs)
+    else:
+        RaiseIfNot.value_error(like, ["columns", "rows"])
+
+    return df_result

@@ -1,19 +1,18 @@
 import os
 from shutil import rmtree
 import logging
-import sys
 from functools import reduce
 
 from optimus.spark import Spark
 
 Spark.instance = None
 
-import operator
 from optimus.create import Create
 from optimus.io.load import Load
 from optimus.spark import Spark
+from optimus.functions import concat
 from optimus.helpers.constants import *
-from optimus.helpers.functions import random_name, is_str, is_list_of_dataframes, is_ip, is_filepath
+from optimus.helpers.functions import random_name
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.dataframe import rows, columns, extension
 
@@ -28,22 +27,11 @@ class Optimus:
     def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
         """
 
-        :param master:
+        :param master: Master, local or ip address to a cluster
         :param app_name:
         :param path:
         :param file_system:
         """
-
-        RaiseIfNot.type_error(master, is_str)
-        RaiseIfNot.value_error(master, ["master", "local"])
-
-        RaiseIfNot.type_error(app_name, is_str)
-
-        RaiseIfNot.type_error(path, is_str)
-        RaiseIfNot.value_error(path, is_filepath)
-
-        RaiseIfNot.value_error(master, ["local", "hadoop"])
-
         if verbose:
             level = logging.INFO
             logging.basicConfig(format="%(message)s", level=level)
@@ -72,6 +60,8 @@ class Optimus:
     def get_sc():
         return Spark.instance.get_sc()
 
+    concat = concat
+
     @staticmethod
     def concat(dfs, like="columns"):
         """
@@ -80,10 +70,6 @@ class Optimus:
         :param like: The way dataframes is going to be concat. like columns or rows
         :return:
         """
-        RaiseIfNot.type_error(dfs, is_list_of_dataframes)
-
-        RaiseIfNot.value_error(like, ["columns", "rows"])
-
         # Add increasing Ids, and they should be the same.
         if like == "columns":
             temp_dfs = []
@@ -92,15 +78,15 @@ class Optimus:
                 temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
 
             def _append_df(df1, df2):
-                return df2.join(df1, col_temp_name, "outer").drop(col_temp_name)
+                return df1.join(df2, col_temp_name, "outer").drop(col_temp_name)
 
             df_result = reduce(_append_df, temp_dfs)
         elif like == "rows":
             df_result = reduce(DataFrame.union, dfs)
+        else:
+            RaiseIfNot.value_error(like, ["columns", "rows"])
 
         return df_result
-
-        # Alias
 
     def set_check_point_folder(self, path, file_system):
         """
@@ -118,7 +104,7 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-        RaiseIfNot.type_error(file_system, is_filepath)
+        # RaiseIfNot.type_error(file_system, is_filepath)
 
         print_check_point_config(file_system)
 
@@ -162,9 +148,6 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
-        RaiseIfNot.type_error(file_system, is_filepath)
-
-        RaiseIfNot.value_error(file_system, ["hadoop", "local"])
 
         if file_system == "hadoop":
             # Folder path:
@@ -187,3 +170,5 @@ class Optimus:
             else:
                 logging.info("Folder deleted.")
                 pass
+        else:
+            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
