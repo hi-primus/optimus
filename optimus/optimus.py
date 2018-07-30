@@ -24,7 +24,7 @@ from pyspark.sql import functions as F
 
 
 class Optimus:
-    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
+    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=True):
         """
 
         :param master: Master, local or ip address to a cluster
@@ -32,10 +32,10 @@ class Optimus:
         :param path:
         :param file_system:
         """
-        if verbose:
+        if verbose is True:
             level = logging.INFO
             logging.basicConfig(format="%(message)s", level=level)
-        else:
+        elif False:
             logging.propagate = False
             logging.disable(logging.NOTSET)
 
@@ -104,7 +104,6 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-        # RaiseIfNot.type_error(file_system, is_filepath)
 
         print_check_point_config(file_system)
 
@@ -136,7 +135,7 @@ class Optimus:
 
             Spark.instance.get_sc().setCheckpointDir(dirName="file:///" + folder_path)
         else:
-            raise ValueError("file_system must be 'local' or 'hadoop', received {0}".format(file_system))
+            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
     def delete_check_point_folder(path, file_system):
