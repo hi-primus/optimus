@@ -4,6 +4,9 @@ from pyspark.sql import DataFrame
 import os
 
 
+# element are int, float, str, bool
+
+# Check Type
 def is_(value, type_):
     """
     Check if a value is sometype
@@ -41,7 +44,6 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
-@staticmethod
 def is_list_of_str_or_int(value):
     """
     Check if an object is a string or an integer
@@ -75,7 +77,6 @@ def is_filepath(file_path):
     :param file_path:
     :return:
     """
-    print(file_path)
     # the file is there
     if os.path.exists(file_path):
         return True
@@ -127,6 +128,16 @@ def is_list_of_tuples(value):
     :return:
     """
     return bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
+
+
+def is_list_of_one_element(value):
+    """
+    Check if a var is a single element
+    :param value:
+    :return:
+    """
+    if is_list(value):
+        return len(value) == 1
 
 
 def is_one_element(value):
@@ -190,29 +201,38 @@ def is_data_type(value, data_type):
 
     :return:
     """
-    data_type = "string"
 
+    _data_type = "string"
     if isinstance(value, int):  # Check if value is integer
-        data_type = "int"
+        _data_type = "int"
     elif isinstance(value, float):
-        data_type = "float"
+        _data_type = "float"
     elif isinstance(value, bool):
-        data_type = "boolean"
+        _data_type = "boolean"
     # if string we try to parse it to int, float or bool
     elif isinstance(value, str):
-        print("str")
-        if str_to_int(value):
-            data_type = "int"
+        try:
+            int(value)
+            _data_type = "int"
+        except ValueError:
+            pass
+        try:
+            float(value)
+            _data_type = "float"
+        except ValueError:
+            pass
+        try:
+            # int(value)
+            value = value.lower()
+            if value == "true" or value == "false":
+                _data_type = "bool"
+        except ValueError:
+            pass
 
-        elif str_to_float(value):
-            data_type = "float"
-
-        elif str_to_boolean(value):
-            data_type = "boolean"
     else:
-        data_type = "null"
-
-    if data_type == data_type:
+        _data_type = "null"
+    # print(_data_type, data_type)
+    if _data_type == data_type:
         return True
     else:
         return False
@@ -227,6 +247,7 @@ def is_dataframe(value):
     return isinstance(value, DataFrame)
 
 
+# Check cast
 def str_to_int(value):
     """
     Check if a str can be converted to int
@@ -238,7 +259,7 @@ def str_to_int(value):
         return True
 
     except ValueError:
-        pass
+        return False
 
 
 def str_to_float(value):
@@ -248,7 +269,7 @@ def str_to_float(value):
     :return:
     """
     try:
-        int(value)
+        float(value)
         return True
 
     except ValueError:
