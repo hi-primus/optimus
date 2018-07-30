@@ -163,11 +163,10 @@ def validate_columns_names(df, col_names, index=0):
     """
 
     columns = val_to_list(col_names)
-    print(is_one_element(columns))
-    if not is_list_of_one_element(columns):
+
+    if is_list_of_tuples(columns):
         columns = [c[index] for c in columns]
 
-    print(columns)
     # Remove duplicates in the list
     if is_list_of_strings(columns):
         columns = set(columns)
