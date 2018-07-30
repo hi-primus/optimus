@@ -1,10 +1,10 @@
 from functools import reduce
-from optimus.helpers.functions import *
-from optimus.helpers.checkit import is_data_type
+
+from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name
 from optimus.helpers import raiseit as RaiseIfNot
 
-
 from pyspark.sql import functions as F
+from pyspark.sql import DataFrame
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
@@ -81,6 +81,7 @@ def filter_row_by_data_type(col_name, data_type):
     :param data_type:
     :return:
     """
+
     data_type = parse_python_dtypes(data_type)
     return abstract_udf(col_name, is_data_type, "bool", data_type)
 
