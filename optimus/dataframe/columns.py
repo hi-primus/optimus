@@ -190,7 +190,7 @@ def cols(self):
                 F.col(c).alias(func(c)) for c in df.columns
             ]
             df = df.select(exprs)
-        elif is_list_of_tuples():
+        elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
 
             validate_columns_names(self, columns_old_new)
