@@ -1,16 +1,26 @@
-## Helpers to check if an object belong to some kind
+## Helpers to check if an object match a type
 
 from pyspark.sql import DataFrame
 import os
 
 
-def is_function(obj):
+def is_(value, type_):
     """
-    Check if a param is a function
-    :param obj: object to check for
+    Check if a value is sometype
+    :param value:
+    :param type_:
     :return:
     """
-    return hasattr(obj, '__call__')
+    return isinstance(value, type_)
+
+
+def is_function(value):
+    """
+    Check if a param is a function
+    :param value: object to check for
+    :return:
+    """
+    return hasattr(value, '__call__')
 
 
 def is_list(value):
@@ -20,6 +30,15 @@ def is_list(value):
     :return:
     """
     return isinstance(value, list)
+
+
+def is_tuple(value):
+    """
+    Check if an object is a tuple
+    :param value:
+    :return:
+    """
+    return isinstance(value, tuple)
 
 
 @staticmethod
@@ -52,10 +71,11 @@ def is_list_of_dataframes(value):
 
 def is_filepath(file_path):
     """
-    Check if a valid filepath
+    Check if a value ia a valid file path
     :param file_path:
     :return:
     """
+    print(file_path)
     # the file is there
     if os.path.exists(file_path):
         return True
@@ -67,13 +87,13 @@ def is_filepath(file_path):
         return False
 
 
-def is_ip(address):
+def is_ip(value):
     """
-    Check is a valid ip
-    :param address:
+    Check if a value is valid ip
+    :param value:
     :return:
     """
-    parts = address.split(".")
+    parts = value.split(".")
     if len(parts) != 4:
         return False
     for item in parts:
@@ -84,7 +104,7 @@ def is_ip(address):
 
 def is_list_of_strings(value):
     """
-    Check that all elements in a list are strings
+    Check if all elements in a list are strings
     :param value:
     :return:
     """
@@ -93,7 +113,7 @@ def is_list_of_strings(value):
 
 def is_list_of_numeric(value):
     """
-    Check that all elements in a list are int or float
+    Check if all elements in a list are int or float
     :param value:
     :return:
     """
@@ -102,7 +122,7 @@ def is_list_of_numeric(value):
 
 def is_list_of_tuples(value):
     """
-    Check that all elements in a list are tuples
+    Check if all elements in a list are tuples
     :param value:
     :return:
     """
@@ -111,16 +131,25 @@ def is_list_of_tuples(value):
 
 def is_one_element(value):
     """
-    Check that a var is a single element
+    Check if a var is a single element
     :param value:
     :return:
     """
     return isinstance(value, (str, int, float, bool))
 
 
+def is_num_or_str(value):
+    """
+    Check if a var is numeric(int, float) or string
+    :param value:
+    :return:
+    """
+    return isinstance(value, (int, float, str))
+
+
 def is_str_or_int(value):
     """
-    Check that a var is a single element
+    Check if a var is a single element
     :param value:
     :return:
     """
@@ -129,7 +158,7 @@ def is_str_or_int(value):
 
 def is_numeric(value):
     """
-    Check that a var is a single element
+    Check if a var is a single element
     :param value:
     :return:
     """
