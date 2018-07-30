@@ -5,7 +5,7 @@ import logging
 from urllib.request import Request, urlopen
 from optimus.spark import Spark
 
-
+# TODO: Append to write dataframe class
 class Load:
 
     def url(self, path=None, type_of="csv"):

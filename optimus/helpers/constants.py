@@ -48,7 +48,7 @@ STARTING = "Starting or getting SparkSession and SparkContext..."
 
 def print_check_point_config(filesystem):
     return logging.info(
-        "Setting checkpoint folder %s. If you are in a cluster initialize Sptimus with master='your_ip' as param",
+        "Setting checkpoint folder %s. If you are in a cluster initialize Optimus with master='your_ip' as param",
         filesystem)
 
 

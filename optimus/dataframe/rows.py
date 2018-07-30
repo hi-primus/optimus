@@ -5,7 +5,7 @@ from pyspark.sql.dataframe import *
 
 # Helpers
 import optimus.create as op
-from optimus.helpers.functions import *
+from optimus.helpers.functions import validate_columns_names, parse_columns
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 

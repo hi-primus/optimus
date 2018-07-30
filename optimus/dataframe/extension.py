@@ -1,50 +1,37 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
+from pyspark.ml.feature import SQLTransformer
 
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
 from optimus.spark import Spark
 
-import pandas as pd
-
 
 @add_method(DataFrame)
-def melt(self, id_vars, value_vars, var_name="variable", value_name="value"):
+def melt(self, df, id_vars, value_vars, var_name="variable", value_name="value"):
     """
-
+    Convert :class:`DataFrame` from wide to long format.
     :param self:
+    :param df: Dataframe to be melted
     :param id_vars:
     :param value_vars:
     :param var_name:
     :param value_name:
     :return:
     """
-    _vars_and_vals = [*(F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars)]
+
+    # Create array<struct<variable: str, value: ...>>
+    _vars_and_vals = [*(
+        F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name))
+        for c in value_vars)]
 
     # Add to the DataFrame and explode
-    tmp = self.withColumn("_vars_and_vals", F.explode(_vars_and_vals))
-    cols = id_vars + [F.col("_vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
+    _tmp = df.withColumn("_vars_and_vals", F.explode(F.array(_vars_and_vals)))
 
-    return tmp.select(*cols)
-
-
-@staticmethod
-@add_method(DataFrame)
-def plot(columns):
-    """
-    :param columns:
-    :return:
-    """
-
-    histogram_result = _hist(columns, 10)
-
-    pd.DataFrame(
-        list(zip(*histogram_result)),
-        columns=['bin', 'frequency']
-    ).set_index(
-        'bin'
-    ).plot(kind='bar');
+    cols = id_vars + [
+        F.col("_vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
+    return _tmp.select(*cols)
 
 
 @add_method(DataFrame)
@@ -56,7 +43,8 @@ def size(self):
     """
 
     def _to_java_object_rdd(rdd):
-        """ Return a JavaRDD of Object by unpickling
+        """
+        Return a JavaRDD of Object by unpickling
         It will convert each Python object into Java object by Pyrolite, whenever the
         RDD is serialized in batch or not.
         """
@@ -107,8 +95,6 @@ def sql(self, sql_expression):
     """
 
     self._assert_type_str(sql_expression, "sql_expression")
-
-    from pyspark.ml.feature import SQLTransformer
 
     sql_transformer = SQLTransformer(statement=sql_expression)
 
