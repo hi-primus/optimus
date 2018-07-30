@@ -1,5 +1,6 @@
 from optimus import Optimus
-from pyspark.sql.types import *
+from pyspark.sql.types import StringType, IntegerType
+from pyspark.sql import functions as F
 
 op = Optimus()
 spark = op.get_sc()
@@ -88,6 +89,8 @@ class TestDataFrameCols(object):
                 ("age", IntegerType(), False)
             ]
         )
+        expected_df.show()
+        actual_df.show()
 
         assert (expected_df.collect() == actual_df.collect())
 
@@ -119,7 +122,7 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_lookup_col(self):
+    def test_replace_col(self):
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -131,7 +134,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().lookup("emotion", [("happy", "elated")])
+        actual_df = source_df.cols().replace("emotion", [("happy", "elated")])
 
         expected_df = op.create.df(
             rows=[
@@ -145,7 +148,7 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_set_col(self):
+    def test_set_apply_exp(self):
         source_df = op.create.df(
             rows=[
                 ("cafe", 1),
@@ -157,9 +160,10 @@ class TestDataFrameCols(object):
             ]
         )
 
-        transformer = op.DataFrameTransformer(source_df)
-        func = lambda num: num * 2
-        actual_df = transformer.set_col("num1", func, "integer").df
+        def func(col_name, attrs):
+            return F.col(col_name) * 2
+
+        actual_df = source_df.cols().apply_exp("num1", func)
 
         expected_df = op.create.df(
             rows=[
