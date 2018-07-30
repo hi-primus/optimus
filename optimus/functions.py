@@ -2,6 +2,7 @@ from functools import reduce
 
 from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name
 from optimus.helpers import raiseit as RaiseIfNot
+from optimus.helpers.checkit import is_data_type
 
 from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
