@@ -1,10 +1,6 @@
-from pyspark.sql import DataFrame
-
-from pyspark.sql import functions as F
-
-from pyspark.sql.functions import Column
 import unicodedata
 import string
+import re
 from functools import reduce
 
 # Library used for method overloading using decorators
@@ -12,22 +8,28 @@ from multipledispatch import dispatch
 
 from pyspark.ml.feature import Imputer
 from pyspark.ml.feature import QuantileDiscretizer
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
+from pyspark.sql.functions import Column
+
+# from pyspark.ml.linalg import Vectors
+from pyspark.ml.feature import VectorAssembler
 
 # Helpers
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import *
+from optimus.helpers.decorators import add_attr, add_method
+from optimus.helpers.checkit \
+    import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    is_function, is_one_element
+
 from optimus.helpers.functions \
-    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    parse_columns
+    import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
+    tuple_to_dict, val_to_list
 
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf, concat
 
-from optimus.create import Create
 from optimus.helpers.raiseit import RaiseIfNot
-
-# from pyspark.ml.linalg import Vectors
-from pyspark.ml.feature import VectorAssembler
 
 import builtins
 
@@ -97,11 +99,11 @@ def cols(self):
         :param data_type:
         :return:
         """
-        columns = parse_columns(self, columns, is_regex=regex, filter_by_type=data_type)
+        columns = parse_columns(self, columns, is_regex=regex, filter_by_dtypes=data_type)
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func=None, attrs=None, col_exp=None):
+    def apply_exp(columns, func=None, attrs=None, col_exp=None, filter_col_by_dtypes=None):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
@@ -118,7 +120,7 @@ def cols(self):
         else:
             _func = func
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_dtypes=filter_col_by_dtypes)
 
         df = self
         for col_name in columns:
@@ -126,7 +128,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply(columns, func, func_return_type, args=None, func_type=None, when=None):
+    def apply(columns, func, func_return_type, args=None, func_type=None, when=None, filter_col_by_dtypes=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param columns:
@@ -135,13 +137,14 @@ def cols(self):
         :param args:
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
         :param when:
+        :param filter_col_by_dtypes:
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_dtypes=filter_col_by_dtypes)
         df = self
 
-        def condition(_when):
+        def expr(_when):
             main_query = abstract_udf(c, func, func_return_type, args, func_type)
             if when is not None:
                 # Use the data type to filter the query
@@ -150,7 +153,7 @@ def cols(self):
             return main_query
 
         for c in columns:
-            df = df.withColumn(c, condition(when))
+            df = df.withColumn(c, expr(when))
         return df
 
     @add_attr(cols)
@@ -186,10 +189,11 @@ def cols(self):
             exprs = [
                 F.col(c).alias(func(c)) for c in df.columns
             ]
-            df = df.select(*exprs)
-        else:
+            df = df.select(exprs)
+        elif is_list_of_tuples():
             # Check that the 1st element in the tuple is a valid set of columns
-            assert validate_columns_names(self, columns_old_new, 0)
+
+            validate_columns_names(self, columns_old_new)
             for c in columns_old_new:
                 df = df.withColumnRenamed(c[0], c[1])
 
@@ -211,7 +215,7 @@ def cols(self):
         """
 
         # assert validate_columns_names(self, cols_and_types, 0)
-        cols, attrs = parse_columns(self, cols_and_types, get_attrs=True)
+        cols, attrs = parse_columns(self, cols_and_types, get_args=True)
 
         def _cast(col_name, attr):
             return F.col(col_name).cast(parse_spark_dtypes(attr[0]))
@@ -284,20 +288,19 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
-    def sort(order=False):
+    def sort(order="asc"):
         """
         Sort dataframes columns asc or desc
         :param order: Apache Spark Dataframe
         :return:
         """
 
-        RaiseIfNot.type_error(order, is_str)
-        RaiseIfNot.value_error(order, ["asc", "desc"])
-
         if order == "asc":
             sorted_col_names = sorted(self.columns)
         elif order == "desc":
             sorted_col_names = sorted(self.columns, reverse=True)
+        else:
+            RaiseIfNot.value_error(order, ["asc", "desc"])
 
         return self.select(sorted_col_names)
 
@@ -315,7 +318,7 @@ def cols(self):
             r = re.compile(regex)
             columns = list(filter(r.match, self.columns))
 
-        columns = parse_columns(self, columns, filter_by_type=data_type)
+        columns = parse_columns(self, columns, filter_by_dtypes=data_type)
 
         for column in columns:
             df = df.drop(column)
@@ -522,7 +525,7 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply_exp(columns, _lower)
+        return apply_exp(columns, _lower, filter_col_by_dtypes="string")
 
     @add_attr(cols)
     def upper(columns):
@@ -535,7 +538,7 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply_exp(columns, _upper)
+        return apply_exp(columns, _upper, filter_col_by_dtypes="string")
 
     @add_attr(cols)
     def trim(columns):
@@ -561,7 +564,7 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        return apply_exp(columns, _reverse)
+        return apply_exp(columns, _reverse, filter_col_by_dtypes="string")
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -772,7 +775,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, '*', is_regex=None, filter_by_type=data_type)
+        columns = parse_columns(self, '*', is_regex=None, filter_by_dtypes=data_type)
 
         return self.select(columns)
 
@@ -786,15 +789,20 @@ def cols(self):
 
     # Operations between columns
     @add_attr(cols)
+    def _math(columns, operator):
+        columns = parse_columns(self, columns)
+        assert len(columns) >= 2, "Error 2 or more columns needed"
+        return self.select(reduce(operator, columns, 1))
+
+    @add_attr(cols)
     def add(columns):
         """
         Add two or more columns
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce((lambda x, y: self[x] + self[y]), columns))
+
+        self._math(columns, lambda x, y: self[x] + self[y])
 
     @add_attr(cols)
     def sub(columns):
@@ -803,9 +811,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce((lambda x, y: self[x] - self[y]), columns))
+        self._math(columns, lambda x, y: self[x] - self[y])
 
     @add_attr(cols)
     def mul(columns):
@@ -814,9 +820,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce((lambda x, y: self[x] * self[y]), columns))
+        self._math(columns, lambda x, y: self[x] * self[y])
 
     @add_attr(cols)
     def div(columns):
@@ -825,9 +829,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce((lambda x, y: self[x] / self[y]), columns))
+        self._math(columns, lambda x, y: self[x] / self[y])
 
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
