@@ -2,8 +2,8 @@ from pyspark.sql.types import StructField, StructType
 from pyspark.sql import DataFrame
 
 # Helpers
-# from optimus.helpers.constants import *
-from optimus.helpers.functions import *
+from optimus.helpers.constants import VAR_TYPES
+from optimus.helpers.functions import parse_spark_dtypes
 from optimus.spark import Spark
 
 
