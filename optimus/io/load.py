@@ -50,7 +50,7 @@ class Load:
         """
 
         logging.info("Loading file using SparkSession")
-        csvload = Spark.instance.get_ss() \
+        csvload = Spark.instance.spark() \
             .read \
             .format("csv") \
             .options(header=True) \
@@ -67,8 +67,8 @@ class Load:
         """
         res = open(path, 'r').read()
         print("Loading file using a pyspark.read.json")
-        data_rdd = Spark.instance.get_sc().parallelize([res])
-        return Spark.instance.get_ss().read.json(data_rdd)
+        data_rdd = Spark.instance.sc().parallelize([res])
+        return Spark.instance.spark().read.json(data_rdd)
 
 
 class Downloader(object):

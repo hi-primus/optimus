@@ -37,13 +37,13 @@ class Spark:
         logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
         logging.info("-----")
         logging.info(STARTING)
-        self.get_ss()
+        self.spark()
         #self.get_sc().addPyFile("../optimus/helpers/checkit.py")
         #self.get_sc().addPyFile("../optimus/spark.py")
         #self.get_sc().addPyFile("../optimus/optimus.py")
 
     @lru_cache(maxsize=None)
-    def get_ss(self):
+    def spark(self):
         """
         Return the Spark Session
         :return: None
@@ -57,9 +57,9 @@ class Spark:
                 .getOrCreate()
                 )
 
-    def get_sc(self):
+    def sc(self):
         """
         Return the Spark Context
         :return:
         """
-        return self.get_ss().sparkContext
+        return self.spark().sparkContext
