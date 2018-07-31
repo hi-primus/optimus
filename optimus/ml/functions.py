@@ -1,7 +1,11 @@
 from pyspark.ml import feature, Pipeline
-from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler
+from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
+from pyspark.ml.linalg import DenseVector, VectorUDT
 
-from optimus.helpers.functions import is_dataframe, parse_columns
+from pyspark.sql import functions as F
+
+from optimus.helpers.functions import parse_columns
+from optimus.helpers.checkit import is_dataframe, is_
 
 
 def n_gram(df, input_col, n=2):
@@ -100,6 +104,48 @@ def vector_assembler(df, input_cols):
     assembler = [VectorAssembler(inputCols=input_cols, outputCol="features")]
 
     pipeline = Pipeline(stages=assembler)
+    df = pipeline.fit(df).transform(df)
+
+    return df
+
+
+def normalizer(df, input_cols, p=2.0):
+    """
+    Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+    specifies the p-norm used for normalization. (p=2) by default.
+    :param input_cols: Columns to be normalized.
+    :param p:  p-norm used for normalization.
+    :return: Dataframe with normalized columns.
+    """
+
+    # Check if columns argument must be a string or list datatype:
+
+    input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=["integer", "float"])
+
+    assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
+
+    # Convert ArrayType() column to DenseVector
+    def arr_to_vec(arr_column):
+        """
+        :param arr_column: Column name
+        :return: Returns DenseVector by converting an ArrayType() column
+        """
+        return DenseVector(arr_column)
+
+    # User-Defined function
+    # TODO: use apply() to use Pyarrow
+    udf_arr_to_vec = F.udf(arr_to_vec, VectorUDT())
+
+    # Check for columns which are not DenseVector types and convert them into DenseVector
+    for col in input_cols:
+        if not is_(df[col], DenseVector):
+            df = df.withColumn(col, udf_arr_to_vec(df[col]))
+
+    normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
+              list(set(input_cols))]
+
+    pipeline = Pipeline(stages=normal)
+
     df = pipeline.fit(df).transform(df)
 
     return df
