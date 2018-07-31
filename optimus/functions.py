@@ -22,10 +22,14 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     # attrs = val_to_list(attrs)
 
     if func_type != "column_exp":
-        if func_type is None and is_pyarrow_installed():
+        if (func_type is None or func_type == "pandas_udf") and is_pyarrow_installed() is True:
             func_type = "pandas_udf"
+            print("Using 'Pandas UDFs' to process column '{column}'".format(column=col))
         else:
             func_type = "udf"
+            print("Using 'UDFs' to process column '{column}'".format(column=col))
+    else:
+        print("Using 'Column Expression' to process column '{column}'".format(column=col))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
@@ -42,7 +46,7 @@ def func_factory(func_type=None, func_return_type=None):
         func_return_type = parse_spark_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
-        # TODO: Get the column type, so is not necessary to pass the return type a param
+        # TODO: Get the column type, so is not necessary to pass the return type as param
 
         # Apply the function over the whole series
         def apply_to_series(val, attr):
