@@ -99,7 +99,7 @@ def cols(self):
         :param data_type:
         :return:
         """
-        columns = parse_columns(self, columns, is_regex=regex, filter_by_dtypes=data_type)
+        columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
         return self.select(columns)
 
     @add_attr(cols)
@@ -120,7 +120,7 @@ def cols(self):
         else:
             _func = func
 
-        columns = parse_columns(self, columns, filter_by_dtypes=filter_col_by_dtypes)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
 
         df = self
         for col_name in columns:
@@ -141,7 +141,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_dtypes=filter_col_by_dtypes)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
         df = self
 
         def expr(_when):
@@ -318,7 +318,7 @@ def cols(self):
             r = re.compile(regex)
             columns = list(filter(r.match, self.columns))
 
-        columns = parse_columns(self, columns, filter_by_dtypes=data_type)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
 
         for column in columns:
             df = df.drop(column)
@@ -333,7 +333,9 @@ def cols(self):
         :param columns: list of columns names or a string (a column name).
         :return:
         """
-        columns = parse_columns(self, columns)
+
+        # Filter only numeric columns
+        columns = parse_columns(self, columns, filter_by_column_dtypes=["int", "float"])
 
         # Aggregate
         result = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
@@ -414,10 +416,12 @@ def cols(self):
     # Descriptive Analytics
 
     @add_attr(cols)
+    # TODO: implemente double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def mad(col_name, more=None):
         """
         Return the Median Absolute Deviation
-        :param col_name:
+        :param col_name: Column to be processed
+        :param more: Return some extra computed values (Median).
         :return:
         """
 
@@ -775,7 +779,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, '*', is_regex=None, filter_by_dtypes=data_type)
+        columns = parse_columns(self, '*', is_regex=None, filter_by_column_dtypes=data_type)
 
         return self.select(columns)
 
