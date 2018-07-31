@@ -24,7 +24,7 @@ from optimus.helpers.checkit \
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
-    tuple_to_dict, val_to_list
+    tuple_to_dict, val_to_list, filter_list
 
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf, concat
@@ -157,7 +157,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, filter_by_data_type=None):
+    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param columns:
@@ -165,14 +165,14 @@ def cols(self):
         :param func_return_type
         :param args:
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param filter_by_data_type:
+        :param data_type:
         :return:
         """
         columns = parse_columns(self, columns)
 
         for c in columns:
             df = self.cols().apply(c, func, func_return_type, args=args, func_type=func_type,
-                                   when=fbdt(c, filter_by_data_type))
+                                   when=fbdt(c, data_type))
         return df
 
     @add_attr(cols)
@@ -186,9 +186,7 @@ def cols(self):
         df = self
         # Apply a transformation function
         if is_function(func):
-            exprs = [
-                F.col(c).alias(func(c)) for c in df.columns
-            ]
+            exprs = [F.col(c).alias(func(c)) for c in df.columns]
             df = df.select(exprs)
         elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
@@ -307,9 +305,9 @@ def cols(self):
     @add_attr(cols)
     def drop(columns=None, regex=None, data_type=None):
         """
-        Drop a list columns
-        :param columns:
-        :param regex:
+        Drop a list of columns
+        :param columns: Columns to be dropped
+        :param regex: Regex expression to select the columns
         :param data_type:
         :return:
         """
@@ -329,7 +327,7 @@ def cols(self):
     def _agg(agg, columns):
         """
         Helper function to manage aggregation functions
-        :param agg: Aggregation function from spark
+        :param agg: Aggregation function from Apache Spark
         :param columns: list of columns names or a string (a column name).
         :return:
         """
@@ -717,9 +715,6 @@ def cols(self):
 
         assert isinstance(out_cols, list), "Error: out_cols argument must be a list"
 
-        # Check if columns argument a string datatype:
-        assert isinstance(strategy, str)
-
         assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
 
         imputer = Imputer(inputCols=columns, outputCols=out_cols)
@@ -794,7 +789,13 @@ def cols(self):
     # Operations between columns
     @add_attr(cols)
     def _math(columns, operator):
-        columns = parse_columns(self, columns)
+        """
+        Helper to process arithmetic operation between columns
+        :param columns:
+        :param operator:
+        :return:
+        """
+        columns = parse_columns(self, columns, ["integer", "float"])
         assert len(columns) >= 2, "Error 2 or more columns needed"
         return self.select(reduce(operator, columns, 1))
 
@@ -820,7 +821,7 @@ def cols(self):
     @add_attr(cols)
     def mul(columns):
         """
-
+        Multiply two or more columns
         :param columns:
         :return:
         """
@@ -829,7 +830,7 @@ def cols(self):
     @add_attr(cols)
     def div(columns):
         """
-
+        Divide two or more columns
         :param columns:
         :return:
         """
@@ -838,12 +839,11 @@ def cols(self):
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
         """
-
+        Replace
         :param columns:
-        :param search_and_replace:
+        :param search_and_replace: values to look at to be replaced
         :param value:
-        :param replace_by:
-        :param regex:        
+        :param regex:
         :return:
         """
         replace = None
@@ -1023,6 +1023,6 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        return format_dict({c: self._hist(c, bins) for c in columns})
+        return format_dict({c: self.cols()._hist(c, bins) for c in columns})
 
     return cols

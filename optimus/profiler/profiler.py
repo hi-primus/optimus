@@ -1,14 +1,20 @@
-import pyspark.sql.functions as F
-from optimus.helpers.functions import *
-from optimus.profiler.functions import *
-
 from pathlib import Path
+
+import pyspark.sql.functions as F
+from optimus.helpers.functions import parse_columns, collect_to_dict
+from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, write_json
 
 
 class Profiler:
 
     @staticmethod
     def dataset_info(df):
+        """
+        Return info about cols and row counts
+        :param df:
+        :return:
+        """
 
         columns = parse_columns(df, df.columns)
 
@@ -54,7 +60,7 @@ class Profiler:
             :param col_name:
             :return:
             """
-            types = df.cols().apply(col_name, check_data_type, "udf") \
+            types = df.cols().apply(col_name, fbdt, "bool", "udf") \
                 .groupBy(col_name) \
                 .count()
 

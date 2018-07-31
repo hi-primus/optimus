@@ -127,6 +127,7 @@ def is_list_of_tuples(value):
     :param value:
     :return:
     """
+
     return bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
 
 

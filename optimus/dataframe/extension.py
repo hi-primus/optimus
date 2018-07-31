@@ -53,7 +53,7 @@ def size(self):
 
     java_obj = _to_java_object_rdd(self.rdd)
 
-    nbytes = Spark.instance.get_sc()._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
+    nbytes = Spark.instance.sc()._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     return nbytes
 
 
