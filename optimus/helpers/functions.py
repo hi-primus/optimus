@@ -1,3 +1,8 @@
+import re
+import random
+from functools import reduce
+import itertools
+
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
 
@@ -5,9 +10,6 @@ from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, 
     is_list_of_str_or_int, is_str, is_str_or_int
 from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
 from optimus.helpers.raiseit import RaiseIfNot
-
-import re
-import random
 
 
 def random_name():
@@ -191,7 +193,7 @@ def check_for_missing_columns(df, col_names):
     return False
 
 
-def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_dtypes=None):
+def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None):
     """
     Return a list of columns and check that columns exists in the dadaframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
@@ -200,7 +202,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_dtypes
     This params can me used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the dataframe
-    :param filter_by_dtypes:
+    :param filter_by_column_dtypes:
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
     :return: A list of columns string names
@@ -240,21 +242,32 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_dtypes
     else:
 
         # Verify that columns are a string or list of string
-
-        assert isinstance(cols_args, (str, list)), "Columns param must be a string or a list"
+        pass
+        # RaiseIfNot.type_error(cols_args, (str, list))
 
     check_for_missing_columns(df, cols)
 
-    # Filter columns by data type
-    if filter_by_dtypes is not None:
-        columns_filtered = parse_python_dtypes(filter_by_dtypes)
-        cols = list(set(cols).intersection(filter_col_name_by_type(df, columns_filtered)))
+    filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    if is_list_of_strings(filter_by_column_dtypes):
+
+        filter_by_column_dtypes = list(map(lambda x: parse_python_dtypes(x), filter_by_column_dtypes))
+
+        # Get columns for every data type
+        columns_filtered = list(map(lambda x: filter_col_name_by_dtypes(df, x), filter_by_column_dtypes))
+
+        # Merge list
+        columns_filtered = list(itertools.chain(*columns_filtered))
+
+        # Intersect the columns filtered per datatype from the whole dataframe with the columns passed to the function
+        cols = list(set(cols).intersection(columns_filtered))
 
     # Return cols or cols an params
     if get_args is True:
         params = cols, attrs
-    else:
+    elif get_args is False:
         params = cols
+    else:
+        RaiseIfNot.value_error(get_args, ["True", "False"])
 
     return params
 
@@ -282,6 +295,13 @@ def is_pyarrow_installed():
     return have_arrow
 
 
-def filter_col_name_by_type(df, data_type):
+def filter_col_name_by_dtypes(df, data_type):
+    """
+    Return column names by data type
+    :param df: Dataframe which columns are going to be filtered
+    :param data_type: Datatype used to filter the column.
+    :type data_type: str or list
+    :return:
+    """
     # data_type = parse_spark_dtypes(data_type)
     return [y[0] for y in filter(lambda x: x[1] == data_type, df.dtypes)]
