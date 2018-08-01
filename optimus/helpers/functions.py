@@ -5,9 +5,10 @@ import itertools
 
 from IPython.display import display, HTML
 from pyspark.sql import DataFrame
+from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int
+    is_list_of_str_or_int, is_str, is_str_or_int, is_
 from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -27,8 +28,11 @@ def parse_spark_dtypes(value):
     :return:
     """
     try:
-        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value.lower()]]
-    except TypeError:
+        if not is_(value, ArrayType):
+            value = value.lower()
+        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value]]
+
+    except Exception as e:
         print("Expected {0}, got {1}".format(",".join([k for k in SPARK_TYPES]), value))
     return data_type
 
@@ -212,6 +216,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     attrs = None
 
     # if columns value is * get all dataframes columns
+
+    print(cols_args)
     if cols_args == "*":
         cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
 
@@ -249,9 +255,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
-
         filter_by_column_dtypes = list(map(lambda x: parse_python_dtypes(x), filter_by_column_dtypes))
-
+        print("arui", filter_by_column_dtypes)
         # Get columns for every data type
         columns_filtered = list(map(lambda x: filter_col_name_by_dtypes(df, x), filter_by_column_dtypes))
 
@@ -303,5 +308,22 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
+
     # data_type = parse_spark_dtypes(data_type)
-    return [y[0] for y in filter(lambda x: x[1] == data_type, df.dtypes)]
+
+    def parse(x):
+
+        if "array" in x[1]:
+            value = "array"
+
+        else:
+            value = x[1]
+        # print("value", data_type, value)
+        return value in data_type
+
+    columns = [y[0] for y in filter(parse, df.dtypes)]
+
+    return columns
+
+
+

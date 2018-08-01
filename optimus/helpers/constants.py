@@ -13,6 +13,7 @@ TYPES = {'string': 'string',
          'double': 'double',
          'bool': 'boolean',
          'boolean': 'boolean',
+         'array': 'array'
 
          }
 
@@ -27,16 +28,16 @@ SPARK_TYPES = {'string': 'string',
                'bool': 'boolean',
                'boolean': 'boolean',
                'struct': 'struct',
-               'array': '_array'
+               'array': 'array'
 
                }
 TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
-                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType()}
+                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType}
 
 TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
-VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType)
+VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
 
 TYPES_LEGEND = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
 
