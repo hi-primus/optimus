@@ -45,9 +45,39 @@ def parse_python_dtypes(value):
     """
     try:
         data_type = TYPES[value.lower()]
-    except TypeError:
-        print("Expected {0}, got {1}".format(",".join([k for k in TYPES]), value))
+    except Exception as e:
+        print(e)
+        print("Expected {0}, got {1}".format(", ".join([k for k in TYPES]), value))
     return data_type
+
+
+def parse_col_dtypes(df, column):
+    """
+    Try to infer the column datatype from df.dtypes strings.
+    :param df:
+    :param column:
+    :return: Puspark data type
+    """
+    _type = None
+    _sub_type = None
+
+    # Get the Spark dtypes string from a specific column
+    for dtypes in df.dtypes:
+        if dtypes[0] == column:
+            _type = dtypes[1]
+        data_type = _type
+
+    if "array" in data_type[:5]:
+        _type = "array"
+        left = "<"
+        right = ">"
+        _sub_type = data_type[(data_type.index(left) + len(left)):data_type.index(right)]
+        result = parse_spark_dtypes(_type)(parse_spark_dtypes(_sub_type))
+        # result = {"type": _type, "sub_type": _sub_type}
+    else:
+        result = parse_spark_dtypes(_type)
+
+    return result
 
 
 def print_html(html):
@@ -324,6 +354,3 @@ def filter_col_name_by_dtypes(df, data_type):
     columns = [y[0] for y in filter(parse, df.dtypes)]
 
     return columns
-
-
-
