@@ -12,7 +12,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
-# from pyspark.ml.linalg import Vectors
+from pyspark.ml.linalg import VectorUDT
 from pyspark.ml.feature import VectorAssembler
 
 # Helpers
@@ -20,7 +20,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
     import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element
+    is_function, is_one_element, is_same_class
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
@@ -122,6 +122,10 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
 
+        # if columns do not exits
+        if not columns:
+            columns = val_to_list(columns)
+
         df = self
         for col_name in columns:
             df = df.withColumn(col_name, abstract_udf(col_name, _func, attrs=attrs, func_type="column_exp"))
@@ -142,6 +146,11 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
+
+        # if columns do not exits
+        if not columns:
+            columns = val_to_list(columns)
+
         df = self
 
         def expr(_when):
@@ -609,29 +618,6 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def split(column, mark, get=None, n=None):
-        """
-        Split a columns in multiple columns
-        :param column: Column to be split
-        :param mark: Which character is going to be used to split the column
-        :param get: Get a specific split
-        :param n: Is necessary to indicate how many split do you want
-        :return:
-        """
-        df = self
-        split_col = F.split(df[column], mark)
-
-        if get:
-            assert isinstance(get, int), "Error: get param must be an integer"
-            df = df.withColumn('COL_' + str(get), split_col.getItem(get))
-        elif n:
-            assert isinstance(n, int), "Error: n param must be an integer"
-            for p in builtins.range(n):
-                df = df.withColumn('COL_' + str(p), split_col.getItem(p))
-
-        return df
-
-    @add_attr(cols)
     def date_transform(col_name, new_col, current_format, output_format):
         """
         Tranform a column date format
@@ -946,58 +932,101 @@ def cols(self):
         return result
 
     @add_attr(cols)
-    def nest(input_cols, output_cols):
+    # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
+    def nest(input_cols, output_cols, separator=" ", shape=None):
         """
-
+        Concat multiple columns to one with the format specified
         :param input_cols:
         :param output_cols:
+        :param separator:
+        :param shape: a string with
         :return:
         """
-        validate_columns_names(self, input_cols)
+        columns = parse_columns(self, input_cols)
+        df = self
 
-        if not is_str(output_cols):
-            raise TypeError("Expected string")
+        if shape is "vector":
+            vector_assembler = VectorAssembler(
+                inputCols=input_cols,
+                outputCol=output_cols)
+            df = vector_assembler.transform(self)
 
-        vector_assembler = VectorAssembler(
-            inputCols=input_cols,
-            outputCol=output_cols)
+        elif shape is "array":
+            df = apply_exp(output_cols, F.array(*columns))
 
-        return vector_assembler.transform(self)
+        elif shape is "string":
+            df = apply_exp(output_cols, F.concat_ws(separator, *columns))
+        else:
+            RaiseIfNot.value_error(shape, ["vector", "array", "string"])
+
+        return df
 
     @add_attr(cols)
-    def unnest(features_col_name):
+    def cell(column):
         """
-        This function unpack a column of list arrays to multiple columns.
-        +-------------------+-------+
-        |           features|column |
-        +-------------------+-------+
-        |[11, 2, 1, 1, 1, 1]|   hola|
-        | [0, 1, 1, 1, 1, 1]|  salut|
-        |[31, 1, 1, 1, 1, 1]|  hello|
-        +-------------------+-------+
-                      |
-                      |
-                      V
-        +-------+---+---+-----+----+----+---+
-        |column |one|two|three|four|five|six|
-        +-------+---+---+-----+----+----+---+
-        |   hola| 11|  2|    1|   1|   1|  1|
-        |  salut|  0|  1|    1|   1|   1|  1|
-        |  hello| 31|  1|    1|   1|   1|  1|
-        +-------+---+---+-----+----+----+---+
-
-        Thanks https://stackoverflow.com/questions/38384347/how-to-split-vector-into-columns-using-pyspark
-
-        :param features_col_name:
+        Get the value from one cell in a data frame
+        :param column:
+        :return:
         """
+        return self.cols().filter(column).first()[0]
+
+    @add_attr(cols)
+    def unnest(columns, n=None, mark=None):
+        """
+        Split array or string in different columns
+        :param columns:
+        :param n:
+        :return:
+        """
+
+        flag_n = None
+        if n is None:
+            flag_n = True
+
+        df = self
+
+        for col_name in columns:
+            # if the col is array
+            expr = None
+
+            col_dtype = self.schema[col_name].dataType
+
+            # Array
+            if is_(col_dtype, ArrayType):
+
+                expr = F.col(col_name)
+                # Try to infer the array length using the first row
+                if flag_n is True:
+                    n = len(self.cols().cell(col_name))
+
+            # String
+            elif is_(col_dtype, StringType):
+                expr = F.split(F.col(col_name), mark)
+                # Try to infer the array length using the first row
+                if flag_n is True:
+                    n = len(self.cols().cell(col_name).split(mark))
+
+            # Vector
+            elif is_(col_dtype, VectorUDT):
+
+                def extract(row):
+                    return row + tuple(row.vector.toArray().tolist())
+
+                df = df.rdd.map(extract).toDF(df.columns)
+
+            # for p in builtins.range(n):
+            # for p in builtins.range(n):
+            #    df = df.withColumn(col_name + "_" + str(p), expr.getItem(p))
+
+        return df
 
         # Check if column argument a string datatype:
-        def _unnest(row):
-            return (row.word,) + tuple(row.vector.toArray().tolist())
+        # def _unnest(row):
+        #    return (row.word,) + tuple(row.vector.toArray().tolist())
 
-        validate_columns_names(self, features_col_name)
-
-        return self.rdd.map(_unnest).toDF([features_col_name])
+        # columns = parse_columns(self, columns, filter_by_column_dtypes="array")
+        # print("unset", columns)
+        # return self.rdd.map(_unnest).toDF([columns])
 
     @add_method(cols)
     def _hist(column, bins=10):
@@ -1024,5 +1053,15 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         return format_dict({c: self.cols()._hist(c, bins) for c in columns})
+
+    @add_method(cols)
+    def schema_dtypes(columns):
+        """
+
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     return cols

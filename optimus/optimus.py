@@ -22,6 +22,7 @@ from pyspark.sql import functions as F
 
 # We use this to save a reference to the Spark session at the module level
 
+
 class Optimus:
     def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
         """
@@ -49,6 +50,7 @@ class Optimus:
         self.load = Load()
 
         self.spark = self.get_ss()
+        self.sc = self.get_sc()
         self.read = self.spark.read
 
     @staticmethod

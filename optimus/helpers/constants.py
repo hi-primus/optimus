@@ -2,6 +2,8 @@ from pyspark.sql import types as t
 from pyspark.sql.types import StringType, BooleanType, IntegerType, \
     ArrayType, FloatType, DoubleType, StructType
 
+from pyspark.ml.linalg import VectorUDT
+
 import logging
 
 # You can use string, str or String as param
@@ -28,11 +30,13 @@ SPARK_TYPES = {'string': 'string',
                'bool': 'boolean',
                'boolean': 'boolean',
                'struct': 'struct',
-               'array': 'array'
+               'array': 'array',
+               'vector': 'vector'
 
                }
 TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
-                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType}
+                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType,
+                    'vector': VectorUDT}
 
 TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
 

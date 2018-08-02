@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_
+    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element
 from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -49,35 +49,6 @@ def parse_python_dtypes(value):
         print(e)
         print("Expected {0}, got {1}".format(", ".join([k for k in TYPES]), value))
     return data_type
-
-
-def parse_col_dtypes(df, column):
-    """
-    Try to infer the column datatype from df.dtypes strings.
-    :param df:
-    :param column:
-    :return: Puspark data type
-    """
-    _type = None
-    _sub_type = None
-
-    # Get the Spark dtypes string from a specific column
-    for dtypes in df.dtypes:
-        if dtypes[0] == column:
-            _type = dtypes[1]
-        data_type = _type
-
-    if "array" in data_type[:5]:
-        _type = "array"
-        left = "<"
-        right = ">"
-        _sub_type = data_type[(data_type.index(left) + len(left)):data_type.index(right)]
-        result = parse_spark_dtypes(_type)(parse_spark_dtypes(_sub_type))
-        # result = {"type": _type, "sub_type": _sub_type}
-    else:
-        result = parse_spark_dtypes(_type)
-
-    return result
 
 
 def print_html(html):
@@ -181,11 +152,14 @@ def format_dict(val):
                     _val = v
         return _val
 
-    # We apply 2 pass to the dict to process internals dicts and the whole dict
-    if isinstance(val, dict) and len(val) == 1:
+    if is_list_of_one_element(val):
+        val = val[0]
+
+    elif is_dict_of_one_element(val):
         val = next(iter(val.values()))
 
     # TODO: Maybe this can be done in a recursive way
+    # We apply two passes to the dict so we can process internals dicts and the superiors ones
     return repeat(_format_dict, 2, val)
 
 
@@ -247,7 +221,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     # if columns value is * get all dataframes columns
 
-    print(cols_args)
     if cols_args == "*":
         cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
 
@@ -281,7 +254,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         pass
         # RaiseIfNot.type_error(cols_args, (str, list))
 
-    check_for_missing_columns(df, cols)
+    #check_for_missing_columns(df, cols)
 
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
@@ -301,8 +274,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         params = cols, attrs
     elif get_args is False:
         params = cols
-    else:
-        RaiseIfNot.value_error(get_args, ["True", "False"])
+    #else:
+        #print("column missing",cols)
+        #RaiseIfNot.value_error(get_args, ["True", "False"])
 
     return params
 
@@ -342,7 +316,7 @@ def filter_col_name_by_dtypes(df, data_type):
     # data_type = parse_spark_dtypes(data_type)
 
     def parse(x):
-
+        # TODO: Check for a better way to handle this usin schemma['col_name'].data_type
         if "array" in x[1]:
             value = "array"
 

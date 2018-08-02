@@ -6,6 +6,15 @@ import os
 
 # element are int, float, str, bool
 
+def is_same_class(class1, class2):
+    """
+    Check if 2 class are the same
+    :param class1:
+    :param class2:
+    :return:
+    """
+    return class1 == class2
+
 # Check Type
 def is_(value, type_):
     """
@@ -33,6 +42,15 @@ def is_list(value):
     :return:
     """
     return isinstance(value, list)
+
+
+def is_dict(value):
+    """
+    Check if an object is a list
+    :param value:
+    :return:
+    """
+    return isinstance(value, dict)
 
 
 def is_tuple(value):
@@ -138,6 +156,16 @@ def is_list_of_one_element(value):
     :return:
     """
     if is_list(value):
+        return len(value) == 1
+
+
+def is_dict_of_one_element(value):
+    """
+    Check if a var is a single element
+    :param value:
+    :return:
+    """
+    if is_dict(value):
         return len(value) == 1
 
 
