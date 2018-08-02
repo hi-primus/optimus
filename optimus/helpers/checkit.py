@@ -15,15 +15,26 @@ def is_same_class(class1, class2):
     """
     return class1 == class2
 
-# Check Type
+
 def is_(value, type_):
     """
-    Check if a value is sometype
+    Check if a value is instance of a class
     :param value:
     :param type_:
     :return:
     """
+    print(value, type_)
     return isinstance(value, type_)
+
+
+def is_type(type1, type2):
+    """
+    Check if a value is a specific class
+    :param type1:
+    :param type2:
+    :return:
+    """
+    return type1 == type2
 
 
 def is_function(value):
@@ -42,6 +53,15 @@ def is_list(value):
     :return:
     """
     return isinstance(value, list)
+
+
+def is_list_empty(value):
+    """
+    Check is a list is empty
+    :param value:
+    :return:
+    """
+    return len(value) == 0
 
 
 def is_dict(value):
@@ -267,6 +287,7 @@ def is_data_type(value, data_type):
         return False
 
 
+# TODO: can be confused with is_type
 def is_dataframe(value):
     """
     Check if an object is a Spark DataFrame

@@ -1,7 +1,7 @@
 from functools import reduce
 
 from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name
-from optimus.helpers import raiseit as RaiseIfNot
+from optimus.helpers.raiseit import RaiseIfNot
 from optimus.helpers.checkit import is_data_type
 
 from pyspark.sql import functions as F
@@ -20,8 +20,9 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     """
 
     # attrs = val_to_list(attrs)
-
-    if func_type != "column_exp":
+    if func_type == "column_exp":
+        print("Using 'Column Expression' to process column '{column}'".format(column=col))
+    elif func_type != "column_exp":
         if (func_type is None or func_type == "pandas_udf") and is_pyarrow_installed() is True:
             func_type = "pandas_udf"
             print("Using 'Pandas UDFs' to process column '{column}'".format(column=col))
@@ -29,7 +30,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
             func_type = "udf"
             print("Using 'UDFs' to process column '{column}'".format(column=col))
     else:
-        print("Using 'Column Expression' to process column '{column}'".format(column=col))
+        RaiseIfNot.type_error(func_type, ["column_exp", "udf", "pandas_udf"])
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
@@ -42,8 +43,9 @@ def func_factory(func_type=None, func_return_type=None):
     :param func_return_type:
     :return:
     """
-    if func_return_type is not None:
-        func_return_type = parse_spark_dtypes(func_return_type)
+
+    # if func_return_type is not None:
+    #    func_return_type = parse_spark_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
         # TODO: Get the column type, so is not necessary to pass the return type as param
@@ -57,10 +59,13 @@ def func_factory(func_type=None, func_return_type=None):
 
             return val.apply(func, args=attr)
 
-        return F.pandas_udf(lambda value: apply_to_series(value, attr), func_return_type)
+        def aaa(value):
+            return apply_to_series(value, attr)
+
+        return F.pandas_udf(aaa, func_return_type)
 
     def udf_func(attr, func):
-        return F.udf(lambda value: func(value, attr))
+        return F.udf(lambda value: func(value, attr), func_return_type)
 
     def expression_func(attr, func):
         # TODO: Check if we can the returned value for a col expression

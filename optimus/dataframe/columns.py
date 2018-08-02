@@ -12,7 +12,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
-from pyspark.ml.linalg import VectorUDT
+from pyspark.ml.linalg import VectorUDT, Vectors
 from pyspark.ml.feature import VectorAssembler
 
 # Helpers
@@ -20,14 +20,14 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
     import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_same_class
+    is_function, is_one_element, is_same_class, is_type
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list
 
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.functions import abstract_udf, concat
+from optimus.functions import abstract_udf as audf, concat
 
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -120,7 +120,7 @@ def cols(self):
         else:
             _func = func
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
 
         # if columns do not exits
         if not columns:
@@ -128,7 +128,7 @@ def cols(self):
 
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, abstract_udf(col_name, _func, attrs=attrs, func_type="column_exp"))
+            df = df.withColumn(col_name, audf(col_name, _func, attrs=attrs, func_type="column_exp"))
         return df
 
     @add_attr(cols)
@@ -145,16 +145,12 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes)
-
-        # if columns do not exits
-        if not columns:
-            columns = val_to_list(columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
 
         df = self
 
         def expr(_when):
-            main_query = abstract_udf(c, func, func_return_type, args, func_type)
+            main_query = audf(c, func, func_return_type, args, func_type)
             if when is not None:
                 # Use the data type to filter the query
                 main_query = F.when(_when, main_query).otherwise(F.col(c))
@@ -224,13 +220,42 @@ def cols(self):
         # assert validate_columns_names(self, cols_and_types, 0)
         cols, attrs = parse_columns(self, cols_and_types, get_args=True)
 
-        def _cast(col_name, attr):
-            return F.col(col_name).cast(parse_spark_dtypes(attr[0]))
+        # if parse_spark_dtypes(attr[0])
+        def cast_factory(cls):
+            # Parse standard data types
+            if parse_spark_dtypes(cls):
+
+                func_type = "column_exp"
+
+                def cast_to_vectors(col_name, attr):
+                    return F.col(col_name).cast(parse_spark_dtypes(cls))
+
+                func_return_type = None
+
+            # Parse to Vector
+            elif is_type(cls, Vectors):
+
+                func_type = "udf"
+
+                def cast_to_vectors(val, attr):
+                    return Vectors.dense(val)
+
+                func_return_type = VectorUDT()
+
+            # Add here any other parse you want
+            else:
+                RaiseIfNot.value_error(cls)
+
+            return func_return_type, cast_to_vectors, func_type
 
         df = self
-        for cols, attrs in zip(cols, attrs):
-            df = df.cols().apply_exp(cols, _cast, attrs)
-
+        for col, attrs in zip(cols, attrs):
+            return_type, func, func_type = cast_factory(attrs[0])
+            df = df.withColumn(col, audf(col, func,
+                                         func_return_type=return_type,
+                                         attrs=attrs[0],
+                                         func_type=func_type)
+                               )
         return df
 
     @add_attr(cols)

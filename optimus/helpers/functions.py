@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element
+    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element, is_tuple
 from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -27,13 +27,14 @@ def parse_spark_dtypes(value):
     :param value:
     :return:
     """
-    try:
-        if not is_(value, ArrayType):
-            value = value.lower()
-        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value]]
 
-    except Exception as e:
-        print("Expected {0}, got {1}".format(",".join([k for k in SPARK_TYPES]), value))
+    # if not is_(value, ArrayType):
+    #    value = value.lower()
+    try:
+        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value]]
+    except KeyError:
+        data_type = None
+
     return data_type
 
 
@@ -43,12 +44,7 @@ def parse_python_dtypes(value):
     :param value:
     :return:
     """
-    try:
-        data_type = TYPES[value.lower()]
-    except Exception as e:
-        print(e)
-        print("Expected {0}, got {1}".format(", ".join([k for k in TYPES]), value))
-    return data_type
+    return TYPES[value.lower()]
 
 
 def print_html(html):
@@ -100,7 +96,7 @@ def val_to_list(val):
     :param val:
     :return:
     """
-    if isinstance(val, (int, float, str)):
+    if isinstance(val, (int, float, str, tuple)):
         result = [val]
     else:
         result = val
@@ -201,7 +197,8 @@ def check_for_missing_columns(df, col_names):
     return False
 
 
-def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None):
+def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
+                  accepts_missing_cols=False):
     """
     Return a list of columns and check that columns exists in the dadaframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
@@ -210,17 +207,20 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     This params can me used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the dataframe
-    :param filter_by_column_dtypes:
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
+    :param filter_by_column_dtypes:
+    :param accepts_missing_cols: if true not check if column exist in the dataframe
     :return: A list of columns string names
     """
 
     cols = None
     attrs = None
 
-    # if columns value is * get all dataframes columns
+    # ensure that cols_args is a list
+    cols_args = val_to_list(cols_args)
 
+    # if columns value is * get all dataframes columns
     if cols_args == "*":
         cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
 
@@ -236,6 +236,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         # columns = [c[index] for c in columns]
         cols = [(i[0:1][0]) for i in cols_args]
         attrs = [(i[1:]) for i in cols_args]
+
 
     # if cols are string or int
     elif is_list_of_str_or_int(cols_args):
@@ -254,12 +255,13 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         pass
         # RaiseIfNot.type_error(cols_args, (str, list))
 
-    #check_for_missing_columns(df, cols)
+    if accepts_missing_cols is False:
+        check_for_missing_columns(df, cols)
 
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
         filter_by_column_dtypes = list(map(lambda x: parse_python_dtypes(x), filter_by_column_dtypes))
-        print("arui", filter_by_column_dtypes)
+
         # Get columns for every data type
         columns_filtered = list(map(lambda x: filter_col_name_by_dtypes(df, x), filter_by_column_dtypes))
 
@@ -274,9 +276,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         params = cols, attrs
     elif get_args is False:
         params = cols
-    #else:
-        #print("column missing",cols)
-        #RaiseIfNot.value_error(get_args, ["True", "False"])
+    else:
+        RaiseIfNot.value_error(get_args, ["True", "False"])
 
     return params
 

@@ -21,36 +21,43 @@ class RaiseIfNot:
         return None
 
     @staticmethod
-    def type_error(var, func, operator="not"):
+    def type_error(var, types):
         """
         Raise a TypeError exception
         :param var:
-        :param func:
-        :param operator:
+        :param types:
         :return:
         """
 
+
+        divisor = None
+        if len(types) == 2:
+            divisor = " or "
+        elif len(types) > 2:
+            divisor = ", "
+
         raise TypeError(
-            "'{var_name}' must be {type}, received '{var_type}'{value}"
+            "'{var_name}' must be {type}, received '{var_type}'"
                 .format(var_name=RaiseIfNot._get_name(var),
-                        type=str, var_type=var,
-                        value=type(var)))
+                        type=divisor.join(map(
+                            lambda x: "'" + x + "'",
+                            types)), var_type=type(var)))
 
     @staticmethod
     def value_error(var, _list):
         """
         Raise a ValueError exception
         :param var:
-        :param _list: string, value
+        :param _list: list of values
         :return:
         """
 
-        r = []
-        for element in _list:
-            if is_function(element):
-                r.append(element(var))
-            else:
-                r.append(element == var)
+        # r = []
+        # for element in _list:
+        #    if is_function(element):
+        #        r.append(element(var))
+        #    else:
+        #        r.append(element == var)
 
         if not any(r):
             if len(_list) == 2:
@@ -58,9 +65,8 @@ class RaiseIfNot:
             elif len(_list) > 2:
                 divisor = ", "
 
-
-            raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
-                             .format(var_name=RaiseIfNot._get_name(var),
-                                     type=divisor.join(map(
-                                         lambda x: "'" + x + "'",
-                                         _list)), var_type=var))
+        raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
+                         .format(var_name=RaiseIfNot._get_name(var),
+                                 type=divisor.join(map(
+                                     lambda x: "'" + x + "'",
+                                     _list)), var_type=var))
