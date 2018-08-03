@@ -20,7 +20,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
     import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_same_class, is_type, is_int
+    is_function, is_one_element, is_same_class, is_type, is_int, cast_to_float
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
@@ -224,13 +224,13 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-
             # Parse standard data types
             if parse_spark_dtypes(cls):
 
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
+                    print(parse_spark_dtypes(cls))
                     return F.col(col_name).cast(parse_spark_dtypes(cls))
 
                 func_return_type = None
@@ -253,7 +253,7 @@ def cols(self):
         df = self
         for col, attrs in zip(cols, attrs):
             return_type, func, func_type = cast_factory(attrs[0])
-            print(return_type)
+
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
                                          attrs=attrs[0],
@@ -370,10 +370,11 @@ def cols(self):
         """
 
         # Filter only numeric columns
-        columns = parse_columns(self, columns, filter_by_column_dtypes=["int", "float"])
+        columns = parse_columns(self, columns)
 
         # Aggregate
-        result = list(map(lambda c: self.agg({c: agg}).collect()[0][0], columns))
+
+        result = list(map(lambda c: cast_to_float(self.agg({c: agg}).collect()[0][0]), columns))
 
         column_result = dict(zip(columns, result))
 
@@ -440,13 +441,21 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         # Get percentiles
-        percentile_results = self \
-            .rows().drop_na(columns) \
-            .cols().cast((columns, "double",)) \
-            .approxQuantile(columns, percentile, error)
+        percentile_value = []
+        for c in columns:
+            percentile_results = self \
+                .rows().drop_na(c) \
+                .cols().cast((c, "double",)) \
+                .approxQuantile(c, percentile, error)
+
+            percentile_value.append(dict(zip(percentile, percentile_results)))
+
+        percentile_value = dict(zip(columns, percentile_value))
+
+        return format_dict(percentile_value)
 
         # Merge percentile and value
-        percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
+        # percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
 
         # Merge percentile, values and columns
         return format_dict(dict(zip(columns, percentile_value)))
@@ -1049,7 +1058,6 @@ def cols(self):
                     r = builtins.range(0, n)
 
                 for i in r:
-                    print(i)
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
             # Vectorp
@@ -1071,8 +1079,13 @@ def cols(self):
         """
 
         temp_col = "bucket_" + column
+
+        # Quantile Discretizer needs a numeric columns
+        df = self.cols().cast((column, "double",))
+
         discretizer = QuantileDiscretizer(numBuckets=10, inputCol=column, outputCol=temp_col)
-        df = discretizer.fit(self).transform(self)
+
+        df = discretizer.fit(df).transform(df)
         return collect_to_dict(df.groupBy(temp_col).agg(F.min(column).alias('min'), F.max(column).alias('max'),
                                                         F.count(temp_col).alias('count')).orderBy(temp_col).collect())
 
