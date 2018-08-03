@@ -9,6 +9,7 @@
 
 
 [![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Backers on Open Collective](https://opencollective.com/Optimus/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/Optimus/sponsors/badge.svg)](#sponsors) 
 
 Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion. It uses all the power of 
 Apache Spark (optimized via Catalyst) to do so. It implements several handy tools for data wrangling and munging that will 
@@ -318,6 +319,36 @@ new improvements and features will be added now on this version.
  
 [![Logo Data](https://www.bbvadata.com/wp-content/uploads/2016/07/bbvada_logo.png)](https://www.bbvadata.com)
  
+
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="graphs/contributors"><img src="https://opencollective.com/Optimus/contributors.svg?width=890&button=false" /></a>
+
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/Optimus#backer)]
+
+<a href="https://opencollective.com/Optimus#backers" target="_blank"><img src="https://opencollective.com/Optimus/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/Optimus#sponsor)]
+
+<a href="https://opencollective.com/Optimus/sponsor/0/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/1/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/2/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/3/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/4/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/5/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/6/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/7/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/8/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/Optimus/sponsor/9/website" target="_blank"><img src="https://opencollective.com/Optimus/sponsor/9/avatar.svg"></a>
+
+
+
 ## License:
 
 Apache 2.0 © [Iron](https://github.com/ironmussa)
