@@ -298,8 +298,20 @@ def is_dataframe(value):
     return isinstance(value, DataFrame)
 
 
+def cast_to_float(value):
+    """
+    Try to cast to float if not possible return the same value
+    :param value:
+    :return:
+    """
+    try:
+        return float(value)
+    except:
+        return value
+
+
 # Check cast
-def str_to_int(value):
+def could_be_int(value):
     """
     Check if a str can be converted to int
     :param value:
@@ -313,7 +325,7 @@ def str_to_int(value):
         return False
 
 
-def str_to_float(value):
+def could_be_float(value):
     """
     Check if a str can be converted to float
     :param value:
@@ -327,7 +339,7 @@ def str_to_float(value):
         pass
 
 
-def str_to_boolean(value):
+def could_be_bool(value):
     """
     Check if a str can be converted to boolean
     :param value:
