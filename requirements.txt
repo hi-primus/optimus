@@ -9,3 +9,5 @@ seaborn==0.8.1
 setuptools==39.2.0
 deprecated==1.2.0
 pyarrow==0.9.*
+tabulate==0.8.2
+Jinja2==

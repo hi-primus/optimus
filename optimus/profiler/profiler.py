@@ -20,12 +20,14 @@ class Profiler:
 
         cols_count = len(df.columns)
         rows_count = df.count()
-        missing = df.cols().count_na(columns)
+        missing_count = sum(df.cols().count_na(columns).values())
+
 
         return (
             {'cols_count': cols_count,
              'rows_count': rows_count,
-             'missing': missing}
+             'missing_count': missing_count,
+             'size': df.size()}
         )
 
     @staticmethod
@@ -60,9 +62,8 @@ class Profiler:
             :param col_name:
             :return:
             """
-            types = df.cols().apply(col_name, fbdt, "bool", "udf") \
-                .groupBy(col_name) \
-                .count()
+            temp = col_name + "_type"
+            types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count()
 
             # Convert the collect result to a list
             # TODO: check if collect_to_dict function can be used here
@@ -70,6 +71,8 @@ class Profiler:
             count_by_data_type = {}
             for row in types.collect():
                 count_by_data_type[row[0]] = row[1]
+
+
 
             # Fill missing data types with 0
             count_by_data_type = fill_missing_var_types(count_by_data_type)
@@ -79,17 +82,29 @@ class Profiler:
             count_by_data_type['string'] = count_by_data_type['string'] - count_empty_strings
 
             data_types_count = {"string": count_by_data_type['string'],
-                                "boolean": count_by_data_type['boolean'],
-                                "integer": count_by_data_type['integer'],
-                                "float": count_by_data_type['float']
+                                "bool": count_by_data_type['bool'],
+                                "int": count_by_data_type['int'],
+                                "float": count_by_data_type['float'],
+                                "date": count_by_data_type['date']
                                 }
 
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
 
+            # Get the greatest count by column data type to
+            greatest_data_type_count = max(data_types_count, key=data_types_count.get)
+            if greatest_data_type_count is "string":
+                cat = "categorical"
+            elif greatest_data_type_count is "int" or greatest_data_type_count is "float":
+                cat = "numerical"
+            elif greatest_data_type_count is "date":
+                cat = "date"
+            else:
+                cat = "null"
+
             col = {}
-            col['type'] = max(data_types_count, key=data_types_count.get)
+            col['type'] = cat
             col['details'] = {**data_types_count, **null_missed_count}
 
             return col
@@ -139,14 +154,14 @@ class Profiler:
             col['p_missing'] = na[col_name] / rows_count * 100
 
             # Categorical column
-            if column_type == "string":
+            if column_type == "categorical":
                 col['frequency'] = collect_to_dict(df.select(F.col(col_name).alias("value")).groupBy("value").count()
                                                    .orderBy('count', ascending=False).limit(10)
                                                    .withColumn('percentage',
                                                                F.col('count') / rows_count * 100).collect())
 
             # Numeric Column
-            elif column_type == "integer" or column_type == "float":
+            elif column_type == "numerical":
                 # Quantile statistics
                 min_value = df.cols().min(col_name)
                 max_value = df.cols().max(col_name)
@@ -171,7 +186,7 @@ class Profiler:
                 col['zeros'] = df.cols().count_zeros(col_name)
                 col['p_zeros'] = col['zeros'] / rows_count
 
-                col['hist'] = df.hist(col_name)
+                col['hist'] = df.cols().hist(col_name)
 
             elif column_type == "boolean":
                 pass
