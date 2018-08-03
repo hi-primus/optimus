@@ -153,7 +153,7 @@ class Profiler:
             col = {}
 
             # Get if a column is numerical or categorical
-            column_type = count_dtype[col_name]['type']
+            column_type = count_dtype["columns"][col_name]['type']
 
             # Get uniques
             uniques = df.cols().count_uniques(col_name)
@@ -169,14 +169,19 @@ class Profiler:
             col['p_missing'] = na[col_name] / rows_count * 100
 
             # Categorical column
+            if column_type == "categorical" or column_type == "numeric":
+                temp = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
+                    .orderBy('count', ascending=False)
+
+                col['frequency'] = collect_to_dict(temp.limit(10)
+                                                   .withColumn('percentage', F.col('count') / rows_count * 100)
+                                                   .collect())
+
             if column_type == "categorical":
-                col['frequency'] = collect_to_dict(df.select(F.col(col_name).alias("value")).groupBy("value").count()
-                                                   .orderBy('count', ascending=False).limit(10)
-                                                   .withColumn('percentage',
-                                                               F.col('count') / rows_count * 100).collect())
+                col['group_count'] = temp.count()
 
             # Numeric Column
-            elif column_type == "numerical":
+            if column_type == "numeric":
                 # Quantile statistics
                 min_value = df.cols().min(col_name)
                 max_value = df.cols().max(col_name)
