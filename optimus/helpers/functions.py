@@ -218,10 +218,14 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     attrs = None
 
     # ensure that cols_args is a list
-    cols_args = val_to_list(cols_args)
+    # cols_args = val_to_list(cols_args)
 
     # if columns value is * get all dataframes columns
-    if cols_args == "*":
+    if is_regex is True:
+        r = re.compile(cols_args[0])
+        cols = list(filter(r.match, df.columns))
+
+    elif cols_args == "*":
         cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
@@ -231,29 +235,20 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
 
     # Verify if we have a list with tuples
-    elif is_list_of_tuples(cols_args):
+    elif is_tuple(cols_args) or is_list_of_tuples(cols_args):
+        cols_args = val_to_list(cols_args)
         # Extract a specific position in the tuple
-        # columns = [c[index] for c in columns]
         cols = [(i[0:1][0]) for i in cols_args]
         attrs = [(i[1:]) for i in cols_args]
 
-
     # if cols are string or int
+    # ["col_name_1",]
     elif is_list_of_str_or_int(cols_args):
         cols = [c if is_str(c) else df.columns[c] for c in cols_args]
 
+    # ("col_name",..)
     elif is_str_or_int(cols_args):
-        # Verify if a regex
-        if is_regex:
-            r = re.compile(cols_args)
-            cols = list(filter(r.match, df.columns))
-        else:
-            cols = val_to_list(cols_args)
-    else:
-
-        # Verify that columns are a string or list of string
-        pass
-        # RaiseIfNot.type_error(cols_args, (str, list))
+        cols = val_to_list(cols_args)
 
     if accepts_missing_cols is False:
         check_for_missing_columns(df, cols)
@@ -317,15 +312,15 @@ def filter_col_name_by_dtypes(df, data_type):
     # data_type = parse_spark_dtypes(data_type)
 
     def parse(x):
-        # TODO: Check for a better way to handle this usin schemma['col_name'].data_type
+        # TODO: Check for a better way to handle this using schemma['col_name'].data_type
         if "array" in x[1]:
             value = "array"
-
         else:
             value = x[1]
-        # print("value", data_type, value)
+
         return value in data_type
 
     columns = [y[0] for y in filter(parse, df.dtypes)]
 
     return columns
+

@@ -20,11 +20,11 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
     import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_same_class, is_type
+    is_function, is_one_element, is_same_class, is_type, is_int
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
-    tuple_to_dict, val_to_list, filter_list
+    tuple_to_dict, val_to_list, filter_list, one_list_to_val
 
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf as audf, concat
@@ -103,7 +103,7 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func=None, attrs=None, col_exp=None, filter_col_by_dtypes=None):
+    def apply_exp(columns, func=None, attrs=None, col_exp=None, filter_col_by_dtypes=None, verbose=True):
         """
         :param columns: Columns in which the columns are going to be applied
         :param func:
@@ -128,11 +128,12 @@ def cols(self):
 
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, audf(col_name, _func, attrs=attrs, func_type="column_exp"))
+            df = df.withColumn(col_name, audf(col_name, _func, attrs=attrs, func_type="column_exp", verbose=verbose))
         return df
 
     @add_attr(cols)
-    def apply(columns, func, func_return_type, args=None, func_type=None, when=None, filter_col_by_dtypes=None):
+    def apply(columns, func, func_return_type, args=None, func_type=None, when=None, filter_col_by_dtypes=None,
+              verbose=True):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param columns:
@@ -150,7 +151,7 @@ def cols(self):
         df = self
 
         def expr(_when):
-            main_query = audf(c, func, func_return_type, args, func_type)
+            main_query = audf(c, func, func_return_type, args, func_type, verbose=verbose)
             if when is not None:
                 # Use the data type to filter the query
                 main_query = F.when(_when, main_query).otherwise(F.col(c))
@@ -222,9 +223,11 @@ def cols(self):
 
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
+
+            print(parse_spark_dtypes(cls))
             # Parse standard data types
             if parse_spark_dtypes(cls):
-
+                print("ASDFasdf")
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
@@ -234,7 +237,7 @@ def cols(self):
 
             # Parse to Vector
             elif is_type(cls, Vectors):
-
+                print("vector")
                 func_type = "udf"
 
                 def cast_to_vectors(val, attr):
@@ -251,10 +254,11 @@ def cols(self):
         df = self
         for col, attrs in zip(cols, attrs):
             return_type, func, func_type = cast_factory(attrs[0])
+            print(return_type)
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
                                          attrs=attrs[0],
-                                         func_type=func_type)
+                                         func_type=func_type, verbose=False)
                                )
         return df
 
@@ -895,7 +899,7 @@ def cols(self):
 
         df = self
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes="string")
         for c in columns:
             df = func(df, c, search, replace)
 
@@ -996,7 +1000,7 @@ def cols(self):
         return self.cols().filter(column).first()[0]
 
     @add_attr(cols)
-    def unnest(columns, n=None, mark=None):
+    def unnest(columns, mark=None, n=None, index=None):
         """
         Split array or string in different columns
         :param columns:
@@ -1007,6 +1011,8 @@ def cols(self):
         flag_n = None
         if n is None:
             flag_n = True
+
+        columns = parse_columns(self, columns)
 
         df = self
 
@@ -1024,6 +1030,9 @@ def cols(self):
                 if flag_n is True:
                     n = len(self.cols().cell(col_name))
 
+                for i in builtins.range(n):
+                    df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
+
             # String
             elif is_(col_dtype, StringType):
                 expr = F.split(F.col(col_name), mark)
@@ -1031,27 +1040,23 @@ def cols(self):
                 if flag_n is True:
                     n = len(self.cols().cell(col_name).split(mark))
 
+                if is_int(index):
+                    r = builtins.range(index, index + 1)
+                else:
+                    r = builtins.range(0, n)
+
+                for i in r:
+                    print(i)
+                    df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
+
             # Vector
             elif is_(col_dtype, VectorUDT):
-
                 def extract(row):
                     return row + tuple(row.vector.toArray().tolist())
 
                 df = df.rdd.map(extract).toDF(df.columns)
 
-            # for p in builtins.range(n):
-            # for p in builtins.range(n):
-            #    df = df.withColumn(col_name + "_" + str(p), expr.getItem(p))
-
         return df
-
-        # Check if column argument a string datatype:
-        # def _unnest(row):
-        #    return (row.word,) + tuple(row.vector.toArray().tolist())
-
-        # columns = parse_columns(self, columns, filter_by_column_dtypes="array")
-        # print("unset", columns)
-        # return self.rdd.map(_unnest).toDF([columns])
 
     @add_method(cols)
     def _hist(column, bins=10):

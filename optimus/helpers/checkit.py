@@ -23,7 +23,7 @@ def is_(value, type_):
     :param type_:
     :return:
     """
-    print(value, type_)
+
     return isinstance(value, type_)
 
 
@@ -213,6 +213,7 @@ def is_str_or_int(value):
     :param value:
     :return:
     """
+
     return isinstance(value, (str, int))
 
 
@@ -280,7 +281,7 @@ def is_data_type(value, data_type):
 
     else:
         _data_type = "null"
-    # print(_data_type, data_type)
+
     if _data_type == data_type:
         return True
     else:

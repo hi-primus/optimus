@@ -10,7 +10,7 @@ class RaiseIfNot:
     @staticmethod
     def _get_name(var):
         """
-
+        Get the var name form the var passed to a function
         :param var:
         :return:
         """
@@ -28,7 +28,6 @@ class RaiseIfNot:
         :param types:
         :return:
         """
-
 
         divisor = None
         if len(types) == 2:
@@ -52,19 +51,21 @@ class RaiseIfNot:
         :return:
         """
 
-        # r = []
-        # for element in _list:
+        #r = []
+        #for element in _list:
         #    if is_function(element):
         #        r.append(element(var))
         #    else:
         #        r.append(element == var)
 
-        if not any(r):
-            if len(_list) == 2:
-                divisor = " or "
-            elif len(_list) > 2:
-                divisor = ", "
+        #if not any(r):
+        if len(_list) == 2:
+            divisor = " or "
+        elif len(_list) > 2:
+            divisor = ", "
 
+        print(_list)
+        print(len(_list))
         raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
                          .format(var_name=RaiseIfNot._get_name(var),
                                  type=divisor.join(map(
