@@ -19,7 +19,7 @@ TYPES = {'string': 'string',
 
          }
 
-TYPES_PROFILER = {'integer', 'float', 'string', 'boolean', 'null'}
+TYPES_PROFILER = {'int', 'float', 'string', 'bool', 'date', 'null'}
 
 SPARK_TYPES = {'string': 'string',
                'str': 'string',
@@ -31,12 +31,12 @@ SPARK_TYPES = {'string': 'string',
                'boolean': 'boolean',
                'struct': 'struct',
                'array': 'array',
-               #'vector': 'vector'
+               # 'vector': 'vector'
 
                }
 TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
                     'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType,
-                    #'vector': VectorUDT
+                    # 'vector': VectorUDT
                     }
 
 TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
