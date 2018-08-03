@@ -1,4 +1,5 @@
 from functools import reduce
+import dateutil.parser
 
 from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name
 from optimus.helpers.raiseit import RaiseIfNot
@@ -8,29 +9,33 @@ from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
+def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=True):
     """
-    General User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
-    :param col:
-    :param func:
-    :param attrs:
-    :param func_return_type:
+    Abstract User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
+    :param col: Column to created or transformed
+    :param func: Function to be applied to the data
+    :param attrs: If required attributes to be passed to the function
+    :param func_return_type: Required bu UDF and Pandas UDF. It is necessary to define the return type
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
-    :return:
+    :return: A function
     """
 
-    # attrs = val_to_list(attrs)
     if func_type == "column_exp":
-        print("Using 'Column Expression' to process column '{column}'".format(column=col))
-    elif func_type != "column_exp":
-        if (func_type is None or func_type == "pandas_udf") and is_pyarrow_installed() is True:
-            func_type = "pandas_udf"
-            print("Using 'Pandas UDFs' to process column '{column}'".format(column=col))
-        else:
-            func_type = "udf"
-            print("Using 'UDFs' to process column '{column}'".format(column=col))
+
+        msg = "Using 'Column Expression' to process column '{column}'"
+    elif (func_type is None or func_type == "pandas_udf") and is_pyarrow_installed() is True:
+        func_type = "pandas_udf"
+        msg = "Using 'Pandas UDF' to process column '{column}'"
     else:
-        RaiseIfNot.type_error(func_type, ["column_exp", "udf", "pandas_udf"])
+        func_type = "udf"
+        msg = "Using 'UDF' to process column '{column}'"
+
+    if verbose is True:
+        print(msg.format(column=col))
+
+    types = ["column_exp", "udf", "pandas_udf"]
+    if func_type not in types:
+        RaiseIfNot.value_error(func_type, types)
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
@@ -39,13 +44,13 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
 def func_factory(func_type=None, func_return_type=None):
     """
     Return column express, udf or pandas udf function.
-    :param func_type:
+    :param func_type: Type of function udf or pandas udf
     :param func_return_type:
     :return:
     """
 
     # if func_return_type is not None:
-    #    func_return_type = parse_spark_dtypes(func_return_type)
+    # func_return_type = parse_spark_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
         # TODO: Get the column type, so is not necessary to pass the return type as param
@@ -59,10 +64,10 @@ def func_factory(func_type=None, func_return_type=None):
 
             return val.apply(func, args=attr)
 
-        def aaa(value):
+        def to_serie(value):
             return apply_to_series(value, attr)
 
-        return F.pandas_udf(aaa, func_return_type)
+        return F.pandas_udf(to_serie, func_return_type)
 
     def udf_func(attr, func):
         return F.udf(lambda value: func(value, attr), func_return_type)
@@ -84,7 +89,7 @@ def func_factory(func_type=None, func_return_type=None):
         return expression_func
 
 
-def filter_row_by_data_type(col_name, data_type):
+def filter_row_by_data_type_audf(col_name, data_type):
     """
     Filter a column using a Spark data type as reference
     :param col_name:
@@ -93,7 +98,7 @@ def filter_row_by_data_type(col_name, data_type):
     """
 
     data_type = parse_python_dtypes(data_type)
-    return abstract_udf(col_name, is_data_type, "bool", data_type)
+    return abstract_udf(col_name, is_data_type, "boolean", data_type)
 
 
 def concat(dfs, like="columns"):
@@ -121,3 +126,108 @@ def concat(dfs, like="columns"):
         RaiseIfNot.value_error(like, ["columns", "rows"])
 
     return df_result
+
+
+def filter_row_by_data_type(col_name, data_type=None, get_type=False):
+    """
+    A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
+    Also can return the data type
+    :param col_name: Column to be process
+    :param data_type: The data_type to be compared
+    :param get_type:
+    :return: True or False
+    """
+    if data_type is not None:
+        data_type = parse_python_dtypes(data_type)
+
+    def pandas_udf_func(v):
+
+        def str_to_int(value):
+            """
+            Check if a str can be converted to int
+            :param value:
+            :return:
+            """
+            try:
+                int(value)
+                return True
+
+            except ValueError:
+                return False
+
+        def str_to_float(value):
+            """
+            Check if a str can be converted to float
+            :param value:
+            :return:
+            """
+            try:
+                float(value)
+                return True
+
+            except ValueError:
+                pass
+
+        def str_to_boolean(value):
+            """
+            Check if a str can be converted to boolean
+            :param value:
+            :return:
+            """
+            value = value.lower()
+            if value == "true" or value == "false":
+                return True
+        def str_to_date(value):
+            try:
+                dateutil.parser.parse(value)
+                return True
+            except ValueError:
+                pass
+
+
+        def func(value):
+            """
+            Check if a value can be casted to a specific
+            :param value: value to be checked
+
+            :return:
+            """
+
+            # _data_type = data_type
+            if isinstance(value, int):  # Check if value is integer
+                _data_type = "int"
+            elif isinstance(value, float):
+                _data_type = "float"
+            elif isinstance(value, bool):
+                _data_type = "bool"
+            # if string we try to parse it to int, float or bool
+            elif isinstance(value, str):
+                if str_to_int(value):
+                    _data_type = "int"
+                elif str_to_float(value):
+                    _data_type = "float"
+                elif str_to_boolean(value):
+                    _data_type = "bool"
+                elif str_to_date(value):
+                    _data_type = "date"
+                else:
+                    _data_type = "string"
+            else:
+                _data_type = "null"
+
+            if get_type is False:
+                if _data_type == data_type:
+                    return True
+                else:
+                    return False
+            else:
+                return _data_type
+
+        return v.apply(func)
+
+    if get_type is True:
+        a = "string"
+    else:
+        a = "boolean"
+
+    return F.pandas_udf(pandas_udf_func, a)(col_name)
