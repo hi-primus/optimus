@@ -1,6 +1,6 @@
 from pyspark.sql import types as t
 from pyspark.sql.types import StringType, BooleanType, IntegerType, \
-    ArrayType, FloatType, DoubleType, StructType
+    ArrayType, FloatType, DoubleType, StructType, DateType
 
 from pyspark.ml.linalg import VectorUDT
 
@@ -33,11 +33,13 @@ SPARK_TYPES = {'string': 'string',
                'boolean': 'boolean',
                'struct': 'struct',
                'array': 'array',
+               'date': 'date'
                # 'vector': 'vector'
 
                }
 TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
                     'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType,
+                    'date': DateType()
                     # 'vector': VectorUDT
                     }
 
