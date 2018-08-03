@@ -15,8 +15,8 @@ TYPES = {'string': 'string',
          'double': 'double',
          'bool': 'boolean',
          'boolean': 'boolean',
-         'array': 'array'
-
+         'array': 'array',
+         'null': 'null'
          }
 
 PROFILER_TYPES = {'int', 'float', 'string', 'bool', 'date', 'null'}
