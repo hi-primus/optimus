@@ -161,24 +161,29 @@ class Profiler:
             na = df.cols().count_na(col_name)
 
             # Uniques
-            col['uniques_count'] = uniques[col_name]
-            col['p_uniques'] = uniques[col_name] / rows_count * 100
+            # if column_type == "categorical":
+            #    col['uniques_count'] = uniques[col_name]
+            #    col['p_uniques'] = uniques[col_name] / rows_count * 100
 
             # Missing
             col['missing_count'] = na[col_name]
             col['p_missing'] = na[col_name] / rows_count * 100
 
             # Categorical column
+            col['column_type'] = column_type
             if column_type == "categorical" or column_type == "numeric":
-                temp = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
+                uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
                     .orderBy('count', ascending=False)
 
-                col['frequency'] = collect_to_dict(temp.limit(10)
-                                                   .withColumn('percentage', F.col('count') / rows_count * 100)
+                col['frequency'] = collect_to_dict(uniques_df.limit(10)
+                                                   .withColumn('percentage', F.round(F.col('count') / rows_count * 100,
+                                                                                     2))
                                                    .collect())
 
+            uniques = uniques_df.count()
             if column_type == "categorical":
-                col['group_count'] = temp.count()
+                col['uniques_count'] = uniques
+                col['p_uniques'] = round(uniques / rows_count * 100, 2)
 
             # Numeric Column
             if column_type == "numeric":
@@ -195,16 +200,16 @@ class Profiler:
                 # Descriptive statistic
                 col['stdev'] = df.cols().std(col_name)
                 # Coef of variation
-                col['kurt'] = df.cols().kurt(col_name)
-                col['mean'] = df.cols().mean(col_name)
-                col['mad'] = df.cols().mad(col_name)
-                col['skewness'] = df.cols().skewness(col_name)
-                col['sum'] = df.cols().sum(col_name)
-                col['variance'] = df.cols().variance(col_name)
+                col['kurt'] = round(df.cols().kurt(col_name),5)
+                col['mean'] = round(df.cols().mean(col_name), 5)
+                col['mad'] = round(df.cols().mad(col_name),5)
+                col['skewness'] = round(df.cols().skewness(col_name),5)
+                col['sum'] = round(df.cols().sum(col_name),5)
+                col['variance'] = round(df.cols().variance(col_name),5)
 
                 # Zeros
                 col['zeros'] = df.cols().count_zeros(col_name)
-                col['p_zeros'] = col['zeros'] / rows_count
+                col['p_zeros'] = round(col['zeros'] / rows_count,2)
 
                 col['hist'] = df.cols().hist(col_name)
 
