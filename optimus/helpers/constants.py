@@ -19,7 +19,9 @@ TYPES = {'string': 'string',
 
          }
 
-TYPES_PROFILER = {'int', 'float', 'string', 'bool', 'date', 'null'}
+PROFILER_TYPES = {'int', 'float', 'string', 'bool', 'date', 'null'}
+
+PROFILER_COLUMN_TYPES = {'categorical', 'numeric', 'date'}
 
 SPARK_TYPES = {'string': 'string',
                'str': 'string',

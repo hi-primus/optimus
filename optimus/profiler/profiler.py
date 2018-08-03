@@ -3,7 +3,7 @@ from pathlib import Path
 import pyspark.sql.functions as F
 from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, write_json
+from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, write_json
 
 
 class Profiler:
@@ -21,7 +21,6 @@ class Profiler:
         cols_count = len(df.columns)
         rows_count = df.count()
         missing_count = sum(df.cols().count_na(columns).values())
-
 
         return (
             {'cols_count': cols_count,
@@ -47,6 +46,7 @@ class Profiler:
 
         return col_type
 
+    # TODO: This should check only the StringType Columns. The datatype from others columns can be taken from schema().
     @staticmethod
     def count_data_types(df, columns):
         """
@@ -72,8 +72,6 @@ class Profiler:
             for row in types.collect():
                 count_by_data_type[row[0]] = row[1]
 
-
-
             # Fill missing data types with 0
             count_by_data_type = fill_missing_var_types(count_by_data_type)
 
@@ -92,12 +90,13 @@ class Profiler:
                                  "missing": count_empty_strings,
                                  }
 
-            # Get the greatest count by column data type to
+            # Get the greatest count by column data type
             greatest_data_type_count = max(data_types_count, key=data_types_count.get)
+
             if greatest_data_type_count is "string":
                 cat = "categorical"
             elif greatest_data_type_count is "int" or greatest_data_type_count is "float":
-                cat = "numerical"
+                cat = "numeric"
             elif greatest_data_type_count is "date":
                 cat = "date"
             else:
@@ -111,7 +110,23 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        return {c: _count_data_types(c) for c in columns}
+        type_details = {c: _count_data_types(c) for c in columns}
+
+        count_types = {}
+        # Count the categorical, numerical and date columns
+        for k, v in type_details.items():
+            name = v["type"]
+            if name in count_types:
+                count_types[name] += 1
+            else:
+                count_types[name] = 1
+
+        count_types = fill_missing_col_types(count_types)
+
+        results = {}
+        results["count_types"] = count_types
+        results["columns"] = type_details
+        return results
 
     @staticmethod
     def columns(df, columns):

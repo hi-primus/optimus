@@ -3,13 +3,25 @@ from optimus.helpers.constants import *
 import json
 
 
+def fill_missing_col_types(col_types):
+    """
+    Fill missing col types with 0
+    :param col_types:
+    :return:
+    """
+    for label in PROFILER_COLUMN_TYPES:
+        if label not in col_types:
+            col_types[label] = 0
+    return col_types
+
+
 def fill_missing_var_types(var_types):
     """
     Fill missing data types with 0
     :param var_types:
     :return:
     """
-    for label in TYPES_PROFILER:
+    for label in PROFILER_TYPES:
         if label not in var_types:
             var_types[label] = 0
     return var_types
