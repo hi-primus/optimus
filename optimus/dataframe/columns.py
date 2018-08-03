@@ -224,10 +224,10 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-            print(parse_spark_dtypes(cls))
+
             # Parse standard data types
             if parse_spark_dtypes(cls):
-                print("ASDFasdf")
+
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
@@ -237,7 +237,6 @@ def cols(self):
 
             # Parse to Vector
             elif is_type(cls, Vectors):
-                print("vector")
                 func_type = "udf"
 
                 def cast_to_vectors(val, attr):
@@ -441,7 +440,10 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         # Get percentiles
-        percentile_results = self.approxQuantile(columns, percentile, error)
+        percentile_results = self \
+            .rows().drop_na(columns) \
+            .cols().cast((columns, "double",)) \
+            .approxQuantile(columns, percentile, error)
 
         # Merge percentile and value
         percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
@@ -767,6 +769,7 @@ def cols(self):
         return format_dict(collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
                                            .collect()))
 
+    # TODO: Explorer the use of approxCountDistinct
     @add_attr(cols)
     def count_uniques(columns):
         """
@@ -1049,7 +1052,7 @@ def cols(self):
                     print(i)
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
-            # Vector
+            # Vectorp
             elif is_(col_dtype, VectorUDT):
                 def extract(row):
                     return row + tuple(row.vector.toArray().tolist())
