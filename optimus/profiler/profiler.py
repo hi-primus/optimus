@@ -5,6 +5,11 @@ from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, write_json
 
+import jinja2
+import json
+import os
+from IPython.core.display import display, HTML
+
 
 class Profiler:
 
@@ -131,15 +136,20 @@ class Profiler:
     @staticmethod
     def columns(df, columns):
         """
-        Get statistical information about a column
+        Get statistical information in json format
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
         :return: json object with the
         """
         columns = parse_columns(df, columns)
 
+        summary = Profiler.dataset_info(df)
+
         # Initialize Objects
         column_info = {}
+
+        column_info["summary"] = summary
+
         column_info['columns'] = {}
 
         rows_count = df.count()
@@ -228,4 +238,22 @@ class Profiler:
 
         path = Path.cwd() / "data.json"
         write_json(column_info, path=path)
+
         return column_info
+
+    @staticmethod
+    def run(df, columns):
+        """
+        Get statistical information in HTML Format
+        :param columns:
+        :return:
+        """
+        path = os.path.dirname(os.path.abspath(__file__))
+        templateLoader = jinja2.FileSystemLoader(searchpath=path + "//templates")
+        templateEnv = jinja2.Environment(loader=templateLoader)
+
+        template = templateEnv.get_template("column_stats.html")
+        summary = Profiler.columns(df, columns)
+        #df_data = json.dumps(summary)
+        output = template.render(data=summary)
+        display(HTML(output))
