@@ -245,6 +245,7 @@ def cols(self):
         :param attrs:
         :return:
         """
+
         # assert validate_columns_names(self, cols_and_types, 0)
         # cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
 
@@ -384,7 +385,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def _agg(agg, columns):
+    def _exprs(agg, columns):
         """
         Helper function to manage aggregation functions
         :param agg: Aggregation function from Apache Spark
@@ -396,7 +397,7 @@ def cols(self):
 
         # Filter only numeric columns
         columns = parse_columns(self, columns)
-        
+
         # Aggregate
         df = self
         exprs = []
@@ -406,7 +407,6 @@ def cols(self):
 
         return format_dict(collect_to_dict(df.agg(*exprs).collect()))
 
-
     # Quantile statistics
     @add_attr(cols)
     def min(columns):
@@ -415,7 +415,7 @@ def cols(self):
         :param columns: '*', list of columns names or a string (a column name).
         :return:
         """
-        return _agg(F.min, columns)
+        return _exprs(F.min, columns)
 
     @add_attr(cols)
     def max(columns):
@@ -424,7 +424,7 @@ def cols(self):
         :param columns: '*', list of columns names or a string (a column name).
         :return:
         """
-        return _agg("max", columns)
+        return _exprs("max", columns)
 
     @add_attr(cols)
     def range(columns):
@@ -520,7 +520,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("stddev", columns)
+        return _exprs("stddev", columns)
 
     @add_attr(cols)
     def kurt(columns):
@@ -529,7 +529,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("kurtosis", columns)
+        return _exprs("kurtosis", columns)
 
     @add_attr(cols)
     def mean(columns):
@@ -538,7 +538,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("mean", columns)
+        return _exprs("mean", columns)
 
     @add_attr(cols)
     def skewness(columns):
@@ -547,7 +547,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("skewness", columns)
+        return _exprs("skewness", columns)
 
     @add_attr(cols)
     def sum(columns):
@@ -556,7 +556,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("sum", columns)
+        return _exprs("sum", columns)
 
     @add_attr(cols)
     def variance(columns):
@@ -565,7 +565,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _agg("variance", columns)
+        return _exprs("variance", columns)
 
     @add_attr(cols)
     def mode(columns):
