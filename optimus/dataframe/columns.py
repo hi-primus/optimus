@@ -852,14 +852,6 @@ def cols(self):
 
         return self.select(columns)
 
-    @add_attr(cols)
-    def unique():
-        """
-        Just a wrapper for Apache Spark distinct function
-        :return:
-        """
-        return self.distinct()
-
     # Operations between columns
     @add_attr(cols)
     def _math(columns, operator):
