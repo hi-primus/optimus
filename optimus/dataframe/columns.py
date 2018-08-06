@@ -1114,7 +1114,7 @@ def cols(self):
         return df
 
     @add_method(cols)
-    def _hist(column, bins=10):
+    def _hist(columns, bins=10):
         """
 
         :param column:
@@ -1122,16 +1122,19 @@ def cols(self):
         :return:
         """
 
-        temp_col = "bucket_" + column
-
         # Quantile Discretizer needs a numeric columns
-        df = self.cols().cast((column, "double",))
+        df = self.cols().cast(columns, "double")
 
-        discretizer = QuantileDiscretizer(numBuckets=10, inputCol=column, outputCol=temp_col)
+        for col_name in columns:
+            temp_col = "bucket_" + col_name
+            discretizer = QuantileDiscretizer(numBuckets=bins, inputCol=col_name, outputCol=temp_col)
 
-        df = discretizer.fit(df).transform(df)
-        return collect_to_dict(df.groupBy(temp_col).agg(F.min(column).alias('min'), F.max(column).alias('max'),
-                                                        F.count(temp_col).alias('count')).orderBy(temp_col).collect())
+            df = discretizer.fit(df).transform(df)
+
+            df = df.groupBy(temp_col).agg(F.min(col_name).alias('min' + '_' + col_name),
+                                          F.max(col_name).alias('max' + '_' + col_name),
+                                          F.count(temp_col).alias('count' + "_" + col_name)).orderBy(temp_col)
+        return df
 
     @add_method(cols)
     def hist(columns, bins=10):
@@ -1142,7 +1145,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        return format_dict({c: self.cols()._hist(c, bins) for c in columns})
+        return format_dict(collect_to_dict(self.cols()._hist(columns, bins).collect()))
 
     @add_method(cols)
     def schema_dtypes(columns):
