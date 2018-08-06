@@ -2,8 +2,8 @@ import unicodedata
 import string
 import re
 from functools import reduce
+import builtins
 
-# Library used for method overloading using decorators
 from multipledispatch import dispatch
 
 from pyspark.ml.feature import Imputer
@@ -14,6 +14,7 @@ from pyspark.sql.functions import Column
 
 from pyspark.ml.linalg import VectorUDT, Vectors
 from pyspark.ml.feature import VectorAssembler
+from pyspark.sql.utils import AnalysisException
 
 # Helpers
 from optimus.helpers.constants import *
@@ -30,8 +31,6 @@ from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf as audf, concat
 
 from optimus.helpers.raiseit import RaiseIfNot
-
-import builtins
 
 
 @add_method(DataFrame)
@@ -226,11 +225,9 @@ def cols(self):
 
             # Parse standard data types
             if parse_spark_dtypes(cls):
-
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
-                    print(parse_spark_dtypes(cls))
                     return F.col(col_name).cast(parse_spark_dtypes(cls))
 
                 func_return_type = None
@@ -253,7 +250,6 @@ def cols(self):
         df = self
         for col, attrs in zip(cols, attrs):
             return_type, func, func_type = cast_factory(attrs[0])
-
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
                                          attrs=attrs[0],
@@ -359,7 +355,6 @@ def cols(self):
             df = df.drop(column)
         return df
 
-    # Quantile statistics
     @add_attr(cols)
     def _agg(agg, columns):
         """
@@ -392,7 +387,7 @@ def cols(self):
         :param columns: '*', list of columns names or a string (a column name).
         :return:
         """
-        return _agg("min", columns)
+        return _agg(F.min, columns)
 
     @add_attr(cols)
     def max(columns):
@@ -756,6 +751,12 @@ def cols(self):
         return df
 
     @add_attr(cols)
+    def show(columns):
+        columns = parse_columns(self, columns)
+        print(self.cols().schema_dtypes(columns))
+        self.select("antiguedad_construccion").show(100)
+
+    @add_attr(cols)
     def count_na(columns):
         """
         Return the NAN and Null count in a Column
@@ -904,7 +905,7 @@ def cols(self):
 
         def func_replace(_df, _col_name, _search, _replace):
             data_type = self.cols().dtypes(_col_name)
-            _search = [TYPES_PYTHON_FUNC[data_type](s) for s in _search]
+            _search = [PYTHON_TYPES_[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
 
