@@ -368,19 +368,23 @@ def cols(self):
         :param columns: list of columns names or a string (a column name).
         :return:
         """
+        # Ensure that is a list
+        agg = val_to_list(agg)
 
         # Filter only numeric columns
         columns = parse_columns(self, columns)
-
+        
         # Aggregate
+        df = self
+        exprs = []
+        for c in columns:
+            for a in agg:
+                exprs.append(a(c).alias(a.__name__ + "_" + c))
 
-        result = list(map(lambda c: cast_to_float(self.agg({c: agg}).collect()[0][0]), columns))
+        return format_dict(collect_to_dict(df.agg(*exprs).collect()))
 
-        column_result = dict(zip(columns, result))
 
-        # if the list has one element return just a single element
-        return format_dict(column_result)
-
+    # Quantile statistics
     @add_attr(cols)
     def min(columns):
         """
