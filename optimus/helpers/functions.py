@@ -8,8 +8,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element, is_tuple
-from optimus.helpers.constants import TYPES, SPARK_TYPES, TYPES_SPARK_FUNC
+    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element, is_tuple, is_function
+from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -31,7 +31,7 @@ def parse_spark_dtypes(value):
     # if not is_(value, ArrayType):
     #    value = value.lower()
     try:
-        data_type = TYPES_SPARK_FUNC[SPARK_TYPES[value]]
+        data_type = SPARK_DTYPES[SPARK_SHORT_DTYPES[value]]
     except KeyError:
         data_type = None
 
@@ -44,7 +44,7 @@ def parse_python_dtypes(value):
     :param value:
     :return:
     """
-    return TYPES[value.lower()]
+    return PYTHON_SHORT_TYPES[value.lower()]
 
 
 def print_html(html):
@@ -96,7 +96,7 @@ def val_to_list(val):
     :param val:
     :return:
     """
-    if isinstance(val, (int, float, str, tuple)):
+    if isinstance(val, (int, float, str, tuple)) or is_function(val):
         result = [val]
     else:
         result = val

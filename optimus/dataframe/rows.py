@@ -35,8 +35,8 @@ def rows(self):
         for d, r in zip(df.dtypes, row):
             col_name = d[0]
             data_type = d[1]
-            if data_type in TYPES_SPARK_FUNC:
-                cols.append((col_name, (TYPES_SPARK_FUNC[data_type]), True))
+            if data_type in SPARK_DTYPES:
+                cols.append((col_name, (SPARK_DTYPES[data_type]), True))
                 values.append(r)
 
         values = [tuple(values)]

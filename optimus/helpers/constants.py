@@ -7,7 +7,8 @@ from pyspark.ml.linalg import VectorUDT
 import logging
 
 # You can use string, str or String as param
-TYPES = {'string': 'string',
+
+PYTHON_SHORT_TYPES = {'string': 'string',
          'str': 'string',
          'integer': 'int',
          'int': 'int',
@@ -17,38 +18,40 @@ TYPES = {'string': 'string',
          'boolean': 'boolean',
          'array': 'array',
          'null': 'null'
-         }
+                      }
+PYTHON_TYPES_ = {'string': str, 'int': int, 'float': float, 'boolean': bool}
+
 
 PROFILER_TYPES = {'int', 'float', 'string', 'bool', 'date', 'null'}
-
+PROFILER_LEGEND_TYPES = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
 PROFILER_COLUMN_TYPES = {'categorical', 'numeric', 'date', 'null'}
 
-SPARK_TYPES = {'string': 'string',
-               'str': 'string',
-               'integer': 'int',
-               'int': 'int',
-               'float': 'float',
-               'double': 'double',
-               'bool': 'boolean',
-               'boolean': 'boolean',
-               'struct': 'struct',
-               'array': 'array',
-               'date': 'date'
-               # 'vector': 'vector'
+SPARK_SHORT_DTYPES = {'string': 'string',
+                      'str': 'string',
+                      'integer': 'int',
+                      'int': 'int',
+                      'float': 'float',
+                      'double': 'double',
+                      'bool': 'boolean',
+                      'boolean': 'boolean',
+                      'struct': 'struct',
+                      'array': 'array',
+                      'date': 'date'
+                      # 'vector': 'vector'
 
-               }
-TYPES_SPARK_FUNC = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
-                    'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType,
-                    'date': DateType()
-                    # 'vector': VectorUDT
-                    }
+                      }
+SPARK_DTYPES = {'string': StringType(), 'int': IntegerType(), 'float': FloatType(),
+                'double': DoubleType(), 'boolean': BooleanType(), 'struct': StructType(), 'array': ArrayType,
+                'date': DateType()
+                # 'vector': VectorUDT
+                }
 
-TYPES_PYTHON_FUNC = {'string': str, 'int': int, 'float': float, 'boolean': bool}
+
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
 VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
 
-TYPES_LEGEND = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
+
 
 # Strings Messages
 
