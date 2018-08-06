@@ -827,22 +827,27 @@ def cols(self):
 
     # TODO: Explorer the use of approxCountDistinct
     @add_attr(cols)
-    def count_uniques(columns):
+    def count_uniques(columns, estimate=True):
         """
         Return how many unique items exist in a columns
         :param columns:
-        :param type: Accepts integer, float, string or None
+        :param estimate:
         :return:
         """
         columns = parse_columns(self, columns)
-        df = self
-        return {c: df.select(c).distinct().count() for c in columns}
+
+        if estimate is True:
+            resutl = _exprs(F.approx_count_distinct, columns)
+        else:
+            df = self
+            resutl = {c: df.select(c).distinct().count() for c in columns}
+        return resutl
 
     @add_attr(cols)
     def filter_by_dtypes(data_type):
         """
         This function returns column of dataFrame which have the same
-        datatype provided. It analyses column datatype by dataFrame.dtypes method.
+        datatype provided. It gets the column datatype from dataFrame.dtypes method.
 
         :param data_type:
         :return:
