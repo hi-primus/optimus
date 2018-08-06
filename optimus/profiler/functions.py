@@ -1,6 +1,9 @@
 from optimus.helpers.constants import *
 
 import json
+import math
+
+confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
 
 
 def fill_missing_col_types(col_types):
@@ -59,7 +62,7 @@ def write_json(data, path):
     :param path:
     :return:
     """
-    print(type(data))
+
     with open(path, 'w') as outfile:
         json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
 
@@ -76,3 +79,33 @@ def human_readable_bytes(num, suffix='B'):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
+def sample_size(population_size, confidence_level, confidence_interval):
+    """
+
+    :param population_size:
+    :param confidence_level:
+    :param confidence_interval:
+    :return:
+    """
+    z = 0.0
+    p = 0.5
+    e = confidence_interval / 100.0
+    n = population_size
+
+    # LOOP THROUGH SUPPORTED CONFIDENCE LEVELS AND FIND THE NUM STD DEVIATIONS FOR THAT CONFIDENCE LEVEL
+    for i in confidence_level_constant:
+        if i[0] == confidence_level:
+            z = i[1]
+
+    if z == 0.0:
+        return -1
+
+    # CALC SAMPLE SIZE
+    n_0 = ((z ** 2) * p * (1 - p)) / (e ** 2)
+
+    # ADJUST SAMPLE SIZE FOR FINITE POPULATION
+    n = n_0 / (1 + ((n_0 - 1) / float(n)))
+
+    return int(math.ceil(n))  # THE SAMPLE SIZE
