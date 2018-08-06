@@ -276,11 +276,11 @@ def cols(self):
             return func_return_type, cast_to_vectors, func_type
 
         df = self
-        for col, attrs in zip(cols, attrs):
-            return_type, func, func_type = cast_factory(attrs[0])
+        for col, args in zip(cols, attrs):
+            return_type, func, func_type = cast_factory(args[0])
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
-                                         attrs=attrs[0],
+                                         attrs=args[0],
                                          func_type=func_type, verbose=False)
                                )
         return df
@@ -802,7 +802,7 @@ def cols(self):
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
 
             if is_(df.cols().schema_dtypes(c), (StructType, BooleanType)):
-                df = df.cols().cast((c, "string"))
+                df = df.cols().cast(c, "string")
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
 
         # print(df)
