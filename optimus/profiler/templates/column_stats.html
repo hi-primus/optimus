@@ -66,6 +66,11 @@
                 <td>{{data.count_types.date}}</td>
 
             </tr>
+             <tr>
+                <td>Bool</td>
+                <td>{{data.count_types.bool}}</td>
+
+            </tr>
             <tr>
                 <td>Not available</td>
                 <td>{{data.count_types.null}}</td>
@@ -81,7 +86,7 @@
 {% for k,v in data.columns.items() %}
 <div class="main">
 
-    {% if v.column_type=="categorical" or v.column_type=="numeric" or v.column_type=="date"%}
+    {% if v.column_type=="categorical" or v.column_type=="numeric" or v.column_type=="date" or  v.column_type=="bool"%}
     <div class="panel_profiler">
         <div>
             <h2>{{k}}</h2>
