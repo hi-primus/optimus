@@ -764,11 +764,25 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
+
         columns = parse_columns(self, columns)
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
-        return collect_to_dict(df.select([F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c) for c in columns]) \
-                               .collect())
+
+        expr = []
+        for c in columns:
+            # If type column is Struct parse to String. isnan/isNull can not handle Structure
+
+            if is_(df.cols().schema_dtypes(c), (StructType, BooleanType)):
+                df = df.cols().cast((c, "string"))
+            expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
+
+        # print(df)
+        result = collect_to_dict(df.select(*expr).collect())
+        # except AnalysisException:
+        #    pass
+
+        return result
 
     @add_attr(cols)
     def count_zeros(columns):
