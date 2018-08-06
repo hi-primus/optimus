@@ -146,7 +146,7 @@ class Profiler:
         return results
 
     @staticmethod
-    def columns(df, columns):
+    def columns_new(df, columns):
         """
         Get statistical information in json format
         count_data_type()
@@ -162,36 +162,33 @@ class Profiler:
         column_info['columns'] = {}
 
         rows_count = df.count()
-
         column_info['rows_count'] = rows_count
-        count_dtype = Profiler.count_data_types(df, columns)
 
-        column_info["count_types"] = count_dtype["count_types"]
+        #count_dtype = Profiler.count_data_types(df, columns)
+        #column_info["count_types"] = count_dtype["count_types"]
 
         column_info['size'] = human_readable_bytes(df.size())
+
+        #column_type = count_dtype["columns"][col_name]['type']
+        #dtypes_stats = count_dtype["columns"][col_name]['details']
+
+        na = df.cols().count_na(columns)
+
+        # Missing
+        col_info['missing_count'] = round(na[col_name], 2)
+        col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
+
+        # Categorical column
+        col_info['column_type'] = column_type
+
+        return na
 
         for col_name in columns:
             col_info = {}
 
             # Get if a column is numerical or categorical
-            column_type = count_dtype["columns"][col_name]['type']
-            dtypes_stats = count_dtype["columns"][col_name]['details']
 
-            na = df.cols().count_na(col_name)
 
-            # Get uniques
-            # uniques = df.cols().count_uniques(col_name)
-            # Uniques
-            # if column_type == "categorical":
-            #    col['uniques_count'] = uniques[col_name]
-            #    col['p_uniques'] = uniques[col_name] / rows_count * 100
-
-            # Missing
-            col_info['missing_count'] = round(na[col_name], 2)
-            col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
-
-            # Categorical column
-            col_info['column_type'] = column_type
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
@@ -217,6 +214,9 @@ class Profiler:
                 col_info['max'] = max_value
 
             if column_type == "numeric":
+
+                r = df.cols()._agg([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance],
+                                   "m2_superficie_construida")
 
                 col_info['quantile'] = df.cols().percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col_info['range'] = max_value - min_value
@@ -250,6 +250,7 @@ class Profiler:
 
         return column_info
 
+    @staticmethod
     def columns(df, columns):
         """
         Get statistical information in json format
