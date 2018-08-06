@@ -10,7 +10,7 @@ from optimus.helpers.functions import is_str
 
 
 class Spark:
-    def __init__(self, master="local", app_name="optimus"):
+    def __init__(self, master="local[*]", app_name="optimus"):
         """
 
         :param master: Sets the Spark master URL to connect to, such as “local” to run locally, “local[4]” to run
