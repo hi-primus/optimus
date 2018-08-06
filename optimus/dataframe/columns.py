@@ -203,22 +203,50 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def cast(cols_and_types):
+    @dispatch(list)
+    def cast(cols_and_dtypes):
         """
-        Cast a column to a var type
-        :param cols_and_types:
-                List of tuples of column names and types to be casted. This variable should have the
+        Cast multiple columns to a specific datatype
+        List of tuples of column names and types to be casted. This variable should have the
                 following structure:
 
                 colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
 
                 The first parameter in each tuple is the column name, the second is the final datatype of column after
                 the transformation is made.
+
+        :param cols_and_dtypes: Columns to be casted and new data types
         :return:
         """
+        cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
+        return _cast(cols, attrs)
 
+    @add_attr(cols)
+    @dispatch((list, str), object)
+    def cast(columns, dtypes):
+        """
+        Cast a column or a list of columns to a specific datatype
+        :param columns: Columns to be casted
+        :param dtypes: final data type
+        :return:
+        """
+        cols = parse_columns(self, columns)
+        attrs = []
+        for _ in builtins.range(0, len(cols)):
+            attrs.append((dtypes,))
+
+        return _cast(cols, attrs)
+
+    @add_attr(cols)
+    def _cast(cols, attrs):
+        """
+        Helper function to support the multiple params implementation
+        :param cols:
+        :param attrs:
+        :return:
+        """
         # assert validate_columns_names(self, cols_and_types, 0)
-        cols, attrs = parse_columns(self, cols_and_types, get_args=True)
+        # cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
 
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
