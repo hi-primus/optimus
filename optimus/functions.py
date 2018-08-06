@@ -177,13 +177,13 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             value = value.lower()
             if value == "true" or value == "false":
                 return True
+
         def str_to_date(value):
             try:
                 dateutil.parser.parse(value)
                 return True
             except ValueError:
                 pass
-
 
         def func(value):
             """
@@ -192,14 +192,13 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
 
             :return:
             """
-
+            if isinstance(value, bool):
+                _data_type = "bool"
             # _data_type = data_type
-            if isinstance(value, int):  # Check if value is integer
+            elif isinstance(value, int):  # Check if value is integer
                 _data_type = "int"
             elif isinstance(value, float):
                 _data_type = "float"
-            elif isinstance(value, bool):
-                _data_type = "bool"
             # if string we try to parse it to int, float or bool
             elif isinstance(value, str):
                 if str_to_int(value):
