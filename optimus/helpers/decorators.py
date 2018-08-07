@@ -29,7 +29,7 @@ def add_attr(class_):
         @wraps(func)
         def wrapper(*args, **kwargs):
             time1 = time.time()
-            ret = func(*args)
+            ret = func(*args, **kwargs)
             time2 = time.time()
             print('{:s} function took {:.3f} ms'.format(func.__name__, (time2 - time1) * 1000.0))
             return ret
