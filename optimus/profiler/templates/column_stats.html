@@ -96,19 +96,19 @@
             <tbody>
             <tr>
                 <td>Distinct count</td>
-                <td> {{v.uniques_count}}</td>
+                <td> {{v.stats.uniques_count}}</td>
             </tr>
             <tr>
                 <td>Unique (%)</td>
-                <td> {{v.p_uniques}}</td>
+                <td> {{v.stats.p_uniques}}</td>
             </tr>
             <tr>
                 <td>Missing (%)</td>
-                <td>{{v.missing_count}}</td>
+                <td>{{v.stats.missing_count}}</td>
             </tr>
             <tr>
                 <td>Missing (n)</td>
-                <td>{{v.p_missing}}</td>
+                <td>{{v.stats.p_missing}}</td>
             </tr>
             </tbody>
         </table>
@@ -117,19 +117,19 @@
             <tbody>
             <tr>
                 <td>Mean</td>
-                <td>{{v.mean}}</td>
+                <td>{{v.stats.mean}}</td>
             </tr>
             <tr>
                 <td>Minimum</td>
-                <td>{{v.min}}</td>
+                <td>{{v.stats.min}}</td>
             </tr>
             <tr>
                 <td>Maximum</td>
-                <td>{{v.max}}</td>
+                <td>{{v.stats.max}}</td>
             </tr>
             <tr>
                 <td>Zeros(%)</td>
-                <td>{{v.zeros}}</td>
+                <td>{{v.stats.zeros}}</td>
             </tr>
 
             </tbody>
@@ -155,12 +155,12 @@
             <!--<tr>
                 <td>Other Values</td>
                 <td>{{data.other_values}}</td>
-                <td>{{((data.rows_count - v.missing_count)/data.rows_count) | round(2) }}%</td>
+                <td>{{((data.rows_count - v.stats.missing_count)/data.rows_count) | round(2) }}%</td>
             </tr>-->
             <tr>
                 <td>"Missing"</td>
-                <td>{{v.missing_count}}</td>
-                <td>{{v.p_missing}}%</td>
+                <td>{{v.stats.missing_count}}</td>
+                <td>{{v.stats.p_missing}}%</td>
             </tr>
             </tbody>
         </table>
@@ -176,39 +176,39 @@
             <tbody>
             <tr>
                 <td>Minimum</td>
-                <td>{{v.min}}</td>
+                <td>{{v.stats.min}}</td>
             </tr>
             <tr>
                 <td>5-th percentile</td>
-                <td>{{v.quantile[0.05]}}</td>
+                <td>{{v.stats.quantile[0.05]}}</td>
             </tr>
             <tr>
                 <td>Q1</td>
-                <td>{{v.quantile[0.25]}}</td>
+                <td>{{v.stats.quantile[0.25]}}</td>
             </tr>
             <tr>
                 <td>Median</td>
-                <td>{{v.quantile[0.5]}}</td>
+                <td>{{v.stats.quantile[0.5]}}</td>
             </tr>
             <tr>
                 <td>Q3</td>
-                <td>{{v.quantile[0.75]}}</td>
+                <td>{{v.stats.quantile[0.75]}}</td>
             </tr>
             <tr>
                 <td>95-th percentile</td>
-                <td>{{v.quantile[0.95]}}</td>
+                <td>{{v.stats.quantile[0.95]}}</td>
             </tr>
             <tr>
                 <td>Maximum</td>
-                <td>{{v.max}}</td>
+                <td>{{v.stats.max}}</td>
             </tr>
             <tr>
                 <td>Range</td>
-                <td>{{v.range}}</td>
+                <td>{{v.stats.range}}</td>
             </tr>
             <tr>
                 <td>Interquartile range</td>
-                <td>{{v.interquartile_range}}</td>
+                <td>{{v.stats.interquartile_range}}</td>
             </tr>
             </tbody>
         </table>
@@ -219,35 +219,35 @@
             <tbody>
             <tr>
                 <td>Standard deviation</td>
-                <td>{{v.stdev}}</td>
+                <td>{{v.stats.stdev}}</td>
             </tr>
             <tr>
                 <td>Coef of variation</td>
-                <td>{{v.coef_variation}}</td>
+                <td>{{v.stats.coef_variation}}</td>
             </tr>
             <tr>
                 <td>Kurtosis</td>
-                <td>{{v.kurt}}</td>
+                <td>{{v.stats.kurt}}</td>
             </tr>
             <tr>
                 <td>Mean</td>
-                <td>{{v.mean}}</td>
+                <td>{{v.stats.mean}}</td>
             </tr>
             <tr>
                 <td>MAD</td>
-                <td>{{v.mad}}</td>
+                <td>{{v.stats.mad}}</td>
             </tr>
             <tr>
                 <td>Skewness</td>
-                <td>{{v.zeros}}</td>
+                <td>{{v.stats.zeros}}</td>
             </tr>
             <tr>
                 <td>Sum</td>
-                <td>{{v.sum}}</td>
+                <td>{{v.stats.sum}}</td>
             </tr>
             <tr>
                 <td>Variance</td>
-                <td>{{v.variance}}</td>
+                <td>{{v.stats.variance}}</td>
             </tr>
             </tbody>
         </table>

@@ -27,7 +27,7 @@ class Profiler:
 
         cols_count = len(df.columns)
         rows_count = df.count()
-        missing_count = sum(df.cols().count_na(columns).values())
+        missing_count = sum(df.cols.count_na(columns).values())
 
         return (
             {'cols_count': cols_count,
@@ -164,22 +164,26 @@ class Profiler:
         rows_count = df.count()
         column_info['rows_count'] = rows_count
 
-        #count_dtype = Profiler.count_data_types(df, columns)
-        #column_info["count_types"] = count_dtype["count_types"]
+        # count_dtype = Profiler.count_data_types(df, columns)
+        # column_info["count_types"] = count_dtype["count_types"]
 
         column_info['size'] = human_readable_bytes(df.size())
 
-        #column_type = count_dtype["columns"][col_name]['type']
-        #dtypes_stats = count_dtype["columns"][col_name]['details']
+        # column_type = count_dtype["columns"][col_name]['type']
+        # dtypes_stats = count_dtype["columns"][col_name]['details']
 
-        na = df.cols().count_na(columns)
+        na = df.cols.count_na(columns)
 
         # Missing
-        col_info['missing_count'] = round(na[col_name], 2)
-        col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
+        # col_info['missing_count'] = round(na[col_name], 2)
+        # col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
 
         # Categorical column
-        col_info['column_type'] = column_type
+        # col_info['column_type'] = column_type
+
+        uniques = df.cols.count_uniques(columns)
+
+        r = df.cols._exprs([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance], columns)
 
         return na
 
@@ -187,8 +191,6 @@ class Profiler:
             col_info = {}
 
             # Get if a column is numerical or categorical
-
-
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
@@ -200,7 +202,7 @@ class Profiler:
                                                                             2))
 
                                                         .collect())
-                # col_info['other_values'] = uniques_df.cols().sum(col_name)
+                # col_info['other_values'] = uniques_df.cols.sum(col_name)
                 uniques = uniques_df.count()
                 col_info['uniques_count'] = uniques
                 col_info['p_uniques'] = round(uniques / rows_count * 100, 2)
@@ -208,36 +210,36 @@ class Profiler:
             # Numeric Column
             if column_type == "numeric" or column_type == "date":
                 # Quantile statistics
-                min_value = df.cols().min(col_name)
-                max_value = df.cols().max(col_name)
+                min_value = df.cols.min(col_name)
+                max_value = df.cols.max(col_name)
                 col_info['min'] = min_value
                 col_info['max'] = max_value
 
             if column_type == "numeric":
 
-                r = df.cols()._agg([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance],
-                                   "m2_superficie_construida")
+                r = df.cols._agg([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance],
+                                 "m2_superficie_construida")
 
-                col_info['quantile'] = df.cols().percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+                col_info['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col_info['range'] = max_value - min_value
                 col_info['median'] = col_info['quantile'][0.5]
                 col_info['interquartile_range'] = col_info['quantile'][0.75] - col_info['quantile'][0.25]
 
                 # Descriptive statistic
-                col_info['stdev'] = round(df.cols().std(col_name), 5)
-                col_info['kurt'] = round(df.cols().kurt(col_name), 5)
-                col_info['mean'] = round(df.cols().mean(col_name), 5)
-                col_info['mad'] = round(df.cols().mad(col_name), 5)
-                col_info['skewness'] = round(df.cols().skewness(col_name), 5)
-                col_info['sum'] = round(df.cols().sum(col_name), 2)
-                col_info['variance'] = round(df.cols().variance(col_name), 0)
+                col_info['stdev'] = round(df.cols.std(col_name), 5)
+                col_info['kurt'] = round(df.cols.kurt(col_name), 5)
+                col_info['mean'] = round(df.cols.mean(col_name), 5)
+                col_info['mad'] = round(df.cols.mad(col_name), 5)
+                col_info['skewness'] = round(df.cols.skewness(col_name), 5)
+                col_info['sum'] = round(df.cols.sum(col_name), 2)
+                col_info['variance'] = round(df.cols.variance(col_name), 0)
                 col_info['coef_variation'] = round((col_info['stdev'] / col_info['mean']), 5)
 
                 # Zeros
-                col_info['zeros'] = df.cols().count_zeros(col_name)
+                col_info['zeros'] = df.cols.count_zeros(col_name)
                 col_info['p_zeros'] = round(col_info['zeros'] / rows_count, 2)
 
-                col_info['hist'] = df.cols().hist(col_name)
+                col_info['hist'] = df.cols.hist(col_name)
 
             elif column_type == "date":
                 pass
@@ -277,26 +279,28 @@ class Profiler:
 
         for col_name in columns:
             col_info = {}
+            col_info["stats"] = {}
 
             # Get if a column is numerical or categorical
             column_type = count_dtype["columns"][col_name]['type']
             dtypes_stats = count_dtype["columns"][col_name]['details']
 
-            na = df.cols().count_na(col_name)
+            na = df.cols.count_na(col_name)
 
             # Get uniques
-            # uniques = df.cols().count_uniques(col_name)
+            # uniques = df.cols.count_uniques(col_name)
             # Uniques
             # if column_type == "categorical":
             #    col['uniques_count'] = uniques[col_name]
             #    col['p_uniques'] = uniques[col_name] / rows_count * 100
 
             # Missing
-            col_info['missing_count'] = round(na[col_name], 2)
-            col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
+            col_info['stats']['missing_count'] = round(na[col_name], 2)
+            col_info['stats']['p_missing'] = round(na[col_name] / rows_count * 100, 2)
 
             # Categorical column
             col_info['column_type'] = column_type
+            col_info['name'] = col_name
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
@@ -308,41 +312,41 @@ class Profiler:
                                                                             2))
 
                                                         .collect())
-                # col_info['other_values'] = uniques_df.cols().sum(col_name)
+                # col_info['other_values'] = uniques_df.cols.sum(col_name)
                 uniques = uniques_df.count()
-                col_info['uniques_count'] = uniques
-                col_info['p_uniques'] = round(uniques / rows_count * 100, 2)
+                col_info['stats']['uniques_count'] = uniques
+                col_info['stats']['p_uniques'] = round(uniques / rows_count * 100, 2)
 
             # Numeric Column
             if column_type == "numeric" or column_type == "date":
                 # Quantile statistics
-                min_value = df.cols().min(col_name)
-                max_value = df.cols().max(col_name)
-                col_info['min'] = min_value
-                col_info['max'] = max_value
+                min_value = df.cols.min(col_name)
+                max_value = df.cols.max(col_name)
+                col_info['stats']['min'] = min_value
+                col_info['stats']['max'] = max_value
 
             if column_type == "numeric":
 
-                col_info['quantile'] = df.cols().percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
-                col_info['range'] = max_value - min_value
-                col_info['median'] = col_info['quantile'][0.5]
-                col_info['interquartile_range'] = col_info['quantile'][0.75] - col_info['quantile'][0.25]
+                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+                col_info['stats']['range'] = max_value - min_value
+                col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
+                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - col_info['stats']['quantile'][0.25]
 
                 # Descriptive statistic
-                col_info['stdev'] = round(df.cols().std(col_name), 5)
-                col_info['kurt'] = round(df.cols().kurt(col_name), 5)
-                col_info['mean'] = round(df.cols().mean(col_name), 5)
-                col_info['mad'] = round(df.cols().mad(col_name), 5)
-                col_info['skewness'] = round(df.cols().skewness(col_name), 5)
-                col_info['sum'] = round(df.cols().sum(col_name), 2)
-                col_info['variance'] = round(df.cols().variance(col_name), 0)
-                col_info['coef_variation'] = round((col_info['stdev'] / col_info['mean']), 5)
+                col_info['stats']['stdev'] = round(df.cols.std(col_name), 5)
+                col_info['stats']['kurt'] = round(df.cols.kurt(col_name), 5)
+                col_info['stats']['mean'] = round(df.cols.mean(col_name), 5)
+                col_info['stats']['mad'] = round(df.cols.mad(col_name), 5)
+                col_info['stats']['skewness'] = round(df.cols.skewness(col_name), 5)
+                col_info['stats']['sum'] = round(df.cols.sum(col_name), 2)
+                col_info['stats']['variance'] = round(df.cols.variance(col_name), 0)
+                col_info['stats']['coef_variation'] = round((col_info['stats']['stdev'] / col_info['stats']['mean']), 5)
 
                 # Zeros
-                col_info['zeros'] = df.cols().count_zeros(col_name)
-                col_info['p_zeros'] = round(col_info['zeros'] / rows_count, 2)
+                col_info['stats']['zeros'] = df.cols.count_zeros(col_name)
+                col_info['stats']['p_zeros'] = round(col_info['stats']['zeros'] / rows_count, 2)
 
-                col_info['hist'] = df.cols().hist(col_name)
+                col_info['hist'] = df.cols.hist(col_name)
 
             elif column_type == "date":
                 pass
