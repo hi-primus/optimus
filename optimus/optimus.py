@@ -24,7 +24,7 @@ from pyspark.sql import functions as F
 
 
 class Optimus:
-    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=False):
+    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=True):
         """
 
         :param master: Master, local or ip address to a cluster
@@ -35,7 +35,7 @@ class Optimus:
         if verbose is True:
             level = logging.INFO
             logging.basicConfig(format="%(message)s", level=level)
-        elif False:
+        elif verbose is False:
             logging.propagate = False
             logging.disable(logging.NOTSET)
 
@@ -43,8 +43,20 @@ class Optimus:
             path = os.getcwd()
 
         # Initialize Spark
+        logging.info("""
+                             ____        __  _                     
+                            / __ \____  / /_(_)___ ___  __  _______
+                           / / / / __ \/ __/ / __ `__ \/ / / / ___/
+                          / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
+                          \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
+                              /_/                                  
+                              """)
+
+        logging.info(STARTING_OPTIMUS)
         Spark.instance = Spark(master, app_name)
         self.set_check_point_folder(path, file_system)
+
+        logging.info(SUCCESS)
 
         self.create = Create()
         self.load = Load()

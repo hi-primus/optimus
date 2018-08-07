@@ -6,7 +6,7 @@ from functools import lru_cache
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
-from optimus.helpers.functions import is_str
+from optimus.helpers.functions import is_pyarrow_installed
 
 
 class Spark:
@@ -21,26 +21,19 @@ class Spark:
         self.master = master
         self.app_name = app_name
 
-        logging.info("""
-                     ____        __  _                     
-                    / __ \____  / /_(_)___ ___  __  _______
-                   / / / / __ \/ __/ / __ `__ \/ / / / ___/
-                  / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
-                  \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
-                      /_/                                  
-                      """)
-
         logging.info(JUST_CHECKING)
         logging.info("-----")
         logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
         logging.info("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
         logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
+        if is_pyarrow_installed() is True:
+            logging.info("Pyarrow Installed")
+        else:
+            logging.info("Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
         logging.info("-----")
-        logging.info(STARTING)
+        logging.info(STARTING_SPARK)
         self.spark()
         #self.get_sc().addPyFile("../optimus/helpers/checkit.py")
-        #self.get_sc().addPyFile("../optimus/spark.py")
-        #self.get_sc().addPyFile("../optimus/optimus.py")
 
     @lru_cache(maxsize=None)
     def spark(self):
