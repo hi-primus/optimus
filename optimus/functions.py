@@ -1,7 +1,7 @@
 from functools import reduce
 import dateutil.parser
 
-from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name
+from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name, one_list_to_val
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.helpers.checkit import is_data_type
 
@@ -229,4 +229,5 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     else:
         a = "boolean"
 
+    col_name = one_list_to_val(col_name)
     return F.pandas_udf(pandas_udf_func, a)(col_name)
