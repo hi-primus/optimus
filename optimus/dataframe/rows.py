@@ -12,7 +12,6 @@ from optimus.helpers.decorators import *
 from optimus.functions import filter_row_by_data_type as fbdt
 
 
-@add_method(DataFrame)
 def rows(self):
     @add_attr(rows)
     def append(row):
@@ -22,7 +21,7 @@ def rows(self):
         :return:
         """
 
-        #if is_list_of_dataframes(rows):
+        # if is_list_of_dataframes(rows):
         #    return reduce(DataFrame.union, dfs)
         df = self
 
@@ -61,8 +60,8 @@ def rows(self):
         :param data_type:
         :return:
         """
+        col_name = parse_columns(self, col_name)
 
-        validate_columns_names(self, col_name)
         return self.where(fbdt(col_name, data_type))
 
     @add_attr(rows)
@@ -94,7 +93,7 @@ def rows(self):
         :return:
         """
         validate_columns_names(self, col_name)
-        return self.rows().drop(fbdt(col_name, data_type))
+        return self.rows.drop(fbdt(col_name, data_type))
 
     @add_attr(rows)
     def drop_na(columns, how="all"):
@@ -137,3 +136,6 @@ def rows(self):
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
     return rows
+
+
+DataFrame.rows = property(rows)

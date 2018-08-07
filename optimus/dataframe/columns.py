@@ -32,7 +32,6 @@ from optimus.functions import abstract_udf as audf, concat
 
 from optimus.helpers.raiseit import RaiseIfNot
 
-
 @add_method(DataFrame)
 def cols(self):
     @add_attr(cols)
@@ -85,7 +84,7 @@ def cols(self):
             for c in cols_values:
                 col_name = c[0]
                 value = c[1]
-                df_result = df_result.cols().append(col_name, value)
+                df_result = df_result.cols.append(col_name, value)
 
         return df_result
 
@@ -176,8 +175,8 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         for c in columns:
-            df = self.cols().apply(c, func, func_return_type, args=args, func_type=func_type,
-                                   when=fbdt(c, data_type))
+            df = self.cols.apply(c, func, func_return_type, args=args, func_type=func_type,
+                                 when=fbdt(c, data_type))
         return df
 
     @add_attr(cols)
@@ -424,7 +423,7 @@ def cols(self):
         :param columns: '*', list of columns names or a string (a column name).
         :return:
         """
-        return _exprs("max", columns)
+        return _exprs(F.max, columns)
 
     @add_attr(cols)
     def range(columns):
@@ -438,8 +437,8 @@ def cols(self):
 
         range = {}
         for c in columns:
-            max_val = self.cols().max(c)
-            min_val = self.cols().min(c)
+            max_val = self.cols.max(c)
+            min_val = self.cols.min(c)
             range[c] = {'min': min_val, 'max': max_val}
 
         return range
@@ -471,8 +470,8 @@ def cols(self):
         percentile_value = []
         for c in columns:
             percentile_results = self \
-                .rows().drop_na(c) \
-                .cols().cast((c, "double",)) \
+                .rows.drop_na(c) \
+                .cols.cast(c, "double") \
                 .approxQuantile(c, percentile, error)
 
             percentile_value.append(dict(zip(percentile, percentile_results)))
@@ -500,11 +499,11 @@ def cols(self):
         """
 
         # return mean(absolute(data - mean(data, axis)), axis)
-        median_value = self.cols().median(col_name)
+        median_value = self.cols.median(col_name)
 
         mad_value = self.select(col_name) \
             .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-            .cols().median(col_name)
+            .cols.median(col_name)
 
         if more:
             result = {"mad": mad_value, "median": median_value}
@@ -520,7 +519,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("stddev", columns)
+        return _exprs(F.stddev, columns)
 
     @add_attr(cols)
     def kurt(columns):
@@ -529,7 +528,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("kurtosis", columns)
+        return _exprs(F.kurtosis, columns)
 
     @add_attr(cols)
     def mean(columns):
@@ -538,7 +537,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("mean", columns)
+        return _exprs(F.mean, columns)
 
     @add_attr(cols)
     def skewness(columns):
@@ -547,7 +546,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("skewness", columns)
+        return _exprs(F.skewness, columns)
 
     @add_attr(cols)
     def sum(columns):
@@ -556,7 +555,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("sum", columns)
+        return _exprs(F.sum, columns)
 
     @add_attr(cols)
     def variance(columns):
@@ -565,7 +564,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        return _exprs("variance", columns)
+        return _exprs(F.variance, columns)
 
     @add_attr(cols)
     def mode(columns):
@@ -662,7 +661,7 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(columns, _remove_accents, "str")
+        df = apply(columns, _remove_accents, "string")
         return df
 
     @add_attr(cols)
@@ -759,8 +758,9 @@ def cols(self):
         :param columns: List of columns to be analyze.
         :param out_cols: List of output columns with missing values imputed.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
-        :return: Transformer object (DF with columns that has the imputed values).
+        :return: Dataframe object (DF with columns that has the imputed values).
         """
+
 
         # Check if columns to be process are in dataframe
         # TODO: this should filter only numeric values
@@ -781,7 +781,7 @@ def cols(self):
     @add_attr(cols)
     def show(columns):
         columns = parse_columns(self, columns)
-        print(self.cols().schema_dtypes(columns))
+        print(self.cols.schema_dtypes(columns))
         self.select("antiguedad_construccion").show(100)
 
     @add_attr(cols)
@@ -801,8 +801,8 @@ def cols(self):
         for c in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
 
-            if is_(df.cols().schema_dtypes(c), (StructType, BooleanType)):
-                df = df.cols().cast(c, "string")
+            if is_(df.cols.schema_dtypes(c), (StructType, BooleanType)):
+                df = df.cols.cast(c, "string")
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
 
         # print(df)
@@ -830,18 +830,24 @@ def cols(self):
     def count_uniques(columns, estimate=True):
         """
         Return how many unique items exist in a columns
-        :param columns:
-        :param estimate:
+        :param columns: Columns Dataframe to process
+        :param estimate: If true use hyperloglog to estimate distinct count else use full count
+        :type estimate: bool
         :return:
         """
         columns = parse_columns(self, columns)
 
         if estimate is True:
-            resutl = _exprs(F.approx_count_distinct, columns)
+            result = _exprs(F.approx_count_distinct, columns)
         else:
             df = self
-            resutl = {c: df.select(c).distinct().count() for c in columns}
-        return resutl
+            result = {c: df.select(c).distinct().count() for c in columns}
+        return result
+
+    @add_attr(cols)
+    def unique(columns):
+        columns = parse_columns(self, columns)
+        return self.select(columns).distinct()
 
     @add_attr(cols)
     def filter_by_dtypes(data_type):
@@ -943,7 +949,7 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols().dtypes(_col_name)
+            data_type = self.cols.dtypes(_col_name)
             _search = [PYTHON_TYPES_[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
@@ -989,8 +995,8 @@ def cols(self):
         for c in columns:
             new_col = "z_col_" + c
 
-            mean_value = self.cols().mean(columns)
-            stdev_value = self.cols().std(columns)
+            mean_value = self.cols.mean(columns)
+            stdev_value = self.cols.std(columns)
 
             df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
         return df
@@ -1005,7 +1011,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         for c in columns:
-            quartile = self.cols().percentile(c, [0.25, 0.75])
+            quartile = self.cols.percentile(c, [0.25, 0.75])
             q1 = quartile[0.25]
             q3 = quartile[0.75]
 
@@ -1018,7 +1024,7 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, output_cols, separator=" ", shape=None):
+    def nest(input_cols, output_cols, separator=None, shape=None):
         """
         Concat multiple columns to one with the format specified
         :param input_cols:
@@ -1029,6 +1035,8 @@ def cols(self):
         """
         columns = parse_columns(self, input_cols)
         df = self
+
+        print(shape)
 
         if shape is "vector":
             vector_assembler = VectorAssembler(
@@ -1053,7 +1061,7 @@ def cols(self):
         :param column:
         :return:
         """
-        return self.cols().filter(column).first()[0]
+        return self.cols.filter(column).first()[0]
 
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
@@ -1084,7 +1092,7 @@ def cols(self):
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
                 if flag_n is True:
-                    n = len(self.cols().cell(col_name))
+                    n = len(self.cols.cell(col_name))
 
                 for i in builtins.range(n):
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
@@ -1094,7 +1102,7 @@ def cols(self):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
                 if flag_n is True:
-                    n = len(self.cols().cell(col_name).split(mark))
+                    n = len(self.cols.cell(col_name).split(mark))
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
@@ -1123,17 +1131,18 @@ def cols(self):
         """
 
         # Quantile Discretizer needs a numeric columns
-        df = self.cols().cast(columns, "double")
+        df = self.cols.cast(columns, "double")
 
         for col_name in columns:
-            temp_col = "bucket_" + col_name
+            # temp_col = "bucket_" + col_name
+            temp_col = "bin"
             discretizer = QuantileDiscretizer(numBuckets=bins, inputCol=col_name, outputCol=temp_col)
 
             df = discretizer.fit(df).transform(df)
 
-            df = df.groupBy(temp_col).agg(F.min(col_name).alias('min' + '_' + col_name),
-                                          F.max(col_name).alias('max' + '_' + col_name),
-                                          F.count(temp_col).alias('count' + "_" + col_name)).orderBy(temp_col)
+            df = df.groupBy(temp_col).agg(F.min(col_name).alias('min'),
+                                          F.max(col_name).alias('max'),
+                                          F.count(temp_col).alias('count')).orderBy(temp_col)
         return df
 
     @add_method(cols)
@@ -1145,7 +1154,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        return format_dict(collect_to_dict(self.cols()._hist(columns, bins).collect()))
+        return format_dict(collect_to_dict(self.cols._hist(columns, bins).collect()))
 
     @add_method(cols)
     def schema_dtypes(columns):
@@ -1158,3 +1167,6 @@ def cols(self):
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     return cols
+
+
+DataFrame.cols = property(cols)

@@ -23,11 +23,11 @@ class OutlierDetector:
         columns = parse_columns(df, columns)
 
         for c in columns:
-            iqr = df.cols().iqr(c, more=True)
+            iqr = df.cols.iqr(c, more=True)
             lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
             upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-            df = df.rows().drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+            df = df.rows.drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
 
         return df
 
@@ -53,9 +53,9 @@ class OutlierDetector:
             # the column with the z_col value is always the string z_col plus the name of column
             z_col = "z_col_" + c
 
-            df = df.cols().z_score(c) \
-                .rows().drop(F.col(z_col) > threshold) \
-                .cols().drop(z_col)
+            df = df.cols.z_score(c) \
+                .rows.drop(F.col(z_col) > threshold) \
+                .cols.drop(z_col)
 
         return df
 
@@ -77,9 +77,9 @@ class OutlierDetector:
 
         columns = parse_columns(df, columns)
         for c in columns:
-            mad_value = df.cols().mad(c, more=True)
+            mad_value = df.cols.mad(c, more=True)
             lower_bound = mad_value["median"] - threshold * mad_value["mad"]
             upper_bound = mad_value["median"] + threshold * mad_value["mad"]
 
-            df = df.rows().drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+            df = df.rows.drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
         return df
