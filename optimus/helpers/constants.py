@@ -56,7 +56,8 @@ VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
 # Strings Messages
 
 JUST_CHECKING = "Just checking that all necessary environments vars are present..."
-STARTING = "Starting or getting SparkSession and SparkContext..."
+STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
+STARTING_OPTIMUS = "Transform and Roll out..."
 
 
 def print_check_point_config(filesystem):
