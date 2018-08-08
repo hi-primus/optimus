@@ -30,22 +30,6 @@ def fill_missing_var_types(var_types):
     return var_types
 
 
-def sample_size(df):
-    """
-    Get a size sample depending on the dataframe size
-    :param df:
-    :return:
-    """
-    count = df.count()
-    if count < 100:
-        fraction = 0.99
-    elif count < 1000:
-        fraction = 0.5
-    else:
-        fraction = 0.1
-    return fraction
-
-
 # TODO: Maybe use pprint instead of this
 def print_json(value):
     """
