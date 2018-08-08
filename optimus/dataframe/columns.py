@@ -823,7 +823,7 @@ def cols(self):
         """
         Return how many unique items exist in a columns
         :param columns: Columns Dataframe to process
-        :param estimate: If true use hyperloglog to estimate distinct count else use full count
+        :param estimate: If true use hyperloglog to estimate distinct count. If False use full distinct
         :type estimate: bool
         :return:
         """

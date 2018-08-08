@@ -53,7 +53,7 @@ def func_factory(func_type=None, func_return_type=None):
     # func_return_type = parse_spark_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
-        # TODO: Get the column type, so is not necessary to pass the return type as param
+        # TODO: Get the column type, so is not necessary to pass the return type as param.
 
         # Apply the function over the whole series
         def apply_to_series(val, attr):
@@ -73,7 +73,6 @@ def func_factory(func_type=None, func_return_type=None):
         return F.udf(lambda value: func(value, attr), func_return_type)
 
     def expression_func(attr, func):
-        # TODO: Check if we can the returned value for a col expression
         def inner(col_name):
             return func(col_name, attr)
 
