@@ -35,23 +35,6 @@ class Profiler:
              'size': human_readable_bytes(df.size())}
         )
 
-    @staticmethod
-    def count_column_by_type(df, columns):
-        """
-        Return the count of columns by type
-        :return:
-        """
-        columns = parse_columns(df, columns)
-
-        result = Profiler.count_data_types(columns)
-
-        col_type = {}
-        for key, value in result.items():
-            max_key = max(value, key=value.get)
-            col_type[key] = ({max_key: value[max_key]})
-
-        return col_type
-
     # TODO: This should check only the StringType Columns. The datatype from others columns can be taken from schema().
     @staticmethod
     def count_data_types(df, columns):
