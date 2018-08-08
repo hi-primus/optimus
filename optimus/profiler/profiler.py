@@ -8,7 +8,6 @@ from optimus.profiler.functions import human_readable_bytes, fill_missing_var_ty
 import pyspark.sql.functions as F
 
 import jinja2
-import json
 import os
 from IPython.core.display import display, HTML
 
@@ -295,8 +294,8 @@ class Profiler:
             #    col['p_uniques'] = uniques[col_name] / rows_count * 100
 
             # Missing
-            col_info['stats']['missing_count'] = round(na[col_name], 2)
-            col_info['stats']['p_missing'] = round(na[col_name] / rows_count * 100, 2)
+            col_info['stats']['missing_count'] = round(na, 2)
+            col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
 
             # Categorical column
             col_info['column_type'] = column_type
@@ -330,7 +329,8 @@ class Profiler:
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col_info['stats']['range'] = max_value - min_value
                 col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
-                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - col_info['stats']['quantile'][0.25]
+                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
+                                                           col_info['stats']['quantile'][0.25]
 
                 # Descriptive statistic
                 col_info['stats']['stdev'] = round(df.cols.std(col_name), 5)
