@@ -5,6 +5,10 @@ from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
 from optimus.ml.functions import string_to_index, vector_assembler
 
+from optimus import Optimus
+
+op = Optimus()
+
 
 class ML:
     @staticmethod
@@ -51,7 +55,7 @@ class ML:
 
         model = RandomForestClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns=[(input_col + "_index", "label")])
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -83,7 +87,7 @@ class ML:
 
         model = DecisionTreeClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns=[(input_col + "_index", "label")])
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
@@ -115,8 +119,8 @@ class ML:
 
         model = GBTClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns=[(input_col + "_index", "label")])
 
-        gbt_model = model.fit(transformer.df)
-        df_model = gbt_model.transform(transformer.df)
+        gbt_model = model.fit(df)
+        df_model = gbt_model.transform(df)
         return df_model, gbt_model
