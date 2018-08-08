@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from optimus.helpers.functions import parse_columns, collect_to_dict, is_list_of_one_element
+from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json, sample_size
@@ -107,14 +107,10 @@ class Profiler:
         type_details = {c: _count_data_types(c) for c in columns}
 
         results = {}
-
-        # If more that a column
-
-        # if not is_list_of_one_element(columns):
         count_types = {}
 
         # Count the categorical, numerical and date columns
-        for k, v in type_details.items():
+        for v in type_details.values():
             name = v["type"]
             if name in count_types:
                 count_types[name] += 1
