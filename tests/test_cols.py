@@ -20,7 +20,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().lower("*")
+        actual_df = source_df.cols.lower("*")
 
         expected_df = op.create.df(
             rows=[
@@ -49,7 +49,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().upper("name")
+        actual_df = source_df.cols.upper("name")
 
         expected_df = op.create.df(
             rows=[
@@ -77,7 +77,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().trim("name")
+        actual_df = source_df.cols.trim("name")
 
         expected_df = op.create.df(
             rows=[
@@ -107,7 +107,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().drop("num1")
+        actual_df = source_df.cols.drop("num1")
 
         expected_df = op.create.df(
             rows=[
@@ -134,7 +134,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols().replace("emotion", [("happy", "elated")])
+        actual_df = source_df.cols.replace("emotion", [("happy", "elated")])
 
         expected_df = op.create.df(
             rows=[
@@ -163,7 +163,7 @@ class TestDataFrameCols(object):
         def func(col_name, attrs):
             return F.col(col_name) * 2
 
-        actual_df = source_df.cols().apply_exp("num1", func)
+        actual_df = source_df.cols.apply_exp("num1", func)
 
         expected_df = op.create.df(
             rows=[
