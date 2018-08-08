@@ -5,9 +5,14 @@ import pyspark
 
 from optimus import Optimus
 
+from optimus.ml.models import ML
+from optimus.ml.functions import *
+
 op = Optimus()
+ml = ML()
 spark = op.get_ss()
 sc = op.get_sc()
+
 
 df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
@@ -42,7 +47,7 @@ def test_logistic_regression_text():
                      Row(sentence='this is another test', label=1.)]). \
         toDF()
 
-    df_predict, ml_model = op.ml.logistic_regression_text(df, "sentence")
+    df_predict, ml_model = ml.logistic_regression_text(df, "sentence")
 
     assert_spark_df(df_predict)
 
@@ -55,7 +60,7 @@ def test_n_gram():
                      ['this is however the worst sentence available']]). \
         toDF(schema=types.StructType().add('sentence', types.StringType()))
 
-    df_model, tfidf_model = op.ml.n_gram(df, input_col="sentence", n=2)
+    df_model, tfidf_model = n_gram(df, input_col="sentence", n=2)
 
     assert_spark_df(df_model)
 
@@ -65,7 +70,7 @@ def test_n_gram():
 
 
 def test_random_forest():
-    df_model, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
+    df_model, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
@@ -73,7 +78,7 @@ def test_random_forest():
 
 
 def test_decision_tree():
-    df_model, rf_model = op.ml.decision_tree(df_cancer, columns, "diagnosis")
+    df_model, rf_model = ml.decision_tree(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
@@ -81,7 +86,7 @@ def test_decision_tree():
 
 
 def test_gbt():
-    df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
+    df_model, rf_model = ml.gbt(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
