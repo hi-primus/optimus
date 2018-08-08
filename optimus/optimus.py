@@ -1,21 +1,21 @@
 import os
 from shutil import rmtree
-from functools import reduce
-from optimus.spark import Spark
+
 from optimus.create import Create
-from optimus.io.load import Load
 from optimus.functions import concat
 from optimus.helpers.constants import *
-from optimus.helpers.functions import random_name
 from optimus.helpers.raiseit import RaiseIfNot
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
+from optimus.io.load import Load
+from optimus.spark import Spark
+
+from optimus.dataframe import rows, columns, extension
+from optimus.io import save
 
 Spark.instance = None
 
 
 class Optimus:
-    def __init__(self, master="local", app_name="optimus", path=None, file_system="local", verbose=True):
+    def __init__(self, master="local[*]", app_name="optimus", path=None, file_system="local", verbose=True):
         """
 
         :param master: Master, local or ip address to a cluster
@@ -51,7 +51,7 @@ class Optimus:
 
         self.create = Create()
         self.load = Load()
-        self.read = self.spark.read
+        # self.read = self.spark().read
 
     @property
     def spark(self):
@@ -62,32 +62,6 @@ class Optimus:
         return Spark.instance.sc()
 
     concat = concat
-
-    @staticmethod
-    def concat(dfs, like="columns"):
-        """
-        Concat multiple dataframes as columns or rows way
-        :param dfs:
-        :param like: The way dataframes is going to be concat. like columns or rows
-        :return:
-        """
-        # Add increasing Ids, and they should be the same.
-        if like == "columns":
-            temp_dfs = []
-            col_temp_name = "id_" + random_name()
-            for df in dfs:
-                temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
-
-            def _append_df(df1, df2):
-                return df1.join(df2, col_temp_name, "outer").drop(col_temp_name)
-
-            df_result = reduce(_append_df, temp_dfs)
-        elif like == "rows":
-            df_result = reduce(DataFrame.union, dfs)
-        else:
-            RaiseIfNot.value_error(like, ["columns", "rows"])
-
-        return df_result
 
     def set_check_point_folder(self, path, file_system):
         """

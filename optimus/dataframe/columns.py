@@ -1,34 +1,29 @@
-import unicodedata
-import string
-import re
-from functools import reduce
 import builtins
+import re
+import string
+import unicodedata
+from functools import reduce
 
 from multipledispatch import dispatch
-
 from pyspark.ml.feature import Imputer
 from pyspark.ml.feature import QuantileDiscretizer
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
-from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.ml.feature import VectorAssembler
-
-# Helpers
-from optimus.helpers.constants import *
-from optimus.helpers.decorators import add_attr, add_method
+from optimus.functions import abstract_udf as audf, concat
+from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int
-
+# Helpers
+from optimus.helpers.constants import *
+from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list
-
-from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.functions import abstract_udf as audf, concat
-
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -1090,7 +1085,7 @@ def cols(self):
     @add_attr(cols)
     def cell(column):
         """
-        Get the value from one cell in a data frame
+        Get the value for the first cell from a column in a data frame
         :param column:
         :return:
         """
