@@ -26,3 +26,13 @@ test.csv
 .coverage*
 .DS_Store
 test-new-interface.ipynb
+data.json
+optimus/dataframe/plot.py
+examples/prueba con sofi.ipynb
+.pytest_cache/v/cache/lastfailed
+examples/properties.json
+examples/new-api-tests.ipynb
+examples/new-api-rationale.ipynb
+examples/blogpost-git.ipynb
+examples/100.json
+.pytest_cache/v/cache/nodeids
