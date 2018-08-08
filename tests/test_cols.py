@@ -3,7 +3,7 @@ from pyspark.sql.types import StringType, IntegerType
 from pyspark.sql import functions as F
 
 op = Optimus()
-spark = op.get_sc()
+sc = op.sc
 
 
 class TestDataFrameCols(object):

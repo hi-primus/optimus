@@ -10,8 +10,8 @@ from optimus.ml.functions import *
 
 op = Optimus()
 ml = ML()
-spark = op.get_ss()
-sc = op.get_sc()
+spark = op.spark
+sc = op.sc
 
 
 df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
