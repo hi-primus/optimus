@@ -1,5 +1,4 @@
 from pyspark.sql.types import StructField, StructType
-from pyspark.sql import DataFrame
 
 # Helpers
 from optimus.helpers.constants import VAR_TYPES
