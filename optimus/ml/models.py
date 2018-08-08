@@ -5,6 +5,10 @@ from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
 from optimus.ml.functions import string_to_index, vector_assembler
 
+from optimus import Optimus
+
+op = Optimus()
+
 
 class ML:
     @staticmethod
@@ -46,12 +50,12 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = RandomForestClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -78,12 +82,12 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = DecisionTreeClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
@@ -110,13 +114,13 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = GBTClassifier()
 
-        transformer.rename_col(columns=[(input_col + "_index", "label")])
+        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
 
-        gbt_model = model.fit(transformer.df)
-        df_model = gbt_model.transform(transformer.df)
+        gbt_model = model.fit(df)
+        df_model = gbt_model.transform(df)
         return df_model, gbt_model

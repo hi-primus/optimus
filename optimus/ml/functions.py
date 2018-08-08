@@ -17,7 +17,7 @@ def n_gram(df, input_col, n=2):
     :return: Spark DataFrame with n-grams calculated.
     """
 
-    assert_spark_df(df)
+    is_dataframe(df)
 
     tokenizer = feature.Tokenizer().setInputCol(input_col) | feature.StopWordsRemover()
     count = feature.CountVectorizer()
