@@ -4,6 +4,7 @@ import re
 from functools import reduce
 import builtins
 
+
 from multipledispatch import dispatch
 
 from pyspark.ml.feature import Imputer
@@ -31,6 +32,7 @@ from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf as audf, concat
 
 from optimus.helpers.raiseit import RaiseIfNot
+
 
 @add_method(DataFrame)
 def cols(self):
@@ -384,15 +386,15 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def _exprs(agg, columns):
+    def _exprs(func, columns):
         """
         Helper function to manage aggregation functions
-        :param agg: Aggregation function from Apache Spark
+        :param func: Aggregation function from Apache Spark
         :param columns: list of columns names or a string (a column name).
         :return:
         """
         # Ensure that is a list
-        agg = val_to_list(agg)
+        func = val_to_list(func)
 
         # Filter only numeric columns
         columns = parse_columns(self, columns)
@@ -401,7 +403,7 @@ def cols(self):
         df = self
         exprs = []
         for c in columns:
-            for a in agg:
+            for a in func:
                 exprs.append(a(c).alias(a.__name__ + "_" + c))
 
         return format_dict(collect_to_dict(df.agg(*exprs).collect()))
@@ -761,7 +763,6 @@ def cols(self):
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-
         # Check if columns to be process are in dataframe
         # TODO: this should filter only numeric values
         columns = parse_columns(self, columns)
@@ -777,12 +778,6 @@ def cols(self):
         df = model.transform(df)
 
         return df
-
-    @add_attr(cols)
-    def show(columns):
-        columns = parse_columns(self, columns)
-        print(self.cols.schema_dtypes(columns))
-        self.select("antiguedad_construccion").show(100)
 
     @add_attr(cols)
     def count_na(columns):
@@ -806,7 +801,7 @@ def cols(self):
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
 
         # print(df)
-        result = collect_to_dict(df.select(*expr).collect())
+        result = format_dict(collect_to_dict(df.select(*expr).collect()))
         # except AnalysisException:
         #    pass
 
@@ -1036,8 +1031,6 @@ def cols(self):
         columns = parse_columns(self, input_cols)
         df = self
 
-        print(shape)
-
         if shape is "vector":
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
@@ -1148,10 +1141,10 @@ def cols(self):
     @add_method(cols)
     def hist(columns, bins=10):
         """
-
-        :param columns:
-        :param bins:
-        :return:
+        Get the histogram column
+        :param columns: Columns to be processed
+        :param bins: Number of bins
+        :return: json
         """
         columns = parse_columns(self, columns)
         return format_dict(collect_to_dict(self.cols._hist(columns, bins).collect()))

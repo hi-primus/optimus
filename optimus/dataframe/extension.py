@@ -1,3 +1,7 @@
+import jinja2
+import os
+from IPython.core.display import display, HTML
+
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -6,6 +10,8 @@ from pyspark.ml.feature import SQLTransformer
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import *
 from optimus.spark import Spark
+
+
 
 
 @add_method(DataFrame)
@@ -84,6 +90,7 @@ def run(self):
     return None
 
 
+@add_attr(DataFrame)
 def sql(self, sql_expression):
     """
     Implements the transformations which are defined by SQL statement. Currently we only support
@@ -101,3 +108,31 @@ def sql(self, sql_expression):
     self._df = sql_transformer.transform(self)
 
     return self
+
+
+@add_attr(DataFrame)
+def table(self, columns=None, limit=100):
+    """
+    Return a HTML table with the dataframe cols, data types and values
+    :param self
+    :param columns:
+    :param limit:
+    :return:
+    """
+    if columns is None:
+        columns = "*"
+    columns = parse_columns(self, columns)
+
+    data = collect_to_dict(self.select(columns).limit(limit).collect())
+
+    print(type(data))
+
+    path = os.path.dirname(os.path.abspath(__file__))
+
+    template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
+    template_env = jinja2.Environment(loader=template_loader)
+
+    template = template_env.get_template("table.html")
+
+    output = template.render(cols=self.dtypes, data=data)
+    display(HTML(output))
