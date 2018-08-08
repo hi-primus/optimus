@@ -4,7 +4,6 @@ import re
 from functools import reduce
 import builtins
 
-
 from multipledispatch import dispatch
 
 from pyspark.ml.feature import Imputer
@@ -13,20 +12,19 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
-from pyspark.ml.linalg import VectorUDT, Vectors
+from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
-from pyspark.sql.utils import AnalysisException
 
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
     import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_same_class, is_type, is_int, cast_to_float
+    is_function, is_one_element, is_type, is_int
 
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, one_list_to_val
+    tuple_to_dict, val_to_list, filter_list
 
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.functions import abstract_udf as audf, concat
@@ -491,7 +489,7 @@ def cols(self):
     # Descriptive Analytics
 
     @add_attr(cols)
-    # TODO: implemente double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
+    # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def mad(col_name, more=None):
         """
         Return the Median Absolute Deviation
@@ -820,7 +818,6 @@ def cols(self):
         return format_dict(collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
                                            .collect()))
 
-    # TODO: Explorer the use of approxCountDistinct
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
         """
