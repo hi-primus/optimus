@@ -1,14 +1,11 @@
 import re
 import random
-from functools import reduce
 import itertools
 
 from IPython.display import display, HTML
-from pyspark.sql import DataFrame
-from pyspark.sql.types import ArrayType
 
-from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_one_element, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_, is_list, is_dict, is_dict_of_one_element, is_tuple, is_function
+from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
+    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -23,13 +20,11 @@ def random_name():
 
 def parse_spark_dtypes(value):
     """
-
+    Get a python data type from a string
     :param value:
     :return:
     """
 
-    # if not is_(value, ArrayType):
-    #    value = value.lower()
     try:
         data_type = SPARK_DTYPES[SPARK_SHORT_DTYPES[value]]
     except KeyError:
@@ -40,7 +35,7 @@ def parse_spark_dtypes(value):
 
 def parse_python_dtypes(value):
     """
-
+    Get a spark data type from a string
     :param value:
     :return:
     """
@@ -70,7 +65,7 @@ def collect_to_dict(value):
     else:
         dict_result = [v.asDict() for v in value]
         # if there is only an element in the list return only de dict
-        #if len(dict_result) == 1:
+        # if len(dict_result) == 1:
         #    dict_result = dict_result[0]
 
     return dict_result
@@ -323,4 +318,3 @@ def filter_col_name_by_dtypes(df, data_type):
     columns = [y[0] for y in filter(parse, df.dtypes)]
 
     return columns
-

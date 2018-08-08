@@ -1,10 +1,4 @@
-from optimus.helpers import checkit as c
-import operator as operator_
 import inspect
-from functools import reduce
-
-from optimus.helpers.checkit import is_function
-
 
 class RaiseIfNot:
     @staticmethod
@@ -50,13 +44,6 @@ class RaiseIfNot:
         :param _list: list of values
         :return:
         """
-
-        #r = []
-        #for element in _list:
-        #    if is_function(element):
-        #        r.append(element(var))
-        #    else:
-        #        r.append(element == var)
 
         #if not any(r):
         if len(_list) == 2:

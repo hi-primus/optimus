@@ -1,7 +1,7 @@
 from functools import reduce
 import dateutil.parser
 
-from optimus.helpers.functions import is_pyarrow_installed, parse_spark_dtypes, parse_python_dtypes, random_name, one_list_to_val
+from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_name, one_list_to_val
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.helpers.checkit import is_data_type
 

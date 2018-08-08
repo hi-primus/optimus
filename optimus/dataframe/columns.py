@@ -12,14 +12,14 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
-from pyspark.ml.linalg import Vectors
+from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.ml.feature import VectorAssembler
 
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
 from optimus.helpers.checkit \
-    import is_str, is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int
 
 from optimus.helpers.functions \
@@ -32,13 +32,12 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.helpers.raiseit import RaiseIfNot
 
 
-@add_method(DataFrame)
 def cols(self):
     @add_attr(cols)
     @dispatch(str, object)
     def append(col_name=None, value=None):
         """
-        Append a Column to a Dataframe
+        Append a column to a Dataframe
         :param col_name:
         :param value:
         :return:
@@ -435,13 +434,13 @@ def cols(self):
 
         columns = parse_columns(self, columns)
 
-        range = {}
+        range_result = {}
         for c in columns:
             max_val = self.cols.max(c)
             min_val = self.cols.min(c)
-            range[c] = {'min': min_val, 'max': max_val}
+            range_result[c] = {'min': min_val, 'max': max_val}
 
-        return range
+        return range_result
 
     @add_attr(cols)
     # TODO: Use pandas or rdd for small datasets?!
@@ -480,14 +479,7 @@ def cols(self):
 
         return format_dict(percentile_value)
 
-        # Merge percentile and value
-        # percentile_value = list(map(lambda r: dict(zip(percentile, r)), percentile_results))
-
-        # Merge percentile, values and columns
-        return format_dict(dict(zip(columns, percentile_value)))
-
     # Descriptive Analytics
-
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def mad(col_name, more=None):

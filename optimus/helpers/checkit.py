@@ -306,7 +306,8 @@ def cast_to_float(value):
     """
     try:
         return float(value)
-    except:
+    # if we can not parse the value return the value without modification
+    except Exception:
         return value
 
 

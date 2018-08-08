@@ -1,7 +1,4 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.dataframe import *
-
-# from pyspark.sql import functions as F
 
 # Helpers
 import optimus.create as op
@@ -108,8 +105,8 @@ def rows(self):
 
         assert isinstance(how, str), "Error, how argument provided must be a string."
 
-        assert how == 'all' or (
-                how == 'any'), "Error, how only can be 'all' or 'any'."
+        assert how == "all" or (
+                how == "any"), "Error, how only can be 'all' or 'any'."
 
         columns = parse_columns(self, columns)
 

@@ -5,7 +5,8 @@ import logging
 from urllib.request import Request, urlopen
 from optimus.spark import Spark
 
-# TODO: Append to write dataframe class
+
+# TODO: Append to read dataframe class
 class Load:
 
     def url(self, path=None, type_of="csv"):
@@ -44,7 +45,7 @@ class Load:
     @staticmethod
     def csv_data_loader(path):
         """
-
+        Read a csv file from disk
         :param path:
         :return:
         """
@@ -61,12 +62,12 @@ class Load:
     @staticmethod
     def json_data_loader(path):
         """
-
+        Read a json file from disk
         :param path:
         :return:
         """
         res = open(path, 'r').read()
-        print("Loading file using a pyspark.read.json")
+        logging.info("Loading file using a pyspark.read.json")
         data_rdd = Spark.instance.sc().parallelize([res])
         return Spark.instance.spark().read.json(data_rdd)
 
@@ -100,6 +101,13 @@ class Downloader(object):
 
     @staticmethod
     def write(response, file, chunk_size=8192):
+        """
+        Write file from http request to Disk
+        :param response:
+        :param file:
+        :param chunk_size:
+        :return:
+        """
         total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100
         total_size = int(total_size)
         bytes_so_far = 0

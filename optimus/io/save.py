@@ -2,12 +2,13 @@ from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
 
+import shutil
+import glob, os
 
-@add_method(DataFrame)
+
 def save(self):
-
     @add_attr(save)
-    def json(path_name, num_partitions=1):
+    def json(path_name, mode ="overwrite", num_partitions=1):
         """
         Save data frame in a json file
         :param path_name:
@@ -17,7 +18,14 @@ def save(self):
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                                 "partitions in file store in memory."
-        return self.repartition(num_partitions).write.format('json').save(path_name)
+        self.repartition(num_partitions).write.format("json").mode(mode).save(path_name)
+
+        # os.chdir(path_name + "/")
+        # for file in glob.glob("*.json"):
+        #    shutil.copyfile(file, path_name)
+
+        # shutil.copyfile(path_name+ "")
+        # shutil.rmtree("/folder_name")
 
     # TODO: Check this to save to a single file
     @add_attr(save)
@@ -42,12 +50,13 @@ def save(self):
                                                                 "partitions in file store in memory."
         assert header == "true" or header == "false", "Error header must be 'true' or 'false'"
 
-        if header == 'true':
+        if header == "true":
             header = True
         else:
             header = False
 
-        return self.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+        self.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+        # shutil.rmtree("/folder_name")
 
     @add_attr(save)
     def parquet(path_name, num_partitions=1):
@@ -60,6 +69,9 @@ def save(self):
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                                 "partitions in file store in memory."
-        return self.coalesce(num_partitions).write.parquet(path_name)
+        self.coalesce(num_partitions).write.parquet(path_name)
 
     return save
+
+
+DataFrame.save = property(save)

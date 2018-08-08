@@ -67,7 +67,7 @@ def human_readable_bytes(num, suffix='B'):
 
 def sample_size(population_size, confidence_level, confidence_interval):
     """
-
+    Get a sample number of the whole population
     :param population_size:
     :param confidence_level:
     :param confidence_interval:
@@ -78,7 +78,7 @@ def sample_size(population_size, confidence_level, confidence_interval):
     e = confidence_interval / 100.0
     n = population_size
 
-    # LOOP THROUGH SUPPORTED CONFIDENCE LEVELS AND FIND THE NUM STD DEVIATIONS FOR THAT CONFIDENCE LEVEL
+    # Loop through supported confidence levels and find the num sdd deviations for that confidence level
     for i in confidence_level_constant:
         if i[0] == confidence_level:
             z = i[1]
@@ -86,10 +86,10 @@ def sample_size(population_size, confidence_level, confidence_interval):
     if z == 0.0:
         return -1
 
-    # CALC SAMPLE SIZE
+    # Calculate sample size
     n_0 = ((z ** 2) * p * (1 - p)) / (e ** 2)
 
-    # ADJUST SAMPLE SIZE FOR FINITE POPULATION
+    # Adjust sample size fo finite population
     n = n_0 / (1 + ((n_0 - 1) / float(n)))
 
     return int(math.ceil(n))  # THE SAMPLE SIZE

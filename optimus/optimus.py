@@ -9,18 +9,17 @@ Spark.instance = None
 
 from optimus.create import Create
 from optimus.io.load import Load
-from optimus.spark import Spark
 from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.functions import random_name
 from optimus.helpers.raiseit import RaiseIfNot
+
+#
 from optimus.dataframe import rows, columns, extension
+from optimus.io import save
 
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-
-
-# We use this to save a reference to the Spark session at the module level
 
 
 class Optimus:

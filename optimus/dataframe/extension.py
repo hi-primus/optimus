@@ -1,5 +1,6 @@
 import jinja2
 import os
+import logging
 from IPython.core.display import display, HTML
 
 from pyspark.sql import DataFrame
@@ -79,11 +80,11 @@ def run(self):
     # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
     # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
 
-    print("Saving changes at disk by checkpoint...")
+    logging.info("Saving changes at disk by checkpoint...")
 
-    self.cache().count
+    result = self.cache().count
 
-    print("Done.")
+    logging.info("Done.")
 
     return None
 
@@ -127,7 +128,7 @@ def table(self, columns=None, limit=100):
     path = os.path.dirname(os.path.abspath(__file__))
 
     template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
-    template_env = jinja2.Environment(loader=template_loader)
+    template_env = jinja2.Environment(loader=template_loader, autoescape=True)
 
     template = template_env.get_template("table.html")
 
