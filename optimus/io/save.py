@@ -2,9 +2,6 @@ from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
 
-import shutil
-import glob, os
-
 
 def save(self):
     @add_attr(save)
