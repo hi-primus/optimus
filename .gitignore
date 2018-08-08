@@ -9,6 +9,7 @@
 
 metastore_db/
 checkPointFolder/
+projectFilesBackup/
 
 # Distribution / packaging
 build/
