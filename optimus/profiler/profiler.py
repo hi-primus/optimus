@@ -1,15 +1,14 @@
+import os
 from pathlib import Path
 
-from optimus.helpers.functions import parse_columns, collect_to_dict
+import jinja2
+import pyspark.sql.functions as F
+from IPython.core.display import display, HTML
+
 from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json, sample_size
-
-import pyspark.sql.functions as F
-
-import jinja2
-import os
-from IPython.core.display import display, HTML
 
 
 class Profiler:
