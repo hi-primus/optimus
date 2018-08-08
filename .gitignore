@@ -9,7 +9,7 @@
 
 metastore_db/
 checkPointFolder/
-projectFilesBackup/
+projectFilesBackup/tests.py
 
 # Distribution / packaging
 build/
