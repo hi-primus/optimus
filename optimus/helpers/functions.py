@@ -70,8 +70,8 @@ def collect_to_dict(value):
     else:
         dict_result = [v.asDict() for v in value]
         # if there is only an element in the list return only de dict
-        if len(dict_result) == 1:
-            dict_result = dict_result[0]
+        #if len(dict_result) == 1:
+        #    dict_result = dict_result[0]
 
     return dict_result
 
@@ -200,7 +200,7 @@ def check_for_missing_columns(df, col_names):
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False):
     """
-    Return a list of columns and check that columns exists in the dadaframe
+    Return a list of columns and check that columns exists in the dataframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
     Also accept a regex.
     If a list of tuples return to list. The first element is the columns name the others element are params.
@@ -225,8 +225,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         r = re.compile(cols_args[0])
         cols = list(filter(r.match, df.columns))
 
-    elif cols_args == "*":
-        cols = list(map(lambda dtypes: dtypes[0], df.dtypes))
+    elif cols_args == "*" or cols_args is None:
+        cols = df.columns
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
