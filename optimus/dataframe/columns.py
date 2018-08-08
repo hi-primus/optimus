@@ -38,8 +38,8 @@ def cols(self):
     def append(col_name=None, value=None):
         """
         Append a column to a Dataframe
-        :param col_name:
-        :param value:
+        :param col_name: Name of the new column
+        :param value: List of data values
         :return:
         """
 
@@ -68,7 +68,8 @@ def cols(self):
     def append(cols_values=None):
         """
         Append a column or a Dataframe to a Dataframe
-        :param cols_values:
+        :param cols_values: New Column Names and data values
+        :type cols_values: List of tuples
         :return:
         """
 
@@ -100,15 +101,19 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func=None, attrs=None, col_exp=None, filter_col_by_dtypes=None, verbose=True):
+    def apply_exp(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
         """
-        :param columns: Columns in which the columns are going to be applied
-        :param func:
-        :param column_data_type:
-        :param  attrs:
-        :return:
+        Apply a expression to column.
+        :param columns: Columns in which the function is going to be applied
+        :param func: function to be applied
+        :type func: A plain expression or a function
+        :param args: Argument passed to the function
+        :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
+        :param verbose: Print additional information about
+        :return: Dataframe
         """
 
+        # It handle if func param is a plain expression or a function returning and expression
         def func_col_exp(col_name, attr):
             return func
 
@@ -119,13 +124,9 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
 
-        # if columns do not exits
-        if not columns:
-            columns = val_to_list(columns)
-
         df = self
         for col_name in columns:
-            df = df.withColumn(col_name, audf(col_name, _func, attrs=attrs, func_type="column_exp", verbose=verbose))
+            df = df.withColumn(col_name, audf(col_name, _func, attrs=args, func_type="column_exp", verbose=verbose))
         return df
 
     @add_attr(cols)
@@ -133,14 +134,16 @@ def cols(self):
               verbose=True):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
-        :param columns:
-        :param func: Functions to be applied to a columns
-        :param func_return_type
-        :param args:
+        :param columns: Columns in which the function is going to be applied
+        :param func: Functions to be applied to a columns. The declaration must have always 2 params.
+            def func(value, args):
+        :param func_return_type: function return type. This is required by UDF and Pandas UDF.
+        :param args: Arguments to be passed to the function
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param when:
-        :param filter_col_by_dtypes:
-        :return:
+        :param when: A expression to better control when the function is going to be apllied
+        :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
+        :param verbose: Print additional information about
+        :return: DataFrame
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
@@ -163,7 +166,7 @@ def cols(self):
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
-        :param columns:
+        :param columns: Columns in which the function is going to be applied
         :param func: Functions to be applied to a columns
         :param func_return_type
         :param args:
@@ -200,47 +203,11 @@ def cols(self):
 
         return df
 
-    @add_attr(cols)
-    @dispatch(list)
-    def cast(cols_and_dtypes):
-        """
-        Cast multiple columns to a specific datatype
-        List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-
-        :param cols_and_dtypes: Columns to be casted and new data types
-        :return:
-        """
-        cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
-        return _cast(cols, attrs)
-
-    @add_attr(cols)
-    @dispatch((list, str), object)
-    def cast(columns, dtypes):
-        """
-        Cast a column or a list of columns to a specific datatype
-        :param columns: Columns to be casted
-        :param dtypes: final data type
-        :return:
-        """
-        cols = parse_columns(self, columns)
-        attrs = []
-        for _ in builtins.range(0, len(cols)):
-            attrs.append((dtypes,))
-
-        return _cast(cols, attrs)
-
-    @add_attr(cols)
-    def _cast(cols, attrs):
+    def _cast(cols, args):
         """
         Helper function to support the multiple params implementation
         :param cols:
-        :param attrs:
+        :param args:
         :return:
         """
 
@@ -275,7 +242,7 @@ def cols(self):
             return func_return_type, cast_to_vectors, func_type
 
         df = self
-        for col, args in zip(cols, attrs):
+        for col, args in zip(cols, args):
             return_type, func, func_type = cast_factory(args[0])
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
@@ -284,6 +251,43 @@ def cols(self):
                                )
         return df
 
+    @add_attr(cols)
+    @dispatch(list)
+    def cast(cols_and_dtypes):
+        """
+        Cast multiple columns to a specific datatype
+        List of tuples of column names and types to be casted. This variable should have the
+                following structure:
+
+                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+
+                The first parameter in each tuple is the column name, the second is the final datatype of column after
+                the transformation is made.
+
+        :param cols_and_dtypes: Columns to be casted and new data types
+        :return:
+        """
+        cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
+        return _cast(cols, attrs)
+
+    @add_attr(cols)
+    @dispatch((list, str), object)
+    def cast(columns, dtypes):
+        """
+        Cast a column or a list of columns to a specific datatype
+        :param columns: Columns names to be casted
+        :param dtypes: final data type
+        :return: Spark DataFrame
+        """
+
+        cols = parse_columns(self, columns)
+        attrs = []
+        for _ in builtins.range(0, len(cols)):
+            attrs.append((dtypes,))
+
+        return _cast(cols, attrs)
+
+    @add_attr(cols)
     @add_attr(cols)
     def astype(*args, **kwargs):
         return cast(*args, **kwargs)
@@ -294,8 +298,8 @@ def cols(self):
         Move a column to specific position
         :param column: Column to be moved
         :param ref_col: Column taken as reference
-        :param position:
-        :return:
+        :param position: Column new position. Accepts 'after' or 'before'
+        :return: Spark DataFrame
         """
         # Check that column is a string or a list
         column = parse_columns(self, column)
@@ -331,10 +335,10 @@ def cols(self):
     @add_attr(cols)
     def keep(columns=None, regex=None):
         """
-        Just Keep the columns and drop.
-        :param columns:
-        :param regex:
-        :return:
+        Only keep the columns specified
+        :param columns: Columns to Keep in the dataFrame
+        :param regex: Regular expression to filter
+        :return: Spark DataFrame
         """
 
         if regex:
@@ -349,8 +353,8 @@ def cols(self):
     def sort(order="asc"):
         """
         Sort dataframes columns asc or desc
-        :param order: Apache Spark Dataframe
-        :return:
+        :param order: 'asc' or 'desc' accepted
+        :return: Spark DataFrame
         """
 
         if order == "asc":
@@ -410,7 +414,7 @@ def cols(self):
     def min(columns):
         """
         Return the min value from a column dataframe
-        :param columns: '*', list of columns names or a string (a column name).
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.min, columns)
@@ -419,7 +423,7 @@ def cols(self):
     def max(columns):
         """
         Return the max value from a column dataframe
-        :param columns: '*', list of columns names or a string (a column name).
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.max, columns)
@@ -428,7 +432,7 @@ def cols(self):
     def range(columns):
         """
         Return the range form the min to the max value
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -447,7 +451,7 @@ def cols(self):
     def median(columns):
         """
         Return the median of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         columns = parse_columns(self, columns)
@@ -458,8 +462,8 @@ def cols(self):
     def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95], error=0):
         """
         Return the percentile of a dataframe
-        :param columns: 
-        :param percentile:
+        :param columns:  '*', list of columns names or a single column name.
+        :param percentile: list of percentiles to be calculated
         :return: 
         """
 
@@ -508,7 +512,7 @@ def cols(self):
     def std(columns):
         """
         Return the standard deviation of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.stddev, columns)
@@ -517,7 +521,7 @@ def cols(self):
     def kurt(columns):
         """
         Return the kurtosis of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.kurtosis, columns)
@@ -526,7 +530,7 @@ def cols(self):
     def mean(columns):
         """
         Return the mean of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.mean, columns)
@@ -535,7 +539,7 @@ def cols(self):
     def skewness(columns):
         """
         Return the skewness of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.skewness, columns)
@@ -544,7 +548,7 @@ def cols(self):
     def sum(columns):
         """
         Return the sum of a column dataframe
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.sum, columns)
@@ -553,7 +557,7 @@ def cols(self):
     def variance(columns):
         """
         Return the column variance
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         return _exprs(F.variance, columns)
@@ -562,7 +566,7 @@ def cols(self):
     def mode(columns):
         """
         Return the the column mode
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -587,7 +591,7 @@ def cols(self):
     def lower(columns):
         """
         Lowercase all the string in a column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -600,7 +604,7 @@ def cols(self):
     def upper(columns):
         """
         Uppercase all the strings column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -613,7 +617,7 @@ def cols(self):
     def trim(columns):
         """
         Trim the string in a column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -626,7 +630,7 @@ def cols(self):
     def reverse(columns):
         """
         Reverse the order of all the string in a column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -639,7 +643,7 @@ def cols(self):
     def remove_accents(columns):
         """
         Remove accents in specific columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -660,7 +664,7 @@ def cols(self):
     def remove_special_chars(columns):
         """
         Remove accents in specific columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -705,16 +709,17 @@ def cols(self):
         return apply_exp(col_name, _date_transform, [new_col, current_format, output_format])
 
     @add_attr(cols)
-    def years_between(col_name, new_col, format_date):
+    def years_between(col_name, new_col, date_format):
         """
         This method compute the age based on a born date.
-        :param  new_col: Name of the new column, the new columns is the resulting column of ages.
-        :param  format_date: String format date of the column provided.
         :param  col_name: Name of the column born dates column.
+        :param  new_col: Name of the new column, the new columns is the resulting column of ages.
+        :param  date_format: String format date of the column provided.
+
 
         """
         # Check if column argument a string datatype:
-        assert isinstance(format_date, str)
+        assert isinstance(date_format, str)
 
         # Check if dates_format argument a string datatype:
         assert isinstance(new_col, str)
@@ -773,7 +778,7 @@ def cols(self):
     def count_na(columns):
         """
         Return the NAN and Null count in a Column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :param type: Accepts integer, float, string or None
         :return:
         """
@@ -801,7 +806,7 @@ def cols(self):
     def count_zeros(columns):
         """
         Return the NAN and Null count in a Column
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :param type: Accepts integer, float, string or None
         :return:
         """
@@ -814,7 +819,7 @@ def cols(self):
     def count_uniques(columns, estimate=True):
         """
         Return how many unique items exist in a columns
-        :param columns: Columns Dataframe to process
+        :param columns: '*', list of columns names or a single column name.
         :param estimate: If true use hyperloglog to estimate distinct count. If False use full distinct
         :type estimate: bool
         :return:
@@ -837,7 +842,7 @@ def cols(self):
     def filter_by_dtypes(data_type):
         """
         This function returns column of dataFrame which have the same
-        datatype provided. It gets the column datatype from dataFrame.dtypes method.
+        data type provided. It gets the column data type from dataFrame.dtypes method.
 
         :param data_type:
         :return:
@@ -864,7 +869,7 @@ def cols(self):
     def add(columns):
         """
         Add two or more columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
@@ -874,7 +879,7 @@ def cols(self):
     def sub(columns):
         """
         Subs two or more columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         self._math(columns, lambda x, y: self[x] - self[y])
@@ -883,7 +888,7 @@ def cols(self):
     def mul(columns):
         """
         Multiply two or more columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         self._math(columns, lambda x, y: self[x] * self[y])
@@ -892,7 +897,7 @@ def cols(self):
     def div(columns):
         """
         Divide two or more columns
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         self._math(columns, lambda x, y: self[x] / self[y])
@@ -901,9 +906,9 @@ def cols(self):
     def replace(columns, search_and_replace=None, value=None, regex=None):
         """
         Replace
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :param search_and_replace: values to look at to be replaced
-        :param value:
+        :param value: new value to replace the old one
         :param regex:
         :return:
         """
@@ -950,19 +955,6 @@ def cols(self):
             df = func(df, c, search, replace)
 
         return df
-
-    @add_attr(cols)
-    def dtypes(columns):
-        """
-        Return the column data type
-        :param columns:
-        :return:
-        """
-
-        columns = parse_columns(self, columns)
-        data_types = tuple_to_dict(self.dtypes)
-
-        return format_dict({c: data_types[c] for c in columns})
 
     # Stats
     @add_attr(cols)
@@ -1011,11 +1003,11 @@ def cols(self):
     def nest(input_cols, output_cols, separator=None, shape=None):
         """
         Concat multiple columns to one with the format specified
-        :param input_cols:
-        :param output_cols:
-        :param separator:
-        :param shape: a string with
-        :return:
+        :param input_cols: columns to be nested
+        :param output_cols: final column with the nested content
+        :param separator: char to be used as separator at the concat time
+        :param shape: final data type, 'array', 'string' or 'vector'
+        :return: Spark DataFrame
         """
         columns = parse_columns(self, input_cols)
         df = self
@@ -1036,22 +1028,14 @@ def cols(self):
 
         return df
 
-    @add_attr(cols)
-    def cell(column):
-        """
-        Get the value from one cell in a data frame
-        :param column:
-        :return:
-        """
-        return self.cols.filter(column).first()[0]
 
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
         """
         Split array or string in different columns
-        :param columns:
-        :param n:
-        :return:
+        :param columns: Columns to be un-nested
+        :param n: Number of rows to un-nested
+        :return: Spark DataFrame
         """
 
         flag_n = None
@@ -1103,6 +1087,15 @@ def cols(self):
 
         return df
 
+    @add_attr(cols)
+    def cell(column):
+        """
+        Get the value from one cell in a data frame
+        :param column:
+        :return:
+        """
+        return self.cols.filter(column).first()[0]
+
     @add_method(cols)
     def _hist(columns, bins=10):
         """
@@ -1141,12 +1134,25 @@ def cols(self):
     @add_method(cols)
     def schema_dtypes(columns):
         """
-
+        Return the columns data type as DataType
         :param columns:
         :return:
         """
         columns = parse_columns(self, columns)
         return format_dict([self.schema[col_name].dataType for col_name in columns])
+
+    @add_attr(cols)
+    def dtypes(columns):
+        """
+        Return the column data type as string
+        :param columns:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+        data_types = tuple_to_dict(self.dtypes)
+
+        return format_dict({c: data_types[c] for c in columns})
 
     return cols
 

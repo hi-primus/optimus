@@ -16,7 +16,7 @@ from optimus.spark import Spark
 @add_method(DataFrame)
 def melt(self, df, id_vars, value_vars, var_name="variable", value_name="value"):
     """
-    Convert :class:`DataFrame` from wide to long format.
+    Convert DataFrame from wide to long format.
     :param self:
     :param df: Dataframe to be melted
     :param id_vars:
@@ -58,8 +58,8 @@ def size(self):
 
     java_obj = _to_java_object_rdd(self.rdd)
 
-    nbytes = Spark.instance.sc()._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
-    return nbytes
+    n_bytes = Spark.instance.sc()._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
+    return n_bytes
 
 
 @add_attr(DataFrame)
@@ -82,11 +82,11 @@ def run(self):
 
     logging.info("Saving changes at disk by checkpoint...")
 
-    result = self.cache().count
+    self.cache().count
 
     logging.info("Done.")
 
-    return None
+    return True
 
 
 @add_attr(DataFrame)

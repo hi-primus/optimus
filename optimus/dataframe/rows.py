@@ -14,8 +14,8 @@ def rows(self):
     def append(row):
         """
         Append a row at the end of a dataframe
-        :param row: List of values
-        :return:
+        :param row: List of values to be appended
+        :return: Spark DataFrame
         """
 
         # if is_list_of_dataframes(rows):
@@ -53,9 +53,9 @@ def rows(self):
 
         | 1 |
 
-        :param col_name:
-        :param data_type:
-        :return:
+        :param col_name: Column to be filtered
+        :param data_type: Datatype use filter values
+        :return: Spark DataFrame
         """
         col_name = parse_columns(self, col_name)
 
@@ -67,7 +67,7 @@ def rows(self):
         Alias of Spark filter function. Return rows that match a expression
         :param args:
         :param kwargs:
-        :return:
+        :return: Spark DataFrame
         """
         return self.filter(*args, **kwargs)
 
@@ -75,9 +75,9 @@ def rows(self):
     # https://chrisalbon.com/python/data_wrangling/pandas_dropping_column_and_rows/
     def drop(where=None):
         """
-        Drop a file depending dataframe expression
-        :param where:
-        :return:
+        Drop a row depending on a dataframe expression
+        :param where: Expression used to drop the row
+        :return: Spark DataFrame
         """
         return self.where(~where)
 
@@ -85,9 +85,9 @@ def rows(self):
     def drop_by_dtypes(col_name, data_type=None):
         """
         Drop rows by cell data type
-        :param col_name:
-        :param data_type:
-        :return:
+        :param col_name: Column in which the filter is going to be apllied
+        :param data_type: filter by string, integer, float or boolean
+        :return: Spark DataFrame
         """
         validate_columns_names(self, col_name)
         return self.rows.drop(fbdt(col_name, data_type))
@@ -98,6 +98,7 @@ def rows(self):
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
 
+        :param columns:
         :param how: ‘any’ or ‘all’. If ‘any’, drop a row if it contains any nulls. If ‘all’, drop a row only if all its
         values are null. The default is 'all'.
         :return: Returns a new DataFrame omitting rows with null values.
@@ -128,7 +129,7 @@ def rows(self):
     def drop_first():
         """
         Remove first row in a dataframe
-        :return:
+        :return: Spark DataFrame
         """
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
