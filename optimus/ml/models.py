@@ -50,8 +50,8 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = RandomForestClassifier()
 
@@ -82,8 +82,8 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = DecisionTreeClassifier()
 
@@ -114,8 +114,8 @@ class ML:
         feats = data.columns
         feats.remove(input_col)
 
-        string_to_index(df, input_cols=input_col)
-        vector_assembler(df, input_cols=feats)
+        df = string_to_index(df, input_cols=input_col)
+        df = vector_assembler(df, input_cols=feats)
 
         model = GBTClassifier()
 
