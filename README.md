@@ -322,6 +322,6 @@ new improvements and features will be added now on this version.
 
 Apache 2.0 © [Iron](https://github.com/ironmussa)
 
-[![Logo Iron](https://ironmussa.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)
+[![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)
 
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
