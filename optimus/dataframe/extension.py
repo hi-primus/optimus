@@ -12,8 +12,6 @@ from optimus.helpers.functions import *
 from optimus.spark import Spark
 
 
-
-
 @add_method(DataFrame)
 def melt(self, df, id_vars, value_vars, var_name="variable", value_name="value"):
     """
@@ -119,13 +117,12 @@ def table(self, columns=None, limit=100):
     :param limit:
     :return:
     """
+
     if columns is None:
         columns = "*"
     columns = parse_columns(self, columns)
 
     data = collect_to_dict(self.select(columns).limit(limit).collect())
-
-    print(type(data))
 
     path = os.path.dirname(os.path.abspath(__file__))
 
@@ -134,5 +131,8 @@ def table(self, columns=None, limit=100):
 
     template = template_env.get_template("table.html")
 
-    output = template.render(cols=self.dtypes, data=data)
+    # Filter only the columns and data type need it
+    dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
+
+    output = template.render(cols=dtypes, data=data)
     display(HTML(output))
