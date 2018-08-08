@@ -1104,7 +1104,6 @@ def cols(self):
         df = self.cols.cast(columns, "double")
 
         for col_name in columns:
-            # temp_col = "bucket_" + col_name
             temp_col = "bucket_" + col_name
             discretizer = QuantileDiscretizer(numBuckets=bins, inputCol=col_name, outputCol=temp_col)
 

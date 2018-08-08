@@ -2,11 +2,10 @@ from pyspark.sql import DataFrame
 
 # Helpers
 import optimus.create as op
-from optimus.helpers.functions import validate_columns_names, parse_columns
+from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-
-from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.helpers.functions import validate_columns_names, parse_columns
 
 
 def rows(self):
@@ -18,8 +17,6 @@ def rows(self):
         :return: Spark DataFrame
         """
 
-        # if is_list_of_dataframes(rows):
-        #    return reduce(DataFrame.union, dfs)
         df = self
 
         assert isinstance(row, list), "Error: row must me a list"
