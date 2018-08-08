@@ -1105,7 +1105,7 @@ def cols(self):
 
         for col_name in columns:
             # temp_col = "bucket_" + col_name
-            temp_col = "bin"
+            temp_col = "bucket_" + col_name
             discretizer = QuantileDiscretizer(numBuckets=bins, inputCol=col_name, outputCol=temp_col)
 
             df = discretizer.fit(df).transform(df)
@@ -1113,6 +1113,7 @@ def cols(self):
             df = df.groupBy(temp_col).agg(F.min(col_name).alias('min'),
                                           F.max(col_name).alias('max'),
                                           F.count(temp_col).alias('count')).orderBy(temp_col)
+            df= df.cols.drop(temp_col)
         return df
 
     @add_method(cols)
