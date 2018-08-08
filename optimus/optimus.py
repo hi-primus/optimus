@@ -59,17 +59,14 @@ class Optimus:
 
         self.create = Create()
         self.load = Load()
-
-        self.spark = self.get_ss()
-        self.sc = self.get_sc()
         self.read = self.spark.read
 
-    @staticmethod
-    def get_ss():
+    @property
+    def spark(self):
         return Spark.instance.spark()
 
-    @staticmethod
-    def get_sc():
+    @property
+    def sc(self):
         return Spark.instance.sc()
 
     concat = concat
