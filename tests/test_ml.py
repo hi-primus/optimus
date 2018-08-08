@@ -7,6 +7,7 @@ from optimus import Optimus
 
 op = Optimus()
 spark = op.get_ss()
+sc = op.get_sc()
 
 df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
@@ -23,10 +24,10 @@ def assert_spark_model(model):
 
 
 def test_ml_pipe():
-    df = op.sc. \
-        parallelize([Row(sentence='this is a test', label=0.),
+    df = sc. \
+         parallelize([Row(sentence='this is a test', label=0.),
                      Row(sentence='this is another test', label=1.)]). \
-        toDF()
+         toDF()
 
     pl = feature.Tokenizer().setInputCol('sentence') | feature.CountVectorizer()
     ml = pl | classification.LogisticRegression()
