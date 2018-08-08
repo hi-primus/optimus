@@ -15,13 +15,15 @@ Spark.instance = None
 
 
 class Optimus:
-    def __init__(self, master="local[*]", app_name="optimus", path=None, file_system="local", verbose=True):
+    def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
+                 verbose=True):
         """
 
-        :param master: Master, local or ip address to a cluster
-        :param app_name:
-        :param path:
-        :param file_system:
+        :param master: 'Master', 'local' or ip address to a cluster
+        :param app_name: Spark app name
+        :param path: path to the checkpoint folder
+        :param checkpoint: If True create a checkpoint folder
+        :param file_system: 'local' or 'hadoop'
         """
         if verbose is True:
             level = logging.INFO
@@ -45,13 +47,14 @@ class Optimus:
 
         logging.info(STARTING_OPTIMUS)
         Spark.instance = Spark(master, app_name)
-        self.set_check_point_folder(path, file_system)
+        if checkpoint is True:
+            self.set_check_point_folder(path, file_system)
 
         logging.info(SUCCESS)
 
         self.create = Create()
         self.load = Load()
-        # self.read = self.spark().read
+        self.read = self.spark.read
 
     @property
     def spark(self):
