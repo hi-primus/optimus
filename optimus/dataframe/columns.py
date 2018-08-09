@@ -1082,6 +1082,22 @@ def cols(self):
 
         return df
 
+    # TODO: Maybe we could merge this with un unnest. Like unnesting to the same column
+    @add_attr(cols)
+    def split(columns, mark):
+        """
+        A shortcut to the Apache Spark split
+        :param columns:
+        :param mark: split separator
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        def _split(col_name, args):
+            return F.split(F.col(col_name), mark)
+
+        return apply_exp(columns, _split)
+
     @add_attr(cols)
     def cell(column):
         """
