@@ -177,3 +177,33 @@ class TestDataFrameCols(object):
         )
 
         assert (expected_df.collect() == actual_df.collect())
+
+    def test_append_number(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1, 8),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.append("num3", 1)
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1, 8, 1),
+                ("excited", 2, 8, 1)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True),
+                ("num3", IntegerType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
