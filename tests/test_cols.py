@@ -221,7 +221,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.cols.append([("new_col_4", "test"),
+        actual_df = source_df.cols.append([("new_col_4", "test"),
                                                 ("new_col_5", source_df['num1']*2),
                                                 ("new_col_6", [1, 2, 3])
                                                 ])
