@@ -31,7 +31,7 @@ def add_attr(class_):
             time1 = time.time()
             ret = func(*args, **kwargs)
             time2 = time.time()
-            print('{:s} function took {:.3f} ms'.format(func.__name__, (time2 - time1) * 1000.0))
+            print('{:s} function took {:.3f} sec'.format(func.__name__, (time2 - time1)))
             return ret
 
         setattr(class_, func.__name__, wrapper)
