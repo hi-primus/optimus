@@ -658,20 +658,34 @@ def cols(self):
     @add_attr(cols)
     def remove_special_chars(columns):
         """
-        Remove accents in specific columns
+        Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+        This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
 
         columns = parse_columns(self, columns)
+        regex = re.compile("[%s]" % re.escape(string.punctuation))
 
-        def _remove_special_chars(col_name, attr):
-            # Remove all punctuation and control characters
-            for punct in (set(col_name) & set(string.punctuation)):
-                col_name = col_name.replace(punct, "")
-            return col_name
+        def _remove_special_chars(value, attr):
+            return regex.sub("", value)
 
-        df = apply(columns, _remove_special_chars, "str")
+        df = apply(columns, _remove_special_chars, "string")
+        return df
+
+    @add_attr(cols)
+    def remove_white_spaces(columns):
+        """
+        Remove all the white spaces from a string
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        def _remove_white_spaces(col_name, args):
+            return F.regexp_replace(F.col(col_name), " ", "")
+
+        df = apply_exp(columns, _remove_white_spaces)
         return df
 
     @add_attr(cols)
