@@ -26,17 +26,16 @@ def melt(self, df, id_vars, value_vars, var_name="variable", value_name="value")
     :return:
     """
 
-    # Create array<struct<variable: str, value: ...>>
-    _vars_and_vals = [*(
+    vars_and_vals = [*(
         F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name))
         for c in value_vars)]
 
     # Add to the DataFrame and explode
-    _tmp = df.withColumn("_vars_and_vals", F.explode(F.array(_vars_and_vals)))
+    df = df.withColumn("vars_and_vals", F.explode(F.array(vars_and_vals)))
 
     cols = id_vars + [
-        F.col("_vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
-    return _tmp.select(*cols)
+        F.col("vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
+    return df.select(*cols)
 
 
 @add_method(DataFrame)
@@ -100,17 +99,13 @@ def sql(self, sql_expression):
     :return: Dataframe with columns changed by SQL statement.
     """
 
-    self._assert_type_str(sql_expression, "sql_expression")
-
     sql_transformer = SQLTransformer(statement=sql_expression)
 
-    self._df = sql_transformer.transform(self)
-
-    return self
+    return sql_transformer.transform(self)
 
 
-@add_attr(DataFrame)
-def table(self, columns=None, limit=100):
+@add_method(DataFrame)
+def table(self, limit=100,  columns=None):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self
@@ -119,8 +114,6 @@ def table(self, columns=None, limit=100):
     :return:
     """
 
-    if columns is None:
-        columns = "*"
     columns = parse_columns(self, columns)
 
     data = collect_to_dict(self.select(columns).limit(limit).collect())
@@ -137,3 +130,11 @@ def table(self, columns=None, limit=100):
 
     output = template.render(cols=dtypes, data=data)
     display(HTML(output))
+
+
+#@add_method(DataFrame)
+#def table(self, limit=100):
+#    columns = "*"
+#    columns = parse_columns(self, columns)
+
+#    self.table(columns, limit)
