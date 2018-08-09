@@ -632,7 +632,9 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        return apply_exp(columns, _reverse, filter_col_by_dtypes="string")
+        df = apply_exp(columns, _reverse, filter_col_by_dtypes="string")
+
+        return df
 
     @add_attr(cols)
     def remove_accents(columns):
@@ -708,14 +710,14 @@ def cols(self):
         # Asserting if column if in dataFrame:
         validate_columns_names(self, col_name)
 
-        def _date_transform(col_name, attr):
-            new_col = attr[0]
-            current_format = attr[1]
-            output_format = attr[2]
-            return F.date_format(F.unix_timestamp(col_name, current_format).cast("timestamp"), output_format).alias(
+        def _date_transform(new_col, attr):
+            _col_name = attr[0]
+            _current_format = attr[1]
+            _output_format = attr[2]
+            return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
                 new_col)
 
-        return apply_exp(col_name, _date_transform, [new_col, current_format, output_format])
+        return apply_exp(new_col, _date_transform, [col_name, current_format, output_format])
 
     @add_attr(cols)
     def years_between(col_name, new_col, date_format):
@@ -1037,19 +1039,20 @@ def cols(self):
 
         return df
 
-
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
         """
         Split array or string in different columns
         :param columns: Columns to be un-nested
+        :param mark: is column is string
         :param n: Number of rows to un-nested
+        :param index:
         :return: Spark DataFrame
         """
 
-        flag_n = None
+        infer_n = None
         if n is None:
-            flag_n = True
+            infer_n = True
 
         columns = parse_columns(self, columns)
 
@@ -1066,7 +1069,7 @@ def cols(self):
 
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
-                if flag_n is True:
+                if infer_n is True:
                     n = len(self.cols.cell(col_name))
 
                 for i in builtins.range(n):
@@ -1076,7 +1079,7 @@ def cols(self):
             elif is_(col_dtype, StringType):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
-                if flag_n is True:
+                if infer_n is True:
                     n = len(self.cols.cell(col_name).split(mark))
 
                 if is_int(index):
@@ -1087,7 +1090,7 @@ def cols(self):
                 for i in r:
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
-            # Vectorp
+            # Vector
             elif is_(col_dtype, VectorUDT):
                 def extract(row):
                     return row + tuple(row.vector.toArray().tolist())
@@ -1142,7 +1145,7 @@ def cols(self):
             df = df.groupBy(temp_col).agg(F.min(col_name).alias('min'),
                                           F.max(col_name).alias('max'),
                                           F.count(temp_col).alias('count')).orderBy(temp_col)
-            df= df.cols.drop(temp_col)
+            df = df.cols.drop(temp_col)
         return df
 
     @add_method(cols)
