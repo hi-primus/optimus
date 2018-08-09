@@ -1,5 +1,5 @@
 from optimus import Optimus
-from pyspark.sql.types import StringType, IntegerType
+from pyspark.sql.types import StringType, IntegerType, ArrayType
 from pyspark.sql import functions as F
 
 op = Optimus()
@@ -207,3 +207,39 @@ class TestDataFrameCols(object):
         )
 
         assert (actual_df.collect() == expected_df.collect())
+
+    def test_append_advanced(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1, 8),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.cols.append([("new_col_4", "test"),
+                                                ("new_col_5", source_df['num1']*2),
+                                                ("new_col_6", [1, 2, 3])
+                                                ])
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1, 8, "test", 2, [1, 2, 3]),
+                ("excited", 2, 8, "test", 4, [1, 2, 3])
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True),
+                ("new_col_4", StringType(), True),
+                ("new_col_5", IntegerType(), True),
+                ("new_col_6", ArrayType(IntegerType()), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
