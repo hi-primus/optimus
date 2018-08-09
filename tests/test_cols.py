@@ -222,9 +222,9 @@ class TestDataFrameCols(object):
         )
 
         actual_df = source_df.cols.append([("new_col_4", "test"),
-                                                ("new_col_5", source_df['num1']*2),
-                                                ("new_col_6", [1, 2, 3])
-                                                ])
+                                           ("new_col_5", source_df['num1'] * 2),
+                                           ("new_col_6", [1, 2, 3])
+                                           ])
 
         expected_df = op.create.df(
             rows=[
@@ -242,4 +242,3 @@ class TestDataFrameCols(object):
         )
 
         assert (actual_df.collect() == expected_df.collect())
-
