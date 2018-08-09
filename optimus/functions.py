@@ -17,25 +17,20 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     :param attrs: If required attributes to be passed to the function
     :param func_return_type: Required bu UDF and Pandas UDF. It is necessary to define the return type
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
-    :return: A function
+    :return: A function, UDF or Pandas UDF
     """
 
-    if func_type == "column_exp":
-
-        msg = "Using 'Column Expression' to process column '{column}'"
-    elif (func_type is None or func_type == "pandas_udf") and is_pyarrow_installed() is True:
+    # By default is going to try to use pandas UDF
+    if func_type is None and is_pyarrow_installed() is True:
         func_type = "pandas_udf"
-        msg = "Using 'Pandas UDF' to process column '{column}'"
-    else:
-        func_type = "udf"
-        msg = "Using 'UDF' to process column '{column}'"
-
-    if verbose is True:
-        print(msg.format(column=col))
 
     types = ["column_exp", "udf", "pandas_udf"]
     if func_type not in types:
         RaiseIfNot.value_error(func_type, types)
+
+    if verbose is True:
+        print("Using '{func_type}' to process column '{column}' with function {func_name}"
+              .format(func_type=func_type, column=col, func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
