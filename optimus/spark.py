@@ -31,7 +31,7 @@ class Spark:
         logging.info("-----")
         logging.info(STARTING_SPARK)
         self.spark()
-        #self.get_sc().addPyFile("../optimus/helpers/checkit.py")
+        # self.get_sc().addPyFile("../optimus/helpers/checkit.py")
 
     @lru_cache(maxsize=None)
     def spark(self):
@@ -42,7 +42,7 @@ class Spark:
 
         return (SparkSession
                 .builder
-                # .enableHiveSupport()
+                .enableHiveSupport()
                 .master(self.master)
                 .appName(self.app_name)
                 .getOrCreate()
