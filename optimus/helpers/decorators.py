@@ -2,13 +2,12 @@
 # Decorator to attach a custom functions to a class
 
 from functools import wraps
-import time
 
 
-def add_method(class_):
+def add_method(cls):
     """
     Use it as a decorator to add a function to specific class
-    :param class_: Class in which the function will be attached
+    :param cls: Class in which the function will be attached
     :return:
     """
 
@@ -17,26 +16,20 @@ def add_method(class_):
         def wrapper(self, *args, **kwargs):
             return func(self, *args, **kwargs)
 
-        setattr(class_, func.__name__, wrapper)
-        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-        return func  # returning func means func can still be used normally
+        setattr(cls, func.__name__, wrapper)
+        return func
 
     return decorator
 
 
-def add_attr(class_):
+def add_attr(cls):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            time1 = time.time()
-            ret = func(*args, **kwargs)
-            time2 = time.time()
-            print('{:s} function took {:.3f} sec'.format(func.__name__, (time2 - time1)))
-            return ret
+            return func(*args, **kwargs)
 
-        setattr(class_, func.__name__, wrapper)
-        # Note we are not binding func, but wrapper which accepts self but does exactly the same as func
-        return func  # returning func means func can still be used normally
+        setattr(cls, func.__name__, wrapper)
+        return func
 
     return decorator
 
