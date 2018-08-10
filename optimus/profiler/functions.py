@@ -1,7 +1,9 @@
-from optimus.helpers.constants import *
-
 import json
 import math
+
+from pyspark.sql import functions as F
+
+from optimus.helpers.constants import *
 
 confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
 
@@ -51,18 +53,18 @@ def write_json(data, path):
         json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
 
 
-def human_readable_bytes(num, suffix='B'):
+def human_readable_bytes(value, suffix='B'):
     """
     Return a human readable file size
-    :param num:
+    :param value:
     :param suffix:
     :return:
     """
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+        if abs(value) < 1024.0:
+            return "%3.1f%s%s" % (value, unit, suffix)
+        value /= 1024.0
+    return "%.1f%s%s" % (value, 'Yi', suffix)
 
 
 def sample_size(population_size, confidence_level, confidence_interval):
@@ -92,4 +94,33 @@ def sample_size(population_size, confidence_level, confidence_interval):
     # Adjust sample size fo finite population
     n = n_0 / (1 + ((n_0 - 1) / float(n)))
 
-    return int(math.ceil(n))  # THE SAMPLE SIZE
+    return int(math.ceil(n))  # sample size
+
+
+def bucketizer_expr(df, column, bins):
+    """
+    Create a column expression that create buckets in a range of values
+    :param column: Column to be processed
+    :param min_val: min value
+    :param max_val: max value
+    :param bins: number og bins
+    :return:
+    """
+
+    min_val = df.cols.min(column)
+    max_val = df.cols.max(column)
+
+    range_value = (max_val - min_val) / bins
+    low = min_val
+
+    buckets = []
+    for i in range_value(0, bins):
+        high = low + range_value
+        buckets.append({"min": low, "max": high, "bucket": i})
+        low = high
+
+    expr = None
+    for b in buckets:
+        expr = expr + F.when((F.col(column) >= b["min"]) & (F.col(column) <= b["max"]), b["bucket"]).alias(
+            column + "_bucket")
+    return expr
