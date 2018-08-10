@@ -1,9 +1,7 @@
-import string
-
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
-from pyspark.sql.types import *
 
+from optimus.helpers.functions import collect_to_dict
 from optimus.helpers.functions import parse_columns
 
 
@@ -53,9 +51,18 @@ class KeyCollision:
                   .cols.remove_special_chars(output_col)
                   .cols.remove_accents(output_col)
                   .cols.apply(output_col, func, "string", [sort_tokens, remove_duplicates])
+                  .repartition(1)
+                  .cache()
                   )
 
-        return df
+            # Clustering
+            cluster = (df.groupBy(output_col)
+                       .agg(F.count(output_col).alias("count"), F.first(F.col(col_name)).alias(col_name))
+                       .sort(F.desc("count"))
+                       .select(col_name, "count", F.col(output_col).alias("fingerprint"))
+                       )
+
+        return collect_to_dict(cluster.collect())
 
     def n_gram_fingerprint(self, column, n_size):
         """
@@ -65,13 +72,14 @@ class KeyCollision:
         :return:
         """
 
-        output_col = column + "ngram"
-        nGramCol = "ngram"
+        output_col = column + "_ngram"
+        nGramCol = column + "_ngram_fingerprint"
 
         df = self.df
         df = (df.select(column)
               .groupBy(column)
               .count()
+              .select('count', column)
               .withColumn(output_col, F.col(column))
               .repartition(1)  # Needed for optimization in a single machine
               .cache())
@@ -83,6 +91,8 @@ class KeyCollision:
               .cols.remove_accents(output_col)
               # For create n-grams we need a Array type column
               .cols.split(output_col, "")
+              .repartition(1)  # Needed for optimization in a single machine
+              .cache()
               )
 
         n_gram = NGram(n=n_size, inputCol=output_col, outputCol=nGramCol)
@@ -100,6 +110,14 @@ class KeyCollision:
 
             return value
 
-        df = df.cols.apply(nGramCol, func, "string")
+        df = (df
+              .cols.apply(nGramCol, func, "string")
+              )
 
-        return df
+        # Clustering
+        cluster = (df.groupBy(nGramCol)
+                   .agg(F.count(nGramCol).alias("count"), F.first(F.col(column)).alias(column))
+                   .sort(F.desc("count"))
+                   .select(column, "count", F.col(nGramCol).alias("fingerprint")))
+
+        return collect_to_dict(cluster.collect())
