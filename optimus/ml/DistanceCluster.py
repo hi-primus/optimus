@@ -1,39 +1,21 @@
 from pyspark.sql.functions import *
-from pyspark.sql.types import *
-from pyspark.ml.feature import NGram
-from functools import reduce
-import string
+
+from optimus.ml.Keycollision import KeyCollision
 
 
-class DistanceCluster():
+class DistanceCluster:
     def __init__(self, df):
         self.df = df
         self.keyer = KeyCollision(df)
 
-    def validate(column):
-        # Asserting data variable is string:
-        assert type(column) == type('s'), "Error: Column argument must be a string."
-
-        # If None or [] is provided with column parameter:
-        assert column != "", "Error: Column can not be a empty string"
-
-        # Filters all string columns in dataFrame
-        validCols = [c for (c, t) in filter(lambda t: t[1] == 'string', self.df.dtypes)]
-
-        # asserts the column parameter is a string column of the dataFrame
-        assert column in validCols, 'Error: Columns or column does not exist in the dataFrame or is numberic column'
-
-    """
-    Performs clustering on a string column 'column' based on the levenshtein distance
-    between all values
-    """
-
-    def __cluster_leven__(self, column, threshold):
+    # def ppm Reference https://github.com/xiaowec/PPM-coding/blob/master/ppm.py
+    def _cluster_leven(self, column, threshold):
         first_col = 'fingerprint'
         second_col = '_fingerprint_'
         distance_col = 'levenshtein'
 
         fdf = self.keyer.fingerprints(column, first_col)
+
         fdict = (fdf.map(lambda r: r[first_col])
                  .zip(fdf.map(lambda f: f[column]))
                  .map(lambda x: (x[0], [x[1]]))
@@ -68,13 +50,13 @@ class DistanceCluster():
         smallest = 0  # smallest distance found in the DF
 
         # first, clustering is populated with all fdict values with more than one item
-        def addItem(value):
+        def add_item(value):
             i = len(clustering)
             clustering[i] = value
 
         for i, v in fdict.items():
-            if (len(v) > 1):
-                addItem(v)
+            if len(v) > 1:
+                add_item(v)
 
                 # get the smallest distance (as an int) present in the matrix
         try:
@@ -83,7 +65,7 @@ class DistanceCluster():
             assert False, "Error: Dataframe does not contain distinct values"
 
         # cluster procedure, clustering will be perfomed over rows with levenshtein < threshold
-        while (smallest <= threshold):
+        while smallest <= threshold:
 
             grouped = False  # flag to determine if pair has been added to a cluster
 
@@ -136,9 +118,13 @@ class DistanceCluster():
         fc.unpersist()
         return clustering
 
-    """Returns a dictionary containing clusters of strings, associated by the Levenshtein distance"""
+    def levenshtein_cluster(self, column, distance):
+        """
+        Returns a dictionary containing clusters of strings, associated by the Levenshtein distance
+        :param column:
+        :param distance:
+        :return:
+        """
 
-    def levenshteinCluster(self, column, distance):
-        validate(column)
 
-        return self.__cluster_leven__(column, distance)
+        return self._cluster_leven(column, distance)
