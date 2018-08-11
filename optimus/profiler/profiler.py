@@ -8,7 +8,9 @@ from IPython.core.display import display, HTML
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
-    write_json, sample_size
+    write_json, sample_size, create_buckets
+
+from optimus.profiler.functions import bucketizer
 
 
 class Profiler:
@@ -131,7 +133,6 @@ class Profiler:
         :param columns: Columns that you want to profile
         :return: json object with the
         """
-
         columns = parse_columns(df, columns)
         # Initialize Objects
         column_info = {}
@@ -160,9 +161,22 @@ class Profiler:
 
         uniques = df.cols.count_uniques(columns)
 
-        r = df.cols._exprs([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance], columns)
+        # buckets = bucketizer(df, columns, 10)
+        # df.cols.apply_exp()
+        # return df.cols._exprs([F.min, F.max], columns)
 
-        return na
+        data = df.cols._exprs([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance], columns)
+        splits = {}
+        buckets = 10
+
+        # print(data)
+        for k, v in data.items():
+            splits[k] = create_buckets(v["min"], v["max"], buckets)
+        print(splits)
+        return bucketizer(df, columns, splits=splits)
+
+        return
+        # return df.cols.apply_exp("ssss", buckets)
 
         for col_name in columns:
             col_info = {}

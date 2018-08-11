@@ -4,6 +4,7 @@ import math
 from pyspark.sql import functions as F
 
 from optimus.helpers.constants import *
+from optimus.helpers.functions import parse_columns
 
 confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
 
@@ -97,30 +98,58 @@ def sample_size(population_size, confidence_level, confidence_interval):
     return int(math.ceil(n))  # sample size
 
 
-def bucketizer_expr(df, column, bins):
+def bucketizer(df, columns, splits):
     """
-    Create a column expression that create buckets in a range of values
-    :param column: Column to be processed
-    :param min_val: min value
-    :param max_val: max value
-    :param bins: number og bins
+
+    :param df:
+    :param columns:
+    :param splits:
     :return:
     """
+    columns = parse_columns(df, columns)
 
-    min_val = df.cols.min(column)
-    max_val = df.cols.max(column)
+    def _bucketizer(col_name, args):
+        """
+        Create a column expression that create buckets in a range of values
+        :param col_name: Column to be processed
+        :return:
+        """
+        out_in_columns = args[1]
+        col_name_input = out_in_columns[col_name]
+        buckets = args[0][col_name_input]
+        expr = None
+        i = 0
 
-    range_value = (max_val - min_val) / bins
-    low = min_val
+        for b in buckets:
+            if i == 0:
+                expr = F.when((F.col(col_name_input) >= b["low"]) & (F.col(col_name_input) <= b["high"]), b["bucket"])
+            else:
+                expr = expr.when((F.col(col_name_input) >= b["low"]) & (F.col(col_name_input) <= b["high"]), b["bucket"])
+            i = i + 1
+
+        return expr
+
+    output_columns = [c + "_buckets" for c in columns]
+    # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
+    df = df.cols.apply_exp(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
+
+    return df
+
+
+def create_buckets(low_val, high_val, bins):
+    """
+    Create a dictionary with bins
+    :param low_val: low range
+    :param high_val: high range
+    :param buckets: number of buckets
+    :return:
+    """
+    range_value = (high_val - low_val) / bins
+    low = low_val
 
     buckets = []
-    for i in range_value(0, bins):
+    for i in range(0, bins):
         high = low + range_value
-        buckets.append({"min": low, "max": high, "bucket": i})
+        buckets.append({"low": low, "high": high, "bucket": i})
         low = high
-
-    expr = None
-    for b in buckets:
-        expr = expr + F.when((F.col(column) >= b["min"]) & (F.col(column) <= b["max"]), b["bucket"]).alias(
-            column + "_bucket")
-    return expr
+    return buckets
