@@ -296,3 +296,57 @@ class TestDataFrameCols(object):
         )
 
         assert (actual_df.collect() == expected_df.collect())
+
+    def test_cast_simple(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.cast("num", "string")
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", StringType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    def test_cast_advanced(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.cast("*", "string")
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", StringType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
