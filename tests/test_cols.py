@@ -160,7 +160,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        def func(col_name):
+        def func(col_name, attrs):
             return F.col(col_name) * 2
 
         actual_df = source_df.cols.apply_exp("num1", func)
