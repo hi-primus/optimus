@@ -1,5 +1,6 @@
 from optimus import Optimus
-from pyspark.sql.types import StringType, IntegerType, ArrayType
+from pyspark.sql.types import *
+from pyspark.sql import Row
 from pyspark.sql import functions as F
 
 op = Optimus()
@@ -365,13 +366,35 @@ class TestDataFrameCols(object):
 
         actual_df = source_df.cols.keep("num")
 
-        expected_df = op.create.df(
+        schema = StructType([StructField('num', IntegerType())])
+        rows = [Row(num=1), Row(num=2)]
+
+        expected_df = op.spark.createDataFrame(rows, schema)
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    def test_move(self):
+        source_df = op.create.df(
             rows=[
-                1,
-                2
+                ("happy", 1),
+                ("excited", 2)
             ],
             cols=[
+                ("emotion", StringType(), True),
                 ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.move("num", "emotion", "after")
+
+        expected_df = op.create.df(
+            rows=[
+                (1, "happy"),
+                (2, "excited")
+            ],
+            cols=[
+                ("num", IntegerType(), True),
+                ("emotion", StringType(), True)
             ]
         )
 

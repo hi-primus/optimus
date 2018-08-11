@@ -21,9 +21,18 @@ class Spark:
 
         logging.info(JUST_CHECKING)
         logging.info("-----")
-        logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
-        logging.info("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
-        logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
+        try:
+            logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
+        except:
+            logging.info("You don't have PYSPARK_PYTHON set")
+        try:
+            logging.info("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
+        except:
+            logging.info("You don't have SPARK_HOME set")
+        try:
+            logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
+        except:
+            logging.info("You don't have JAVA_HOME set")
         if is_pyarrow_installed() is True:
             logging.info("Pyarrow Installed")
         else:
