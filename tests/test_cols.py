@@ -160,7 +160,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        def func(col_name, attrs):
+        def func(col_name):
             return F.col(col_name) * 2
 
         actual_df = source_df.cols.apply_exp("num1", func)
@@ -238,6 +238,60 @@ class TestDataFrameCols(object):
                 ("new_col_4", StringType(), True),
                 ("new_col_5", IntegerType(), True),
                 ("new_col_6", ArrayType(IntegerType()), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    def test_rename_simple(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.rename([('num', 'number')])
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("number", IntegerType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    def test_rename_advanced(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.rename(func=str.upper)
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("EMOTION", StringType(), True),
+                ("NUM", IntegerType(), True)
             ]
         )
 
