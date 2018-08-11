@@ -385,7 +385,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.move("num", "emotion", "after")
+        actual_df = source_df.cols.move("emotion", "after", "num")
 
         expected_df = op.create.df(
             rows=[
