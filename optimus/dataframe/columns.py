@@ -17,7 +17,7 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int
+    is_function, is_one_element, is_type, is_int, is_dict
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
@@ -382,27 +382,60 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def _exprs(func, columns):
+    def _exprs(funcs, columns):
         """
-        Helper function to manage aggregation functions
-        :param func: Aggregation function from Apache Spark
+        Helper function to multiple Column expression to multiple columns
+        :param funcs: Aggregation function from Apache Spark
         :param columns: list of columns names or a string (a column name).
         :return:
         """
-        # Ensure that is a list
-        func = val_to_list(func)
 
-        # Filter only numeric columns
+        def parse_col_names_funcs_to_keys(data):
+            """
+            Helper function that return a formatted json with function:value inside columns. Transform from
+            {'max_antiguedad_anos': 15,
+            'max_m2_superficie_construida': 1800000,
+            'min_antiguedad_anos': 2,
+            'min_m2_superficie_construida': 20}
+
+            to
+
+            {'m2_superficie_construida': {'min': 20, 'max': 1800000}, 'antiguedad_anos': {'min': 2, 'max': 15}}
+
+            :param data: json data
+            :return: json
+            """
+            functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance"]
+            result = {}
+            if is_dict(data):
+                for k, v in data.items():
+                    for f in functions_array:
+                        temp_func_name = f + "_"
+                        if k.startswith(temp_func_name):
+                            _col_name = k[len(temp_func_name):]
+                            result.setdefault(_col_name, {})[f] = v
+                return result
+            else:
+                return data
+
         columns = parse_columns(self, columns)
 
-        # Aggregate
-        df = self
-        exprs = []
-        for c in columns:
-            for a in func:
-                exprs.append(a(c).alias(a.__name__ + "_" + c))
+        # Ensure that is a list
+        funcs = val_to_list(funcs)
 
-        return format_dict(collect_to_dict(df.agg(*exprs).collect()))
+        df = self
+
+        # Create a Column Expression to every column
+        exprs = []
+        for col_name in columns:
+            for func in funcs:
+                exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
+
+        return (
+            parse_col_names_funcs_to_keys(
+                format_dict(
+                    collect_to_dict(
+                        df.agg(*exprs).collect()))))
 
     # Quantile statistics
     @add_attr(cols)
@@ -806,7 +839,7 @@ def cols(self):
                 df = df.cols.cast(c, "string")
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
 
-        # print(df)
+
         result = format_dict(collect_to_dict(df.select(*expr).collect()))
         # except AnalysisException:
         #    pass
@@ -1050,6 +1083,7 @@ def cols(self):
         :return: Spark DataFrame
         """
 
+        # If a number of split was not defined try to infer the lenght with the first element
         infer_n = None
         if n is None:
             infer_n = True
