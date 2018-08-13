@@ -5,6 +5,10 @@ from sparkdl import DeepImageFeaturizer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from sparkdl import DeepImagePredictor
 
+from optimus import Optimus
+
+op = Optimus()
+
 
 class DL:
     @staticmethod
