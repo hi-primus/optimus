@@ -400,9 +400,9 @@ def cols(self):
     @add_attr(cols)
     def _exprs(funcs, columns):
         """
-        Helper function to multiple Column expression to multiple columns
-        :param funcs: Aggregation function from Apache Spark
-        :param columns: list of columns names or a string (a column name).
+        Helper function to apply multiple columns expression to multiple columns
+        :param funcs: Aggregation functions from Apache Spark
+        :param columns: list or string of columns names or a .
         :return:
         """
 
@@ -421,7 +421,8 @@ def cols(self):
             :param data: json data
             :return: json
             """
-            functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance"]
+            functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
+                               "approx_count_distinct", "na", "zeros"]
             result = {}
             if is_dict(data):
                 for k, v in data.items():
@@ -858,7 +859,6 @@ def cols(self):
             if is_(df.cols.schema_dtypes(c), (StructType, BooleanType)):
                 df = df.cols.cast(c, "string")
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
-
 
         result = format_dict(collect_to_dict(df.select(*expr).collect()))
         # except AnalysisException:
