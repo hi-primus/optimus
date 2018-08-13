@@ -84,7 +84,7 @@ def cols(self):
         return df_result
 
     @add_attr(cols)
-    def filter(columns=None, regex=None, data_type=None):
+    def select(columns=None, regex=None, data_type=None):
         """
         Select columns using index, column name, regex to data type
         :param columns:
@@ -354,7 +354,7 @@ def cols(self):
 
         if regex:
             r = re.compile(regex)
-            columns = list(filter(r.match, self.columns))
+            columns = list((r.match, self.columns))
 
         columns = parse_columns(self, columns)
         return self.select(*columns)
@@ -389,7 +389,7 @@ def cols(self):
         df = self
         if regex:
             r = re.compile(regex)
-            columns = list(filter(r.match, self.columns))
+            columns = list((r.match, self.columns))
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
 
