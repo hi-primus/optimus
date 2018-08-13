@@ -425,7 +425,11 @@ def cols(self):
 
         df = self
 
-        # Create a Column Expression to every column
+        # Parse the columns to float. Seems that spark can handle some aggregation with string columns giving
+        # unexpected results
+        df = df.cols.cast(columns, "float")
+
+        # Create a Column Expression for every column
         exprs = []
         for col_name in columns:
             for func in funcs:
