@@ -6,7 +6,6 @@ from functools import reduce
 
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer
-from pyspark.ml.feature import QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
@@ -25,6 +24,8 @@ from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list
 from optimus.helpers.raiseit import RaiseIfNot
+from optimus.profiler.functions import bucketizer
+from optimus.profiler.functions import create_buckets
 
 
 def cols(self):
@@ -422,7 +423,7 @@ def cols(self):
             :return: json
             """
             functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                               "approx_count_distinct", "na", "zeros"]
+                               "approx_count_distinct", "na", "zeros", "percentile"]
             result = {}
             if is_dict(data):
                 for k, v in data.items():
@@ -1176,34 +1177,10 @@ def cols(self):
         :param column:
         :return:
         """
-        return self.cols.filter(column).first()[0]
+        return self.cols.select(column).first()[0]
 
     @add_method(cols)
-    def _hist(columns, bins=10):
-        """
-
-        :param column:
-        :param bins:
-        :return:
-        """
-
-        # Quantile Discretizer needs a numeric columns
-        df = self.cols.cast(columns, "double")
-
-        for col_name in columns:
-            temp_col = "bucket_" + col_name
-            discretizer = QuantileDiscretizer(numBuckets=bins, inputCol=col_name, outputCol=temp_col)
-
-            df = discretizer.fit(df).transform(df)
-
-            df = df.groupBy(temp_col).agg(F.min(col_name).alias('min'),
-                                          F.max(col_name).alias('max'),
-                                          F.count(temp_col).alias('count')).orderBy(temp_col)
-            df = df.cols.drop(temp_col)
-        return df
-
-    @add_method(cols)
-    def hist(columns, bins=10):
+    def hist(columns, min_value, max_value, buckets=10):
         """
         Get the histogram column
         :param columns: Columns to be processed
@@ -1211,7 +1188,24 @@ def cols(self):
         :return: json
         """
         columns = parse_columns(self, columns)
-        return format_dict(collect_to_dict(self.cols._hist(columns, bins).collect()))
+        for col_name in columns:
+            # Create splits
+            splits = create_buckets(min_value, max_value, buckets)
+
+            # Create buckets in the dataframe
+            df = bucketizer(self, col_name, splits=splits)
+
+            counts = (collect_to_dict(
+                df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
+                    col_name + "_buckets", "value").sort(F.asc("value")).collect()
+            ))
+
+            hist = []
+            for x, y in zip(counts, splits):
+                if x["value"] is not None and x["count"] != 0:
+                    hist.append({"lower": y["lower"], "upper": y["upper"], "value": x["count"]})
+
+        return hist
 
     @add_method(cols)
     def schema_dtypes(columns):
