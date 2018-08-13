@@ -1,12 +1,13 @@
 from functools import reduce
-import dateutil.parser
 
+import dateutil.parser
+from fastnumbers import isint, isfloat
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
+
+from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_name, one_list_to_val
 from optimus.helpers.raiseit import RaiseIfNot
-from optimus.helpers.checkit import is_data_type
-
-from pyspark.sql import functions as F
-from pyspark.sql import DataFrame
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=True):
@@ -135,33 +136,6 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         data_type = parse_python_dtypes(data_type)
 
     def pandas_udf_func(v):
-
-        def str_to_int(value):
-            """
-            Check if a str can be converted to int
-            :param value:
-            :return:
-            """
-            try:
-                int(value)
-                return True
-
-            except ValueError:
-                return False
-
-        def str_to_float(value):
-            """
-            Check if a str can be converted to float
-            :param value:
-            :return:
-            """
-            try:
-                float(value)
-                return True
-
-            except ValueError:
-                pass
-
         def str_to_boolean(value):
             """
             Check if a str can be converted to boolean
@@ -189,17 +163,13 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             if isinstance(value, bool):
                 _data_type = "bool"
             # _data_type = data_type
-            elif isinstance(value, int):  # Check if value is integer
+            elif isint(value):  # Check if value is integer
                 _data_type = "int"
-            elif isinstance(value, float):
+            elif isfloat(value):
                 _data_type = "float"
             # if string we try to parse it to int, float or bool
             elif isinstance(value, str):
-                if str_to_int(value):
-                    _data_type = "int"
-                elif str_to_float(value):
-                    _data_type = "float"
-                elif str_to_boolean(value):
+                if str_to_boolean(value):
                     _data_type = "bool"
                 elif str_to_date(value):
                     _data_type = "date"
