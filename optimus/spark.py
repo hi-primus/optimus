@@ -7,6 +7,9 @@ from optimus.helpers.constants import *
 from optimus.helpers.functions import is_pyarrow_installed
 
 
+# instance = None
+
+
 class Spark:
     def __init__(self, master="local[*]", app_name="optimus"):
         """
@@ -21,6 +24,10 @@ class Spark:
 
         logging.info(JUST_CHECKING)
         logging.info("-----")
+        try:
+            logging.info("HADOOP_HOME=" + os.environ.get("HADOOP_HOME"))
+        except:
+            logging.info("You don't have HADOOP_HOME set")
         try:
             logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
         except:
@@ -48,9 +55,12 @@ class Spark:
         Return the Spark Session
         :return: None
         """
-
+        from os.path import abspath
+        warehouse_location = abspath('spark-warehouse')
         return (SparkSession
                 .builder
+                #.config("hive.metastore.warehouse.dir", warehouse_location)
+                #.config("spark.sql.warehouse.dir", warehouse_location)
                 .enableHiveSupport()
                 .master(self.master)
                 .appName(self.app_name)
