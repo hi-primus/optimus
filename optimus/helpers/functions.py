@@ -1,11 +1,11 @@
-import re
-import random
 import itertools
+import random
+import re
 
 from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function
+    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function, is_dict
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES
 from optimus.helpers.raiseit import RaiseIfNot
 
@@ -24,7 +24,6 @@ def parse_spark_dtypes(value):
     :param value:
     :return:
     """
-
     try:
         data_type = SPARK_DTYPES[SPARK_SHORT_DTYPES[value]]
     except KeyError:
@@ -77,7 +76,7 @@ def one_list_to_val(val):
     :param val:
     :return:
     """
-    if isinstance(val, list) and len(val) == 1:
+    if is_list_of_one_element(val):
         result = val[0]
     else:
         result = val
@@ -131,11 +130,11 @@ def format_dict(val):
     """
 
     def _format_dict(_val):
-        if not isinstance(_val, dict):
+        if not is_dict(_val):
             return _val
 
         for k, v in _val.items():
-            if isinstance(v, dict):
+            if is_dict(v):
                 if len(v) == 1:
                     _val[k] = next(iter(v.values()))
             else:
@@ -145,9 +144,12 @@ def format_dict(val):
 
     if is_list_of_one_element(val):
         val = val[0]
-
     elif is_dict_of_one_element(val):
         val = next(iter(val.values()))
+
+
+    # Some aggregation like min or max return a string column
+
 
     # TODO: Maybe this can be done in a recursive way
     # We apply two passes to the dict so we can process internals dicts and the superiors ones
