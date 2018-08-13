@@ -6,11 +6,11 @@ import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.functions import parse_columns, collect_to_dict, format_dict
+from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
-    write_json, sample_size, create_buckets
+    write_json, sample_size
 
-from optimus.profiler.functions import bucketizer
+from pyspark.sql import DataFrameStatFunctions as SF
 
 
 class Profiler:
@@ -125,29 +125,139 @@ class Profiler:
         return results
 
     @staticmethod
-    def columns_new(df, columns):
+    def columns_sql(df, columns, buckets=10):
         """
         Get statistical information in json format
         count_data_type()
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
+        :param buckets:
         :return: json object with the
         """
+
         columns = parse_columns(df, columns)
+
         # Initialize Objects
         column_info = {}
-
         column_info['columns'] = {}
 
         rows_count = df.count()
         column_info['rows_count'] = rows_count
 
-        count_dtype = Profiler.count_data_types(df, columns)
-        # column_info["count_types"] = count_dtype["count_types"]
+        count_dtypes = Profiler.count_data_types(df, columns)
+        column_info["count_types"] = count_dtypes["count_types"]
 
         column_info['size'] = human_readable_bytes(df.size())
 
-        print(count_dtype)
+        exprs = []
+
+        def escape(value):
+            return "`" + value + "`"
+
+        for col_name in columns:
+            c = escape(col_name)
+            exprs.append("approx_percentile(" + c + ", array(1/20, 1/4, 1/2, 3/4, 19/20)) AS " + escape(
+                col_name + "_percentile"))
+            exprs.append("approx_count_distinct(" + c + ") AS " + escape(col_name + "_uniques"))
+            exprs.append("min(" + c + ") AS " + escape(col_name + "_min"))
+            exprs.append("max(" + c + ") AS " + escape(col_name + "_max"))
+            exprs.append("stddev(" + c + ") AS " + escape(col_name + "_stddev"))
+            exprs.append("sum(" + c + ") AS " + escape(col_name + "_sum"))
+            exprs.append("variance(" + c + ") AS " + escape(col_name + "_variance"))
+            exprs.append("mean(" + c + ") AS " + escape(col_name + "_mean"))
+            exprs.append("kurtosis(" + c + ") AS " + escape(col_name + "_kurtosis"))
+            exprs.append("skewness(" + c + ") AS " + escape(col_name + "_skewness"))
+            exprs.append("SUM(CASE WHEN" + c + "= 0 THEN 1 ELSE 0 END) AS " + escape(col_name + "_zeros"))
+            exprs.append("SUM(CASE WHEN " + c + " IS NULL OR " + c + "='' THEN 1 ELSE 0 END) AS " + escape(
+                col_name + "_missing"))
+
+            print(df.cols.hist(col_name, 0, 100, buckets))
+
+            # collect_to_dict(
+            #    df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).cols.rename(
+            #        col_name, "value").sort(F.desc("count")).collect())
+            print(collect_to_dict(df.sql(
+                "select " + c + ", count(" + c + ") AS count from table group by " + c + " ORDER BY count desc LIMIT 10").collect()))
+
+        exprs = "SELECT " + ",".join(exprs) + "FROM table"
+        df.show()
+        # print(collect_to_dict(df.sql(exprs).collect()))
+
+        return 1
+
+        for col_name in columns:
+            col_info = {}
+            col_info["stats"] = {}
+
+            column_type = count_dtypes["columns"][col_name]['type']
+
+            na = some_stats[col_name]["na"]
+            max_value = some_stats[col_name]["max"]
+            min_value = some_stats[col_name]["min"]
+
+            col_info['name'] = col_name
+            col_info['column_type'] = column_type
+
+            # Missing
+            col_info['stats']['missing_count'] = round(na, 2)
+            col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
+
+            if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
+                # Frequency
+                col_info['frequency'] = collect_to_dict(
+                    df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).cols.rename(
+                        col_name, "value").sort(F.desc("count")).collect())
+
+                # Uniques
+                uniques = some_stats[col_name].pop("approx_count_distinct")
+                col_info['stats']["uniques"] = uniques
+                col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 2)
+
+            # Numeric Column
+            if column_type == "numeric" or column_type == "date":
+                # Merge
+                col_info["stats"] = some_stats[col_name]
+
+            if column_type == "numeric":
+                # Additional Stats
+                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+                col_info['stats']['range'] = max_value - min_value
+                col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
+                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
+                                                           col_info['stats']['quantile'][0.25]
+
+                col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
+
+                column_info['columns'][col_name] = col_info
+
+                column_info['columns'][col_name]["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
+
+        return column_info
+
+    @staticmethod
+    def columns(df, columns, buckets=10):
+        """
+        Get statistical information in json format
+        count_data_type()
+        :param df: Dataframe to be processed
+        :param columns: Columns that you want to profile
+        :param buckets:
+        :return: json object with the
+        """
+
+        columns = parse_columns(df, columns)
+
+        # Initialize Objects
+        column_info = {}
+        column_info['columns'] = {}
+
+        rows_count = df.count()
+        column_info['rows_count'] = rows_count
+
+        count_dtypes = Profiler.count_data_types(df, columns)
+        column_info["count_types"] = count_dtypes["count_types"]
+
+        column_info['size'] = human_readable_bytes(df.size())
 
         def na(col_name):
             return F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name))
@@ -155,132 +265,64 @@ class Profiler:
         def zeros(col_name):
             return F.count(F.when(F.col(col_name) == 0, col_name))
 
-        data = df.cols._exprs(
-            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na, zeros],
+        some_stats = df.cols._exprs(
+            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
+             zeros],
             columns)
-        print(data)
-        # data = df.cols._exprs(
-        #    [F.approx_count_distinct], columns)
-        # Missing
+
         for col_name in columns:
             col_info = {}
-            col_info[col_name] = {}
-            col_info[col_name]["stats"] = {}
+            col_info["stats"] = {}
 
-            # na = df.cols.count_na(col_name)
-            # print(na)
+            column_type = count_dtypes["columns"][col_name]['type']
+
+            na = some_stats[col_name]["na"]
+            max_value = some_stats[col_name]["max"]
+            min_value = some_stats[col_name]["min"]
+
+            col_info['name'] = col_name
+            col_info['column_type'] = column_type
 
             # Missing
-            # col_info[col_name]['stats']['missing_count'] = round(na, 2)
-            # col_info[col_name]['stats']['p_missing'] = round(na / rows_count * 100, 2)
-
-            col_info[col_name]['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
-            # col_info['range'] = max_value - min_value
-            col_info[col_name]['median'] = col_info[col_name]['quantile'][0.5]
-            col_info[col_name]['interquartile_range'] = col_info[col_name]['quantile'][0.75] - \
-                                                        col_info[col_name]['quantile'][0.25]
-
-            col_info[col_name]['frequency'] = collect_to_dict(
-                df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).sort(F.desc("count")).collect())
-
-        print(col_info, data)
-
-        # Cast the results to numeric. Some functions like min or max return strings
-        def cast_dict(d, func):
-            for k, v in d.items():
-                if isinstance(v, dict):
-                    cast_dict(v, func)
-                else:
-                    d[k] = func(v)
-
-        cast_dict(data, float)
-
-        splits = {}
-        buckets = 10
-
-        # print(data)
-        for k, v in data.items():
-            splits[k] = create_buckets(v["min"], v["max"], buckets)
-
-        df = bucketizer(df, columns, splits=splits)
-
-        """for c in columns:
-            print(collect_to_dict(
-                df.groupBy(c + "_buckets").agg(F.count(c + "_buckets").alias("count")).cols.rename(c + "_buckets", c)
-                    .sort(F.asc(c)).collect()
-            ))"""
-
-        return df
-
-        # return df.cols.apply_exp("ssss", buckets)
-
-        for col_name in columns:
-            col_info = {}
-
-            # Get if a column is numerical or categorical
+            col_info['stats']['missing_count'] = round(na, 2)
+            col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
-                uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
-                    .orderBy('count', ascending=False)
+                # Frequency
+                col_info['frequency'] = collect_to_dict(
+                    df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).cols.rename(
+                        col_name, "value").sort(F.desc("count")).collect())
 
-                col_info['frequency'] = collect_to_dict(uniques_df.limit(10)
-                                                        .withColumn('percentage',
-                                                                    F.round(F.col('count') / rows_count * 100,
-                                                                            2))
-
-                                                        .collect())
-                # col_info['other_values'] = uniques_df.cols.sum(col_name)
-                uniques = uniques_df.count()
-                col_info['uniques_count'] = uniques
-                col_info['p_uniques'] = round(uniques / rows_count * 100, 2)
+                # Uniques
+                uniques = some_stats[col_name].pop("approx_count_distinct")
+                col_info['stats']["uniques"] = uniques
+                col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 2)
 
             # Numeric Column
             if column_type == "numeric" or column_type == "date":
-                # Quantile statistics
-                min_value = df.cols.min(col_name)
-                max_value = df.cols.max(col_name)
-                col_info['min'] = min_value
-                col_info['max'] = max_value
+                # Merge
+                col_info["stats"] = some_stats[col_name]
 
             if column_type == "numeric":
+                # Additional Stats
+                # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
+                # https: // stackoverflow.com / questions / 45287832 / pyspark - approxquantile - function
+                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+                col_info['stats']['range'] = max_value - min_value
+                col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
+                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
+                                                           col_info['stats']['quantile'][0.25]
 
-                r = df.cols._agg([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance],
-                                 "m2_superficie_construida")
+                col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
 
-                col_info['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
-                col_info['range'] = max_value - min_value
-                col_info['median'] = col_info['quantile'][0.5]
-                col_info['interquartile_range'] = col_info['quantile'][0.75] - col_info['quantile'][0.25]
+                column_info['columns'][col_name] = col_info
 
-                # Descriptive statistic
-                col_info['stdev'] = round(df.cols.std(col_name), 5)
-                col_info['kurt'] = round(df.cols.kurt(col_name), 5)
-                col_info['mean'] = round(df.cols.mean(col_name), 5)
-                col_info['mad'] = round(df.cols.mad(col_name), 5)
-                col_info['skewness'] = round(df.cols.skewness(col_name), 5)
-                col_info['sum'] = round(df.cols.sum(col_name), 2)
-                col_info['variance'] = round(df.cols.variance(col_name), 0)
-                col_info['coef_variation'] = round((col_info['stdev'] / col_info['mean']), 5)
-
-                # Zeros
-                col_info['zeros'] = df.cols.count_zeros(col_name)
-                col_info['p_zeros'] = round(col_info['zeros'] / rows_count, 2)
-
-                col_info['hist'] = df.cols.hist(col_name)
-
-            elif column_type == "date":
-                pass
-            elif column_type == "boolean":
-                pass
-
-            # Buckets: values, count, %
-            column_info['columns'][col_name] = col_info
-            column_info['columns'][col_name]["dtypes_stats"] = dtypes_stats
+                column_info['columns'][col_name]["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
 
         return column_info
 
     @staticmethod
-    def columns(df, columns):
+    def columns_batch(df, columns):
         """
         Get statistical information in json format
         count_data_type()
@@ -313,13 +355,6 @@ class Profiler:
             dtypes_stats = count_dtype["columns"][col_name]['details']
 
             na = df.cols.count_na(col_name)
-
-            # Get uniques
-            # uniques = df.cols.count_uniques(col_name)
-            # Uniques
-            # if column_type == "categorical":
-            #    col['uniques_count'] = uniques[col_name]
-            #    col['p_uniques'] = uniques[col_name] / rows_count * 100
 
             # Missing
             col_info['stats']['missing_count'] = round(na, 2)
