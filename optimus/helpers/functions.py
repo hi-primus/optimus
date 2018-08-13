@@ -63,9 +63,6 @@ def collect_to_dict(value):
         dict_result = next(iter(dict_result.values()))
     else:
         dict_result = [v.asDict() for v in value]
-        # if there is only an element in the list return only de dict
-        # if len(dict_result) == 1:
-        #    dict_result = dict_result[0]
 
     return dict_result
 
