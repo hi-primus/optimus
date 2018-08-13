@@ -105,7 +105,7 @@ def sql(self, sql_expression):
 
 
 @add_method(DataFrame)
-def table(self, limit=100,  columns=None):
+def table(self, limit=100, columns=None):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self
@@ -128,12 +128,11 @@ def table(self, limit=100,  columns=None):
     # Filter only the columns and data type need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
-    output = template.render(cols=dtypes, data=data)
+    output = template.render(cols=dtypes, data=data, limit=limit, total=self.count())
     display(HTML(output))
 
-
-#@add_method(DataFrame)
-#def table(self, limit=100):
+# @add_method(DataFrame)
+# def table(self, limit=100):
 #    columns = "*"
 #    columns = parse_columns(self, columns)
 
