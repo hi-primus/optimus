@@ -6,7 +6,7 @@ import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.functions import parse_columns, collect_to_dict
+from optimus.helpers.functions import parse_columns, collect_to_dict, format_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json, sample_size, create_buckets
 
@@ -60,7 +60,7 @@ class Profiler:
             # TODO: check if collect_to_dict function can be used here
 
             count_by_data_type = {}
-            print(types)
+
             for row in types:
                 count_by_data_type[row[0]] = row[1]
 
@@ -142,40 +142,76 @@ class Profiler:
         rows_count = df.count()
         column_info['rows_count'] = rows_count
 
-        # count_dtype = Profiler.count_data_types(df, columns)
+        count_dtype = Profiler.count_data_types(df, columns)
         # column_info["count_types"] = count_dtype["count_types"]
 
         column_info['size'] = human_readable_bytes(df.size())
 
-        # column_type = count_dtype["columns"][col_name]['type']
-        # dtypes_stats = count_dtype["columns"][col_name]['details']
+        print(count_dtype)
 
-        na = df.cols.count_na(columns)
+        def na(col_name):
+            return F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name))
 
+        def zeros(col_name):
+            return F.count(F.when(F.col(col_name) == 0, col_name))
+
+        data = df.cols._exprs(
+            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na, zeros],
+            columns)
+        print(data)
+        # data = df.cols._exprs(
+        #    [F.approx_count_distinct], columns)
         # Missing
-        # col_info['missing_count'] = round(na[col_name], 2)
-        # col_info['p_missing'] = round(na[col_name] / rows_count * 100, 2)
+        for col_name in columns:
+            col_info = {}
+            col_info[col_name] = {}
+            col_info[col_name]["stats"] = {}
 
-        # Categorical column
-        # col_info['column_type'] = column_type
+            # na = df.cols.count_na(col_name)
+            # print(na)
 
-        uniques = df.cols.count_uniques(columns)
+            # Missing
+            # col_info[col_name]['stats']['missing_count'] = round(na, 2)
+            # col_info[col_name]['stats']['p_missing'] = round(na / rows_count * 100, 2)
 
-        # buckets = bucketizer(df, columns, 10)
-        # df.cols.apply_exp()
-        # return df.cols._exprs([F.min, F.max], columns)
+            col_info[col_name]['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+            # col_info['range'] = max_value - min_value
+            col_info[col_name]['median'] = col_info[col_name]['quantile'][0.5]
+            col_info[col_name]['interquartile_range'] = col_info[col_name]['quantile'][0.75] - \
+                                                        col_info[col_name]['quantile'][0.25]
 
-        data = df.cols._exprs([F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance], columns)
+            col_info[col_name]['frequency'] = collect_to_dict(
+                df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).sort(F.desc("count")).collect())
+
+        print(col_info, data)
+
+        # Cast the results to numeric. Some functions like min or max return strings
+        def cast_dict(d, func):
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    cast_dict(v, func)
+                else:
+                    d[k] = func(v)
+
+        cast_dict(data, float)
+
         splits = {}
         buckets = 10
 
         # print(data)
         for k, v in data.items():
             splits[k] = create_buckets(v["min"], v["max"], buckets)
-        print(splits)
-        return bucketizer(df, columns, splits=splits)
 
-        return
+        df = bucketizer(df, columns, splits=splits)
+
+        """for c in columns:
+            print(collect_to_dict(
+                df.groupBy(c + "_buckets").agg(F.count(c + "_buckets").alias("count")).cols.rename(c + "_buckets", c)
+                    .sort(F.asc(c)).collect()
+            ))"""
+
+        return df
+
         # return df.cols.apply_exp("ssss", buckets)
 
         for col_name in columns:
