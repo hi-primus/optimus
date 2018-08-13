@@ -2,6 +2,9 @@ import json
 import math
 
 from pyspark.sql import functions as F
+from pyspark.sql.functions import when
+
+from functools import reduce
 
 from optimus.helpers.constants import *
 from optimus.helpers.functions import parse_columns
@@ -116,15 +119,19 @@ def bucketizer(df, columns, splits):
         """
         out_in_columns = args[1]
         col_name_input = out_in_columns[col_name]
-        buckets = args[0][col_name_input]
+
+        buckets = args[0]
+
         expr = None
         i = 0
 
+        # TODO: seems that this can be write with reduce
         for b in buckets:
             if i == 0:
-                expr = F.when((F.col(col_name_input) >= b["low"]) & (F.col(col_name_input) <= b["high"]), b["bucket"])
+                expr = when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]), b["bucket"])
             else:
-                expr = expr.when((F.col(col_name_input) >= b["low"]) & (F.col(col_name_input) <= b["high"]), b["bucket"])
+                expr = expr.when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]),
+                                 b["bucket"])
             i = i + 1
 
         return expr
@@ -150,6 +157,6 @@ def create_buckets(low_val, high_val, bins):
     buckets = []
     for i in range(0, bins):
         high = low + range_value
-        buckets.append({"low": low, "high": high, "bucket": i})
+        buckets.append({"lower": low, "upper": high, "bucket": i})
         low = high
     return buckets
