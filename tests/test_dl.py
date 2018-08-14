@@ -11,9 +11,9 @@ dl = DL()
 spark = op.spark
 sc = op.sc
 
-rdd = op.sc.parallelize([Row(predicted_labels=['picket_fence', '0.14247830212116241']),
-                         Row(predicted_labels=['daisy', '0.9532104134559631']),
-                         Row(predicted_labels=['daisy', '0.8918145298957825'])])
+rdd = op.sc.parallelize([Row(predicted_labels=['daisy', '0.8918145298957825']),
+                         Row(predicted_labels=['picket_fence', '0.14247830212116241']),
+                         Row(predicted_labels=['daisy', '0.9532104134559631'])])
 
 df_row = spark.createDataFrame(rdd)
 
