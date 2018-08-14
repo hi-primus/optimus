@@ -12,3 +12,4 @@ pyarrow==0.9.*
 Jinja2
 tabulate==0.8.2
 fastnumbers==2.1.0
+tensorflow==1.6.0
