@@ -128,12 +128,8 @@ def table(self, limit=100, columns=None):
     # Filter only the columns and data type need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
-    output = template.render(cols=dtypes, data=data, limit=limit, total=self.count())
+    total = self.count()
+    if total < limit:
+        limit = total
+    output = template.render(cols=dtypes, data=data, limit=limit, total=total)
     display(HTML(output))
-
-# @add_method(DataFrame)
-# def table(self, limit=100):
-#    columns = "*"
-#    columns = parse_columns(self, columns)
-
-#    self.table(columns, limit)
