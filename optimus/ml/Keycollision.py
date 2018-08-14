@@ -10,6 +10,9 @@ class KeyCollision:
     Taken for the amazing Open Refine post https://github.com/OpenRefine/OpenRefine/wiki/Clustering-In-Depth
     """
 
+    # def __init__(self, df):
+    #    self.df = df
+
     @staticmethod
     def fingerprint(df, columns):
         """
@@ -37,7 +40,7 @@ class KeyCollision:
 
         columns = parse_columns(df, columns)
         for col_name in columns:
-            output_col = col_name + "_fingerprint"
+            output_col = col_name + "_FINGERPRINT"
             df = (df
                   .withColumn(output_col, F.col(col_name))
                   .cols.trim(output_col)
@@ -62,7 +65,8 @@ class KeyCollision:
         columns = parse_columns(df, columns)
 
         for col_name in columns:
-            output_col = col_name + "_fingerprint"
+            output_col = col_name + "_FINGERPRINT"
+            # Instead of apply the fingerprint to the whole data set we group by names
             df = (df
                   .groupBy(col_name)
                   .count()
@@ -70,17 +74,18 @@ class KeyCollision:
                   .repartition(1)  # Needed for optimization in a single machine
                   .cache()
                   )
-
+            # Calculate the fingeprint
             df = KeyCollision.fingerprint(df, col_name)
 
-            # Clustering
-            cluster = (df.groupBy(output_col)
-                       .agg(F.count(output_col).alias("count"), F.first(F.col(col_name)).alias(col_name))
-                       .sort(F.desc("count"))
-                       .select(col_name, "count", F.col(output_col).alias("fingerprint"))
-                       )
-
-        return collect_to_dict(cluster.collect())
+            # Create cluster
+            df = df.groupby(output_col).agg(
+                F.collect_set(col_name).alias("cluster"),
+                F.sum("count").alias("count"),
+                F.first(col_name).alias("recommended"),
+                F.size(F.collect_set(col_name)).alias("cluster_size")
+            ) \
+                .select("cluster_size", "cluster", "count", "recommended")
+        return df
 
     @staticmethod
     def n_gram_fingerprint(df, columns, n_size):
@@ -104,6 +109,7 @@ class KeyCollision:
 
             return value
 
+        columns = parse_columns(df, columns)
         for col_name in columns:
             output_col = col_name + "_ngram"
             n_gram_col = col_name + "_ngram_fingerprint"
@@ -127,7 +133,7 @@ class KeyCollision:
         return df
 
     @staticmethod
-    def n_gram_fingerprint_cluster(df, columns, n_size):
+    def n_gram_fingerprint_cluster(df, columns, n_size=2):
         """
         Cluster a DataFrame column based on the N-Gram Fingerprint algorithm
         :param df:
@@ -135,6 +141,7 @@ class KeyCollision:
         :param n_size:
         :return:
         """
+        columns = parse_columns(df, columns)
         for col_name in columns:
             n_gram_col = col_name + "_ngram_fingerprint"
 
@@ -146,12 +153,13 @@ class KeyCollision:
                   .repartition(1)  # Needed for optimization in a single machine
                   .cache())
 
-            KeyCollision.n_gram_fingerprint(df, col_name, 2)
+            df = KeyCollision.n_gram_fingerprint(df, col_name, n_size)
+            #df.table()
+            df = df.groupby(n_gram_col).agg(
+                F.collect_set(col_name).alias("cluster"),
+                F.sum("count").alias("count"),
+                F.first(col_name).alias("recommended"),
+                F.size(F.collect_set(col_name)).alias("cluster_size")
+            ).select("cluster_size", "cluster", "count", "recommended")
 
-            # Clustering
-            cluster = (df.groupBy(n_gram_col)
-                       .agg(F.count(n_gram_col).alias("count"), F.first(F.col(col_name)).alias(col_name))
-                       .sort(F.desc("count"))
-                       .select(col_name, "count", F.col(n_gram_col).alias("fingerprint")))
-
-            return collect_to_dict(cluster.collect())
+            return df
