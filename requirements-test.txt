@@ -12,3 +12,9 @@ pyarrow==0.9.*
 Jinja2
 tabulate==0.8.2
 fastnumbers==2.1.0
+tensorflow==1.6.0
+keras==2.1.5
+pillow>=4.1.1,<4.2
+pygments>=2.2.0
+six>=1.10.0
+h5py>=2.7.0
