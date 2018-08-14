@@ -26,9 +26,8 @@ def assert_spark_model(model):
     assert isinstance(model, pyspark.ml.PipelineModel), "Not a model"
 
 
-tulips_df = ImageSchema.readImages("testtulips/").withColumn("label", lit(1))
-daisy_df = imageIO.readImagesWithCustomFn("testdaisy/", decode_f=imageIO.PIL_decode).withColumn("label", lit(0))
-image_df = ImageSchema.readImages("sampleimg/")
+tulips_df = ImageSchema.readImages("tests/testtulips/").withColumn("label", lit(1))
+daisy_df = imageIO.readImagesWithCustomFn("tests/testdaisy/", decode_f=imageIO.PIL_decode).withColumn("label", lit(0))
 
 train_df = tulips_df.unionAll(daisy_df)
 
@@ -48,6 +47,6 @@ def test_evaluate_img_lr():
 
 
 def test_image_predictor():
-    preds = dl.image_predictor("sampleimg/")
+    preds = dl.image_predictor("tests/sampleimg/")
     assert (preds.collect == df_row.collect())
 
