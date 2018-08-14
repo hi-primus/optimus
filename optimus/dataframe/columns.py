@@ -16,7 +16,7 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict
+    is_function, is_one_element, is_type, is_int, is_dict, is_str
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr, add_method
@@ -196,7 +196,11 @@ def cols(self):
 
             validate_columns_names(self, columns_old_new)
             for c in columns_old_new:
-                df = df.withColumnRenamed(c[0], c[1])
+                old_col_name = c[0]
+                if is_str(old_col_name):
+                    df = df.withColumnRenamed(old_col_name, c[1])
+                elif is_int(old_col_name):
+                    df = df.withColumnRenamed(self.schema.names[old_col_name], c[1])
 
         return df
 
@@ -209,7 +213,6 @@ def cols(self):
     @dispatch(object)
     def rename(func=None):
         return rename(None, func)
-
 
     @add_attr(cols)
     @dispatch(str, str, object)
@@ -855,7 +858,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=["string", "float"])
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
 
