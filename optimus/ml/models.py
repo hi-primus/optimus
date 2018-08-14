@@ -55,7 +55,7 @@ class ML:
 
         model = RandomForestClassifier()
 
-        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
+        df = df.cols.rename([(input_col + "_index", "label")])
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -87,7 +87,7 @@ class ML:
 
         model = DecisionTreeClassifier()
 
-        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
+        df = df.cols.rename([(input_col + "_index", "label")])
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
@@ -119,7 +119,7 @@ class ML:
 
         model = GBTClassifier()
 
-        df = df.cols.rename(columns_old_new=[(input_col + "_index", "label")])
+        df = df.cols.rename([(input_col + "_index", "label")])
 
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
