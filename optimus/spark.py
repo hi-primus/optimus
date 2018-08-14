@@ -61,7 +61,7 @@ class Spark:
                 .builder
                 #.config("hive.metastore.warehouse.dir", warehouse_location)
                 #.config("spark.sql.warehouse.dir", warehouse_location)
-                .enableHiveSupport()
+                #.enableHiveSupport()
                 .master(self.master)
                 .appName(self.app_name)
                 .getOrCreate()

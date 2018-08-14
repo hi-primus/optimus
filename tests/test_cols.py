@@ -291,7 +291,7 @@ class TestDataFrameCols(object):
                 ("excited", 2)
             ],
             cols=[
-                ("emotion", StringType(), True),
+                ("emotions", StringType(), True),
                 ("number", IntegerType(), True)
             ]
         )
