@@ -178,7 +178,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    @dispatch(list, object)
+    @dispatch(object, object)
     def rename(columns_old_new=None, func=None):
         """"
         This functions change the name of a column(s) dataFrame.
@@ -202,8 +202,14 @@ def cols(self):
 
     @add_attr(cols)
     @dispatch(list)
-    def rename(columns_old_new=None, func=None):
+    def rename(columns_old_new=None):
         return rename(columns_old_new, None)
+
+    @add_attr(cols)
+    @dispatch(object)
+    def rename(func=None):
+        return rename(None, func)
+
 
     @add_attr(cols)
     @dispatch(str, str, object)
