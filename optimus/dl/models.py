@@ -4,6 +4,8 @@ from pyspark.ml.image import ImageSchema
 from sparkdl import DeepImageFeaturizer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from sparkdl import DeepImagePredictor
+from pyspark.sql.functions import udf
+from pyspark.sql.types import ArrayType, StringType
 
 from optimus import Optimus
 
@@ -20,7 +22,7 @@ class DL:
         return p_model, p_model.transform(df)
 
     @staticmethod
-    def evaluate_image_lr(df, model):
+    def evaluate_image_classifier(df, model):
         tested_df = model.transform(df)
         evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
         return evaluator.evaluate(tested_df.select("prediction", "label"))
@@ -31,4 +33,6 @@ class DL:
         image_df = ImageSchema.readImages(path)
         predictor = DeepImagePredictor(inputCol=input_col, outputCol=output_col, modelName=model_name,
                                        decodePredictions=decode_predictions, topK=topK)
-        return predictor.transform(image_df)
+        preds = predictor.transform(image_df)
+        firstelement = udf(lambda v: (str(v[0][1]), float(v[0][2])), ArrayType(StringType()))
+        return preds.select(firstelement('predicted_labels').alias("predicted_labels"))
