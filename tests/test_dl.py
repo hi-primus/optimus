@@ -11,11 +11,12 @@ dl = DL()
 spark = op.spark
 sc = op.sc
 
-rdd = op.sc.parallelize([Row(predicted_labels=['daisy', '0.8918145298957825']),
-                         Row(predicted_labels=['picket_fence', '0.14247830212116241']),
-                         Row(predicted_labels=['daisy', '0.9532104134559631'])])
 
-df_row = spark.createDataFrame(rdd)
+# rdd = op.sc.parallelize([Row(predicted_labels=['daisy', '0.8918145298957825']),
+#                         Row(predicted_labels=['picket_fence', '0.14247830212116241']),
+#                         Row(predicted_labels=['daisy', '0.9532104134559631'])])
+
+# df_row = spark.createDataFrame(rdd)
 
 
 def assert_spark_df(df):
@@ -48,5 +49,5 @@ def test_evaluate_img_lr():
 
 def test_image_predictor():
     preds = dl.image_predictor("tests/sampleimg/")
-    assert (preds.collect() == df_row.collect())
+    assert_spark_df(preds)
 
