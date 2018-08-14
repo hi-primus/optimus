@@ -41,12 +41,12 @@ def test_image_classifier_lr():
 
 def test_evaluate_img_lr():
     model, df_preds = dl.image_classifier_lr(train_df)
-    result = dl.evaluate_image_classifier(df_preds, model)
+    result = dl.evaluate_image_classifier(train_df, model)
 
     assert isinstance(result, float), "Not a float"
 
 
 def test_image_predictor():
     preds = dl.image_predictor("tests/sampleimg/")
-    assert (preds.collect == df_row.collect())
+    assert (preds.collect() == df_row.collect())
 
