@@ -256,7 +256,34 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.rename([('num', 'number')])
+        actual_df = source_df.cols.rename('num', 'number')
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("number", IntegerType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    def test_rename_list(self):
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.rename([('num', 'number'), ('emotion', 'emotions')])
 
         expected_df = op.create.df(
             rows=[
@@ -283,7 +310,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.rename(func=str.upper)
+        actual_df = source_df.cols.rename(str.upper)
 
         expected_df = op.create.df(
             rows=[
