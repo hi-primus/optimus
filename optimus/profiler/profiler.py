@@ -6,7 +6,7 @@ import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
-from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.functions import filter_row_by_data_type as fbdt, plot_hist
 from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json
@@ -363,7 +363,7 @@ class Profiler:
         template = templateEnv.get_template("one_column.html")
         for c in columns:
             if "hist" in summary["columns"][c]:
-                hist_pic = df.plots.hist({c: summary["columns"][c]["hist"]})
+                hist_pic = plot_hist({c: summary["columns"][c]["hist"]}, output="base64")
             else:
                 hist_pic = None
 

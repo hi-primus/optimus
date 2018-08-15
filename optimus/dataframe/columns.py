@@ -1189,11 +1189,6 @@ def cols(self):
         return self.cols.select(column).first()[0]
 
     @add_method(cols)
-    @dispatch((str, list), int)
-    def hist(columns, buckets=10):
-        return self.cols.hist(self.cols.min(columns), self.cols.max(columns), buckets)
-
-    @add_method(cols)
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
         """
@@ -1217,10 +1212,15 @@ def cols(self):
 
             hist = []
             for x, y in zip(counts, splits):
-                if x["value"] is not None and x["count"] != 0:
-                    hist.append({"lower": y["lower"], "upper": y["upper"], "value": x["count"]})
+                # if x["value"] is not None and x["count"] != 0:
+                hist.append({"lower": y["lower"], "upper": y["upper"], "value": x["count"]})
 
         return hist
+
+    @add_method(cols)
+    @dispatch((str, list), int)
+    def hist(columns, buckets=10):
+        return self.cols.hist(columns, self.cols.min(columns), self.cols.max(columns), buckets)
 
     @add_method(cols)
     def schema_dtypes(columns):

@@ -1,8 +1,13 @@
+import base64
 import logging
 from fastnumbers import isint, isfloat
 from functools import reduce
+from io import BytesIO
 
 import dateutil.parser
+import matplotlib.pyplot as plt
+from multipledispatch import dispatch
+from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
@@ -100,7 +105,7 @@ def filter_row_by_data_type_audf(col_name, data_type):
 
 def concat(dfs, like="columns"):
     """
-    Concat multiple dataframes as columns or rows way
+    Concat multiple dataframes as columns or rows
     :param dfs:
     :param like: The way dataframes is going to be concat. like columns or rows
     :return:
@@ -123,6 +128,54 @@ def concat(dfs, like="columns"):
         RaiseIfNot.value_error(like, ["columns", "rows"])
 
     return df_result
+
+
+def plot_hist(column_data=None, output="image"):
+    """
+    Plot a histogram
+    obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
+    {'lower': -70.51333465576172, 'upper': -53.66000061035157, 'value': 22094},
+    {'lower': -53.66000061035157, 'upper': -36.80666656494141, 'value': 2},
+    ...
+    ]}
+    :param column_data:
+    :return:
+    """
+
+    for col_name, data in column_data.items():
+
+        bins = []
+        for d in data:
+            bins.append(d['lower'])
+
+        last = data[len(data) - 1]["upper"]
+        bins.append(last)
+
+        # Transform hist Optimus format to matplot lib
+        hist = []
+        for d in data:
+            if d is not None:
+                hist.append(d["value"])
+
+        bins = array(bins)
+        center = (bins[:-1] + bins[1:]) / 2
+        width = 0.9 * (bins[1] - bins[0])
+
+        # Plot
+        fig = plt.figure()
+        plt.bar(center, hist, width=width)
+        plt.title("Histogram " + col_name)
+
+        # Save as base64
+        if output is "base64":
+            figfile = BytesIO()
+            plt.savefig(figfile, format='png')
+            figfile.seek(0)  # rewind to beginning of file
+
+            figdata_png = base64.b64encode(figfile.getvalue())
+            plt.close(fig)
+
+            return figdata_png.decode('utf8')
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
