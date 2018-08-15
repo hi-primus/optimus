@@ -1,6 +1,8 @@
 import itertools
 import random
 import re
+import pprint
+import json
 
 from IPython.display import display, HTML
 
@@ -48,6 +50,17 @@ def print_html(html):
     :return:
     """
     display(HTML(html))
+
+
+def print_json(value):
+    pp = pprint.PrettyPrinter(indent=2)
+    if is_str(value):
+
+        value = value.replace("'", "\"")
+        print(value)
+        value = json.loads(value)
+
+    pp.pprint(value)
 
 
 def collect_to_dict(value):
@@ -144,9 +157,7 @@ def format_dict(val):
     elif is_dict_of_one_element(val):
         val = next(iter(val.values()))
 
-
     # Some aggregation like min or max return a string column
-
 
     # TODO: Maybe this can be done in a recursive way
     # We apply two passes to the dict so we can process internals dicts and the superiors ones
