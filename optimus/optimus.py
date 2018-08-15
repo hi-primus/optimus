@@ -8,7 +8,7 @@ from optimus.helpers.raiseit import RaiseIfNot
 from optimus.io.load import Load
 from optimus.spark import Spark
 
-from optimus.dataframe import rows, columns, extension
+from optimus.dataframe import rows, columns, extension, plots
 from optimus.io import save
 
 Spark.instance = None
