@@ -1,7 +1,8 @@
+import logging
+from fastnumbers import isint, isfloat
 from functools import reduce
 
 import dateutil.parser
-from fastnumbers import isint, isfloat
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
@@ -10,7 +11,7 @@ from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes,
 from optimus.helpers.raiseit import RaiseIfNot
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=True):
+def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
     """
     Abstract User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
     :param col: Column to created or transformed
@@ -18,6 +19,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     :param attrs: If required attributes to be passed to the function
     :param func_return_type: Required bu UDF and Pandas UDF. It is necessary to define the return type
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
+    :param verbose: print additional info
     :return: A function, UDF or Pandas UDF
     """
 
@@ -30,8 +32,8 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
         RaiseIfNot.value_error(func_type, types)
 
     if verbose is True:
-        print("Using '{func_type}' to process column '{column}' with function {func_name}"
-              .format(func_type=func_type, column=col, func_name=func.__name__))
+        logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
+                     .format(func_type=func_type, column=col, func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
