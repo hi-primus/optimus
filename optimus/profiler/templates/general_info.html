@@ -1,0 +1,87 @@
+<style>
+    .main{
+        width:100%;
+        overflow:auto;
+        border-bottom:1px solid #eeeeee;
+        padding: 10px 0;
+    }
+    .panel_profiler{
+        margin-right:2%;
+        float:left;
+        padding-bottom:2%;
+    }
+    .title_profiler{
+        padding:20px;
+        background-color: #eeeeee
+    }
+    .info{
+        overflow: auto
+    }
+
+
+</style>
+
+<div class="title_profiler">
+    <h1>Overview</h1>
+</div>
+<div class="main">
+    <div class="panel_profiler">
+        <h2>Dataset info</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td>Number of columns</td>
+                <td>{{data.summary.cols_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Number of rows</td>
+                <td>{{data.summary.rows_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Total Missing (%)</td>
+                <td>{{data.summary.missing_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Total size in memory</td>
+                <td>{{data.summary.size}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="panel_profiler">
+        <h2>Variables types</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td>Categorical</td>
+                <td>{{data.count_types.categorical}}</td>
+
+            </tr>
+            <tr>
+                <td>Numeric</td>
+                <td>{{data.count_types.numeric}}</td>
+
+            </tr>
+            <tr>
+                <td>Date</td>
+                <td>{{data.count_types.date}}</td>
+
+            </tr>
+            <tr>
+                <td>Bool</td>
+                <td>{{data.count_types.bool}}</td>
+
+            </tr>
+            <tr>
+                <td>Not available</td>
+                <td>{{data.count_types.null}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
