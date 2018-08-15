@@ -312,145 +312,59 @@ class Profiler:
                 col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
                 col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
                                                            col_info['stats']['quantile'][0.25]
+                col_info['stats']['coef_variation'] = round((col_info['stats']['stddev'] / col_info['stats']['mean']),
+                                                            5)
+                col_info['stats']['mad'] = round(df.cols.mad(col_name), 5)
 
                 col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
+                col_info["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
 
-                column_info['columns'][col_name] = col_info
-
-                column_info['columns'][col_name]["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
-
-        return column_info
-
-    @staticmethod
-    def columns_batch(df, columns):
-        """
-        Get statistical information in json format
-        count_data_type()
-        :param df: Dataframe to be processed
-        :param columns: Columns that you want to profile
-        :return: json object with the
-        """
-
-        columns = parse_columns(df, columns)
-        # Initialize Objects
-        column_info = {}
-
-        column_info['columns'] = {}
-
-        rows_count = df.count()
-
-        column_info['rows_count'] = rows_count
-        count_dtype = Profiler.count_data_types(df, columns)
-
-        column_info["count_types"] = count_dtype["count_types"]
-
-        column_info['size'] = human_readable_bytes(df.size())
-
-        for col_name in columns:
-            col_info = {}
-            col_info["stats"] = {}
-
-            # Get if a column is numerical or categorical
-            column_type = count_dtype["columns"][col_name]['type']
-            dtypes_stats = count_dtype["columns"][col_name]['details']
-
-            na = df.cols.count_na(col_name)
-
-            # Missing
-            col_info['stats']['missing_count'] = round(na, 2)
-            col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
-
-            # Categorical column
-            col_info['column_type'] = column_type
-            col_info['name'] = col_name
-
-            if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
-                uniques_df = df.select(F.col(col_name).alias("value")).groupBy("value").count() \
-                    .orderBy('count', ascending=False)
-
-                col_info['frequency'] = collect_to_dict(uniques_df.limit(10)
-                                                        .withColumn('percentage',
-                                                                    F.round(F.col('count') / rows_count * 100,
-                                                                            2))
-
-                                                        .collect())
-                # col_info['other_values'] = uniques_df.cols.sum(col_name)
-                uniques = uniques_df.count()
-                col_info['stats']['uniques_count'] = uniques
-                col_info['stats']['p_uniques'] = round(uniques / rows_count * 100, 2)
-
-            # Numeric Column
-            if column_type == "numeric" or column_type == "date":
-                # Quantile statistics
-                min_value = df.cols.min(col_name)
-                max_value = df.cols.max(col_name)
-                col_info['stats']['min'] = min_value
-                col_info['stats']['max'] = max_value
-
-            if column_type == "numeric":
-
-                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
-                col_info['stats']['range'] = max_value - min_value
-                col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
-                col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
-                                                           col_info['stats']['quantile'][0.25]
-
-                # Descriptive statistic
-                col_info['stats']['stdev'] = round(df.cols.std(col_name), 5)
-                col_info['stats']['kurt'] = round(df.cols.kurt(col_name), 5)
-                col_info['stats']['mean'] = round(df.cols.mean(col_name), 5)
-                col_info['stats']['mad'] = round(df.cols.mad(col_name), 5)
-                col_info['stats']['skewness'] = round(df.cols.skewness(col_name), 5)
-                col_info['stats']['sum'] = round(df.cols.sum(col_name), 2)
-                col_info['stats']['variance'] = round(df.cols.variance(col_name), 0)
-                col_info['stats']['coef_variation'] = round((col_info['stats']['stdev'] / col_info['stats']['mean']), 5)
-
-                # Zeros
-                col_info['stats']['zeros'] = df.cols.count_zeros(col_name)
-                col_info['stats']['p_zeros'] = round(col_info['stats']['zeros'] / rows_count, 2)
-
-                col_info['hist'] = df.cols.hist(col_name)
-
-            elif column_type == "date":
-                pass
-            elif column_type == "boolean":
-                pass
-
-            # Buckets: values, count, %
             column_info['columns'][col_name] = col_info
-            column_info['columns'][col_name]["dtypes_stats"] = dtypes_stats
 
+            # print(column_info['columns'])
         return column_info
 
     @staticmethod
     def run(df, columns):
         """
         Get statistical information in HTML Format
+        :param df:
         :param columns:
         :return:
         """
+
+        columns = parse_columns(df, columns)
 
         path = os.path.dirname(os.path.abspath(__file__))
         templateLoader = jinja2.FileSystemLoader(searchpath=path + "//templates")
         templateEnv = jinja2.Environment(loader=templateLoader)
 
-        template = templateEnv.get_template("column_stats.html")
+        template = templateEnv.get_template("one_column.html")
 
-        rows_count = df.count()
-        # Get just a sample to infer the column data type
-        sample_size_number = sample_size(rows_count, 95.0, 2.0)
-        fraction = sample_size_number / rows_count
-        sample = df.sample(False, fraction, seed=1)
+        # rows_count = df.count()
 
         dataset = Profiler.dataset_info(df)
+        summary = Profiler.columns(df, columns, 20)
 
-        summary = Profiler.columns(df, columns)
         summary["summary"] = dataset
+
+
+        # Render template
+        output = ""
+        general_template = templateEnv.get_template("general_info.html")
+        output = output + general_template.render(data=summary)
+
+        for c in columns:
+            if "hist" in summary["columns"][c]:
+                # print({c: summary["columns"][c]["hist"]})
+                hist_pic = df.plots.hist({c: summary["columns"][c]["hist"]})
+            else:
+                hist_pic = None
+
+            output = output + template.render(data=summary["columns"][c], hist_pic=hist_pic)
+
+        display(HTML(output))
 
         # Write json
         path = Path.cwd() / "data.json"
         write_json(summary, path=path)
-
-        # Render template
-        output = template.render(data=summary)
-        display(HTML(output))
