@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -8,9 +9,7 @@ from IPython.core.display import display, HTML
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
-    write_json, sample_size
-
-from pyspark.sql import DataFrameStatFunctions as SF
+    write_json
 
 
 class Profiler:
@@ -171,7 +170,7 @@ class Profiler:
             exprs.append("SUM(CASE WHEN " + c + " IS NULL OR " + c + "='' THEN 1 ELSE 0 END) AS " + escape(
                 col_name + "_missing"))
 
-            print(df.cols.hist(col_name, 0, 100, buckets))
+            # print(df.cols.hist(col_name, 0, 100, buckets))
 
             # collect_to_dict(
             #    df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).cols.rename(
@@ -247,6 +246,11 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
+        # Get just a sample to infer the column data type
+        # sample_size_number = sample_size(rows_count, 95.0, 2.0)
+        # fraction = sample_size_number / rows_count
+        # sample = df.sample(False, fraction, seed=1)
+
         # Initialize Objects
         column_info = {}
         column_info['columns'] = {}
@@ -271,8 +275,11 @@ class Profiler:
             columns)
 
         for col_name in columns:
+            logging.info("Proccesing column '" + col_name + "'...")
+
             col_info = {}
             col_info["stats"] = {}
+            column_info['columns'][col_name] = {}
 
             column_type = count_dtypes["columns"][col_name]['type']
 
@@ -283,6 +290,11 @@ class Profiler:
             col_info['name'] = col_name
             col_info['column_type'] = column_type
 
+            # Numeric Column
+            if column_type == "numeric" or column_type == "date":
+                # Merge
+                col_info["stats"] = some_stats[col_name]
+
             # Missing
             col_info['stats']['missing_count'] = round(na, 2)
             col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
@@ -290,18 +302,16 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
                 col_info['frequency'] = collect_to_dict(
-                    df.groupby(col_name).agg(F.count(col_name).alias("count")).limit(10).cols.rename(
+                    df.groupby(col_name).agg(F.count(col_name).alias("count"),
+                                             F.round(F.count(col_name) / rows_count * 100,
+                                                     5).alias("percentage")
+                                             ).limit(10).cols.rename(
                         col_name, "value").sort(F.desc("count")).collect())
 
                 # Uniques
                 uniques = some_stats[col_name].pop("approx_count_distinct")
-                col_info['stats']["uniques"] = uniques
+                col_info['stats']["uniques_count"] = uniques
                 col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 2)
-
-            # Numeric Column
-            if column_type == "numeric" or column_type == "date":
-                # Merge
-                col_info["stats"] = some_stats[col_name]
 
             if column_type == "numeric":
                 # Additional Stats
@@ -335,28 +345,24 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
+        # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
         templateLoader = jinja2.FileSystemLoader(searchpath=path + "//templates")
         templateEnv = jinja2.Environment(loader=templateLoader)
-
-        template = templateEnv.get_template("one_column.html")
-
-        # rows_count = df.count()
 
         dataset = Profiler.dataset_info(df)
         summary = Profiler.columns(df, columns, 20)
 
         summary["summary"] = dataset
 
-
         # Render template
         output = ""
         general_template = templateEnv.get_template("general_info.html")
         output = output + general_template.render(data=summary)
 
+        template = templateEnv.get_template("one_column.html")
         for c in columns:
             if "hist" in summary["columns"][c]:
-                # print({c: summary["columns"][c]["hist"]})
                 hist_pic = df.plots.hist({c: summary["columns"][c]["hist"]})
             else:
                 hist_pic = None
