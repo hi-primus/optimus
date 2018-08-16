@@ -2,6 +2,7 @@
 # Decorator to attach a custom functions to a class
 
 from functools import wraps
+import logging
 
 
 def add_method(cls):
@@ -32,19 +33,3 @@ def add_attr(cls):
         return func
 
     return decorator
-
-
-def counted(fn):
-    """
-    Count the numbers of call to a function
-    :param fn:
-    :return:
-    """
-
-    def wrapper(*args, **kwargs):
-        wrapper.called += 1
-        return fn(*args, **kwargs)
-
-    wrapper.called = 0
-    wrapper.__name__ = fn.__name__
-    return wrapper
