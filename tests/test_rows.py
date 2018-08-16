@@ -48,7 +48,7 @@ class TestDataFrameRows(object):
         assert (expected_df.collect() == actual_df.collect())
 
     def test_filter(self):
-        actual_df = source_df.rows.rows.filter(source_df["num"] == 1)
+        actual_df = source_df.rows.filter(source_df["num"] == 1)
 
         expected_df = op.create.df([
             ("words", "str", True),
@@ -65,7 +65,7 @@ class TestDataFrameRows(object):
         assert (expected_df.collect() == actual_df.collect())
 
     def test_filter_by_dtypes(self):
-        actual_df = source_df.rows.rows.filter_by_dtypes("filter", "integer")
+        actual_df = source_df.rows.filter_by_dtypes("filter", "integer")
 
         expected_df = op.create.df([
             ("words", "str", True),
@@ -82,7 +82,7 @@ class TestDataFrameRows(object):
         assert (expected_df.collect() == actual_df.collect())
 
     def test_drop_by_dtypes(self):
-        actual_df = source_df.rows.rows.drop_by_dtypes("filter", "integer")
+        actual_df = source_df.rows.drop_by_dtypes("filter", "integer")
 
         expected_df = op.create.df([
             ("words", "str", True),
