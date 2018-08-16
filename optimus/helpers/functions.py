@@ -8,7 +8,7 @@ from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
     is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function, is_dict
-from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES
+from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -27,7 +27,7 @@ def parse_spark_dtypes(value):
     :return:
     """
     try:
-        data_type = SPARK_DTYPES[SPARK_SHORT_DTYPES[value]]
+        data_type = SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[value]]
     except KeyError:
         data_type = None
 

@@ -28,8 +28,8 @@ def rows(self):
         for d, r in zip(df.dtypes, row):
             col_name = d[0]
             data_type = d[1]
-            if data_type in SPARK_DTYPES:
-                cols.append((col_name, (SPARK_DTYPES[data_type]), True))
+            if data_type in SPARK_DTYPES_DICT:
+                cols.append((col_name, (SPARK_DTYPES_DICT[data_type]), True))
                 values.append(r)
 
         values = [tuple(values)]

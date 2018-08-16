@@ -38,15 +38,15 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       # "vector": "vector"
 
                       }
-SPARK_DTYPES = {"string": StringType(), "int": IntegerType(), "float": FloatType(),
+SPARK_DTYPES_DICT = {"string": StringType(), "int": IntegerType(), "float": FloatType(),
                 "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(), "array": ArrayType,
                 "date": DateType()
-                }
+                     }
 
 
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
-VAR_TYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
+SPARK_DTYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
 
 
 # Strings and Function Messages
