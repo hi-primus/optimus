@@ -1,7 +1,9 @@
+import logging
+
 from pyspark.sql.types import StructField, StructType
 
 # Helpers
-from optimus.helpers.constants import VAR_TYPES
+from optimus.helpers.constants import SPARK_DTYPES
 from optimus.helpers.functions import parse_spark_dtypes
 from optimus.spark import Spark
 
@@ -16,12 +18,14 @@ class Create:
         :param rows:
         :return:
         """
+        logger = logging.getLogger("analytics")
+        logger.debug("data_frame")
 
         specs = []
         for c in cols:
             value = c[1]
             # Try to find if the type var is a Spark datatype
-            if isinstance(value, VAR_TYPES):
+            if isinstance(value, SPARK_DTYPES):
                 var_type = value
             # else, try to parse a str, int, float ......
             else:
