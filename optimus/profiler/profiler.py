@@ -122,7 +122,7 @@ class Profiler:
 
         results["columns"] = type_details
         return results
-    
+
     @staticmethod
     def columns(df, columns, buckets=10):
         """
@@ -193,10 +193,13 @@ class Profiler:
                 # Frequency
                 col_info['frequency'] = collect_to_dict(
                     df.groupby(col_name).agg(F.count(col_name).alias("count"),
-                                             F.round(F.count(col_name) / rows_count * 100,
+                                             F.round(F.count(
+                                                 col_name) / rows_count * 100,
                                                      5).alias("percentage")
-                                             ).limit(10).cols.rename(
-                        col_name, "value").sort(F.desc("count")).collect())
+
+                                             ).sort(F.col("count").desc()).limit(10).cols.rename(col_name,
+                                                                                                 "value").sort(
+                        F.desc("count")).collect())
 
                 # Uniques
                 uniques = some_stats[col_name].pop("approx_count_distinct")
