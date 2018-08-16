@@ -66,7 +66,8 @@ class Optimus:
 
     concat = concat
 
-    def set_check_point_folder(self, path, file_system):
+    @staticmethod
+    def set_check_point_folder(path, file_system):
         """
         Function that receives a workspace path where a folder is created.
         This folder will store temporal
@@ -82,12 +83,13 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
+        logger.info("set_check_point_folder")
 
         print_check_point_config(file_system)
 
         if file_system == "hadoop":
             folder_path = path + "/" + "checkPointFolder"
-            self.delete_check_point_folder(path=path, file_system=file_system)
+            Optimus.delete_check_point_folder(path=path, file_system=file_system)
 
             # Creating file:
             logging.info("Creating the hadoop folder...")
@@ -125,7 +127,7 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
-
+        logger.info("delete")
         if file_system == "hadoop":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
