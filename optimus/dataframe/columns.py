@@ -19,7 +19,7 @@ from optimus.helpers.checkit \
     is_function, is_one_element, is_type, is_int, is_dict, is_str
 # Helpers
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import add_attr, add_method
+from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list
@@ -871,8 +871,6 @@ def cols(self):
             expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
 
         result = format_dict(collect_to_dict(df.select(*expr).collect()))
-        # except AnalysisException:
-        #    pass
 
         return result
 
@@ -1188,7 +1186,7 @@ def cols(self):
         """
         return self.cols.select(column).first()[0]
 
-    @add_method(cols)
+    @add_attr(cols)
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
         """
@@ -1217,12 +1215,12 @@ def cols(self):
 
         return hist
 
-    @add_method(cols)
+    @add_attr(cols)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
         return self.cols.hist(columns, self.cols.min(columns), self.cols.max(columns), buckets)
 
-    @add_method(cols)
+    @add_attr(cols)
     def schema_dtypes(columns):
         """
         Return the columns data type as DataType
