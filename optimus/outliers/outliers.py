@@ -1,11 +1,11 @@
 from pyspark.sql import functions as F
 from optimus.helpers.functions import parse_columns
-from optimus.helpers.checkit import *
+from optimus.helpers.checkit import is_dataframe, is_int
 
 
 class OutlierDetector:
     """
-    Outlier detection for pyspark dataframes.
+    Outlier detection for pyspark data frames.
     """
 
     @staticmethod
@@ -82,4 +82,20 @@ class OutlierDetector:
             upper_bound = mad_value["median"] + threshold * mad_value["mad"]
 
             df = df.rows.drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+        return df
+
+    @staticmethod
+    def modified_z_score(df, col_name, threshold):
+        """
+        Delete outliers from a DataFrame using modified z score
+        Reference: http://colingorrie.github.io/outlier-detection.html#modified-z-score-method
+        :param df:
+        :param col_name:
+        :param threshold:
+        :return:
+        """
+        median_y = df.cols.median(col_name)
+        median_absolute_deviation_y = df.select(F.abs(F.col(col_name) - median_y).alias(col_name)).cols.median("num")
+        df = df.withColumn('m_z_score', F.abs(0.6745 * (F.col(col_name) - median_y) / median_absolute_deviation_y))
+        df = df.rows.drop(F.col("m_z_score") > threshold)
         return df
