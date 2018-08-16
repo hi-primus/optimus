@@ -7,14 +7,13 @@ from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.io.load import Load
 from optimus.spark import Spark
-
-from optimus.dataframe import rows, columns, extension, plots
-from optimus.io import save
+import logging
 
 Spark.instance = None
 
 
 class Optimus:
+
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
                  verbose=True):
         """
@@ -25,6 +24,7 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         """
+
         if verbose is True:
             level = logging.INFO
             logging.basicConfig(format="%(message)s", level=level)
