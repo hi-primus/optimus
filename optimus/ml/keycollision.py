@@ -1,7 +1,6 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import collect_to_dict
 from optimus.helpers.functions import parse_columns
 
 
@@ -90,7 +89,7 @@ class KeyCollision:
     @staticmethod
     def n_gram_fingerprint(df, columns, n_size):
         """
-
+        Calculate the ngram for a fingerprinted string
         :param df:
         :param columns:
         :param n_size:
