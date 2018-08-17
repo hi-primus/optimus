@@ -220,6 +220,8 @@ class Profiler:
                 # Additional Stats
                 # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
                 # https: // stackoverflow.com / questions / 45287832 / pyspark - approxquantile - function
+                max_value = float(max_value)
+                min_value = float(min_value)
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col_info['stats']['range'] = max_value - min_value
                 col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
