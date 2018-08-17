@@ -18,6 +18,16 @@
         overflow: auto
     }
 
+
+
+
+
+
+
+
+
+
+
 </style>
 
 <div class="main">
@@ -25,6 +35,7 @@
 
         {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
         data.column_type=="bool"%}
+
         <div class="panel_profiler">
             <div>
                 <h2>{{data.name}}</h2>
@@ -47,6 +58,72 @@
                 <tr>
                     <td>Missing (n)</td>
                     <td>{{data.stats.p_missing}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div>
+                <h3>
+                    Datatypes
+                </h3>
+            </div>
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        String
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.string}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Integer
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.int}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Float
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.float}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Boolean
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.bool}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Date
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.date}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Missing
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.missing}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Null
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.null}}
+                    </td>
+
                 </tr>
                 </tbody>
             </table>

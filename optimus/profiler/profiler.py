@@ -97,6 +97,7 @@ class Profiler:
                 cat = "null"
 
             col = {}
+            col['dtype'] = greatest_data_type_count
             col['type'] = cat
             col['details'] = {**data_types_count, **null_missed_count}
 
@@ -118,9 +119,10 @@ class Profiler:
                 count_types[name] = 1
 
         count_types = fill_missing_col_types(count_types)
-        results["count_types"] = count_types
 
+        results["count_types"] = count_types
         results["columns"] = type_details
+
         return results
 
     @staticmethod
@@ -149,8 +151,8 @@ class Profiler:
         column_info['rows_count'] = rows_count
 
         count_dtypes = Profiler.count_data_types(df, columns)
-        column_info["count_types"] = count_dtypes["count_types"]
 
+        column_info["count_types"] = count_dtypes["count_types"]
         column_info['size'] = human_readable_bytes(df.size())
 
         def na(col_name):
@@ -159,13 +161,20 @@ class Profiler:
         def zeros(col_name):
             return F.count(F.when(F.col(col_name) == 0, col_name))
 
+        # Cast every column to a specific type to ensure the correct profiling
+        # For example if we calculate the min or max of a string column with numeric value we are going to have
+        # incorrect values
+        for col_name in columns:
+            dtype = count_dtypes["columns"][col_name]['dtype']
+            df = df.cols.cast(col_name, dtype)
+
         some_stats = df.cols._exprs(
             [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
              zeros],
             columns)
 
         for col_name in columns:
-            logging.info("Proccesing column '" + col_name + "'...")
+            logging.info("Processing column '" + col_name + "'...")
 
             col_info = {}
             col_info["stats"] = {}
@@ -188,6 +197,7 @@ class Profiler:
             # Missing
             col_info['stats']['missing_count'] = round(na, 2)
             col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
+            col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
@@ -219,7 +229,6 @@ class Profiler:
                                                             5)
                 col_info['stats']['mad'] = round(df.cols.mad(col_name), 5)
 
-                col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
                 col_info["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
 
             column_info['columns'][col_name] = col_info
@@ -249,11 +258,14 @@ class Profiler:
         summary["summary"] = dataset
 
         # Render template
+        # Create the header
         output = ""
         general_template = templateEnv.get_template("general_info.html")
         output = output + general_template.render(data=summary)
 
         template = templateEnv.get_template("one_column.html")
+
+        # Create every column stats
         for c in columns:
             if "hist" in summary["columns"][c]:
                 hist_pic = plot_hist({c: summary["columns"][c]["hist"]}, output="base64")
