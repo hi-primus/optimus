@@ -83,7 +83,7 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-        logger.info("set_check_point_folder")
+
 
         print_check_point_config(file_system)
 
@@ -127,7 +127,7 @@ class Optimus:
         :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
-        logger.info("delete")
+
         if file_system == "hadoop":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
