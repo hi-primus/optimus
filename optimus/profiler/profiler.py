@@ -166,7 +166,9 @@ class Profiler:
         # incorrect values
         for col_name in columns:
             dtype = count_dtypes["columns"][col_name]['dtype']
-            df = df.cols.cast(col_name, dtype)
+            # not force date type conversion, can trust that the convertion is going to be representative
+            if dtype in ["string", "float", "int", "bool"]:
+                df = df.cols.cast(col_name, dtype)
 
         some_stats = df.cols._exprs(
             [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
@@ -214,7 +216,7 @@ class Profiler:
                 # Uniques
                 uniques = some_stats[col_name].pop("approx_count_distinct")
                 col_info['stats']["uniques_count"] = uniques
-                col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 2)
+                col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 3)
 
             if column_type == "numeric":
                 # Additional Stats
@@ -239,7 +241,7 @@ class Profiler:
         return column_info
 
     @staticmethod
-    def run(df, columns):
+    def run(df, columns, buckets=20):
         """
         Get statistical information in HTML Format
         :param df:
@@ -249,15 +251,12 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
+        summary = Profiler.json(df, columns, buckets)
+
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
         templateLoader = jinja2.FileSystemLoader(searchpath=path + "//templates")
         templateEnv = jinja2.Environment(loader=templateLoader)
-
-        dataset = Profiler.dataset_info(df)
-        summary = Profiler.columns(df, columns, 20)
-
-        summary["summary"] = dataset
 
         # Render template
         # Create the header
@@ -278,6 +277,22 @@ class Profiler:
 
         display(HTML(output))
 
-        # Write json
-        path = Path.cwd() / "data.json"
+    @staticmethod
+    def json(df, columns, buckets=20, path=None):
+        """
+        Output profilig as json format
+        :param df: Dataframe to be processed
+        :param columns: column to calculate the histogram
+        :param buckets: buckets on the histogram
+        :param path: Path where the json is going to be saved
+        :return:
+        """
+        dataset = Profiler.dataset_info(df)
+        summary = Profiler.columns(df, columns, buckets)
+        summary["summary"] = dataset
+        if path is None:
+            path = Path.cwd() / "data.json"
+
         write_json(summary, path=path)
+
+        return summary
