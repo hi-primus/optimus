@@ -1170,8 +1170,8 @@ def cols(self):
     def split(columns, mark):
         """
         A shortcut to the Apache Spark split
-        :param columns:
-        :param mark: split separator
+        :param columns: Column to be split
+        :param mark: char used to split the column
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1185,7 +1185,7 @@ def cols(self):
     def cell(column):
         """
         Get the value for the first cell from a column in a data frame
-        :param column:
+        :param column: Column to be
         :return:
         """
         return self.cols.select(column).first()[0]
@@ -1194,17 +1194,20 @@ def cols(self):
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
         """
-        Get the histogram column
+         Get the histogram column in json format
         :param columns: Columns to be processed
-        :param bins: Number of bins
-        :return: json
+        :param min_value: Min value used to calculate the buckets
+        :param max_value: Max value used to calculate the buckets
+        :param buckets: Number of buckets
+        :return:
         """
+
         columns = parse_columns(self, columns)
         for col_name in columns:
             # Create splits
             splits = create_buckets(min_value, max_value, buckets)
 
-            # Create buckets in the dataframe
+            # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
             counts = (collect_to_dict(
