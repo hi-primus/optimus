@@ -94,8 +94,8 @@ class OutlierDetector:
         :param threshold:
         :return:
         """
-        median_y = df.cols.median(col_name)
-        median_absolute_deviation_y = df.select(F.abs(F.col(col_name) - median_y).alias(col_name)).cols.median("num")
-        df = df.withColumn('m_z_score', F.abs(0.6745 * (F.col(col_name) - median_y) / median_absolute_deviation_y))
+        median = df.cols.median(col_name)
+        median_absolute_deviation = df.select(F.abs(F.col(col_name) - median).alias(col_name)).cols.median(col_name)
+        df = df.withColumn('m_z_score', F.abs(0.6745 * (F.col(col_name) - median) / median_absolute_deviation))
         df = df.rows.drop(F.col("m_z_score") > threshold)
         return df
