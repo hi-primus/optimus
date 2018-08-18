@@ -1,6 +1,4 @@
 # pyspark_pipes: build Spark ML pipelines easily
-import timber
-
 from .ml.pipelines import patch
 from .optimus import *
 
@@ -13,4 +11,3 @@ os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages databricks:spark-deep-learning:1
 # Monkey patch for Spark DataFrames
 from optimus.dataframe import rows, columns, extension, plots
 from optimus.io import save
-
