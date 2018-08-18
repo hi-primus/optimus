@@ -244,6 +244,16 @@ def is_int(value):
     return isinstance(value, int)
 
 
+# TODO: can be confused with is_type
+def is_dataframe(value):
+    """
+    Check if an object is a Spark DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, DataFrame)
+
+
 def is_data_type(value, data_type):
     """
     Check if a value can be casted to a specific
@@ -286,53 +296,3 @@ def is_data_type(value, data_type):
         return True
     else:
         return False
-
-
-# TODO: can be confused with is_type
-def is_dataframe(value):
-    """
-    Check if an object is a Spark DataFrame
-    :param value:
-    :return:
-    """
-    return isinstance(value, DataFrame)
-
-
-# Check cast
-def could_be_int(value):
-    """
-    Check if a str can be converted to int
-    :param value:
-    :return:
-    """
-    try:
-        int(value)
-        return True
-
-    except ValueError:
-        return False
-
-
-def could_be_float(value):
-    """
-    Check if a str can be converted to float
-    :param value:
-    :return:
-    """
-    try:
-        float(value)
-        return True
-
-    except ValueError:
-        pass
-
-
-def could_be_bool(value):
-    """
-    Check if a str can be converted to boolean
-    :param value:
-    :return:
-    """
-    value = value.lower()
-    if value == "true" or value == "false":
-        return True
