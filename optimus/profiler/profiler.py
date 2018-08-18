@@ -18,7 +18,7 @@ class Profiler:
     def dataset_info(df):
         """
         Return info about cols and row counts
-        :param df:
+        :param df: Dataframe to be processed
         :return:
         """
 
@@ -122,7 +122,6 @@ class Profiler:
 
         results["count_types"] = count_types
         results["columns"] = type_details
-
         return results
 
     @staticmethod
@@ -183,6 +182,7 @@ class Profiler:
             column_info['columns'][col_name] = {}
 
             column_type = count_dtypes["columns"][col_name]['type']
+            col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
 
             na = some_stats[col_name]["na"]
             max_value = some_stats[col_name]["max"]
@@ -203,15 +203,16 @@ class Profiler:
 
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
-                col_info['frequency'] = collect_to_dict(
-                    df.groupby(col_name).agg(F.count(col_name).alias("count"),
-                                             F.round(F.count(
-                                                 col_name) / rows_count * 100,
-                                                     5).alias("percentage")
 
-                                             ).sort(F.col("count").desc()).limit(10).cols.rename(col_name,
-                                                                                                 "value").sort(
-                        F.desc("count")).collect())
+                col_info['frequency'] = collect_to_dict(df.groupBy(col_name)
+                                                        .count()
+                                                        .rows.sort("count", "desc")
+                                                        .limit(10)
+                                                        .withColumn("percentage",
+                                                                    F.round((F.col("count") / rows_count) * 100,
+                                                                            5))
+                                                        .cols.rename(col_name)
+                                                        .collect())
 
                 # Uniques
                 uniques = some_stats[col_name].pop("approx_count_distinct")
@@ -237,7 +238,6 @@ class Profiler:
 
             column_info['columns'][col_name] = col_info
 
-            # print(column_info['columns'])
         return column_info
 
     @staticmethod
@@ -246,6 +246,7 @@ class Profiler:
         Get statistical information in HTML Format
         :param df:
         :param columns:
+        :param buckets:
         :return:
         """
 
