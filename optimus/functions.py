@@ -6,7 +6,6 @@ from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
-from multipledispatch import dispatch
 from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -130,6 +129,65 @@ def concat(dfs, like="columns"):
     return df_result
 
 
+def output_base64(fig):
+    """
+    Output a matplotlib as base64 encode
+    :param fig: Matplotlib figure
+    :return: Base64 encode image
+    """
+    fig_file = BytesIO()
+    plt.savefig(fig_file, format='png')
+
+    # rewind to beginning of file
+    fig_file.seek(0)
+
+    fig_png = base64.b64encode(fig_file.getvalue())
+    plt.close(fig)
+
+    return fig_png.decode('utf8')
+
+
+def ellipsis(data, length=10):
+    """
+    Add a "..." if a string y greater than a specific length
+    :param data:
+    :param lenght
+    :return:
+    """
+    data = str(data)
+    return (data[:length] + '..') if len(data) > length else data
+
+
+def plot_freq(column_data=None, output="image"):
+    """
+    Frequency plot
+    :param column_data:
+    :param output:
+    :return:
+    """
+    for col_name, data in column_data.items():
+
+        # Transform Optimus formt to matplotlib format
+        freq = {}
+        for d in data:
+            freq[ellipsis(d["value"])] = d["count"]
+
+        # Plot
+        fig = plt.figure()
+
+        plt.bar(freq.keys(), freq.values())
+        plt.title("Frequency " + col_name)
+
+        plt.xticks(rotation=30, ha="right")
+
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(bottom=0.2)
+
+        # Save as base64
+        if output is "base64":
+            return output_base64(fig)
+
+
 def plot_hist(column_data=None, output="image"):
     """
     Plot a histogram
@@ -138,7 +196,8 @@ def plot_hist(column_data=None, output="image"):
     {'lower': -53.66000061035157, 'upper': -36.80666656494141, 'value': 2},
     ...
     ]}
-    :param column_data:
+    :param column_data: histogram in Optimus format
+    :param output:
     :return:
     """
 
@@ -151,7 +210,7 @@ def plot_hist(column_data=None, output="image"):
         last = data[len(data) - 1]["upper"]
         bins.append(last)
 
-        # Transform hist Optimus format to matplot lib
+        # Transform hist Optimus format to matplot lib format
         hist = []
         for d in data:
             if d is not None:
@@ -168,14 +227,7 @@ def plot_hist(column_data=None, output="image"):
 
         # Save as base64
         if output is "base64":
-            figfile = BytesIO()
-            plt.savefig(figfile, format='png')
-            figfile.seek(0)  # rewind to beginning of file
-
-            figdata_png = base64.b64encode(figfile.getvalue())
-            plt.close(fig)
-
-            return figdata_png.decode('utf8')
+            return output_base64(fig)
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):

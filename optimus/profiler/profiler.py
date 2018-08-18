@@ -268,29 +268,35 @@ class Profiler:
         template = templateEnv.get_template("one_column.html")
 
         # Create every column stats
-        for c in columns:
-            if "hist" in summary["columns"][c]:
-                hist_pic = plot_hist({c: summary["columns"][c]["hist"]}, output="base64")
+        for col_name in columns:
+            if "hist" in summary["columns"][col_name]:
+                hist_pic = plot_hist({col_name: summary["columns"][col_name]["hist"]}, output="base64")
             else:
                 hist_pic = None
+            if "frequency" in summary["columns"][col_name]:
+                freq_pic = plot_freq({col_name: summary["columns"][col_name]["frequency"]}, output="base64")
+            else:
+                freq_pic = None
 
-            output = output + template.render(data=summary["columns"][c], hist_pic=hist_pic)
+            output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
         display(HTML(output))
 
     @staticmethod
     def json(df, columns, buckets=20, path=None):
         """
-        Output profilig as json format
+        Return the profiling data in json format
         :param df: Dataframe to be processed
         :param columns: column to calculate the histogram
         :param buckets: buckets on the histogram
         :param path: Path where the json is going to be saved
-        :return:
+        :return: json file
         """
         dataset = Profiler.dataset_info(df)
         summary = Profiler.columns(df, columns, buckets)
         summary["summary"] = dataset
+
+
         if path is None:
             path = Path.cwd() / "data.json"
 
