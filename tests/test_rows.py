@@ -2,7 +2,6 @@ from optimus import Optimus
 from pyspark.sql.types import *
 from optimus.functions import abstract_udf as audf
 
-
 op = Optimus()
 sc = op.sc
 
@@ -133,6 +132,27 @@ class TestDataFrameRows(object):
         ],
             [
                 ("  I like     fish  ", 1, "dog dog", "housé", 5, "a")
+            ])
+
+        assert (expected_df.collect() == actual_df.collect())
+
+    def test_sort(self):
+        actual_df = source_df.rows.sort("num", "desc")
+
+        expected_df = op.create.df([
+            ("words", "str", True),
+            ("num", "int", True),
+            ("animals", "str", True),
+            ("thing", StringType(), True),
+            ("second", "int", True),
+            ("filter", StringType(), True)
+        ],
+            [
+                (None, 3, "eagle", "glass", 8, "c"),
+                ("    zombies", 2, "cat", "tv", 6, "b"),
+                ("simpsons   cat lady", 2, "frog", "table", 7, "1"),
+                ("  I like     fish  ", 1, "dog dog", "housé", 5, "a"),
+
             ])
 
         assert (expected_df.collect() == actual_df.collect())

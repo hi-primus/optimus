@@ -1,13 +1,13 @@
+from multipledispatch import dispatch
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 
 # Helpers
 import optimus.create as op
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import validate_columns_names, parse_columns
-
-from pyspark.sql import functions as F
+from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val
 
 
 def rows(self):
@@ -71,20 +71,45 @@ def rows(self):
         return self.filter(*args, **kwargs)
 
     @add_attr(rows)
+    @dispatch(str)
+    def sort(columns):
+        """
+        Sort column by row
+        """
+        columns = parse_columns(self, columns)
+        return self.rows.sort([(columns, "asc",)])
+
+    @add_attr(rows)
+    @dispatch(str, str)
     def sort(columns, order="asc"):
         """
         Sort column by row
         """
         columns = parse_columns(self, columns)
 
-        if order == "asc":
-            sort_func = F.asc
-        elif order == "desc":
-            sort_func = F.desc
+        return self.rows.sort([(columns, order,)])
 
-        df = self
-        for col_name in columns:
-            df = self.sort(sort_func(col_name))
+    @add_attr(rows)
+    @dispatch(list)
+    def sort(col_sort):
+        """
+        Sort columns taking in account multiple columns
+        :param col_sort:
+        :type col_sort: list of tuples
+        """
+        # col_sort = parse_columns(self, col_sort)
+        func = []
+
+        for cs in col_sort:
+            col_name = one_list_to_val(cs[0])
+            order = cs[1]
+
+            if order == "asc":
+                sort_func = F.asc
+            elif order == "desc":
+                sort_func = F.desc
+            func.append(sort_func(col_name))
+        df = self.sort(*func)
         return df
 
     @add_attr(rows)
