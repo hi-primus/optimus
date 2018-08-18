@@ -97,7 +97,7 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_exp(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
+    def apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
         """
         Apply a expression to column.
         :param columns: Columns in which the function is going to be applied
@@ -466,7 +466,10 @@ def cols(self):
             parse_col_names_funcs_to_keys(
                 format_dict(
                     collect_to_dict(
-                        df.agg(*exprs).collect()))))
+                        df.agg(*exprs).collect())
+                )
+            )
+        )
 
     # Quantile statistics
     @add_attr(cols)
@@ -657,7 +660,7 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply_exp(columns, _lower, filter_col_by_dtypes="string")
+        return apply_expr(columns, _lower, filter_col_by_dtypes="string")
 
     @add_attr(cols)
     def upper(columns):
@@ -670,7 +673,7 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply_exp(columns, _upper, filter_col_by_dtypes="string")
+        return apply_expr(columns, _upper, filter_col_by_dtypes="string")
 
     @add_attr(cols)
     def trim(columns):
@@ -683,7 +686,7 @@ def cols(self):
         def _trim(col, args):
             return F.trim(F.col(col))
 
-        return apply_exp(columns, _trim)
+        return apply_expr(columns, _trim)
 
     @add_attr(cols)
     def reverse(columns):
@@ -696,7 +699,7 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_exp(columns, _reverse, filter_col_by_dtypes="string")
+        df = apply_expr(columns, _reverse, filter_col_by_dtypes="string")
 
         return df
 
@@ -751,7 +754,7 @@ def cols(self):
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
 
-        df = apply_exp(columns, _remove_white_spaces)
+        df = apply_expr(columns, _remove_white_spaces)
         return df
 
     @add_attr(cols)
@@ -781,7 +784,7 @@ def cols(self):
             return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
                 new_col)
 
-        return apply_exp(new_col, _date_transform, [col_name, current_format, output_format])
+        return apply_expr(new_col, _date_transform, [col_name, current_format, output_format])
 
     @add_attr(cols)
     def years_between(col_name, new_col, date_format):
@@ -821,7 +824,7 @@ def cols(self):
                 .alias(
                 name_col_age)
 
-        return apply_exp(new_col, _years_between, ["yyyyMMdd", col_name])
+        return apply_expr(new_col, _years_between, ["yyyyMMdd", col_name])
 
     @add_attr(cols)
     def impute(columns, out_cols, strategy):
@@ -1091,10 +1094,11 @@ def cols(self):
             df = vector_assembler.transform(self)
 
         elif shape is "array":
-            df = apply_exp(output_cols, F.array(*columns))
+            df = apply_expr(output_col, F.array(*columns))
 
         elif shape is "string":
-            df = apply_exp(output_cols, F.concat_ws(separator, *columns))
+
+            df = apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
             RaiseIfNot.value_error(shape, ["vector", "array", "string"])
 
@@ -1175,7 +1179,7 @@ def cols(self):
         def _split(col_name, args):
             return F.split(F.col(col_name), mark)
 
-        return apply_exp(columns, _split)
+        return apply_expr(columns, _split)
 
     @add_attr(cols)
     def cell(column):

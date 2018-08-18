@@ -4,8 +4,6 @@ import math
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
-from functools import reduce
-
 from optimus.helpers.constants import *
 from optimus.helpers.functions import parse_columns
 
@@ -138,7 +136,7 @@ def bucketizer(df, columns, splits):
 
     output_columns = [c + "_buckets" for c in columns]
     # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
-    df = df.cols.apply_exp(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
+    df = df.cols.apply_expr(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
 
     return df
 
