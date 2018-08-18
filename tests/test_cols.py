@@ -149,7 +149,7 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_set_apply_exp(self):
+    def test_set_apply_expr(self):
         source_df = op.create.df(
             rows=[
                 ("cafe", 1),
@@ -164,7 +164,7 @@ class TestDataFrameCols(object):
         def func(col_name, attrs):
             return F.col(col_name) * 2
 
-        actual_df = source_df.cols.apply_exp("num1", func)
+        actual_df = source_df.cols.apply_expr("num1", func)
 
         expected_df = op.create.df(
             rows=[
