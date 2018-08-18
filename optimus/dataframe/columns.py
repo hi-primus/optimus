@@ -1221,7 +1221,7 @@ def cols(self):
     @add_attr(cols)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
-        return self.cols.hist(columns, self.cols.min(columns), self.cols.max(columns), buckets)
+        return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
 
     @add_attr(cols)
     def schema_dtypes(columns):
