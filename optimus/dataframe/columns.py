@@ -2,6 +2,7 @@ import builtins
 import re
 import string
 import unicodedata
+from fastnumbers import fast_float
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -274,7 +275,7 @@ def cols(self):
 
     @add_attr(cols)
     @dispatch(list)
-    def cast(cols_and_dtypes):
+    def cast(col_and_dtype):
         """
         Cast multiple columns to a specific datatype
         List of tuples of column names and types to be casted. This variable should have the
@@ -285,26 +286,26 @@ def cols(self):
                 The first parameter in each tuple is the column name, the second is the final datatype of column after
                 the transformation is made.
 
-        :param cols_and_dtypes: Columns to be casted and new data types
+        :param col_and_dtype: Columns to be casted and new data types
         :return:
         """
-        cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
+        cols, attrs = parse_columns(self, col_and_dtype, get_args=True)
         return _cast(cols, attrs)
 
     @add_attr(cols)
     @dispatch((list, str), object)
-    def cast(columns, dtypes):
+    def cast(columns, dtype):
         """
         Cast a column or a list of columns to a specific datatype
         :param columns: Columns names to be casted
-        :param dtypes: final data type
+        :param dtype: final data type
         :return: Spark DataFrame
         """
 
         cols = parse_columns(self, columns)
         attrs = []
         for _ in builtins.range(0, len(cols)):
-            attrs.append((dtypes,))
+            attrs.append((dtype,))
 
         return _cast(cols, attrs)
 
@@ -454,7 +455,7 @@ def cols(self):
 
         # Parse the columns to float. Seems that spark can handle some aggregation with string columns giving
         # unexpected results
-        #df = df.cols.cast(columns, "float")
+        # df = df.cols.cast(columns, "float")
 
         # Create a Column Expression for every column
         exprs = []
@@ -862,8 +863,8 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
+
         df = self
-        # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
         expr = []
         for c in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
@@ -1074,11 +1075,11 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, output_cols, separator=None, shape=None):
+    def nest(input_cols, output_col, shape=None, separator=" "):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
-        :param output_cols: final column with the nested content
+        :param output_col: final column with the nested content
         :param separator: char to be used as separator at the concat time
         :param shape: final data type, 'array', 'string' or 'vector'
         :return: Spark DataFrame
@@ -1089,7 +1090,7 @@ def cols(self):
         if shape is "vector":
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
-                outputCol=output_cols)
+                outputCol=output_col)
             df = vector_assembler.transform(self)
 
         elif shape is "array":
