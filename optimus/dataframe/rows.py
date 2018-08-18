@@ -7,6 +7,8 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns
 
+from pyspark.sql import functions as F
+
 
 def rows(self):
     @add_attr(rows)
@@ -38,7 +40,7 @@ def rows(self):
         return df.union(new_row)
 
     @add_attr(rows)
-    def filter_by_dtypes(col_name, data_type=None):
+    def select_by_dtypes(col_name, data_type=None):
         """
         This function has built in order to filter some type of row depending of the var type detected by python
         for Example if you have a column with
@@ -67,6 +69,22 @@ def rows(self):
         :return: Spark DataFrame
         """
         return self.filter(*args, **kwargs)
+
+    @add_attr(rows)
+    def sort(columns, order):
+        """
+        """
+        columns = parse_columns(self, columns)
+
+        if order == "asc":
+            sort_func = F.asc
+        elif order == "desc":
+            sort_func = F.desc
+
+        df = self
+        for col_name in columns:
+            df = self.sort(sort_func(col_name))
+        return df
 
     @add_attr(rows)
     # https://chrisalbon.com/python/data_wrangling/pandas_dropping_column_and_rows/
