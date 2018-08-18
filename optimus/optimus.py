@@ -17,7 +17,7 @@ class Optimus:
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
                  verbose=True):
         """
-
+        Transform and roll out
         :param master: 'Master', 'local' or ip address to a cluster
         :param app_name: Spark app name
         :param path: path to the checkpoint folder
@@ -64,26 +64,20 @@ class Optimus:
     def sc(self):
         return Spark.instance.sc()
 
-    concat = concat
+    @staticmethod
+    def concat(dfs, like):
+        return concat(dfs, like)
 
     @staticmethod
     def set_check_point_folder(path, file_system):
         """
         Function that receives a workspace path where a folder is created.
-        This folder will store temporal
-        dataframes when user writes the DataFrameTransformer.checkPoint().
-
-        This function needs the sc parameter, which is the spark context in order to
-        tell spark where is going to save the temporal files.
-
-        It is recommended that users deleted this folder after all transformations are completed
-        and the final dataframe have been saved. This can be done with deletedCheckPointFolder function.
+        This folder will store temporal dataframes when user writes the .checkPoint().
 
         :param path: Location of the dataset (string).
         :param file_system: Describes if file system is local or hadoop file system.
 
         """
-
 
         print_check_point_config(file_system)
 
@@ -123,7 +117,7 @@ class Optimus:
         Function that deletes the temporal folder where temp files were stored.
         The path required is the same provided by user in setCheckPointFolder().
 
-        :param path:
+        :param path: path where the info will be saved
         :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
