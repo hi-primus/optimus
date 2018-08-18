@@ -298,19 +298,6 @@ def is_dataframe(value):
     return isinstance(value, DataFrame)
 
 
-def cast_to_float(value):
-    """
-    Try to cast to float if not possible return the same value
-    :param value:
-    :return:
-    """
-    try:
-        return float(value)
-    # if we can not parse the value return the value without modification
-    except Exception:
-        return value
-
-
 # Check cast
 def could_be_int(value):
     """
