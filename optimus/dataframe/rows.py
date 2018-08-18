@@ -59,7 +59,7 @@ def rows(self):
         return self.where(fbdt(col_name, data_type))
 
     @add_attr(rows)
-    def filter(*args, **kwargs):
+    def select(*args, **kwargs):
         """
         Alias of Spark filter function. Return rows that match a expression
         :param args:
