@@ -30,8 +30,8 @@ def rows(self):
         for d, r in zip(df.dtypes, row):
             col_name = d[0]
             data_type = d[1]
-            if data_type in SPARK_DTYPES_DICT:
-                cols.append((col_name, (SPARK_DTYPES_DICT[data_type]), True))
+            if data_type in SPARK_DTYPES_DICT_OBJECTS:
+                cols.append((col_name, (SPARK_DTYPES_DICT_OBJECTS[data_type]), True))
                 values.append(r)
 
         values = [tuple(values)]
@@ -71,8 +71,9 @@ def rows(self):
         return self.filter(*args, **kwargs)
 
     @add_attr(rows)
-    def sort(columns, order):
+    def sort(columns, order="asc"):
         """
+        Sort column by row
         """
         columns = parse_columns(self, columns)
 
