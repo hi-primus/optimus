@@ -3,7 +3,7 @@ import seaborn as sns
 from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 
-from optimus.functions import plot_hist
+from optimus.functions import plot_hist, plot_freq
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns
 
@@ -11,11 +11,33 @@ from optimus.helpers.functions import parse_columns
 def plots(self):
     @add_attr(plots)
     def hist(columns=None, buckets=10, output="image"):
+        """
+
+        :param columns:
+        :param buckets:
+        :param output:
+        :return:
+        """
         columns = parse_columns(self, columns)
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
             plot_hist({col_name: data}, output=output)
+
+    @add_attr(plots)
+    def frequency(columns=None, buckets=10, output="image"):
+        """
+
+        :param columns:
+        :param buckets:
+        :param output:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        for col_name in columns:
+            data = self.cols.frequency(col_name, buckets)
+            plot_freq({col_name: data}, output=output)
 
     @add_attr(plots)
     def correlation(vec_col, method="pearson"):
