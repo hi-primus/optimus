@@ -5,17 +5,17 @@ from pyspark.sql import DataFrame
 
 from optimus.functions import plot_hist
 from optimus.helpers.decorators import add_attr
+from optimus.helpers.functions import parse_columns
 
-
-# Get only column
-# Get split and column name
-# output base64 or terminal
 
 def plots(self):
     @add_attr(plots)
-    def hist(col_name=None, buckets=10, output="image"):
-        data = self.cols.hist(col_name, buckets)
-        plot_hist({col_name: data}, output=output)
+    def hist(columns=None, buckets=10, output="image"):
+        columns = parse_columns(self, columns)
+
+        for col_name in columns:
+            data = self.cols.hist(col_name, buckets)
+            plot_hist({col_name: data}, output=output)
 
     @add_attr(plots)
     def correlation(vec_col, method="pearson"):
