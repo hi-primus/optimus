@@ -7,8 +7,9 @@ import json
 from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function, is_dict
-from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT
+    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function, is_dict, is_list
+from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
+    SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -75,7 +76,6 @@ def print_html(html):
 def print_json(value):
     pp = pprint.PrettyPrinter(indent=2)
     if is_str(value):
-
         value = value.replace("'", "\"")
         print(value)
         value = json.loads(value)
@@ -120,12 +120,10 @@ def val_to_list(val):
     :param val:
     :return:
     """
-    if isinstance(val, (int, float, str, tuple)) or is_function(val):
-        result = [val]
-    else:
-        result = val
+    if not is_list(val):
+        val = [val]
 
-    return result
+    return val
 
 
 def filter_list(val, index=0):
@@ -155,7 +153,7 @@ def format_dict(val):
     """
     This function format a dict. If the main dict or a deep dict has only on element
      {"col_name":{0.5: 200}} we get 200
-    :param val: dict to be formated
+    :param val: dict to be formatted
     :return:
     """
 
@@ -280,13 +278,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
-        filter_by_column_dtypes = list(map(lambda x: parse_python_dtypes(x), filter_by_column_dtypes))
-
         # Get columns for every data type
-        columns_filtered = list(map(lambda x: filter_col_name_by_dtypes(df, x), filter_by_column_dtypes))
-
-        # Merge list
-        columns_filtered = list(itertools.chain(*columns_filtered))
+        columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per datatype from the whole dataframe with the columns passed to the function
         cols = list(set(cols).intersection(columns_filtered))
@@ -327,24 +320,16 @@ def is_pyarrow_installed():
 
 def filter_col_name_by_dtypes(df, data_type):
     """
-    Return column names by data type
+    Return column names filtered by the column data type
     :param df: Dataframe which columns are going to be filtered
     :param data_type: Datatype used to filter the column.
     :type data_type: str or list
     :return:
     """
+    data_type = parse_spark_dtypes(data_type)
 
-    # data_type = parse_spark_dtypes(data_type)
+    # isinstace requiere a tuple
+    data_type = tuple(val_to_list(data_type))
 
-    def parse(x):
-        # TODO: Check for a better way to handle this using schemma['col_name'].data_type
-        if "array" in x[1]:
-            value = "array"
-        else:
-            value = x[1]
-
-        return value in data_type
-
-    columns = [y[0] for y in filter(parse, df.dtypes)]
-
-    return columns
+    # Filter columns by data type
+    return [c for c in df.columns if isinstance(df.schema[c].dataType, data_type)]
