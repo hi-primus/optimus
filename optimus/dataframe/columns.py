@@ -1225,9 +1225,25 @@ def cols(self):
         return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
 
     @add_attr(cols)
+    def frequency(columns, buckets=10):
+        """
+        Output values frequency in json format
+        :param columns: Column to be processed
+        :param buckets: Number of buckets
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        for col_name in columns:
+            df = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
+                buckets).cols.rename(col_name, "value")
+
+        return collect_to_dict(df.collect())
+
+    @add_attr(cols)
     def schema_dtypes(columns):
         """
-        Return the columns data type as DataType
+        Return the columns data type as Type
         :param columns:
         :return:
         """
