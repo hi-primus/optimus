@@ -22,7 +22,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
-    tuple_to_dict, val_to_list, filter_list
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
@@ -239,11 +239,11 @@ def cols(self):
         def cast_factory(cls):
 
             # Parse standard data types
-            if parse_spark_dtypes(cls):
+            if get_spark_dtypes_object(cls):
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
-                    return F.col(col_name).cast(parse_spark_dtypes(cls))
+                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
 
                 func_return_type = None
 

@@ -22,15 +22,35 @@ def random_name():
 
 def parse_spark_dtypes(value):
     """
-    Get a python data type from a string
+    Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
     :param value:
     :return:
     """
+    value = val_to_list(value)
     try:
-        data_type = SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[value]]
+        data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
+
     except KeyError:
         data_type = None
 
+    data_type = one_list_to_val(data_type)
+    return data_type
+
+
+def get_spark_dtypes_object(value):
+    """
+    Get a pyspark data class from a string data type representation. for example 'StringType()' from 'string'
+    :param value:
+    :return:
+    """
+    value = val_to_list(value)
+    try:
+        data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
+
+    except KeyError:
+        data_type = None
+
+    data_type = one_list_to_val(data_type)
     return data_type
 
 
