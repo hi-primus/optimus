@@ -10,34 +10,32 @@ from optimus.helpers.functions import parse_columns
 
 def plots(self):
     @add_attr(plots)
-    def hist(columns=None, buckets=10, output="image"):
+    def hist(columns=None, buckets=10):
         """
-
-        :param columns:
-        :param buckets:
-        :param output:
+        Plot histogram
+        :param columns: Columns to be printed
+        :param buckets: Number of buckets
         :return:
         """
         columns = parse_columns(self, columns)
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
-            plot_hist({col_name: data}, output=output)
+            plot_hist({col_name: data}, output="image")
 
     @add_attr(plots)
-    def frequency(columns=None, buckets=10, output="image"):
+    def frequency(columns=None, buckets=10):
         """
-
-        :param columns:
-        :param buckets:
-        :param output:
+        Plot frequency chart
+        :param columns: Columns to be printed
+        :param buckets: Number of buckets
         :return:
         """
         columns = parse_columns(self, columns)
 
         for col_name in columns:
             data = self.cols.frequency(col_name, buckets)
-            plot_freq({col_name: data}, output=output)
+            plot_freq({col_name: data}, output="image")
 
     @add_attr(plots)
     def correlation(vec_col, method="pearson"):
