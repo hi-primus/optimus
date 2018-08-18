@@ -861,10 +861,9 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=["string", "float"])
+        columns = parse_columns(self, columns)
         df = self
         # df = df.select([F.count(F.when(F.isnan(c), c)).alias(c) for c in columns]) Just count Nans
-
         expr = []
         for c in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
