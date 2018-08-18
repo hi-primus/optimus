@@ -4,7 +4,7 @@ from pyspark.sql.types import StructField, StructType
 
 # Helpers
 from optimus.helpers.constants import SPARK_DTYPES
-from optimus.helpers.functions import parse_spark_dtypes
+from optimus.helpers.functions import parse_spark_dtypes, get_spark_dtypes_object
 from optimus.spark import Spark
 
 
@@ -18,8 +18,6 @@ class Create:
         :param rows:
         :return:
         """
-        logger = logging.getLogger("analytics")
-        logger.debug("data_frame")
 
         specs = []
         for c in cols:
@@ -29,8 +27,7 @@ class Create:
                 var_type = value
             # else, try to parse a str, int, float ......
             else:
-                var_type = parse_spark_dtypes(c[1])
-
+                var_type = get_spark_dtypes_object(c[1])
             specs.append([c[0], var_type, c[2]])
 
         struct_fields = list(map(lambda x: StructField(*x), specs))
