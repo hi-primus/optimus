@@ -1,9 +1,9 @@
-import logging
 import os
 
 import jinja2
 from IPython.core.display import display, HTML
 from pyspark.ml.feature import SQLTransformer
+from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -108,9 +108,9 @@ def sql(self, sql_expression):
 def table(self, limit=100, columns=None):
     """
     Return a HTML table with the dataframe cols, data types and values
-    :param self
-    :param columns:
-    :param limit:
+    :param self:
+    :param columns: Columns to be printed
+    :param limit: how many rows will be printed
     :return:
     """
 
@@ -118,11 +118,10 @@ def table(self, limit=100, columns=None):
 
     data = collect_to_dict(self.select(columns).limit(limit).collect())
 
+    # Load template
     path = os.path.dirname(os.path.abspath(__file__))
-
     template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
-
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type need it
@@ -131,5 +130,63 @@ def table(self, limit=100, columns=None):
     total = self.count()
     if total < limit:
         limit = total
+
+    # Print table
     output = template.render(cols=dtypes, data=data, limit=limit, total=total)
     display(HTML(output))
+
+
+@add_method(DataFrame)
+def correlation(self, columns, method="pearson", strategy="mean", output="json"):
+    """
+    Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
+    missing values
+    :param self:
+    :param columns: Columns to be processed
+    :param method: Method used to calculate the correlation
+    :param strategy: Imputing strategy
+    :param output: array or json
+    :return:
+    """
+    columns = parse_columns(self, columns)
+    # try to parse the select column to float and create a vector
+
+    df = self
+    for col_name in columns:
+        df = df.cols.cast(col_name, "float")
+        logging.info("Casting {col_name} to float...".format(col_name=col_name))
+
+    # Impute missing values
+    imputed_cols = [c + "_imputed" for c in columns]
+    df = df.cols.impute(columns, imputed_cols, strategy)
+    logging.info("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
+
+    # Create Vector necessary to calculate the correlation
+    df = df.cols.nest(imputed_cols, "features", "vector")
+
+    corr = Correlation.corr(df, "features", method).head()[0].toArray()
+
+    if output is "array":
+        result = corr
+
+    elif output is "json":
+
+        # Parse result to json
+        col_pair = []
+        for col_name in columns:
+            for col_name_2 in columns:
+                col_pair.append({"between": col_name, "an": col_name_2})
+
+        # flat array
+        values = corr.flatten('F').tolist()
+
+        result = []
+        for n, v in zip(col_pair, values):
+            # Remove correlation between the same column
+            if n["between"] is not n["an"]:
+                n["value"] = v
+                result.append(n)
+
+        result = sorted(result, key=lambda k: k['value'], reverse=True)
+
+    return result
