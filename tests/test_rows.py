@@ -22,8 +22,8 @@ source_df = op.create.df([
 
 
 class TestDataFrameRows(object):
-
-    def test_append(self):
+    @staticmethod
+    def test_append():
         actual_df = source_df.rows.append(["this is a word", 2, "this is an animal",
                                            "this is a thing", 64, "this is a filter"])
 
@@ -46,7 +46,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_select(self):
+    @staticmethod
+    def test_select():
         actual_df = source_df.rows.select(source_df["num"] == 1)
 
         expected_df = op.create.df([
@@ -63,7 +64,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_select_by_dtypes(self):
+    @staticmethod
+    def test_select_by_dtypes():
         actual_df = source_df.rows.select_by_dtypes("filter", "integer")
 
         expected_df = op.create.df([
@@ -80,7 +82,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_drop_by_dtypes(self):
+    @staticmethod
+    def test_drop_by_dtypes():
         actual_df = source_df.rows.drop_by_dtypes("filter", "integer")
 
         expected_df = op.create.df([
@@ -99,7 +102,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_drop(self):
+    @staticmethod
+    def test_drop():
         actual_df = source_df.rows.drop((source_df["num"] == 2) | (source_df["second"] == 5))
 
         expected_df = op.create.df([
@@ -116,7 +120,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_drop_audf(self):
+    @staticmethod
+    def test_drop_audf():
         def func_data_type(value, attr):
             return value > 1
 

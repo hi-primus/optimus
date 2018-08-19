@@ -8,8 +8,8 @@ sc = op.sc
 
 
 class TestDataFrameCols(object):
-
-    def test_lower_case(self):
+    @staticmethod
+    def test_lower_case():
         source_df = op.create.df(
             rows=[
                 ("BOB", 1),
@@ -37,7 +37,8 @@ class TestDataFrameCols(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_upper_case(self):
+    @staticmethod
+    def test_upper_case():
         source_df = op.create.df(
             rows=[
                 ("BOB", 1),
@@ -66,7 +67,8 @@ class TestDataFrameCols(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_trim_col(self):
+    @staticmethod
+    def test_trim_col():
         source_df = op.create.df(
             rows=[
                 ("  ron", 1),
@@ -95,7 +97,8 @@ class TestDataFrameCols(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_drop_col(self):
+    @staticmethod
+    def test_drop_col():
         source_df = op.create.df(
             rows=[
                 ("happy", 1, 8),
@@ -123,7 +126,8 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_replace_col(self):
+    @staticmethod
+    def test_replace_col():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -149,7 +153,8 @@ class TestDataFrameCols(object):
         )
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_set_apply_expr(self):
+    @staticmethod
+    def test_set_apply_expr():
         source_df = op.create.df(
             rows=[
                 ("cafe", 1),
@@ -179,7 +184,8 @@ class TestDataFrameCols(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_append_number(self):
+    @staticmethod
+    def test_append_number():
         source_df = op.create.df(
             rows=[
                 ("happy", 1, 8),
@@ -209,7 +215,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_append_advanced(self):
+    @staticmethod
+    def test_append_advanced():
         source_df = op.create.df(
             rows=[
                 ("happy", 1, 8),
@@ -244,7 +251,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_rename_simple(self):
+    @staticmethod
+    def test_rename_simple():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -271,7 +279,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_rename_list(self):
+    @staticmethod
+    def test_rename_list():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -298,7 +307,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_rename_advanced(self):
+    @staticmethod
+    def test_rename_advanced():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -325,7 +335,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_cast_simple(self):
+    @staticmethod
+    def test_cast_simple():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -352,7 +363,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_cast_advanced(self):
+    @staticmethod
+    def test_cast_advanced():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -379,7 +391,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_keep(self):
+    @staticmethod
+    def test_keep():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -400,7 +413,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_move(self):
+    @staticmethod
+    def test_move():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
@@ -427,7 +441,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_select(self):
+    @staticmethod
+    def test_select():
         source_df = op.create.df(
             rows=[
                 ("happy", 1, 8),
@@ -455,7 +470,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_select_regex(self):
+    @staticmethod
+    def test_select_regex():
         source_df = op.create.df(
             rows=[
                 ("happy", 1, 8),
@@ -483,7 +499,8 @@ class TestDataFrameCols(object):
 
         assert (actual_df.collect() == expected_df.collect())
 
-    def test_sort(self):
+    @staticmethod
+    def test_sort():
         source_df = op.create.df(
             rows=[
                 ("happy", 1),
