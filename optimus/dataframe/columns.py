@@ -22,7 +22,7 @@ from optimus.helpers.checkit \
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import validate_columns_names, parse_columns, parse_spark_dtypes, collect_to_dict, format_dict, \
+    import validate_columns_names, parse_columns, collect_to_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.profiler.functions import bucketizer
@@ -522,29 +522,31 @@ def cols(self):
         return percentile(columns, [0.5])
 
     @add_attr(cols)
-    def percentile(columns, percentile=[0.05, 0.25, 0.5, 0.75, 0.95], error=0):
+    def percentile(columns, values=None, error=0):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
-        :param percentile: list of percentiles to be calculated
-        :return: 
+        :param values: list of percentiles to be calculated
+        :return: percentiles per columns
         """
+        if values is None:
+            values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
         columns = parse_columns(self, columns)
 
         # Get percentiles
-        percentile_value = []
+        percentile_results = []
         for c in columns:
-            percentile_results = self \
+            percentile_per_col = self \
                 .rows.drop_na(c) \
                 .cols.cast(c, "double") \
-                .approxQuantile(c, percentile, error)
+                .approxQuantile(c, values, error)
 
-            percentile_value.append(dict(zip(percentile, percentile_results)))
+            percentile_results.append(dict(zip(values, percentile_per_col)))
 
-        percentile_value = dict(zip(columns, percentile_value))
+        percentile_results = dict(zip(columns, percentile_results))
 
-        return format_dict(percentile_value)
+        return format_dict(percentile_results)
 
     # Descriptive Analytics
     @add_attr(cols)
