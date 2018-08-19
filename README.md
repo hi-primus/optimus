@@ -7,11 +7,10 @@
 [![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
 
 Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Apache Spark(PySpark).
-Also in this new version Optimus can help you in the model creation with several tools like ...
 
 ## Installation (pip):  
   
-In your terminal just type  `pip install optimuspyspark  `  
+In your terminal just type  `pip install optimuspyspark`
 ### Requirements
 * Apache Spark 2.3.0  
 * Python>=3.6  
@@ -25,24 +24,24 @@ After installation go to the examples folder and found examples about data clean
 [![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://docs.hioptimus.com/en/latest/)  
   
 ## Feedback 
-Feedback is what drive Optimus future. So take a couple of minutes to help shape the Optimus' Roadmap:  https://optimusdata.typeform.com/to/aEnYRY  
+Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  https://optimusdata.typeform.com/to/aEnYRY  
 
 Also If you want to know what features are the most requested or have and idea you want to see in Optimus let us know at  
 https://optimus.featureupvote.com/  
  
 ## Info
-And if you want to see some cool information and tutorials for Optimus check out our blog https://medium.com/hi-optimus  
+And if you want to see some cool information and tutorials about Optimus check out our blog https://medium.com/hi-optimus  
   
 ### Requirements
 * Apache Spark 2.3.0  
 * Python>=3.6  
   
-## Basic Usage  
+## Data loading, cleaning and processing
   
-Optimus V2 was created to make data cleaning a brezee. The API was designed to be super easy to new commers and very familliar to the ones that comes from Pandas.
+Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
 Optimus expand the Spark DataFrame functionality adding .rows and .cols attributes.
 
-For example to:
+For example you can load data from a url, apply some cleaning functions and make some operations in a easy
 
 `df = df\
 	.cols.rename([('num','number')])\
@@ -50,12 +49,27 @@ For example to:
     .withColumn("new_col_2", lit("spongebob"))\
     .cols.append("new_col_1", 1)\
     .cols.sort(order= "desc")\
+    .rows.drop(col('number')>1)
     .table()`
 
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time.
 
-DataFrameTransformer class receives a dataFrame as an argument. This  
-class has all methods listed above.  
+To know about all the Optimus functionality please go to this notebooks
+
+### Custom functions
+Spark have multiple ways to transform your data rdd, Column Expression ,udf, pandas udf. In Optimus we create the *abstract UDF* which handle all the implementation complexity.
+ 
+
+## Data profiling
+
+Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
+it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date which give a unique overview about your data nature. 
+You only need to run `df.profile("*")`. For more info about the profile please go to this notebooks
+
+## Machine Learning 
+
+## Deep Learning
+ 
  
 ## Contributing to Optimus
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
