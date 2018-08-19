@@ -1,14 +1,14 @@
-import os
 from functools import lru_cache
+from os.path import abspath
 
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
-from optimus.helpers.functions import is_pyarrow_installed
-
+from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
 
 
 class Spark:
+
     def __init__(self, master="local[*]", app_name="optimus"):
         """
 
@@ -22,22 +22,8 @@ class Spark:
 
         logging.info(JUST_CHECKING)
         logging.info("-----")
-        try:
-            logging.info("HADOOP_HOME=" + os.environ.get("HADOOP_HOME"))
-        except:
-            logging.info("You don't have HADOOP_HOME set")
-        try:
-            logging.info("PYSPARK_PYTHON=" + os.environ.get("PYSPARK_PYTHON"))
-        except:
-            logging.info("You don't have PYSPARK_PYTHON set")
-        try:
-            logging.info("SPARK_HOME=" + os.environ.get("SPARK_HOME"))
-        except:
-            logging.info("You don't have SPARK_HOME set")
-        try:
-            logging.info("JAVA_HOME=" + os.environ.get("JAVA_HOME"))
-        except:
-            logging.info("You don't have JAVA_HOME set")
+        check_env_vars(["SPARK_HOME", "HADOOP_HOME", "PYSPARK_PYTHON", "PYSPARK_DRIVER_PYTHON", "JAVA_HOME"])
+
         if is_pyarrow_installed() is True:
             logging.info("Pyarrow Installed")
         else:
@@ -54,7 +40,7 @@ class Spark:
         Return the Spark Session
         :return: None
         """
-        from os.path import abspath
+
         warehouse_location = abspath('spark-warehouse')
         return (SparkSession
                 .builder
@@ -72,3 +58,5 @@ class Spark:
         :return:
         """
         return self.spark().sparkContext
+
+
