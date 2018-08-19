@@ -49,14 +49,9 @@ def plots(self):
         :return: Heatmap plot of the corr matrix using seaborn.
         """
 
-        assert isinstance(method, str), "Error, method argument provided must be a string."
-
-        assert method == 'pearson' or (
-                method == 'spearman'), "Error, method only can be 'pearson' or 'sepearman'."
-
-        cor = Correlation.corr(self._df, vec_col, method).head()[0].toArray()
-        return sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
-                                                                                                   as_cmap=True))
+        corr = self.correlation(vec_col, method, output="array")
+        return sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
+                                                                                                     as_cmap=True))
 
     return plots
 
