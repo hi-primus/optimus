@@ -32,7 +32,6 @@ class Spark:
         logging.info("-----")
         logging.info(STARTING_SPARK)
         self.spark()
-        # self.get_sc().addPyFile("../optimus/helpers/checkit.py")
 
     @lru_cache(maxsize=None)
     def spark(self):
@@ -41,12 +40,8 @@ class Spark:
         :return: None
         """
 
-        warehouse_location = abspath('spark-warehouse')
         return (SparkSession
                 .builder
-                # .config("hive.metastore.warehouse.dir", warehouse_location)
-                # .config("spark.sql.warehouse.dir", warehouse_location)
-                # .enableHiveSupport()
                 .master(self.master)
                 .appName(self.app_name)
                 .getOrCreate()
@@ -58,5 +53,3 @@ class Spark:
         :return:
         """
         return self.spark().sparkContext
-
-

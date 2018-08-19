@@ -1,4 +1,5 @@
 import findspark
+
 findspark.init()
 
 import pytest

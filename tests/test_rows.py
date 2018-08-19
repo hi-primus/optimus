@@ -141,7 +141,8 @@ class TestDataFrameRows(object):
 
         assert (expected_df.collect() == actual_df.collect())
 
-    def test_sort(self):
+    @staticmethod
+    def test_sort():
         actual_df = source_df.rows.sort("num", "desc")
 
         expected_df = op.create.df([
