@@ -1,8 +1,4 @@
-# Reference https://medium.com/@mgarod/dynamically-add-a-method-to-a-class-in-python-c49204b85bd6
-# Decorator to attach a custom functions to a class
-
 from functools import wraps
-import logging
 
 
 def add_method(cls):

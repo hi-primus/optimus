@@ -1,10 +1,9 @@
-import logging
-
+# Helpers
 from pyspark.sql.types import StructField, StructType
 
 # Helpers
 from optimus.helpers.constants import SPARK_DTYPES
-from optimus.helpers.functions import parse_spark_dtypes, get_spark_dtypes_object
+from optimus.helpers.functions import get_spark_dtypes_object
 from optimus.spark import Spark
 
 
