@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from fastnumbers import fast_float
@@ -255,16 +254,16 @@ class Profiler:
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
-        templateLoader = jinja2.FileSystemLoader(searchpath=path + "//templates")
-        templateEnv = jinja2.Environment(loader=templateLoader)
+        template_loader = jinja2.FileSystemLoader(searchpath=path + "//templates")
+        template_env = jinja2.Environment(loader=template_loader, autoescape=True)
 
         # Render template
         # Create the profiler info header
         output = ""
-        general_template = templateEnv.get_template("general_info.html")
+        general_template = template_env.get_template("general_info.html")
         output = output + general_template.render(data=summary)
 
-        template = templateEnv.get_template("one_column.html")
+        template = template_env.get_template("one_column.html")
 
         # Create every column stats
         for col_name in columns:
@@ -279,7 +278,7 @@ class Profiler:
 
             output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
-        #df.plots.correlation(columns)
+        # df.plots.correlation(columns)
         display(HTML(output))
         df.table(10)
 
@@ -296,7 +295,6 @@ class Profiler:
         dataset = Profiler.dataset_info(df)
         summary = Profiler.columns(df, columns, buckets)
         summary["summary"] = dataset
-
 
         if path is None:
             path = Path.cwd() / "data.json"
