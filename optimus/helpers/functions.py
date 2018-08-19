@@ -1,13 +1,14 @@
-import itertools
+import json
+import logging
+import os
+import pprint
 import random
 import re
-import pprint
-import json
 
 from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_function, is_dict, is_list
+    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_dict, is_list
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIfNot
@@ -336,3 +337,17 @@ def filter_col_name_by_dtypes(df, data_type):
 
     # Filter columns by data type
     return [c for c in df.columns if isinstance(df.schema[c].dataType, data_type)]
+
+
+def check_env_vars(env_vars):
+    """
+    Check if a environment var exist
+    :param env_vars:
+    :return:
+    """
+
+    for env_var in env_vars:
+        try:
+            logging.info(env_var + "=" + os.environ.get(env_var))
+        except:
+            logging.info("You don't have " + env_var + " set")
