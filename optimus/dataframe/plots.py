@@ -1,6 +1,5 @@
 import numpy as np
 import seaborn as sns
-from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 
 from optimus.functions import plot_hist, plot_freq
