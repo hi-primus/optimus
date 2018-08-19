@@ -23,7 +23,7 @@ def rows(self):
 
         assert isinstance(row, list), "Error: row must me a list"
         assert len(row) > 0, "Error: row list must be greater that 0"
-        assert len(df.dtypes) == len(row), "Error row must be the same lenght of the dataframe"
+        assert len(df.dtypes) == len(row), "Error row must be the same length of the dataframe"
 
         cols = []
         values = []
@@ -113,7 +113,6 @@ def rows(self):
         return df
 
     @add_attr(rows)
-    # https://chrisalbon.com/python/data_wrangling/pandas_dropping_column_and_rows/
     def drop(where=None):
         """
         Drop a row depending on a dataframe expression
@@ -144,11 +143,6 @@ def rows(self):
         values are null. The default is 'all'.
         :return: Returns a new DataFrame omitting rows with null values.
         """
-
-        assert isinstance(how, str), "Error, how argument provided must be a string."
-
-        assert how == "all" or (
-                how == "any"), "Error, how only can be 'all' or 'any'."
 
         columns = parse_columns(self, columns)
 
