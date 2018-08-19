@@ -15,7 +15,7 @@ Spark.instance = None
 class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
-                 verbose=True):
+                 verbose=False):
         """
         Transform and roll out
         :param master: 'Master', 'local' or ip address to a cluster
@@ -142,6 +142,5 @@ class Optimus:
                 logging.info("Folder deleted.")
             else:
                 logging.info("Folder deleted.")
-                pass
         else:
             RaiseIfNot.value_error(file_system, ["hadoop", "local"])
