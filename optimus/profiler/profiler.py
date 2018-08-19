@@ -1,12 +1,14 @@
+import json
 import logging
 import os
+from fastnumbers import fast_float
 from pathlib import Path
 
 import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
-from optimus.functions import filter_row_by_data_type as fbdt, plot_hist
+from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.functions import parse_columns, collect_to_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json
@@ -26,7 +28,7 @@ class Profiler:
 
         cols_count = len(df.columns)
         rows_count = df.count()
-        missing_count = sum(df.cols.count_na(columns).values())
+        missing_count = round(sum(df.cols.count_na(columns).values()), 2)
 
         return (
             {'cols_count': cols_count,
@@ -39,7 +41,7 @@ class Profiler:
     @staticmethod
     def count_data_types(df, columns):
         """
-        Count the number of int, float, string and bool in a column
+        Count the number of int, float, string and bool in a  in json format
         :param df:
         :param columns:
         :return:
@@ -127,7 +129,7 @@ class Profiler:
     @staticmethod
     def columns(df, columns, buckets=10):
         """
-        Get statistical information in json format
+        Return statistical information about a specific column in json format
         count_data_type()
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
@@ -161,15 +163,14 @@ class Profiler:
             return F.count(F.when(F.col(col_name) == 0, col_name))
 
         # Cast every column to a specific type to ensure the correct profiling
-        # For example if we calculate the min or max of a string column with numeric value we are going to have
-        # incorrect values
+        # For example if we calculate the min or max of a string column with numeric values the result will be incorrect
         for col_name in columns:
             dtype = count_dtypes["columns"][col_name]['dtype']
-            # not force date type conversion, can trust that the convertion is going to be representative
+            # Not force date type conversion, we can not trust that is going to be representative
             if dtype in ["string", "float", "int", "bool"]:
                 df = df.cols.cast(col_name, dtype)
 
-        some_stats = df.cols._exprs(
+        stats = df.cols._exprs(
             [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
              zeros],
             columns)
@@ -184,9 +185,9 @@ class Profiler:
             column_type = count_dtypes["columns"][col_name]['type']
             col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
 
-            na = some_stats[col_name]["na"]
-            max_value = some_stats[col_name]["max"]
-            min_value = some_stats[col_name]["min"]
+            na = stats[col_name]["na"]
+            max_value = stats[col_name]["max"]
+            min_value = stats[col_name]["min"]
 
             col_info['name'] = col_name
             col_info['column_type'] = column_type
@@ -194,7 +195,7 @@ class Profiler:
             # Numeric Column
             if column_type == "numeric" or column_type == "date":
                 # Merge
-                col_info["stats"] = some_stats[col_name]
+                col_info["stats"] = stats[col_name]
 
             # Missing
             col_info['stats']['missing_count'] = round(na, 2)
@@ -206,16 +207,15 @@ class Profiler:
 
                 col_info['frequency'] = collect_to_dict(df.groupBy(col_name)
                                                         .count()
-                                                        .rows.sort("count", "desc")
+                                                        .rows.sort([("count", "desc"), (col_name, "desc")])
                                                         .limit(10)
                                                         .withColumn("percentage",
                                                                     F.round((F.col("count") / rows_count) * 100,
-                                                                            5))
-                                                        .cols.rename(col_name)
+                                                                            3))
+                                                        .cols.rename(col_name, "value")
                                                         .collect())
-
                 # Uniques
-                uniques = some_stats[col_name].pop("approx_count_distinct")
+                uniques = stats[col_name].pop("approx_count_distinct")
                 col_info['stats']["uniques_count"] = uniques
                 col_info['stats']["p_uniques"] = round(uniques / rows_count * 100, 3)
 
@@ -223,8 +223,8 @@ class Profiler:
                 # Additional Stats
                 # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
                 # https: // stackoverflow.com / questions / 45287832 / pyspark - approxquantile - function
-                max_value = float(max_value)
-                min_value = float(min_value)
+                max_value = fast_float(max_value)
+                min_value = fast_float(min_value)
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
                 col_info['stats']['range'] = max_value - min_value
                 col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
@@ -243,7 +243,7 @@ class Profiler:
     @staticmethod
     def run(df, columns, buckets=20):
         """
-        Get statistical information in HTML Format
+        Return statistical information in HTML Format
         :param df:
         :param columns:
         :param buckets:
@@ -251,7 +251,6 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-
         summary = Profiler.json(df, columns, buckets)
 
         # Load jinja
@@ -260,7 +259,7 @@ class Profiler:
         templateEnv = jinja2.Environment(loader=templateLoader)
 
         # Render template
-        # Create the header
+        # Create the profiler info header
         output = ""
         general_template = templateEnv.get_template("general_info.html")
         output = output + general_template.render(data=summary)
@@ -280,7 +279,9 @@ class Profiler:
 
             output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
+        #df.plots.correlation(columns)
         display(HTML(output))
+        df.table(10)
 
     @staticmethod
     def json(df, columns, buckets=20, path=None):
