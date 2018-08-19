@@ -828,24 +828,19 @@ def cols(self):
         return apply_expr(new_col, _years_between, ["yyyyMMdd", col_name])
 
     @add_attr(cols)
-    def impute(columns, out_cols, strategy):
+    def impute(input_cols, out_cols, strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param columns: List of columns to be analyze.
+        :param input_cols: List of columns to be analyze.
         :param out_cols: List of output columns with missing values imputed.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-        # Check if columns to be process are in dataframe
-        # TODO: this should filter only numeric values
-        columns = parse_columns(self, columns)
+        input_cols = parse_columns(self, input_cols)
+        out_cols = val_to_list(out_cols)
 
-        assert isinstance(out_cols, list), "Error: out_cols argument must be a list"
-
-        assert (strategy == "mean" or strategy == "median"), "Error: strategy has to be 'mean' or 'median'."
-
-        imputer = Imputer(inputCols=columns, outputCols=out_cols)
+        imputer = Imputer(inputCols=input_cols, outputCols=out_cols)
 
         df = self
         model = imputer.setStrategy(strategy).fit(df)

@@ -264,18 +264,21 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         cols = [(i[0:1][0]) for i in cols_args]
         attrs = [(i[1:]) for i in cols_args]
 
-    # if cols are string or int
+    # if cols is a list
     # ["col_name_1",]
     elif is_list_of_str_or_int(cols_args):
         cols = [c if is_str(c) else df.columns[c] for c in cols_args]
 
+    # if cols are string or int
     # ("col_name",..)
     elif is_str_or_int(cols_args):
         cols = val_to_list(cols_args)
 
+    # Check for missing columns
     if accepts_missing_cols is False:
         check_for_missing_columns(df, cols)
 
+    # Filter by datat column datatype
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type

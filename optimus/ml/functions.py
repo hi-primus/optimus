@@ -1,11 +1,10 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 from pyspark.ml.linalg import DenseVector, VectorUDT
-
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import parse_columns
 from optimus.helpers.checkit import is_dataframe, is_
+from optimus.helpers.functions import parse_columns
 
 
 def n_gram(df, input_col, n=2):

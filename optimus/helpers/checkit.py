@@ -258,7 +258,7 @@ def is_data_type(value, data_type):
     """
     Check if a value can be casted to a specific
     :param value: value to be checked
-
+    :param data_type:
     :return:
     """
 

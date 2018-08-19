@@ -7,8 +7,6 @@ from optimus.helpers.constants import *
 from optimus.helpers.functions import is_pyarrow_installed
 
 
-# instance = None
-
 
 class Spark:
     def __init__(self, master="local[*]", app_name="optimus"):
@@ -43,7 +41,8 @@ class Spark:
         if is_pyarrow_installed() is True:
             logging.info("Pyarrow Installed")
         else:
-            logging.info("Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
+            logging.info(
+                "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
         logging.info("-----")
         logging.info(STARTING_SPARK)
         self.spark()
@@ -59,9 +58,9 @@ class Spark:
         warehouse_location = abspath('spark-warehouse')
         return (SparkSession
                 .builder
-                #.config("hive.metastore.warehouse.dir", warehouse_location)
-                #.config("spark.sql.warehouse.dir", warehouse_location)
-                #.enableHiveSupport()
+                # .config("hive.metastore.warehouse.dir", warehouse_location)
+                # .config("spark.sql.warehouse.dir", warehouse_location)
+                # .enableHiveSupport()
                 .master(self.master)
                 .appName(self.app_name)
                 .getOrCreate()

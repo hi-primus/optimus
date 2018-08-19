@@ -26,7 +26,9 @@ After installation go to the examples folder and found examples about data clean
   
 ## Feedback 
 Feedback is what drive Optimus future. So take a couple of minutes to help shape the Optimus' Roadmap:  https://optimusdata.typeform.com/to/aEnYRY  
-Also If you want to know what features are the most requested or have and idea you want to see in Optimus let us know at  https://optimus.featureupvote.com/  
+
+Also If you want to know what features are the most requested or have and idea you want to see in Optimus let us know at  
+https://optimus.featureupvote.com/  
  
 ## Info
 And if you want to see some cool information and tutorials for Optimus check out our blog https://medium.com/hi-optimus  
