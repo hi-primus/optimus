@@ -769,11 +769,6 @@ def cols(self):
                                 different formats will fail.
         :param  output_format: output date string format to be expected.
         """
-        # Check if current_format argument a string datatype:
-        assert isinstance(current_format, str)
-
-        # Check if output_format argument a string datatype:
-        assert isinstance(output_format, str)
 
         # Asserting if column if in dataFrame:
         validate_columns_names(self, col_name)
@@ -797,12 +792,6 @@ def cols(self):
 
 
         """
-        # Check if column argument a string datatype:
-        assert isinstance(date_format, str)
-
-        # Check if dates_format argument a string datatype:
-        assert isinstance(new_col, str)
-
         # Asserting if column if in dataFrame:
         validate_columns_names(self, col_name)
 
@@ -810,22 +799,22 @@ def cols(self):
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
         def _years_between(name_col_age, attr):
-            dates_format = attr[0]
-            col_name = attr[1]
+            _date_format = attr[0]
+            _col_name = attr[1]
 
             return F.format_number(
                 F.abs(
                     F.months_between(
                         F.date_format(
                             F.unix_timestamp(
-                                col_name,
-                                dates_format).cast("timestamp"),
+                                _col_name,
+                                _date_format).cast("timestamp"),
                             format_dt),
                         F.current_date()) / 12), 4) \
                 .alias(
                 name_col_age)
 
-        return apply_expr(new_col, _years_between, ["yyyyMMdd", col_name])
+        return apply_expr(new_col, _years_between, [date_format, col_name]).cols.cast(new_col, "float")
 
     @add_attr(cols)
     def impute(input_cols, out_cols, strategy="mean"):
@@ -909,12 +898,10 @@ def cols(self):
         return self.select(columns).distinct()
 
     @add_attr(cols)
-    def filter_by_dtypes(data_type):
+    def select_by_dtypes(data_type):
         """
-        This function returns column of dataFrame which have the same
-        data type provided. It gets the column data type from dataFrame.dtypes method.
-
-        :param data_type:
+        This function returns one or multiple dataFrame columns which match with the data type provided.
+        :param data_type: Datatype column to look at
         :return:
         """
 
@@ -975,7 +962,7 @@ def cols(self):
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
         """
-        Replace
+        Replace a value or a list of values by a specified string
         :param columns: '*', list of columns names or a single column name.
         :param search_and_replace: values to look at to be replaced
         :param value: new value to replace the old one
