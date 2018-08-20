@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+    <style>
+        .gray-dark {
+            background-color: #7e7e7e;
+        }
+
+        .gray {
+            background-color: #aeabab;
+        }
+
+        .gray-light {
+            background-color: #e7e6e6;
+        }
+
+        .green {
+            background-color: #6fac46;
+        }
+
+        .green-light {
+            background-color: #c5dfb4;
+        }
+
+        .orange {
+            background-color: #ec7c30;
+        }
+
+        .orange-light {
+            background-color: #f8caac;
+        }
+
+        .blue {
+            background-color: #4471c4;
+        }
+
+        .blue-light {
+            background-color: #bcd6ed;
+        }
+
+        table {
+            border-collapse: initial;
+            font-color: #ffffff;
+        !important;
+            margin-bottom: 0.7em !important;
+        }
+
+        table td {
+            width: 1.5em;
+            height: 0.7em;
+        }
+
+        pre {
+            font-size: 0.8em;
+            margin-bottom: 0;
+        }
+
+        p {
+            font-size: 0.7em;
+        }
+
+        .operation-symbol {
+            font-size: 5em;
+            font-weight: bold;
+            line-height: 1;
+            margin: 0 0.1em;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+<div class="container">
+    <h1>Optimus Cheat Sheet</h1>
+    <div class="row">
+        <div class="col-sm-4">
+            <h3>Syntax</h3>
+            <h4>Creating DataFrames</h4>
+            <pre><code class="python">df = op.create.df(
+    [
+        ("words", "str", True),
+        ("num", "int", True),
+    ],
+    [
+        ("  I like     fish  ", 1),
+        ("    zombies", 2, ),
+        ("simpsons   cat lady", 2),
+        (None, 3)
+    ])</code></pre>
+            <p>Specify values for each column.</p>
+
+
+            <h3>Method Chaining</h3>
+            <p>Most Optimus methods return a DataFrame so that another Optimus method can be applied to the result. This
+                improved readability of code </p>
+            <pre><code class="python">df = df\
+    .rows.sort("product","desc")\
+    .cols.lower(["firstName","lastName"])\
+    .cols.date_transform("birth", "new_date",
+                "yyyy/MM/dd",
+                "dd-MM-YYYY")\</code></pre>
+
+        </div>
+
+        <div class="col-sm-4">
+            <h3>Reshaping Data</h3>
+
+            <!-- Melt -->
+            <pre><code class="python">df.melt(columns)</code></pre>
+            <p>Gather columns into rows</p>
+
+            <div class="flex-row d-flex">
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+                            <td class="blue"></td>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="gray-dark"></td>
+                            <td class="gray-dark"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Green -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <!-- Orange -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <!-- Blue -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Pivot -->
+            <pre><code class="python">df.pivot(columns)</code></pre>
+            <p>Spread rows into columns</p>
+            <div class="flex-row d-flex">
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="gray-dark"></td>
+                            <td class="gray-dark"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Green -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <!-- Orange -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <!-- Blue -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    }
+                </div>
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+                            <td class="blue"></td>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <!-- Concat Rows-->
+            <pre><code class="python">df.append(columns)</code></pre>
+            <div class="flex-row d-flex">
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    }
+                </div>
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Green -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Concat Columns -->
+            <pre><code class="python">df.append(columns)</code></pre>
+            <div class="flex-row d-flex">
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="orange"></td>
+                            <td class="blue"></td>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="orange"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Green -->
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="orange-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <pre><code class="python">df.rows.sort("col_name")</code></pre>
+
+            <p>Order rows by values of a column (low to high)</p>
+
+            <pre><code class="python">df.rows.sort("col_name", order="asc)</code></pre>
+            <p>Order rows by values of a column (high to low)</p>
+
+            <pre><code class="python">df.rows.rename("col_name", "new_col_name)</code></pre>
+            <p>Rename the columns of a DataFrame</p>
+
+            <pre><code class="python">df.rows.rename([("col_name", "new_col_name"),
+                ("col_name_1", "new_col_name_1)])</code></pre>
+            <p>Drop columns from a DataFrame</p>
+        </div>
+
+        <div class="col-sm-4">
+            <h3>Column 3</h3>
+            <p>Lorem ipsum dolor..</p>
+            <p>Ut enim ad..</p>
+        </div>
+
+
+    </div>
+    <div class="row">
+        <h3>Summarize Data</h3>
+        <div class="col-sm-2">
+            <pre><code class="python">df.cols.sum()</code></pre>
+            <p>Sum all values in a column</p>
+            <pre><code class="python">df.cols.min()</code></pre>
+            <p>Min value in a column</p>
+            <pre><code class="python">df.cols.max()</code></pre>
+            <p>Max value in a column</p>
+            <pre><code class="python">df.cols.median()</code></pre>
+            <p>Median value in a column</p>
+        </div>
+        <div class="col-sm-2">
+            <pre><code class="python">df.cols.mean()</code></pre>
+            <p>Mean value in a column</p>
+            <pre><code class="python">df.cols.std()</code></pre>
+            <p>Standard Deviation in a column</p>
+            <pre><code class="python">df.cols.quantile([0.25,0.75])</code></pre>
+            <p>Qunatiles in a column</p>
+            <pre><code class="python">df.cols.count()</code></pre>
+        </div>
+        <div class="col-sm-8">
+            <h3>Handling Missing Data</h3>
+            <pre><code class="python">df.dropna(</code></pre>
+            <h3>Group Data</h3>
+            <pre><code class="python">df.fillna(na)</code></pre>
+        </div>
+    </div>
+</div>
+</body>
+</html>
