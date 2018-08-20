@@ -182,7 +182,7 @@ def cols(self):
     @dispatch(object, object)
     def rename(columns_old_new=None, func=None):
         """"
-        This functions change the name of a column(s) dataFrame.
+        Changes the name of a column(s) dataFrame.
         :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
         :param func: can be lower, upper or any string transformation function
         """

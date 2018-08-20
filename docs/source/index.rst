@@ -24,11 +24,10 @@ Prepare, process and explore your Big Data with fastest open source library on t
    sections/overview
    sections/installing
    sections/cols_api
-   sections/analyzing
-   sections/transforming
    sections/feature
    sections/ml
 
-Library maintained by `Favio Vazquez`_
+Library maintained by `Favio Vazquez`_ and `Argenis Leon`_
 ------------------------------------------
 .. _Favio Vazquez: https://github.com/faviovazquez
+.. _Argenis Leon: https://github.com/argenisleon
