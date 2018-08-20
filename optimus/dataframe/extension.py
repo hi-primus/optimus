@@ -9,8 +9,27 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_to_dict
+from optimus.helpers.functions import parse_columns, collect_to_dict, random_int
 from optimus.spark import Spark
+
+
+@add_method(DataFrame)
+def sample_n(self, n=10, random=False):
+    """
+    Return a n number of sample from a dataFrame
+    :param self:
+    :param n: Number of samples
+    :param random: if true get a semi random sample
+    :return:
+    """
+    if random is True:
+        seed = random_int()
+    elif random is False:
+        seed = 0
+
+    rows_count = self.count()
+    fraction = n / rows_count
+    return self.sample(False, fraction, seed=seed)
 
 
 @add_method(DataFrame)
