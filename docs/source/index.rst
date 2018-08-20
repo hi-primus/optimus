@@ -23,6 +23,7 @@ Prepare, process and explore your Big Data with fastest open source library on t
 
    sections/overview
    sections/installing
+   sections/cols_api
    sections/analyzing
    sections/transforming
    sections/feature

@@ -11,5 +11,5 @@ In your terminal just type:
 Requirements
 ----------------
 
--  Apache Spark >= 2.2.0
--  Python >= 3.5
+-  Apache Spark >= 2.3.1 (installed with the package)
+-  Python >= 3.6
