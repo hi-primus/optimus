@@ -1,5 +1,4 @@
 from functools import lru_cache
-from os.path import abspath
 
 from pyspark.sql import SparkSession
 
