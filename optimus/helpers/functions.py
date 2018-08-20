@@ -19,7 +19,7 @@ def random_int(n=5):
     Create a unique filename
     :return:
     """
-    return str(random.randint(1, 10**n))
+    return str(random.randint(1, 10 ** n))
 
 
 def parse_spark_dtypes(value):
@@ -78,7 +78,6 @@ def print_json(value):
     pp = pprint.PrettyPrinter(indent=2)
     if is_str(value):
         value = value.replace("'", "\"")
-        print(value)
         value = json.loads(value)
 
     pp.pprint(value)
@@ -264,16 +263,11 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         # Extract a specific position in the tuple
         cols = [(i[0:1][0]) for i in cols_args]
         attrs = [(i[1:]) for i in cols_args]
-
-    # if cols is a list
-    # ["col_name_1",]
-    elif is_list_of_str_or_int(cols_args):
-        cols = [c if is_str(c) else df.columns[c] for c in cols_args]
-
-    # if cols are string or int
-    # ("col_name",..)
-    elif is_str_or_int(cols_args):
+    else:
+        # if not a list convert to list
         cols = val_to_list(cols_args)
+        # Get col name from index
+        cols = [c if is_str(c) else df.columns[c] for c in cols]
 
     # Check for missing columns
     if accepts_missing_cols is False:
