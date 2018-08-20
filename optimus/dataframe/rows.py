@@ -77,11 +77,11 @@ def rows(self):
         Sort column by row
         """
         columns = parse_columns(self, columns)
-        return self.rows.sort([(columns, "asc",)])
+        return self.rows.sort([(columns, "desc",)])
 
     @add_attr(rows)
     @dispatch(str, str)
-    def sort(columns, order="asc"):
+    def sort(columns, order="desc"):
         """
         Sort column by row
         """
