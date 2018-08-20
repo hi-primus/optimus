@@ -14,12 +14,12 @@ from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SP
 from optimus.helpers.raiseit import RaiseIfNot
 
 
-def random_name():
+def random_int(n=5):
     """
     Create a unique filename
     :return:
     """
-    return str(random.randint(1, 100))
+    return str(random.randint(1, 10**n))
 
 
 def parse_spark_dtypes(value):
@@ -342,12 +342,12 @@ def filter_col_name_by_dtypes(df, data_type):
 def check_env_vars(env_vars):
     """
     Check if a environment var exist
-    :param env_vars:
+    :param env_vars: Environment var name
     :return:
     """
 
     for env_var in env_vars:
-        try:
+        if env_var in os.environ:
             logging.info(env_var + "=" + os.environ.get(env_var))
-        except:
+        else:
             logging.info("You don't have " + env_var + " set")

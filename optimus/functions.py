@@ -11,7 +11,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.checkit import is_data_type
-from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_name, one_list_to_val
+from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -112,7 +112,7 @@ def concat(dfs, like="columns"):
     # Add increasing Ids, and they should be the same.
     if like == "columns":
         temp_dfs = []
-        col_temp_name = "id_" + random_name()
+        col_temp_name = "id_" + random_int()
         for df in dfs:
             temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
 
