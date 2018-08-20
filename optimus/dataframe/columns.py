@@ -840,6 +840,20 @@ def cols(self):
         return df
 
     @add_attr(cols)
+    def fill_na(columns, value):
+        """
+        Reaplce null data with a specified value
+        :param columns:
+        :param value:
+        :return:
+        """
+
+        def _fill_na(col_name, args):
+            return F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name).otherwise(args)
+
+        return self.cols.apply_expr(columns, _fill_na, value)
+
+    @add_attr(cols)
     def count_na(columns):
         """
         Return the NAN and Null count in a Column
