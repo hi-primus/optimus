@@ -83,7 +83,7 @@ def print_json(value):
     pp.pprint(value)
 
 
-def collect_to_dict(value):
+def collect_as_dict(value):
     """
     Return a dict from a Collect result
     :param value:
@@ -273,7 +273,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     if accepts_missing_cols is False:
         check_for_missing_columns(df, cols)
 
-    # Filter by datat column datatype
+    # Filter by column data type
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type

@@ -6,7 +6,7 @@ from fastnumbers import fast_float
 from functools import reduce
 
 from multipledispatch import dispatch
-from pyspark.ml.feature import Imputer
+from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
@@ -22,7 +22,7 @@ from optimus.helpers.checkit \
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import validate_columns_names, parse_columns, collect_to_dict, format_dict, \
+    import validate_columns_names, parse_columns, collect_as_dict, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.profiler.functions import bucketizer
@@ -466,7 +466,7 @@ def cols(self):
         return (
             parse_col_names_funcs_to_keys(
                 format_dict(
-                    collect_to_dict(
+                    collect_as_dict(
                         df.agg(*exprs).collect())
                 )
             )
@@ -638,16 +638,19 @@ def cols(self):
         columns = parse_columns(self, columns)
         mode_result = []
 
-        for c in columns:
-            cnts = self.groupBy(c).count()
+        for col_name in columns:
+            cnts = self.groupBy(col_name).count()
             mode_df = cnts.join(
                 cnts.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
             )
 
             # if none of the values are repeated we not have mode
-            mode_list = mode_df.filter(mode_df["count"] > 1).select(c).collect()
+            mode_list = (mode_df
+                         .rows.select(mode_df["count"] > 1)
+                         .cols.select(col_name)
+                         .collect())
 
-            mode_result.append({c: filter_list(mode_list)})
+            mode_result.append({col_name: filter_list(mode_list)})
 
         return mode_result
 
@@ -686,8 +689,8 @@ def cols(self):
         :return:
         """
 
-        def _trim(col, args):
-            return F.trim(F.col(col))
+        def _trim(col_name, args):
+            return F.trim(F.col(col_name))
 
         return apply_expr(columns, _trim)
 
@@ -800,7 +803,7 @@ def cols(self):
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
-        def _years_between(name_col_age, attr):
+        def _years_between(new_col, attr):
             _date_format = attr[0]
             _col_name = attr[1]
 
@@ -887,7 +890,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        return format_dict(collect_to_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
+        return format_dict(collect_as_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
                                            .collect()))
 
     @add_attr(cols)
@@ -1031,7 +1034,7 @@ def cols(self):
 
     # Stats
     @add_attr(cols)
-    def z_score(columns, new_col=None):
+    def z_score(columns):
         """
         Return the column data type
         :param columns:
@@ -1208,7 +1211,7 @@ def cols(self):
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
-            counts = (collect_to_dict(
+            counts = (collect_as_dict(
                 df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                     col_name + "_buckets", "value").sort(F.asc("value")).collect()
             ))
@@ -1239,7 +1242,7 @@ def cols(self):
             df = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
                 buckets).cols.rename(col_name, "value")
 
-        return collect_to_dict(df.collect())
+        return collect_as_dict(df.collect())
 
     @add_attr(cols)
     def schema_dtypes(columns):
