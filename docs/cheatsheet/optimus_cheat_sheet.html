@@ -47,16 +47,27 @@
             background-color: #bcd6ed;
         }
 
-        table {
+        .table-operations {
             border-collapse: initial;
-            font-color: #ffffff;
-        !important;
+            font-color: #ffffff !important;
             margin-bottom: 0.7em !important;
+            #border-color: transparent;
+            background-color: #ffffff
         }
 
-        table td {
+        .table-operations td {
             width: 1.5em;
             height: 0.7em;
+        }
+
+        .table-info {
+            font-size: 0.8em;
+            background-color: #ffffff;
+            width: 100%;
+        }
+
+        .table-info tr td:first-child {
+            font-weight: bold;
         }
 
         pre {
@@ -78,7 +89,6 @@
 </head>
 <body>
 
-<!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
@@ -136,7 +146,7 @@
 
             <div class="flex-row d-flex">
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -166,7 +176,7 @@
                     🡆
                 </div>
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -219,7 +229,7 @@
             <p>Spread rows into columns</p>
             <div class="flex-row d-flex">
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -268,7 +278,7 @@
                     }
                 </div>
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -300,7 +310,7 @@
             <pre><code class="python">df.append(columns)</code></pre>
             <div class="flex-row d-flex">
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -322,7 +332,7 @@
                         </tr>
                         </tbody>
                     </table>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -349,7 +359,7 @@
                     }
                 </div>
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -399,7 +409,7 @@
             <pre><code class="python">df.append(columns)</code></pre>
             <div class="flex-row d-flex">
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -417,7 +427,7 @@
                         </tr>
                         </tbody>
                     </table>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -444,7 +454,7 @@
                     🡆
                 </div>
                 <div>
-                    <table>
+                    <table class="table-operations">
                         <thead>
                         <tr>
                             <td class="gray"></td>
@@ -472,8 +482,7 @@
                     </table>
                 </div>
             </div>
-        </div>
-        <div class="col-sm-4">
+
             <pre><code class="python">df.rows.sort("col_name")</code></pre>
 
             <p>Order rows by values of a column (low to high)</p>
@@ -488,18 +497,263 @@
                 ("col_name_1", "new_col_name_1)])</code></pre>
             <p>Drop columns from a DataFrame</p>
         </div>
-
         <div class="col-sm-4">
-            <h3>Column 3</h3>
-            <p>Lorem ipsum dolor..</p>
-            <p>Ut enim ad..</p>
+            <h3>Subset Observations (Rows)</h3>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                            <td class="gray-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <pre><code class="python">df.rows.select(column, df[]>7)</code></pre>
+            <p>Extract rows that meet logical criteria.</p>
+
+            <pre><code class="python">df.rows.drop_duplicates()</code></pre>
+            <p>Remove duplicates rows (only considers columns).</p>
+
+            <pre><code class="python">df.table(n)</code></pre>
+            <p>Show first n rows</p>
+
+            <pre><code class="python">df.table(n)</code></pre>
+            <p>Randomly select n rows</p>
+            <h4>Logic in Python</h4>
+            <table class="table-info">
+                <tbody>
+                <tr>
+                    <td><</td>
+                    <td>Less than</td>
+                </tr>
+                <tr>
+                    <td>></td>
+                    <td>Greater tahn</td>
+                </tr>
+                <tr>
+                    <td>==</td>
+                    <td>Equals</td>
+                </tr>
+                <tr>
+                    <td><=</td>
+                    <td>Less than or equals</td>
+                </tr>
+                <tr>
+                    <td><=</td>
+                    <td>Greater than or equals</td>
+                </tr>
+                <tr>
+                    <td>!=</td>
+                    <td>Not equal to</td>
+                </tr>
+
+
+                </tbody>
+            </table>
+
+            <h3>Subset Variables (Columns)</h3>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="green"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="green"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <pre><code class="python">df.cols.select(["width","length","species"])</code></pre>
+            <p>Select multiple columns with specific names.</p>
+
+            <pre><code class="python">df.cols.select([1 , 3, 5])</code></pre>
+            <p>Select columns in positions 1, 3 and 5 (first column is 0)</p>
+
+            <pre><code class="python">df.cols.select("n.*", regex = True)</code></pre>
+            <p>Select columns whose name matched regular expression regex.</p>
+
+            <table class="table-info">
+                <tbody>
+                <tr>
+                    <td>'\.</td>
+                    <td>Matches strings containing a period</td>
+                </tr>
+                <tr>
+                    <td>'Length$'</td>
+                    <td>Matches strings ending wirt word 'Length'</td>
+                </tr>
+                <tr>
+                    <td>'^$epal</td>
+                    <td>Matches strings begining with the word 'Sepal'</td>
+                </tr>
+                <tr>
+                    <td>'^x[1-5]$</td>
+                    <td>Matches strings beginning with 'x' and ending with 1,2,3,4,5</td>
+                </tr>
+                <tr>
+                    <td>''^(?!Species$).*'</td>
+                    <td>Matches strings expect the string 'Species'</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
-
-
     </div>
     <div class="row">
-        <h3>Summarize Data</h3>
-        <div class="col-sm-2">
+
+        <div class="col-sm-4">
+            <h3>Summarize Data</h3>
+            <p>
+                Optimus provides a large set o summary functions.
+            </p>
+
+
             <pre><code class="python">df.cols.sum()</code></pre>
             <p>Sum all values in a column</p>
             <pre><code class="python">df.cols.min()</code></pre>
@@ -508,8 +762,7 @@
             <p>Max value in a column</p>
             <pre><code class="python">df.cols.median()</code></pre>
             <p>Median value in a column</p>
-        </div>
-        <div class="col-sm-2">
+
             <pre><code class="python">df.cols.mean()</code></pre>
             <p>Mean value in a column</p>
             <pre><code class="python">df.cols.std()</code></pre>
@@ -517,14 +770,116 @@
             <pre><code class="python">df.cols.quantile([0.25,0.75])</code></pre>
             <p>Qunatiles in a column</p>
             <pre><code class="python">df.cols.count()</code></pre>
-        </div>
-        <div class="col-sm-8">
-            <h3>Handling Missing Data</h3>
-            <pre><code class="python">df.dropna(</code></pre>
+
+
             <h3>Group Data</h3>
-            <pre><code class="python">df.fillna(na)</code></pre>
         </div>
+        <div class="col-sm-4">
+            <h3>Handling Missing Data</h3>
+            <pre><code class="python">df.rows.drop_na(columns)</code></pre>
+            <p>Drop rows any column having NA/null data.</p>
+
+            <pre><code class="python">df.cols.fill_na(columns, value)</code></pre>
+            <p>Replace all NA/null data with value</p>
+
+            <h3>Make new columns</h3>
+            <pre><code class="python">df.cols.fill_na(columns, "new_value")</code></pre>
+            <p>drop wors with any column having NA/null data.</p>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations">
+                        <thead>
+                        <tr>
+                            <td class="gray"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="green"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="green-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="col-sm-4"></div>
     </div>
-</div>
 </body>
 </html>
