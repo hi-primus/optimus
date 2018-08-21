@@ -533,7 +533,7 @@ Returns one or multiple dataframe columns which match with the data type provide
 |  3|
 +---+
 
-apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None)
+cols.apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None)
 ---------------------------------------------------------------------------------------------
 
 Apply a function using pandas udf or udf if apache arrow is not available.
@@ -646,7 +646,7 @@ Create an abstract udf (Pandas UDF) to pass two arguments to a function a apply 
 |               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|     33|
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
 
-apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True)
+cols.apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True)
 ------------------------------------------------------------------------------------
 
 Apply a expression to column.
@@ -694,4 +694,42 @@ Convert to uppercase:
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
 |               null|  3|  EAGLE|glass|      LION-PC|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
+cols.count_na(columns)
+----------------------
+
+Returns the NAN and Null count in a Column.
+
+.. code-block:: python
+    import numpy as np
+
+    df_null = op.spark.createDataFrame(
+        [(1, 1, None), (1, 2, float(5)), (1, 3, np.nan), (1, 4, None), (1, 5, float(10)), (1, 6, float('nan')), (1, 6, float('nan'))],
+        ('session', "timestamp1", "id2"))
+
+    df_null.cols.count_na("*")
+
+    Out -> {'session': 0, 'timestamp1': 0, 'id2': 5}
+
+cols.count_uniques(columns, estimate=True)
+----------------------------------------
+
+Returns how many unique items exist in a columns
+
+.. code-block:: python
+    df.cols.count_uniques("*")
+
+And you'll get:
+
+.. code-block:: python
+    {'words': {'approx_count_distinct': 3},
+     'num': {'approx_count_distinct': 3},
+     'animals': {'approx_count_distinct': 4},
+     'thing': {'approx_count_distinct': 4},
+     'two strings': {'approx_count_distinct': 4},
+     'filter': {'approx_count_distinct': 4},
+     'num 2': {'approx_count_distinct': 4},
+     'col_array': {'approx_count_distinct': 3},
+     'col_int': {'approx_count_distinct': 4},
+     'new_col_1': {'approx_count_distinct': 1}}
 
