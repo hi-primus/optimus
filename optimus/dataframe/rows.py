@@ -94,23 +94,23 @@ def rows(self):
     def sort(col_sort):
         """
         Sort columns taking in account multiple columns
-        :param col_sort:
+        :param col_sort: column and sort type combination (col_name, "asc")
         :type col_sort: list of tuples
         """
-
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
         t = []
         if is_list_of_str_or_int(col_sort):
             for col_name in col_sort:
                 t.append(tuple([col_name, "desc"]))
+            col_sort = t
 
-        col_sort = t
         func = []
 
         for cs in col_sort:
             col_name = one_list_to_val(cs[0])
             order = cs[1]
+
 
             if order == "asc":
                 sort_func = F.asc
