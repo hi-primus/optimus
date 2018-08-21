@@ -272,7 +272,7 @@ You can cast all columns to a specific type too.
      ('new_col_1', 'string')]
 
 
-keep(columns=None, regex=None)
+cols.keep(columns=None, regex=None)
 ---------------------------------------
 
 Only keep the columns specified.
@@ -298,8 +298,7 @@ cols.move(column, position, ref_col)
 Move a column to specific position
 
 .. code-block:: python
-
-df.cols.move("words", "after", "thing").table()
+    df.cols.move("words", "after", "thing").table()
 
 +---+-------+-----+-------------------+-------------+------+-----+-----------------+---------+---------+
 |num|animals|thing|              words|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
@@ -313,13 +312,12 @@ df.cols.move("words", "after", "thing").table()
 |  3|  eagle|glass|               null|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|
 +---+-------+-----+-------------------+-------------+------+-----+-----------------+---------+---------+
 
-sort(order="asc")
+cols.sort(order="asc")
 ------------------------------
 
 Sort dataframes columns asc or desc
 
 .. code-block:: python
-
     df.cols.sort().table()
 
 +-------+-----------------+---------+------+---------+---+-----+-----+-------------+-------------------+
@@ -350,7 +348,7 @@ Sort dataframes columns asc or desc
 |               null|      lion-pc|glass|    4|  3|        1|     c|   [7, 8]|[baby 3, sorry 3]|  eagle|
 +-------------------+-------------+-----+-----+---+---------+------+---------+-----------------+-------+
 
-drop()
+cols.drop()
 ---------------------------
 
 Drops a list of columns
@@ -388,7 +386,7 @@ Drops a list of columns
 |  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|
 +-------+-----+-------------+------+-----+-----------------+---------+---------+
 
-chaining
+Chaining
 ----------------------------------------------
 
 The past transformations were done step by step, but this can be achieved by chaining all operations into one line of code, like the cell below. This way is much more efficient and scalable because it uses all optimization issues from the lazy evaluation approach.
@@ -413,3 +411,240 @@ The past transformations were done step by step, but this can be achieved by cha
 +-----------+-----+-----+---------+---------+------+---------+-----------------+-------+
 |    lion-pc|glass|    4|spongebob|        1|     c|   [7, 8]|[baby 3, sorry 3]|  eagle|
 +-----------+-----+-----+---------+---------+------+---------+-----------------+-------+
+
+cols.unnest(columns, mark=None, n=None, index=None)
+-----------------------
+
+Split array or string in different columns
+
+.. code-block:: python
+    df.cols.unnest("two strings","-").table()
+
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|two strings_0|two strings_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|          cat|          car|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|          dog|           tv|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|        eagle|           tv|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|         lion|           pc|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+
+
+Only getting the first element
+
+.. code-block:: python
+    df.cols.unnest("two strings","-", index = 1).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|two strings_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|          car|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|           tv|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|           tv|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|           pc|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
+
+Unnest array of string
+
+.. code-block:: python
+
+    df.cols.unnest(["col_array"]).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|col_array_0|col_array_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|       baby|      sorry|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|     baby 1|    sorry 1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|     baby 2|    sorry 2|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|     baby 3|    sorry 3|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-----------+-----------+
+
+Split in 3 parts
+
+.. code-block:: python
+    df \
+    .cols.unnest(["two strings"], n= 3, mark = "-") \
+    .table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|two strings_0|two strings_1|two strings_2|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|          cat|          car|         null|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|          dog|           tv|         null|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|        eagle|           tv|         plus|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|         lion|           pc|         null|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+-------------+-------------+
+
+cols.impute(input_cols, output_cols, strategy="mean")
+---------------------------------------------------------
+
+Imputes missing data from specified columns using the mean or median.
+
+.. code-block:: python
+    # Create test dataset
+    df_fill = op.spark.createDataFrame([(1.0, float("nan")), (2.0, float("nan")),
+                               (float("nan"), 3.0), (4.0, 4.0), (5.0, 5.0)], ["a", "b"])
+
+    df_fill.cols.impute(["a", "b"], ["out_a", "out_b"], "median").table()
+
++---+---+-----+-----+
+|  a|  b|out_a|out_b|
++---+---+-----+-----+
+|1.0|NaN|  1.0|  4.0|
++---+---+-----+-----+
+|2.0|NaN|  2.0|  4.0|
++---+---+-----+-----+
+|NaN|3.0|  2.0|  3.0|
++---+---+-----+-----+
+|4.0|4.0|  4.0|  4.0|
++---+---+-----+-----+
+|5.0|5.0|  5.0|  5.0|
++---+---+-----+-----+
+
+cols.select_by_dtypes(data_type)
+-----------------------------------
+
+Returns one or multiple dataframe columns which match with the data type provided.
+
+.. code-block:: python
+    df.cols.select_by_dtypes("int").table()
+
++---+
+|num|
++---+
+|  1|
++---+
+|  2|
++---+
+|  2|
++---+
+|  3|
++---+
+
+apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None)
+---------------------------------------------------------------------------------------------
+
+Apply a function using pandas udf or udf if apache arrow is not available.
+
+In the next example we replace a number in a string column with "new string":
+
+.. code-block:: python
+    def func(val, attr):
+        return attr
+
+    df.cols.apply_by_dtypes("filter", func, "string", "new string", data_type="integer").table()
+
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+|              words|num|animals|thing|  two strings|    filter|num 2|        col_array|  col_int|
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+|  I like     fish  |  1|    dog|housé|      cat-car|         a|    1|    [baby, sorry]|[1, 2, 3]|
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+|            zombies|  2|    cat|   tv|       dog-tv|         b|    2|[baby 1, sorry 1]|   [3, 4]|
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|new string|    3|[baby 2, sorry 2]|[5, 6, 7]|
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+|               null|  3|  eagle|glass|      lion-pc|         c|    4|[baby 3, sorry 3]|   [7, 8]|
++-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
+
+
+User Define Functions in Optimus
+-----------------------------------------
+
+Now we'll create a UDF function that sum a values (32 in this case) to two columns
+
+.. code-block:: python
+    df = df.cols.append("new_col_1", 1)
+
+    def func(val, attr):
+        return val + attr
+
+    df.cols.apply(["num", "new_col_1"], func, "int", 32 ,"udf").table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|  I like     fish  | 33|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|       33|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|            zombies| 34|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|       33|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|simpsons   cat lady| 34|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|       33|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|               null| 35|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|       33|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
+Now a we'll create a Pandas UDF function that sum a values (10 in this case) to two columns
+
+.. code-block:: python
+    def func(val, attr):
+        return val + attr
+
+    df.cols.apply(["num", "new_col_1"], func, "int", 10).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|  I like     fish  | 11|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|       11|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|            zombies| 12|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|       11|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|simpsons   cat lady| 12|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|       11|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|               null| 13|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|       11|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
+Create an abstract udf to filter a rows where the value of column "num"> 1
+
+.. code-block:: python
+    from optimus.functions import abstract_udf as audf
+
+    def func(val, attr):
+        return val>1
+
+    df.rows.select(audf("num", func, "boolean")).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
+Create an abstract udf (Pandas UDF) to pass two arguments to a function a apply a sum operation
+
+.. code-block:: python
+    from optimus.functions import abstract_udf as audf
+
+    def func(val, attr):
+        return val+attr[0]+ attr[1]
+
+    df.withColumn("num_sum", audf ("num", func, "int", [10,20])).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|num_sum|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|        1|     31|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+|            zombies|  2|    cat|   tv|       dog-tv|     b|    2|[baby 1, sorry 1]|   [3, 4]|        1|     32|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+|simpsons   cat lady|  2|   frog|table|eagle-tv-plus|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|        1|     32|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+|               null|  3|  eagle|glass|      lion-pc|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|     33|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+-------+
+
+apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True)
+------------------------------------------------------------------------------------
