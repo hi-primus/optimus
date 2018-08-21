@@ -817,24 +817,24 @@ def cols(self):
                             format_dt),
                         F.current_date()) / 12), 4) \
                 .alias(
-                name_col_age)
+                new_col)
 
         return apply_expr(new_col, _years_between, [date_format, col_name]).cols.cast(new_col, "float")
 
     @add_attr(cols)
-    def impute(input_cols, out_cols, strategy="mean"):
+    def impute(input_cols, output_cols, strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: List of columns to be analyze.
-        :param out_cols: List of output columns with missing values imputed.
+        :param output_cols: List of output columns with missing values imputed.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
         input_cols = parse_columns(self, input_cols)
-        out_cols = val_to_list(out_cols)
+        output_cols = val_to_list(output_cols)
 
-        imputer = Imputer(inputCols=input_cols, outputCols=out_cols)
+        imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
 
         df = self
         model = imputer.setStrategy(strategy).fit(df)
@@ -869,14 +869,14 @@ def cols(self):
 
         df = self
         expr = []
-        for c in columns:
+        for col_name in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
 
-            if is_(df.cols.schema_dtypes(c), (StructType, BooleanType)):
-                df = df.cols.cast(c, "string")
-            expr.append(F.count(F.when(F.isnan(c) | F.col(c).isNull(), c)).alias(c))
+            if is_(df.cols.schema_dtypes(col_name), (StructType, BooleanType)):
+                df = df.cols.cast(col_name, "string")
+            expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
 
-        result = format_dict(collect_to_dict(df.select(*expr).collect()))
+        result = format_dict(collect_as_dict(df.select(*expr).collect()))
 
         return result
 

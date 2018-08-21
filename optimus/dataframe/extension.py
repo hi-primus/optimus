@@ -9,7 +9,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_to_dict, random_int
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int
 from optimus.spark import Spark
 
 
@@ -135,7 +135,7 @@ def table(self, limit=100, columns=None):
 
     columns = parse_columns(self, columns)
 
-    data = collect_to_dict(self.select(columns).limit(limit).collect())
+    data = collect_as_dict(self.select(columns).limit(limit).collect())
 
     # Load template
     path = os.path.dirname(os.path.abspath(__file__))
