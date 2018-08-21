@@ -5,6 +5,7 @@ from pyspark.sql import functions as F
 # Helpers
 import optimus.create as op
 from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.helpers.checkit import is_list_of_str_or_int
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val
@@ -86,7 +87,6 @@ def rows(self):
         Sort column by row
         """
         columns = parse_columns(self, columns)
-
         return self.rows.sort([(columns, order,)])
 
     @add_attr(rows)
@@ -97,7 +97,15 @@ def rows(self):
         :param col_sort:
         :type col_sort: list of tuples
         """
-        # col_sort = parse_columns(self, col_sort)
+
+        # If a list of columns names are given order this by desc. If you need to specify the order of every
+        # column use a list of tuples (col_name, "asc")
+        t = []
+        if is_list_of_str_or_int(col_sort):
+            for col_name in col_sort:
+                t.append(tuple([col_name, "desc"]))
+
+        col_sort = t
         func = []
 
         for cs in col_sort:
