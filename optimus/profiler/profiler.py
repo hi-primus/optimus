@@ -8,7 +8,7 @@ import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
-from optimus.helpers.functions import parse_columns, collect_to_dict
+from optimus.helpers.functions import parse_columns, collect_as_dict
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json
 
@@ -204,7 +204,7 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
 
-                col_info['frequency'] = collect_to_dict(df.groupBy(col_name)
+                col_info['frequency'] = collect_as_dict(df.groupBy(col_name)
                                                         .count()
                                                         .rows.sort([("count", "desc"), (col_name, "desc")])
                                                         .limit(10)
