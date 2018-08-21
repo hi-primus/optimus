@@ -1264,6 +1264,54 @@ def cols(self):
 
         return format_dict({c: data_types[c] for c in columns})
 
+    @add_attr(cols)
+    def qcut(input_col, output_col, num_buckets):
+        """
+        Bin columns into n buckets
+        :param input_col:
+        :param output_col:
+        :param num_buckets:
+        :return:
+        """
+        discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)
+        return discretizer.fit(self).transform(self)
+
+    @add_attr(cols)
+    def clip(columns, lower, upper):
+        """
+        Trim values at input thresholds
+        :param columns: Columns to be trimmed
+        :param lower: Lower
+        :param upper:
+        :return:
+        """
+
+        columns = parse_columns(self, columns)
+
+        def _clip(_col_name, args):
+            _lower = args[0]
+            _upper = args[1]
+            return (F.when(F.col(_col_name) <= _lower, _lower)
+                    .when(F.col(_col_name) >= _upper, _upper)).otherwise(F.col(col_name))
+
+        df = self
+        for col_name in columns:
+            df = df.cols.apply_expr(col_name, _clip, [lower, upper])
+        return df
+
+    @add_attr(cols)
+    def abs(columns):
+        """
+        Apply abs to the values in a column
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        for col_name in columns:
+            df = df.withColumn(col_name, F.abs(F.col(col_name)))
+        return df
+
     return cols
 
 
