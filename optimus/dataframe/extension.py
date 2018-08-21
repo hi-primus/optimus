@@ -1,3 +1,4 @@
+import logging
 import os
 
 import jinja2
@@ -9,7 +10,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list
 from optimus.spark import Spark
 
 
@@ -33,6 +34,19 @@ def sample_n(self, n=10, random=False):
 
 
 @add_method(DataFrame)
+def pivot(self, index, column, values):
+    """
+    Return reshaped DataFrame organized by given index / column values.
+    :param self:
+    :param index: Column to use to make new frame’s index.
+    :param column: Column to use to make new frame’s columns.
+    :param values: Column(s) to use for populating new frame’s values.
+    :return:
+    """
+    return self.groupby(index).pivot(column).agg(F.first(values))
+
+
+@add_method(DataFrame)
 def melt(self, id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
     """
     Convert DataFrame from wide to long format.
@@ -46,14 +60,14 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value", dat
     """
 
     df = self
-
+    id_vars = val_to_list(id_vars)
     # Cast all colums to the same type
     df = df.cols.cast(id_vars + value_vars, data_type)
 
-    vars_and_vals = [*(F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars)]
+    vars_and_vals = [F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars]
 
     # Add to the DataFrame and explode
-    df = df.withColumn("vars_and_vals", F.explode(F.array(vars_and_vals)))
+    df = df.withColumn("vars_and_vals", F.explode(F.array(*vars_and_vals)))
 
     cols = id_vars + [F.col("vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
 
