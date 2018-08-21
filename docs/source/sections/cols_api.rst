@@ -648,3 +648,50 @@ Create an abstract udf (Pandas UDF) to pass two arguments to a function a apply 
 
 apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True)
 ------------------------------------------------------------------------------------
+
+Apply a expression to column.
+
+Here we'll apply a column expression to when the value of "num" or "num 2" is grater than 2:
+
+.. code-block:: python
+    from pyspark.sql import functions as F
+    def func(col_name, attr):
+        return F.when(F.col(col_name)>2 ,10).otherwise(1)
+
+    df.cols.apply_expr(["num","num 2"], func).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|  I like     fish  |  1|    dog|housé|      cat-car|     a|    1|    [baby, sorry]|[1, 2, 3]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|            zombies|  1|    cat|   tv|       dog-tv|     b|    1|[baby 1, sorry 1]|   [3, 4]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|simpsons   cat lady|  1|   frog|table|eagle-tv-plus|     1|   10|[baby 2, sorry 2]|[5, 6, 7]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|               null| 10|  eagle|glass|      lion-pc|     c|   10|[baby 3, sorry 3]|   [7, 8]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
+
+Convert to uppercase:
+
+.. code-block:: python
+
+    from pyspark.sql import functions as F
+    def func(col_name, attr):
+        return F.upper(F.col(col_name))
+
+    df.cols.apply_expr(["two strings","animals"], func).table()
+
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|  I like     fish  |  1|    DOG|housé|      CAT-CAR|     a|    1|    [baby, sorry]|[1, 2, 3]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|            zombies|  2|    CAT|   tv|       DOG-TV|     b|    2|[baby 1, sorry 1]|   [3, 4]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|simpsons   cat lady|  2|   FROG|table|EAGLE-TV-PLUS|     1|    3|[baby 2, sorry 2]|[5, 6, 7]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+|               null|  3|  EAGLE|glass|      LION-PC|     c|    4|[baby 3, sorry 3]|   [7, 8]|        1|
++-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
+
