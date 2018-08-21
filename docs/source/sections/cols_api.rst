@@ -1,7 +1,7 @@
 Columns Operation
 ======================
 
-Here you will see a detailed overview of all the columns operations available in Optimus.
+Here you will see a detailed overview of all the column operations available in Optimus.
 You can access the operation via ``df.cols``
 
 Let's create a sample dataframe to start working.
