@@ -11,12 +11,20 @@ Even though this task is not extremely hard, is not easy. The way most Machine L
 are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
 section inside the Transformer.
 
-To import the Machine Learning Library you just need to say to import Optimus:
+To import the Machine Learning Library you just need to say to import Optimus and the ML API:
 
-.. code:: python
+.. code-block:: python
 
-    # Importing Optimus
-    import optimus as op
+    from pyspark.sql import Row, types
+    from pyspark.ml import feature, classification
+    from optimus import Optimus
+    from optimus.ml.models import ML
+    from optimus.ml.functions import *
+
+    op = Optimus()
+    ml = ML()
+    spark = op.spark
+    sc = op.sc
 
 Now with Optimus you can use this really easy feature engineering with our Machine Learning Library.
 
@@ -32,7 +40,7 @@ This method runs a logistic regression for input (text) DataFrame.
 
 Let's create a sample dataframe to see how it works.
 
-.. code:: python
+.. code-block:: python
 
     # Import Row from pyspark
     from pyspark.sql import Row
@@ -44,7 +52,7 @@ Let's create a sample dataframe to see how it works.
                      Row(sentence='this is another test', label=1.)]). \
         toDF()
 
-    df.show()
+    df.table()
 
 +-----+--------------------+
 |label|            sentence|
@@ -54,17 +62,15 @@ Let's create a sample dataframe to see how it works.
 |  1.0|this is another test|
 +-----+--------------------+
 
-.. code:: python
-
-    df_predict, ml_model = op.ml.logistic_regression_text(df, "sentence")
-
+.. code-block:: python
+    df_predict, ml_model = ml.logistic_regression_text(df, "sentence")
 
 This instruction will return two things, first the DataFrame with predictions and steps to build it with a
 pipeline and a Spark machine learning model where the third step will be the logistic regression.
 
 The columns of df_predict are:
 
-.. code:: python
+.. code-block:: python
 
     df_predict.columns
 
@@ -79,10 +85,9 @@ The columns of df_predict are:
 The names are long because those are the uid for each step in the pipeline. So lets see the prediction compared
 with the actual labels:
 
-.. code:: python
+.. code-block:: python
 
-    transformer = op.DataframeTransformer(df_predict)
-    transformer.select_idx([[0,6]).show()
+    df_predict.cols.select([[0,6]).table()
 
 +-----+---------------------------------------------------+
 |label|LogisticRegression_406a8cef8029cfbbfeda__prediction|
@@ -104,23 +109,18 @@ it will produce bi-grams.
 
 Let's create a sample dataframe to see how it works.
 
-.. code:: python
-
-    # Import Row from pyspark
-    from pyspark.sql import Row,types
-    # Importing Optimus
-    import optimus as op
+.. code-block:: python
 
     df = op.sc. \
         parallelize([['this is the best sentence ever'],
                      ['this is however the worst sentence available']]). \
         toDF(schema=types.StructType().add('sentence', types.StringType()))
 
-    df_predict, model = op.ml.n_gram(df, input_col="sentence", n=2)
+    df_model, tfidf_model = n_gram(df, input_col="sentence", n=2)
 
 The columns of df_predict are:
 
-.. code:: python
+.. code-block:: python
 
     ['sentence',
      'Tokenizer_4a0eb7921c3a33b0bec5__output',
@@ -133,10 +133,9 @@ The columns of df_predict are:
 
 So lets see the bi-grams (we can change n as we want) for the sentences:
 
-.. code:: python
+.. code-block:: python
 
-    transformer = op.DataframeTransformer(df_predict)
-    transformer.select_idx([[0,4]).show()
+     df_model.cols.select([[0,4]).table()
 
 +--------------------------------------------+---------------------------------------------------+
 |sentence                                    |NGram_4e1d89fc70917c522134__output                 |
@@ -164,15 +163,10 @@ Two Linearly Inseparable Sets", Optimization Methods and Software 1, 1992, 23-34
 
 Let's download it with Optimus and save it into a DF:
 
-.. code:: python
-
-    # Importing Optimus
-    import optimus as op
-    # Importing Optimus utils
-    tools = op.Utilities()
+.. code-block:: python
 
     # Downloading and creating Spark DF
-    df = tools.read_url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+    df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
 
 ml.random_forest(df, columns, input_col)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,15 +176,15 @@ one line? With Optimus is really easy.
 
 Let's download some sample data for analysis.
 
-.. code:: python
+.. code-block:: python
 
-    df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
+    df_predict, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Random Forest model.
 
 Let's see df_predict:
 
-.. code:: python
+.. code-block:: python
 
     ['label',
      'diagnosis',
@@ -211,11 +205,9 @@ Let's see df_predict:
 
 So lets see the prediction compared with the actual label:
 
-.. code:: python
+.. code-block:: python
 
-    transformer = op.DataframeTransformer(df_predict)
-    transformer.select_idx([0,15]).show()
-
+    df_predict.select([0,15]).table()
 
 +-----+----------+
 |label|prediction|
@@ -269,17 +261,15 @@ It will be the same for Decision Trees and Gradient Boosted Trees, let's check i
 ml.decision_tree(df, columns, input_col)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's download some sample data for analysis.
+.. code-block:: python
 
-.. code:: python
-
-    df_predict, dt_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
+    df_predict, dt_model = ml.random_forest(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Decision Tree model.
 
 Let's see df_predict:
 
-.. code:: python
+.. code-block:: python
 
     ['label',
      'diagnosis',
@@ -300,10 +290,9 @@ Let's see df_predict:
 
 So lets see the prediction compared with the actual label:
 
-.. code:: python
+.. code-block:: python
 
-    transformer = op.DataframeTransformer(df_predict)
-    transformer.select_idx([0,15]).show()
+    df_predict.select([0,15]).table()
 
 
 +-----+----------+
@@ -355,17 +344,15 @@ only showing top 20 rows
 ml.gbt(df, columns, input_col)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's download some sample data for analysis.
+.. code-block:: python
 
-.. code:: python
-
-    df_predict, gbt_model = op.ml.gbt(df_cancer, columns, "diagnosis")
+    df_predict, gbt_model = ml.gbt(df_cancer, columns, "diagnosis")
 
 This will create a DataFrame with the predictions of the Gradient Boosted Trees model.
 
 Let's see df_predict:
 
-.. code:: python
+.. code-block:: python
 
     ['label',
      'diagnosis',
@@ -386,10 +373,9 @@ Let's see df_predict:
 
 So lets see the prediction compared with the actual label:
 
-.. code:: python
+.. code-block:: python
 
-    transformer = op.DataframeTransformer(df_predict)
-    transformer.select_idx([0,15]).show()
+    df_predict.select([0,15]).show()
 
 
 +-----+----------+
