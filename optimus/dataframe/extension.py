@@ -33,27 +33,30 @@ def sample_n(self, n=10, random=False):
 
 
 @add_method(DataFrame)
-def melt(self, df, id_vars, value_vars, var_name="variable", value_name="value"):
+def melt(self, id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
     """
     Convert DataFrame from wide to long format.
     :param self:
-    :param df: Dataframe to be melted
     :param id_vars:
     :param value_vars:
-    :param var_name:
-    :param value_name:
+    :param var_name: column name for vars
+    :param value_name: column name for values
+    :param data_type: because all data must have the same type
     :return:
     """
 
-    vars_and_vals = [*(
-        F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name))
-        for c in value_vars)]
+    df = self
+
+    # Cast all colums to the same type
+    df = df.cols.cast(id_vars + value_vars, data_type)
+
+    vars_and_vals = [*(F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars)]
 
     # Add to the DataFrame and explode
     df = df.withColumn("vars_and_vals", F.explode(F.array(vars_and_vals)))
 
-    cols = id_vars + [
-        F.col("vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
+    cols = id_vars + [F.col("vars_and_vals")[x].alias(x) for x in [var_name, value_name]]
+
     return df.select(*cols)
 
 
