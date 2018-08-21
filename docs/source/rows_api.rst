@@ -1,4 +1,4 @@
-Columns Operation
+Row Operation
 ======================
 
 Here you will see a detailed overview of all the row operations available in Optimus.

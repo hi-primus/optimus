@@ -1,4 +1,4 @@
-Columns Operation
+Column Operations
 ======================
 
 Here you will see a detailed overview of all the column operations available in Optimus.
