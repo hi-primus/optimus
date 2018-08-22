@@ -164,7 +164,7 @@ Apache Spark created a library called MLlib where they coded great algorithms fo
 with the ML library we can take advantage of the Dataframe API and its optimization to create easily
 Machine Learning Pipelines.
 
-Even though this ta`sk is not extremely hard, is not easy. The way most Machine Learning models work on Spark
+Even though this task is not extremely hard, is not easy. The way most Machine Learning models work on Spark
 are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
 section inside the Transformer.
 
