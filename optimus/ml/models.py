@@ -3,7 +3,7 @@ from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassi
 
 from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
-from optimus.ml.functions import string_to_index, vector_assembler
+from optimus.ml.feature import string_to_index, vector_assembler
 
 from optimus import Optimus
 

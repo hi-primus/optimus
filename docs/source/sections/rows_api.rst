@@ -1,4 +1,4 @@
-Row Operation
+Row Operations
 ======================
 
 Here you will see a detailed overview of all the row operations available in Optimus.
@@ -48,6 +48,7 @@ rows.append(row)
 Append a row at the end of a dataframe
 
 .. code-block:: python
+
     df.rows.append(["this is a word",2, "this is an animal", "this is a thing", 64, "this is a filter"]).table()
 
 +-------------------+---+-----------------+---------------+------+----------------+
@@ -70,6 +71,7 @@ rows.sort()
 Sort the columns by rows or multiple conditions.
 
 .. code-block:: python
+
     df.rows.sort("animals").table()
 
 +-------------------+---+-------+-----+------+------+
@@ -85,6 +87,7 @@ Sort the columns by rows or multiple conditions.
 +-------------------+---+-------+-----+------+------+
 
 .. code-block:: python
+
     df.rows.sort("animals", "desc").table()
 
 +-------------------+---+-------+-----+------+------+
@@ -100,6 +103,7 @@ Sort the columns by rows or multiple conditions.
 +-------------------+---+-------+-----+------+------+
 
 .. code-block:: python
+
     df.rows.sort([("animals","desc"),("thing","asc")]).table()
 
 +-------------------+---+-------+-----+------+------+
@@ -120,6 +124,7 @@ rows.select(*args, **kwargs)
 Alias of Spark filter function. Return rows that match a expression.
 
 .. code-block:: python
+
     df.rows.select(df["num"]==1).table()
 
 +-------------------+---+-------+-----+------+------+
@@ -148,6 +153,7 @@ rows.drop(where=None)
 Drop a row depending on a dataframe expression
 
 .. code-block:: python
+
     df.rows.drop((df["num"]==2) | (df["second"]==5)).table()
 
 +-----+---+-------+-----+------+------+
@@ -162,6 +168,7 @@ rows.drop_by_dtypes(col_name, data_type=None)
 Drop rows by cell data type
 
 .. code-block:: python
+
     df.rows.drop_by_dtypes("filter", "int").table()
 
 +-------------------+---+-------+-----+------+------+
@@ -178,6 +185,7 @@ Drop using an abstract UDF
 --------------------------------
 
 .. code-block:: python
+
     from optimus.functions import abstract_udf as audf
 
     def func_data_type(value, attr):

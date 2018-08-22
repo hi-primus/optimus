@@ -63,6 +63,7 @@ Let's create a sample dataframe to see how it works.
 +-----+--------------------+
 
 .. code-block:: python
+
     df_predict, ml_model = ml.logistic_regression_text(df, "sentence")
 
 This instruction will return two things, first the DataFrame with predictions and steps to build it with a

@@ -6,7 +6,7 @@ import pyspark
 from optimus import Optimus
 
 from optimus.ml.models import ML
-from optimus.ml.functions import *
+import optimus.ml.feature as fe
 
 op = Optimus()
 ml = ML()
@@ -60,7 +60,7 @@ def test_n_gram():
                      ['this is however the worst sentence available']]). \
         toDF(schema=types.StructType().add('sentence', types.StringType()))
 
-    df_model, tfidf_model = n_gram(df, input_col="sentence", n=2)
+    df_model, tfidf_model = fe.n_gram(df, input_col="sentence", n=2)
 
     assert_spark_df(df_model)
 
