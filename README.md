@@ -18,7 +18,7 @@ In your terminal just type  `pip install optimuspyspark`
 
 ## Examples
 
-After installation go to the examples folder and found examples about data cleaning, data munging, and how to create ML and DL models.
+After installation go to the [examples](examples/) folder to found notebooks about data cleaning, data munging, and how to create ML and DL models.
 
 ## Documentation
   
