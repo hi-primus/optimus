@@ -11,8 +11,9 @@ Optimus is the missing framework to profile, clean, process and do ML in a distr
 ## Installation (pip):  
   
 In your terminal just type  `pip install optimuspyspark`
+
 ### Requirements
-* Apache Spark 2.3.0  
+* Apache Spark>= 2.3.0  
 * Python>=3.6  
 
 ## Examples
@@ -31,10 +32,6 @@ https://optimus.featureupvote.com/
  
 ## Info
 And if you want to see some cool information and tutorials about Optimus check out our blog https://medium.com/hi-optimus  
-  
-### Requirements
-* Apache Spark 2.3.0  
-* Python>=3.6  
   
 ## Data loading, cleaning and processing
   
@@ -69,7 +66,8 @@ df\
     .cols.trim("*")\
     .show()
 ```
-You tranform this:
+
+You transform this:
 
 ```
 +---+--------------------+--------------------+---------+----------+-----+----------+--------+
@@ -97,7 +95,8 @@ You tranform this:
 +---+--------------------+--------------------+---------+----------+-----+----------+--------+
 ```
 
-to this:
+into this:
+
 ```
 +---+---------+--------+---------+-----------------+-----+----------+----------+-------------+
 | id|firstname|lastname|billingid|          product|price|     birth|  new_date|years_between|
@@ -159,11 +158,113 @@ Just run `df.profile("*")` to profile all the columns. For more info about the p
 
 ## Machine Learning 
 
-Favio optimus is calling you
+Machine Learning is one of the last steps, and the goal for most Data Science WorkFlows.
 
-## Deep Learning
- 
-Favio optimus is calling you
+Apache Spark created a library called MLlib where they coded great algorithms for Machine Learning. Now
+with the ML library we can take advantage of the Dataframe API and its optimization to create easily
+Machine Learning Pipelines.
+
+Even though this ta`sk is not extremely hard, is not easy. The way most Machine Learning models work on Spark
+are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
+section inside the Transformer.
+
+To import the Machine Learning Library you just need to say to import Optimus and the ML API:
+
+```python
+    from optimus import Optimus
+    from optimus.ml.models import ML
+
+    op = Optimus()
+    ml = ML()
+    spark = op.spark
+    sc = op.sc
+```
+
+One of the best "tree" models for machine learning is Random Forest. What about creating a RF model with just
+one line? With Optimus is really easy.
+
+```python
+    df_predict, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
+```
+
+This will create a DataFrame with the predictions of the Random Forest model.
+
+Let's see df_predict:
+
+```
+    ['label',
+     'diagnosis',
+     'radius_mean',
+     'texture_mean',
+     'perimeter_mean',
+     'area_mean',
+     'smoothness_mean',
+     'compactness_mean',
+     'concavity_mean',
+     'concave points_mean',
+     'symmetry_mean',
+     'fractal_dimension_mean',
+     'features',
+     'rawPrediction',
+     'probability',
+     'prediction']
+```
+
+So lets see the prediction compared with the actual label:
+
+
+```python
+    df_predict.select([0,15]).table()
+```
+
+```
++-----+----------+
+|label|prediction|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       0.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  1.0|       1.0|
++-----+----------+
+|  0.0|       0.0|
++-----+----------+
+only showing top 20 rows
+```
+
+The rf_model variable contains the Random Forest model for analysis.
  
 ## Contributing to Optimus
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
@@ -189,7 +290,7 @@ including:
   
 ## Optimus for Spark 1.6.x  
   
-Optimus main stable branch will work now for Spark 2.2.0 The 1.6.x version is now under maintenance, the last tag release for this Spark version is the 0.4.0. We strongly suggest that you use the >2.x version of the framework because the new improvements and features will be added now on this version.
+Optimus main stable branch will work now for Spark 2.3.1 The 1.6.x version is now under maintenance, the last tag release for this Spark version is the 0.4.0. We strongly suggest that you use the >2.x version of the framework because the new improvements and features will be added now on this version.
 ## Core Team
 Argenis Leon
 Favio Vazquez
@@ -206,7 +307,6 @@ Here is the amazing people that make Optimus possible:
 [![6](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/6)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/6)  
 [![7](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/7)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/7)  
   
-[![Logo Data](https://www.bbvadata.com/wp-content/uploads/2016/07/bbvada_logo.png)](https://www.bbvadata.com)  
    
 ## License:  
   

@@ -26,7 +26,6 @@ To import the Machine Learning Library you just need to say to import Optimus an
     spark = op.spark
     sc = op.sc
 
-Now with Optimus you can use this really easy feature engineering with our Machine Learning Library.
 
 Let's take a look of what Optimus can do for you:
 
