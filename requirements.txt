@@ -1,5 +1,5 @@
 fastnumbers==2.1.0
-multipledispatch==0.4.9
+multipledispatch==0.6.0
 python_dateutil==2.7.3
 nose==1.3.7
 numpy==1.15.1
