@@ -17,33 +17,39 @@ Engineering methods. You'll see how easy it is to prepare your data with Optimus
 Methods for Feature Engineering
 ---------------------------------
 
-Transformer.string_to_index(input_cols)
+fe.string_to_index(input_cols)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method maps a string column of labels to an ML column of label indices. If the input column is numeric, we cast it
 to string and index the string values.
 
+
+``df`` Data frame to transform
 ``input_cols`` argument receives a list of columns to be indexed.
 
 Let's start by creating a DataFrame with Optimus.
 
 .. code:: python
 
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
+    from pyspark.sql import Row, types
+    from pyspark.ml import feature, classification
 
-    # Creating DF with Optimus
+    from optimus import Optimus
+
+    from optimus.ml.models import ML
+    import optimus.ml.feature as fe
+
+    op = Optimus()
+    ml = ML()
+    spark = op.spark
+    sc = op.sc
+
+    # Creating sample DF
     data = [('Japan', 'Tokyo', 37800000),('USA', 'New York', 19795791),('France', 'Paris', 12341418),
-                  ('Spain','Madrid',6489162)]
-    df = tools.create_data_frame(data, ["country", "city", "population"])
+              ('Spain','Madrid',6489162)]
+    df = op.spark.createDataFrame(data, ["country", "city", "population"])
 
-    # Instantiating transformer
-    transformer = op.DataFrameTransformer(df)
-
-    # Show DF
-    transformer.show()
+    df.table()
 
 +-------+--------+----------+
 |country|    city|population|
@@ -60,10 +66,10 @@ Let's start by creating a DataFrame with Optimus.
 .. code:: python
 
     # Indexing columns 'city" and 'country'
-    transformer.string_to_index(["city", "country"])
+    df_sti = fe.string_to_index(df, input_cols=["city", "country"])
 
     # Show indexed DF
-    transformer.show()
+    df_sti.table()
 
 +-------+--------+----------+----------+-------------+
 |country|    city|population|city_index|country_index|
@@ -78,50 +84,25 @@ Let's start by creating a DataFrame with Optimus.
 +-------+--------+----------+----------+-------------+
 
 
-Transformer.index_to_string(input_cols)
+fe.index_to_string(input_cols)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method maps a column of indices back to a new column of corresponding string values. The index-string mapping is
 either from the ML (Spark) attributes of the input column, or from user-supplied labels (which take precedence over
 ML attributes).
 
+``df`` Data frame to transform
 ``input_cols`` argument receives a list of columns to be indexed.
 
 Let's go back to strings with the DataFrame we created in the last step.
 
 .. code:: python
 
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
-
-    # Instantiating transformer
-    transformer = op.DataFrameTransformer(df)
-
-    # Show DF
-    transformer.show()
-
-+-------+--------+----------+
-|country|    city|population|
-+-------+--------+----------+
-|  Japan|   Tokyo|  37800000|
-+-------+--------+----------+
-|    USA|New York|  19795791|
-+-------+--------+----------+
-| France|   Paris|  12341418|
-+-------+--------+----------+
-|  Spain|  Madrid|   6489162|
-+-------+--------+----------+
-
-
-.. code:: python
-
     # Indexing columns 'city" and 'country'
-    transformer.string_to_index(["city", "country"])
+    df_sti = fe.string_to_index(df, input_cols=["city", "country"])
 
     # Show indexed DF
-    transformer.show()
+    df_sti.table()
 
 +-------+--------+----------+----------+-------------+
 |country|    city|population|city_index|country_index|
@@ -138,10 +119,10 @@ Let's go back to strings with the DataFrame we created in the last step.
 .. code:: python
 
     # Going back to strings from index
-    transformer.index_to_string(["country_index"])
+    df_its = fe.string_to_index(df_sti, input_cols=["country_index"])
 
     # Show DF with column "county_index" back to string
-    transformer.show()
+    df_its.table()
 
 +-------+--------+----------+-------------+----------+--------------------+
 |country|    city|population|country_index|city_index|country_index_string|
@@ -156,21 +137,17 @@ Let's go back to strings with the DataFrame we created in the last step.
 +-------+--------+----------+-------------+----------+--------------------+
 
 
-Transformer.one_hot_encoder(input_cols)
+fe.one_hot_encoder(input_cols)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method maps a column of label indices to a column of binary vectors, with at most a single one-value.
 
+``df`` Data frame to transform
 ``input_cols`` argument receives a list of columns to be encoded.
 
 Let's create a sample dataframe to see what OHE does:
 
 .. code:: python
-
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
 
     # Creating DataFrame
     data = [
@@ -181,16 +158,13 @@ Let's create a sample dataframe to see what OHE does:
     (4, "a"),
     (5, "c")
     ]
-    df = tools.create_data_frame(data,["id", "category"])
-
-    # Instantiating the transformer
-    transformer = op.DataFrameTransformer(df)
+    df = op.spark.createDataFrame(data,["id", "category"])
 
     # One Hot Encoding
-    transformer.one_hot_encoder(["id"])
+    df_ohe = fe.one_hot_encoder(df, input_cols=["id"])
 
     # Show encoded dataframe
-    transformer.show()
+    df_ohe.table()
 
 +---+--------+-------------+
 | id|category|   id_encoded|
@@ -208,67 +182,6 @@ Let's create a sample dataframe to see what OHE does:
 |  5|       c|    (5,[],[])|
 +---+--------+-------------+
 
-Transformer.sql(sql_expression)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This method implements the transformations which are defined by SQL statement. Spark only support
-SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
-underlying table of the input dataframe. Thank Spark for this amazing function.
-
-`sql_expression`` argument receives a string that contains SQL expression.
-
-Let's create a sample DataFrame to test this function.
-
-.. code:: python
-
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
-
-    # Creating DataFrame
-    data = [
-    (0, 1.0, 3.0),
-    (2, 2.0, 5.0)
-    ]
-
-    df = tools.create_data_frame(data,["id", "v1", "v2"])
-
-    # Instantiating the transformer
-    transformer = op.DataFrameTransformer(df)
-
-
-This dataframe is just this:
-
-+---+---+---+
-| id| v1| v2|
-+---+---+---+
-|  0|1.0|3.0|
-+---+---+---+
-|  2|2.0|5.0|
-+---+---+---+
-
-Now let's create two new columns from these ones. The first will be the sum of the columns `v1` and `v2`, and
-the second one will be the multiplication of this two columns. With the `sql()` function we just need to
-pass the sql expression and use at the end `FROM __THIS__` that will be the underlying table of the input dataframe.
-
-So:
-
-.. code:: python
-
-    transformer.sql("SELECT *, (v1 + v2) AS v3, (v1 * v2) AS v4 FROM __THIS__")
-
-
-And this will output:
-
-+---+---+---+---+----+---+----+
-| id| v1| v2| v3|  v4| v3|  v4|
-+---+---+---+---+----+---+----+
-|  0|1.0|3.0|4.0| 3.0|4.0| 3.0|
-+---+---+---+---+----+---+----+
-|  2|2.0|5.0|7.0|10.0|7.0|10.0|
-+---+---+---+---+----+---+----+
-
 Transformer.vector_assembler(input_cols)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -280,30 +193,22 @@ This is very important because lots of Machine Learning algorithms in Spark need
 
 Let's create a sample dataframe to see what vector assembler does:
 
-.. code:: python
+.. code-block:: python
 
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
     # Import Vectors
     from pyspark.ml.linalg import Vectors
 
     # Creating DataFrame
     data = [(0, 18, 1.0, Vectors.dense([0.0, 10.0, 0.5]), 1.0)]
 
-    df = tools.create_data_frame(data,["id", "hour", "mobile", "user_features", "clicked"]
-
-    # Instantiating the transformer
-    transformer = op.DataFrameTransformer(df)
+    df = op.spark.createDataFrame(data,["id", "hour", "mobile", "user_features", "clicked"])
 
     # Assemble features
-    transformer.vector_assembler(["hour", "mobile", "userFeatures"])
-
+    df_va = fe.vector_assembler(df, input_cols=["hour", "mobile", "user_features"])
 
     # Show assembled df
-    print("Assembled columns 'hour', 'mobile', 'userFeatures' to vector column 'features'")
-    transform.df.select("features", "clicked").show(truncate=False)
+    print("Assembled columns 'hour', 'mobile', 'user_features' to vector column 'features'")
+    df_va.select("features", "clicked").table()
 
 
 +-----------------------+-------+
@@ -312,7 +217,7 @@ Let's create a sample dataframe to see what vector assembler does:
 |[18.0,1.0,0.0,10.0,0.5]|1.0    |
 +-----------------------+-------+
 
-Transformer.normalizer(input_cols,p=2.0)
+fe.normalizer(input_cols,p=2.0)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This method transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
@@ -327,11 +232,6 @@ specifies the p-norm used for normalization. (p=2) by default.
 Let's create a sample dataframe to see what normalizer does:
 
 .. code:: python
-
-    # Importing Optimus
-    import optimus as op
-    #Importing utilities
-    tools = op.Utilities()
     # Import Vectors
     from pyspark.ml.linalg import Vectors
 
@@ -341,12 +241,11 @@ Let's create a sample dataframe to see what normalizer does:
     (2, Vectors.dense([4.0, 10.0, 2.0]),)
     ]
 
-    df = tools.create_data_frame(data,["id", "features"])
+    df = op.spark.createDataFrame(data,["id", "features"])
 
-    transformer.normalizer(["features"], p=2.0).show(truncate=False)
+    df_norm = fe.normalizer(df, input_cols=["features"], p=2.0)
 
-    # Show normalized data
-    transformer.show(truncate=False)
+    df_norm.table()
 
 
 +---+--------------+-----------------------------------------------------------+

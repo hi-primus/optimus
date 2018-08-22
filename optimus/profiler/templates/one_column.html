@@ -1,0 +1,282 @@
+<style>
+    .main{
+        width:100%;
+        overflow:auto;
+        border-bottom:1px solid #eeeeee;
+        padding: 10px 0;
+    }
+    .panel_profiler{
+        margin-right:2%;
+        float:left;
+        padding-bottom:2%;
+    }
+    .title_profiler{
+        padding:20px;
+        background-color: #eeeeee
+    }
+    .info{
+        overflow: auto
+    }
+</style>
+
+<div class="main">
+    <div class="info">
+
+        {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
+        data.column_type=="bool"%}
+
+        <div class="panel_profiler">
+            <div>
+                <h2>{{data.name}}</h2>
+                <div>{{data.column_type}}</div>
+            </div>
+            <table>
+                <tbody>
+                <tr>
+                    <td>Distinct count</td>
+                    <td> {{data.stats.uniques_count}}</td>
+                </tr>
+                <tr>
+                    <td>Unique (%)</td>
+                    <td> {{data.stats.p_uniques}}</td>
+                </tr>
+                <tr>
+                    <td>Missing (%)</td>
+                    <td>{{data.stats.missing_count}}</td>
+                </tr>
+                <tr>
+                    <td>Missing (n)</td>
+                    <td>{{data.stats.p_missing}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div>
+                <h3>
+                    Datatypes
+                </h3>
+            </div>
+            <table>
+                <tbody>
+                <tr>
+                    <td>
+                        String
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.string}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Integer
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.int}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Float
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.float}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Bool
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.bool}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Date
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.date}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Missing
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.missing}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Null
+                    </td>
+                    <td>
+                        {{data.dtypes_stats.null}}
+                    </td>
+
+                </tr>
+                </tbody>
+            </table>
+            {% if data.column_type=="numeric" %}
+            <div>
+                <h3>
+                    Basic Stats
+                </h3>
+
+            </div>
+            <table>
+                <tbody>
+                <tr>
+                    <td>Mean</td>
+                    <td>{{data.stats.mean}}</td>
+                </tr>
+                <tr>
+                    <td>Minimum</td>
+                    <td>{{data.stats.min}}</td>
+                </tr>
+                <tr>
+                    <td>Maximum</td>
+                    <td>{{data.stats.max}}</td>
+                </tr>
+                <tr>
+                    <td>Zeros(%)</td>
+                    <td>{{data.stats.zeros}}</td>
+                </tr>
+
+                </tbody>
+            </table>
+            {% endif %}
+
+        </div>
+        <div class="panel_profiler">
+            <h3>Frequency</h3>
+            <table>
+                <tbody>
+                <th>Value</th>
+                <th>Count</th>
+                <th>Frecuency (%)</th>
+                {% for vi in data.frequency %}
+                <tr>
+                    <td>{{vi.value}}</td>
+                    <td>{{vi.count}}</td>
+                    <td>{{vi.percentage}}%</td>
+                </tr>
+
+                {% endfor %}
+                <tr>
+                    <td>"Missing"</td>
+                    <td>{{data.stats.missing_count}}</td>
+                    <td>{{data.stats.p_missing}}%</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if data.column_type=="numeric" %}
+        <div class="panel_profiler">
+
+
+            <h3>Quantile statistics</h3>
+            <table>
+                <tbody>
+                <tr>
+                    <td>Minimum</td>
+                    <td>{{data.stats.min}}</td>
+                </tr>
+                <tr>
+                    <td>5-th percentile</td>
+                    <td>{{data.stats.quantile[0.05]}}</td>
+                </tr>
+                <tr>
+                    <td>Q1</td>
+                    <td>{{data.stats.quantile[0.25]}}</td>
+                </tr>
+                <tr>
+                    <td>Median</td>
+                    <td>{{data.stats.quantile[0.5]}}</td>
+                </tr>
+                <tr>
+                    <td>Q3</td>
+                    <td>{{data.stats.quantile[0.75]}}</td>
+                </tr>
+                <tr>
+                    <td>95-th percentile</td>
+                    <td>{{data.stats.quantile[0.95]}}</td>
+                </tr>
+                <tr>
+                    <td>Maximum</td>
+                    <td>{{data.stats.max}}</td>
+                </tr>
+                <tr>
+                    <td>Range</td>
+                    <td>{{data.stats.range}}</td>
+                </tr>
+                <tr>
+                    <td>Interquartile range</td>
+                    <td>{{data.stats.interquartile_range}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel_profiler">
+            <h3>Descriptive statistics</h3>
+            <table>
+                <tbody>
+                <tr>
+                    <td>Standard deviation</td>
+                    <td>{{data.stats.stddev}}</td>
+                </tr>
+                <tr>
+                    <td>Coef of variation</td>
+                    <td>{{data.stats.coef_variation}}</td>
+                </tr>
+                <tr>
+                    <td>Kurtosis</td>
+                    <td>{{data.stats.kurtosis}}</td>
+                </tr>
+                <tr>
+                    <td>Mean</td>
+                    <td>{{data.stats.mean}}</td>
+                </tr>
+                <tr>
+                    <td>MAD</td>
+                    <td>{{data.stats.mad}}</td>
+                </tr>
+                <tr>
+                    <td>Skewness</td>
+                    <td>{{data.stats.zeros}}</td>
+                </tr>
+                <tr>
+                    <td>Sum</td>
+                    <td>{{data.stats.sum}}</td>
+                </tr>
+                <tr>
+                    <td>Variance</td>
+                    <td>{{data.stats.variance}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    <table>
+        <tr>
+            {% if hist_pic is not none %}
+            <td>
+
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_pic | safe }}">
+                </div>
+            </td>
+            {% endif %}
+            {% if freq_pic is not none %}
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ freq_pic | safe }}">
+                </div>
+
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+</div>

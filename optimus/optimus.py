@@ -1,123 +1,146 @@
-# Importing DataFrameTransformer library
-from optimus.df_transformer import DataFrameTransformer
-# Importing DataFrameAnalyzer library
-from optimus.df_analyzer import DataFrameAnalyzer
-from pyspark.sql.dataframe import DataFrame
+import os
+from shutil import rmtree
+
+from optimus.create import Create
+from optimus.functions import concat
+from optimus.helpers.constants import *
+from optimus.helpers.raiseit import RaiseIfNot
+from optimus.io.load import Load
+from optimus.spark import Spark
+import logging
+
+Spark.instance = None
 
 
 class Optimus:
-    """
-    This class can be considered as a wrapper of DataFrameTransformer and DataFrameAnalyzer classes.
-    """
 
-    def __init__(self, df, path_file, pu=1):
-        """Constructor.
-        In this method DataFrameTransformer and DataFrameAnalyzer classes are
-        instantiated.
+    def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
+                 verbose=False):
         """
-        # Path file:
-        self._path_file = path_file
-
-        # Pu file:
-        self._pu = pu
-
-        # Instance of transformer class:
-        self.transformer = DataFrameTransformer(df)
-
-        # Instance of analyzer class:
-        self.analyzer = DataFrameAnalyzer(df, self._path_file, self._pu)
-
-    def get_data_frame(self):
+        Transform and roll out
+        :param master: 'Master', 'local' or ip address to a cluster
+        :param app_name: Spark app name
+        :param path: path to the checkpoint folder
+        :param checkpoint: If True create a checkpoint folder
+        :param file_system: 'local' or 'hadoop'
         """
-        This function return the dataframe loaded in the class
+
+        if verbose is True:
+            level = logging.INFO
+            logging.basicConfig(format="%(message)s", level=level)
+        elif verbose is False:
+            logging.propagate = False
+            logging.disable(logging.NOTSET)
+
+        if path is None:
+            path = os.getcwd()
+
+        # Initialize Spark
+        logging.info("""
+                             ____        __  _                     
+                            / __ \____  / /_(_)___ ___  __  _______
+                           / / / / __ \/ __/ / __ `__ \/ / / / ___/
+                          / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
+                          \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
+                              /_/                                  
+                              """)
+
+        logging.info(STARTING_OPTIMUS)
+        Spark.instance = Spark(master, app_name)
+        if checkpoint is True:
+            self.set_check_point_folder(path, file_system)
+
+        logging.info(SUCCESS)
+
+        self.create = Create()
+        self.load = Load()
+        self.read = self.spark.read
+
+    @property
+    def spark(self):
+        return Spark.instance.spark()
+
+    @property
+    def sc(self):
+        return Spark.instance.sc()
+
+    @staticmethod
+    def concat(dfs, like):
+        return concat(dfs, like)
+
+    @staticmethod
+    def set_check_point_folder(path, file_system):
+        """
+        Function that receives a workspace path where a folder is created.
+        This folder will store temporal dataframes when user writes the .checkPoint().
+
+        :param path: Location of the dataset (string).
+        :param file_system: Describes if file system is local or hadoop file system.
+
+        """
+
+        print_check_point_config(file_system)
+
+        if file_system == "hadoop":
+            folder_path = path + "/" + "checkPointFolder"
+            Optimus.delete_check_point_folder(path=path, file_system=file_system)
+
+            # Creating file:
+            logging.info("Creating the hadoop folder...")
+            command = "hadoop fs -mkdir " + folder_path
+            logging.info("$" + command)
+            os.system(command)
+            logging.info("Hadoop folder created. \n")
+
+            logging.info("Setting created folder as checkpoint folder...")
+            Spark.instance.sc().setCheckpointDir(folder_path)
+        elif file_system == "local":
+            # Folder path:
+            folder_path = path + "/" + "checkPointFolder"
+            # Checking if tempFolder exits:
+            logging.info("Deleting previous folder if exists...")
+            if os.path.isdir(folder_path):
+                # Deletes folder if exits:
+                rmtree(folder_path)
+
+            logging.info("Creating the checkpoint directory...")
+            # Creates new folder:
+            os.mkdir(folder_path)
+
+            Spark.instance.sc().setCheckpointDir(dirName="file:///" + folder_path)
+        else:
+            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
+
+    @staticmethod
+    def delete_check_point_folder(path, file_system):
+        """
+        Function that deletes the temporal folder where temp files were stored.
+        The path required is the same provided by user in setCheckPointFolder().
+
+        :param path: path where the info will be saved
+        :param file_system: Describes if file system is local or hadoop file system.
         :return:
         """
 
-        return self.transformer.df
-
-    def set_data_frame(self, df):
-        """
-        This function set a dataframe into the class for subsequent actions.
-        :param df:
-        :return:
-        """
-        assert isinstance(df, DataFrame), "Error: df argument must a pyspark.sql.dataframe.DataFrame type"
-        self.transformer.set_data_frame(df)
-
-    def _execute_analyzer(self, columns):
-        """
-
-        :param columns:
-        :return:
-        """
-        # First
-        self.analyzer.unpersist_df()
-        del self.analyzer
-        # Instance of analyzer class:
-        self.analyzer = DataFrameAnalyzer(self.transformer.df, self._path_file, self._pu)
-        # Sampling if it is specified (this method is dependent to the pu argument)
-        self.analyzer.analyze_sample()
-        # Analyze column specified by user:
-        self.analyzer.column_analyze(column_list=columns,
-                                     plots=True,
-                                     values_bar=False,
-                                     print_type=True,
-                                     num_bars=50)
-
-    def trim_col(self, columns):
-        """
-        This methods cut left and right extra spaces in column strings provided by user.
-        :param columns: list of column names of dataFrame.
-                        If a string "*" is provided, the method
-                        will do the trimming operation in whole dataFrame.
-        :return: transformer object
-        """
-        # Calling trimCol
-        self.transformer.trim_col(columns=columns)
-        # Execute analyzer:
-        self._execute_analyzer(columns)
-
-    def drop_col(self, columns):
-        """
-        This method eliminate the list of columns provided by user.
-        :param columns: list of columns names or a string (a column name).
-
-        :return: transformer object
-        """
-
-        # Calling dropCol
-        self.transformer.drop_col(columns=columns)
-        # Execute analyzer:
-        self._execute_analyzer(columns)
-
-    def lower_case(self, columns):
-        """This function set all strings in columns of dataframe specified to lowercase.
-        Columns argument must be a string or a list of string. In order to apply this
-        function to all dataframe, columns must be equal to '*'"""
-
-        # Calling lowerCase
-        self.transformer.lower_case(columns=columns)
-        # Execute analyzer:
-        self._execute_analyzer(columns)
-
-    def upper_case(self, columns):
-        """This function set all strings in columns of dataframe specified to uppercase.
-        Columns argument must be a string or a list of string. In order to apply this function to all
-        dataframe, columns must be equal to '*'"""
-
-        # Calling lowerCase
-        self.transformer.upper_case(columns=columns)
-        # Execute analyzer:
-        self._execute_analyzer(columns)
-
-    def keep_col(self, columns):
-        """This method keep only columns specified by user with columns argument in DataFrame.
-        :param columns list of columns or a string (column name).
-
-        :return transformer object
-        """
-
-        # Calling keepCol
-        self.transformer.keep_col(columns=columns)
-        # Execute analyzer:
-        self._execute_analyzer(columns)
+        if file_system == "hadoop":
+            # Folder path:
+            folder_path = path + "/" + "checkPointFolder"
+            logging.info("Deleting checkpoint folder...")
+            command = "hadoop fs -rm -r " + folder_path
+            os.system(command)
+            logging.info("$" + command)
+            logging.info("Folder deleted.")
+        elif file_system == "local":
+            logging.info("Deleting checkpoint folder...")
+            # Folder path:
+            folder_path = path + "/" + "checkPointFolder"
+            # Checking if tempFolder exits:
+            if os.path.isdir(folder_path):
+                # Deletes folder if exits:
+                rmtree(folder_path)
+                # Creates new folder:
+                logging.info("Folder deleted.")
+            else:
+                logging.info("Folder deleted.")
+        else:
+            RaiseIfNot.value_error(file_system, ["hadoop", "local"])

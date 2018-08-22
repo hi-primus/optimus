@@ -1,0 +1,68 @@
+set_data_frame			    removed. now used directly from spark df
+df				            removed. now used directly from spark df
+show:				        removed. now used directly from spark df
+lower_case:			        renamed to lower
+upper_case:			        renamed to upper
+impute_missing:			    moved to ml.py
+check_point
+trim_col:			        renamed to trim
+drop_col:			        renamed to drop
+replace_col:			    renamed to replace. I just wipeout the implementation. it just only checking if columns are valid and run df.replace
+delete_row			        renamed to filter
+set_col				        checking
+keep_col			        renamed to keep
+clear_accents			    moved to utilities
+remove_special_chars		moved to utilities
+remove_special_chars_regex	moved to utilities
+rename_col			        renamed to rename
+lookup				        checking
+move_col			        reimplemented
+count_items			        checking
+date_transform			    moved to utilities checking
+age_calculate			    moved to utilities
+cast_func			        renamed as astype
+empty_str_to_str		    removed. replace or fillna form Spark can be used
+
+operation_in_type		    checking
+row_filter_by_type		    Merged with filter
+split_str_col			    reimplemented using split form spark
+remove_empty_rows		    replaced by dropna
+remove_duplicates		    replaced by drop_duplicates
+select				        Not changes
+select_idx			        Not changes
+collect				        removed.
+
+IO
+write_df_as_json: 		    moved to operations.py
+to_csv:				        moved to operations.py @deprecated
+
+read_csv:                   @deprecated
+json_data_loader:	        @deprecated
+read_dataset_parquet:	    @deprecated
+
+
+ML				moved to ml.py
+string_to_index:
+index_to_string:
+one_hot_encoder:
+sql:
+vector_assembler:
+normalizer:
+undo_vec_assembler
+scale_vec_col
+
+
+thoughts
+
+df
+	rows
+	columns
+		create
+		read
+		move
+		update
+		delete
+		save
+
+
+

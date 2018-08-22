@@ -36,11 +36,11 @@ if 'nosetests' in sys.argv[1:]:
 setup(
     name='optimuspyspark',
     version=get_version(),
-    author='Favio Vazquez',
+    author='Favio Vazquez amd Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/1.2.6.tar.gz',
-    description=('Optimus is the missing framework for cleaning and preprocessing data in a distributed fashion with '
+    download_url='https://github.com/ironmussa/Optimus/archive/2.0.0.tar.gz',
+    description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
     license='APACHE',
@@ -58,7 +58,7 @@ setup(
     test_suite='nose.collector',
     include_package_data=False,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'License :: OSI Approved :: Apache Software License',
