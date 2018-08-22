@@ -33,7 +33,7 @@ def string_to_index(df, input_cols):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
-    :param df:
+    :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
     :return: Dataframe with indexed columns.
     """
@@ -54,7 +54,7 @@ def index_to_string(df, input_cols):
     Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
     ML attributes).
-    :param df:
+    :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
     :return: Dataframe with indexed columns.
     """
@@ -73,7 +73,7 @@ def index_to_string(df, input_cols):
 def one_hot_encoder(df, input_cols):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
-    :param df:
+    :param df: Dataframe to be transformed
     :param input_cols: Columns to be encoded.
     :return: Dataframe with encoded columns.
     """
@@ -93,7 +93,7 @@ def one_hot_encoder(df, input_cols):
 def vector_assembler(df, input_cols):
     """
     Combines a given list of columns into a single vector column.
-    :param df:
+    :param df: Dataframe to be transformed
     :param input_cols: Columns to be assembled.
     :return: Dataframe with assembled column.
     """
@@ -112,6 +112,7 @@ def normalizer(df, input_cols, p=2.0):
     """
     Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
     specifies the p-norm used for normalization. (p=2) by default.
+    :param df: Dataframe to be transformed
     :param input_cols: Columns to be normalized.
     :param p:  p-norm used for normalization.
     :return: Dataframe with normalized columns.
@@ -119,7 +120,11 @@ def normalizer(df, input_cols, p=2.0):
 
     # Check if columns argument must be a string or list datatype:
 
-    input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=["integer", "float"])
+    assert isinstance(input_cols, (str, list)), \
+        "Error: %s argument must be a string or a list." % "input_cols"
+
+    if isinstance(input_cols, str):
+        input_cols = [input_cols]
 
     assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
 
