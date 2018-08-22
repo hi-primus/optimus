@@ -1,4 +1,4 @@
-fastnumbers==2.1.0
+fastnumbers==2.1.1
 multipledispatch==0.4.9
 python_dateutil==2.7.3
 nose==1.3.7
