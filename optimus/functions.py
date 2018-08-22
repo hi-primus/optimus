@@ -11,7 +11,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.checkit import is_data_type
-from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
+from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
+    parse_spark_dtypes, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIfNot
 
 
@@ -52,7 +53,7 @@ def func_factory(func_type=None, func_return_type=None):
     """
 
     # if func_return_type is not None:
-    # func_return_type = parse_spark_dtypes(func_return_type)
+    func_return_type = get_spark_dtypes_object(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
         # TODO: Get the column type, so is not necessary to pass the return type as param.
