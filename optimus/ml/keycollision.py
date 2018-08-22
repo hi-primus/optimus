@@ -153,7 +153,7 @@ class KeyCollision:
                   .cache())
 
             df = KeyCollision.n_gram_fingerprint(df, col_name, n_size)
-            #df.table()
+            # df.table()
             df = df.groupby(n_gram_col).agg(
                 F.collect_set(col_name).alias("cluster"),
                 F.sum("count").alias("count"),
