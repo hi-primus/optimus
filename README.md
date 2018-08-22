@@ -117,7 +117,7 @@ to this:
 |  9| johannes|  kepler|      735|             taco|    3|1920/04/22|22-04-1920|      98.3253|
 +---+---------+--------+---------+-----------------+-----+----------+----------+-------------+
 ```
-Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time. To know about all the Optimus functionality please go to this notebooks
+Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
 ### Custom functions
 Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
@@ -155,7 +155,7 @@ df.cols.apply_expr("billingid", func, 20).show()
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
-Just run `df.profile("*")` to profile all the columns. For more info about the profile please go to this notebooks
+Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb)
 
 ## Machine Learning 
 
