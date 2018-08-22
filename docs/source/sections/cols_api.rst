@@ -278,6 +278,7 @@ cols.keep(columns=None, regex=None)
 Only keep the columns specified.
 
 .. code-block:: python
+
     df.cols.keep("num").table()
 
 +---+
@@ -298,6 +299,7 @@ cols.move(column, position, ref_col)
 Move a column to specific position
 
 .. code-block:: python
+
     df.cols.move("words", "after", "thing").table()
 
 +---+-------+-----+-------------------+-------------+------+-----+-----------------+---------+---------+
@@ -318,6 +320,7 @@ cols.sort(order="asc")
 Sort dataframes columns asc or desc
 
 .. code-block:: python
+
     df.cols.sort().table()
 
 +-------+-----------------+---------+------+---------+---+-----+-----+-------------+-------------------+
@@ -354,6 +357,7 @@ cols.drop()
 Drops a list of columns
 
 .. code-block:: python
+
     df2 = df.cols.drop("num")
     df2.table()
 
@@ -370,6 +374,7 @@ Drops a list of columns
 +-------------------+-------+-----+-------------+------+-----+-----------------+---------+---------+
 
 .. code-block:: python
+
     df2 = df.cols.drop(["num","words"])
     df2.table()
 
@@ -418,6 +423,7 @@ cols.unnest(columns, mark=None, n=None, index=None)
 Split array or string in different columns
 
 .. code-block:: python
+
     df.cols.unnest("two strings","-").table()
 
 
@@ -436,6 +442,7 @@ Split array or string in different columns
 Only getting the first element
 
 .. code-block:: python
+
     df.cols.unnest("two strings","-", index = 1).table()
 
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+-------------+
@@ -471,6 +478,7 @@ Unnest array of string
 Split in 3 parts
 
 .. code-block:: python
+
     df \
     .cols.unnest(["two strings"], n= 3, mark = "-") \
     .table()
@@ -493,6 +501,7 @@ cols.impute(input_cols, output_cols, strategy="mean")
 Imputes missing data from specified columns using the mean or median.
 
 .. code-block:: python
+
     # Create test dataset
     df_fill = op.spark.createDataFrame([(1.0, float("nan")), (2.0, float("nan")),
                                (float("nan"), 3.0), (4.0, 4.0), (5.0, 5.0)], ["a", "b"])
@@ -519,6 +528,7 @@ cols.select_by_dtypes(data_type)
 Returns one or multiple dataframe columns which match with the data type provided.
 
 .. code-block:: python
+
     df.cols.select_by_dtypes("int").table()
 
 +---+
@@ -541,6 +551,7 @@ Apply a function using pandas udf or udf if apache arrow is not available.
 In the next example we replace a number in a string column with "new string":
 
 .. code-block:: python
+
     def func(val, attr):
         return attr
 
@@ -565,6 +576,7 @@ User Define Functions in Optimus
 Now we'll create a UDF function that sum a values (32 in this case) to two columns
 
 .. code-block:: python
+
     df = df.cols.append("new_col_1", 1)
 
     def func(val, attr):
@@ -587,6 +599,7 @@ Now we'll create a UDF function that sum a values (32 in this case) to two colum
 Now a we'll create a Pandas UDF function that sum a values (10 in this case) to two columns
 
 .. code-block:: python
+
     def func(val, attr):
         return val + attr
 
@@ -607,6 +620,7 @@ Now a we'll create a Pandas UDF function that sum a values (10 in this case) to 
 Create an abstract udf to filter a rows where the value of column "num"> 1
 
 .. code-block:: python
+
     from optimus.functions import abstract_udf as audf
 
     def func(val, attr):
@@ -627,6 +641,7 @@ Create an abstract udf to filter a rows where the value of column "num"> 1
 Create an abstract udf (Pandas UDF) to pass two arguments to a function a apply a sum operation
 
 .. code-block:: python
+
     from optimus.functions import abstract_udf as audf
 
     def func(val, attr):
@@ -654,6 +669,7 @@ Apply a expression to column.
 Here we'll apply a column expression to when the value of "num" or "num 2" is grater than 2:
 
 .. code-block:: python
+
     from pyspark.sql import functions as F
     def func(col_name, attr):
         return F.when(F.col(col_name)>2 ,10).otherwise(1)
@@ -701,6 +717,7 @@ cols.count_na(columns)
 Returns the NAN and Null count in a Column.
 
 .. code-block:: python
+
     import numpy as np
 
     df_null = op.spark.createDataFrame(
@@ -717,11 +734,13 @@ cols.count_uniques(columns, estimate=True)
 Returns how many unique items exist in a columns
 
 .. code-block:: python
+
     df.cols.count_uniques("*")
 
 And you'll get:
 
 .. code-block:: python
+
     {'words': {'approx_count_distinct': 3},
      'num': {'approx_count_distinct': 3},
      'animals': {'approx_count_distinct': 4},
@@ -739,6 +758,7 @@ cols.replace(columns, search_and_replace=None, value=None, regex=None)
 Replace a value or a list of values by a specified string
 
 .. code-block:: python
+
     df.cols.replace("animals",["dog","cat"],"animals").table()
 
 
@@ -758,6 +778,11 @@ Replace "dog","cat" in column "animals" by the word "animals":
 
 Replace "dog-tv", "cat", "eagle", "fish" in columns "two strings","animals" by "animals":
 
+.. code-block:: python
+
+    df.cols.replace(["two strings","animals"], ["dog-tv", "cat", "eagle", "fish"], "animals").table()
+
+
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
 |              words|num|animals|thing|  two strings|filter|num 2|        col_array|  col_int|new_col_1|
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+
@@ -776,6 +801,7 @@ cols.nest(input_cols, output_col, shape=None, separator=" ")
 Concat multiple columns to one with the format specified
 
 .. code-block:: python
+
     df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").table()
 
 Merge two columns in a column vector:
@@ -795,6 +821,7 @@ Merge two columns in a column vector:
 Merge two columns in a string columns:
 
 .. code-block:: python
+
     df.cols.nest(["animals", "two strings"], output_col= "col_nested", shape = "string").table()
 
 +-------------------+---+-------+-----+-------------+------+-----+-----------------+---------+---------+------------------+
