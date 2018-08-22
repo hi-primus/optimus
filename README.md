@@ -190,32 +190,11 @@ one line? With Optimus is really easy.
 
 This will create a DataFrame with the predictions of the Random Forest model.
 
-Let's see df_predict:
-
-```
-    ['label',
-     'diagnosis',
-     'radius_mean',
-     'texture_mean',
-     'perimeter_mean',
-     'area_mean',
-     'smoothness_mean',
-     'compactness_mean',
-     'concavity_mean',
-     'concave points_mean',
-     'symmetry_mean',
-     'fractal_dimension_mean',
-     'features',
-     'rawPrediction',
-     'probability',
-     'prediction']
-```
-
 So lets see the prediction compared with the actual label:
 
 
 ```python
-    df_predict.select([0,15]).table()
+    df_predict.cols.select(["label","prediction"]).show()
 ```
 
 ```
