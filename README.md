@@ -182,7 +182,10 @@ One of the best "tree" models for machine learning is Random Forest. What about 
 one line? With Optimus is really easy.
 
 ```python
-    df_predict, rf_model = ml.random_forest(df_cancer, "*", "diagnosis")
+    columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+    df_predict, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
 This will create a DataFrame with the predictions of the Random Forest model.
