@@ -10,6 +10,11 @@ def get_version():
                          version_file.read()).group('version')
 
 
+# Requirements
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
+
 if sys.version_info < (3, 6):
     raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
 
@@ -19,8 +24,6 @@ def readme():
         return f.read()
 
 
-install_requires = ['pytest', 'findspark', 'pytest-spark', 'pyspark', 'seaborn',
-                    'deprecated']
 lint_requires = [
     'pep8',
     'pyflakes'
@@ -39,14 +42,14 @@ setup(
     author='Favio Vazquez and Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.0.2.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/2.0.3.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
     long_description_content_type='text/markdown',
     license='APACHE',
     packages=find_packages(),
-    install_requires=install_requires,
+    install_requires=required,
     tests_require=tests_require,
     setup_requires=setup_requires,
     extras_require={
