@@ -96,7 +96,7 @@ class DistanceCluster:
         # Cluster
         df_l = df_l.join(df_t, (df_l[col_name + "_FROM"] == df_t[col_name + "_FINGERPRINT"]), how="left") \
             .cols.drop(col_name + "_FINGERPRINT") \
-            .cols.drop([col_name + "_FROM", col_name + "_TO", col_name + "_LEVENSHTEIN_DISTANCE"]).table()
+            .cols.drop([col_name + "_FROM", col_name + "_TO", col_name + "_LEVENSHTEIN_DISTANCE"])
 
         return df_l
 
