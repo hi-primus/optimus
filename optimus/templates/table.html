@@ -10,7 +10,6 @@
         margin: 10px 0;
         font-size: 0.8em;
     }
-
 </style>
 <div class="info_items">Viewing {{limit}} of {{total}}</div>
 <table>
@@ -19,7 +18,7 @@
         {%for col in cols: %}
         <th>
             <div class="column_name">{{col[0]}}</div>
-            <div class="data_type">({{col[1]}})</div>
+            <div class="data_type">{{loop.index}} ({{col[1]}})</div>
 
         </th>
         {% endfor %}
