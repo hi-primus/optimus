@@ -1,0 +1,214 @@
+{
+    "columns": {
+        "id": {
+            "column_dtype": "int",
+            "column_type": "numeric",
+            "dtypes_stats": {
+                "bool": 0,
+                "date": 0,
+                "float": 0,
+                "int": 45716,
+                "missing": 0,
+                "null": 0,
+                "string": 0
+            },
+            "frequency": [
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57458
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57457
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57456
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57455
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57454
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57453
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57436
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57435
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57434
+                },
+                {
+                    "count": 1,
+                    "percentage": 0.002,
+                    "value": 57433
+                }
+            ],
+            "hist": [
+                {
+                    "lower": 1.0,
+                    "upper": 2873.85,
+                    "value": 0
+                },
+                {
+                    "lower": 2873.85,
+                    "upper": 5746.7,
+                    "value": 2505
+                },
+                {
+                    "lower": 5746.7,
+                    "upper": 8619.55,
+                    "value": 2084
+                },
+                {
+                    "lower": 8619.55,
+                    "upper": 11492.4,
+                    "value": 2844
+                },
+                {
+                    "lower": 11492.4,
+                    "upper": 14365.25,
+                    "value": 2837
+                },
+                {
+                    "lower": 14365.25,
+                    "upper": 17238.1,
+                    "value": 2831
+                },
+                {
+                    "lower": 17238.1,
+                    "upper": 20110.949999999997,
+                    "value": 2829
+                },
+                {
+                    "lower": 20110.949999999997,
+                    "upper": 22983.799999999996,
+                    "value": 2843
+                },
+                {
+                    "lower": 22983.799999999996,
+                    "upper": 25856.649999999994,
+                    "value": 2869
+                },
+                {
+                    "lower": 25856.649999999994,
+                    "upper": 28729.499999999993,
+                    "value": 2664
+                },
+                {
+                    "lower": 28729.499999999993,
+                    "upper": 31602.34999999999,
+                    "value": 2268
+                },
+                {
+                    "lower": 31602.34999999999,
+                    "upper": 34475.19999999999,
+                    "value": 2446
+                },
+                {
+                    "lower": 34475.19999999999,
+                    "upper": 37348.04999999999,
+                    "value": 1292
+                },
+                {
+                    "lower": 37348.04999999999,
+                    "upper": 40220.89999999999,
+                    "value": 2254
+                },
+                {
+                    "lower": 40220.89999999999,
+                    "upper": 43093.749999999985,
+                    "value": 1392
+                },
+                {
+                    "lower": 43093.749999999985,
+                    "upper": 45966.599999999984,
+                    "value": 392
+                },
+                {
+                    "lower": 45966.599999999984,
+                    "upper": 48839.44999999998,
+                    "value": 1486
+                },
+                {
+                    "lower": 48839.44999999998,
+                    "upper": 51712.29999999998,
+                    "value": 2694
+                },
+                {
+                    "lower": 51712.29999999998,
+                    "upper": 54585.14999999998,
+                    "value": 2403
+                },
+                {
+                    "lower": 54585.14999999998,
+                    "upper": 57457.99999999998,
+                    "value": 2241
+                }
+            ],
+            "name": "id",
+            "stats": {
+                "coef_variation": 0.62703,
+                "interquartile_range": 27968.0,
+                "kurtosis": -1.1602608393254032,
+                "mad": 13263.0,
+                "max": 57458,
+                "mean": 26889.73510368361,
+                "median": 24261.0,
+                "min": 1,
+                "missing_count": 0,
+                "na": 0,
+                "p_missing": 0.0,
+                "p_uniques": 92.67,
+                "quantile": {
+                    "0.05": 2434.0,
+                    "0.25": 12688.0,
+                    "0.5": 24261.0,
+                    "0.75": 40656.0,
+                    "0.95": 54892.0
+                },
+                "range": 57457.0,
+                "skewness": 0.26653721939302294,
+                "stddev": 16860.68303027627,
+                "sum": 1229291130,
+                "uniques_count": 42365,
+                "variance": 284282632.2474462,
+                "zeros": 0
+            }
+        }
+    },
+    "count_types": {
+        "categorical": 0,
+        "date": 0,
+        "null": 0,
+        "numeric": 1
+    },
+    "rows_count": 45716,
+    "size": "91.0MiB",
+    "summary": {
+        "cols_count": 10,
+        "missing_count": "0.4891941552191793%",
+        "rows_count": 45716,
+        "size": "89.7MiB"
+    }
+}
