@@ -1,3 +1,4 @@
+import logging
 import os
 from shutil import rmtree
 
@@ -6,9 +7,10 @@ from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.io.load import Load
-from optimus.spark import Spark
 from optimus.ml.models import ML
-import logging
+from optimus.spark import Spark
+from optimus.profiler.profiler import Profiler
+import configparser
 
 Spark.instance = None
 
@@ -17,6 +19,7 @@ class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
                  verbose=False):
+
         """
         Transform and roll out
         :param master: 'Master', 'local' or ip address to a cluster
@@ -25,6 +28,18 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         """
+
+
+        # try to load the config file
+        config = configparser.ConfigParser()
+        # try to load the config file
+        try:
+            config.read('config.ini')
+        except IOError:
+            logging.info("Config.ini not found")
+            pass
+
+        output_profiler_path = config["PROFILER"]["Output"]
 
         if verbose is True:
             level = logging.INFO
@@ -56,6 +71,7 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
+        self.profiler = Profiler(output_profiler_path)
         self.ml = ML()
 
     @property

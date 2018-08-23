@@ -1,7 +1,6 @@
 import logging
 import os
 from fastnumbers import fast_float
-from pathlib import Path
 
 import jinja2
 import pyspark.sql.functions as F
@@ -14,6 +13,9 @@ from optimus.profiler.functions import human_readable_bytes, fill_missing_var_ty
 
 
 class Profiler:
+
+    def __init__(self, output_path=None):
+        self.path = output_path
 
     @staticmethod
     def dataset_info(df):
@@ -239,8 +241,7 @@ class Profiler:
 
         return column_info
 
-    @staticmethod
-    def run(df, columns, buckets=20):
+    def run(self, df, columns, buckets=20):
         """
         Return statistical information in HTML Format
         :param df:
@@ -250,7 +251,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        summary = Profiler.json(df, columns, buckets)
+        summary = Profiler.write_json(df, columns, buckets, self.path)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -283,7 +284,7 @@ class Profiler:
         df.table(10)
 
     @staticmethod
-    def json(df, columns, buckets=20, path=None):
+    def write_json(df, columns, buckets=20, path=None):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -296,9 +297,6 @@ class Profiler:
         summary = Profiler.columns(df, columns, buckets)
         summary["summary"] = dataset
 
-        if path is None:
-            path = Path.cwd() / "data.json"
-
-        write_json(summary, path=path)
+        write_json(summary, path)
 
         return summary
