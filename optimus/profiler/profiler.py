@@ -251,7 +251,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        summary = Profiler.to_json(df, columns, buckets)
+        output = Profiler.to_json(df, columns, buckets)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -260,33 +260,33 @@ class Profiler:
 
         # Render template
         # Create the profiler info header
-        output = ""
+        html = ""
         general_template = template_env.get_template("general_info.html")
-        output = output + general_template.render(data=summary)
+        html = html + general_template.render(data=output)
 
         template = template_env.get_template("one_column.html")
 
         # Create every column stats
         for col_name in columns:
-            if "hist" in summary["columns"][col_name]:
-                hist_pic = plot_hist({col_name: summary["columns"][col_name]["hist"]}, output="base64")
+            if "hist" in output["columns"][col_name]:
+                hist_pic = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
             else:
                 hist_pic = None
-            if "frequency" in summary["columns"][col_name]:
-                freq_pic = plot_freq({col_name: summary["columns"][col_name]["frequency"]}, output="base64")
+            if "frequency" in output["columns"][col_name]:
+                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
-            output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
+            html = html + template.render(data=output["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
-        output = output + df.table_html(10)
+        html = html + df.table_html(10)
         # df.plots.correlation(columns)
 
         # Display HTML
-        display(HTML(output))
+        display(HTML(html))
 
         # Save to file
-        write_json(summary, self.path)
+        write_json(output, self.path)
 
     @staticmethod
     def to_json(df, columns, buckets=20):
@@ -298,16 +298,15 @@ class Profiler:
         :param path: Path where the json is going to be saved
         :return: json file
         """
+
+        output = Profiler.columns(df, columns, buckets)
         dataset = Profiler.dataset_info(df)
-        summary = Profiler.columns(df, columns, buckets)
-        summary["summary"] = dataset
+        output["summary"] = dataset
 
         data = []
-        # Get a sample of the data and transform it to frindly json format
+        # Get a sample of the data and transform it to friendly json format
         for l in df.sample_n(10).to_json():
             data.append([v for k, v in l.items()])
-        summary["sample"] = [{"columns": df.columns}, {"data": data}]
+        output["sample"] = [{"columns": df.columns}, {"data": data}]
 
-
-
-        return summary
+        return output
