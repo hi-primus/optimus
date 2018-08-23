@@ -215,7 +215,7 @@ def plot_hist(column_data=None, output="image"):
         hist = []
         for d in data:
             if d is not None:
-                hist.append(d["value"])
+                hist.append(d["count"])
 
         bins = array(bins)
         center = (bins[:-1] + bins[1:]) / 2
