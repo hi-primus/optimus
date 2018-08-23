@@ -157,7 +157,7 @@ def table_html(self, limit=100, columns=None):
 
     columns = parse_columns(self, columns)
 
-    data = collect_as_dict(self.select(columns).limit(limit).collect())
+    data = self.select(columns).limit(limit).to_json()
 
     # Load template
     path = os.path.dirname(os.path.abspath(__file__))
@@ -165,7 +165,7 @@ def table_html(self, limit=100, columns=None):
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
     template = template_env.get_template("table.html")
 
-    # Filter only the columns and data type need it
+    # Filter only the columns and data type info need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
     total = self.count()

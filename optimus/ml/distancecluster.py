@@ -1,7 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import collect_as_dict
-from optimus.ml.keycollision import KeyCollision
+from optimus.ml import keycollision
 
 
 def levenshtein_matrix(df, col_name):
@@ -11,7 +10,7 @@ def levenshtein_matrix(df, col_name):
     :param col_name:
     :return:
     """
-    df = KeyCollision.fingerprint(df, col_name)
+    df = keycollision.fingerprint(df, col_name)
 
     col_fingerprint = col_name + "_FINGERPRINT"
     col_distance = col_name + "_LEVENSHTEIN_DISTANCE"
@@ -78,7 +77,7 @@ def levenshtein_cluster(df, col_name):
     """
     # Prepare a group so we don need to apply the fingerprint to the whole data set
     df = df.select(col_name).groupby(col_name).agg(F.count(col_name).alias("count"))
-    df = KeyCollision.fingerprint(df, col_name)
+    df = keycollision.fingerprint(df, col_name)
 
     df_t = df.groupby(col_name + "_FINGERPRINT").agg(F.collect_list(col_name).alias("cluster"),
                                                      F.size(F.collect_list(col_name)).alias("cluster_size"),
@@ -97,4 +96,4 @@ def levenshtein_cluster(df, col_name):
 
 
 def to_json(df, column):
-    return collect_as_dict(levenshtein_cluster(df, column).collect())
+    return levenshtein_cluster(df, column).to_json()

@@ -7,7 +7,7 @@ import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
-from optimus.helpers.functions import parse_columns, collect_as_dict
+from optimus.helpers.functions import parse_columns
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json
 
@@ -206,15 +206,15 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
 
-                col_info['frequency'] = collect_as_dict(df.groupBy(col_name)
-                                                        .count()
-                                                        .rows.sort([("count", "desc"), (col_name, "desc")])
-                                                        .limit(10)
-                                                        .withColumn("percentage",
-                                                                    F.round((F.col("count") / rows_count) * 100,
-                                                                            3))
-                                                        .cols.rename(col_name, "value")
-                                                        .collect())
+                col_info['frequency'] = (df.groupBy(col_name)
+                                         .count()
+                                         .rows.sort([("count", "desc"), (col_name, "desc")])
+                                         .limit(10)
+                                         .withColumn("percentage",
+                                                     F.round((F.col("count") / rows_count) * 100,
+                                                             3))
+                                         .cols.rename(col_name, "value").to_json())
+
                 # Uniques
                 uniques = stats[col_name].pop("approx_count_distinct")
                 col_info['stats']["uniques_count"] = uniques

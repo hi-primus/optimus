@@ -1,7 +1,7 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import parse_columns, collect_as_dict
+from optimus.helpers.functions import parse_columns
 
 
 def fingerprint(df, columns):
@@ -156,4 +156,4 @@ def n_gram_fingerprint_cluster(df, columns, n_size=2):
 
 
 def to_json(df, column, n_size=2):
-    return collect_as_dict(n_gram_fingerprint_cluster(df, column, n_size).collect())
+    return n_gram_fingerprint_cluster(df, column, n_size).to_json()
