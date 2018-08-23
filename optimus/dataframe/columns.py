@@ -1219,7 +1219,7 @@ def cols(self):
             hist = []
             for x, y in zip(counts, splits):
                 # if x["value"] is not None and x["count"] != 0:
-                hist.append({"lower": y["lower"], "upper": y["upper"], "value": x["count"]})
+                hist.append({"lower": y["lower"], "upper": y["upper"], "count": x["count"]})
 
         return hist
 
