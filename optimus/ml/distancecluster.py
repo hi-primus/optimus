@@ -1,5 +1,6 @@
 from pyspark.sql import functions as F
 
+from optimus.helpers.functions import collect_as_dict
 from optimus.ml.keycollision import KeyCollision
 
 
@@ -8,6 +9,12 @@ class DistanceCluster:
     # def ppm Reference https://github.com/xiaowec/PPM-coding/blob/master/ppm.py
     @staticmethod
     def levenshtein_matrix(df, col_name):
+        """
+        Create a couple of column with all the string combination
+        :param df:
+        :param col_name:
+        :return:
+        """
         df = KeyCollision.fingerprint(df, col_name)
 
         col_fingerprint = col_name + "_FINGERPRINT"
@@ -29,10 +36,9 @@ class DistanceCluster:
     @staticmethod
     def levenshtein_filter(df, col_name):
         """
-
+        Get the nearest string
         :param df:
         :param col_name:
-        :param threshold:
         :return:
         """
         # TODO: must filter by and exprs
@@ -68,6 +74,12 @@ class DistanceCluster:
 
     @staticmethod
     def levenshtein_cluster(df, col_name):
+        """
+        Return a dataframe with a cluster related to the string
+        :param df:
+        :param col_name:
+        :return:
+        """
         # Prepare a group so we don need to apply the fingerprint to the whole data set
         df = df.select(col_name).groupby(col_name).agg(F.count(col_name).alias("count"))
 
@@ -87,3 +99,8 @@ class DistanceCluster:
             .cols.drop([col_name + "_FROM", col_name + "_TO", col_name + "_LEVENSHTEIN_DISTANCE"]).table()
 
         return df_l
+
+
+    def to_json(self, df, column):
+        return collect_as_dict(DistanceCluster.levenshtein_cluster(df, column).collect())
+

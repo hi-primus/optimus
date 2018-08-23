@@ -1,7 +1,7 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.functions import parse_columns, collect_as_dict
 
 
 class KeyCollision:
@@ -110,8 +110,8 @@ class KeyCollision:
 
         columns = parse_columns(df, columns)
         for col_name in columns:
-            output_col = col_name + "_ngram"
-            n_gram_col = col_name + "_ngram_fingerprint"
+            output_col = col_name + "_NGRAM"
+            n_gram_col = col_name + "_NGRAM_FINGERPRINT"
 
             df = (df
                   .withColumn(output_col, F.col(col_name))
@@ -162,3 +162,6 @@ class KeyCollision:
             ).select("cluster_size", "cluster", "count", "recommended")
 
             return df
+
+    def to_json(self, df, column, n_size=2):
+        return collect_as_dict(self.n_gram_fingerprint_cluster(df, column, n_size).collect())
