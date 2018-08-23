@@ -141,7 +141,7 @@ def sql(self, sql_expression):
 
 
 @add_method(DataFrame)
-def table(self, limit=100, columns=None):
+def table_html(self, limit=100, columns=None):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -169,7 +169,13 @@ def table(self, limit=100, columns=None):
 
     # Print table
     output = template.render(cols=dtypes, data=data, limit=limit, total=total)
-    display(HTML(output))
+    return output
+
+
+@add_method(DataFrame)
+def table(self, limit=100, columns=None):
+    result = self.table_html(limit=limit, columns=columns)
+    return display(HTML(result))
 
 
 @add_method(DataFrame)

@@ -279,9 +279,13 @@ class Profiler:
 
             output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
+        output = output + df.table_html(10)
         # df.plots.correlation(columns)
+
+        # Display HTML
         display(HTML(output))
-        df.table(10)
+
+        # Save to file
 
     @staticmethod
     def write_json(df, columns, buckets=20, path=None):
