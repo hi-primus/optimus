@@ -251,7 +251,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        summary = Profiler.write_json(df, columns, buckets, self.path)
+        summary = Profiler.to_json(df, columns, buckets)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -286,9 +286,10 @@ class Profiler:
         display(HTML(output))
 
         # Save to file
+        write_json(summary, self.path)
 
     @staticmethod
-    def write_json(df, columns, buckets=20, path=None):
+    def to_json(df, columns, buckets=20):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -301,6 +302,12 @@ class Profiler:
         summary = Profiler.columns(df, columns, buckets)
         summary["summary"] = dataset
 
-        write_json(summary, path)
+        data = []
+        # Get a sample of the data and transform it to frindly json format
+        for l in df.sample_n(10).to_json():
+            data.append([v for k, v in l.items()])
+        summary["sample"] = [{"columns": df.columns}, {"data": data}]
+
+
 
         return summary

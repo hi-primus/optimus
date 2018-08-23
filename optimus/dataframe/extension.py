@@ -15,6 +15,11 @@ from optimus.spark import Spark
 
 
 @add_method(DataFrame)
+def to_json(self):
+    return collect_as_dict(self.collect())
+
+
+@add_method(DataFrame)
 def sample_n(self, n=10, random=False):
     """
     Return a n number of sample from a dataFrame
