@@ -15,12 +15,12 @@ if sys.version_info < (3, 6):
 
 
 def readme():
-    with open('Readme.txt') as f:
+    with open('README.md') as f:
         return f.read()
 
 
-install_requires = ['pytest', 'findspark', 'pytest-spark', 'spark-df-profiling-optimus', 'pyspark', 'seaborn',
-                    'pixiedust-optimus', 'deprecated']
+install_requires = ['pytest', 'findspark', 'pytest-spark', 'pyspark', 'seaborn',
+                    'deprecated']
 lint_requires = [
     'pep8',
     'pyflakes'
@@ -36,13 +36,14 @@ if 'nosetests' in sys.argv[1:]:
 setup(
     name='optimuspyspark',
     version=get_version(),
-    author='Favio Vazquez',
+    author='Favio Vazquez and Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/1.2.5.tar.gz',
-    description=('Optimus is the missing framework for cleaning and preprocessing data in a distributed fashion with '
+    download_url='https://github.com/ironmussa/Optimus/archive/2.0.2.tar.gz',
+    description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
+    long_description_content_type='text/markdown',
     license='APACHE',
     packages=find_packages(),
     install_requires=install_requires,
@@ -58,7 +59,7 @@ setup(
     test_suite='nose.collector',
     include_package_data=False,
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'License :: OSI Approved :: Apache Software License',

@@ -9,6 +9,7 @@
 
 metastore_db/
 checkPointFolder/
+projectFilesBackup/tests.py
 
 # Distribution / packaging
 build/
@@ -21,6 +22,10 @@ __pycache__/
 *.zip
 
 __pycache__
-test.csv
 .cache
 .coverage*
+.DS_Store
+.pytest_cache/v/cache/lastfailed
+.pytest_cache/v/cache/nodeids
+examples/example.json
+examples/random.csv

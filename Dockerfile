@@ -11,7 +11,7 @@ RUN git clone https://github.com/ironmussa/Optimus-examples.git /home/jovyan/wor
 RUN chmod -R 777 /home/jovyan/work
 
 # Spark dependencies
-ENV APACHE_SPARK_VERSION 2.2.0
+ENV APACHE_SPARK_VERSION 2.3.1
 ENV HADOOP_VERSION 2.7
 
 RUN apt-get -y update && \

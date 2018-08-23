@@ -1,0 +1,258 @@
+<style>
+    .main{
+        width:100%;
+        overflow:auto;
+        border-bottom:1px solid #eeeeee;
+        padding: 10px 0;
+    }
+    .panel_profiler{
+        margin-right:2%;
+        float:left;
+        padding-bottom:2%;
+    }
+    .title_profiler{
+        padding:20px;
+        background-color: #eeeeee
+    }
+</style>
+{{summary}}
+<div class="title_profiler">
+    <h1>Overview</h1>
+</div>
+<div class="main">
+    <div class="panel_profiler">
+        <h2>Dataset info</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td>Number of columns</td>
+                <td>{{data.summary.cols_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Number of rows</td>
+                <td>{{data.summary.rows_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Total Missing (%)</td>
+                <td>{{data.summary.missing_count}}</td>
+
+            </tr>
+            <tr>
+                <td>Total size in memory</td>
+                <td>{{data.summary.size}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="panel_profiler">
+        <h2>Variables types</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td>Categorical</td>
+                <td>{{data.count_types.categorical}}</td>
+
+            </tr>
+            <tr>
+                <td>Numeric</td>
+                <td>{{data.count_types.numeric}}</td>
+
+            </tr>
+            <tr>
+                <td>Date</td>
+                <td>{{data.count_types.date}}</td>
+
+            </tr>
+             <tr>
+                <td>Bool</td>
+                <td>{{data.count_types.bool}}</td>
+
+            </tr>
+            <tr>
+                <td>Not available</td>
+                <td>{{data.count_types.null}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="title_profiler">
+    <h1>Variables</h1>
+</div>
+{% for k,v in data.columns.items() %}
+<div class="main">
+
+    {% if v.column_type=="categorical" or v.column_type=="numeric" or v.column_type=="date" or  v.column_type=="bool"%}
+    <div class="panel_profiler">
+        <div>
+            <h2>{{k}}</h2>
+            <div>{{v.column_type}}</div>
+        </div>
+        <table>
+            <tbody>
+            <tr>
+                <td>Distinct count</td>
+                <td> {{v.stats.uniques_count}}</td>
+            </tr>
+            <tr>
+                <td>Unique (%)</td>
+                <td> {{v.stats.p_uniques}}</td>
+            </tr>
+            <tr>
+                <td>Missing (%)</td>
+                <td>{{v.stats.missing_count}}</td>
+            </tr>
+            <tr>
+                <td>Missing (n)</td>
+                <td>{{v.stats.p_missing}}</td>
+            </tr>
+            </tbody>
+        </table>
+        {% if v.column_type=="numeric" %}
+        <table>
+            <tbody>
+            <tr>
+                <td>Mean</td>
+                <td>{{v.stats.mean}}</td>
+            </tr>
+            <tr>
+                <td>Minimum</td>
+                <td>{{v.stats.min}}</td>
+            </tr>
+            <tr>
+                <td>Maximum</td>
+                <td>{{v.stats.max}}</td>
+            </tr>
+            <tr>
+                <td>Zeros(%)</td>
+                <td>{{v.stats.zeros}}</td>
+            </tr>
+
+            </tbody>
+        </table>
+        {% endif %}
+
+    </div>
+    <div class="panel_profiler">
+        <h3>Frequency</h3>
+        <table>
+            <tbody>
+            <th>Value</th>
+            <th>Count</th>
+            <th>Frecuency (%)</th>
+            {% for vi in v.frequency %}
+            <tr>
+                <td>{{vi.value}}</td>
+                <td>{{vi.count}}</td>
+                <td>{{vi.percentage}}%</td>
+            </tr>
+
+            {% endfor %}
+            <!--<tr>
+                <td>Other Values</td>
+                <td>{{data.other_values}}</td>
+                <td>{{((data.rows_count - v.stats.missing_count)/data.rows_count) | round(2) }}%</td>
+            </tr>-->
+            <tr>
+                <td>"Missing"</td>
+                <td>{{v.stats.missing_count}}</td>
+                <td>{{v.stats.p_missing}}%</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if v.column_type=="numeric" %}
+    <div class="panel_profiler">
+
+
+        <h3>Quantile statistics</h3>
+        <table>
+            <tbody>
+            <tr>
+                <td>Minimum</td>
+                <td>{{v.stats.min}}</td>
+            </tr>
+            <tr>
+                <td>5-th percentile</td>
+                <td>{{v.stats.quantile[0.05]}}</td>
+            </tr>
+            <tr>
+                <td>Q1</td>
+                <td>{{v.stats.quantile[0.25]}}</td>
+            </tr>
+            <tr>
+                <td>Median</td>
+                <td>{{v.stats.quantile[0.5]}}</td>
+            </tr>
+            <tr>
+                <td>Q3</td>
+                <td>{{v.stats.quantile[0.75]}}</td>
+            </tr>
+            <tr>
+                <td>95-th percentile</td>
+                <td>{{v.stats.quantile[0.95]}}</td>
+            </tr>
+            <tr>
+                <td>Maximum</td>
+                <td>{{v.stats.max}}</td>
+            </tr>
+            <tr>
+                <td>Range</td>
+                <td>{{v.stats.range}}</td>
+            </tr>
+            <tr>
+                <td>Interquartile range</td>
+                <td>{{v.stats.interquartile_range}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="panel_profiler">
+        <h3>Descriptive statistics</h3>
+        <table>
+            <tbody>
+            <tr>
+                <td>Standard deviation</td>
+                <td>{{v.stats.stddev}}</td>
+            </tr>
+            <tr>
+                <td>Coef of variation</td>
+                <td>{{v.stats.coef_variation}}</td>
+            </tr>
+            <tr>
+                <td>Kurtosis</td>
+                <td>{{v.stats.kurtosis}}</td>
+            </tr>
+            <tr>
+                <td>Mean</td>
+                <td>{{v.stats.mean}}</td>
+            </tr>
+            <tr>
+                <td>MAD</td>
+                <td>{{v.stats.mad}}</td>
+            </tr>
+            <tr>
+                <td>Skewness</td>
+                <td>{{v.stats.zeros}}</td>
+            </tr>
+            <tr>
+                <td>Sum</td>
+                <td>{{v.stats.sum}}</td>
+            </tr>
+            <tr>
+                <td>Variance</td>
+                <td>{{v.stats.variance}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+{% endfor %}

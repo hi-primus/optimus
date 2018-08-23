@@ -1,0 +1,41 @@
+<style>
+    .data_type{
+        font-size: 0.8em;
+        font-weight:normal;
+    }
+    .column_name{
+        font-size: 1.2em;
+    }
+    .info_items{
+        margin: 10px 0;
+        font-size: 0.8em;
+    }
+
+</style>
+<div class="info_items">Viewing {{limit}} of {{total}}</div>
+<table>
+    <thead>
+    <tr>
+        {%for col in cols: %}
+        <th>
+            <div class="column_name">{{col[0]}}</div>
+            <div class="data_type">({{col[1]}})</div>
+
+        </th>
+        {% endfor %}
+    </tr>
+
+    </thead>
+    <tbody>
+    {%for r in data:%}
+    <tr>
+        {%for k,v in r.items(): %}
+        <td>
+            {{v|string|replace(" ", "\u2E31")}}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="info_items">Viewing {{limit}} of {{total}}</div>
