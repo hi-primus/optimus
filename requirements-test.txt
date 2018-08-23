@@ -11,7 +11,7 @@ ipython==6.5.0
 pyarrow==0.9.*
 Jinja2
 tabulate==0.8.2
-fastnumbers==2.1.0
+fastnumbers==2.1.1
 tensorflow==1.6.0
 keras==2.1.5
 pillow==5.2.0
