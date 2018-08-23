@@ -9,7 +9,7 @@ multipledispatch==0.4.9
 python_dateutil==2.7.3
 ipython==6.5.0
 pyarrow==0.9.*
-Jinja2
+Jinja2==2.10
 tabulate==0.8.2
 fastnumbers==2.1.1
 tensorflow==1.6.0
