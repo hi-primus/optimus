@@ -5,11 +5,9 @@ import pyspark
 
 from optimus import Optimus
 
-from optimus.ml.models import ML
 import optimus.ml.feature as fe
 
 op = Optimus()
-ml = ML()
 spark = op.spark
 sc = op.sc
 
@@ -47,7 +45,7 @@ def test_logistic_regression_text():
                      Row(sentence='this is another test', label=1.)]). \
         toDF()
 
-    df_predict, ml_model = ml.logistic_regression_text(df, "sentence")
+    df_predict, ml_model = op.ml.logistic_regression_text(df, "sentence")
 
     assert_spark_df(df_predict)
 
@@ -70,7 +68,7 @@ def test_n_gram():
 
 
 def test_random_forest():
-    df_model, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
+    df_model, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
@@ -78,7 +76,7 @@ def test_random_forest():
 
 
 def test_decision_tree():
-    df_model, rf_model = ml.decision_tree(df_cancer, columns, "diagnosis")
+    df_model, rf_model = op.ml.decision_tree(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 
@@ -86,7 +84,7 @@ def test_decision_tree():
 
 
 def test_gbt():
-    df_model, rf_model = ml.gbt(df_cancer, columns, "diagnosis")
+    df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
     assert_spark_df(df_model)
 

@@ -172,20 +172,19 @@ To import the Machine Learning Library you just need to say to import Optimus an
 
 ```python
     from optimus import Optimus
-    from optimus.ml.models import ML
 
     op = Optimus()
-    ml = ML()
 ```
 
 One of the best "tree" models for machine learning is Random Forest. What about creating a RF model with just
 one line? With Optimus is really easy.
 
 ```python
+    df_cancer =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
     columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
-    df_predict, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
+    df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
 This will create a DataFrame with the predictions of the Random Forest model.

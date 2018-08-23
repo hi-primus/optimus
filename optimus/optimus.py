@@ -7,6 +7,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.io.load import Load
 from optimus.spark import Spark
+from optimus.ml.models import ML
 import logging
 
 Spark.instance = None
@@ -55,6 +56,7 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
+        self.ml = ML()
 
     @property
     def spark(self):
