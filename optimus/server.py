@@ -9,7 +9,7 @@ config = configparser.ConfigParser()
 # try to load the config file
 try:
     config.read("config.ini")
-except IOError:
+except (IOError, KeyError):
     print("config.ini not found")
     raise
 
