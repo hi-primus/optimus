@@ -6,10 +6,7 @@ from sparkdl.image import imageIO
 from pyspark import Row
 from optimus.dl.models import DL
 
-op = Optimus()
-dl = DL()
-spark = op.spark
-sc = op.sc
+op = Optimus(dl=True)
 
 
 # rdd = op.sc.parallelize([Row(predicted_labels=['daisy', '0.8918145298957825']),
@@ -34,20 +31,19 @@ train_df = tulips_df.unionAll(daisy_df)
 
 
 def test_image_classifier_lr():
-    model, df_preds = dl.image_classifier_lr(train_df)
+    model, df_preds = op.dl.image_classifier_lr(train_df)
 
     assert_spark_model(model)
     assert_spark_df(df_preds)
 
 
 def test_evaluate_img_lr():
-    model, df_preds = dl.image_classifier_lr(train_df)
-    result = dl.evaluate_image_classifier(train_df, model)
+    model, df_preds = op.dl.image_classifier_lr(train_df)
+    result = op.dl.evaluate_image_classifier(train_df, model)
 
     assert isinstance(result, float), "Not a float"
 
 
 def test_image_predictor():
-    preds = dl.image_predictor("tests/sampleimg/")
+    preds = op.dl.image_predictor("tests/sampleimg/")
     assert_spark_df(preds)
-

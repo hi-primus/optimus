@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+
 SPARK_VERSION='2.3.1'
 HADOOP_VERSION='2.7'
 

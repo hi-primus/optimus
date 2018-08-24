@@ -15,6 +15,11 @@ from optimus.spark import Spark
 
 
 @add_method(DataFrame)
+def to_json(self):
+    return collect_as_dict(self.collect())
+
+
+@add_method(DataFrame)
 def sample_n(self, n=10, random=False):
     """
     Return a n number of sample from a dataFrame
@@ -112,7 +117,7 @@ def run(self):
      the lineage is cut.
     """
 
-    # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
+    # Check pointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
     # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
 
     logging.info("Saving changes at disk by checkpoint...")
@@ -141,7 +146,7 @@ def sql(self, sql_expression):
 
 
 @add_method(DataFrame)
-def table(self, limit=100, columns=None):
+def table_html(self, limit=100, columns=None):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -152,7 +157,7 @@ def table(self, limit=100, columns=None):
 
     columns = parse_columns(self, columns)
 
-    data = collect_as_dict(self.select(columns).limit(limit).collect())
+    data = self.select(columns).limit(limit).to_json()
 
     # Load template
     path = os.path.dirname(os.path.abspath(__file__))
@@ -160,7 +165,7 @@ def table(self, limit=100, columns=None):
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
     template = template_env.get_template("table.html")
 
-    # Filter only the columns and data type need it
+    # Filter only the columns and data type info need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
     total = self.count()
@@ -169,7 +174,13 @@ def table(self, limit=100, columns=None):
 
     # Print table
     output = template.render(cols=dtypes, data=data, limit=limit, total=total)
-    display(HTML(output))
+    return output
+
+
+@add_method(DataFrame)
+def table(self, limit=100, columns=None):
+    result = self.table_html(limit=limit, columns=columns)
+    return display(HTML(result))
 
 
 @add_method(DataFrame)

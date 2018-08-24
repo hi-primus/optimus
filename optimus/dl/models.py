@@ -7,10 +7,6 @@ from sparkdl import DeepImagePredictor
 from pyspark.sql.functions import udf
 from pyspark.sql.types import ArrayType, StringType
 
-from optimus import Optimus
-
-op = Optimus()
-
 
 class DL:
     @staticmethod

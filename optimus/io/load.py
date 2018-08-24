@@ -11,7 +11,7 @@ class Load:
 
     def url(self, path=None, type_of="csv"):
         """
-        Reads dataset from URL.
+        Reads a dataset from URL.
         :param path: string for URL to read
         :param type_of: type of the URL backend (can be csv or json)
         :return: pyspark dataframe from URL.
