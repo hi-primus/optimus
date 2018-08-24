@@ -54,7 +54,7 @@ setup(
     setup_requires=setup_requires,
     extras_require={
         'test': tests_require,
-        'all': install_requires + tests_require,
+        'all': required + tests_require,
         'docs': ['sphinx'] + tests_require,
         'lint': lint_requires
     },

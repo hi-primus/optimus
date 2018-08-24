@@ -3,7 +3,6 @@ import os
 from shutil import rmtree
 
 from optimus.create import Create
-from optimus.dl.models import DL
 from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIfNot
@@ -18,7 +17,7 @@ Spark.instance = None
 class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
-                 verbose=False):
+                 verbose=False, dl=False):
 
         """
         Transform and roll out
@@ -28,6 +27,16 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         """
+
+        if dl is True:
+            os.environ[
+                'PYSPARK_SUBMIT_ARGS'] = '--packages databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell'
+            Spark.instance = Spark(master, app_name)
+            from optimus.dl.models import DL
+            self.dl = DL()
+        else:
+            Spark.instance = Spark(master, app_name)
+            pass
 
         if verbose is True:
             level = logging.INFO
@@ -50,7 +59,6 @@ class Optimus:
                               """)
 
         logging.info(STARTING_OPTIMUS)
-        Spark.instance = Spark(master, app_name)
         if checkpoint is True:
             self.set_check_point_folder(path, file_system)
 
@@ -61,7 +69,6 @@ class Optimus:
         self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
-        self.dl = DL()
 
     @property
     def spark(self):
