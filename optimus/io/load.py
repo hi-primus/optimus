@@ -18,11 +18,11 @@ class Load:
         """
 
         if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
-            return self.data_loader(str(path), type_of)
+            return self._data_loader(str(path), type_of)
         else:
             print("Unknown sample data identifier. Please choose an id from the list below")
 
-    def data_loader(self, url, type_of):
+    def _data_loader(self, url, type_of):
         """
         Load data in csv or json format from a url
         :param url:

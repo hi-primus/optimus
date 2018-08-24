@@ -1,4 +1,3 @@
-import logging
 import os
 from shutil import rmtree
 
@@ -12,6 +11,8 @@ from optimus.profiler.profiler import Profiler
 from optimus.spark import Spark
 
 Spark.instance = None
+
+import logging
 
 
 class Optimus:
@@ -39,8 +40,8 @@ class Optimus:
             pass
 
         if verbose is True:
-            level = logging.INFO
-            logging.basicConfig(format="%(message)s", level=level)
+            logging.basicConfig(format="%(message)s", level=logging.INFO)
+            logging.getLogger().setLevel(logging.INFO)
         elif verbose is False:
             logging.propagate = False
             logging.disable(logging.NOTSET)
