@@ -11,7 +11,6 @@ from optimus.ml.models import ML
 from optimus.spark import Spark
 from optimus.profiler.profiler import Profiler
 
-
 Spark.instance = None
 
 
@@ -28,8 +27,6 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         """
-
-
 
         if verbose is True:
             level = logging.INFO

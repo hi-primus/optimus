@@ -117,7 +117,7 @@ def run(self):
      the lineage is cut.
     """
 
-    # Checkpointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
+    # Check pointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
     # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
 
     logging.info("Saving changes at disk by checkpoint...")
