@@ -50,9 +50,11 @@ def write_json(data, path):
     :param path:
     :return:
     """
-
-    with open(path, 'w', encoding='utf-8') as outfile:
-        json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+    try:
+        with open(path, 'w', encoding='utf-8') as outfile:
+            json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
+    except IOError:
+        pass
 
 
 def human_readable_bytes(value, suffix='B'):
