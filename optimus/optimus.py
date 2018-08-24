@@ -28,6 +28,12 @@ class Optimus:
         :param file_system: 'local' or 'hadoop'
         """
 
+        if verbose is True:
+            logging.basicConfig(format="%(message)s", level=logging.INFO)
+        elif verbose is False:
+            logging.propagate = False
+            logging.disable(logging.NOTSET)
+
         if dl is True:
             os.environ[
                 'PYSPARK_SUBMIT_ARGS'] = '--packages databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell'
@@ -37,13 +43,6 @@ class Optimus:
         else:
             Spark.instance = Spark(master, app_name)
             pass
-
-        if verbose is True:
-            level = logging.INFO
-            logging.basicConfig(format="%(message)s", level=level)
-        elif verbose is False:
-            logging.propagate = False
-            logging.disable(logging.NOTSET)
 
         if path is None:
             path = os.getcwd()
