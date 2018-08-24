@@ -19,3 +19,4 @@ pygments>=2.2.0
 six>=1.10.0
 h5py>=2.7.0
 timber==1.0.3
+flask==0.12.2
