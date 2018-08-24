@@ -24,7 +24,7 @@ class Profiler:
                 # try to load the config file
                 config.read("config.ini")
                 output_path = config["PROFILER"]["Output"]
-            except IOError:
+            except (IOError, KeyError):
                 logging.info("Config.ini not found")
                 output_path = "data.json"
                 pass
