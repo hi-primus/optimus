@@ -16,8 +16,8 @@ deprecated==1.2.0
 pyarrow==0.10.0
 tabulate==0.8.2
 Jinja2==2.10
-tensorflow==1.10.0
-keras==2.2.2
+tensorflow==1.6.0
+keras==2.1.5
 pillow==5.2.0
 pygments>=2.2.0
 six>=1.10.0
