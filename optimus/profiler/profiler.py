@@ -1,3 +1,4 @@
+import configparser
 import logging
 import os
 from fastnumbers import fast_float
@@ -15,6 +16,18 @@ from optimus.profiler.functions import human_readable_bytes, fill_missing_var_ty
 class Profiler:
 
     def __init__(self, output_path=None):
+
+        config = configparser.ConfigParser()
+        # If not path defined. Try to load from the config.ini file
+        if output_path is None:
+            try:
+                # try to load the config file
+                config.read("config.ini")
+                output_path = config["PROFILER"]["Output"]
+            except IOError:
+                logging.info("Config.ini not found")
+                output_path = "config.ini"
+
         self.path = output_path
 
     @staticmethod

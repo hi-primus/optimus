@@ -10,7 +10,7 @@ from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.spark import Spark
 from optimus.profiler.profiler import Profiler
-import configparser
+
 
 Spark.instance = None
 
@@ -30,16 +30,6 @@ class Optimus:
         """
 
 
-        # try to load the config file
-        config = configparser.ConfigParser()
-        # try to load the config file
-        try:
-            config.read('config.ini')
-        except IOError:
-            logging.info("Config.ini not found")
-            pass
-
-        output_profiler_path = config["PROFILER"]["Output"]
 
         if verbose is True:
             level = logging.INFO
@@ -71,7 +61,7 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
-        self.profiler = Profiler(output_profiler_path)
+        self.profiler = Profiler()
         self.ml = ML()
 
     @property
