@@ -26,7 +26,8 @@ class Profiler:
                 output_path = config["PROFILER"]["Output"]
             except IOError:
                 logging.info("Config.ini not found")
-                output_path = "config.ini"
+                output_path = "data.json"
+                pass
 
         self.path = output_path
 
