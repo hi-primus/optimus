@@ -1,15 +1,16 @@
+import logging
 import os
 from shutil import rmtree
 
 from optimus.create import Create
+from optimus.dl.models import DL
 from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.io.load import Load
-from optimus.spark import Spark
 from optimus.ml.models import ML
-from optimus.dl.models import DL
-import logging
+from optimus.profiler.profiler import Profiler
+from optimus.spark import Spark
 
 Spark.instance = None
 
@@ -18,6 +19,7 @@ class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
                  verbose=False):
+
         """
         Transform and roll out
         :param master: 'Master', 'local' or ip address to a cluster
@@ -57,6 +59,7 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
+        self.profiler = Profiler()
         self.ml = ML()
         self.dl = DL()
 

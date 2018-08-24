@@ -1,19 +1,34 @@
+import configparser
 import logging
 import os
 from fastnumbers import fast_float
-from pathlib import Path
 
 import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
-from optimus.helpers.functions import parse_columns, collect_as_dict
+from optimus.helpers.functions import parse_columns
 from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
     write_json
 
 
 class Profiler:
+
+    def __init__(self, output_path=None):
+
+        config = configparser.ConfigParser()
+        # If not path defined. Try to load from the config.ini file
+        if output_path is None:
+            try:
+                # try to load the config file
+                config.read("config.ini")
+                output_path = config["PROFILER"]["Output"]
+            except IOError:
+                logging.info("Config.ini not found")
+                output_path = "config.ini"
+
+        self.path = output_path
 
     @staticmethod
     def dataset_info(df):
@@ -204,15 +219,15 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
 
-                col_info['frequency'] = collect_as_dict(df.groupBy(col_name)
-                                                        .count()
-                                                        .rows.sort([("count", "desc"), (col_name, "desc")])
-                                                        .limit(10)
-                                                        .withColumn("percentage",
-                                                                    F.round((F.col("count") / rows_count) * 100,
-                                                                            3))
-                                                        .cols.rename(col_name, "value")
-                                                        .collect())
+                col_info['frequency'] = (df.groupBy(col_name)
+                                         .count()
+                                         .rows.sort([("count", "desc"), (col_name, "desc")])
+                                         .limit(10)
+                                         .withColumn("percentage",
+                                                     F.round((F.col("count") / rows_count) * 100,
+                                                             3))
+                                         .cols.rename(col_name, "value").to_json())
+
                 # Uniques
                 uniques = stats[col_name].pop("approx_count_distinct")
                 col_info['stats']["uniques_count"] = uniques
@@ -239,8 +254,7 @@ class Profiler:
 
         return column_info
 
-    @staticmethod
-    def run(df, columns, buckets=20):
+    def run(self, df, columns, buckets=20):
         """
         Return statistical information in HTML Format
         :param df:
@@ -250,7 +264,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        summary = Profiler.json(df, columns, buckets)
+        output = Profiler.to_json(df, columns, buckets)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -259,31 +273,36 @@ class Profiler:
 
         # Render template
         # Create the profiler info header
-        output = ""
+        html = ""
         general_template = template_env.get_template("general_info.html")
-        output = output + general_template.render(data=summary)
+        html = html + general_template.render(data=output)
 
         template = template_env.get_template("one_column.html")
 
         # Create every column stats
         for col_name in columns:
-            if "hist" in summary["columns"][col_name]:
-                hist_pic = plot_hist({col_name: summary["columns"][col_name]["hist"]}, output="base64")
+            if "hist" in output["columns"][col_name]:
+                hist_pic = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
             else:
                 hist_pic = None
-            if "frequency" in summary["columns"][col_name]:
-                freq_pic = plot_freq({col_name: summary["columns"][col_name]["frequency"]}, output="base64")
+            if "frequency" in output["columns"][col_name]:
+                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
-            output = output + template.render(data=summary["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
+            html = html + template.render(data=output["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
 
+        html = html + df.table_html(10)
         # df.plots.correlation(columns)
-        display(HTML(output))
-        df.table(10)
+
+        # Display HTML
+        display(HTML(html))
+
+        # Save to file
+        write_json(output, self.path)
 
     @staticmethod
-    def json(df, columns, buckets=20, path=None):
+    def to_json(df, columns, buckets=20):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -292,13 +311,15 @@ class Profiler:
         :param path: Path where the json is going to be saved
         :return: json file
         """
+
+        output = Profiler.columns(df, columns, buckets)
         dataset = Profiler.dataset_info(df)
-        summary = Profiler.columns(df, columns, buckets)
-        summary["summary"] = dataset
+        output["summary"] = dataset
 
-        if path is None:
-            path = Path.cwd() / "data.json"
+        data = []
+        # Get a sample of the data and transform it to friendly json format
+        for l in df.sample_n(10).to_json():
+            data.append([v for k, v in l.items()])
+        output["sample"] = {"columns": df.columns, "data": data}
 
-        write_json(summary, path=path)
-
-        return summary
+        return output

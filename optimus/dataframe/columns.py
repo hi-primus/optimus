@@ -22,7 +22,7 @@ from optimus.helpers.checkit \
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import validate_columns_names, parse_columns, collect_as_dict, format_dict, \
+    import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIfNot
 from optimus.profiler.functions import bucketizer
@@ -465,10 +465,7 @@ def cols(self):
 
         return (
             parse_col_names_funcs_to_keys(
-                format_dict(
-                    collect_as_dict(
-                        df.agg(*exprs).collect())
-                )
+                format_dict(df.agg(*exprs).to_json())
             )
         )
 
@@ -876,7 +873,7 @@ def cols(self):
                 df = df.cols.cast(col_name, "string")
             expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
 
-        result = format_dict(collect_as_dict(df.select(*expr).collect()))
+        result = format_dict(df.select(*expr).to_json())
 
         return result
 
@@ -890,8 +887,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        return format_dict(collect_as_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]) \
-                                           .collect()))
+        return format_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]).to_json())
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
@@ -1211,15 +1207,13 @@ def cols(self):
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
-            counts = (collect_as_dict(
-                df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
-                    col_name + "_buckets", "value").sort(F.asc("value")).collect()
-            ))
+            counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
+                col_name + "_buckets", "value").sort(F.asc("value")).to_json())
 
             hist = []
             for x, y in zip(counts, splits):
                 # if x["value"] is not None and x["count"] != 0:
-                hist.append({"lower": y["lower"], "upper": y["upper"], "value": x["count"]})
+                hist.append({"lower": y["lower"], "upper": y["upper"], "count": x["count"]})
 
         return hist
 
@@ -1242,7 +1236,7 @@ def cols(self):
             df = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
                 buckets).cols.rename(col_name, "value")
 
-        return collect_as_dict(df.collect())
+        return df.to_json()
 
     @add_attr(cols)
     def schema_dtypes(columns):
