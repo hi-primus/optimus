@@ -320,6 +320,6 @@ class Profiler:
         # Get a sample of the data and transform it to friendly json format
         for l in df.sample_n(10).to_json():
             data.append([v for k, v in l.items()])
-        output["sample"] = [{"columns": df.columns}, {"data": data}]
+        output["sample"] = {"columns": df.columns, "data": data}
 
         return output
