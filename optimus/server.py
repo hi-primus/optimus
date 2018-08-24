@@ -4,17 +4,17 @@ import json
 from flask import Flask
 from flask import jsonify
 
-app = Flask(__name__)
-
 config = configparser.ConfigParser()
 
 # try to load the config file
 try:
     config.read("config.ini")
 except IOError:
-    print("config not found")
-    pass
+    print("config.ini not found")
+    raise
+
 path = config["SERVER"]["Input"]
+app = Flask(__name__)
 
 
 @app.route('/')
