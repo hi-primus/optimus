@@ -6,7 +6,7 @@ from sparkdl.image import imageIO
 from pyspark import Row
 from optimus.dl.models import DL
 
-op = Optimus()
+op = Optimus(dl=True)
 
 
 # rdd = op.sc.parallelize([Row(predicted_labels=['daisy', '0.8918145298957825']),
