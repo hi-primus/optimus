@@ -9,11 +9,12 @@ config = configparser.ConfigParser()
 # try to load the config file
 try:
     config.read("config.ini")
+    path = config["SERVER"]["Input"]
 except (IOError, KeyError):
     print("config.ini not found")
-    raise
+    pass
 
-path = config["SERVER"]["Input"]
+
 app = Flask(__name__)
 
 
