@@ -1,6 +1,6 @@
 # Hacking Optimus
 
-##WIndows 
+##Windows 
 
 If you want to contribute, hack or play with Optimus you are in the raight place. This is a little guide to  
 
