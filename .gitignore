@@ -29,3 +29,4 @@ __pycache__
 .pytest_cache/v/cache/nodeids
 examples/example.json
 examples/random.csv
+data.json
