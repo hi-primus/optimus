@@ -3,8 +3,6 @@ import logging
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
     DateType, LongType
 
-# You can use string, str or String as param
-
 PYTHON_SHORT_TYPES = {"string": "string",
                       "str": "string",
                       "integer": "int",
@@ -37,6 +35,7 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       # "vector": "vector"
 
                       }
+
 SPARK_DTYPES_DICT_OBJECTS = {"string": StringType(), "int": IntegerType(), "float": FloatType(),
                              "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(),
                              "array": ArrayType,
@@ -52,7 +51,7 @@ SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatTyp
 SPARK_DTYPES = (StringType, IntegerType, FloatType, DoubleType, ArrayType)
 
 # Strings and Function Messages
-JUST_CHECKING = "Just checking that all necessary environments vars are present..."
+JUST_CHECKING = "Just check that Spark and all necessary environments vars are present..."
 STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
 STARTING_OPTIMUS = "Transform and Roll out..."
 

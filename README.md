@@ -18,7 +18,7 @@ In your terminal just type  `pip install optimuspyspark`
 
 ## Examples
 
-After installation go to the examples folder and found examples about data cleaning, data munging, and how to create ML and DL models.
+After installation go to the [examples](examples/) folder to found notebooks about data cleaning, data munging, and how to create ML and DL models.
 
 ## Documentation
   
@@ -176,45 +176,25 @@ To import the Machine Learning Library you just need to say to import Optimus an
 
     op = Optimus()
     ml = ML()
-    spark = op.spark
-    sc = op.sc
 ```
 
 One of the best "tree" models for machine learning is Random Forest. What about creating a RF model with just
 one line? With Optimus is really easy.
 
 ```python
+    columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
     df_predict, rf_model = ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
 This will create a DataFrame with the predictions of the Random Forest model.
 
-Let's see df_predict:
-
-```
-    ['label',
-     'diagnosis',
-     'radius_mean',
-     'texture_mean',
-     'perimeter_mean',
-     'area_mean',
-     'smoothness_mean',
-     'compactness_mean',
-     'concavity_mean',
-     'concave points_mean',
-     'symmetry_mean',
-     'fractal_dimension_mean',
-     'features',
-     'rawPrediction',
-     'probability',
-     'prediction']
-```
-
 So lets see the prediction compared with the actual label:
 
 
 ```python
-    df_predict.select([0,15]).table()
+    df_predict.cols.select(["label","prediction"]).show()
 ```
 
 ```
@@ -292,21 +272,12 @@ including:
   
 Optimus main stable branch will work now for Spark 2.3.1 The 1.6.x version is now under maintenance, the last tag release for this Spark version is the 0.4.0. We strongly suggest that you use the >2.x version of the framework because the new improvements and features will be added now on this version.
 ## Core Team
-Argenis Leon
-Favio Vazquez
+Argenis Leon and Favio Vazquez
 
 ## Contributors:
 Here is the amazing people that make Optimus possible:
   
-[![0](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/0)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/0)  
-[![1](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/1)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/1)  
-[![2](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/2)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/2)  
-[![3](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/3)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/3)  
-[![4](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/4)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/4)  
-[![5](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/5)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/5)  
-[![6](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/6)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/6)  
-[![7](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/7)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/7)  
-  
+[![0](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/0)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/0)[![1](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/1)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/1)[![2](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/2)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/2)[![3](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/3)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/3)[![4](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/4)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/4)[![5](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/5)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/5)[![6](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/6)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/6)[![7](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/7)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/7)    
    
 ## License:  
   

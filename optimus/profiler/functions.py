@@ -123,7 +123,7 @@ def bucketizer(df, columns, splits):
         expr = None
         i = 0
 
-        # TODO: seems that this can be write with reduce
+        # TODO: seems that this can be written with reduce
         for b in buckets:
             if i == 0:
                 expr = when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]), b["bucket"])
