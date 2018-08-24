@@ -30,3 +30,16 @@ __pycache__
 examples/example.json
 examples/random.csv
 data.json
+examples/feature_engineering/top_features
+examples/feature_engineering/data/products.csv
+examples/feature_engineering/data/orders.csv
+examples/feature_engineering/data/order_products__train.csv
+examples/feature_engineering/data/order_products__prior.csv
+examples/feature_engineering/data/departments.csv
+examples/feature_engineering/data/aisles.csv
+examples/feature_engineering/data/._products.csv
+examples/feature_engineering/data/._orders.csv
+examples/feature_engineering/data/._order_products__train.csv
+examples/feature_engineering/data/._order_products__prior.csv
+examples/feature_engineering/data/._departments.csv
+examples/feature_engineering/data/._aisles.csv
