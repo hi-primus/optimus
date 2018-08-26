@@ -53,7 +53,7 @@ class Load:
             "displayName": data_name,
             "url": url
         }
-        return Downloader(data_def).download(data_loader)
+        return Downloader(data_def).download(data_loader, type)
 
     @staticmethod
     def json(path):
@@ -157,18 +157,19 @@ class Downloader(object):
         self.data_def = data_def
         self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
 
-    def download(self, data_loader):
+    def download(self, data_loader, ext):
         display_name = self.data_def["displayName"]
         bytes_downloaded = 0
         if "path" in self.data_def:
             path = self.data_def["path"]
         else:
             url = self.data_def["url"]
-
             req = Request(url, None, self.headers)
 
             logging.info("Downloading %s from %s", display_name, url)
-            with tempfile.NamedTemporaryFile(delete=False) as f:
+
+            # It seems that avro need a .avro extension file
+            with tempfile.NamedTemporaryFile(suffix="." + ext, delete=False) as f:
                 bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
