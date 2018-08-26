@@ -6,6 +6,7 @@ from urllib.request import Request, urlopen
 
 import fastavro
 
+from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
 
@@ -24,30 +25,34 @@ class Load:
         else:
             print("Unknown sample data identifier. Please choose an id from the list below")
 
-    def data_loader(self, url, type_of):
+    def data_loader(self, url, type):
         """
-        Load data in csv or json format from a url
-        :param url:
-        :param type_of:
+        Load data in from a url
+        :param url: url string
+        :param type: format data type
         :return:
         """
+
+        data_loader = None
+        if type == "csv":
+            data_loader = self.csv
+        elif type == "json":
+            data_loader = self.json
+        elif type == "parquet":
+            data_loader = self.parquet
+        elif type == "avro":
+            data_loader = self.avro
+        elif type == "geojson":
+            data_loader = self.geojson
+        else:
+            RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", "geojson"])
+
         i = url.rfind('/')
         data_name = url[(i + 1):]
         data_def = {
             "displayName": data_name,
             "url": url
         }
-        if type_of == "csv":
-            data_loader = self.csv
-        elif type_of == "json":
-            data_loader = self.json
-        elif type_of == "parquet":
-            data_loader = self.parquet
-        elif type_of == "avro":
-            data_loader = self.avro
-        elif type_of == "geojson":
-            data_loader = self.geojson
-
         return Downloader(data_def).download(data_loader)
 
     @staticmethod
@@ -128,6 +133,7 @@ class Load:
         :param path:
         :return:
         """
+        df = Spark.instance.read.option("multiline", "true").json(path, mode="PERMISSIVE", schema=validSchema)
 
         df = self.read.load(path, format="json")
         df.printSchema()
@@ -148,10 +154,12 @@ class Downloader(object):
             path = self.data_def["path"]
         else:
             url = self.data_def["url"]
+
             req = Request(url, None, self.headers)
+
             logging.info("Downloading %s from %s", display_name, url)
             with tempfile.NamedTemporaryFile(delete=False) as f:
-                bytes_downloaded = self.write_file(urlopen(req), f)
+                bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
         if path:
@@ -164,12 +172,12 @@ class Downloader(object):
                 logging.info("Successfully created DataFrame for '%s'", display_name)
 
     @staticmethod
-    def write_file(response, file, chunk_size=8192):
+    def write(response, file, chunk_size=8192):
         """
-        Write file from http request to Disk
-        :param response:
+        Load the data from the http request and save it to disk
+        :param response: data retruned
         :param file:
-        :param chunk_size:
+        :param chunk_size: size chunk size of the data
         :return:
         """
         total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100
@@ -181,7 +189,7 @@ class Downloader(object):
             bytes_so_far += len(chunk)
             if not chunk:
                 break
-            file.write_file(chunk)
+            file.write(chunk)
             total_size = bytes_so_far if bytes_so_far > total_size else total_size
 
         return bytes_so_far
