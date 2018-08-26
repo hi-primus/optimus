@@ -854,6 +854,14 @@ def cols(self):
         return self.cols.apply_expr(columns, _fill_na, value)
 
     @add_attr(cols)
+    def count():
+        """
+        Return the columns number
+        :return:
+        """
+        return len(self.columns)
+
+    @add_attr(cols)
     def count_na(columns):
         """
         Return the NAN and Null count in a Column
