@@ -125,12 +125,16 @@ class Load:
     # reference https://medium.com/@sabman/loading-geojson-data-in-apache-spark-f7a52390cdc9
     def geojson(self, path):
         """
-
+        Return a dataframe from a geojson file.
         :param path:
         :return:
         """
 
-        return path
+        df = self.read.load(path, format="json")
+        df.printSchema()
+        df = df.drop("_corrupt_record").dropna()
+
+        return df
 
 
 class Downloader(object):
