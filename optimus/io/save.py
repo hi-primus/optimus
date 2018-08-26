@@ -45,24 +45,37 @@ def save(self):
         """
 
         try:
-            self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+            self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path, sep=sep)
         except IOError as error:
             logging.error(error)
             raise
 
     @add_attr(save)
-    def parquet(path_name, num_partitions=1):
+    def parquet(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to a parquet file
-        :param path_name:
+        :param path:
         :param num_partitions:
+        :param mode:
         :return:
         """
+        # This character are invalid as column names by parquet
+        invalid_character = [" ", ",", ";", "{", "}", "(", ")", "\n", "\t", "="]
+
+        def func(col_name):
+            for i in invalid_character:
+                col_name = col_name.replace(i, "_")
+            return col_name
+
+        df = self.cols.rename(func)
 
         try:
-            self.coalesce(num_partitions).write.parquet(path_name)
-        except IOError as error:
-            logging.error(error)
+            df.coalesce(num_partitions) \
+                .write \
+                .mode(mode) \
+                .parquet(path)
+        except IOError as e:
+            logging.error(e)
             raise
 
     @add_attr(save)
