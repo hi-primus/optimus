@@ -30,3 +30,4 @@ __pycache__
 examples/example.json
 examples/random.csv
 data.json
+examples/data/random.csv
