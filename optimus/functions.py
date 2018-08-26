@@ -13,7 +13,7 @@ from pyspark.sql import functions as F
 from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
     parse_spark_dtypes, get_spark_dtypes_object
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -34,7 +34,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
 
     types = ["column_exp", "udf", "pandas_udf"]
     if func_type not in types:
-        RaiseIfNot.value_error(func_type, types)
+        RaiseIt.value_error(func_type, types)
 
     if verbose is True:
         logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
@@ -125,7 +125,7 @@ def concat(dfs, like="columns"):
     elif like == "rows":
         df_result = reduce(DataFrame.union, dfs)
     else:
-        RaiseIfNot.value_error(like, ["columns", "rows"])
+        RaiseIt.value_error(like, ["columns", "rows"])
 
     return df_result
 

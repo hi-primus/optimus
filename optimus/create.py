@@ -31,6 +31,6 @@ class Create:
 
         struct_fields = list(map(lambda x: StructField(*x), specs))
 
-        return Spark.instance.spark().createDataFrame(rows, StructType(struct_fields))
+        return Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
 
     df = data_frame

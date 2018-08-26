@@ -1,17 +1,17 @@
 # URL reading
-import tempfile
 import logging
-
+import tempfile
 from urllib.request import Request, urlopen
+
+from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
 
-# TODO: Append to read dataframe class
 class Load:
 
     def url(self, path=None, type_of="csv"):
         """
-        Reads a dataset from URL.
+        Reads a dataset from a URL.
         :param path: string for URL to read
         :param type_of: type of the URL backend (can be csv or json)
         :return: pyspark dataframe from URL.
@@ -22,54 +22,99 @@ class Load:
         else:
             print("Unknown sample data identifier. Please choose an id from the list below")
 
-    def data_loader(self, url, type_of):
+    def data_loader(self, url, type):
         """
-        Load data in csv or json format from a url
-        :param url:
-        :param type_of:
+        Load data in from a url
+        :param url: url string
+        :param type: format data type
         :return:
         """
+
+        data_loader = None
+        if type == "csv":
+            data_loader = self.csv
+        elif type == "json":
+            data_loader = self.json
+        elif type == "parquet":
+            data_loader = self.parquet
+        elif type == "avro":
+            data_loader = self.avro
+        else:
+            RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", ])
+
         i = url.rfind('/')
         data_name = url[(i + 1):]
         data_def = {
             "displayName": data_name,
             "url": url
         }
-        if type_of == "csv":
-            data_loader = self.csv_data_loader
-        else:
-            data_loader = self.json_data_loader
-
-        return Downloader(data_def).download(data_loader)
+        return Downloader(data_def).download(data_loader, type)
 
     @staticmethod
-    def csv_data_loader(path):
+    def json(path):
         """
-        Read a csv file from disk
+        Return a dataframe from a json file.
         :param path:
         :return:
         """
-
-        logging.info("Loading file using SparkSession")
-        csvload = Spark.instance.spark() \
-            .read \
-            .format("csv") \
-            .options(header=True) \
-            .options(mode="DROPMALFORMED")
-
-        return csvload.option("inferSchema", "true").load(path)
+        try:
+            df = Spark.instance.spark.read.json(path)
+        except IOError as error:
+            logging.error(error)
+            raise
+        return df
 
     @staticmethod
-    def json_data_loader(path):
+    def csv(path, sep=',', header='true', infer_schema='true', *args, **kargs):
         """
-        Read a json file from disk
-        :param path:
-        :return:
+        Return a dataframe from a csv file.. It is the same read.csv Spark funciont with some predefined
+        params
+
+        :param path: Path or location of the file.
+        :param sep: Usually delimiter mark are ',' or ';'.
+        :param  header: Tell the function whether dataset has a header row. 'true' default.
+        :param infer_schema: Infers the input schema automatically from data.
+        It requires one extra pass over the data. 'true' default.
+
+        :return dataFrame
         """
-        res = open(path, 'r').read()
-        logging.info("Loading file using a pyspark.read.json")
-        data_rdd = Spark.instance.sc().parallelize([res])
-        return Spark.instance.spark().read.json(data_rdd)
+        try:
+            df = (Spark.instance.spark.read
+                  .options(header=header)
+                  .options(mode="DROPMALFORMED")
+                  .options(delimiter=sep)
+                  .options(inferSchema=infer_schema)
+                  .csv(path, *args, **kargs))
+        except IOError as error:
+            logging.error(error)
+            raise
+        return df
+
+    def parquet(self, path):
+        """
+        Return a dataframe from a parquet file.
+        :param path: Path or location of the file. Must be string dataType.
+        :return dataFrame
+        """
+
+        try:
+            df = Spark.instance.spark.read.parquet(path)
+        except IOError as error:
+            logging.error(error)
+            raise
+
+        return df
+
+    @staticmethod
+    def avro(path):
+        try:
+            df = (Spark.instance.spark.read
+                  .format("com.databricks.spark.avro")
+                  .load(path))
+        except IOError as error:
+            logging.error(error)
+            raise
+        return df
 
 
 class Downloader(object):
@@ -77,7 +122,7 @@ class Downloader(object):
         self.data_def = data_def
         self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
 
-    def download(self, data_loader):
+    def download(self, data_loader, ext):
         display_name = self.data_def["displayName"]
         bytes_downloaded = 0
         if "path" in self.data_def:
@@ -85,8 +130,11 @@ class Downloader(object):
         else:
             url = self.data_def["url"]
             req = Request(url, None, self.headers)
+
             logging.info("Downloading %s from %s", display_name, url)
-            with tempfile.NamedTemporaryFile(delete=False) as f:
+
+            # It seems that avro need a .avro extension file
+            with tempfile.NamedTemporaryFile(suffix="." + ext, delete=False) as f:
                 bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
@@ -102,10 +150,10 @@ class Downloader(object):
     @staticmethod
     def write(response, file, chunk_size=8192):
         """
-        Write file from http request to Disk
-        :param response:
+        Load the data from the http request and save it to disk
+        :param response: data retruned
         :param file:
-        :param chunk_size:
+        :param chunk_size: size chunk size of the data
         :return:
         """
         total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100

@@ -30,9 +30,12 @@ class Spark:
                 "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
         logging.info("-----")
         logging.info(STARTING_SPARK)
-        self.spark()
 
-    @lru_cache(maxsize=None)
+        # Build the spark session
+        self.spark
+
+
+    @property
     def spark(self):
         """
         Return the Spark Session
@@ -46,9 +49,10 @@ class Spark:
                 .getOrCreate()
                 )
 
+    @property
     def sc(self):
         """
         Return the Spark Context
         :return:
         """
-        return self.spark().sparkContext
+        return self.spark.sparkContext
