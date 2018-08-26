@@ -1,3 +1,5 @@
+import logging
+
 from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
@@ -5,26 +7,26 @@ from optimus.helpers.decorators import *
 
 def save(self):
     @add_attr(save)
-    def json(path_name, mode ="overwrite", num_partitions=1):
+    def json(path_name, mode="overwrite", num_partitions=1):
         """
         Save data frame in a json file
         :param path_name:
+        :param mode:
         :param num_partitions:
         :return:
         """
-        assert isinstance(path_name, str), "Error: path must be a string"
-        assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
-                                                                "partitions in file store in memory."
-        self.repartition(num_partitions).write_file.format("json").mode(mode).save(path_name)
+        try:
+            # na.fill enforce null value keys to the json output
+            self.na.fill("") \
+                .repartition(num_partitions) \
+                .write \
+                .format("json") \
+                .mode(mode) \
+                .save(path_name)
+        except IOError as error:
+            logging.error(error)
+            raise
 
-        # os.chdir(path_name + "/")
-        # for file in glob.glob("*.json"):
-        #    shutil.copyfile(file, path_name)
-
-        # shutil.copyfile(path_name+ "")
-        # shutil.rmtree("/folder_name")
-
-    # TODO: Check this to save to a single file
     @add_attr(save)
     def csv(path_name, header="true", mode="overwrite", sep=",", num_partitions=1):
         """
@@ -42,18 +44,11 @@ def save(self):
         :return: Dataframe in a CSV format in the specified path.
         """
 
-        assert isinstance(path_name, str), "Error: path must be a string"
-        assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
-                                                                "partitions in file store in memory."
-        assert header == "true" or header == "false", "Error header must be 'true' or 'false'"
-
-        if header == "true":
-            header = True
-        else:
-            header = False
-
-        self.repartition(1).write_file.options(header=header).mode(mode).csv(path_name, sep=sep)
-        # shutil.rmtree("/folder_name")
+        try:
+            self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+        except IOError as error:
+            logging.error(error)
+            raise
 
     @add_attr(save)
     def parquet(path_name, num_partitions=1):
@@ -63,10 +58,27 @@ def save(self):
         :param num_partitions:
         :return:
         """
-        assert isinstance(path_name, str), "Error: path must be a string"
-        assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
-                                                                "partitions in file store in memory."
-        self.coalesce(num_partitions).write_file.parquet(path_name)
+
+        try:
+            self.coalesce(num_partitions).write.parquet(path_name)
+        except IOError as error:
+            logging.error(error)
+            raise
+
+    @add_attr(save)
+    def avro(path_name, num_partitions=1):
+        """
+        Save data frame to an avro file
+        :param path_name:
+        :param num_partitions:
+        :return:
+        """
+
+        try:
+            print("Not implemented yet")
+        except IOError as error:
+            logging.error(error)
+            raise
 
     return save
 
