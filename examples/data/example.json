@@ -1,0 +1,312 @@
+{
+  'columns': {
+    'reclat': {
+      'stats': {
+        'missing_count': 7315,
+        'p_missing': 16.0,
+        'uniques_count': 12739,
+        'p_uniques': 27.87,
+        'min': -87.36666870117188,
+        'max': 81.16667175292969,
+        'quantile': {
+          0.05: -84.35516,
+          0.25: -76.71424,
+          0.5: -71.5,
+          0.75: 0.0,
+          0.95: 34.49058
+        },
+        'range': 168.53334045410156,
+        'median': -71.5,
+        'interquartile_range': 76.71424,
+        'stdev': 46.37851,
+        'kurt': -1.4768,
+        'mean': -39.12258,
+        'mad': 12.76421,
+        'skewness': 0.49159,
+        'sum': -1502346.2,
+        'variance': 2151.0,
+        'coef_variation': -1.18547,
+        'zeros': 6440,
+        'p_zeros': 0.14
+      },
+      'column_type': 'numeric',
+      'name': 'reclat',
+      'frequency': [
+        {
+          'value': None,
+          'count': 7315,
+          'percentage': 16.0
+        },
+        {
+          'value': '0.000000',
+          'count': 6438,
+          'percentage': 14.08
+        },
+        {
+          'value': '-71.500000',
+          'count': 4761,
+          'percentage': 10.41
+        },
+        {
+          'value': '-84.000000',
+          'count': 3040,
+          'percentage': 6.65
+        },
+        {
+          'value': '-72.000000',
+          'count': 1506,
+          'percentage': 3.29
+        },
+        {
+          'value': '-79.683330',
+          'count': 1130,
+          'percentage': 2.47
+        },
+        {
+          'value': '-76.716670',
+          'count': 680,
+          'percentage': 1.49
+        },
+        {
+          'value': '-76.183330',
+          'count': 539,
+          'percentage': 1.18
+        },
+        {
+          'value': '-84.216670',
+          'count': 263,
+          'percentage': 0.58
+        },
+        {
+          'value': '-86.366670',
+          'count': 226,
+          'percentage': 0.49
+        }
+      ],
+      'hist': [
+        {
+          'min': None,
+          'max': None,
+          'count': 0
+        },
+        {
+          'min': -87.36667,
+          'max': -84.22997,
+          'count': 3750
+        },
+        {
+          'min': -84.21667,
+          'max': -80.06667,
+          'count': 3428
+        },
+        {
+          'min': -79.68333,
+          'max': -76.26568,
+          'count': 4306
+        },
+        {
+          'min': -76.26557,
+          'max': -72.775,
+          'count': 3824
+        },
+        {
+          'min': -72.774722,
+          'max': -71.54694,
+          'count': 2029
+        },
+        {
+          'min': -71.5,
+          'max': -24.91667,
+          'count': 5647
+        },
+        {
+          'min': -24.85,
+          'max': -1.00278,
+          'count': 429
+        },
+        {
+          'min': 0.0,
+          'max': 18.77152,
+          'count': 7280
+        },
+        {
+          'min': 18.77153,
+          'max': 27.45433,
+          'count': 3831
+        },
+        {
+          'min': 27.45467,
+          'max': 81.16667,
+          'count': 3877
+        }
+      ],
+      'dtypes_stats': {
+        'string': 0,
+        'bool': 0,
+        'int': 0,
+        'float': 38401,
+        'date': 0,
+        'null': 7315,
+        'missing': 0
+      }
+    },
+    'mass (g)': {
+      'stats': {
+        'missing_count': 131,
+        'p_missing': 0.29,
+        'uniques_count': 12577,
+        'p_uniques': 27.51,
+        'min': 0.0,
+        'max': 60000000.0,
+        'quantile': {
+          0.05: 1.1,
+          0.25: 7.2,
+          0.5: 32.6,
+          0.75: 202.6,
+          0.95: 4000.0
+        },
+        'range': 60000000.0,
+        'median': 32.6,
+        'interquartile_range': 195.4,
+        'stdev': 574988.87641,
+        'kurt': 6796.17061,
+        'mean': 13278.07855,
+        'mad': 30.5,
+        'skewness': 76.90759,
+        'sum': 605281210.64,
+        'variance': 330612207996.0,
+        'coef_variation': 43.30362,
+        'zeros': 1956,
+        'p_zeros': 0.04
+      },
+      'column_type': 'numeric',
+      'name': 'mass (g)',
+      'frequency': [
+        {
+          'value': '1.3',
+          'count': 171,
+          'percentage': 0.37
+        },
+        {
+          'value': '1.2',
+          'count': 140,
+          'percentage': 0.31
+        },
+        {
+          'value': '1.4',
+          'count': 138,
+          'percentage': 0.3
+        },
+        {
+          'value': None,
+          'count': 131,
+          'percentage': 0.29
+        },
+        {
+          'value': '2.1',
+          'count': 130,
+          'percentage': 0.28
+        },
+        {
+          'value': '2.4',
+          'count': 126,
+          'percentage': 0.28
+        },
+        {
+          'value': '1.6',
+          'count': 120,
+          'percentage': 0.26
+        },
+        {
+          'value': '0.5',
+          'count': 119,
+          'percentage': 0.26
+        },
+        {
+          'value': '1.1',
+          'count': 116,
+          'percentage': 0.25
+        },
+        {
+          'value': '3.8',
+          'count': 114,
+          'percentage': 0.25
+        }
+      ],
+      'hist': [
+        {
+          'min': None,
+          'max': None,
+          'count': 0
+        },
+        {
+          'min': 0.0,
+          'max': 2.09,
+          'count': 4434
+        },
+        {
+          'min': 2.1,
+          'max': 5.08,
+          'count': 4686
+        },
+        {
+          'min': 5.09,
+          'max': 9.79,
+          'count': 4500
+        },
+        {
+          'min': 9.8,
+          'max': 17.977,
+          'count': 4603
+        },
+        {
+          'min': 18.0,
+          'max': 32.38,
+          'count': 4515
+        },
+        {
+          'min': 32.4,
+          'max': 63.72,
+          'count': 4574
+        },
+        {
+          'min': 63.8,
+          'max': 132.25,
+          'count': 4553
+        },
+        {
+          'min': 132.3,
+          'max': 309.93,
+          'count': 4561
+        },
+        {
+          'min': 310.0,
+          'max': 1095.0,
+          'count': 4559
+        },
+        {
+          'min': 1097.0,
+          'max': 60000000.0,
+          'count': 4600
+        }
+      ],
+      'dtypes_stats': {
+        'string': 0,
+        'bool': 0,
+        'int': 13059,
+        'float': 32526,
+        'date': 0,
+        'null': 131,
+        'missing': 0
+      }
+    }
+  },
+  'rows_count': 45716,
+  'count_types': {
+    'numeric': 2,
+    'categorical': 0,
+    'date': 0,
+    'null': 0
+  },
+  'size': '50.8MiB'
+}
