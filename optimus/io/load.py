@@ -53,7 +53,7 @@ class Load:
     @staticmethod
     def json(path):
         """
-        This function read data from a json file.
+        Return a dataframe from a json file.
         :param path:
         :return:
         """
@@ -67,7 +67,7 @@ class Load:
     @staticmethod
     def csv(path, sep=',', header='true', infer_schema='true', *args, **kargs):
         """
-        This function read data from a csv file. It is the same read.csv Spark funciont with some predefined
+        Return a dataframe from a csv file.. It is the same read.csv Spark funciont with some predefined
         params
 
         :param path: Path or location of the file.
@@ -92,7 +92,7 @@ class Load:
 
     def parquet(self, path):
         """
-
+        Return a dataframe from a parquet file.
         :param path: Path or location of the file. Must be string dataType.
         :return dataFrame
         """
@@ -108,9 +108,8 @@ class Load:
     @staticmethod
     def avro(path):
         """
-
+        Return a dataframe from an avro file.
         :param  path: Path or location of the file. Must be string dataType.
-
         :return dataFrame
         """
         try:
