@@ -24,7 +24,7 @@ from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -259,7 +259,7 @@ def cols(self):
 
             # Add here any other parse you want
             else:
-                RaiseIfNot.value_error(cls)
+                RaiseIt.value_error(cls)
 
             return func_return_type, cast_to_vectors, func_type
 
@@ -384,7 +384,7 @@ def cols(self):
         elif order == "desc":
             sorted_col_names = sorted(self.columns, reverse=True)
         else:
-            RaiseIfNot.value_error(order, ["asc", "desc"])
+            RaiseIt.value_error(order, ["asc", "desc"])
 
         return self.select(sorted_col_names)
 
@@ -1097,7 +1097,7 @@ def cols(self):
 
             df = apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
-            RaiseIfNot.value_error(shape, ["vector", "array", "string"])
+            RaiseIt.value_error(shape, ["vector", "array", "string"])
 
         return df
 

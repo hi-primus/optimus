@@ -1,6 +1,7 @@
 import inspect
 
-class RaiseIfNot:
+
+class RaiseIt:
     @staticmethod
     def _get_name(var):
         """
@@ -19,7 +20,7 @@ class RaiseIfNot:
         """
         Raise a TypeError exception
         :param var:
-        :param types:
+        :param types:data types as strings
         :return:
         """
 
@@ -31,7 +32,7 @@ class RaiseIfNot:
 
         raise TypeError(
             "'{var_name}' must be {type}, received '{var_type}'"
-                .format(var_name=RaiseIfNot._get_name(var),
+                .format(var_name=RaiseIt._get_name(var),
                         type=divisor.join(map(
                             lambda x: "'" + x + "'",
                             types)), var_type=type(var)))
@@ -41,11 +42,11 @@ class RaiseIfNot:
         """
         Raise a ValueError exception
         :param var:
-        :param _list: list of values
+        :param _list: list of values accepted
         :return:
         """
 
-        #if not any(r):
+        # if not any(r):
         if len(_list) == 2:
             divisor = " or "
         elif len(_list) > 2:
@@ -54,7 +55,16 @@ class RaiseIfNot:
         print(_list)
         print(len(_list))
         raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
-                         .format(var_name=RaiseIfNot._get_name(var),
+                         .format(var_name=RaiseIt._get_name(var),
                                  type=divisor.join(map(
                                      lambda x: "'" + x + "'",
                                      _list)), var_type=var))
+
+    @staticmethod
+    def type(cls, var, message):
+        """
+        Raise and exception ot type specified
+        :param var:
+        :return:
+        """
+        raise cls("'{var_name}' error".format(var_name=RaiseIt._get_name(var), var_type=var))

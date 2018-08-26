@@ -5,7 +5,7 @@ from shutil import rmtree
 from optimus.create import Create
 from optimus.functions import concat
 from optimus.helpers.constants import *
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
@@ -121,7 +121,7 @@ class Optimus:
 
             Spark.instance.sc.setCheckpointDir(dirName="file:///" + folder_path)
         else:
-            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
+            RaiseIt.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
     def delete_check_point_folder(path, file_system):
@@ -155,4 +155,4 @@ class Optimus:
             else:
                 logging.info("Folder deleted.")
         else:
-            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
+            RaiseIt.value_error(file_system, ["hadoop", "local"])
