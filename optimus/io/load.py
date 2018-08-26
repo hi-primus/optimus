@@ -1,10 +1,7 @@
 # URL reading
 import logging
 import tempfile
-from io import BytesIO
 from urllib.request import Request, urlopen
-
-import fastavro
 
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
@@ -14,7 +11,7 @@ class Load:
 
     def url(self, path=None, type_of="csv"):
         """
-        Reads a dataset from URL.
+        Reads a dataset from a URL.
         :param path: string for URL to read
         :param type_of: type of the URL backend (can be csv or json)
         :return: pyspark dataframe from URL.
@@ -42,10 +39,8 @@ class Load:
             data_loader = self.parquet
         elif type == "avro":
             data_loader = self.avro
-        elif type == "geojson":
-            data_loader = self.geojson
         else:
-            RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", "geojson"])
+            RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", ])
 
         i = url.rfind('/')
         data_name = url[(i + 1):]
@@ -111,44 +106,14 @@ class Load:
         return df
 
     @staticmethod
-    def avro_fast(path):
-        """
-        Return a dataframe from an avro file.
-        :param  path: Path or location of the file. Must be string dataType.
-        :return dataFrame
-        """
-        try:
-            df = Spark.instance.spark.binaryFiles(path) \
-                .flatMap(lambda args: fastavro.reader(BytesIO(args[1]))).toDF()
-        except IOError as error:
-            logging.error(error)
-            raise
-
-        return df
-
-    @staticmethod
     def avro(path):
         try:
             df = (Spark.instance.spark.read
-                  .format("com.databricks.spark.avro").load(path))
+                  .format("com.databricks.spark.avro")
+                  .load(path))
         except IOError as error:
             logging.error(error)
             raise
-        return df
-
-    # reference https://medium.com/@sabman/loading-geojson-data-in-apache-spark-f7a52390cdc9
-    def geojson(self, path):
-        """
-        Return a dataframe from a geojson file.
-        :param path:
-        :return:
-        """
-        df = Spark.instance.read.option("multiline", "true").json(path, mode="PERMISSIVE", schema=validSchema)
-
-        df = self.read.load(path, format="json")
-        df.printSchema()
-        df = df.drop("_corrupt_record").dropna()
-
         return df
 
 
