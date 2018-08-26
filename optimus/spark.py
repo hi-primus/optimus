@@ -33,6 +33,7 @@ class Spark:
         self.spark()
 
     @lru_cache(maxsize=None)
+    @property
     def spark(self):
         """
         Return the Spark Session
@@ -46,6 +47,7 @@ class Spark:
                 .getOrCreate()
                 )
 
+    @property
     def sc(self):
         """
         Return the Spark Context
