@@ -10,9 +10,13 @@ def save(self):
     def json(path, mode="overwrite", num_partitions=1):
         """
         Save data frame in a json file
-        :param path:
-        :param mode:
-        :param num_partitions:
+        :param path: path where the dataframe will be saved.
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                "append": Append contents of this DataFrame to existing data.
+                "overwrite" (default case): Overwrite existing data.
+                "ignore": Silently ignore this operation if data already exists.
+                "error": Throw an exception if data already exists.
+        :param num_partitions: the number of partitions of the DataFrame
         :return:
         """
         try:
@@ -31,7 +35,7 @@ def save(self):
     def csv(path, header="true", mode="overwrite", sep=",", num_partitions=1):
         """
         Save data frame to a CSV file.
-        :param path: Path to write the DF and the name of the output CSV file.
+        :param path: path where the dataframe will be saved.
         :param header: True or False to include header
         :param mode: Specifies the behavior of the save operation when data already exists.
                     "append": Append contents of this DataFrame to existing data.
@@ -40,7 +44,7 @@ def save(self):
                     "error": Throw an exception if data already exists.
         :param sep: sets the single character as a separator for each field and value. If None is set,
         it uses the default value.
-        :param num_partitions:
+        :param num_partitions: the number of partitions of the DataFrame
         :return: Dataframe in a CSV format in the specified path.
         """
 
@@ -54,9 +58,13 @@ def save(self):
     def parquet(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to a parquet file
-        :param path:
-        :param num_partitions:
-        :param mode:
+        :param path: path where the dataframe will be saved.
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                    "append": Append contents of this DataFrame to existing data.
+                    "overwrite" (default case): Overwrite existing data.
+                    "ignore": Silently ignore this operation if data already exists.
+                    "error": Throw an exception if data already exists.
+        :param num_partitions: the number of partitions of the DataFrame
         :return:
         """
         # This character are invalid as column names by parquet
@@ -82,8 +90,13 @@ def save(self):
     def avro(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to an avro file
-        :param path:
-        :param num_partitions:
+        :param path: path where the dataframe will be saved.
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                    "append": Append contents of this DataFrame to existing data.
+                    "overwrite" (default case): Overwrite existing data.
+                    "ignore": Silently ignore this operation if data already exists.
+                    "error": Throw an exception if data already exists.
+        :param num_partitions: the number of partitions of the DataFrame
         :return:
         """
 
@@ -95,7 +108,6 @@ def save(self):
         except IOError as e:
             logging.error(e)
             raise
-        print("Not implemented yet")
 
     return save
 
