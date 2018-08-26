@@ -35,12 +35,14 @@ class Optimus:
             logging.disable(logging.NOTSET)
 
         if dl is True:
-            os.environ[
-                'PYSPARK_SUBMIT_ARGS'] = '--packages databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell'
+            Optimus.add_spark_packages(["databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11", "pyspark-shell"])
+
             Spark.instance = Spark(master, app_name)
             from optimus.dl.models import DL
             self.dl = DL()
         else:
+            Optimus.add_spark_packages(["databricks:spark-avro_2.11"])
+
             Spark.instance = Spark(master, app_name)
             pass
 
@@ -79,6 +81,12 @@ class Optimus:
     @staticmethod
     def concat(dfs, like):
         return concat(dfs, like)
+
+    @staticmethod
+    def add_spark_packages(packages):
+        p = "--packages " + " ".join(packages)
+        print(p)
+        os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages " + " ".join(packages)
 
     @staticmethod
     def set_check_point_folder(path, file_system):
