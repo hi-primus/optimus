@@ -1,8 +1,8 @@
 # URL reading
-import tempfile
 import logging
-
+import tempfile
 from urllib.request import Request, urlopen
+
 from optimus.spark import Spark
 
 
