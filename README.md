@@ -30,9 +30,30 @@ Feedback is what drive Optimus future, so please take a couple of minutes to hel
 Also If you want to know what features are the most requested or have and idea you want to see in Optimus let us know at  
 https://optimus.featureupvote.com/  
  
-## Info
 And if you want to see some cool information and tutorials about Optimus check out our blog https://medium.com/hi-optimus  
   
+## Loading data
+Now Optimus can load data in csv, json, parquet and avro from a local file or an URL.
+
+```python
+#csv
+df = op.load.csv("data/foo.csv")
+
+#json
+df = op.load.json("data/foo.json")
+
+# parquet
+df = op.load.parquet("data/foo.parquet")
+
+# avro
+df = op.load.avro("data/foo.avro").table(5)
+```
+
+If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro)
+
+```python
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/feature/load_save_improvements/examples/data/foo.json", "json")
+```
 ## Data loading, cleaning and processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
