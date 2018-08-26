@@ -15,7 +15,22 @@ from optimus.spark import Spark
 
 
 @add_method(DataFrame)
+def rollout(self):
+    """
+    Just a function to check if the dataframe has been Monkey Patched
+    :param self:
+    :return:
+    """
+    print("Yes")
+
+
+@add_method(DataFrame)
 def to_json(self):
+    """
+    Return a json from a Spark Dataframe
+    :param self:
+    :return:
+    """
     return collect_as_dict(self.collect())
 
 
