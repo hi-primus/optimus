@@ -35,13 +35,13 @@ class Optimus:
             logging.disable(logging.NOTSET)
 
         if dl is True:
-            Optimus.add_spark_packages(["databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11", "pyspark-shell"])
+            Optimus.add_spark_packages(["databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell"])
 
             Spark.instance = Spark(master, app_name)
             from optimus.dl.models import DL
             self.dl = DL()
         else:
-            Optimus.add_spark_packages(["databricks:spark-avro_2.11"])
+            Optimus.add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0 pyspark-shell"])
 
             Spark.instance = Spark(master, app_name)
             pass
@@ -85,7 +85,6 @@ class Optimus:
     @staticmethod
     def add_spark_packages(packages):
         p = "--packages " + " ".join(packages)
-        print(p)
         os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages " + " ".join(packages)
 
     @staticmethod
