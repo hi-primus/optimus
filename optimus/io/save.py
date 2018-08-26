@@ -15,7 +15,7 @@ def save(self):
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                                 "partitions in file store in memory."
-        self.repartition(num_partitions).write.format("json").mode(mode).save(path_name)
+        self.repartition(num_partitions).write_file.format("json").mode(mode).save(path_name)
 
         # os.chdir(path_name + "/")
         # for file in glob.glob("*.json"):
@@ -52,7 +52,7 @@ def save(self):
         else:
             header = False
 
-        self.repartition(1).write.options(header=header).mode(mode).csv(path_name, sep=sep)
+        self.repartition(1).write_file.options(header=header).mode(mode).csv(path_name, sep=sep)
         # shutil.rmtree("/folder_name")
 
     @add_attr(save)
@@ -66,7 +66,7 @@ def save(self):
         assert isinstance(path_name, str), "Error: path must be a string"
         assert (num_partitions <= self.rdd.getNumPartitions()), "Error: num_partitions specified is greater that the" \
                                                                 "partitions in file store in memory."
-        self.coalesce(num_partitions).write.parquet(path_name)
+        self.coalesce(num_partitions).write_file.parquet(path_name)
 
     return save
 
