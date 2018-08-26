@@ -7,10 +7,10 @@ from optimus.helpers.decorators import *
 
 def save(self):
     @add_attr(save)
-    def json(path_name, mode="overwrite", num_partitions=1):
+    def json(path, mode="overwrite", num_partitions=1):
         """
         Save data frame in a json file
-        :param path_name:
+        :param path:
         :param mode:
         :param num_partitions:
         :return:
@@ -22,16 +22,16 @@ def save(self):
                 .write \
                 .format("json") \
                 .mode(mode) \
-                .save(path_name)
-        except IOError as error:
-            logging.error(error)
+                .save(path)
+        except IOError as e:
+            logging.error(e)
             raise
 
     @add_attr(save)
-    def csv(path_name, header="true", mode="overwrite", sep=",", num_partitions=1):
+    def csv(path, header="true", mode="overwrite", sep=",", num_partitions=1):
         """
         Save data frame to a CSV file.
-        :param path_name: Path to write the DF and the name of the output CSV file.
+        :param path: Path to write the DF and the name of the output CSV file.
         :param header: True or False to include header
         :param mode: Specifies the behavior of the save operation when data already exists.
                     "append": Append contents of this DataFrame to existing data.
@@ -79,19 +79,23 @@ def save(self):
             raise
 
     @add_attr(save)
-    def avro(path_name, num_partitions=1):
+    def avro(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to an avro file
-        :param path_name:
+        :param path:
         :param num_partitions:
         :return:
         """
 
         try:
-            print("Not implemented yet")
-        except IOError as error:
-            logging.error(error)
+            self.coalesce(num_partitions) \
+                .write.format("com.databricks.spark.avro") \
+                .mode(mode) \
+                .save(path)
+        except IOError as e:
+            logging.error(e)
             raise
+        print("Not implemented yet")
 
     return save
 
