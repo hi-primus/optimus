@@ -111,7 +111,7 @@ class Load:
         return df
 
     @staticmethod
-    def avro(path):
+    def avro_fast(path):
         """
         Return a dataframe from an avro file.
         :param  path: Path or location of the file. Must be string dataType.
@@ -124,6 +124,16 @@ class Load:
             logging.error(error)
             raise
 
+        return df
+
+    @staticmethod
+    def avro(path):
+        try:
+            df = (Spark.instance.spark.read
+                  .format("com.databricks.spark.avro").load(path))
+        except IOError as error:
+            logging.error(error)
+            raise
         return df
 
     # reference https://medium.com/@sabman/loading-geojson-data-in-apache-spark-f7a52390cdc9
