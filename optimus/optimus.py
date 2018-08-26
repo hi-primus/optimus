@@ -65,17 +65,16 @@ class Optimus:
 
         self.create = Create()
         self.load = Load()
-        self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
 
     @property
     def spark(self):
-        return Spark.instance.spark()
+        return Spark.instance.spark
 
     @property
     def sc(self):
-        return Spark.instance.sc()
+        return Spark.instance.sc
 
     @staticmethod
     def concat(dfs, like):
@@ -106,7 +105,7 @@ class Optimus:
             logging.info("Hadoop folder created. \n")
 
             logging.info("Setting created folder as checkpoint folder...")
-            Spark.instance.sc().setCheckpointDir(folder_path)
+            Spark.instance.sc.setCheckpointDir(folder_path)
         elif file_system == "local":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
@@ -120,7 +119,7 @@ class Optimus:
             # Creates new folder:
             os.mkdir(folder_path)
 
-            Spark.instance.sc().setCheckpointDir(dirName="file:///" + folder_path)
+            Spark.instance.sc.setCheckpointDir(dirName="file:///" + folder_path)
         else:
             RaiseIfNot.value_error(file_system, ["hadoop", "local"])
 
