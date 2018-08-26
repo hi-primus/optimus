@@ -178,6 +178,7 @@ def cols(self):
                                  when=fbdt(c, data_type))
         return df
 
+    # TODO: Check if we must use * to select all the columns
     @add_attr(cols)
     @dispatch(object, object)
     def rename(columns_old_new=None, func=None):
@@ -188,10 +189,12 @@ def cols(self):
         """
 
         df = self
+
         # Apply a transformation function
         if is_function(func):
             exprs = [F.col(c).alias(func(c)) for c in df.columns]
             df = df.select(exprs)
+
         elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
 
