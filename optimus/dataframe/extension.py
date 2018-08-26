@@ -183,12 +183,12 @@ def table_html(self, limit=100, columns=None):
     # Filter only the columns and data type info need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
-    total = self.count()
-    if total < limit:
-        limit = total
+    total_rows = self.count()
+    if total_rows < limit:
+        limit = total_rows
 
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total=total)
+    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=self.cols.count())
     return output
 
 
