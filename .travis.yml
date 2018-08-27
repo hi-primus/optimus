@@ -12,12 +12,6 @@ before_install:
     - chmod +x install-spark-2-3-1.sh
     - pip install pytest pytest-cov
     - pip install coveralls
-    - pip install findspark
-    - pip install seaborn
-    - pip install matplotlib
-    - pip install ipython
-    - pip install spark-df-profiling-optimus
-    - pip install pixiedust-optimus
 
 install:
     - ./install-spark-2-3-1.sh
@@ -29,14 +23,14 @@ jdk:
 script:
     - py.test -v --ignore=optimus/dl/
 
-deploy:
-  provider: pypi
-  user: "faviovazquez"
-  password:
-    secure: "YAVFUdSdO0CM4Y92uHjie8StctPb0bh2YZ8HXxMRG6U1hAqZHuh+7FT1yUlH8gqThysm07n7XfoYnfMXGI5sj3xxuiTYrA1eHJwHPn8geRmGMa9j/sWcg8lGk3o48k/Ur//DrKHFvX692ZbCc659zake/IU8MgnOV3NpVnN3lC8OEhNq5D+0WNt0cWYgEIjzUfJUnKJQ9ZF92lyTe0pnn3DwDL6jjaqSVSBYNTgAsf0Rc76BT2fXs8RDiD+zsvxjEoX7U5nazPMtzFUITW1dXzlvpJLXkkVd8HUF4lxBjE2Wm6SFj67sz9VZ+HEGPMzJEFpR3mHHluN00Qw5Nr9RvRG1ivFGPb309LN19jAmuOthPrq65/GSNtlV2bi8ndXCrlu01H2HBXaiF1cXgc++ThIm6mkViQMdGTo+xTvc6UPHTBTH94cIAZCix361yNbiAx4N2XhXGjq+1qMs2Z/qb9mNWw4NVTIsruFSQQXD5iSEwBQltLHo/JEkuR3MgoExyEcQmG7mf/ukgh8Wcenv4UjFOBuEdZgcj4zXn2jva4PaRUGkoJkQsji27Wd8BQjAyNGoz0wnOp7gaLDIOqG/6v+RCNVOfQNBuI1D9OPSzWYSD95/2gLayc+mSgr7hrlgsVsScmz4MdhS4E/0ay3zdQz7MoyMJlHfadfICaJxQI4="
-    on:
-      tags: true
-      branch: develop
+#deploy:
+#  provider: pypi
+#  user: "faviovazquez"
+#  password:
+#    secure: "YAVFUdSdO0CM4Y92uHjie8StctPb0bh2YZ8HXxMRG6U1hAqZHuh+7FT1yUlH8gqThysm07n7XfoYnfMXGI5sj3xxuiTYrA1eHJwHPn8geRmGMa9j/sWcg8lGk3o48k/Ur//DrKHFvX692ZbCc659zake/IU8MgnOV3NpVnN3lC8OEhNq5D+0WNt0cWYgEIjzUfJUnKJQ9ZF92lyTe0pnn3DwDL6jjaqSVSBYNTgAsf0Rc76BT2fXs8RDiD+zsvxjEoX7U5nazPMtzFUITW1dXzlvpJLXkkVd8HUF4lxBjE2Wm6SFj67sz9VZ+HEGPMzJEFpR3mHHluN00Qw5Nr9RvRG1ivFGPb309LN19jAmuOthPrq65/GSNtlV2bi8ndXCrlu01H2HBXaiF1cXgc++ThIm6mkViQMdGTo+xTvc6UPHTBTH94cIAZCix361yNbiAx4N2XhXGjq+1qMs2Z/qb9mNWw4NVTIsruFSQQXD5iSEwBQltLHo/JEkuR3MgoExyEcQmG7mf/ukgh8Wcenv4UjFOBuEdZgcj4zXn2jva4PaRUGkoJkQsji27Wd8BQjAyNGoz0wnOp7gaLDIOqG/6v+RCNVOfQNBuI1D9OPSzWYSD95/2gLayc+mSgr7hrlgsVsScmz4MdhS4E/0ay3zdQz7MoyMJlHfadfICaJxQI4="
+#    on:
+#      tags: true
+#      branch: develop
 
 notifications:
   email: false
