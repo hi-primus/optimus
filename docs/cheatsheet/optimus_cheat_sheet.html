@@ -90,7 +90,7 @@
             /*width: 1.5em;
             height: 0.7em;*/
             font-size: 0.6em;
-            padding: 0.2em 0.1em;
+            padding: 0.2em 0.05em;
             text-align: center;
 
         }
@@ -218,6 +218,22 @@ op = Optimus()</code></pre>
                 </tbody>
             </table>
             <span class="commentary">Specify values for each column.</span>
+
+            <h3>Data Loading</h3>
+
+            <pre><code class="python">df = op.load.csv("foo.csv")
+df = op.load.json("foo.json")
+df = op.load.parquet("foo.parquet")
+df = op.load.avro("foo.avro")</code></pre>
+            <span class="commentary">Load a file</span>
+
+
+            <pre><code class="python">df = op.load.url("http://.../foo.csv")
+df = op.load.url("http://.../foo.json", "json")
+df = op.load.url("http://.../foo.parquet", "parquet")
+df = op.load.url("http://.../foo.avro", "avro")</code></pre>
+            <span class="commentary">Load a file to a dataframe from a URL</span>
+
             <h3>Method Chaining</h3>
             <span class="commentary">Most Optimus methods return a DataFrame so that another Optimus method can be applied to the result. This
                 improved readability of code.</span>
@@ -477,6 +493,7 @@ op = Optimus()</code></pre>
             <!-- Concat Rows-->
             <pre><code class="python">df = df.rows.append(
     ["Grimlock", "Commander","80", "9"])</code></pre>
+            <span class="commentary">Append a dataframe as rows</span>
             <div class="flex-row d-flex">
                 <div>
                     <table class="table-operations-with-data">
