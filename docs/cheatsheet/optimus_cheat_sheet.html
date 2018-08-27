@@ -165,7 +165,7 @@
 
 <div class="container">
     <h1>Optimus Cheat Sheet</h1>
-    <span>Data cleansing and exploration made simple</span>
+    <span>Agile Data Science Workflows made easy with Python and Spark.</span>
     <div class="row">
         <div class="col-sm-4">
             <h3>Initialize Optimus</h3>
@@ -605,7 +605,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Drop columns from a DataFrame.</span>
         </div>
         <div class="col-sm-4">
-            <h3>Subset Observations (Rows)</h3>
+            <h3>Subset Rows</h3>
             <div class="flex-row d-flex">
                 <div>
                     <table class="table-operations-no-data">
@@ -727,7 +727,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
                 </tbody>
             </table>
 
-            <h3>Subset Variables (Columns)</h3>
+            <h3>Subset Columns</h3>
             <div class="flex-row d-flex">
                 <div>
                     <table class="table-operations-no-data">
@@ -1017,7 +1017,6 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Correlation plot for all columns.</span>
 
 
-
             <h3>Profiling</h3>
             <pre><code class="python">from optimus.profiler.profiler import Profiler
     profiler = Profiler()
@@ -1028,9 +1027,55 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Profile a specific column.</span>
 
 
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-4">
+            <h3>Outliers</h3>
+            <pre><code class="python">df.plot.iqr("rank")</code></pre>
+            <span class="commentary">Delete outliers using iqr method.</span>
+
+            <pre><code class="python">df.plot.z_score("rank")</code></pre>
+            <span class="commentary">Delete outliers using z-score method.</span>
+
+            <pre><code class="python">df.plot.mad("rank")</code></pre>
+            <span class="commentary">Delete outliers using mad method.</span>
+
+            <pre><code class="python">df.plot.modified_z_score("rank")</code></pre>
+            <span class="commentary">Delete outliers using modified z-score method.</span>
+
+
+            <h3>Strings</h3>
+            <span>dfa</span>
+        
+        </div>
+        <div class="col-sm-4">
+            <h3>Machine Learning</h3>
+            <pre><code class="python">df_predict, ml_model = op.
+ml.logistic_regression_text(df, "sentence")</code></pre>
+            <span class="commentary">Create a model using Logistic Regression text.</span>
+
+            <pre><code class="python">df_model, rf_model = op
+.ml.random_forest(df, columns, "diagnosis")</code></pre>
+            <span class="commentary">Create a model using Random Forest.</span>
+
+            <pre><code class="python">df_model, rf_model = op
+.ml.decision_tree(df, columns, "diagnosis")</code></pre>
+            <span class="commentary">Create a model using Decision Tree.</span>
+
+            <pre><code class="python">df_model, rf_model = op
+.ml.gbt(df, columns, "diagnosis")</code></pre>
+            <span class="commentary">Create a model using Gradient Boosting Trees.</span>
+        </div>
+        <div class="col-sm-4">
+            <h3>Deep Learning</h3>
+            <pre><code class="python">model, df_preds =
+op.dl.image_classifier_lr(train_df)</code></pre>
+            <span class="commentary">Delete outliers using iqr method.</span>
 
         </div>
     </div>
+
 
 </div>
 </body>
