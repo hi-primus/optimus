@@ -44,3 +44,4 @@ examples/feature_engineering/data/._order_products__prior.csv
 examples/feature_engineering/data/._departments.csv
 examples/feature_engineering/data/._aisles.csv
 data_type_inference/data/newsCorpora.csv
+.pytest_cache/README.md
