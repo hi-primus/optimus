@@ -21,6 +21,10 @@
             display: inline-block;
         }
 
+        h3 {
+            margin-top: 0.5em;
+        }
+
         .container {
             background-color: #ffffff;
             padding-top: 2em;
@@ -63,6 +67,14 @@
 
         .blue-light {
             background-color: #bcd6ed;
+        }
+
+        .red {
+            background-color: #ec3030;
+        }
+
+        .red-light {
+            background-color: #ff8484;
         }
 
         .table-operations-no-data {
@@ -605,7 +617,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Drop columns from a DataFrame.</span>
         </div>
         <div class="col-sm-4">
-            <h3>Subset Rows</h3>
+            <h3>Select Rows</h3>
             <div class="flex-row d-flex">
                 <div>
                     <table class="table-operations-no-data">
@@ -727,7 +739,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
                 </tbody>
             </table>
 
-            <h3>Subset Columns</h3>
+            <h3>Select Columns</h3>
             <div class="flex-row d-flex">
                 <div>
                     <table class="table-operations-no-data">
@@ -1032,6 +1044,84 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
     <div class="row">
         <div class="col-sm-4">
             <h3>Outliers</h3>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations-no-data">
+                        <thead>
+                        <tr>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                            <td class="red-light"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations-no-data">
+                        <thead>
+                        <tr>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                            <td class="blue"></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+                        <tr>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                            <td class="blue-light"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <pre><code class="python">df.plot.iqr("rank")</code></pre>
             <span class="commentary">Delete outliers using iqr method.</span>
 
@@ -1045,9 +1135,6 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Delete outliers using modified z-score method.</span>
 
 
-            <h3>Strings</h3>
-            <span>dfa</span>
-        
         </div>
         <div class="col-sm-4">
             <h3>Machine Learning</h3>
@@ -1066,13 +1153,48 @@ ml.logistic_regression_text(df, "sentence")</code></pre>
             <pre><code class="python">df_model, rf_model = op
 .ml.gbt(df, columns, "diagnosis")</code></pre>
             <span class="commentary">Create a model using Gradient Boosting Trees.</span>
-        </div>
-        <div class="col-sm-4">
+
             <h3>Deep Learning</h3>
             <pre><code class="python">model, df_preds =
 op.dl.image_classifier_lr(train_df)</code></pre>
             <span class="commentary">Delete outliers using iqr method.</span>
 
+        </div>
+        <div class="col-sm-4">
+            <h3>String Processing</h3>
+            <h4>Key Collision</h4>
+            <pre><code class="python">from optimus.ml import keycollision as keyCol
+keyCol.fingerprint(df, "names")
+</code></pre>
+            <span class="commentary">Create a fingerprint from a string.</span>
+
+
+            <pre><code class="python">keyCol.fingerprint_cluster(df, "names")
+</code></pre>
+            <span class="commentary">Cluster a dataframe column based on the Fingerprint algorithm.</span>
+
+            <pre><code class="python">keyCol.n_gram_fingerprint(df, "names", 2)
+</code></pre>
+            <span class="commentary">Calculate the ngram for a fingerprinted string.</span>
+
+            <pre><code class="python">keyCol
+.n_gram_fingerprint_cluster(df, "names" , 2)
+</code></pre>
+            <span class="commentary">Cluster a DataFrame column based on the N-Gram Fingerprint algorithm.</span>
+
+            <h4>Distance Cluster</h4>
+            <pre><code class="python">from optimus.ml import distancecluster as dc
+dc.levenshtein_matrix(df,"names")
+</code></pre>
+            <span class="commentary">Create a couple of column with all the string combination.</span>
+
+            <pre><code class="python">dc.levenshtein_filter(df,"names")
+</code></pre>
+            <span class="commentary">Get the nearest string.</span>
+
+            <pre><code class="python">dc.levenshtein_cluster(df,"names")
+</code></pre>
+            <span class="commentary">Returna a strings of cluster related to a string.</span>
         </div>
     </div>
 
