@@ -6,6 +6,7 @@ from fastnumbers import fast_float
 import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
+from more_itertools import take
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.functions import parse_columns
@@ -220,14 +221,16 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
 
-                col_info['frequency'] = (df.groupBy(col_name)
-                                         .count()
-                                         .rows.sort([("count", "desc"), (col_name, "desc")])
-                                         .limit(10)
-                                         .withColumn("percentage",
-                                                     F.round((F.col("count") / rows_count) * 100,
-                                                             3))
-                                         .cols.rename(col_name, "value").to_json())
+                freq = (df.groupBy(col_name)
+                        .count()
+                        .rows.sort([("count", "desc"), (col_name, "desc")])
+                        .limit(buckets)
+                        .withColumn("percentage",
+                                    F.round((F.col("count") / rows_count) * 100,
+                                            3))
+                        .cols.rename(col_name, "value").to_json())
+                col_info['frequency'] = freq[:10]
+                col_info['frequency_graph'] = freq
 
                 # Uniques
                 uniques = stats[col_name].pop("approx_count_distinct")
@@ -251,11 +254,24 @@ class Profiler:
 
                 col_info["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
 
+            if column_type == "categorical":
+                col_name_len = col_name + "_len"
+                df = df.cols.apply_expr(col_name_len, F.length(F.col(col_name)))
+                min_value = df.cols.min(col_name_len)
+                max_value = df.cols.max(col_name_len)
+
+                # Max value can be considered as the number of bin
+                buckets_string = buckets
+                if max_value <= 50:
+                    buckets_string = max_value
+
+                col_info["hist"] = df.cols.hist(col_name_len, min_value, max_value, buckets_string)
+
             column_info['columns'][col_name] = col_info
 
         return column_info
 
-    def run(self, df, columns, buckets=20):
+    def run(self, df, columns, buckets=50):
         """
         Return statistical information in HTML Format
         :param df:
@@ -287,6 +303,7 @@ class Profiler:
             else:
                 hist_pic = None
             if "frequency" in output["columns"][col_name]:
+
                 freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency"]}, output="base64")
             else:
                 freq_pic = None
