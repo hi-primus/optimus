@@ -166,18 +166,25 @@ def plot_freq(column_data=None, output="image"):
     :param output:
     :return:
     """
+
     for col_name, data in column_data.items():
 
         # Transform Optimus formt to matplotlib format
-        freq = {}
+        x = []
+        h = []
+
         for d in data:
-            freq[ellipsis(d["value"])] = d["count"]
+            x.append(ellipsis(d["value"]))
+            h.append(d["count"])
 
         # Plot
         fig = plt.figure()
 
-        plt.bar(freq.keys(), freq.values())
-        plt.title("Frequency " + col_name)
+        # Need to to this to plot string labels on x
+        x_i = range(len(x))
+        plt.bar(x_i, h)
+        plt.xticks(x_i, x)
+        plt.title("Frequency '" + col_name + "'")
 
         plt.xticks(rotation=30, ha="right")
 
@@ -203,7 +210,6 @@ def plot_hist(column_data=None, output="image"):
     """
 
     for col_name, data in column_data.items():
-
         bins = []
         for d in data:
             bins.append(d['lower'])
@@ -224,7 +230,7 @@ def plot_hist(column_data=None, output="image"):
         # Plot
         fig = plt.figure()
         plt.bar(center, hist, width=width)
-        plt.title("Histogram " + col_name)
+        plt.title("Histogram '" + col_name + "'")
 
         # Save as base64
         if output is "base64":
