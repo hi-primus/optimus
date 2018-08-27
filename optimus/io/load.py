@@ -89,7 +89,8 @@ class Load:
             raise
         return df
 
-    def parquet(self, path, *args, **kwargs):
+    @staticmethod
+    def parquet(path, *args, **kwargs):
         """
         Return a dataframe from a parquet file.
         :param path: Path or location of the file. Must be string dataType.
