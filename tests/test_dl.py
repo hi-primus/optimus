@@ -3,9 +3,6 @@ import pyspark
 from pyspark.ml.image import ImageSchema
 from pyspark.sql.functions import lit
 
-from pyspark import Row
-from optimus.dl.models import DL
-
 op = Optimus(dl=True)
 from sparkdl.image import imageIO
 
