@@ -228,10 +228,11 @@ df = op.load.avro("foo.avro")</code></pre>
             <span class="commentary">Load a file</span>
 
 
-            <pre><code class="python">df=op.load.url("http://.../foo.csv")
-df=op.load.url("http://./f.json", "json")
-df=op.load.url("http://./f.parquet","parquet")
-df=op.load.url("http://./f.avro", "avro")</code></pre>
+            <pre><code class="python">df = op.load.url("http://.../foo.csv")
+df = op.load.url("http://./f.json", "json")
+df = op.load.url("http://./f.parquet",
+"parquet")
+df = op.load.url("http://./f.avro", "avro")</code></pre>
             <span class="commentary">Load a file to a dataframe from a URL</span>
 
             <h3>Method Chaining</h3>
@@ -822,7 +823,8 @@ df=op.load.url("http://./f.avro", "avro")</code></pre>
                     </table>
                 </div>
             </div>
-            <pre><code class="python">df.cols.select(["width","length","species"])</code></pre>
+            <pre><code class="python">df.cols.select(["names","height",
+"function"])</code></pre>
             <span class="commentary">Select multiple columns with specific names.</span>
 
             <pre><code class="python">df.cols.select([1 , 3, 5])</code></pre>
