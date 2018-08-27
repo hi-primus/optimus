@@ -115,11 +115,13 @@ class CharCNN:
             y_data = row[y_col]
 
             sentences = sent_tokenize(x_data)
+
             x.append(sentences)
 
             if len(sentences) > actual_max_sentence:
                 actual_max_sentence = len(sentences)
 
+            print("y_data", y_data)
             y.append(label2indexes[y_data])
 
         if self.verbose > 5:
@@ -147,6 +149,7 @@ class CharCNN:
             max_len_of_sentence = self.max_len_of_sentence
         if max_num_of_setnence is None:
             max_num_of_setnence = self.max_num_of_setnence
+        print("char_indice", self.char_indices)
 
         for i, doc in enumerate(x_raw):
             for j, sentence in enumerate(doc):
@@ -157,6 +160,8 @@ class CharCNN:
                         else:
                             x[i, j, (max_len_of_sentence - 1 - t)] = self.char_indices[char]
 
+        print("x", x)
+        print("y", y)
         return x, y
 
     def _build_character_block(self, block, dropout=0.3, filters=None, kernel_size=None,
@@ -285,6 +290,8 @@ class CharCNN:
         x_preprocess, y_preprocess = self._transform_raw_data(
             df=df, x_col=x_col, y_col=y_col, label2indexes=label2indexes)
 
+        print("x_preprocess", x_preprocess)
+        print("y_preprocess", y_preprocess)
 
         x_preprocess, y_preprocess = self._transform_training_data(
             x_raw=x_preprocess, y_raw=y_preprocess,
