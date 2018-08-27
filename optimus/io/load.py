@@ -1,4 +1,3 @@
-# URL reading
 import logging
 import tempfile
 from urllib.request import Request, urlopen
@@ -22,22 +21,22 @@ class Load:
         else:
             print("Unknown sample data identifier. Please choose an id from the list below")
 
-    def data_loader(self, url, type):
+    def data_loader(self, url, type_of):
         """
         Load data in from a url
         :param url: url string
-        :param type: format data type
+        :param type_of: format data type
         :return:
         """
 
         data_loader = None
-        if type == "csv":
+        if type_of == "csv":
             data_loader = self.csv
-        elif type == "json":
+        elif type_of == "json":
             data_loader = self.json
-        elif type == "parquet":
+        elif type_of == "parquet":
             data_loader = self.parquet
-        elif type == "avro":
+        elif type_of == "avro":
             data_loader = self.avro
         else:
             RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", ])
@@ -48,7 +47,7 @@ class Load:
             "displayName": data_name,
             "url": url
         }
-        return Downloader(data_def).download(data_loader, type)
+        return Downloader(data_def).download(data_loader, type_of)
 
     @staticmethod
     def json(path):
@@ -65,7 +64,7 @@ class Load:
         return df
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', *args, **kargs):
+    def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
         """
         Return a dataframe from a csv file.. It is the same read.csv Spark funciont with some predefined
         params
@@ -84,13 +83,13 @@ class Load:
                   .options(mode="DROPMALFORMED")
                   .options(delimiter=sep)
                   .options(inferSchema=infer_schema)
-                  .csv(path, *args, **kargs))
+                  .csv(path, *args, **kwargs))
         except IOError as error:
             logging.error(error)
             raise
         return df
 
-    def parquet(self, path):
+    def parquet(self, path, *args, **kwargs):
         """
         Return a dataframe from a parquet file.
         :param path: Path or location of the file. Must be string dataType.
@@ -98,7 +97,7 @@ class Load:
         """
 
         try:
-            df = Spark.instance.spark.read.parquet(path)
+            df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
         except IOError as error:
             logging.error(error)
             raise
@@ -106,11 +105,11 @@ class Load:
         return df
 
     @staticmethod
-    def avro(path):
+    def avro(path, *args, **kwargs):
         try:
             df = (Spark.instance.spark.read
                   .format("com.databricks.spark.avro")
-                  .load(path))
+                  .load(path, *args, **kwargs))
         except IOError as error:
             logging.error(error)
             raise
