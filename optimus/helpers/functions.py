@@ -33,7 +33,7 @@ def parse_spark_dtypes(value):
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
 
     except KeyError:
-        data_type = None
+        data_type = value
 
     data_type = one_list_to_val(data_type)
     return data_type
@@ -50,7 +50,7 @@ def get_spark_dtypes_object(value):
         data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
 
     except KeyError:
-        data_type = None
+        data_type = value
 
     data_type = one_list_to_val(data_type)
     return data_type
