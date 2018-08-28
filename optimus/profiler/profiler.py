@@ -278,15 +278,49 @@ class Profiler:
 
                 df = df \
                     .cols.apply('year', infer_date, ArrayType(LongType())) \
-                    .cols.unnest("year")\
+                    .cols.unnest("year") \
                     .h_repartition()
 
                 for i in range(5):
+                    new_col_name = col_name + "_"
                     temp_col = col_name + "_" + str(i)
-                    min_value = df.cols.min(temp_col)
-                    max_value = df.cols.max(temp_col)
+                    # Years
+                    if i == 0:
+                        buckets_date = 50
+                        new_col_name = new_col_name + "years"
 
-                    col_info["hist_" + temp_col] = df.cols.hist(temp_col, min_value, max_value, buckets)
+                        min_value = df.cols.min(temp_col)
+                        max_value = df.cols.max(temp_col)
+
+                    # Months
+                    elif i == 1:
+                        buckets_date = 12
+                        min_value = 0
+                        max_value = 12
+                        new_col_name = new_col_name + "months"
+
+                    # Weekdays
+                    elif i == 2:
+                        buckets_date = 7
+                        min_value = 0
+                        max_value = 7
+                        new_col_name = new_col_name + "weekdays"
+
+                    # Hours
+                    elif i == 3:
+                        buckets_date = 24
+                        min_value = 0
+                        max_value = 24
+                        new_col_name = new_col_name + "hours"
+
+                    # Minutes
+                    elif i == 4:
+                        buckets_date = 60
+                        min_value = 0
+                        max_value = 60
+                        new_col_name = new_col_name + "minutes"
+
+                    col_info["hist_" + new_col_name] = df.cols.hist(temp_col, min_value, max_value, buckets_date)
 
             column_info['columns'][col_name] = col_info
 
