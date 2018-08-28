@@ -1,4 +1,5 @@
 import builtins
+import itertools
 import re
 import string
 import unicodedata
@@ -1214,23 +1215,21 @@ def cols(self):
         for col_name in columns:
             # Create splits
             splits = create_buckets(min_value, max_value, buckets)
-            #print("splits", splits)
 
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
-            #df.where(col_name + "_buckets").table()
-
             counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                 col_name + "_buckets", "value").sort(F.asc("value")).to_json())
-            #print(counts)
 
-            hist = []
-            for x, y in zip(counts, splits):
-                # if x["value"] is not None and x["count"] != 0:
-                hist.append({"lower": y["lower"], "upper": y["upper"], "count": x["count"]})
+            hist_data = []
+            for i in list(itertools.zip_longest(counts, splits)):
+                if i[0] is None:
+                    hist_data.append({"count": 0, "lower": i[1]["lower"], "upper": i[1]["upper"]})
+                elif "count" in i[0]:
+                    hist_data.append({"count": i[0]["count"], "lower": i[1]["lower"], "upper": i[1]["upper"]})
 
-        return hist
+        return hist_data
 
     @add_attr(cols)
     @dispatch((str, list), int)
