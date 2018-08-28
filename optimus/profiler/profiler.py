@@ -3,10 +3,11 @@ import logging
 import os
 from fastnumbers import fast_float
 
+import dateutil
 import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
-from more_itertools import take
+from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.functions import parse_columns
@@ -57,7 +58,7 @@ class Profiler:
     @staticmethod
     def count_data_types(df, columns):
         """
-        Count the number of int, float, string and bool in a  in json format
+        Count the number of int, float, string, date and booleans and output the count in json format
         :param df:
         :param columns:
         :return:
@@ -70,11 +71,8 @@ class Profiler:
             :return:
             """
             temp = col_name + "_type"
-
+            # Count by data type
             types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().collect()
-
-            # Convert the collect result to a list
-            # TODO: check if collect_to_dict function can be used here
 
             count_by_data_type = {}
 
@@ -241,7 +239,7 @@ class Profiler:
             if column_type == "numeric":
                 # Additional Stats
                 # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
-                # https: // stackoverflow.com / questions / 45287832 / pyspark - approxquantile - function
+                # https://stackoverflow.com/questions/45287832/pyspark-approxquantile-function
                 max_value = fast_float(max_value)
                 min_value = fast_float(min_value)
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
@@ -261,12 +259,34 @@ class Profiler:
                 min_value = df.cols.min(col_name_len)
                 max_value = df.cols.max(col_name_len)
 
-                # Max value can be considered as the number of bin
-                buckets_string = buckets
+                # Max value can be considered as the number of buckets
+                buckets_for_string = buckets
                 if max_value <= 50:
-                    buckets_string = max_value
+                    buckets_for_string = max_value
 
-                col_info["hist"] = df.cols.hist(col_name_len, min_value, max_value, buckets_string)
+                col_info["hist"] = df.cols.hist(col_name_len, min_value, max_value, buckets_for_string)
+
+            if column_type == "date":
+                # Create year/month/week day/hour/minute
+                def infer_date(value, args):
+                    if value is None:
+                        result = [None]
+                    else:
+                        date = dateutil.parser.parse(value)
+                        result = [date.year, date.month, date.weekday(), date.hour, date.minute]
+                    return result
+
+                df = df \
+                    .cols.apply('year', infer_date, ArrayType(LongType())) \
+                    .cols.unnest("year")\
+                    .h_repartition()
+
+                for i in range(5):
+                    temp_col = col_name + "_" + str(i)
+                    min_value = df.cols.min(temp_col)
+                    max_value = df.cols.max(temp_col)
+
+                    col_info["hist_" + temp_col] = df.cols.hist(temp_col, min_value, max_value, buckets)
 
             column_info['columns'][col_name] = col_info
 
@@ -327,7 +347,6 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: column to calculate the histogram
         :param buckets: buckets on the histogram
-        :param path: Path where the json is going to be saved
         :return: json file
         """
 
