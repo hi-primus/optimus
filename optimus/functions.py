@@ -12,7 +12,7 @@ from pyspark.sql import functions as F
 
 from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
-    parse_spark_dtypes, get_spark_dtypes_object
+    get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -22,7 +22,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     :param col: Column to created or transformed
     :param func: Function to be applied to the data
     :param attrs: If required attributes to be passed to the function
-    :param func_return_type: Required bu UDF and Pandas UDF. It is necessary to define the return type
+    :param func_return_type: Required by UDF and Pandas UDF.
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
     :param verbose: print additional info
     :return: A function, UDF or Pandas UDF

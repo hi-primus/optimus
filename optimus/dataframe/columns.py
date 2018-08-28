@@ -1115,7 +1115,7 @@ def cols(self):
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
         """
-        Split array or string in different columns
+        Split an array or string in different columns
         :param columns: Columns to be un-nested
         :param mark: is column is string
         :param n: Number of rows to un-nested
