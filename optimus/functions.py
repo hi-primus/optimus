@@ -148,7 +148,7 @@ def output_base64(fig):
     return fig_png.decode('utf8')
 
 
-def ellipsis(data, length=10):
+def ellipsis(data, length=20):
     """
     Add a "..." if a string y greater than a specific length
     :param data:
@@ -178,18 +178,19 @@ def plot_freq(column_data=None, output="image"):
             h.append(d["count"])
 
         # Plot
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 5))
 
         # Need to to this to plot string labels on x
         x_i = range(len(x))
         plt.bar(x_i, h)
         plt.xticks(x_i, x)
+
         plt.title("Frequency '" + col_name + "'")
 
-        plt.xticks(rotation=30, ha="right")
+        plt.xticks(rotation=45, ha="right")
 
         # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(bottom=0.2)
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
         if output is "base64":
@@ -228,9 +229,11 @@ def plot_hist(column_data=None, output="image"):
         width = 0.9 * (bins[1] - bins[0])
 
         # Plot
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 5))
         plt.bar(center, hist, width=width)
         plt.title("Histogram '" + col_name + "'")
+
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
         if output is "base64":

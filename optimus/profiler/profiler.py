@@ -229,6 +229,7 @@ class Profiler:
                                     F.round((F.col("count") / rows_count) * 100,
                                             3))
                         .cols.rename(col_name, "value").to_json())
+
                 col_info['frequency'] = freq[:10]
                 col_info['frequency_graph'] = freq
 
@@ -271,7 +272,7 @@ class Profiler:
 
         return column_info
 
-    def run(self, df, columns, buckets=50):
+    def run(self, df, columns, buckets=40):
         """
         Return statistical information in HTML Format
         :param df:
@@ -304,7 +305,7 @@ class Profiler:
                 hist_pic = None
             if "frequency" in output["columns"][col_name]:
 
-                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency"]}, output="base64")
+                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency_graph"]}, output="base64")
             else:
                 freq_pic = None
 

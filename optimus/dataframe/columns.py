@@ -1214,12 +1214,16 @@ def cols(self):
         for col_name in columns:
             # Create splits
             splits = create_buckets(min_value, max_value, buckets)
+            #print("splits", splits)
 
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
+            #df.where(col_name + "_buckets").table()
+
             counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                 col_name + "_buckets", "value").sort(F.asc("value")).to_json())
+            #print(counts)
 
             hist = []
             for x, y in zip(counts, splits):

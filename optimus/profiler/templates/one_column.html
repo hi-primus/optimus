@@ -17,6 +17,7 @@
     .info{
         overflow: auto
     }
+
 </style>
 
 <div class="main">
@@ -260,23 +261,27 @@
         {% endif %}
     </div>
     <table>
+        {% if hist_pic is not none %}
         <tr>
-            {% if hist_pic is not none %}
+
             <td>
 
                 <div>
                     <img src="data:image/jpeg;base64,{{ hist_pic | safe }}">
                 </div>
             </td>
-            {% endif %}
-            {% if freq_pic is not none %}
+        </tr>
+        {% endif %}
+        {% if freq_pic is not none %}
+        <tr>
             <td>
                 <div>
                     <img src="data:image/jpeg;base64,{{ freq_pic | safe }}">
                 </div>
 
             </td>
-            {% endif %}
+
         </tr>
+        {% endif %}
     </table>
 </div>
