@@ -267,6 +267,8 @@ class Profiler:
                 col_info["hist"] = df.cols.hist(col_name_len, min_value, max_value, buckets_for_string)
 
             if column_type == "date":
+                col_info["hist"] = {}
+
                 # Create year/month/week day/hour/minute
                 def infer_date(value, args):
                     if value is None:
@@ -282,12 +284,12 @@ class Profiler:
                     .h_repartition()
 
                 for i in range(5):
-                    new_col_name = col_name + "_"
+                    key_name = ""
                     temp_col = col_name + "_" + str(i)
                     # Years
                     if i == 0:
-                        buckets_date = 50
-                        new_col_name = new_col_name + "years"
+                        buckets_date = 100
+                        key_name = "years"
 
                         min_value = df.cols.min(temp_col)
                         max_value = df.cols.max(temp_col)
@@ -297,30 +299,30 @@ class Profiler:
                         buckets_date = 12
                         min_value = 0
                         max_value = 12
-                        new_col_name = new_col_name + "months"
+                        key_name = "months"
 
                     # Weekdays
                     elif i == 2:
                         buckets_date = 7
                         min_value = 0
                         max_value = 7
-                        new_col_name = new_col_name + "weekdays"
+                        key_name = "weekdays"
 
                     # Hours
                     elif i == 3:
                         buckets_date = 24
                         min_value = 0
                         max_value = 24
-                        new_col_name = new_col_name + "hours"
+                        key_name = "hours"
 
                     # Minutes
                     elif i == 4:
                         buckets_date = 60
                         min_value = 0
                         max_value = 60
-                        new_col_name = new_col_name + "minutes"
+                        key_name = "minutes"
 
-                    col_info["hist_" + new_col_name] = df.cols.hist(temp_col, min_value, max_value, buckets_date)
+                    col_info["hist"][key_name] = df.cols.hist(temp_col, min_value, max_value, buckets_date)
 
             column_info['columns'][col_name] = col_info
 
@@ -329,9 +331,9 @@ class Profiler:
     def run(self, df, columns, buckets=40):
         """
         Return statistical information in HTML Format
-        :param df:
-        :param columns:
-        :param buckets:
+        :param df: Dataframe to be analyzed
+        :param columns: Columns to be analized
+        :param buckets: number of buckets calculated to print the histogram
         :return:
         """
 
@@ -353,17 +355,32 @@ class Profiler:
 
         # Create every column stats
         for col_name in columns:
+            hist_pic = None
             if "hist" in output["columns"][col_name]:
-                hist_pic = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
-            else:
-                hist_pic = None
-            if "frequency" in output["columns"][col_name]:
+                if output["columns"][col_name]["column_dtype"] == "date":
+                    hist_year = plot_hist({col_name: output["columns"][col_name]["hist"]["years"]}, "base64",
+                                          "years")
+                    hist_month = plot_hist({col_name: output["columns"][col_name]["hist"]["months"]}, "base64",
+                                           "months")
+                    hist_weekday = plot_hist({col_name: output["columns"][col_name]["hist"]["weekdays"]},
+                                             "base64", "weekdays")
+                    hist_hour = plot_hist({col_name: output["columns"][col_name]["hist"]["hours"]}, "base64",
+                                          "hours")
+                    hist_minute = plot_hist({col_name: output["columns"][col_name]["hist"]["minutes"]}, "base64",
+                                            "minutes")
 
+                    hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
+                                "hist_hours": hist_hour, "hist_minutes": hist_minute}
+                else:
+                    hist = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
+                    hist_pic = {"hist_pic": hist}
+
+            if "frequency" in output["columns"][col_name]:
                 freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency_graph"]}, output="base64")
             else:
                 freq_pic = None
 
-            html = html + template.render(data=output["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
+            html = html + template.render(data=output["columns"][col_name], freq_pic=freq_pic, **hist_pic)
 
         html = html + df.table_html(10)
         # df.plots.correlation(columns)

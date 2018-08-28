@@ -18,6 +18,8 @@
         overflow: auto
     }
 
+
+
 </style>
 
 <div class="main">
@@ -261,7 +263,7 @@
         {% endif %}
     </div>
     <table>
-        {% if hist_pic is not none %}
+        {% if hist_pic is defined %}
         <tr>
 
             <td>
@@ -272,7 +274,7 @@
             </td>
         </tr>
         {% endif %}
-        {% if freq_pic is not none %}
+        {% if freq_pic is defined %}
         <tr>
             <td>
                 <div>
@@ -283,5 +285,61 @@
 
         </tr>
         {% endif %}
+        {% if hist_years is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_years | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_months is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_months | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_weekdays is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_weekdays | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_hours is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_hours | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_minutes is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_minutes | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+
     </table>
 </div>

@@ -197,7 +197,7 @@ def plot_freq(column_data=None, output="image"):
             return output_base64(fig)
 
 
-def plot_hist(column_data=None, output="image"):
+def plot_hist(column_data=None, output="image", sub_title=""):
     """
     Plot a histogram
     obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
@@ -231,7 +231,7 @@ def plot_hist(column_data=None, output="image"):
         # Plot
         fig = plt.figure(figsize=(12, 5))
         plt.bar(center, hist, width=width)
-        plt.title("Histogram '" + col_name + "'")
+        plt.title("Histogram '" + col_name + "' " + sub_title)
 
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
