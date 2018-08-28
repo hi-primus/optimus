@@ -1222,6 +1222,21 @@ def cols(self):
             counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                 col_name + "_buckets", "value").sort(F.asc("value")).to_json())
 
+            # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
+            new_array = []
+            for i in builtins.range(buckets):
+                flag = False
+                for c in counts:
+                    value = c["value"]
+                    count = c["count"]
+                    if value == i:
+                        new_array.append({"value": value, "count": count})
+                        flag = True
+                if flag is False:
+                    new_array.append({"value": i, "count": 0})
+
+            counts = new_array
+
             hist_data = []
             for i in list(itertools.zip_longest(counts, splits)):
                 if i[0] is None:
