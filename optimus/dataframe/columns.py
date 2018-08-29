@@ -1,4 +1,5 @@
 import builtins
+import itertools
 import re
 import string
 import unicodedata
@@ -1115,7 +1116,7 @@ def cols(self):
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
         """
-        Split array or string in different columns
+        Split an array or string in different columns
         :param columns: Columns to be un-nested
         :param mark: is column is string
         :param n: Number of rows to un-nested
@@ -1221,12 +1222,29 @@ def cols(self):
             counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                 col_name + "_buckets", "value").sort(F.asc("value")).to_json())
 
-            hist = []
-            for x, y in zip(counts, splits):
-                # if x["value"] is not None and x["count"] != 0:
-                hist.append({"lower": y["lower"], "upper": y["upper"], "count": x["count"]})
+            # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
+            new_array = []
+            for i in builtins.range(buckets):
+                flag = False
+                for c in counts:
+                    value = c["value"]
+                    count = c["count"]
+                    if value == i:
+                        new_array.append({"value": value, "count": count})
+                        flag = True
+                if flag is False:
+                    new_array.append({"value": i, "count": 0})
 
-        return hist
+            counts = new_array
+
+            hist_data = []
+            for i in list(itertools.zip_longest(counts, splits)):
+                if i[0] is None:
+                    hist_data.append({"count": 0, "lower": i[1]["lower"], "upper": i[1]["upper"]})
+                elif "count" in i[0]:
+                    hist_data.append({"count": i[0]["count"], "lower": i[1]["lower"], "upper": i[1]["upper"]})
+
+        return hist_data
 
     @add_attr(cols)
     @dispatch((str, list), int)

@@ -1,10 +1,10 @@
-## Helpers to check if an object match a type
+"""
+Helpers to check if an object match a date type
+"""
 
 from pyspark.sql import DataFrame
 import os
 
-
-# element are int, float, str, bool
 
 def is_same_class(class1, class2):
     """

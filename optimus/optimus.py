@@ -67,6 +67,7 @@ class Optimus:
 
         self.create = Create()
         self.load = Load()
+        self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
 
