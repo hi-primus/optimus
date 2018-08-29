@@ -356,31 +356,27 @@ class Profiler:
         # Create every column stats
         for col_name in columns:
             hist_pic = None
-            if "hist" in output["columns"][col_name]:
-                if output["columns"][col_name]["column_dtype"] == "date":
-                    hist_year = plot_hist({col_name: output["columns"][col_name]["hist"]["years"]}, "base64",
-                                          "years")
-                    hist_month = plot_hist({col_name: output["columns"][col_name]["hist"]["months"]}, "base64",
-                                           "months")
-                    hist_weekday = plot_hist({col_name: output["columns"][col_name]["hist"]["weekdays"]},
-                                             "base64", "weekdays")
-                    hist_hour = plot_hist({col_name: output["columns"][col_name]["hist"]["hours"]}, "base64",
-                                          "hours")
-                    hist_minute = plot_hist({col_name: output["columns"][col_name]["hist"]["minutes"]}, "base64",
-                                            "minutes")
+            col = output["columns"][col_name]
 
+            if "hist" in col:
+                if col["column_dtype"] == "date":
+                    hist_year = plot_hist({col_name: col["hist"]["years"]}, "base64", "years")
+                    hist_month = plot_hist({col_name: col["hist"]["months"]}, "base64", "months")
+                    hist_weekday = plot_hist({col_name: col["hist"]["weekdays"]}, "base64", "weekdays")
+                    hist_hour = plot_hist({col_name: col["hist"]["hours"]}, "base64", "hours")
+                    hist_minute = plot_hist({col_name: col["hist"]["minutes"]}, "base64", "minutes")
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
                 else:
-                    hist = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
+                    hist = plot_hist({col_name: col["hist"]}, output="base64")
                     hist_pic = {"hist_pic": hist}
 
-            if "frequency" in output["columns"][col_name]:
-                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency_graph"]}, output="base64")
+            if "frequency" in col:
+                freq_pic = plot_freq({col_name: col["frequency_graph"]}, output="base64")
             else:
                 freq_pic = None
 
-            html = html + template.render(data=output["columns"][col_name], freq_pic=freq_pic, **hist_pic)
+            html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
 
         html = html + df.table_html(10)
         # df.plots.correlation(columns)
