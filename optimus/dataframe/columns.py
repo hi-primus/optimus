@@ -2,6 +2,7 @@ import builtins
 import itertools
 import re
 import string
+import timeit
 import unicodedata
 from fastnumbers import fast_float
 from functools import reduce
@@ -523,13 +524,15 @@ def cols(self):
         return percentile(columns, [0.5])
 
     @add_attr(cols)
-    def percentile(columns, values=None, error=0):
+    def percentile(columns, values=None, error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
         :return: percentiles per columns
         """
+        start_time = timeit.default_timer()
+
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -547,6 +550,8 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
+        logging.info("percentile")
+        logging.info(timeit.default_timer() - start_time)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
