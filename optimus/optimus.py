@@ -41,7 +41,6 @@ class Optimus:
             from optimus.dl.models import DL
             self.dl = DL()
         else:
-            Optimus.add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0 pyspark-shell"])
 
             Spark.instance = Spark(master, app_name)
             pass
