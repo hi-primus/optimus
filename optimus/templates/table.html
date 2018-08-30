@@ -10,8 +10,14 @@
         margin: 10px 0;
         font-size: 0.8em;
     }
+
 </style>
-<div class="info_items">Viewing {{limit}} of {{total}}</div>
+
+{% macro header_footer(limit, total_rows, total_cols) %}
+<div class="info_items">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
+{% endmacro %}
+
+{{header_footer(limit, total_rows, total_cols)}}
 <table>
     <thead>
     <tr>
@@ -37,4 +43,4 @@
     {% endfor %}
     </tbody>
 </table>
-<div class="info_items">Viewing {{limit}} of {{total}}</div>
+{{header_footer(limit, total_rows, total_cols)}}

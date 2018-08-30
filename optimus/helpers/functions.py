@@ -11,7 +11,7 @@ from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, 
     is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_dict, is_list
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 
 
 def random_int(n=5):
@@ -33,7 +33,7 @@ def parse_spark_dtypes(value):
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
 
     except KeyError:
-        data_type = None
+        data_type = value
 
     data_type = one_list_to_val(data_type)
     return data_type
@@ -50,7 +50,7 @@ def get_spark_dtypes_object(value):
         data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
 
     except KeyError:
-        data_type = None
+        data_type = value
 
     data_type = one_list_to_val(data_type)
     return data_type
@@ -215,7 +215,7 @@ def check_for_missing_columns(df, col_names):
     missing_columns = list(set(col_names) - set(df.columns))
 
     if len(missing_columns) > 0:
-        RaiseIfNot.value_error(missing_columns, df.columns)
+        RaiseIt.value_error(missing_columns, df.columns)
 
     return False
 
@@ -288,7 +288,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     elif get_args is False:
         params = cols
     else:
-        RaiseIfNot.value_error(get_args, ["True", "False"])
+        RaiseIt.value_error(get_args, ["True", "False"])
 
     return params
 

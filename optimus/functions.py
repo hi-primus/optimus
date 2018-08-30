@@ -12,8 +12,8 @@ from pyspark.sql import functions as F
 
 from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
-    parse_spark_dtypes, get_spark_dtypes_object
-from optimus.helpers.raiseit import RaiseIfNot
+    get_spark_dtypes_object
+from optimus.helpers.raiseit import RaiseIt
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -22,7 +22,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     :param col: Column to created or transformed
     :param func: Function to be applied to the data
     :param attrs: If required attributes to be passed to the function
-    :param func_return_type: Required bu UDF and Pandas UDF. It is necessary to define the return type
+    :param func_return_type: Required by UDF and Pandas UDF.
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
     :param verbose: print additional info
     :return: A function, UDF or Pandas UDF
@@ -34,7 +34,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
 
     types = ["column_exp", "udf", "pandas_udf"]
     if func_type not in types:
-        RaiseIfNot.value_error(func_type, types)
+        RaiseIt.value_error(func_type, types)
 
     if verbose is True:
         logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
@@ -125,7 +125,7 @@ def concat(dfs, like="columns"):
     elif like == "rows":
         df_result = reduce(DataFrame.union, dfs)
     else:
-        RaiseIfNot.value_error(like, ["columns", "rows"])
+        RaiseIt.value_error(like, ["columns", "rows"])
 
     return df_result
 
@@ -148,7 +148,7 @@ def output_base64(fig):
     return fig_png.decode('utf8')
 
 
-def ellipsis(data, length=10):
+def ellipsis(data, length=20):
     """
     Add a "..." if a string y greater than a specific length
     :param data:
@@ -166,30 +166,38 @@ def plot_freq(column_data=None, output="image"):
     :param output:
     :return:
     """
+
     for col_name, data in column_data.items():
 
         # Transform Optimus formt to matplotlib format
-        freq = {}
+        x = []
+        h = []
+
         for d in data:
-            freq[ellipsis(d["value"])] = d["count"]
+            x.append(ellipsis(d["value"]))
+            h.append(d["count"])
 
         # Plot
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 5))
 
-        plt.bar(freq.keys(), freq.values())
-        plt.title("Frequency " + col_name)
+        # Need to to this to plot string labels on x
+        x_i = range(len(x))
+        plt.bar(x_i, h)
+        plt.xticks(x_i, x)
 
-        plt.xticks(rotation=30, ha="right")
+        plt.title("Frequency '" + col_name + "'")
+
+        plt.xticks(rotation=45, ha="right")
 
         # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(bottom=0.2)
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
         if output is "base64":
             return output_base64(fig)
 
 
-def plot_hist(column_data=None, output="image"):
+def plot_hist(column_data=None, output="image", sub_title=""):
     """
     Plot a histogram
     obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
@@ -203,7 +211,6 @@ def plot_hist(column_data=None, output="image"):
     """
 
     for col_name, data in column_data.items():
-
         bins = []
         for d in data:
             bins.append(d['lower'])
@@ -222,9 +229,11 @@ def plot_hist(column_data=None, output="image"):
         width = 0.9 * (bins[1] - bins[0])
 
         # Plot
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 5))
         plt.bar(center, hist, width=width)
-        plt.title("Histogram " + col_name)
+        plt.title("Histogram '" + col_name + "' " + sub_title)
+
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
         if output is "base64":

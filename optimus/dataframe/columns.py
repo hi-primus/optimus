@@ -1,4 +1,5 @@
 import builtins
+import itertools
 import re
 import string
 import unicodedata
@@ -24,7 +25,7 @@ from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -178,6 +179,7 @@ def cols(self):
                                  when=fbdt(c, data_type))
         return df
 
+    # TODO: Check if we must use * to select all the columns
     @add_attr(cols)
     @dispatch(object, object)
     def rename(columns_old_new=None, func=None):
@@ -188,10 +190,12 @@ def cols(self):
         """
 
         df = self
+
         # Apply a transformation function
         if is_function(func):
             exprs = [F.col(c).alias(func(c)) for c in df.columns]
             df = df.select(exprs)
+
         elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
 
@@ -259,7 +263,7 @@ def cols(self):
 
             # Add here any other parse you want
             else:
-                RaiseIfNot.value_error(cls)
+                RaiseIt.value_error(cls)
 
             return func_return_type, cast_to_vectors, func_type
 
@@ -384,7 +388,7 @@ def cols(self):
         elif order == "desc":
             sorted_col_names = sorted(self.columns, reverse=True)
         else:
-            RaiseIfNot.value_error(order, ["asc", "desc"])
+            RaiseIt.value_error(order, ["asc", "desc"])
 
         return self.select(sorted_col_names)
 
@@ -854,6 +858,14 @@ def cols(self):
         return self.cols.apply_expr(columns, _fill_na, value)
 
     @add_attr(cols)
+    def count():
+        """
+        Return the columns number
+        :return:
+        """
+        return len(self.columns)
+
+    @add_attr(cols)
     def count_na(columns):
         """
         Return the NAN and Null count in a Column
@@ -1097,14 +1109,14 @@ def cols(self):
 
             df = apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
-            RaiseIfNot.value_error(shape, ["vector", "array", "string"])
+            RaiseIt.value_error(shape, ["vector", "array", "string"])
 
         return df
 
     @add_attr(cols)
     def unnest(columns, mark=None, n=None, index=None):
         """
-        Split array or string in different columns
+        Split an array or string in different columns
         :param columns: Columns to be un-nested
         :param mark: is column is string
         :param n: Number of rows to un-nested
@@ -1210,12 +1222,29 @@ def cols(self):
             counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
                 col_name + "_buckets", "value").sort(F.asc("value")).to_json())
 
-            hist = []
-            for x, y in zip(counts, splits):
-                # if x["value"] is not None and x["count"] != 0:
-                hist.append({"lower": y["lower"], "upper": y["upper"], "count": x["count"]})
+            # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
+            new_array = []
+            for i in builtins.range(buckets):
+                flag = False
+                for c in counts:
+                    value = c["value"]
+                    count = c["count"]
+                    if value == i:
+                        new_array.append({"value": value, "count": count})
+                        flag = True
+                if flag is False:
+                    new_array.append({"value": i, "count": 0})
 
-        return hist
+            counts = new_array
+
+            hist_data = []
+            for i in list(itertools.zip_longest(counts, splits)):
+                if i[0] is None:
+                    hist_data.append({"count": 0, "lower": i[1]["lower"], "upper": i[1]["upper"]})
+                elif "count" in i[0]:
+                    hist_data.append({"count": i[0]["count"], "lower": i[1]["lower"], "upper": i[1]["upper"]})
+
+        return hist_data
 
     @add_attr(cols)
     @dispatch((str, list), int)

@@ -19,11 +19,15 @@ app = Flask(__name__)
 
 
 @app.route('/')
-def profiler_json():
-    with app.app_context():
-        with open(path, encoding="utf8") as f:
-            data = json.loads(f.read())
-            return jsonify(data)
+def output_json():
+    try:
+        with app.app_context():
+
+            with open(path, encoding="utf8") as f:
+                data = json.loads(f.read())
+                return jsonify(data)
+    except IOError:
+        raise
 
 
 if __name__ == '__main__':

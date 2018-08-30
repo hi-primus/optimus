@@ -12,10 +12,28 @@ from pyspark.sql import functions as F
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list
 from optimus.spark import Spark
+import multiprocessing
+
+cpu_count = multiprocessing.cpu_count()
+
+
+@add_method(DataFrame)
+def rollout(self):
+    """
+    Just a function to check if the Spark dataframe has been Monkey Patched
+    :param self:
+    :return:
+    """
+    print("Yes!")
 
 
 @add_method(DataFrame)
 def to_json(self):
+    """
+    Return a json from a Spark Dataframe
+    :param self:
+    :return:
+    """
     return collect_as_dict(self.collect())
 
 
@@ -98,11 +116,11 @@ def size(self):
 
     java_obj = _to_java_object_rdd(self.rdd)
 
-    n_bytes = Spark.instance.sc()._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
+    n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     return n_bytes
 
 
-@add_attr(DataFrame)
+@add_method(DataFrame)
 def run(self):
     """
     This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
@@ -129,7 +147,7 @@ def run(self):
     return True
 
 
-@add_attr(DataFrame)
+@add_method(DataFrame)
 def sql(self, sql_expression):
     """
     Implements the transformations which are defined by SQL statement. Currently we only support
@@ -143,6 +161,27 @@ def sql(self, sql_expression):
     sql_transformer = SQLTransformer(statement=sql_expression)
 
     return sql_transformer.transform(self)
+
+
+@add_attr(DataFrame)
+def partitions(self):
+    """
+    Return dataframes partitions number
+    :param self:
+    :return:
+    """
+    print(self.rdd.getNumPartitions())
+
+
+@add_method(DataFrame)
+def h_repartition(self):
+    """
+    Get the number of cpu available and apply an "optimus" repartition in the dataframe
+    #Reference: https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
+    :param self:
+    :return:
+    """
+    return self.repartition(cpu_count * 4)
 
 
 @add_method(DataFrame)
@@ -168,12 +207,12 @@ def table_html(self, limit=100, columns=None):
     # Filter only the columns and data type info need it
     dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
 
-    total = self.count()
-    if total < limit:
-        limit = total
+    total_rows = self.count()
+    if total_rows < limit:
+        limit = total_rows
 
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total=total)
+    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=self.cols.count())
     return output
 
 

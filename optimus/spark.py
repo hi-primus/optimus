@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
@@ -30,25 +28,27 @@ class Spark:
                 "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
         logging.info("-----")
         logging.info(STARTING_SPARK)
-        self.spark()
 
-    @lru_cache(maxsize=None)
+        # Build the spark session
+        self._spark = (SparkSession
+                       .builder
+                       .master(self.master)
+                       .appName(self.app_name)
+                       .getOrCreate())
+
+    @property
     def spark(self):
         """
         Return the Spark Session
         :return: None
         """
 
-        return (SparkSession
-                .builder
-                .master(self.master)
-                .appName(self.app_name)
-                .getOrCreate()
-                )
+        return self._spark
 
+    @property
     def sc(self):
         """
         Return the Spark Context
         :return:
         """
-        return self.spark().sparkContext
+        return self._spark.sparkContext

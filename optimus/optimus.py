@@ -5,7 +5,7 @@ from shutil import rmtree
 from optimus.create import Create
 from optimus.functions import concat
 from optimus.helpers.constants import *
-from optimus.helpers.raiseit import RaiseIfNot
+from optimus.helpers.raiseit import RaiseIt
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
@@ -35,12 +35,13 @@ class Optimus:
             logging.disable(logging.NOTSET)
 
         if dl is True:
-            os.environ[
-                'PYSPARK_SUBMIT_ARGS'] = '--packages databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell'
+            Optimus.add_spark_packages(["databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11 pyspark-shell"])
+
             Spark.instance = Spark(master, app_name)
             from optimus.dl.models import DL
             self.dl = DL()
         else:
+
             Spark.instance = Spark(master, app_name)
             pass
 
@@ -71,15 +72,35 @@ class Optimus:
 
     @property
     def spark(self):
-        return Spark.instance.spark()
+        """
+        Return a Spark session object
+        :return:
+        """
+        return Spark.instance.spark
 
     @property
     def sc(self):
-        return Spark.instance.sc()
+        """
+        Return a Spark Context object
+        :return:
+        """
+        return Spark.instance.sc
+
+    def stop(self):
+        """
+        Stop Spark Session
+        :return:
+        """
+        Spark.instance.spark.stop()
 
     @staticmethod
-    def concat(dfs, like):
-        return concat(dfs, like)
+    def add_spark_packages(packages):
+        """
+        Define the Spark packages that must be loaded at start time
+        :param packages:
+        :return:
+        """
+        os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages " + " ".join(packages)
 
     @staticmethod
     def set_check_point_folder(path, file_system):
@@ -106,7 +127,7 @@ class Optimus:
             logging.info("Hadoop folder created. \n")
 
             logging.info("Setting created folder as checkpoint folder...")
-            Spark.instance.sc().setCheckpointDir(folder_path)
+            Spark.instance.sc.setCheckpointDir(folder_path)
         elif file_system == "local":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
@@ -120,9 +141,9 @@ class Optimus:
             # Creates new folder:
             os.mkdir(folder_path)
 
-            Spark.instance.sc().setCheckpointDir(dirName="file:///" + folder_path)
+            Spark.instance.sc.setCheckpointDir(dirName="file:///" + folder_path)
         else:
-            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
+            RaiseIt.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
     def delete_check_point_folder(path, file_system):
@@ -156,4 +177,8 @@ class Optimus:
             else:
                 logging.info("Folder deleted.")
         else:
-            RaiseIfNot.value_error(file_system, ["hadoop", "local"])
+            RaiseIt.value_error(file_system, ["hadoop", "local"])
+
+    @staticmethod
+    def concat(dfs, like):
+        return concat(dfs, like)

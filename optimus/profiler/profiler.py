@@ -3,9 +3,11 @@ import logging
 import os
 from fastnumbers import fast_float
 
+import dateutil
 import jinja2
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
+from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.functions import parse_columns
@@ -56,7 +58,7 @@ class Profiler:
     @staticmethod
     def count_data_types(df, columns):
         """
-        Count the number of int, float, string and bool in a  in json format
+        Count the number of int, float, string, date and booleans and output the count in json format
         :param df:
         :param columns:
         :return:
@@ -69,11 +71,8 @@ class Profiler:
             :return:
             """
             temp = col_name + "_type"
-
+            # Count by data type
             types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().collect()
-
-            # Convert the collect result to a list
-            # TODO: check if collect_to_dict function can be used here
 
             count_by_data_type = {}
 
@@ -220,14 +219,17 @@ class Profiler:
             if column_type == "categorical" or column_type == "numeric" or column_type == "date" or column_type == "bool":
                 # Frequency
 
-                col_info['frequency'] = (df.groupBy(col_name)
-                                         .count()
-                                         .rows.sort([("count", "desc"), (col_name, "desc")])
-                                         .limit(10)
-                                         .withColumn("percentage",
-                                                     F.round((F.col("count") / rows_count) * 100,
-                                                             3))
-                                         .cols.rename(col_name, "value").to_json())
+                freq = (df.groupBy(col_name)
+                        .count()
+                        .rows.sort([("count", "desc"), (col_name, "desc")])
+                        .limit(buckets)
+                        .withColumn("percentage",
+                                    F.round((F.col("count") / rows_count) * 100,
+                                            3))
+                        .cols.rename(col_name, "value").to_json())
+
+                col_info['frequency'] = freq[:10]
+                col_info['frequency_graph'] = freq
 
                 # Uniques
                 uniques = stats[col_name].pop("approx_count_distinct")
@@ -237,7 +239,7 @@ class Profiler:
             if column_type == "numeric":
                 # Additional Stats
                 # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
-                # https: // stackoverflow.com / questions / 45287832 / pyspark - approxquantile - function
+                # https://stackoverflow.com/questions/45287832/pyspark-approxquantile-function
                 max_value = fast_float(max_value)
                 min_value = fast_float(min_value)
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
@@ -251,16 +253,87 @@ class Profiler:
 
                 col_info["hist"] = df.cols.hist(col_name, min_value, max_value, buckets)
 
+            if column_type == "categorical":
+                col_name_len = col_name + "_len"
+                df = df.cols.apply_expr(col_name_len, F.length(F.col(col_name)))
+                min_value = df.cols.min(col_name_len)
+                max_value = df.cols.max(col_name_len)
+
+                # Max value can be considered as the number of buckets
+                buckets_for_string = buckets
+                if max_value <= 50:
+                    buckets_for_string = max_value
+
+                col_info["hist"] = df.cols.hist(col_name_len, min_value, max_value, buckets_for_string)
+
+            if column_type == "date":
+                col_info["hist"] = {}
+
+                # Create year/month/week day/hour/minute
+                def infer_date(value, args):
+                    if value is None:
+                        result = [None]
+                    else:
+                        date = dateutil.parser.parse(value)
+                        result = [date.year, date.month, date.weekday(), date.hour, date.minute]
+                    return result
+
+                df = df \
+                    .cols.apply('year', infer_date, ArrayType(LongType())) \
+                    .cols.unnest("year") \
+                    .h_repartition()
+
+                for i in range(5):
+                    key_name = ""
+                    temp_col = col_name + "_" + str(i)
+                    # Years
+                    if i == 0:
+                        buckets_date = 100
+                        key_name = "years"
+
+                        min_value = df.cols.min(temp_col)
+                        max_value = df.cols.max(temp_col)
+
+                    # Months
+                    elif i == 1:
+                        buckets_date = 12
+                        min_value = 0
+                        max_value = 12
+                        key_name = "months"
+
+                    # Weekdays
+                    elif i == 2:
+                        buckets_date = 7
+                        min_value = 0
+                        max_value = 7
+                        key_name = "weekdays"
+
+                    # Hours
+                    elif i == 3:
+                        buckets_date = 24
+                        min_value = 0
+                        max_value = 24
+                        key_name = "hours"
+
+                    # Minutes
+                    elif i == 4:
+                        buckets_date = 60
+                        min_value = 0
+                        max_value = 60
+                        key_name = "minutes"
+
+                    col_info["hist"][key_name] = df.cols.hist(temp_col, min_value, max_value, buckets_date)
+
             column_info['columns'][col_name] = col_info
 
         return column_info
 
-    def run(self, df, columns, buckets=20):
+    def run(self, df, columns, buckets=40):
         """
         Return statistical information in HTML Format
-        :param df:
-        :param columns:
-        :param buckets:
+        :param df: Dataframe to be analyzed
+        :param columns: Columns to be analized
+        :param buckets: number of buckets calculated to print the histogram
         :return:
         """
 
@@ -282,16 +355,28 @@ class Profiler:
 
         # Create every column stats
         for col_name in columns:
-            if "hist" in output["columns"][col_name]:
-                hist_pic = plot_hist({col_name: output["columns"][col_name]["hist"]}, output="base64")
-            else:
-                hist_pic = None
-            if "frequency" in output["columns"][col_name]:
-                freq_pic = plot_freq({col_name: output["columns"][col_name]["frequency"]}, output="base64")
+            hist_pic = None
+            col = output["columns"][col_name]
+
+            if "hist" in col:
+                if col["column_dtype"] == "date":
+                    hist_year = plot_hist({col_name: col["hist"]["years"]}, "base64", "years")
+                    hist_month = plot_hist({col_name: col["hist"]["months"]}, "base64", "months")
+                    hist_weekday = plot_hist({col_name: col["hist"]["weekdays"]}, "base64", "weekdays")
+                    hist_hour = plot_hist({col_name: col["hist"]["hours"]}, "base64", "hours")
+                    hist_minute = plot_hist({col_name: col["hist"]["minutes"]}, "base64", "minutes")
+                    hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
+                                "hist_hours": hist_hour, "hist_minutes": hist_minute}
+                else:
+                    hist = plot_hist({col_name: col["hist"]}, output="base64")
+                    hist_pic = {"hist_pic": hist}
+
+            if "frequency" in col:
+                freq_pic = plot_freq({col_name: col["frequency_graph"]}, output="base64")
             else:
                 freq_pic = None
 
-            html = html + template.render(data=output["columns"][col_name], hist_pic=hist_pic, freq_pic=freq_pic)
+            html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
 
         html = html + df.table_html(10)
         # df.plots.correlation(columns)
@@ -309,7 +394,6 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: column to calculate the histogram
         :param buckets: buckets on the histogram
-        :param path: Path where the json is going to be saved
         :return: json file
         """
 
