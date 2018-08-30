@@ -2,6 +2,7 @@ import builtins
 import itertools
 import re
 import string
+import timeit
 import unicodedata
 from fastnumbers import fast_float
 from functools import reduce
@@ -18,7 +19,7 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
@@ -243,23 +244,23 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-            # Parse standard data types
-            if get_spark_dtypes_object(cls):
-                func_type = "column_exp"
-
-                def cast_to_vectors(col_name, attr):
-                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
-
-                func_return_type = None
-
             # Parse to Vector
-            elif is_type(cls, Vectors):
+            if is_type(cls, Vectors):
                 func_type = "udf"
 
                 def cast_to_vectors(val, attr):
                     return Vectors.dense(val)
 
                 func_return_type = VectorUDT()
+            # Parse standard data types
+            elif get_spark_dtypes_object(cls):
+
+                func_type = "column_exp"
+
+                def cast_to_vectors(col_name, attr):
+                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
+
+                func_return_type = None
 
             # Add here any other parse you want
             else:
@@ -523,13 +524,15 @@ def cols(self):
         return percentile(columns, [0.5])
 
     @add_attr(cols)
-    def percentile(columns, values=None, error=0):
+    def percentile(columns, values=None, error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
         :return: percentiles per columns
         """
+        start_time = timeit.default_timer()
+
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -547,6 +550,8 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
+        logging.info("percentile")
+        logging.info(timeit.default_timer() - start_time)
         return format_dict(percentile_results)
 
     # Descriptive Analytics

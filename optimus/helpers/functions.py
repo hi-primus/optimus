@@ -49,7 +49,7 @@ def get_spark_dtypes_object(value):
     try:
         data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
 
-    except KeyError:
+    except (KeyError, TypeError):
         data_type = value
 
     data_type = one_list_to_val(data_type)
