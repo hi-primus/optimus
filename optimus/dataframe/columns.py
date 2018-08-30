@@ -18,7 +18,7 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
@@ -243,23 +243,23 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-            # Parse standard data types
-            if get_spark_dtypes_object(cls):
-                func_type = "column_exp"
-
-                def cast_to_vectors(col_name, attr):
-                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
-
-                func_return_type = None
-
             # Parse to Vector
-            elif is_type(cls, Vectors):
+            if is_type(cls, Vectors):
                 func_type = "udf"
 
                 def cast_to_vectors(val, attr):
                     return Vectors.dense(val)
 
                 func_return_type = VectorUDT()
+            # Parse standard data types
+            elif get_spark_dtypes_object(cls):
+
+                func_type = "column_exp"
+
+                def cast_to_vectors(col_name, attr):
+                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
+
+                func_return_type = None
 
             # Add here any other parse you want
             else:
