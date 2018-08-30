@@ -60,7 +60,7 @@ setup(
     },
     dependency_links=dependency_links,
     test_suite='nose.collector',
-    include_package_data=False,
+    include_package_data=True,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
