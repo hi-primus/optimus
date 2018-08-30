@@ -141,7 +141,7 @@ class Profiler:
         return results
 
     @staticmethod
-    def columns(df, columns, buckets=10, relative_error=1):
+    def columns(df, columns, buckets=40, relative_error=1):
         """
         Return statistical information about a specific column in json format
         count_data_type()
@@ -165,11 +165,7 @@ class Profiler:
         rows_count = df.count()
         column_info['rows_count'] = rows_count
 
-        # count_dtypes = Profiler.count_data_types(df, columns)
-        count_dtypes = {'count_types': {'numeric': 1, 'categorical': 0, 'date': 0, 'null': 0}, 'columns': {
-            'product_id': {'dtype': 'int', 'type': 'numeric',
-                           'details': {'string': 0, 'bool': 0, 'int': 32434489, 'float': 0, 'date': 0, 'null': 0,
-                                       'missing': 0}}}}
+        count_dtypes = Profiler.count_data_types(df, columns)
 
         column_info["count_types"] = count_dtypes["count_types"]
         column_info['size'] = human_readable_bytes(df.size())
@@ -246,7 +242,6 @@ class Profiler:
                 # https://stackoverflow.com/questions/45287832/pyspark-approxquantile-function
                 max_value = fast_float(max_value)
                 min_value = fast_float(min_value)
-                print(relative_error)
                 col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95],
                                                                    relative_error)
 
@@ -396,7 +391,7 @@ class Profiler:
         write_json(output, self.path)
 
     @staticmethod
-    def to_json(df, columns, buckets=20, relative_error=1):
+    def to_json(df, columns, buckets=40, relative_error=1):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
