@@ -1,7 +1,9 @@
-from optimus import Optimus
-from pyspark.sql.types import *
+from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import Row
 from pyspark.sql import functions as F
+from pyspark.sql.types import *
+
+from optimus import Optimus
 
 op = Optimus()
 sc = op.sc
@@ -385,6 +387,34 @@ class TestDataFrameCols(object):
             ],
             cols=[
                 ("emotion", StringType(), True),
+                ("num", StringType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    @staticmethod
+    def test_cast_vector():
+        source_df = op.create.df(
+            rows=[
+                ("happy", [1, 2, 3]),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", ArrayType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.cast("happy", Vectors)
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy",[1, 2, 3]),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", VectorUDT(), True),
                 ("num", StringType(), True)
             ]
         )
