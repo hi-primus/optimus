@@ -9,6 +9,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
+from optimus.server.server import Server
 from optimus.spark import Spark
 
 Spark.instance = None
@@ -17,7 +18,7 @@ Spark.instance = None
 class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
-                 verbose=False, dl=False):
+                 verbose=False, dl=False, server=False):
 
         """
         Transform and roll out
@@ -41,7 +42,6 @@ class Optimus:
             from optimus.dl.models import DL
             self.dl = DL()
         else:
-
             Spark.instance = Spark(master, app_name)
             pass
 
@@ -61,6 +61,12 @@ class Optimus:
         logging.info(STARTING_OPTIMUS)
         if checkpoint is True:
             self.set_check_point_folder(path, file_system)
+
+        if server is True:
+            logging.info("Starting Optimus Server...")
+            s = Server()
+            s.start()
+            self.server_instance = s
 
         logging.info(SUCCESS)
 
