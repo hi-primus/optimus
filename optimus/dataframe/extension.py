@@ -1,6 +1,8 @@
 import logging
+import multiprocessing
 import os
 
+import humanize
 import jinja2
 from IPython.core.display import display, HTML
 from pyspark.ml.feature import SQLTransformer
@@ -12,7 +14,6 @@ from pyspark.sql import functions as F
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list
 from optimus.spark import Spark
-import multiprocessing
 
 cpu_count = multiprocessing.cpu_count()
 
@@ -205,14 +206,17 @@ def table_html(self, limit=100, columns=None):
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type info need it
-    dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
+    dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
 
     total_rows = self.count()
     if total_rows < limit:
         limit = total_rows
 
+    total_rows = humanize.intword(total_rows)
+    total_cols = self.cols.count()
+
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=self.cols.count())
+    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols)
     return output
 
 

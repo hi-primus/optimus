@@ -11,8 +11,10 @@ from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.functions import parse_columns
-from optimus.profiler.functions import human_readable_bytes, fill_missing_var_types, fill_missing_col_types, \
+from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json
+
+import humanize
 
 
 class Profiler:
@@ -51,7 +53,7 @@ class Profiler:
             {'cols_count': cols_count,
              'rows_count': rows_count,
              'missing_count': str(missing_count / rows_count) + "%",
-             'size': human_readable_bytes(df.size())}
+             'size': humanize.naturalsize(df.size())}
         )
 
     # TODO: This should check only the StringType Columns. The datatype from others columns can be taken from schema().
@@ -168,7 +170,7 @@ class Profiler:
         count_dtypes = Profiler.count_data_types(df, columns)
 
         column_info["count_types"] = count_dtypes["count_types"]
-        column_info['size'] = human_readable_bytes(df.size())
+        column_info['size'] = humanize.naturalsize(df.size())
 
         def na(col_name):
             return F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name))

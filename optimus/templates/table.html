@@ -11,6 +11,7 @@
         font-size: 0.8em;
     }
 
+
 </style>
 
 {% macro header_footer(limit, total_rows, total_cols) %}
@@ -25,7 +26,9 @@
         <th>
             <div class="column_name">{{col[0]}}</div>
             <div class="data_type">{{loop.index}} ({{col[1]}})</div>
-
+            {% if col[2] == true %}
+                <div class="data_type">nullable</div>
+            {% endif %}
         </th>
         {% endfor %}
     </tr>
