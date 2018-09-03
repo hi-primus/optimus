@@ -1,15 +1,18 @@
+from multipledispatch import dispatch
 from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple
-from optimus.helpers.constants import SPARK_DTYPES
 from optimus.helpers.functions import get_spark_dtypes_object
 from optimus.spark import Spark
+
+import pandas as pdf
 
 
 class Create:
 
     @staticmethod
+    @dispatch(list, list)
     def data_frame(cols, rows):
         """
         Helper to create a Spark dataframe:
@@ -42,9 +45,19 @@ class Create:
             # If tuple has not the third param with put it to true to accepts Null in columns
             specs.append([col_name, var_type, nullable])
 
-
         struct_fields = list(map(lambda x: StructField(*x), specs))
 
         return Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
+
+    @staticmethod
+    @dispatch(object)
+    def data_frame(pdf):
+        """
+        Helper to create a Spark dataframe:
+        :param pdf: List of Tuple with name, data type and a flag to accept null
+        :return: Dataframe
+        """
+
+        return Spark.instance.spark.createDataFrame(pdf)
 
     df = data_frame
