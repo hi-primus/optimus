@@ -1,14 +1,31 @@
 <style>
-    .data_type{
+    .data_type {
         font-size: 0.8em;
-        font-weight:normal;
+        font-weight: normal;
     }
-    .column_name{
+
+    .column_name {
         font-size: 1.2em;
     }
-    .info_items{
+
+    .info_items {
         margin: 10px 0;
         font-size: 0.8em;
+    }
+
+    .optimus_table tr:nth-child(even) {
+        background-color: #f2f2f2 !important;
+    }
+
+    .optimus_table tr:nth-child(odd) {
+        background-color: #ffffff !important;
+    }
+
+    .optimus_table thead {
+        border-bottom: 1px solid black;
+    }
+    .optimus_table{
+        font-size: 12px;
     }
 
 
@@ -19,16 +36,18 @@
 {% endmacro %}
 
 {{header_footer(limit, total_rows, total_cols)}}
-<table>
+<table class="optimus_table">
     <thead>
     <tr>
         {%for col in cols: %}
         <th>
             <div class="column_name">{{col[0]}}</div>
             <div class="data_type">{{loop.index}} ({{col[1]}})</div>
-            {% if col[2] == true %}
-                <div class="data_type">nullable</div>
-            {% endif %}
+            <div class="data_type">
+                {% if col[2] == true %}
+                nullable
+                {% endif %}
+            </div>
         </th>
         {% endfor %}
     </tr>
