@@ -72,9 +72,17 @@ class Profiler:
             :param col_name:
             :return:
             """
+
+            # If String, process the data to try to infer which data type is inside. This a kind of optimization.
+            # We do not need to analyze the data if the column data type is integer or boolean.etc
             temp = col_name + "_type"
-            # Count by data type
-            types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().collect()
+
+            col_data_type = df.cols.dtype(col_name)
+            if col_data_type is "string":
+                types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().collect()
+            else:
+                # All the columns elements has the sime type
+                types = {col_data_type: df.count()}
 
             count_by_data_type = {}
 
@@ -88,7 +96,6 @@ class Profiler:
             count_empty_strings = df.where(F.col(col_name) == '').count()
             count_by_data_type['string'] = count_by_data_type['string'] - count_empty_strings
 
-            # if the data type is string we try to infer
             data_types_count = {"string": count_by_data_type['string'],
                                 "bool": count_by_data_type['bool'],
                                 "int": count_by_data_type['int'],
@@ -146,10 +153,10 @@ class Profiler:
     def columns(df, columns, buckets=40, relative_error=1):
         """
         Return statistical information about a specific column in json format
-        count_data_type()
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
-        :param buckets:
+        :param buckets: Create buckets divided by range. Each bin is equal.
+        :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
         :return: json object with the
         """
 

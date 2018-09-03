@@ -18,7 +18,7 @@ from pyspark.sql.functions import Column
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
-    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    import is_num_or_str, is_list, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
 # Helpers
 from optimus.helpers.constants import *
@@ -1049,7 +1049,7 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtypes(_col_name)
+            data_type = self.cols.dtype(_col_name)
             _search = [PYTHON_TYPES_[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
@@ -1221,7 +1221,7 @@ def cols(self):
     def cell(column):
         """
         Get the value for the first cell from a column in a data frame
-        :param column: Column to be
+        :param column: Column to be processed
         :return:
         """
         return self.cols.select(column).first()[0]
@@ -1282,7 +1282,7 @@ def cols(self):
     def frequency(columns, buckets=10):
         """
         Output values frequency in json format
-        :param columns: Column to be processed
+        :param columns: Columns to be processed
         :param buckets: Number of buckets
         :return:
         """
@@ -1297,18 +1297,18 @@ def cols(self):
     @add_attr(cols)
     def schema_dtypes(columns):
         """
-        Return the columns data type as Type
-        :param columns:
+        Return the column(s) data type as Type
+        :param columns: Columns to be processed
         :return:
         """
         columns = parse_columns(self, columns)
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtypes(columns):
+    def dtype(columns):
         """
-        Return the column data type as string
-        :param columns:
+        Return the column(s) data type as string
+        :param columns: Columns to be processed
         :return:
         """
 
@@ -1320,10 +1320,10 @@ def cols(self):
     @add_attr(cols)
     def qcut(input_col, output_col, num_buckets):
         """
-        Bin columns into n buckets
-        :param input_col:
-        :param output_col:
-        :param num_buckets:
+        Bin columns into n buckets. Quantile Discretizer
+        :param input_col: Input column to processed
+        :param output_col: Output columns with the bin number
+        :param num_buckets: Number of buckets in which the column will be divided
         :return:
         """
         discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)
@@ -1364,6 +1364,7 @@ def cols(self):
         for col_name in columns:
             df = df.withColumn(col_name, F.abs(F.col(col_name)))
         return df
+
 
     return cols
 

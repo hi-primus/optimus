@@ -10,7 +10,6 @@ from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
     get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
@@ -100,7 +99,7 @@ def filter_row_by_data_type_audf(col_name, data_type):
     """
 
     data_type = parse_python_dtypes(data_type)
-    return abstract_udf(col_name, is_data_type, "boolean", data_type)
+    return abstract_udf(col_name, filter_row_by_data_type, "boolean", data_type)
 
 
 def concat(dfs, like="columns"):
@@ -270,6 +269,18 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             except ValueError:
                 pass
 
+        def str_to_array(value):
+            """
+            Because Spark can handle tuples we will try to transform tuples to arrays
+            :param value:
+            :return:
+            """
+            try:
+                dateutil.parser.parse(value)
+                return True
+            except ValueError:
+                pass
+
         def func(value):
             """
             Check if a value can be casted to a specific
@@ -290,6 +301,8 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
                     _data_type = "bool"
                 elif str_to_date(value):
                     _data_type = "date"
+                elif str_to_array(value):
+                    _data_type = "array"
                 else:
                     _data_type = "string"
             else:
