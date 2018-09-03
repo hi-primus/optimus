@@ -57,6 +57,7 @@ class Load:
         :return:
         """
         try:
+            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read.json(path)
         except IOError as error:
             logging.error(error)
@@ -107,9 +108,13 @@ class Load:
 
     @staticmethod
     def avro(path, *args, **kwargs):
-        print("Not yet implemented")
-        return
+        try:
+            df = Spark.instance.spark.read.format("com.databricks.spark.avro").load(path, *args, **kwargs)
+        except IOError as error:
+            logging.error(error)
+            raise
 
+        return df
 
 
 class Downloader(object):
