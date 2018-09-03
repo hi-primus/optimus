@@ -1,6 +1,4 @@
-from pyspark.ml.linalg import Vectors, VectorUDT
-from pyspark.sql import Row
-from pyspark.sql import functions as F
+import pandas as pd
 from pyspark.sql.types import *
 
 from optimus import Optimus
@@ -82,6 +80,32 @@ class TestDataFrameCols(object):
         )
 
         actual_df = source_df
+
+        expected_df = op.create.df(
+            rows=[
+                ("BOB", 1),
+                ("JoSe", 2)
+            ],
+            cols=
+            [
+                ("name", StringType(), True),
+                ("age", IntegerType(), True)
+            ]
+        )
+
+        assert (expected_df.collect() == actual_df.collect())
+
+    @staticmethod
+    def test_create_data_frames_pandas():
+        labels = ["name", "age"]
+
+        data = [("BOB", 1),
+                ("JoSe", 2)]
+
+        # Create pandas dataframe
+        pdf = pd.DataFrame.from_records(data, columns=labels)
+
+        actual_df = op.create.df(pdf)
 
         expected_df = op.create.df(
             rows=[
