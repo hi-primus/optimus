@@ -28,14 +28,14 @@
         font-size: 12px;
     }
 
-
 </style>
 
-{% macro header_footer(limit, total_rows, total_cols) %}
+{% macro header_footer(limit, total_rows, total_cols, partitions) %}
 <div class="info_items">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
+<div class="info_items">{{partitions}} partition(s)</div>
 {% endmacro %}
 
-{{header_footer(limit, total_rows, total_cols)}}
+{{header_footer(limit, total_rows, total_cols, partitions)}}
 <table class="optimus_table">
     <thead>
     <tr>
@@ -65,4 +65,4 @@
     {% endfor %}
     </tbody>
 </table>
-{{header_footer(limit, total_rows, total_cols)}}
+{{header_footer(limit, total_rows, total_cols,partitions)}}

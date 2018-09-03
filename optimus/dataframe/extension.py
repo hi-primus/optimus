@@ -166,11 +166,11 @@ def sql(self, sql_expression):
 @add_attr(DataFrame)
 def partitions(self):
     """
-    Return dataframes partitions number
-    :param self:
-    :return:
+    Return the dataframe partitions number
+    :param self: Dataframe
+    :return: Number of partitions
     """
-    print(self.rdd.getNumPartitions())
+    return self.rdd.getNumPartitions()
 
 
 @add_method(DataFrame)
@@ -213,9 +213,11 @@ def table_html(self, limit=100, columns=None):
 
     total_rows = humanize.intword(total_rows)
     total_cols = self.cols.count()
+    total_partitions = self.partitions()
 
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols)
+    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
+                             partitions=total_partitions)
     return output
 
 
