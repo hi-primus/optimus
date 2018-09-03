@@ -19,10 +19,9 @@ cpu_count = multiprocessing.cpu_count()
 
 
 @add_method(DataFrame)
-def rollout(self):
+def rollout():
     """
     Just a function to check if the Spark dataframe has been Monkey Patched
-    :param self:
     :return:
     """
     print("Yes!")
@@ -280,3 +279,15 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
     return result
+
+
+@add_method(DataFrame)
+def create_id(self, column="id"):
+    """
+    Create a unique id for every row.
+    :param self:
+    :param column:
+    :return:
+    """
+
+    return self.withColumn(column, F.monotonically_increasing_id())
