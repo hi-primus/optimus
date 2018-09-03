@@ -269,7 +269,7 @@ class Optimus:
 
     def _start_session(self):
         """
-
+        Start a Spark session using jar, packages, repositories and options given
         :return:
         """
         ## Get python.exe fullpath
@@ -289,6 +289,24 @@ class Optimus:
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
         Spark.instance = Spark(self.master, self.app_name)
+
+    def has_package(self, package_prefix):
+        """
+        Check if the package is available in the session.
+        :param package_prefix: E.g. "org.elasticsearch:elasticsearch-spark".
+        :type package_prefix: str
+        :return bool
+        """
+        return any(package for package in self.packages if package.startswith(package_prefix))
+
+    def has_jar(self, jar_name):
+        """
+        Check if the jar is available in the session.
+        :param jar_name: E.g. "mysql-connector-java".
+        :type jar_name: str
+        :return: bool
+        """
+        return any(jar for jar in self.jars if jar_name in jar)
 
     @staticmethod
     def verbose(verbose):
