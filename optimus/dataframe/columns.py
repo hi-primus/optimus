@@ -16,7 +16,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import Column
 
 from optimus.functions import abstract_udf as audf, concat
-    from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
     import is_num_or_str, is_list, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
@@ -1364,7 +1365,6 @@ def cols(self):
         for col_name in columns:
             df = df.withColumn(col_name, F.abs(F.col(col_name)))
         return df
-
 
     return cols
 
