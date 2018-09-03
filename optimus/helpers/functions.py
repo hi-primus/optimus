@@ -16,7 +16,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 def random_int(n=5):
     """
-    Create a unique filename
+    Create a random string of ints
     :return:
     """
     return str(random.randint(1, 10 ** n))
@@ -185,8 +185,8 @@ def format_dict(val):
 def validate_columns_names(df, col_names, index=0):
     """
     Check if a string or list of string are valid dataframe columns
-    :param df:
-    :param col_names:
+    :param df: Data frame to be analyzed
+    :param col_names: columns names to be checked
     :param index:
     :return:
     """

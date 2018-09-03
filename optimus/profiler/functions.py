@@ -58,20 +58,6 @@ def write_json(data, path):
         pass
 
 
-def human_readable_bytes(value, suffix='B'):
-    """
-    Return a human readable file size
-    :param value:
-    :param suffix:
-    :return:
-    """
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(value) < 1024.0:
-            return "%3.1f%s%s" % (value, unit, suffix)
-        value /= 1024.0
-    return "%.1f%s%s" % (value, 'Yi', suffix)
-
-
 def sample_size(population_size, confidence_level, confidence_interval):
     """
     Get a sample number of the whole population

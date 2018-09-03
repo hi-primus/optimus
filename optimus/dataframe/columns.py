@@ -851,16 +851,38 @@ def cols(self):
     @add_attr(cols)
     def fill_na(columns, value):
         """
-        Reaplce null data with a specified value
+        Replace null data with a specified value
+        :param columns:
+        :param value:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        def _fill_na(_col_name, _value):
+            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(_col_name)
+
+        df = self
+        for col_name in columns:
+            df = df.cols.apply_expr(col_name, _fill_na, value)
+        return df
+
+    @add_attr(cols)
+    def is_na(columns):
+        """
+        Replace null values per True and non null per False
         :param columns:
         :param value:
         :return:
         """
 
-        def _fill_na(col_name, args):
-            return F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name).otherwise(args)
+        def _replace_na(_col_name, _value):
+            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
 
-        return self.cols.apply_expr(columns, _fill_na, value)
+        df = self
+        for col_name in columns:
+            df = df.cols.apply_expr(col_name, _replace_na)
+
+        return df
 
     @add_attr(cols)
     def count():
@@ -1001,25 +1023,25 @@ def cols(self):
         :param regex:
         :return:
         """
-        replace = None
+        _replace = None
         search = None
 
         if is_list_of_tuples(search_and_replace):
             params = list(zip(*search_and_replace))
             search = list(params[0])
-            replace = list(params[1])
+            _replace = list(params[1])
 
         elif is_list(search_and_replace):
             search = search_and_replace
-            replace = value
+            _replace = value
 
         elif is_one_element(search_and_replace):
             search = val_to_list(search_and_replace)
-            replace = value
+            _replace = value
 
         if regex:
             search = search_and_replace
-            replace = value
+            _replace = value
 
         # if regex or normal replace we use regexp or replace functions
         # TODO check if .contains can be used instead of regexp
@@ -1041,7 +1063,7 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes="string")
         for c in columns:
-            df = func(df, c, search, replace)
+            df = func(df, c, search, _replace)
 
         return df
 

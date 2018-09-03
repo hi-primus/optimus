@@ -6,7 +6,6 @@ from pyspark.sql.types import *
 from optimus import Optimus
 
 op = Optimus()
-sc = op.sc
 
 
 class TestDataFrameCols(object):
@@ -410,7 +409,7 @@ class TestDataFrameCols(object):
 
         expected_df = op.create.df(
             rows=[
-                ("happy",[1, 2, 3]),
+                ("happy", [1, 2, 3]),
                 ("excited", 2)
             ],
             cols=[
@@ -552,6 +551,66 @@ class TestDataFrameCols(object):
             cols=[
                 ("num", IntegerType(), True),
                 ("emotion", StringType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    @staticmethod
+    def test_fill_na():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1, None),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.fill_na("*", "N/A")
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1, "N/A"),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
+
+        assert (actual_df.collect() == expected_df.collect())
+
+    @staticmethod
+    def test_is_na():
+        source_df = op.create.df(
+            rows=[
+                ("happy", None, 1),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.fill_na("*", "N/A")
+
+        expected_df = op.create.df(
+            rows=[
+                (False, True, False),
+                (False, False, False)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
             ]
         )
 
