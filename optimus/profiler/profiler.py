@@ -130,12 +130,13 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
+        # Info from all the columns
         type_details = {c: _count_data_types(c) for c in columns}
 
         results = {}
         count_types = {}
 
-        # Count the categorical, numerical and date columns
+        # Count the categorical, numerical, boolean and date columns
         for v in type_details.values():
             name = v["type"]
             if name in count_types:
@@ -172,7 +173,7 @@ class Profiler:
         column_info['columns'] = {}
 
         rows_count = df.count()
-        column_info['rows_count'] = rows_count
+        column_info['rows_count'] = humanize.intword(rows_count)
 
         count_dtypes = Profiler.count_data_types(df, columns)
 
