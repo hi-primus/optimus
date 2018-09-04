@@ -17,12 +17,13 @@ from pyspark.sql.functions import Column
 
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit \
-    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    import is_num_or_str, is_list, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
 # Helpers
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import add_attr
+from optimus.helpers.decorators import add_attr, time_it
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
@@ -413,7 +414,7 @@ def cols(self):
             df = df.drop(column)
         return df
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     def _exprs(funcs, columns):
         """
         Helper function to apply multiple columns expression to multiple columns
@@ -468,11 +469,9 @@ def cols(self):
             for func in funcs:
                 exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-        return (
-            parse_col_names_funcs_to_keys(
-                format_dict(df.agg(*exprs).to_json())
-            )
-        )
+        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*exprs).to_json()))
+        # logging.info(result)
+        return result
 
     # Quantile statistics
     @add_attr(cols)
@@ -523,15 +522,15 @@ def cols(self):
 
         return percentile(columns, [0.5])
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     def percentile(columns, values=None, error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
+        :param error:
         :return: percentiles per columns
         """
-        start_time = timeit.default_timer()
 
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -550,8 +549,6 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
-        logging.info("percentile")
-        logging.info(timeit.default_timer() - start_time)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
@@ -1049,7 +1046,7 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtypes(_col_name)
+            data_type = self.cols.dtype(_col_name)
             _search = [PYTHON_TYPES_[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
@@ -1221,7 +1218,7 @@ def cols(self):
     def cell(column):
         """
         Get the value for the first cell from a column in a data frame
-        :param column: Column to be
+        :param column: Column to be processed
         :return:
         """
         return self.cols.select(column).first()[0]
@@ -1273,7 +1270,7 @@ def cols(self):
 
         return hist_data
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
         return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
@@ -1282,7 +1279,7 @@ def cols(self):
     def frequency(columns, buckets=10):
         """
         Output values frequency in json format
-        :param columns: Column to be processed
+        :param columns: Columns to be processed
         :param buckets: Number of buckets
         :return:
         """
@@ -1297,18 +1294,18 @@ def cols(self):
     @add_attr(cols)
     def schema_dtypes(columns):
         """
-        Return the columns data type as Type
-        :param columns:
+        Return the column(s) data type as Type
+        :param columns: Columns to be processed
         :return:
         """
         columns = parse_columns(self, columns)
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtypes(columns):
+    def dtype(columns):
         """
-        Return the column data type as string
-        :param columns:
+        Return the column(s) data type as string
+        :param columns: Columns to be processed
         :return:
         """
 
@@ -1320,10 +1317,10 @@ def cols(self):
     @add_attr(cols)
     def qcut(input_col, output_col, num_buckets):
         """
-        Bin columns into n buckets
-        :param input_col:
-        :param output_col:
-        :param num_buckets:
+        Bin columns into n buckets. Quantile Discretizer
+        :param input_col: Input column to processed
+        :param output_col: Output columns with the bin number
+        :param num_buckets: Number of buckets in which the column will be divided
         :return:
         """
         discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)
