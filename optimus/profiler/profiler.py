@@ -61,7 +61,7 @@ class Profiler:
     # TODO: This should check only the StringType Columns. The datatype from others columns can be taken from schema().
     @staticmethod
     @time_it
-    def count_data_types(df, columns):
+    def count_data_types(df, columns, infer=False):
         """
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
@@ -85,13 +85,14 @@ class Profiler:
 
             count_by_data_type = {}
             count_empty_strings = 0
-            if col_data_type == "string":
+
+            if infer is True and col_data_type == "string":
+
                 types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().to_json()
                 for row in types:
                     count_by_data_type[row[temp]] = row["count"]
 
                 count_empty_strings = df.where(F.col(col_name) == '').count()
-                #count_by_data_type['string'] = count_by_data_type['string'] - count_empty_strings
 
             else:
                 nulls = df.cols.count_na(col_name)
@@ -105,7 +106,8 @@ class Profiler:
                                 "bool": count_by_data_type['bool'],
                                 "int": count_by_data_type['int'],
                                 "float": count_by_data_type['float'],
-                                "date": count_by_data_type['date']
+                                "date": count_by_data_type['date'],
+                                "array": count_by_data_type['array']
                                 }
 
             null_missed_count = {"null": count_by_data_type['null'],
@@ -123,6 +125,8 @@ class Profiler:
                 cat = "date"
             elif greatest_data_type_count is "bool":
                 cat = "bool"
+            elif greatest_data_type_count is "array":
+                cat = "array"
             else:
                 cat = "null"
 
@@ -155,7 +159,7 @@ class Profiler:
         results["columns"] = type_details
         return results
 
-    def run(self, df, columns, buckets=40, relative_error=1):
+    def run(self, df, columns, buckets=40, infer=False, relative_error=1):
         """
         Return dataframe statistical information in HTML Format
 
@@ -167,7 +171,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        output = Profiler.to_json(df, columns, buckets, relative_error)
+        output = Profiler.to_json(df, columns, buckets, infer, relative_error)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -217,7 +221,7 @@ class Profiler:
         write_json(output, self.path)
 
     @staticmethod
-    def to_json(df, columns, buckets=40, relative_error=1):
+    def to_json(df, columns, buckets=40, infer=False, relative_error=1):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -227,7 +231,7 @@ class Profiler:
         """
 
         # Get the stats for all the columns
-        output = Profiler.columns(df, columns, buckets, relative_error)
+        output = Profiler.columns(df, columns, buckets, infer, relative_error)
 
         # Add the data summary to the output
         output["summary"] = Profiler.dataset_info(df)
@@ -241,7 +245,7 @@ class Profiler:
         return output
 
     @staticmethod
-    def columns(df, columns, buckets=40, relative_error=1):
+    def columns(df, columns, buckets=40, infer=False, relative_error=1):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -264,8 +268,7 @@ class Profiler:
 
         rows_count = df.count()
         columns_info['rows_count'] = humanize.intword(rows_count)
-
-        count_dtypes = Profiler.count_data_types(df, columns)
+        count_dtypes = Profiler.count_data_types(df, columns, infer)
 
         columns_info["count_types"] = count_dtypes["count_types"]
         columns_info['size'] = humanize.naturalsize(df.size())
@@ -295,7 +298,7 @@ class Profiler:
                 col_info["stats"].update(Profiler.extra_numeric_stats(df, col_name, stats, relative_error))
                 col_info["hist"] = df.cols.hist(col_name, stats[col_name]["min"], stats[col_name]["max"], buckets)
 
-            if column_type == "categorical":
+            if column_type == "categorical" or column_type == "array":
                 col_info["hist"] = Profiler.hist_string(df, col_name, buckets)
 
             if column_type == "date":
