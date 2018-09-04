@@ -23,7 +23,7 @@ from optimus.helpers.checkit \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
 # Helpers
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import add_attr
+from optimus.helpers.decorators import add_attr, time_it
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
@@ -414,7 +414,7 @@ def cols(self):
             df = df.drop(column)
         return df
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     def _exprs(funcs, columns):
         """
         Helper function to apply multiple columns expression to multiple columns
@@ -469,11 +469,9 @@ def cols(self):
             for func in funcs:
                 exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-        return (
-            parse_col_names_funcs_to_keys(
-                format_dict(df.agg(*exprs).to_json())
-            )
-        )
+        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*exprs).to_json()))
+        # logging.info(result)
+        return result
 
     # Quantile statistics
     @add_attr(cols)
@@ -524,15 +522,15 @@ def cols(self):
 
         return percentile(columns, [0.5])
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     def percentile(columns, values=None, error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
+        :param error:
         :return: percentiles per columns
         """
-        start_time = timeit.default_timer()
 
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -551,8 +549,6 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
-        logging.info("percentile")
-        logging.info(timeit.default_timer() - start_time)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
@@ -1274,7 +1270,7 @@ def cols(self):
 
         return hist_data
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
         return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
