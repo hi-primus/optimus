@@ -159,6 +159,7 @@ class Profiler:
         results["columns"] = type_details
         return results
 
+    @time_it
     def run(self, df, columns, buckets=40, infer=False, relative_error=1):
         """
         Return dataframe statistical information in HTML Format
