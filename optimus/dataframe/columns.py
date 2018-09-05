@@ -1223,7 +1223,7 @@ def cols(self):
         """
         return self.cols.select(column).first()[0]
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
         """
