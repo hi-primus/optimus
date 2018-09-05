@@ -523,6 +523,7 @@ class Profiler:
         return col_info
 
     @staticmethod
+    @time_it
     def hist_string(df, col_name, buckets):
         """
         Create a string for a date type column
