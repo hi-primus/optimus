@@ -1,6 +1,10 @@
-from optimus.server.process import Process
+import logging
 import os
-import atexit
+import signal
+
+from psutil import NoSuchProcess
+
+from optimus.server.process import Process
 
 
 class Server:
@@ -10,14 +14,40 @@ class Server:
 
         self.process = None
         self.path = path
+        self.pid = None
+        self.pid_file = "server.pid"
+        signal.signal(signal.SIGINT, self.stop)
 
     def start(self):
-        self.process = Process(self.path)
+        """
+        Start the Optimus Server
+        :return:
+        """
+
+        pid_file = self.pid_file
+
+        # Verify if server.pid exist
+        if os.path.isfile(pid_file):
+            pid = int(open(pid_file, 'r').read())
+            logging.info("Server seems to be running with process id {pid}".format(pid=pid))
+            self.pid = pid
+
+        else:
+            # Start the server
+            process = Process(self.path)
+            pid = process.id
+            logging.info("Server started with process id " + str(pid))
+            open(pid_file, 'w').write(str(pid))
+            self.pid = pid
 
     def stop(self):
-        self.process.stop()
-
-    @atexit.register
-    def goodbye(self):
-        self.stop()
-        print("You are now leaving the Python sector.")
+        """
+        Stop the Optimus Server
+        :return:
+        """
+        try:
+            Process.stop_id(self.pid)
+            logging.info("Optimus Server stopped")
+        except (ProcessLookupError, NoSuchProcess):
+            os.remove(self.pid_file)
+            logging.info("Optimus could not be stopped. Process id not found")

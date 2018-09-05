@@ -32,3 +32,4 @@ examples/random.csv
 data.json
 .pytest_cache/README.md
 examples/order_products__prior.csv
+examples/server.pid

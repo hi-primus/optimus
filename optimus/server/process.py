@@ -6,6 +6,7 @@ import sys
 from subprocess import Popen, PIPE
 
 WINDOWS = "windows"
+PLATFORM = platform.system().lower()
 
 # test https://stackoverflow.com/questions/984941/python-subprocess-popen-from-a-thread
 
@@ -18,7 +19,7 @@ class Process:
 
         # set system/version dependent "start_new_session" analogs
         kwargs = {}
-        if platform.system() == WINDOWS:
+        if PLATFORM == WINDOWS:
             # from msdn [1]
             create_new_process_group = 0x00000200  # note: could get it from subprocess
             detached_process = 0x00000008  # 0x8 | 0x200 == 0x208
@@ -31,7 +32,7 @@ class Process:
         process = Popen(path, stdin=PIPE, stdout=PIPE, stderr=PIPE, **kwargs)
 
         # Ensure that a child process has completed before the main process
-        process.join()
+        # process.join()
 
         self.process = process
 
@@ -41,10 +42,18 @@ class Process:
 
     def stop(self):
         """
+
+        :return:
+        """
+        self.stop_id(self.id)
+
+    # TODO: Maybe this should be outside Process()
+    @staticmethod
+    def stop_id(pid):
+        """
         Stop the process that start the server
         :return:
         """
-        process = self.process
 
         # Reference https://stackoverflow.com/questions/1230669/subprocess-deleting-child-processes-in-windows
         def kill_proc_tree(pid, including_parent=True):
@@ -72,10 +81,10 @@ class Process:
             parent = psutil.Process(pid)
             parent.kill()
 
-        if platform.system() == WINDOWS:
-            kill_proc(process.pid)
+        if PLATFORM == WINDOWS:
+            kill_proc(pid)
         else:
-            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
 
     def status(self):
         """
@@ -83,3 +92,11 @@ class Process:
         :return:
         """
         return self.process
+
+    @property
+    def id(self):
+        """
+        Return the process id
+        :return:
+        """
+        return self.process.pid
