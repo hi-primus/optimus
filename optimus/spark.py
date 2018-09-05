@@ -52,3 +52,20 @@ class Spark:
         :return:
         """
         return self._spark.sparkContext
+
+    @property
+    def parallelism(self):
+        """
+        Returns default level of parallelism defined on SparkContext. By default it is number of cores available.
+        :param self: Dataframe
+        :return:
+        """
+        return self.sc.defaultParallelism
+
+    @property
+    def executors(self):
+        """
+        Get the number of executors. If launched in local mode executors in None
+        :return:
+        """
+        return self.sc._conf.get('spark.executor.instances')

@@ -36,15 +36,6 @@ def fill_missing_var_types(var_types):
     return var_types
 
 
-# TODO: Maybe use pprint instead of this
-def print_json(value):
-    """
-    Print beauty jsons
-    :return:
-    """
-    print(json.dumps(value, indent=2))
-
-
 def write_json(data, path):
     """
     Write a json file with the profiler result

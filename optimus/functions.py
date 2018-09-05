@@ -290,7 +290,6 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             """
             Check if a value can be casted to a specific
             :param value: value to be checked
-
             :return:
             """
             if isinstance(value, bool):
@@ -324,9 +323,9 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         return v.apply(func)
 
     if get_type is True:
-        a = "string"
+        return_data_type = "string"
     else:
-        a = "boolean"
+        return_data_type = "boolean"
 
     col_name = one_list_to_val(col_name)
-    return F.pandas_udf(pandas_udf_func, a)(col_name)
+    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)

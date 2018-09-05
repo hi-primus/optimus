@@ -173,15 +173,44 @@ def partitions(self):
     return self.rdd.getNumPartitions()
 
 
+@add_attr(DataFrame)
+def partitioner(self):
+    """
+    Return al algorithm used to partition the dataframe
+    :param self:
+    :return:
+    """
+    return self.rdd.partitioner
+
+
+@add_attr(DataFrame)
+def glom(self):
+    """
+
+    :param self: Dataframe
+    :return:
+    """
+    return collect_as_dict(self.rdd.glom().collect()[0])
+
+
 @add_method(DataFrame)
-def h_repartition(self):
+def h_repartition(self, partitions=None, col_name=None):
     """
     Get the number of cpu available and apply an "optimus" repartition in the dataframe
     #Reference: https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
     :param self:
+    :param partitions:
+    :param col_name:
     :return:
     """
-    return self.repartition(cpu_count * 4)
+    if partitions is None:
+        partitions = Spark.instance.parallelism * 4
+
+    if col_name is None:
+        df = self.repartition(partitions)
+    else:
+        df = self.repartition(partitions, col_name)
+    return df
 
 
 @add_method(DataFrame)

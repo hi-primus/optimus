@@ -88,7 +88,12 @@ class Profiler:
 
             if infer is True and col_data_type == "string":
 
-                types = df.withColumn(temp, fbdt(col_name, get_type=True)).groupBy(temp).count().to_json()
+                types = (df
+                         .h_repartition(col_name=col_name)
+                         .withColumn(temp, fbdt(col_name, get_type=True))
+                         .groupBy(temp).count()
+                         .to_json())
+
                 for row in types:
                     count_by_data_type[row[temp]] = row["count"]
 
@@ -322,7 +327,9 @@ class Profiler:
         rows_count = df.count()
         col_info = {}
         # Frequency
-        freq = (df.groupBy(col_name)
+        freq = (df
+                .h_repartition(col_name=col_name)
+                .groupBy(col_name)
                 .count()
                 .rows.sort([("count", "desc"), (col_name, "desc")])
                 .limit(buckets)
@@ -449,6 +456,7 @@ class Profiler:
         return col_info
 
     @staticmethod
+    @time_it
     def hist_date(df, col_name):
         """
         Create a histogram for a date type column
@@ -468,9 +476,8 @@ class Profiler:
             return result
 
         df = df \
-            .cols.apply('year', infer_date, ArrayType(LongType())) \
-            .cols.unnest("year") \
-            .h_repartition()
+            .cols.apply(col_name, infer_date, ArrayType(LongType())) \
+            .cols.unnest(col_name).h_repartition()
 
         for i in range(5):
             key_name = ""
@@ -516,6 +523,7 @@ class Profiler:
         return col_info
 
     @staticmethod
+    @time_it
     def hist_string(df, col_name, buckets):
         """
         Create a string for a date type column
