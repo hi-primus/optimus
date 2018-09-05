@@ -8,7 +8,7 @@ import re
 from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_dict, is_list
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
@@ -75,6 +75,11 @@ def print_html(html):
 
 
 def print_json(value):
+    """
+    Print a json in a way that a human can read it
+    :param value: json to be printed
+    :return: json
+    """
     pp = pprint.PrettyPrinter(indent=2)
     if is_str(value):
         value = value.replace("'", "\"")
