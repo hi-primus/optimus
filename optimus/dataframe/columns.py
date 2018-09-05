@@ -1243,8 +1243,14 @@ def cols(self):
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
-            counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
-                col_name + "_buckets", "value").sort(F.asc("value")).to_json())
+            col_bucket = col_name + "_buckets"
+
+            counts = (df
+                      .h_repartition(col_name=col_bucket)
+                      .groupBy(col_bucket)
+                      .agg(F.count(col_bucket).alias("count"))
+                      .cols.rename(col_bucket, "value")
+                      .sort(F.asc("value")).to_json())
 
             # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
             new_array = []
