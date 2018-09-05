@@ -10,6 +10,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
+from optimus.server.server import Server
 from optimus.spark import Spark
 
 Spark.instance = None
@@ -19,6 +20,7 @@ class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
                  verbose=False, dl=False,
+                 server=False,
                  repositories=None,
                  packages=None,
                  jars=None,
@@ -83,6 +85,7 @@ class Optimus:
             from optimus.dl.models import DL
             self.dl = DL()
         else:
+
             self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
             self._start_session()
 
@@ -102,6 +105,12 @@ class Optimus:
         logging.info(STARTING_OPTIMUS)
         if checkpoint is True:
             self._set_check_point_folder(path, file_system)
+
+        if server is True:
+            logging.info("Starting Optimus Server...")
+            s = Server()
+            s.start()
+            self.server_instance = s
 
         logging.info(SUCCESS)
 
