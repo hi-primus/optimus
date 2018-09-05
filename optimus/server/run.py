@@ -29,7 +29,7 @@ def index():
     Return a message indicating if the server is running.
     :return:
     """
-    return jsonify("Optimus Server si Running... Go to json /profiler to get the Optimus profiler data.")
+    return jsonify("Optimus Server is running... Go to /profiler to get the Optimus profiler data.")
 
 
 @app.route('/profiler')
