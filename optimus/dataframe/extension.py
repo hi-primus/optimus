@@ -176,7 +176,7 @@ def partitions(self):
 @add_attr(DataFrame)
 def partitioner(self):
     """
-
+    Return al algorithm used to partition the dataframe
     :param self:
     :return:
     """
@@ -204,7 +204,7 @@ def h_repartition(self, partitions=None, col_name=None):
     :return:
     """
     if partitions is None:
-        partitions = Spark.parallelism * 4
+        partitions = Spark.instance.parallelism * 4
 
     if col_name is None:
         df = self.repartition(partitions)
