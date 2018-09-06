@@ -280,7 +280,7 @@ class Profiler:
         columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
-        df = Profiler.cast_columns(df, columns, count_dtypes)
+        df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
         stats = Profiler.general_stats(df, columns)
@@ -293,7 +293,7 @@ class Profiler:
 
             col_info["stats"] = stats[col_name]
             col_info.update(Profiler.frequency(df, col_name, buckets))
-            col_info.update(Profiler.stats_by_column(df, col_name, stats, count_dtypes))
+            col_info.update(Profiler.stats_by_column(col_name, stats, count_dtypes, rows_count))
 
             col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
             col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
@@ -420,14 +420,14 @@ class Profiler:
 
     @staticmethod
     @time_it
-    def stats_by_column(df, col_name, stats, count_dtypes):
+    def stats_by_column(col_name, stats, count_dtypes, rows_count):
         """
         :param df: Dataframe to be analyzed
         :param col_name: Dataframe column to be analyzed
         :param count_dtypes:
         :return:
         """
-        rows_count = df.count()
+
         col_info = {}
         col_info["stats"] = {}
 
@@ -467,7 +467,8 @@ class Profiler:
         col_info = {}
 
         # Create year/month/week day/hour/minute
-        def infer_date(value, args):
+
+        def func_infer_date(value, args):
             if value is None:
                 result = [None]
             else:
@@ -475,9 +476,11 @@ class Profiler:
                 result = [date.year, date.month, date.weekday(), date.hour, date.minute]
             return result
 
-        df = df \
-            .cols.apply(col_name, infer_date, ArrayType(LongType())) \
-            .cols.unnest(col_name).h_repartition()
+        df = (df
+              .cols.select(col_name)
+              .cols.apply(col_name, func_infer_date, ArrayType(LongType()))
+              .cols.unnest(col_name).h_repartition().cache()
+              )
 
         for i in range(5):
             key_name = ""
