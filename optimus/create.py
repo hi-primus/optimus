@@ -6,8 +6,6 @@ from optimus.helpers.checkit import is_tuple
 from optimus.helpers.functions import get_spark_dtypes_object
 from optimus.spark import Spark
 
-import pandas as pdf
-
 
 class Create:
 
@@ -54,7 +52,7 @@ class Create:
     def data_frame(pdf):
         """
         Helper to create a Spark dataframe:
-        :param pdf: List of Tuple with name, data type and a flag to accept null
+        :param pdf: Panda Dataframe
         :return: Dataframe
         """
 

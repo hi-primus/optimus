@@ -1,12 +1,14 @@
 import os
 import platform
-import psutil
 import signal
 import sys
 from subprocess import Popen, PIPE
 
+import psutil
+
 WINDOWS = "windows"
 PLATFORM = platform.system().lower()
+
 
 # test https://stackoverflow.com/questions/984941/python-subprocess-popen-from-a-thread
 
@@ -35,9 +37,6 @@ class Process:
         # process.join()
 
         self.process = process
-
-        assert not self.process.poll()
-
         self.path = path
 
     def stop(self):
@@ -54,23 +53,6 @@ class Process:
         Stop the process that start the server
         :return:
         """
-
-        # Reference https://stackoverflow.com/questions/1230669/subprocess-deleting-child-processes-in-windows
-        def kill_proc_tree(pid, including_parent=True):
-            """
-            Kill process and children
-            :param pid:
-            :param including_parent:
-            :return:
-            """
-            parent = psutil.Process(pid)
-            children = parent.children(recursive=True)
-            for child in children:
-                child.kill()
-            gone, still_alive = psutil.wait_procs(children, timeout=5)
-            if including_parent:
-                parent.wait(5)
-                parent.kill()
 
         def kill_proc(pid):
             """

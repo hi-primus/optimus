@@ -1,6 +1,4 @@
 import base64
-import logging
-
 from fastnumbers import isint, isfloat
 from functools import reduce
 from io import BytesIO
@@ -8,11 +6,9 @@ from io import BytesIO
 import dateutil.parser
 import matplotlib.pyplot as plt
 from numpy import array
-from py4j.protocol import Py4JJavaError
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
     get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
@@ -281,9 +277,9 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             :return:
             """
             try:
-                isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple))
-                return True
-            except:
+                if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+                    return True
+            except ValueError:
                 pass
 
         def func(value):
