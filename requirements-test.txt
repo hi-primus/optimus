@@ -24,4 +24,4 @@ six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
 ipython==6.5.0
-pytest-cov==2.5.1
+pytest-cov==2.6.0
