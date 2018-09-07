@@ -1,16 +1,17 @@
 import configparser
 import json
+
 from flask import Flask
 from flask import jsonify
-from multiprocessing import Process
 
-config = configparser.ConfigParser()
-
-path = ""
-# try to load the config file
 try:
+    # try to load the config file
+    config = configparser.ConfigParser()
+    path = ""
+
     config.read("config.ini")
     path = config["SERVER"]["Input"]
+    app = Flask(__name__)
 except IOError:
     print("config.ini not found")
 
@@ -18,9 +19,6 @@ except KeyError:
     print("Input info not found in config.ini. Be sure you have...")
     print("[SERVER]")
     print("Input = config.ini")
-    raise
-
-app = Flask(__name__)
 
 
 @app.route('/')
