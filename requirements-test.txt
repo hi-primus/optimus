@@ -7,12 +7,12 @@ python_dateutil==2.7.3
 numpy==1.15.1
 matplotlib==2.2.3
 pyspark==2.3.1
-pytest==3.7.2
+pytest==3.8.0
 findspark==1.3.0
 nose==1.3.7
 seaborn==0.9.0
 setuptools==40.2.0
-deprecated==1.2.0
+deprecated==1.2.2
 pyarrow==0.10.0
 tabulate==0.8.2
 Jinja2==2.10
@@ -24,5 +24,5 @@ six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
 ipython==6.5.0
-pytest-cov==2.5.1
-humanize=0.5.1
+humanize==0.5.1
+pytest-cov==2.6.0
