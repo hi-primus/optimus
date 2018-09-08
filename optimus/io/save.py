@@ -1,4 +1,7 @@
 import logging
+from kombu import Connection, Exchange, Queue, Consumer, Producer
+from pymongo import MongoClient
+from tqdm import tqdm_notebook
 
 from pyspark.sql import DataFrame
 
@@ -108,6 +111,68 @@ def save(self):
         except IOError as e:
             logging.error(e)
             raise
+
+    @add_attr(save)
+    def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
+        """
+        Send a dataframe to a redis queue
+        # https://medium.com/python-pandemonium/talking-to-rabbitmq-with-python-and-kombu-6cbee93b1298
+        # https://medium.com/python-pandemonium/building-robust-rabbitmq-consumers-with-python-and-kombu-part-1-ccd660d17271
+        :return:
+        """
+        df = self
+        if parallelism:
+            df = df.coalesce(parallelism)
+
+        def _rabbit_mq(messages):
+            conn = Connection(host)
+            channel = conn.channel()
+
+            exchange = Exchange(exchange_name, type="direct")
+            queue = Queue(name=queue_name, exchange=exchange, routing_key=routing_key)
+
+            queue.maybe_bind(conn)
+            queue.declare()
+            producer = Producer(exchange=exchange, channel=channel, routing_key=routing_key)
+
+            for message in messages:
+                # as_dict = message.asDict(recursive=True)
+                producer.publish(message)
+
+            channel.close()
+            conn.release()
+            return messages
+
+        self.rdd.mapPartitions(_rabbit_mq).count()
+
+    @add_attr(save)
+    def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
+        """
+        Send a dataframe to a mongo collection
+
+        :param host:
+        :param port:
+        :param db_name:
+        :param collection_name:
+        :param parallelism:
+        :return:
+        """
+        df = self
+        if parallelism:
+            df = df.coalesce(parallelism)
+
+        def _mongo(messages):
+            client = MongoClient(host, port)
+            db = client[db_name]
+            collection = db[collection_name]
+
+            for message in messages:
+                as_dict = message.asDict(recursive=True)
+                collection.insert_one(as_dict)
+            client.close()
+            return messages
+
+        df.rdd.mapPartitions(_mongo).count()
 
     return save
 
