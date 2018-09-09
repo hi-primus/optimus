@@ -1,23 +1,20 @@
+import csv
 import json
 import logging
-import urllib
-import csv
-
-import requests
-from pymongo import MongoClient
-from tqdm import tqdm_notebook
-from ratelimit import limits
-
-from optimus.helpers.checkit import is_function, is_
-from pyspark.sql.functions import DataFrame
 
 import pandas as pd
+import requests
+from pymongo import MongoClient
+from pyspark.sql.functions import DataFrame
+from tqdm import tqdm_notebook
 
-
-# from odo import odo
+from optimus.helpers.checkit import is_function, is_
 
 
 class Enricher:
+    """
+    Enrich data from a Pandas or Spark dataframe
+    """
 
     def __init__(self, host, port, db_name=None, collection_name=None):
         logging.basicConfig(format="%(message)s", level=logging.INFO)
@@ -34,21 +31,20 @@ class Enricher:
     def send(self, df):
         """
         Send the dataframe to the mongo collection
-        :param df:
-        :param id_col:
-        :param param_col:
+        :param df: dataframe to be send to the enricher
         :return:
         """
 
         if is_(df, pd.DataFrame):
-            mongo_url = "mongodb://" + self.host + self.port + "/" + self.db_name + "::" + self.collection_name
-            # odo(mongo_url, df)
+            self.get_collection(self.collection_name).insert_many(df.to_dict("records"))
         elif is_(df, DataFrame):
             df.save.mongo(self.host, self.port, self.db_name, self.collection_name)
+        else:
+            raise Exception("df must by a Spark Dataframe or Pandas Dataframe")
 
     def flush(self):
         """
-        Flush collection
+        Flush the enricher default collection
         :return:
         """
         count = self.count()
@@ -64,17 +60,16 @@ class Enricher:
         cursor = collection.find()
         return cursor.count(True)
 
-    def run(self, collection_name=None, key_url="url", func_request=None, func_response=None, return_type="json",
+    def run(self, collection_name=None, func_request=None, func_response=None, return_type="json",
             calls=None, period=60):
         """
         Read a the url key from a mongo collection an make a request to a service
         :param collection_name:
-        :param key_url:
-        :param func_request:
-        :param func_response:
+        :param func_request: help to create a custom request
+        :param func_response: help to create a custom response
         :param return_type:
-        :param calls:
-        :param period:
+        :param calls: how many call can you make
+        :param period: in which period ot time can the call be made
         :return:
         """
 
@@ -83,7 +78,7 @@ class Enricher:
 
         collection = self.get_collection(collection_name)
 
-        cursor = collection.find({"result": {"$exists": False}}, projection={'_id': 1, key_url: 1})
+        cursor = collection.find({"result": {"$exists": False}})
 
         total_docs = cursor.count(True)
         if total_docs > 0:
@@ -92,13 +87,8 @@ class Enricher:
 
             for c in tqdm_notebook(cursor, total=total_docs, desc='Processing...'):
 
-                try:
-                    url = urllib.parse.unquote_plus(c[key_url])
-                except KeyError:
-                    raise Exception("url key not found")
-
                 # Send request to the API
-                response = func_request(url)
+                response = func_request(c)
 
                 mongo_id = c["_id"]
 
@@ -192,7 +182,7 @@ class Enricher:
         for c in cursor:
             print(c)
 
-    def show_keys(self, collection_name=None):
+    def get_keys(self, collection_name=None):
         """
         Show keys in collection
         :param collection_name:
@@ -271,13 +261,19 @@ class Enricher:
             projection = {}
         projection["_id"] = 0
 
-        documents = collection.find({}, projection).limit(limit)
-        count = documents.count(True)
-
         try:
-            csv_write.writerow(["asd", "rty", "hjk"])
+            # Save csv header
+            for header in collection.find({}, projection).limit(1):
+                csv_write.writerow(header.keys())
+
+            # Save csv body
+            documents = collection.find({}, projection).limit(limit)
+            count = documents.count(True)
+
+            # Save csv body
             for document in tqdm_notebook(documents, total=count, desc='Processing records'):
-                # Get a json, transform it to str and return a ; separated string
+                # Get a json, transform it to str and return a semicolon separated string
+
                 result = list(map((lambda x: str(x)), document.values()))
                 csv_write.writerow(result)
         except IOError:
@@ -285,21 +281,26 @@ class Enricher:
 
         file.close()
 
-    # CSV https: // gist.github.com / jxub / f722e0856ed461bf711684b0960c8458
-    @staticmethod
-    def save_to_json(filename, host, port, db, collection, projection=None, limit=None):
-        if (limit is None):
-            limit = 0
+        # Empty the collecion
+        self.flush()
 
-        client = MongoClient(host, port)
-        _db = client[db]
-        _collection = _db[collection]
+    # CSV https: // gist.github.com / jxub / f722e0856ed461bf711684b0960c8458
+
+    def save_to_json(self, filename, projection=None, limit=0):
+        """
+        Save collection to json file
+        :param filename:
+        :param projection:
+        :param limit:
+        :return:
+        """
+
+        _collection = self.get_collection(self.collection_name)
 
         file = open(filename, "w")
         file.write('[')
 
         i = 0
-        properties = {}
 
         # dump all the data
         documents = _collection.find({}, projection).limit(limit)
@@ -318,23 +319,25 @@ class Enricher:
         file.write(']')
         file.close()
 
-    @staticmethod
-    def save_to_geojson(filename, host, port, db, collection, coordinates_keys, projection=None):
+    def save_to_geojson(self, filename, coordinates_keys, projection=None, limit=0):
+        """
+        Save collection to geojson file
+        :param filename: Output file
+        :param coordinates_keys:
+        :param projection:
+        :return:
+        """
 
-        client = MongoClient(host, port)
-        _db = client[db]
-        _collection = _db[collection]
+        _collection = self.get_collection(self.collection_name)
 
         file = open(filename, "w")
         file.write('{"type": "FeatureCollection","features":[')
 
         i = 0
-        properties = {}
 
         # dump all the data
         projection = coordinates_keys + projection
-        # rojection.append({'_id':False})
-        documents = _collection.find({}, projection).limit(0)
+        documents = _collection.find({}, projection).limit(limit)
         count = documents.count(True)
 
         for r in tqdm_notebook(documents, total=count, desc='Processing records'):
@@ -395,7 +398,7 @@ class Enricher:
 
     def insert_to_collection(self, cursor, dest_collection_name, drop=False):
         """
-
+        Insert a cursor into a collection
         :param cursor:
         :param dest_collection_name:
         :param drop:
@@ -440,7 +443,7 @@ class Enricher:
             else:
                 logging.info('Field', c, 'could not be added')
 
-    def convert_field_to(self, collection_name, field, convert_to):
+    def cast(self, collection_name, field, convert_to):
         """
 
         :param collection_name:
