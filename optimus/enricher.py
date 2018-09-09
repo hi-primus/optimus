@@ -228,7 +228,7 @@ class Enricher:
 
     def drop_collection(self, collection_name):
         """
-
+        Drop  a collection
         :param collection_name:
         :return:
         """
@@ -239,10 +239,10 @@ class Enricher:
     def save_to_csv(self, filename, collection_name=None, projection=None, limit=0):
         """
         Save collection to csv
-        :param filename:
-        :param collection_name:
-        :param projection:
-        :param limit:
+        :param filename: Output filename
+        :param collection_name: custom collection to save
+        :param projection: Filter the keys on csv output
+        :param limit: Limit the number to record in the output file
         :return:
         """
 
