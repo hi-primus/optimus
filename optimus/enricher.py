@@ -1,60 +1,126 @@
 import json
 import logging
 import urllib
+import csv
 
 import requests
 from pymongo import MongoClient
 from tqdm import tqdm_notebook
+from ratelimit import limits
+
+from optimus.helpers.checkit import is_function, is_
+from pyspark.sql.functions import DataFrame
+
+import pandas as pd
+
+
+# from odo import odo
 
 
 class Enricher:
 
     def __init__(self, host, port, db_name=None, collection_name=None):
+        logging.basicConfig(format="%(message)s", level=logging.INFO)
+
         self.host = host
         self.port = port
+        self.db_name = db_name
+        self.collection_name = collection_name
         self.client = MongoClient(host, port)
 
-        if self.db_exists(db_name):
-            self.db = self.client[db_name]
-        else:
-            raise Exception('Database do not exist')
+    # FIFTEEN_MINUTES = 900
+    # @limits(calls=15, period=FIFTEEN_MINUTES)
 
-        if self.collection_exists(collection_name):
-            self.collection = self.client[collection_name]
-        else:
-            raise Exception('Collection do not exist')
-
-    def run(self):
+    def send(self, df):
         """
-
+        Send the dataframe to the mongo collection
+        :param df:
+        :param id_col:
+        :param param_col:
         :return:
         """
-        collection = self.get_collection('step3')
-        cursor = collection.find({'$or': [{'lat': None}, {'lng': None}]},
-                                 projection=['_id', 'lat', 'lng', 'state', 'city'])
 
-        for r in tqdm_notebook(cursor, total=cursor.count(), desc='Geolocation'):
-            state = r['state'].lower()
-            state = "".join(state.split())
+        if is_(df, pd.DataFrame):
+            mongo_url = "mongodb://" + self.host + self.port + "/" + self.db_name + "::" + self.collection_name
+            # odo(mongo_url, df)
+        elif is_(df, DataFrame):
+            df.save.mongo(self.host, self.port, self.db_name, self.collection_name)
 
-            if (state == "edo.demexico"):
-                state = "estado de mexico"
-            else:
-                state = r['state']
+    def flush(self):
+        """
+        Flush collection
+        :return:
+        """
+        count = self.count()
+        self.drop_collection(self.collection_name)
+        print("Removed {count} documents".format(count=count))
 
-            url = "http://46.101.10.63:8080/search?format=jsonv2&q=mexico+" + state + '+' + r['city']
-            url = urllib.parse.unquote_plus(url)
+    def count(self):
+        """
+        Conunt nunber of documents in a collections
+        :return:
+        """
+        collection = self.get_collection(self.collection_name)
+        cursor = collection.find()
+        return cursor.count(True)
 
-            result = requests.get(url)
-            result_json = json.loads(result.text)
-            if (result_json):
+    def run(self, collection_name=None, key_url="url", func_request=None, func_response=None, return_type="json",
+            calls=None, period=60):
+        """
+        Read a the url key from a mongo collection an make a request to a service
+        :param collection_name:
+        :param key_url:
+        :param func_request:
+        :param func_response:
+        :param return_type:
+        :param calls:
+        :param period:
+        :return:
+        """
 
-                lat = round(float(result_json[0]['lat']), 6)
-                lon = round(float(result_json[0]['lon']), 6)
-                collection.update_one({'_id': r['_id']}, {'$set': {'lat': lat, 'lng': lon}}, upsert=False)
+        if collection_name is None:
+            collection_name = self.collection_name
 
-            else:
-                print('No procesado')
+        collection = self.get_collection(collection_name)
+
+        cursor = collection.find({"result": {"$exists": False}}, projection={'_id': 1, key_url: 1})
+
+        total_docs = cursor.count(True)
+        if total_docs > 0:
+            if func_request is None:
+                func_request = requests.get
+
+            for c in tqdm_notebook(cursor, total=total_docs, desc='Processing...'):
+
+                try:
+                    url = urllib.parse.unquote_plus(c[key_url])
+                except KeyError:
+                    raise Exception("url key not found")
+
+                # Send request to the API
+                response = func_request(url)
+
+                mongo_id = c["_id"]
+
+                if response.status_code == 200:
+                    if return_type == "json":
+                        response = json.loads(response.text)
+                    elif return_type == "text":
+                        response = response.text
+
+                    # Process the result with an external function
+                    if is_function(func_response):
+                        response = func_response(response)
+
+                    # update the mongo id  with the result
+                    self.get_collection(collection_name).find_and_modify(query={"_id": mongo_id},
+                                                                         update={"$set": {'result': response}},
+                                                                         upsert=False, full_response=True)
+                else:
+                    # The response key will remain blank so we can filter it to try in future request
+                    print(response.status_code)
+        else:
+            print("No records available to process")
 
     def collection_exists(self, collection_name):
         """
@@ -62,7 +128,7 @@ class Enricher:
         :param collection_name:
         :return:
         """
-        if collection_name in self.db.collection_names():
+        if collection_name in self.get_db().collection_names():
             return True
         else:
             return False
@@ -78,13 +144,17 @@ class Enricher:
         else:
             return False
 
+    def get_db(self):
+        return self.client[self.db_name]
+
     def get_collection(self, collection_name):
         """
 
         :param collection_name:
         :return:
         """
-        return self.db[collection_name]
+        collection = self.get_db()[collection_name]
+        return collection
 
     def copy_collection(self, source_name, dest_name):
         """
@@ -108,60 +178,220 @@ class Enricher:
         source.aggregate(pipeline)
         logging.info('Done')
 
-    def show_cols(self, collection_name=None):
+    def head(self, collection_name, n=10):
         """
-        Show cols
+        Print n first documents
+        :param collection_name:
+        :param n:
+        :return:
+        """
+
+        # try to bring a cursor from a collection
+        cursor = self.get_collection(collection_name).find({}).limit(n)
+        print("Total documents:" + str(cursor.count()))
+        for c in cursor:
+            print(c)
+
+    def show_keys(self, collection_name=None):
+        """
+        Show keys in collection
         :param collection_name:
         :return:
         """
 
-        if not self.collection_exists(collection_name):
+        if not self.collection_exists(self.collection_name):
             raise Exception("Collection {collection_name} not exist".format(collection_name=collection_name))
 
         source = None
-        if collection_name is not None:
-            source = self.get_collection(collection_name)
+        if collection_name is None:
+            source = self.get_collection(self.collection_name)
 
         results = source.aggregate([
             {"$project": {"arrayofkeyvalue": {"$objectToArray": "$$ROOT"}}},
             {"$unwind": "$arrayofkeyvalue"},
             {"$group": {"_id": None, "allkeys": {"$addToSet": "$arrayofkeyvalue.k"}}}
         ])
-        logging.info(results)
+
         results = list(results)[0]['allkeys']
+        return results
 
-        for r in results:
-            logging.info(r)
+    def show_collections(self, db):
+        """
+        Show collections in a database
+        :return:
+        """
+        return self.client[db].collection_names()
 
-    def get_cols(self, collection_name=None):
+        # d = dict((db, [collection for collection in self.client[db].collection_names()])
+        #         for db in self.client.list_database_names())
+        # print(json.dumps(d))
+
+    @staticmethod
+    def drop_keys(collection_name, keys):
+        """
+        Drop key in collection
+        :return:
+        """
+        for key in tqdm_notebook(keys, desc='Processing cols'):
+            logging.info('Dropping', key, 'field')
+            collection_name.update_many({}, {'$unset': {key: 1}})
+
+    def drop_collection(self, collection_name):
         """
 
         :param collection_name:
         :return:
         """
-        if collection_name is not None:
-            source = self.get_collection(collection_name)
-        else:
-            source = self.collection
-        logging.info(source)
-        logging.info('Getting cols...')
-        result = source.aggregate([
-            {"$project": {"arrayofkeyvalue": {"$objectToArray": "$$ROOT"}}},
-            {"$unwind": "$arrayofkeyvalue"},
-            {"$group": {"_id": None, "allkeys": {"$addToSet": "$arrayofkeyvalue.k"}}}
-        ])
-        result = list(result)[0]['allkeys']
-        logging.info('Done')
-        return result
+        if collection_name is None:
+            collection_name = self.collection_name
+        self.get_collection(collection_name).drop()
 
-    def drop_col(cols):
+    def save_to_csv(self, filename, collection_name=None, projection=None, limit=0):
         """
-
+        Save collection to csv
+        :param filename:
+        :param collection_name:
+        :param projection:
+        :param limit:
         :return:
         """
-        for x in tqdm_notebook(cols, desc='Processing cols'):
-            logging.info('Dropping', x, 'field')
-            dest_collection.update_many({}, {'$unset': {x: 1}})
+
+        if collection_name is None:
+            collection_name = self.collection_name
+
+        collection = self.get_collection(collection_name)
+
+        try:
+            file = open(filename, "w", newline='')
+            csv_write = csv.writer(file, delimiter=";", quotechar="|", quoting=csv.QUOTE_MINIMAL)
+        except IOError:
+            raise Exception("Could not read file {filename}".format(filename=filename))
+
+        if projection is None:
+            projection = {}
+        projection["_id"] = 0
+
+        documents = collection.find({}, projection).limit(limit)
+        count = documents.count(True)
+
+        try:
+            csv_write.writerow(["asd", "rty", "hjk"])
+            for document in tqdm_notebook(documents, total=count, desc='Processing records'):
+                # Get a json, transform it to str and return a ; separated string
+                result = list(map((lambda x: str(x)), document.values()))
+                csv_write.writerow(result)
+        except IOError:
+            raise Exception("Could not write in {filename}".format(filename=filename))
+
+        file.close()
+
+    # CSV https: // gist.github.com / jxub / f722e0856ed461bf711684b0960c8458
+    @staticmethod
+    def save_to_json(filename, host, port, db, collection, projection=None, limit=None):
+        if (limit is None):
+            limit = 0
+
+        client = MongoClient(host, port)
+        _db = client[db]
+        _collection = _db[collection]
+
+        file = open(filename, "w")
+        file.write('[')
+
+        i = 0
+        properties = {}
+
+        # dump all the data
+        documents = _collection.find({}, projection).limit(limit)
+        count = documents.count(True)
+
+        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
+
+            i = i + 1
+            # FIX: we should remove the id in the projection
+            r.pop('_id')
+
+            file.write(json.dumps(r))
+            if (i < count):
+                file.write(',')
+
+        file.write(']')
+        file.close()
+
+    @staticmethod
+    def save_to_geojson(filename, host, port, db, collection, coordinates_keys, projection=None):
+
+        client = MongoClient(host, port)
+        _db = client[db]
+        _collection = _db[collection]
+
+        file = open(filename, "w")
+        file.write('{"type": "FeatureCollection","features":[')
+
+        i = 0
+        properties = {}
+
+        # dump all the data
+        projection = coordinates_keys + projection
+        # rojection.append({'_id':False})
+        documents = _collection.find({}, projection).limit(0)
+        count = documents.count(True)
+
+        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
+
+            i = i + 1
+
+            lon_key = coordinates_keys[0]
+            # Verify if the key exist and is a float number
+            if (lon_key in r) and (isinstance(r[lon_key], float)):
+                lon = r[lon_key]
+
+            lat_key = coordinates_keys[1]
+            if (lat_key in r) and (isinstance(r[lat_key], float)):
+                lat = r[lat_key]
+
+            # FIX: we should remove the id in the projection
+            r.pop('_id')
+            r.pop(lon_key)
+            r.pop(lat_key)
+
+            features = {"type": "Feature", "properties": r, "geometry": {"type": "Point", "coordinates": [lon, lat]}}
+
+            file.write(json.dumps(features))
+            if (i < count):
+                file.write(',')
+
+        file.write(']}')
+        file.close()
+
+    # FIX: not work need to find how to implement in a cursor object
+    def head_cursor(self, collection_name_or_cursor, n=1):
+        """
+
+        :param collection_name_or_cursor:
+        :param n:
+        :return:
+        """
+        if not int(n): raise Exception('n must be an integer')
+
+        if isinstance(collection_name_or_cursor, str):
+            # try to bring a cursor from a collection
+            cursor = self.get_collection(collection_name_or_cursor).find({}).limit(n)
+            count = cursor.count(True)
+        else:
+            cursor = collection_name_or_cursor
+            cursor.rewind()
+            count = n
+
+        # FIX: and elegant way to make it in python?
+        i = 0
+
+        for c in cursor:
+            if (i < count):
+                print(c)
+            else:
+                break
+            i = i + 1
 
     def insert_to_collection(self, cursor, dest_collection_name, drop=False):
         """
@@ -225,157 +455,19 @@ class Enricher:
         # for c in tqdm_notebook(cursor, total = cursor.count(), desc = 'sad'):
 
         if convert_to == 'int':
-            l = float
+            data_type = float
         elif convert_to == 'float':
-            l = int
+            data_type = int
         elif convert_to == 'string':
-            l = str
+            data_type = str
         else:
             raise ValueError('Only int, float or string accepted in field param', field, 'value present')
 
         for c in tqdm_notebook(cursor, total=cursor.count(), desc='Processing records'):
             try:
                 val = c[field]
-                val = l(c[field])
+                val = data_type(c[field])
                 collection.update_one({'_id': c['_id']}, {'$set': {field: val}})
 
             except ValueError:
                 logging.info('Could not convert "', val, '" to', convert_to)
-
-    @staticmethod
-    def mongo_to_json_array_file(filename, host, port, db, collection, projection=None, limit=None):
-        if (limit is None):
-            limit = 0
-
-        client = MongoClient(host, port)
-        _db = client[db]
-        _collection = _db[collection]
-
-        file = open(filename, "w")
-        file.write('[')
-
-        i = 0
-        properties = {}
-
-        # dump all the data
-        documents = _collection.find({}, projection).limit(limit)
-        count = documents.count(True)
-
-        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
-
-            i = i + 1
-            # FIX: we should remove the id in the projection
-            r.pop('_id')
-
-            file.write(json.dumps(r))
-            if (i < count):
-                file.write(',')
-
-        file.write(']')
-        file.close()
-
-    @staticmethod
-    def to_geojson_file(filename, host, port, db, collection, coordinates_keys, projection=None):
-
-        client = MongoClient(host, port)
-        _db = client[db]
-        _collection = _db[collection]
-
-        file = open(filename, "w")
-        file.write('{"type": "FeatureCollection","features":[')
-
-        i = 0
-        properties = {}
-
-        # dump all the data
-        projection = coordinates_keys + projection
-        # rojection.append({'_id':False})
-        documents = _collection.find({}, projection).limit(0)
-        count = documents.count(True)
-
-        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
-
-            i = i + 1
-
-            lon_key = coordinates_keys[0]
-            # Verify if the key exist and is a float number
-            if (lon_key in r) and (isinstance(r[lon_key], float)):
-                lon = r[lon_key]
-
-            lat_key = coordinates_keys[1]
-            if (lat_key in r) and (isinstance(r[lat_key], float)):
-                lat = r[lat_key]
-
-            # FIX: we should remove the id in the projection
-            r.pop('_id')
-            r.pop(lon_key)
-            r.pop(lat_key)
-
-            features = {"type": "Feature", "properties": r, "geometry": {"type": "Point", "coordinates": [lon, lat]}}
-
-            file.write(json.dumps(features))
-            if (i < count):
-                file.write(',')
-
-        file.write(']}')
-        file.close()
-
-    def merge_two_dicts(x, y):
-        """
-
-        :param y:
-        :return:
-        """
-        z = x.copy()  # start with x's keys and values
-        z.update(y)  # modifies z with y's keys and values & returns None
-        return z
-
-    def head(self, collection_name, n=1):
-        """
-
-        :param collection_name:
-        :param n:
-        :return:
-        """
-        if not int(n):
-            raise Exception('n param must be an integer')
-        if self.collection_exists(collection_name):
-            if isinstance(collection_name, str):
-                # try to bring a cursor from a collection
-                cursor = self.get_collection(collection_name).find({}).limit(n)
-                count = cursor.count(True)
-            # FIX: and elegant way to make it in python?
-            i = 0
-
-            for c in cursor:
-                if (i < count):
-                    print(c)
-                else:
-                    break
-                i = i + 1
-        else:
-            msg = 'Collection', collection_name, ' do not exist'
-            raise Exception(msg)
-
-    # FIX: not work need to find how to implement in a cursor object
-    def head_cursor(self, collection_name_or_cursor, n=1):
-        if not int(n): raise Exception('n must be an integer')
-
-        if isinstance(collection_name_or_cursor, str):
-            # try to bring a cursor from a collection
-            cursor = self.get_collection(collection_name_or_cursor).find({}).limit(n)
-            count = cursor.count(True)
-        else:
-            cursor = collection_name_or_cursor
-            cursor.rewind()
-            count = n
-
-        # FIX: and elegant way to make it in python?
-        i = 0
-
-        for c in cursor:
-            if (i < count):
-                print(c)
-            else:
-                break
-            i = i + 1

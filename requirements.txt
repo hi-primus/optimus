@@ -1,7 +1,6 @@
-requests
-tqdm
-pymongo
-celery
+requests==2.18.4
+tqdm==1.19.2
+pymongo==3.7.1
 fastnumbers==2.1.1
 multipledispatch==0.6.0
 python_dateutil==2.7.3
@@ -26,3 +25,4 @@ six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
 ipython==6.5.0
+ratelimit==2.2.0
