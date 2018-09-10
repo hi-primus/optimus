@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
@@ -30,11 +32,8 @@ class Spark:
         logging.info(STARTING_SPARK)
 
         # Build the spark session
-        self._spark = (SparkSession
-                       .builder
-                       .master(self.master)
-                       .appName(self.app_name)
-                       .getOrCreate())
+        self.spark
+
 
     @property
     def spark(self):
@@ -43,7 +42,12 @@ class Spark:
         :return: None
         """
 
-        return self._spark
+        return (SparkSession
+                .builder
+                .master(self.master)
+                .appName(self.app_name)
+                .getOrCreate()
+                )
 
     @property
     def sc(self):
@@ -51,4 +55,4 @@ class Spark:
         Return the Spark Context
         :return:
         """
-        return self._spark.sparkContext
+        return self.spark.sparkContext

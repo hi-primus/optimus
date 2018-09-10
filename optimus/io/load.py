@@ -109,9 +109,14 @@ class Load:
 
     @staticmethod
     def avro(path, *args, **kwargs):
-        print("Not yet implemented")
-        return
-
+        try:
+            df = (Spark.instance.spark.read
+                  .format("com.databricks.spark.avro")
+                  .load(path, *args, **kwargs))
+        except IOError as error:
+            logging.error(error)
+            raise
+        return df
 
 
 """

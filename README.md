@@ -54,7 +54,7 @@ If you want to load from a URL you just need to use load.url() with the path and
 ```python
 df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/feature/load_save_improvements/examples/data/foo.json", "json")
 ```
-## Cleaning and Processing
+## Data loading, cleaning and processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
 Optimus expand the Spark DataFrame functionality adding .rows and .cols attributes.

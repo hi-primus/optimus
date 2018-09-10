@@ -42,7 +42,7 @@ setup(
     author='Favio Vazquez and Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.0.6.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/2.0.4.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
@@ -60,7 +60,7 @@ setup(
     },
     dependency_links=dependency_links,
     test_suite='nose.collector',
-    include_package_data=True,
+    include_package_data=False,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

@@ -2,7 +2,6 @@ import builtins
 import itertools
 import re
 import string
-import timeit
 import unicodedata
 from fastnumbers import fast_float
 from functools import reduce
@@ -17,8 +16,9 @@ from pyspark.sql.functions import Column
 
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.checkit import is_num_or_str, is_list, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
+from optimus.helpers.checkit \
+    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
 # Helpers
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import add_attr
@@ -83,8 +83,7 @@ def cols(self):
                 col_name = c[0]
                 value = c[1]
                 df_result = df_result.cols.append(col_name, value)
-        else:
-            raise Exception("Must be List of dataframes or list of tuples")
+
         return df_result
 
     @add_attr(cols)
@@ -230,10 +229,10 @@ def cols(self):
     def rename(old_column, new_column):
         return rename([(old_column, new_column)], None)
 
-    def _cast(column, args):
+    def _cast(cols, args):
         """
         Helper function to support the multiple params implementation
-        :param column:
+        :param cols:
         :param args:
         :return:
         """
@@ -244,27 +243,23 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-            # Parse to Vector
-            func_return_type = None
-            cast_to_vectors = None
-            func_type = None
-
-            if is_type(cls, Vectors):
-                func_type = "udf"
-
-                def cast_to_vectors(val, attr):
-                    return Vectors.dense(val)
-
-                func_return_type = VectorUDT()
             # Parse standard data types
-            elif get_spark_dtypes_object(cls):
-
+            if get_spark_dtypes_object(cls):
                 func_type = "column_exp"
 
                 def cast_to_vectors(col_name, attr):
                     return F.col(col_name).cast(get_spark_dtypes_object(cls))
 
                 func_return_type = None
+
+            # Parse to Vector
+            elif is_type(cls, Vectors):
+                func_type = "udf"
+
+                def cast_to_vectors(val, attr):
+                    return Vectors.dense(val)
+
+                func_return_type = VectorUDT()
 
             # Add here any other parse you want
             else:
@@ -273,7 +268,7 @@ def cols(self):
             return func_return_type, cast_to_vectors, func_type
 
         df = self
-        for col, args in zip(column, args):
+        for col, args in zip(cols, args):
             return_type, func, func_type = cast_factory(args[0])
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
@@ -528,15 +523,13 @@ def cols(self):
         return percentile(columns, [0.5])
 
     @add_attr(cols)
-    def percentile(columns, values=None, error=1):
+    def percentile(columns, values=None, error=0):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
         :return: percentiles per columns
         """
-        start_time = timeit.default_timer()
-
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -554,8 +547,6 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
-        logging.info("percentile")
-        logging.info(timeit.default_timer() - start_time)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
@@ -903,6 +894,7 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
+        :param type: Accepts integer, float, string or None
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1228,7 +1220,6 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
-
         for col_name in columns:
             # Create splits
             splits = create_buckets(min_value, max_value, buckets)

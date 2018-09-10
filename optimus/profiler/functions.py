@@ -1,6 +1,5 @@
 import json
 import math
-import timeit
 
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
@@ -110,7 +109,6 @@ def bucketizer(df, columns, splits):
     :param splits:
     :return:
     """
-    start_time = timeit.default_timer()
     columns = parse_columns(df, columns)
 
     def _bucketizer(col_name, args):
@@ -139,11 +137,9 @@ def bucketizer(df, columns, splits):
         return expr
 
     output_columns = [c + "_buckets" for c in columns]
-
     # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
     df = df.cols.apply_expr(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
-    logging.info("bucketizer")
-    logging.info(timeit.default_timer() - start_time)
+
     return df
 
 
