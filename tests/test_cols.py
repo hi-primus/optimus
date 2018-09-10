@@ -557,188 +557,176 @@ class TestDataFrameCols(object):
         assert (actual_df.collect() == expected_df.collect())
 
     @staticmethod
+    def test_nest():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
 
-<< << << < HEAD
+        actual_df = source_df.cols.nest(["emotion", "num"], "new", separator=" ")
 
+        expected_df = op.create.df(
+            rows=[
+                (1, "happy", "1 happy"),
+                (2, "excited", "2 excited")
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True),
+                ("new", StringType(), True)
 
-def test_nest():
-    source_df = op.create.df(
-        rows=[
-            ("happy", 1),
-            ("excited", 2)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True)
-        ]
-    )
+            ]
+        )
 
-    actual_df = source_df.cols.nest(["emotion", "num"], "new", separator=" ")
+        assert (actual_df.collect() == expected_df.collect())
 
-    expected_df = op.create.df(
-        rows=[
-            (1, "happy", "1 happy"),
-            (2, "excited", "2 excited")
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True),
-            ("new", StringType(), True)
+    @staticmethod
+    def test_nest_mix():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
 
-        ]
-    )
+        actual_df = source_df.cols.nest([F.Column("emotion"), "---", F.Column("num")], separator="new")
 
-    assert (actual_df.collect() == expected_df.collect())
+        expected_df = op.create.df(
+            rows=[
+                (1, "happy", "1---happy"),
+                (2, "excited", "2---excited")
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True),
+                ("new", StringType(), True)])
 
+        assert (actual_df.collect() == expected_df.collect())
 
-@staticmethod
-def test_nest_mix():
-    source_df = op.create.df(
-        rows=[
-            ("happy", 1),
-            ("excited", 2)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True)
-        ]
-    )
+    @staticmethod
+    def test_fill_na():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1, None),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
 
-    actual_df = source_df.cols.nest([F.Column("emotion"), "---", F.Column("num")], separator="new")
+        actual_df = source_df.cols.fill_na("*", "N/A")
 
-    expected_df = op.create.df(
-        rows=[
-            (1, "happy", "1---happy"),
-            (2, "excited", "2---excited")
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True),
-            ("new", StringType(), True)
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1, "N/A"),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
 
-            == == == =
+        assert (actual_df.collect() == expected_df.collect())
 
+    @staticmethod
+    def test_nest_vector():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
 
-def test_fill_na():
-    source_df = op.create.df(
-        rows=[
-            ("happy", 1, None),
-            ("excited", 2, 8)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num1", IntegerType(), True),
-            ("num2", IntegerType(), True)
-        ]
-    )
+        actual_df = source_df.cols.nest(["emotion", "num"], "new", shape="vector")
 
-    actual_df = source_df.cols.fill_na("*", "N/A")
+        expected_df = op.create.df(
+            rows=[
+                (1, "happy", [1, "happy"]),
+                (2, "excited", [2, "excited"])
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True),
+                ("new", VectorUDT(), True)
 
-    expected_df = op.create.df(
-        rows=[
-            ("happy", 1, "N/A"),
-            ("excited", 2, 8)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num1", IntegerType(), True),
-            ("num2", IntegerType(), True)
-            >> >> >> > develop
-        ]
-    )
+            ]
+        )
 
-    assert (actual_df.collect() == expected_df.collect())
+        assert (actual_df.collect() == expected_df.collect())
 
+    @staticmethod
+    def test_nest_array():
+        source_df = op.create.df(
+            rows=[
+                ("happy", 1),
+                ("excited", 2)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True)
+            ]
+        )
 
-@staticmethod
+        actual_df = source_df.cols.nest(["emotion", "num"], "new", shape="array")
 
-<< << << < HEAD
+        expected_df = op.create.df(
+            rows=[
+                (1, "happy", [1, "happy"]),
+                (2, "excited", [2, "excited"])
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True),
+                ("new", ArrayType(), True)])
 
+        assert (actual_df.collect() == expected_df.collect())
 
-def test_nest_vector():
-    source_df = op.create.df(
-        rows=[
-            ("happy", 1),
-            ("excited", 2)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True)
-        ]
-    )
+    @staticmethod
+    def test_is_na():
+        source_df = op.create.df(
+            rows=[
+                ("happy", None, 1),
+                ("excited", 2, 8)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
+            ]
+        )
 
-    actual_df = source_df.cols.nest(["emotion", "num"], "new", shape="vector")
+        actual_df = source_df.cols.fill_na("*", "N/A")
 
-    expected_df = op.create.df(
-        rows=[
-            (1, "happy", [1, "happy"]),
-            (2, "excited", [2, "excited"])
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True),
-            ("new", VectorUDT(), True)
+        expected_df = op.create.df(
+            rows=[
+                (False, True, False),
+                (False, False, False)
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num1", IntegerType(), True),
+                ("num2", IntegerType(), True)
 
-        ]
-    )
+            ]
+        )
 
-    assert (actual_df.collect() == expected_df.collect())
-
-
-@staticmethod
-def test_nest_array():
-    source_df = op.create.df(
-        rows=[
-            ("happy", 1),
-            ("excited", 2)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True)
-        ]
-    )
-
-    actual_df = source_df.cols.nest(["emotion", "num"], "new", shape="array")
-
-    expected_df = op.create.df(
-        rows=[
-            (1, "happy", [1, "happy"]),
-            (2, "excited", [2, "excited"])
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num", IntegerType(), True),
-            ("new", ArrayType(), True)
-
-            == == == =
-
-
-def test_is_na():
-    source_df = op.create.df(
-        rows=[
-            ("happy", None, 1),
-            ("excited", 2, 8)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num1", IntegerType(), True),
-            ("num2", IntegerType(), True)
-        ]
-    )
-
-    actual_df = source_df.cols.fill_na("*", "N/A")
-
-    expected_df = op.create.df(
-        rows=[
-            (False, True, False),
-            (False, False, False)
-        ],
-        cols=[
-            ("emotion", StringType(), True),
-            ("num1", IntegerType(), True),
-            ("num2", IntegerType(), True)
-            >> >> >> > develop
-        ]
-    )
-
-    assert (actual_df.collect() == expected_df.collect())
+        assert (actual_df.collect() == expected_df.collect())
