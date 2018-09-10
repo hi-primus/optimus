@@ -1,8 +1,7 @@
 import logging
-from kombu import Connection, Exchange, Queue, Consumer, Producer
-from pymongo import MongoClient
-from tqdm import tqdm_notebook
 
+from kombu import Connection, Exchange, Queue, Producer
+from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
@@ -149,7 +148,6 @@ def save(self):
     def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
         """
         Send a dataframe to a mongo collection
-
         :param host:
         :param port:
         :param db_name:
@@ -167,6 +165,7 @@ def save(self):
             collection = db[collection_name]
 
             for message in messages:
+
                 as_dict = message.asDict(recursive=True)
                 collection.insert_one(as_dict)
             client.close()
