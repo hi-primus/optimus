@@ -41,7 +41,6 @@ class Optimus:
             from optimus.dl.models import DL
             self.dl = DL()
         else:
-            Optimus.add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0 pyspark-shell"])
 
             Spark.instance = Spark(master, app_name)
             pass
@@ -85,19 +84,34 @@ class Optimus:
 
     @property
     def spark(self):
+        """
+        Return a Spark session object
+        :return:
+        """
         return Spark.instance.spark
 
     @property
     def sc(self):
+        """
+        Return a Spark Context object
+        :return:
+        """
         return Spark.instance.sc
 
-    @staticmethod
-    def concat(dfs, like):
-        return concat(dfs, like)
+    def stop(self):
+        """
+        Stop Spark Session
+        :return:
+        """
+        Spark.instance.spark.stop()
 
     @staticmethod
     def add_spark_packages(packages):
-        p = "--packages " + " ".join(packages)
+        """
+        Define the Spark packages that must be loaded at start time
+        :param packages:
+        :return:
+        """
         os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages " + " ".join(packages)
 
     @staticmethod
@@ -176,3 +190,7 @@ class Optimus:
                 logging.info("Folder deleted.")
         else:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
+
+    @staticmethod
+    def concat(dfs, like):
+        return concat(dfs, like)

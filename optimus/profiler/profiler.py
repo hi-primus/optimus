@@ -141,7 +141,7 @@ class Profiler:
         return results
 
     @staticmethod
-    def columns(df, columns, buckets=10):
+    def columns(df, columns, buckets=40, relative_error=1):
         """
         Return statistical information about a specific column in json format
         count_data_type()
@@ -242,7 +242,9 @@ class Profiler:
                 # https://stackoverflow.com/questions/45287832/pyspark-approxquantile-function
                 max_value = fast_float(max_value)
                 min_value = fast_float(min_value)
-                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95])
+                col_info['stats']['quantile'] = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95],
+                                                                   relative_error)
+
                 col_info['stats']['range'] = max_value - min_value
                 col_info['stats']['median'] = col_info['stats']['quantile'][0.5]
                 col_info['stats']['interquartile_range'] = col_info['stats']['quantile'][0.75] - \
@@ -328,17 +330,19 @@ class Profiler:
 
         return column_info
 
-    def run(self, df, columns, buckets=40):
+    def run(self, df, columns, buckets=40, relative_error=1):
         """
-        Return statistical information in HTML Format
+        Return dataframe statistical information in HTML Format
+        
         :param df: Dataframe to be analyzed
         :param columns: Columns to be analized
-        :param buckets: number of buckets calculated to print the histogram
+        :param buckets: Number of buckets calculated to print the histogram
+        :param relative_error: Relative Error for quantile discretizer calculation 
         :return:
         """
 
         columns = parse_columns(df, columns)
-        output = Profiler.to_json(df, columns, buckets)
+        output = Profiler.to_json(df, columns, buckets, relative_error)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -379,7 +383,6 @@ class Profiler:
             html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
 
         html = html + df.table_html(10)
-        # df.plots.correlation(columns)
 
         # Display HTML
         display(HTML(html))
@@ -388,7 +391,7 @@ class Profiler:
         write_json(output, self.path)
 
     @staticmethod
-    def to_json(df, columns, buckets=20):
+    def to_json(df, columns, buckets=40, relative_error=1):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -397,12 +400,14 @@ class Profiler:
         :return: json file
         """
 
-        output = Profiler.columns(df, columns, buckets)
-        dataset = Profiler.dataset_info(df)
-        output["summary"] = dataset
+        # Get the stats for all the columns
+        output = Profiler.columns(df, columns, buckets, relative_error)
 
+        # Add the data summary to the output
+        output["summary"] = Profiler.dataset_info(df)
+
+        # Get a data sample and transform it to friendly json format
         data = []
-        # Get a sample of the data and transform it to friendly json format
         for l in df.sample_n(10).to_json():
             data.append([v for k, v in l.items()])
         output["sample"] = {"columns": df.columns, "data": data}
