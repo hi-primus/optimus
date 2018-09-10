@@ -9,6 +9,7 @@ from pyspark.sql.functions import DataFrame
 from tqdm import tqdm_notebook
 
 from optimus.helpers.checkit import is_function, is_
+from optimus.helpers.functions import random_int
 
 
 class Enricher:
@@ -16,14 +17,26 @@ class Enricher:
     Enrich data from a Pandas or Spark dataframe
     """
 
-    def __init__(self, host, port, db_name=None, collection_name=None):
+    def __init__(self, host="localhost", port=27017, db_name="jazz", collection_name="data", op=None, *args,
+                 **kwargs):
+        """
+
+        :param host: Mongo server host
+        :param port: Mongo server port
+        :param db_name: Mongo server database
+        :param collection_name: Mongo serverg collection
+        :param op: optimus instance
+        :param args:
+        :param kwargs:
+        """
         logging.basicConfig(format="%(message)s", level=logging.INFO)
 
         self.host = host
         self.port = port
         self.db_name = db_name
         self.collection_name = collection_name
-        self.client = MongoClient(host, port)
+        self.client = MongoClient(host, port, *args, **kwargs)
+        self.op = op
 
     # FIFTEEN_MINUTES = 900
     # @limits(calls=15, period=FIFTEEN_MINUTES)
@@ -42,29 +55,12 @@ class Enricher:
         else:
             raise Exception("df must by a Spark Dataframe or Pandas Dataframe")
 
-    def flush(self):
-        """
-        Flush the enricher default collection
-        :return:
-        """
-        count = self.count()
-        self.drop_collection(self.collection_name)
-        print("Removed {count} documents".format(count=count))
-
-    def count(self):
-        """
-        Conunt nunber of documents in a collections
-        :return:
-        """
-        collection = self.get_collection(self.collection_name)
-        cursor = collection.find()
-        return cursor.count(True)
-
-    def run(self, collection_name=None, func_request=None, func_response=None, return_type="json",
+    def run(self, df, collection_name=None, func_request=None, func_response=None, return_type="json", filename=None,
             calls=None, period=60):
         """
         Read a the url key from a mongo collection an make a request to a service
-        :param collection_name:
+        :param df: Dataframe to me loaded to the enricher collection.
+        :param collection_name: Custom collection to save the data.
         :param func_request: help to create a custom request
         :param func_response: help to create a custom response
         :param return_type:
@@ -72,6 +68,10 @@ class Enricher:
         :param period: in which period ot time can the call be made
         :return:
         """
+
+        # Load the dataframe data in the enricher
+        df_result = df.cols.create_id()
+        self.send(df_result)
 
         if collection_name is None:
             collection_name = self.collection_name
@@ -109,8 +109,46 @@ class Enricher:
                 else:
                     # The response key will remain blank so we can filter it to try in future request
                     print(response.status_code)
+
+            # Save a temporal data file to be merged with the dataframe.
+            # If someone knows a way get the data form the collection and merge it the source dataframe
+            # please open an issue.
+            if filename is None:
+                filename = random_int() + ".csv"
+
+            # Save temporal file from mongo to
+            # self.save_to_csv(filename, collection_name)
+
+            # Load from the temporal fgi
+            # df_result = self.op.load.csv(filename)
+
+            # join both the actual dataframe an the temp csv
+
+            # Flush the mongo collection
+            # self.flush()
+            return True
+
+            #
         else:
             print("No records available to process")
+
+    def count(self):
+        """
+        Count number of documents in a collections
+        :return:
+        """
+        collection = self.get_collection(self.collection_name)
+        cursor = collection.find()
+        return cursor.count(True)
+
+    def flush(self):
+        """
+        Flush the enricher default collection
+        :return:
+        """
+        count = self.count()
+        self.drop_collection(self.collection_name)
+        print("Removed {count} documents".format(count=count))
 
     def collection_exists(self, collection_name):
         """
@@ -271,7 +309,7 @@ class Enricher:
             count = documents.count(True)
 
             # Save csv body
-            for document in tqdm_notebook(documents, total=count, desc='Processing records'):
+            for document in tqdm_notebook(documents, total=count, desc='Saving...'):
                 # Get a json, transform it to str and return a semicolon separated string
 
                 result = list(map((lambda x: str(x)), document.values()))
@@ -280,9 +318,6 @@ class Enricher:
             raise Exception("Could not write in {filename}".format(filename=filename))
 
         file.close()
-
-        # Empty the collecion
-        self.flush()
 
     # CSV https: // gist.github.com / jxub / f722e0856ed461bf711684b0960c8458
 

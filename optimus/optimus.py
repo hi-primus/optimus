@@ -1,8 +1,8 @@
-import logging
 import os
 from shutil import rmtree
 
 from optimus.create import Create
+from optimus.enricher import Enricher
 from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.raiseit import RaiseIt
@@ -17,7 +17,7 @@ Spark.instance = None
 class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
-                 verbose=False, dl=False):
+                 verbose=False, dl=False, enricher_localhost="localhost", enricher_port=27017):
 
         """
         Transform and roll out
@@ -70,6 +70,18 @@ class Optimus:
         self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
+        self.enricher = Enricher(enricher_localhost, enricher_port, op=self)
+
+    def enrich(self, df, func_request, func_response):
+        """
+
+        :param df:
+        :param func_request:
+        :param func_response:
+        :return:
+        """
+
+        self.enricher.run(df, func_request=func_request, func_response=func_response)
 
     @property
     def spark(self):
