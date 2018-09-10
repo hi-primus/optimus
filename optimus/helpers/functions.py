@@ -16,7 +16,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 def random_int(n=5):
     """
-    Create a random number
+    Create a random string of ints
     :return:
     """
     return str(random.randint(1, 10 ** n))
@@ -49,7 +49,7 @@ def get_spark_dtypes_object(value):
     try:
         data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
 
-    except KeyError:
+    except (KeyError, TypeError):
         data_type = value
 
     data_type = one_list_to_val(data_type)
@@ -75,6 +75,11 @@ def print_html(html):
 
 
 def print_json(value):
+    """
+    Print a json in a way that a human can read it
+    :param value: json to be printed
+    :return: json
+    """
     pp = pprint.PrettyPrinter(indent=2)
     if is_str(value):
         value = value.replace("'", "\"")
@@ -185,8 +190,8 @@ def format_dict(val):
 def validate_columns_names(df, col_names, index=0):
     """
     Check if a string or list of string are valid dataframe columns
-    :param df:
-    :param col_names:
+    :param df: Data frame to be analyzed
+    :param col_names: columns names to be checked
     :param index:
     :return:
     """

@@ -16,8 +16,7 @@ from pyspark.sql.functions import Column
 
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.checkit \
-    import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
 # Helpers
 from optimus.helpers.constants import *
@@ -243,23 +242,23 @@ def cols(self):
         # if parse_spark_dtypes(attr[0])
         def cast_factory(cls):
 
-            # Parse standard data types
-            if get_spark_dtypes_object(cls):
-                func_type = "column_exp"
-
-                def cast_to_vectors(col_name, attr):
-                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
-
-                func_return_type = None
-
             # Parse to Vector
-            elif is_type(cls, Vectors):
+            if is_type(cls, Vectors):
                 func_type = "udf"
 
                 def cast_to_vectors(val, attr):
                     return Vectors.dense(val)
 
                 func_return_type = VectorUDT()
+            # Parse standard data types
+            elif get_spark_dtypes_object(cls):
+
+                func_type = "column_exp"
+
+                def cast_to_vectors(col_name, attr):
+                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
+
+                func_return_type = None
 
             # Add here any other parse you want
             else:
@@ -412,7 +411,7 @@ def cols(self):
             df = df.drop(column)
         return df
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     def _exprs(funcs, columns):
         """
         Helper function to apply multiple columns expression to multiple columns
@@ -467,11 +466,9 @@ def cols(self):
             for func in funcs:
                 exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-        return (
-            parse_col_names_funcs_to_keys(
-                format_dict(df.agg(*exprs).to_json())
-            )
-        )
+        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*exprs).to_json()))
+        # logging.info(result)
+        return result
 
     # Quantile statistics
     @add_attr(cols)
@@ -522,14 +519,16 @@ def cols(self):
 
         return percentile(columns, [0.5])
 
-    @add_attr(cols)
-    def percentile(columns, values=None, error=0):
+    @add_attr(cols, log_time=True)
+    def percentile(columns, values=None, error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
+        :param error:
         :return: percentiles per columns
         """
+
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -846,16 +845,38 @@ def cols(self):
     @add_attr(cols)
     def fill_na(columns, value):
         """
-        Reaplce null data with a specified value
+        Replace null data with a specified value
+        :param columns:
+        :param value:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        def _fill_na(_col_name, _value):
+            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(_col_name)
+
+        df = self
+        for col_name in columns:
+            df = df.cols.apply_expr(col_name, _fill_na, value)
+        return df
+
+    @add_attr(cols)
+    def is_na(columns):
+        """
+        Replace null values per True and non null per False
         :param columns:
         :param value:
         :return:
         """
 
-        def _fill_na(col_name, args):
-            return F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name).otherwise(args)
+        def _replace_na(_col_name, _value):
+            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
 
-        return self.cols.apply_expr(columns, _fill_na, value)
+        df = self
+        for col_name in columns:
+            df = df.cols.apply_expr(col_name, _replace_na)
+
+        return df
 
     @add_attr(cols)
     def count():
@@ -996,25 +1017,25 @@ def cols(self):
         :param regex:
         :return:
         """
-        replace = None
+        _replace = None
         search = None
 
         if is_list_of_tuples(search_and_replace):
             params = list(zip(*search_and_replace))
             search = list(params[0])
-            replace = list(params[1])
+            _replace = list(params[1])
 
         elif is_list(search_and_replace):
             search = search_and_replace
-            replace = value
+            _replace = value
 
         elif is_one_element(search_and_replace):
             search = val_to_list(search_and_replace)
-            replace = value
+            _replace = value
 
         if regex:
             search = search_and_replace
-            replace = value
+            _replace = value
 
         # if regex or normal replace we use regexp or replace functions
         # TODO check if .contains can be used instead of regexp
@@ -1022,7 +1043,7 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtypes(_col_name)
+            data_type = self.cols.dtype(_col_name)
             _search = [PYTHON_TYPES_[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
@@ -1036,7 +1057,7 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes="string")
         for c in columns:
-            df = func(df, c, search, replace)
+            df = func(df, c, search, _replace)
 
         return df
 
@@ -1202,12 +1223,12 @@ def cols(self):
     def cell(column):
         """
         Get the value for the first cell from a column in a data frame
-        :param column: Column to be
+        :param column: Column to be processed
         :return:
         """
         return self.cols.select(column).first()[0]
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
         """
@@ -1227,8 +1248,14 @@ def cols(self):
             # Create buckets in the dataFrame
             df = bucketizer(self, col_name, splits=splits)
 
-            counts = (df.groupBy(col_name + "_buckets").agg(F.count(col_name + "_buckets").alias("count")).cols.rename(
-                col_name + "_buckets", "value").sort(F.asc("value")).to_json())
+            col_bucket = col_name + "_buckets"
+
+            counts = (df
+                      .h_repartition(col_name=col_bucket)
+                      .groupBy(col_bucket)
+                      .agg(F.count(col_bucket).alias("count"))
+                      .cols.rename(col_bucket, "value")
+                      .sort(F.asc("value")).to_json())
 
             # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
             new_array = []
@@ -1254,7 +1281,7 @@ def cols(self):
 
         return hist_data
 
-    @add_attr(cols)
+    @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
         return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
@@ -1263,7 +1290,7 @@ def cols(self):
     def frequency(columns, buckets=10):
         """
         Output values frequency in json format
-        :param columns: Column to be processed
+        :param columns: Columns to be processed
         :param buckets: Number of buckets
         :return:
         """
@@ -1278,18 +1305,18 @@ def cols(self):
     @add_attr(cols)
     def schema_dtypes(columns):
         """
-        Return the columns data type as Type
-        :param columns:
+        Return the column(s) data type as Type
+        :param columns: Columns to be processed
         :return:
         """
         columns = parse_columns(self, columns)
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtypes(columns):
+    def dtype(columns):
         """
-        Return the column data type as string
-        :param columns:
+        Return the column(s) data type as string
+        :param columns: Columns to be processed
         :return:
         """
 
@@ -1301,10 +1328,10 @@ def cols(self):
     @add_attr(cols)
     def qcut(input_col, output_col, num_buckets):
         """
-        Bin columns into n buckets
-        :param input_col:
-        :param output_col:
-        :param num_buckets:
+        Bin columns into n buckets. Quantile Discretizer
+        :param input_col: Input column to processed
+        :param output_col: Output columns with the bin number
+        :param num_buckets: Number of buckets in which the column will be divided
         :return:
         """
         discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)

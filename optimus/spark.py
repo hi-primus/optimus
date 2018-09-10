@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
@@ -32,8 +30,11 @@ class Spark:
         logging.info(STARTING_SPARK)
 
         # Build the spark session
-        self.spark
-
+        self._spark = (SparkSession
+                       .builder
+                       .master(self.master)
+                       .appName(self.app_name)
+                       .getOrCreate())
 
     @property
     def spark(self):
@@ -42,12 +43,7 @@ class Spark:
         :return: None
         """
 
-        return (SparkSession
-                .builder
-                .master(self.master)
-                .appName(self.app_name)
-                .getOrCreate()
-                )
+        return self._spark
 
     @property
     def sc(self):
@@ -55,4 +51,21 @@ class Spark:
         Return the Spark Context
         :return:
         """
-        return self.spark.sparkContext
+        return self._spark.sparkContext
+
+    @property
+    def parallelism(self):
+        """
+        Returns default level of parallelism defined on SparkContext. By default it is number of cores available.
+        :param self: Dataframe
+        :return:
+        """
+        return self.sc.defaultParallelism
+
+    @property
+    def executors(self):
+        """
+        Get the number of executors. If launched in local mode executors in None
+        :return:
+        """
+        return self.sc._conf.get('spark.executor.instances')

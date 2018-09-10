@@ -1,6 +1,8 @@
 import logging
+import multiprocessing
 import os
 
+import humanize
 import jinja2
 from IPython.core.display import display, HTML
 from pyspark.ml.feature import SQLTransformer
@@ -12,16 +14,14 @@ from pyspark.sql import functions as F
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list
 from optimus.spark import Spark
-import multiprocessing
 
 cpu_count = multiprocessing.cpu_count()
 
 
 @add_method(DataFrame)
-def rollout(self):
+def rollout():
     """
     Just a function to check if the Spark dataframe has been Monkey Patched
-    :param self:
     :return:
     """
     print("Yes!")
@@ -166,22 +166,51 @@ def sql(self, sql_expression):
 @add_attr(DataFrame)
 def partitions(self):
     """
-    Return dataframes partitions number
+    Return the dataframe partitions number
+    :param self: Dataframe
+    :return: Number of partitions
+    """
+    return self.rdd.getNumPartitions()
+
+
+@add_attr(DataFrame)
+def partitioner(self):
+    """
+    Return al algorithm used to partition the dataframe
     :param self:
     :return:
     """
-    print(self.rdd.getNumPartitions())
+    return self.rdd.partitioner
+
+
+@add_attr(DataFrame)
+def glom(self):
+    """
+
+    :param self: Dataframe
+    :return:
+    """
+    return collect_as_dict(self.rdd.glom().collect()[0])
 
 
 @add_method(DataFrame)
-def h_repartition(self):
+def h_repartition(self, partitions=None, col_name=None):
     """
     Get the number of cpu available and apply an "optimus" repartition in the dataframe
     #Reference: https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
     :param self:
+    :param partitions:
+    :param col_name:
     :return:
     """
-    return self.repartition(cpu_count * 4)
+    if partitions is None:
+        partitions = Spark.instance.parallelism * 4
+
+    if col_name is None:
+        df = self.repartition(partitions)
+    else:
+        df = self.repartition(partitions, col_name)
+    return df
 
 
 @add_method(DataFrame)
@@ -205,14 +234,19 @@ def table_html(self, limit=100, columns=None):
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type info need it
-    dtypes = list(filter(lambda x: x[0] in columns, self.dtypes))
+    dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
 
     total_rows = self.count()
     if total_rows < limit:
         limit = total_rows
 
+    total_rows = humanize.intword(total_rows)
+    total_cols = self.cols.count()
+    total_partitions = self.partitions()
+
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=self.cols.count())
+    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
+                             partitions=total_partitions)
     return output
 
 
@@ -276,3 +310,15 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
     return result
+
+
+@add_method(DataFrame)
+def create_id(self, column="id"):
+    """
+    Create a unique id for every row.
+    :param self:
+    :param column:
+    :return:
+    """
+
+    return self.withColumn(column, F.monotonically_increasing_id())

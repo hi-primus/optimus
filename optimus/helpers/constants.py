@@ -16,9 +16,10 @@ PYTHON_SHORT_TYPES = {"string": "string",
                       }
 PYTHON_TYPES_ = {"string": str, "int": int, "float": float, "boolean": bool}
 
-PROFILER_TYPES = {"int", "float", "string", "bool", "date", "null"}
+PROFILER_TYPES = {"int", "float", "string", "bool", "date", "null", "array"}
 PROFILER_LEGEND_TYPES = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
-PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null"}
+
+PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "bool", "null", "array"}
 
 SPARK_SHORT_DTYPES = {"string": "string",
                       "str": "string",

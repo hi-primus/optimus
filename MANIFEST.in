@@ -1,0 +1,2 @@
+include optimus/templates/*
+include optimus/profiler/templates/*

@@ -1,10 +1,12 @@
 import json
 import math
+import timeit
 
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
 from optimus.helpers.constants import *
+from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns
 
 confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
@@ -34,15 +36,6 @@ def fill_missing_var_types(var_types):
     return var_types
 
 
-# TODO: Maybe use pprint instead of this
-def print_json(value):
-    """
-    Print beauty jsons
-    :return:
-    """
-    print(json.dumps(value, indent=2))
-
-
 def write_json(data, path):
     """
     Write a json file with the profiler result
@@ -55,20 +48,6 @@ def write_json(data, path):
             json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False)
     except IOError:
         pass
-
-
-def human_readable_bytes(value, suffix='B'):
-    """
-    Return a human readable file size
-    :param value:
-    :param suffix:
-    :return:
-    """
-    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
-        if abs(value) < 1024.0:
-            return "%3.1f%s%s" % (value, unit, suffix)
-        value /= 1024.0
-    return "%.1f%s%s" % (value, 'Yi', suffix)
 
 
 def sample_size(population_size, confidence_level, confidence_interval):
@@ -101,6 +80,7 @@ def sample_size(population_size, confidence_level, confidence_interval):
     return int(math.ceil(n))  # sample size
 
 
+@time_it
 def bucketizer(df, columns, splits):
     """
 
@@ -137,6 +117,7 @@ def bucketizer(df, columns, splits):
         return expr
 
     output_columns = [c + "_buckets" for c in columns]
+
     # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
     df = df.cols.apply_expr(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
 
