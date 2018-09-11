@@ -1124,18 +1124,15 @@ def cols(self):
             columns = parse_columns(self, input_cols)
 
         if shape is "vector":
-
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)
             df = vector_assembler.transform(self)
 
         elif shape is "array":
-
             df = apply_expr(output_col, F.array(*columns))
 
         elif shape is "string":
-
             df = apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])

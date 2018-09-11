@@ -4,12 +4,18 @@ import logging
 
 import pandas as pd
 import requests
+from backoff import on_exception, expo
 from pymongo import MongoClient
 from pyspark.sql.functions import DataFrame
+from pyspark.sql.functions import pandas_udf, PandasUDFType
+from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
 from optimus.helpers.checkit import is_function, is_
-from optimus.helpers.functions import random_int
+
+# Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
+COL_ID = "jazz_id"
+COL_RESULTS = "jazz_results"
 
 
 class Enricher:
@@ -17,7 +23,7 @@ class Enricher:
     Enrich data from a Pandas or Spark dataframe
     """
 
-    def __init__(self, host="localhost", port=27017, db_name="jazz", collection_name="data", op=None, *args,
+    def __init__(self, op=None, host="localhost", port=27017, db_name="jazz", collection_name="data", *args,
                  **kwargs):
         """
 
@@ -38,9 +44,6 @@ class Enricher:
         self.client = MongoClient(host, port, *args, **kwargs)
         self.op = op
 
-    # FIFTEEN_MINUTES = 900
-    # @limits(calls=15, period=FIFTEEN_MINUTES)
-
     def send(self, df):
         """
         Send the dataframe to the mongo collection
@@ -55,8 +58,8 @@ class Enricher:
         else:
             raise Exception("df must by a Spark Dataframe or Pandas Dataframe")
 
-    def run(self, df, collection_name=None, func_request=None, func_response=None, return_type="json", filename=None,
-            calls=None, period=60):
+    def run(self, df, collection_name=None, func_request=None, func_response=None, return_type="json", calls=60,
+            period=60, max_tries=8):
         """
         Read a the url key from a mongo collection an make a request to a service
         :param df: Dataframe to me loaded to the enricher collection.
@@ -66,29 +69,40 @@ class Enricher:
         :param return_type:
         :param calls: how many call can you make
         :param period: in which period ot time can the call be made
+        :param max_tries: how many retries should we do
         :return:
         """
 
         # Load the dataframe data in the enricher
-        df_result = df.cols.create_id()
-        self.send(df_result)
+        if is_(df, DataFrame):
+            df = df.create_id(COL_ID)
+
+        # Load the dataframe data in the enricher
+        self.send(df)
 
         if collection_name is None:
             collection_name = self.collection_name
-
         collection = self.get_collection(collection_name)
 
-        cursor = collection.find({"result": {"$exists": False}})
+        # Get data that is not yet enriched
+        cursor = collection.find({COL_RESULTS: {"$exists": False}})
 
         total_docs = cursor.count(True)
-        if total_docs > 0:
-            if func_request is None:
-                func_request = requests.get
 
+        if func_request is None:
+            func_request = requests.get
+        collection = self.get_collection(collection_name)
+
+        @on_exception(expo, RateLimitException, max_tries=max_tries)
+        @limits(calls=calls, period=period)
+        def _func_request(v):
+            return func_request(v)
+
+        if total_docs > 0:
             for c in tqdm_notebook(cursor, total=total_docs, desc='Processing...'):
 
                 # Send request to the API
-                response = func_request(c)
+                response = _func_request(c)
 
                 mongo_id = c["_id"]
 
@@ -102,33 +116,42 @@ class Enricher:
                     if is_function(func_response):
                         response = func_response(response)
 
-                    # update the mongo id  with the result
-                    self.get_collection(collection_name).find_and_modify(query={"_id": mongo_id},
-                                                                         update={"$set": {'result': response}},
-                                                                         upsert=False, full_response=True)
+                    # Update the mongo id with the result
+                    collection.find_and_modify(query={"_id": mongo_id},
+                                               update={"$set": {COL_RESULTS: response}},
+                                               upsert=False, full_response=True)
                 else:
                     # The response key will remain blank so we can filter it to try in future request
-                    print(response.status_code)
+                    logging.info(response.status_code)
 
-            # Save a temporal data file to be merged with the dataframe.
-            # If someone knows a way get the data form the collection and merge it the source dataframe
-            # please open an issue.
-            if filename is None:
-                filename = random_int() + ".csv"
+            # Append the data in enrichment to the dataframe
 
-            # Save temporal file from mongo to
-            # self.save_to_csv(filename, collection_name)
+            logging.info("Appending collection info into the dataframe")
+            # TODO: An elegant way to handle pickling?
+            # take care to the pickling
+            host = self.host
+            port = self.port
+            db_name = self.db_name
 
-            # Load from the temporal fgi
-            # df_result = self.op.load.csv(filename)
+            @pandas_udf('string', PandasUDFType.SCALAR)
+            def func(value):
+                # More about pickling
+                from pymongo import MongoClient
+                _client = MongoClient(host, port)
+                _db = _client[db_name]
+                _collection = _db[collection_name]
 
-            # join both the actual dataframe an the temp csv
+                def func_serie(serie):
+                    _cursor = _collection.find_one({COL_ID: serie}, projection={"_id": 0, COL_RESULTS: 1})
+                    return _cursor[COL_RESULTS]
 
-            # Flush the mongo collection
-            # self.flush()
-            return True
+                return value.apply(func_serie)
 
-            #
+            df = df.withColumn(COL_RESULTS, func(df[COL_ID])).cols.drop(COL_ID).run()
+
+            # If the process is finished, flush the Mongo collection
+            self.flush()
+            return df
         else:
             print("No records available to process")
 
@@ -148,7 +171,7 @@ class Enricher:
         """
         count = self.count()
         self.drop_collection(self.collection_name)
-        print("Removed {count} documents".format(count=count))
+        logging.info("Removed {count} documents".format(count=count))
 
     def collection_exists(self, collection_name):
         """
@@ -319,118 +342,6 @@ class Enricher:
 
         file.close()
 
-    # CSV https: // gist.github.com / jxub / f722e0856ed461bf711684b0960c8458
-
-    def save_to_json(self, filename, projection=None, limit=0):
-        """
-        Save collection to json file
-        :param filename:
-        :param projection:
-        :param limit:
-        :return:
-        """
-
-        _collection = self.get_collection(self.collection_name)
-
-        file = open(filename, "w")
-        file.write('[')
-
-        i = 0
-
-        # dump all the data
-        documents = _collection.find({}, projection).limit(limit)
-        count = documents.count(True)
-
-        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
-
-            i = i + 1
-            # FIX: we should remove the id in the projection
-            r.pop('_id')
-
-            file.write(json.dumps(r))
-            if (i < count):
-                file.write(',')
-
-        file.write(']')
-        file.close()
-
-    def save_to_geojson(self, filename, coordinates_keys, projection=None, limit=0):
-        """
-        Save collection to geojson file
-        :param filename: Output file
-        :param coordinates_keys:
-        :param projection:
-        :return:
-        """
-
-        _collection = self.get_collection(self.collection_name)
-
-        file = open(filename, "w")
-        file.write('{"type": "FeatureCollection","features":[')
-
-        i = 0
-
-        # dump all the data
-        projection = coordinates_keys + projection
-        documents = _collection.find({}, projection).limit(limit)
-        count = documents.count(True)
-
-        for r in tqdm_notebook(documents, total=count, desc='Processing records'):
-
-            i = i + 1
-
-            lon_key = coordinates_keys[0]
-            # Verify if the key exist and is a float number
-            if (lon_key in r) and (isinstance(r[lon_key], float)):
-                lon = r[lon_key]
-
-            lat_key = coordinates_keys[1]
-            if (lat_key in r) and (isinstance(r[lat_key], float)):
-                lat = r[lat_key]
-
-            # FIX: we should remove the id in the projection
-            r.pop('_id')
-            r.pop(lon_key)
-            r.pop(lat_key)
-
-            features = {"type": "Feature", "properties": r, "geometry": {"type": "Point", "coordinates": [lon, lat]}}
-
-            file.write(json.dumps(features))
-            if (i < count):
-                file.write(',')
-
-        file.write(']}')
-        file.close()
-
-    # FIX: not work need to find how to implement in a cursor object
-    def head_cursor(self, collection_name_or_cursor, n=1):
-        """
-
-        :param collection_name_or_cursor:
-        :param n:
-        :return:
-        """
-        if not int(n): raise Exception('n must be an integer')
-
-        if isinstance(collection_name_or_cursor, str):
-            # try to bring a cursor from a collection
-            cursor = self.get_collection(collection_name_or_cursor).find({}).limit(n)
-            count = cursor.count(True)
-        else:
-            cursor = collection_name_or_cursor
-            cursor.rewind()
-            count = n
-
-        # FIX: and elegant way to make it in python?
-        i = 0
-
-        for c in cursor:
-            if (i < count):
-                print(c)
-            else:
-                break
-            i = i + 1
-
     def insert_to_collection(self, cursor, dest_collection_name, drop=False):
         """
         Insert a cursor into a collection
@@ -453,7 +364,7 @@ class Enricher:
 
     def create_missing_fields(self, cols, collection_name=None):
         """
-
+        Helper function to fill missing keys in a json
         :param cols:
         :param collection_name:
         :return:
@@ -489,8 +400,6 @@ class Enricher:
         collection = self.get_collection(collection_name)
         cursor = collection.find({field: {'$exists': True}}).limit(0)
         desc = 'Converting', field, 'to', convert_to
-
-        # for c in tqdm_notebook(cursor, total = cursor.count(), desc = 'sad'):
 
         if convert_to == 'int':
             data_type = float

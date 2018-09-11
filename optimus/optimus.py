@@ -20,7 +20,6 @@ Spark.instance = None
 class Optimus:
 
     def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
-
                  verbose=False, dl=False,
                  server=False,
                  repositories=None,
@@ -39,6 +38,7 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         :param additional_options:
+
 
         :param options: Configuration options that are passed to spark-submit.
             See `the list of possible options
@@ -123,7 +123,7 @@ class Optimus:
         self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
-        self.enricher = Enricher(enricher_localhost, enricher_port, op=self)
+        self.enricher = Enricher(op=self, host=enricher_localhost, port=enricher_port, )
 
     def enrich(self, df, func_request, func_response):
         """
@@ -134,7 +134,7 @@ class Optimus:
         :return:
         """
 
-        self.enricher.run(df, func_request=func_request, func_response=func_response)
+        return self.enricher.run(df, func_request=func_request, func_response=func_response)
 
     @property
     def spark(self):
