@@ -2,7 +2,7 @@ from multipledispatch import dispatch
 from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
-from optimus.helpers.checkit import is_tuple
+from optimus.helpers.checkit import is_tuple, is_list_of_tuples
 from optimus.helpers.functions import get_spark_dtypes_object
 from optimus.spark import Spark
 
@@ -18,6 +18,8 @@ class Create:
         :param rows: List of Tuples if vals with the same number and types that cols
         :return: Dataframe
         """
+        if not is_list_of_tuples(rows):
+            rows = [(i,) for i in rows]
 
         specs = []
         for c in cols:

@@ -9,17 +9,33 @@ op = Optimus()
 class TestDataFrameCols(object):
 
     @staticmethod
+    def test_create_data_frames_one_column():
+        source_df = op.create.df(
+            rows=["Argenis", "Favio", "Matthew"],
+            cols=["name"]
+        )
+
+        actual_df = source_df
+
+        expected_df = op.create.df(
+            rows=["Argenis", "Favio", "Matthew"],
+            cols=["name"]
+        )
+
+        assert (expected_df.collect() == actual_df.collect())
+
+    @staticmethod
     def test_create_data_frames_plain():
         source_df = op.create.df(
-            rows=[
-                ("BOB", 1),
-                ("JoSe", 2)
-            ],
-            cols=[
-                "name",
-                "age"
-            ]
-        )
+                rows=[
+                    ("BOB", 1),
+                    ("JoSe", 2)
+                ],
+                cols=[
+                    "name",
+                    "age"
+                ]
+            )
 
         actual_df = source_df
 
