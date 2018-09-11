@@ -2,7 +2,6 @@ import builtins
 import itertools
 import re
 import string
-import timeit
 import unicodedata
 from fastnumbers import fast_float
 from functools import reduce
@@ -17,13 +16,11 @@ from pyspark.sql.functions import Column
 
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.checkit \
-    import is_num_or_str, is_list, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, is_
+from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
 # Helpers
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import add_attr, time_it
+from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
@@ -1108,7 +1105,7 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, output_col, shape=None, separator=" "):
+    def nest(input_cols, output_col, shape="string", separator=""):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
@@ -1117,8 +1114,14 @@ def cols(self):
         :param shape: final data type, 'array', 'string' or 'vector'
         :return: Spark DataFrame
         """
-        columns = parse_columns(self, input_cols)
+
         df = self
+
+        if has_(input_cols, F.Column):
+            "Transform non Column data to lit"
+            columns = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
+        else:
+            columns = parse_columns(self, input_cols)
 
         if shape is "vector":
             vector_assembler = VectorAssembler(
@@ -1130,7 +1133,6 @@ def cols(self):
             df = apply_expr(output_col, F.array(*columns))
 
         elif shape is "string":
-
             df = apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])

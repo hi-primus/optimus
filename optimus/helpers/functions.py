@@ -280,6 +280,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     # Filter by column data type
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)

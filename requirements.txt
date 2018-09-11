@@ -1,3 +1,6 @@
+requests==2.18.4
+tqdm==1.19.2
+pymongo==3.7.1
 fastnumbers==2.1.1
 multipledispatch==0.6.0
 python_dateutil==2.7.3
@@ -20,7 +23,9 @@ pillow==5.2.0
 pygments>=2.2.0
 six>=1.10.0
 h5py>=2.7.0
-humanize==0.5.1
-flask==0.12.2
+flask==1.0.2
 ipython==6.5.0
-psutil
+ratelimit==2.2.0
+humanize==0.5.1
+psutil==5.4.7
+backoff=1.6.0

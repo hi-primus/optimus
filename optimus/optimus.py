@@ -3,6 +3,7 @@ import sys
 from shutil import rmtree
 
 from optimus.create import Create
+from optimus.enricher import Enricher
 from optimus.functions import concat
 from optimus.helpers.constants import *
 from optimus.helpers.functions import val_to_list
@@ -25,7 +26,9 @@ class Optimus:
                  packages=None,
                  jars=None,
                  options=None,
-                 additional_options=None):
+                 additional_options=None,
+                 enricher_localhost="localhost", enricher_port=27017
+                 ):
 
         """
         Transform and roll out
@@ -35,6 +38,7 @@ class Optimus:
         :param checkpoint: If True create a checkpoint folder
         :param file_system: 'local' or 'hadoop'
         :param additional_options:
+
 
         :param options: Configuration options that are passed to spark-submit.
             See `the list of possible options
@@ -119,6 +123,18 @@ class Optimus:
         self.read = self.spark.read
         self.profiler = Profiler()
         self.ml = ML()
+        self.enricher = Enricher(op=self, host=enricher_localhost, port=enricher_port, )
+
+    def enrich(self, df, func_request, func_response):
+        """
+
+        :param df:
+        :param func_request:
+        :param func_response:
+        :return:
+        """
+
+        return self.enricher.run(df, func_request=func_request, func_response=func_response)
 
     @property
     def spark(self):

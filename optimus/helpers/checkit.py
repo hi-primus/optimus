@@ -253,3 +253,6 @@ def is_dataframe(value):
     """
     return isinstance(value, DataFrame)
 
+
+def has_(value, _type):
+    return any(isinstance(elem, _type) for elem in value)
