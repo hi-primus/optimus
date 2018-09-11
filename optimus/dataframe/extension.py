@@ -128,23 +128,14 @@ def run(self):
     Sometimes when transformations are numerous, the computations are very extensive because the high number of
     operations that spark needs to run in order to get the results.
 
-    Other important thing is that apache spark usually save task but not result of dataFrame, so tasks are
+    Other important thing is that Apache Spark save task but not result of dataFrame, so tasks are
     accumulated and the same situation happens.
-
-    The problem can be deal it with the checkPoint method. This method save the resulting dataFrame in disk, so
-     the lineage is cut.
     """
 
-    # Check pointing of dataFrame. One question can be thought. Why not use cache() or persist() instead of
-    # checkpoint. This is because cache() and persis() apparently do not break the lineage of operations,
-
-    logging.info("Saving changes at disk by checkpoint...")
-
     self.cache().count
+    self.count()
 
-    logging.info("Done.")
-
-    return True
+    return self
 
 
 @add_method(DataFrame)
