@@ -29,3 +29,4 @@ ratelimit==2.2.0
 humanize==0.5.1
 psutil==5.4.7
 backoff==1.6.0
+pymongo
