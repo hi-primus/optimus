@@ -637,12 +637,12 @@ class TestDataFrameCols(object):
         expected_df = op.create.df(
             rows=[
                 ("happy", 1, "N/A"),
-                ("excited", 2, 8)
+                ("excited", 2, "8")
             ],
             cols=[
                 ("emotion", StringType(), True),
-                ("num1", IntegerType(), True),
-                ("num2", IntegerType(), True)
+                ("num1", StringType(), True),
+                ("num2", StringType(), True)
             ]
         )
 
@@ -652,25 +652,29 @@ class TestDataFrameCols(object):
     def test_nest_vector():
         source_df = op.create.df(
             rows=[
-                ("happy", 1),
-                ("excited", 2)
-            ],
-            cols=[
-                ("emotion", StringType(), True),
-                ("num", IntegerType(), True)
-            ]
-        )
-
-        actual_df = source_df.cols.nest(["emotion", "num"], "new", shape="vector")
-
-        expected_df = op.create.df(
-            rows=[
-                (1, "happy", [1, "happy"]),
-                (2, "excited", [2, "excited"])
+                ("happy", 1, 4),
+                ("excited", 2, 5),
+                ("sad", 3, 6)
             ],
             cols=[
                 ("emotion", StringType(), True),
                 ("num", IntegerType(), True),
+                ("num 2", IntegerType(), True)
+            ]
+        )
+
+        actual_df = source_df.cols.nest(["num", "num 2"], "new", shape="vector")
+
+        expected_df = op.create.df(
+            rows=[
+                ("happy", 1, 4, DenseVector([1, 4])),
+                ("excited", 2, 5, DenseVector([2, 5])),
+                ("sad", 3, 6, DenseVector([3, 6]))
+            ],
+            cols=[
+                ("emotion", StringType(), True),
+                ("num", IntegerType(), True),
+                ("num 2", IntegerType(), True),
                 ("new", VectorUDT(), True)
 
             ]
@@ -695,13 +699,13 @@ class TestDataFrameCols(object):
 
         expected_df = op.create.df(
             rows=[
-                (1, "happy", [1, "happy"]),
-                (2, "excited", [2, "excited"])
+                ("happy", 1, ["happy", "1"]),
+                ("excited", 2, ["excited", "2"])
             ],
             cols=[
                 ("emotion", StringType(), True),
                 ("num", IntegerType(), True),
-                ("new", ArrayType(), True)])
+                ("new", ArrayType(StringType()), True)])
 
         assert (actual_df.collect() == expected_df.collect())
 
