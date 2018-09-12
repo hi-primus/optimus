@@ -121,7 +121,7 @@ class TestDataFrameCols(object):
         # Create pandas dataframe
         pdf = pd.DataFrame.from_records(data, columns=labels)
 
-        actual_df = op.create.df(pdf)
+        actual_df = op.create.df(pdf=pdf)
 
         expected_df = op.create.df(
             rows=[
@@ -136,3 +136,4 @@ class TestDataFrameCols(object):
         )
 
         assert (expected_df.collect() == actual_df.collect())
+
