@@ -35,7 +35,7 @@ class Create:
                     col_name = c[0]
 
                 # Get columns data type
-                if len(c) == 2:
+                if len(c) >= 2:
                     var_type = get_spark_dtypes_object(c[1])
                 else:
                     var_type = StringType()
@@ -43,6 +43,7 @@ class Create:
                 # Get column nullable flag. It's just to tell if a column accept nulls as values
                 if len(c) == 3:
                     nullable = c[2]
+                    var_type = get_spark_dtypes_object(c[1])
                 else:
                     nullable = True
 
