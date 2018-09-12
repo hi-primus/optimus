@@ -853,7 +853,7 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         def _fill_na(_col_name, _value):
-            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(_col_name)
+            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(F.col(_col_name))
 
         df = self
         for col_name in columns:
