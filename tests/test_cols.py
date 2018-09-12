@@ -1,4 +1,6 @@
-from pyspark.ml.linalg import Vectors, VectorUDT
+import logging
+
+from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
@@ -6,6 +8,10 @@ from pyspark.sql.types import *
 from optimus import Optimus
 
 op = Optimus()
+# op.sc.setLogLevel("INFO")
+
+s_logger = logging.getLogger('py4j.java_gateway')
+s_logger.setLevel(logging.INFO)
 
 
 class TestDataFrameCols(object):
@@ -397,24 +403,23 @@ class TestDataFrameCols(object):
         source_df = op.create.df(
             rows=[
                 ("happy", [1, 2, 3]),
-                ("excited", 2)
+                ("excited", [4, 5, 6])
             ],
             cols=[
-                ("emotion", ArrayType(), True),
-                ("num", IntegerType(), True)
+                ("emotion", StringType(), True),
+                ("num", ArrayType(IntegerType()), True)
             ]
         )
 
-        actual_df = source_df.cols.cast("happy", Vectors)
+        actual_df = source_df.cols.cast("num", Vectors)
 
         expected_df = op.create.df(
             rows=[
-                ("happy", [1, 2, 3]),
-                ("excited", 2)
-            ],
+                ("happy", DenseVector([1, 2, 3])),
+                ("excited", DenseVector([4, 5, 6]))],
             cols=[
-                ("emotion", VectorUDT(), True),
-                ("num", StringType(), True)
+                ("emotion", StringType(), True),
+                ("num", VectorUDT(), True)
             ]
         )
 
@@ -573,8 +578,8 @@ class TestDataFrameCols(object):
 
         expected_df = op.create.df(
             rows=[
-                (1, "happy", "1 happy"),
-                (2, "excited", "2 excited")
+                ("happy", 1, "happy 1"),
+                ("excited", 2, "excited 2")
             ],
             cols=[
                 ("emotion", StringType(), True),
@@ -599,12 +604,12 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.nest([F.Column("emotion"), "---", F.Column("num")], separator="new")
+        actual_df = source_df.cols.nest([F.col("emotion"), F.col("num")], "new", separator="--")
 
         expected_df = op.create.df(
             rows=[
-                (1, "happy", "1---happy"),
-                (2, "excited", "2---excited")
+                ("happy", 1, "happy--1"),
+                ("excited", 2, "excited--2")
             ],
             cols=[
                 ("emotion", StringType(), True),
@@ -714,7 +719,7 @@ class TestDataFrameCols(object):
             ]
         )
 
-        actual_df = source_df.cols.fill_na("*", "N/A")
+        actual_df = source_df.cols.is_na("*")
 
         expected_df = op.create.df(
             rows=[
@@ -722,9 +727,9 @@ class TestDataFrameCols(object):
                 (False, False, False)
             ],
             cols=[
-                ("emotion", StringType(), True),
-                ("num1", IntegerType(), True),
-                ("num2", IntegerType(), True)
+                ("emotion", BooleanType(), True),
+                ("num1", BooleanType(), True),
+                ("num2", BooleanType(), True)
 
             ]
         )
