@@ -27,3 +27,4 @@ ipython==6.5.0
 humanize==0.5.1
 pytest-cov==2.6.0
 psutil
+backoff==1.6.0
