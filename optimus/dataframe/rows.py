@@ -178,7 +178,7 @@ def rows(self):
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
     @add_attr(rows)
-    def isin(columns, values):
+    def is_in(columns, values):
         """
         Filter rows which columns that match a specific value
         :return: Spark DataFrame
