@@ -29,3 +29,4 @@ pytest-cov==2.6.0
 psutil
 backoff==1.6.0
 pymongo
+ratelimit==2.2.0
