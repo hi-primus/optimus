@@ -271,7 +271,7 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
 
         def str_to_array(value):
             """
-            Check if value can be pased to tupple or arrays.
+            Check if value can be parsed to a tuple or and array.
             Because Spark can handle tuples we will try to transform tuples to arrays
             :param value:
             :return:
@@ -279,7 +279,7 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             try:
                 if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
                     return True
-            except ValueError:
+            except (ValueError, SyntaxError,):
                 pass
 
         def func(value):
