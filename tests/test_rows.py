@@ -164,7 +164,7 @@ class TestDataFrameRows(object):
 
     @staticmethod
     def test_is_in():
-        actual_df = source_df.rows.isin("num", 2)
+        actual_df = source_df.rows.is_in("num", 2)
 
         expected_df = op.create.df([
             ("words", "str", True),
@@ -176,6 +176,7 @@ class TestDataFrameRows(object):
         ],
             [
                 ("    zombies", 2, "cat", "tv", 6, "b"),
+                ("simpsons   cat lady", 2, "frog", "table", 7, "1")
             ])
 
         assert (expected_df.collect() == actual_df.collect())

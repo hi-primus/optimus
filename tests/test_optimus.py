@@ -47,7 +47,7 @@ class TestDataFrameCols(object):
             cols=
             [
                 ("name", StringType(), True),
-                ("age", IntegerType(), False)
+                ("age", StringType(), False)
             ]
         )
 
