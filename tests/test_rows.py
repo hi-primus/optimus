@@ -3,7 +3,6 @@ from pyspark.sql.types import *
 from optimus.functions import abstract_udf as audf
 
 op = Optimus()
-sc = op.sc
 
 source_df = op.create.df([
     ("words", "str", True),
@@ -159,6 +158,25 @@ class TestDataFrameRows(object):
                 ("simpsons   cat lady", 2, "frog", "table", 7, "1"),
                 ("  I like     fish  ", 1, "dog dog", "housé", 5, "a"),
 
+            ])
+
+        assert (expected_df.collect() == actual_df.collect())
+
+    @staticmethod
+    def test_is_in():
+        actual_df = source_df.rows.is_in("num", 2)
+
+        expected_df = op.create.df([
+            ("words", "str", True),
+            ("num", "int", True),
+            ("animals", "str", True),
+            ("thing", StringType(), True),
+            ("second", "int", True),
+            ("filter", StringType(), True)
+        ],
+            [
+                ("    zombies", 2, "cat", "tv", 6, "b"),
+                ("simpsons   cat lady", 2, "frog", "table", 7, "1")
             ])
 
         assert (expected_df.collect() == actual_df.collect())

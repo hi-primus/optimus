@@ -8,7 +8,7 @@ import re
 from IPython.display import display, HTML
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_list_of_str_or_int, is_str, is_str_or_int, is_dict_of_one_element, is_tuple, is_dict, is_list
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
@@ -16,7 +16,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 def random_int(n=5):
     """
-    Create a unique filename
+    Create a random string of ints
     :return:
     """
     return str(random.randint(1, 10 ** n))
@@ -75,6 +75,11 @@ def print_html(html):
 
 
 def print_json(value):
+    """
+    Print a json in a way that a human can read it
+    :param value: json to be printed
+    :return: json
+    """
     pp = pprint.PrettyPrinter(indent=2)
     if is_str(value):
         value = value.replace("'", "\"")
@@ -185,8 +190,8 @@ def format_dict(val):
 def validate_columns_names(df, col_names, index=0):
     """
     Check if a string or list of string are valid dataframe columns
-    :param df:
-    :param col_names:
+    :param df: Data frame to be analyzed
+    :param col_names: columns names to be checked
     :param index:
     :return:
     """
@@ -275,6 +280,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     # Filter by column data type
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)

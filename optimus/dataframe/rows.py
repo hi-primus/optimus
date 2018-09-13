@@ -1,3 +1,5 @@
+from functools import reduce
+
 from multipledispatch import dispatch
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -8,7 +10,7 @@ from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit import is_list_of_str_or_int
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val
+from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
 
 
 def rows(self):
@@ -111,7 +113,6 @@ def rows(self):
             col_name = one_list_to_val(cs[0])
             order = cs[1]
 
-
             if order == "asc":
                 sort_func = F.asc
             elif order == "desc":
@@ -175,6 +176,24 @@ def rows(self):
         :return: Spark DataFrame
         """
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
+
+    @add_attr(rows)
+    def is_in(columns, values):
+        """
+        Filter rows which columns that match a specific value
+        :return: Spark DataFrame
+        """
+
+        # Ensure that we have a list
+        values = val_to_list(values)
+
+        # Create column/value expression
+        column_expr = [(F.col(columns) == v) for v in values]
+
+        # Concat expression with and logical or
+        expr = reduce(lambda a, b: a | b, column_expr)
+
+        return self.rows.select(expr)
 
     return rows
 

@@ -1,5 +1,4 @@
 import base64
-import logging
 from fastnumbers import isint, isfloat
 from functools import reduce
 from io import BytesIO
@@ -10,7 +9,6 @@ from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_data_type
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
     get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
@@ -36,9 +34,9 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
-    if verbose is True:
-        logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
-                     .format(func_type=func_type, column=col, func_name=func.__name__))
+    # if verbose is True:
+    #    logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
+    #                 .format(func_type=func_type, column=col, func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
@@ -100,7 +98,7 @@ def filter_row_by_data_type_audf(col_name, data_type):
     """
 
     data_type = parse_python_dtypes(data_type)
-    return abstract_udf(col_name, is_data_type, "boolean", data_type)
+    return abstract_udf(col_name, filter_row_by_data_type, "boolean", data_type)
 
 
 def concat(dfs, like="columns"):
@@ -241,12 +239,13 @@ def plot_hist(column_data=None, output="image", sub_title=""):
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
+    from ast import literal_eval
     """
     A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
     Also can return the data type
     :param col_name: Column to be process
-    :param data_type: The data_type to be compared
-    :param get_type:
+    :param data_type: The data_type to be compared with
+    :param get_type: Value to be returned as string or boolean
     :return: True or False
     """
     if data_type is not None:
@@ -270,11 +269,23 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             except ValueError:
                 pass
 
+        def str_to_array(value):
+            """
+            Check if value can be parsed to a tuple or and array.
+            Because Spark can handle tuples we will try to transform tuples to arrays
+            :param value:
+            :return:
+            """
+            try:
+                if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+                    return True
+            except (ValueError, SyntaxError,):
+                pass
+
         def func(value):
             """
             Check if a value can be casted to a specific
             :param value: value to be checked
-
             :return:
             """
             if isinstance(value, bool):
@@ -290,6 +301,8 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
                     _data_type = "bool"
                 elif str_to_date(value):
                     _data_type = "date"
+                elif str_to_array(value):
+                    _data_type = "array"
                 else:
                     _data_type = "string"
             else:
@@ -306,9 +319,9 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         return v.apply(func)
 
     if get_type is True:
-        a = "string"
+        return_data_type = "string"
     else:
-        a = "boolean"
+        return_data_type = "boolean"
 
     col_name = one_list_to_val(col_name)
-    return F.pandas_udf(pandas_udf_func, a)(col_name)
+    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)
