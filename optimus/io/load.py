@@ -2,8 +2,6 @@ import logging
 import tempfile
 from urllib.request import Request, urlopen
 
-from kombu import Consumer
-
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -117,22 +115,6 @@ class Load:
             raise
 
         return df
-
-
-"""
-    @staticmethod
-    def rabbit_mq():
-        def process_message(body, message):
-            print("The body is {}".format(body))
-            message.ack()
-
-        with Consumer(conn, queues=queue, callbacks=[process_message], accept=["application/json"]):
-            line = conn.drain_events(timeout=5)
-            print(line)
-
-            # conn.heartbeat_check()
-"""
-
 
 class Downloader(object):
     def __init__(self, data_def):

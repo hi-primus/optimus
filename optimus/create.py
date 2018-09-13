@@ -2,7 +2,7 @@ import pandas as pd
 from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
-from optimus.helpers.checkit import is_tuple, is_, is_list, is_one_element, is_list_of_tuples
+from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
 from optimus.helpers.functions import get_spark_dtypes_object
 from optimus.spark import Spark
 

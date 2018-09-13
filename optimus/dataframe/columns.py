@@ -1118,7 +1118,7 @@ def cols(self):
         df = self
 
         if has_(input_cols, F.Column):
-            "Transform non Column data to lit"
+            # Transform non Column data to lit
             columns = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
         else:
             columns = parse_columns(self, input_cols)
