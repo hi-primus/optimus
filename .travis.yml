@@ -21,7 +21,7 @@ jdk:
   - oraclejdk8
     
 script:
-    - py.test -v --ignore=optimus/dl/ --ignore=tests/test_dl.py
+    - py.test -v --ignore=optimus/dl/
 
 deploy:
   provider: pypi
