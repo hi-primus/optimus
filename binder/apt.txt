@@ -1,1 +1,1 @@
-default-jre
+oracle-java8-installer
