@@ -26,7 +26,7 @@ flask==1.0.2
 ipython==6.5.0
 humanize==0.5.1
 pytest-cov==2.6.0
-psutil
+psutil==5.4.7
 backoff==1.6.0
 pymongo
 ratelimit==2.2.0
