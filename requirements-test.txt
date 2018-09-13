@@ -31,4 +31,4 @@ backoff==1.6.0
 pymongo
 ratelimit==2.2.0
 tqdm
-kombu
+kombu==4.2.1
