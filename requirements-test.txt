@@ -30,5 +30,5 @@ psutil
 backoff==1.6.0
 pymongo
 ratelimit==2.2.0
-tqdm
+tqdm==4.25.0
 kombu==4.2.1
