@@ -28,7 +28,7 @@ humanize==0.5.1
 pytest-cov==2.6.0
 psutil
 backoff==1.6.0
-pymongo
+pymongo==3.7.1
 ratelimit==2.2.0
 tqdm
 kombu
