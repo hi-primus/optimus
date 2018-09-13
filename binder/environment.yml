@@ -3,3 +3,5 @@ channels:
   - bioconda
 dependencies:
   - java-jdk
+  - pip:
+    - optimuspyspark
