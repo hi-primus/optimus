@@ -1,0 +1,5 @@
+name: optimus-environment
+channels:
+  - bioconda
+dependencies:
+  - java-jdk
