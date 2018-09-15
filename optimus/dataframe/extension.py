@@ -38,6 +38,33 @@ def to_json(self):
 
 
 @add_method(DataFrame)
+def export(self):
+    """
+    Helper function to export all the dataframe in text format. Aimed to be used in test functions
+    :param self:
+    :return:
+    """
+    dict_result = []
+    value = self.collect()
+    schema = []
+    for c in self.cols.names():
+        name = c
+        dataType = self.schema[c].dataType
+        nullable = self.schema[c].nullable
+        schema.append("('{name}', {dataType}(), {nullable})".format(name=name, dataType=dataType, nullable=nullable))
+    schema = ",".join(schema)
+    schema = "[" + schema + "]"
+
+    # if there is only an element in the dict just return the value
+    if len(dict_result) == 1:
+        dict_result = next(iter(dict_result.values()))
+    else:
+        dict_result = [tuple(v.asDict().values()) for v in value]
+
+    return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
+
+
+@add_method(DataFrame)
 def sample_n(self, n=10, random=False):
     """
     Return a n number of sample from a dataFrame
