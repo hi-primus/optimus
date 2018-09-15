@@ -345,3 +345,4 @@ class Optimus:
         elif verbose is False:
             logging.propagate = False
             logging.disable(logging.NOTSET)
+

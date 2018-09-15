@@ -177,6 +177,7 @@ def rows(self):
         """
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
+    #TODO: Merge with select
     @add_attr(rows)
     def is_in(columns, values):
         """

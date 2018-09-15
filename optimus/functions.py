@@ -108,7 +108,7 @@ def concat(dfs, like="columns"):
     :param like: The way dataframes is going to be concat. like columns or rows
     :return:
     """
-    # Add increasing Ids, and they should be the same.
+
     if like == "columns":
         temp_dfs = []
         col_temp_name = "id_" + random_int()
