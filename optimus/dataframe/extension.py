@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 import os
-
+from pyspark.sql.types import *
 import humanize
 import jinja2
 from IPython.core.display import display, HTML
@@ -19,7 +19,7 @@ cpu_count = multiprocessing.cpu_count()
 
 
 @add_method(DataFrame)
-def rollout():
+def roll_out():
     """
     Just a function to check if the Spark dataframe has been Monkey Patched
     :return:
@@ -87,7 +87,7 @@ def sample_n(self, n=10, random=False):
 def pivot(self, index, column, values):
     """
     Return reshaped DataFrame organized by given index / column values.
-    :param self:
+    :param self: Spark Dataframe
     :param index: Column to use to make new frame’s index.
     :param column: Column to use to make new frame’s columns.
     :param values: Column(s) to use for populating new frame’s values.
@@ -100,12 +100,12 @@ def pivot(self, index, column, values):
 def melt(self, id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
     """
     Convert DataFrame from wide to long format.
-    :param self:
-    :param id_vars:
-    :param value_vars:
-    :param var_name: column name for vars
-    :param value_name: column name for values
-    :param data_type: because all data must have the same type
+    :param self: Spark Dataframe
+    :param id_vars: column with unique values
+    :param value_vars: Column names that are going to be converted to columns values
+    :param var_name: Column name for vars
+    :param value_name: Column name for values
+    :param data_type: All columns must have the same type. It will transform all collumns to this datatype.
     :return:
     """
 
@@ -128,7 +128,7 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value", dat
 def size(self):
     """
     Get the size of a dataframe in bytes
-    :param self:
+    :param self: Spark Dataframe
     :return:
     """
 
@@ -172,7 +172,7 @@ def sql(self, sql_expression):
     Implements the transformations which are defined by SQL statement. Currently we only support
     SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
     underlying table of the input dataframe.
-    :param self:
+    :param self: Spark Dataframe
     :param sql_expression: SQL expression.
     :return: Dataframe with columns changed by SQL statement.
     """
@@ -186,7 +186,7 @@ def sql(self, sql_expression):
 def partitions(self):
     """
     Return the dataframe partitions number
-    :param self: Dataframe
+    :param self: Spark Dataframe
     :return: Number of partitions
     """
     return self.rdd.getNumPartitions()
@@ -195,8 +195,8 @@ def partitions(self):
 @add_attr(DataFrame)
 def partitioner(self):
     """
-    Return al algorithm used to partition the dataframe
-    :param self:
+    Return the algorithm used to partition the dataframe
+    :param self: Spark Dataframe
     :return:
     """
     return self.rdd.partitioner
@@ -206,29 +206,29 @@ def partitioner(self):
 def glom(self):
     """
 
-    :param self: Dataframe
+    :param self: Spark Dataframe
     :return:
     """
     return collect_as_dict(self.rdd.glom().collect()[0])
 
 
 @add_method(DataFrame)
-def h_repartition(self, partitions=None, col_name=None):
+def h_repartition(self, partitions_number=None, col_name=None):
     """
-    Get the number of cpu available and apply an "optimus" repartition in the dataframe
-    #Reference: https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
-    :param self:
-    :param partitions:
-    :param col_name:
+    Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and a column if you need more control.
+    See https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
+    :param self: Spark Dataframe
+    :param partitions_number: Number of partitions
+    :param col_name: Column to be used to apply the repartition id necessary
     :return:
     """
-    if partitions is None:
-        partitions = Spark.instance.parallelism * 4
+    if partitions_number is None:
+        partitions_number = Spark.instance.parallelism * 4
 
     if col_name is None:
-        df = self.repartition(partitions)
+        df = self.repartition(partitions_number)
     else:
-        df = self.repartition(partitions, col_name)
+        df = self.repartition(partitions_number, col_name)
     return df
 
 
