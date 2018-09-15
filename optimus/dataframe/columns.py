@@ -902,7 +902,7 @@ def cols(self):
         for col_name in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure
 
-            if is_(df.cols.schema_dtypes(col_name), (StructType, BooleanType)):
+            if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
             expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
 
@@ -1300,7 +1300,7 @@ def cols(self):
         return df.to_json()
 
     @add_attr(cols)
-    def schema_dtypes(columns):
+    def schema_dtype(columns):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
@@ -1310,7 +1310,7 @@ def cols(self):
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtype(columns):
+    def dtypes(columns):
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
@@ -1321,6 +1321,14 @@ def cols(self):
         data_types = tuple_to_dict(self.dtypes)
 
         return format_dict({c: data_types[c] for c in columns})
+
+    @add_attr(cols)
+    def names():
+        """
+        Get column names
+        :return:
+        """
+        return self.schema.names
 
     @add_attr(cols)
     def qcut(input_col, output_col, num_buckets):
