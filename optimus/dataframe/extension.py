@@ -157,11 +157,12 @@ def run(self):
 
     Other important thing is that Apache Spark save task but not result of dataFrame, so tasks are
     accumulated and the same situation happens.
+
+    :param self: Spark Dataframe
+    :return:
     """
 
-    self.cache().count
-    self.count()
-
+    self.cache().count()
     return self
 
 
