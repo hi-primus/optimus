@@ -243,8 +243,13 @@ def table_html(self, limit=100, columns=None):
 
 @add_method(DataFrame)
 def table(self, limit=100, columns=None):
-    result = self.table_html(limit=limit, columns=columns)
-    return display(HTML(result))
+    try:
+        __IPYTHON__
+        result = self.table_html(limit=limit, columns=columns)
+        return display(HTML(result))
+    except NameError:
+        self.show()
+
 
 
 @add_method(DataFrame)
