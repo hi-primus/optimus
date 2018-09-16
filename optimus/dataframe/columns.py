@@ -853,21 +853,25 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def impute(input_cols, output_cols, strategy="mean"):
+    def impute(columns, strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param input_cols: List of columns to be analyze.
-        :param output_cols: List of output columns with missing values imputed.
+        :param columns: List of columns to be analyze.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-        input_cols = parse_columns(self, input_cols)
-        output_cols = val_to_list(output_cols)
-
-        imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
-
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        
         df = self
+        output_cols = []
+        for col_name in columns:
+            # Imputer requiere not only numeric but float or double
+            df = df.cols.cast(col_name, "float")
+            output_cols.append(col_name + "_impute")
+
+        imputer = Imputer(inputCols=columns, outputCols=output_cols)
+
         model = imputer.setStrategy(strategy).fit(df)
         df = model.transform(df)
 
