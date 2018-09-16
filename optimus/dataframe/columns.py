@@ -817,22 +817,20 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def years_between(col_name, new_col, date_format):
+    def years_between(columns, date_format):
         """
         This method compute the age based on a born date.
-        :param  col_name: Name of the column born dates column.
-        :param  new_col: Name of the new column, the new columns is the resulting column of ages.
+        :param  columns: Name of the column born dates column.
         :param  date_format: String format date of the column provided.
-
-
         """
+
         # Asserting if column if in dataFrame:
-        validate_columns_names(self, col_name)
+        validate_columns_names(self, columns)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
-        def _years_between(new_col, attr):
+        def _years_between(_new_col_name, attr):
             _date_format = attr[0]
             _col_name = attr[1]
 
@@ -846,9 +844,13 @@ def cols(self):
                             format_dt),
                         F.current_date()) / 12), 4) \
                 .alias(
-                new_col)
+                _new_col_name)
 
-        return apply_expr(new_col, _years_between, [date_format, col_name]).cols.cast(new_col, "float")
+        df = self
+        for col_name in columns:
+            new_col_name = col_name + "_years_between"
+            df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
+        return df
 
     @add_attr(cols)
     def impute(input_cols, output_cols, strategy="mean"):
