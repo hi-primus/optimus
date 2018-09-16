@@ -551,25 +551,37 @@ def cols(self):
     # Descriptive Analytics
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(col_name, more=None):
+    def mad(columns, more=None):
         """
         Return the Median Absolute Deviation
-        :param col_name: Column to be processed
+        :param columns: Column to be processed
         :param more: Return some extra computed values (Median).
         :return:
         """
+        columns = parse_columns(self, columns)
+        result = {}
+        for col_name in columns:
 
-        # return mean(absolute(data - mean(data, axis)), axis)
-        median_value = self.cols.median(col_name)
+            _mad = {}
+            print("---")
+            print(self.cols.dtypes(col_name))
+            print("---")
 
-        mad_value = self.select(col_name) \
-            .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-            .cols.median(col_name)
+            if any(item == self.cols.dtypes(col_name) for item in ["bigint", "int", "double"]):
 
-        if more:
-            result = {"mad": mad_value, "median": median_value}
-        else:
-            result = mad_value
+                # return mean(absolute(data - mean(data, axis)), axis)
+                median_value = self.cols.median(col_name)
+
+                mad_value = self.select(col_name) \
+                    .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+                    .cols.median(col_name)
+
+                if more:
+                    _mad = {"mad": mad_value, "median": median_value}
+                else:
+                    _mad = {"mad": mad_value}
+
+            result[col_name] = _mad
 
         return result
 
@@ -626,6 +638,19 @@ def cols(self):
         :return:
         """
         return _exprs(F.variance, columns)
+
+    @add_attr(cols)
+    def abs(columns):
+        """
+        Apply abs to the values in a column
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+        for col_name in columns:
+            df = df.withColumn(col_name, F.abs(F.col(col_name)))
+        return df
 
     @add_attr(cols)
     def mode(columns):
@@ -1363,19 +1388,6 @@ def cols(self):
         df = self
         for col_name in columns:
             df = df.cols.apply_expr(col_name, _clip, [lower, upper])
-        return df
-
-    @add_attr(cols)
-    def abs(columns):
-        """
-        Apply abs to the values in a column
-        :param columns:
-        :return:
-        """
-        columns = parse_columns(self, columns)
-        df = self
-        for col_name in columns:
-            df = df.withColumn(col_name, F.abs(F.col(col_name)))
         return df
 
     return cols
