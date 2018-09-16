@@ -53,10 +53,11 @@ class Test:
 
         test_file.close()
 
-    def create(self, df, func, output, *args, **kwargs):
+    def create(self, df, func, suffix=None, output="df", *args, **kwargs):
         """
         This is a helper function that output python tests for Optimus transformations.
         :param df: Spark Dataframe
+        :param suffix:
         :param func: Spark dataframe function to be tested
         :param output: can be a 'df' or a 'json'
         :param args: Arguments to be used in the function
@@ -69,7 +70,12 @@ class Test:
         def add_buffer(value):
             buffer.append("\t" + value)
 
-        func_test_name = "test_" + func.replace(".", "_") + "()"
+        if suffix is None:
+            suffix = ""
+        else:
+            suffix = "_" + suffix
+
+        func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
         add_buffer("@staticmethod\n")
         add_buffer("def " + func_test_name + ":\n")
@@ -95,6 +101,7 @@ class Test:
         for k, v in kwargs.items():
             _kwargs.append(k + "=" + str(v))
 
+        # Separator if we have positional and keyword arguments
         separator = ""
         if (not is_list_empty(args)) & (not is_list_empty(kwargs)):
             separator = ","
