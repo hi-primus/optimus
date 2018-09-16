@@ -12,8 +12,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse
 from optimus.spark import Spark
+import math
 
 cpu_count = multiprocessing.cpu_count()
 
@@ -47,11 +48,11 @@ def export(self):
     dict_result = []
     value = self.collect()
     schema = []
-    for c in self.cols.names():
-        name = c
-        dataType = self.schema[c].dataType
-        nullable = self.schema[c].nullable
-        schema.append("('{name}', {dataType}(), {nullable})".format(name=name, dataType=dataType, nullable=nullable))
+    for col_names in self.cols.names():
+        name = col_names
+        data_type = self.schema[col_names].dataType
+        nullable = self.schema[col_names].nullable
+        schema.append("('{name}', {dataType}(), {nullable})".format(name=name, dataType=data_type, nullable=nullable))
     schema = ",".join(schema)
     schema = "[" + schema + "]"
 
@@ -60,6 +61,18 @@ def export(self):
         dict_result = next(iter(dict_result.values()))
     else:
         dict_result = [tuple(v.asDict().values()) for v in value]
+
+    def func(path, value):
+        try:
+            if math.isnan(value):
+                r = None
+            else:
+                r = value
+        except TypeError:
+            r = value
+        return r
+
+    dict_result = traverse(dict_result, None, func)
 
     return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
@@ -277,7 +290,6 @@ def table(self, limit=100, columns=None):
         return display(HTML(result))
     except NameError:
         self.show()
-
 
 
 @add_method(DataFrame)
