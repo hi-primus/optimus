@@ -1184,20 +1184,20 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, mark=None, n=None, index=None):
+    def unnest(columns, mark=None, splits=None, index=None):
         """
         Split an array or string in different columns
         :param columns: Columns to be un-nested
-        :param mark: is column is string
-        :param n: Number of rows to un-nested
+        :param mark: If column is string.
+        :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index:
         :return: Spark DataFrame
         """
 
-        # If a number of split was not defined try to infer the lenght with the first element
-        infer_n = None
-        if n is None:
-            infer_n = True
+        # If a number of split was not defined try to infer the length with the first element
+        infer_splits = None
+        if splits is None:
+            infer_splits = True
 
         columns = parse_columns(self, columns)
 
@@ -1205,7 +1205,6 @@ def cols(self):
 
         for col_name in columns:
             # if the col is array
-            expr = None
 
             col_dtype = self.schema[col_name].dataType
 
@@ -1214,23 +1213,23 @@ def cols(self):
 
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
-                if infer_n is True:
-                    n = len(self.cols.cell(col_name))
+                if infer_splits is True:
+                    splits = len(self.cols.cell(col_name))
 
-                for i in builtins.range(n):
+                for i in builtins.range(splits):
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
             # String
             elif is_(col_dtype, StringType):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
-                if infer_n is True:
-                    n = len(self.cols.cell(col_name).split(mark))
+                if infer_splits is True:
+                    splits = len(self.cols.cell(col_name).split(mark))
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
                 else:
-                    r = builtins.range(0, n)
+                    r = builtins.range(0, splits)
 
                 for i in r:
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
