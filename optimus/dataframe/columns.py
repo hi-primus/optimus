@@ -787,11 +787,10 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def date_transform(col_name, new_col, current_format, output_format):
+    def date_transform(columns, current_format, output_format):
         """
         Tranform a column date format
-        :param  col_name: Columns to be transformed.
-        :param  new_col: Column with the transformed date
+        :param  columns: Columns to be transformed.
         :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
@@ -799,18 +798,23 @@ def cols(self):
         :param  output_format: output date string format to be expected.
         """
 
-        # Asserting if column if in dataFrame:
-        validate_columns_names(self, col_name)
-
-        def _date_transform(new_col, attr):
+        def _date_transform(_new_col_name, attr):
             _col_name = attr[0]
             _current_format = attr[1]
             _output_format = attr[2]
 
             return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
-                new_col)
+                _new_col_name)
 
-        return apply_expr(new_col, _date_transform, [col_name, current_format, output_format])
+        # Asserting if column if in dataFrame:
+        columns = parse_columns(self, columns)
+        df = self
+
+        for col_name in columns:
+            new_col_name = col_name + "_data_transform"
+            df = df.cols.apply_expr(new_col_name, _date_transform, [col_name, current_format, output_format])
+
+        return df
 
     @add_attr(cols)
     def years_between(col_name, new_col, date_format):
