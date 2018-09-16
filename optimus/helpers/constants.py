@@ -25,6 +25,9 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       "str": "string",
                       "integer": "int",
                       "int": "int",
+                      "bigint": "bigint",
+                      "big": "bigint",
+                      "long": "bigint",
                       "float": "float",
                       "double": "double",
                       "bool": "boolean",
@@ -32,20 +35,19 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       "struct": "struct",
                       "array": "array",
                       "date": "date",
-                      "long": "long"
                       # "vector": "vector"
 
                       }
 
 SPARK_DTYPES_DICT_OBJECTS = {"string": StringType(), "int": IntegerType(), "float": FloatType(),
                              "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(),
-                             "array": ArrayType,
+                             "array": ArrayType, "bigint": LongType(),
                              "date": DateType()
                              }
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
                      "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
-                     "date": DateType, "long": LongType
+                     "date": DateType, "bigint": LongType
                      }
 
 # TODO: We should get all the data types from pyspark.sql.types something like tuple(t.__all__)
