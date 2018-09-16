@@ -28,6 +28,7 @@ def parse_spark_dtypes(value):
     :param value:
     :return:
     """
+
     value = val_to_list(value)
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
@@ -351,3 +352,39 @@ def check_env_vars(env_vars):
             logging.info(env_var + "=" + os.environ.get(env_var))
         else:
             logging.info("You don't have " + env_var + " set")
+
+
+# Reference https://nvie.com/posts/modifying-deeply-nested-structures/
+def traverse(obj, path=None, callback=None):
+    """
+    Traverse a deep nested python structure
+    :param obj: object to traverse
+    :param path:
+    :param callback: Function used to transform a value
+    :return:
+    """
+    if path is None:
+        path = []
+
+    if isinstance(obj, dict):
+        # print("dict")
+        value = {k: traverse(v, path + [k], callback)
+                 for k, v in obj.items()}
+
+    elif isinstance(obj, list):
+        # print("list")
+        value = [traverse(elem, path + [[]], callback)
+                 for elem in obj]
+
+    elif isinstance(obj, tuple):
+        # print("tuple")
+        value = tuple(traverse(elem, path + [[]], callback)
+                      for elem in obj)
+
+    else:
+        value = obj
+
+    if callback is None:  # if a callback is provided, call it to get the new value
+        return value
+    else:
+        return callback(path, value)
