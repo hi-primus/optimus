@@ -1362,28 +1362,34 @@ def cols(self):
         return self.schema.names
 
     @add_attr(cols)
-    def qcut(input_col, output_col, num_buckets):
+    def qcut(columns, num_buckets, handle_invalid="skip"):
         """
         Bin columns into n buckets. Quantile Discretizer
-        :param input_col: Input column to processed
-        :param output_col: Output columns with the bin number
+        :param columns: Input columns to processed
         :param num_buckets: Number of buckets in which the column will be divided
+        :param handle_invalid:
         :return:
         """
-        discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)
-        return discretizer.fit(self).transform(self)
+        df = self
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        for col_name in columns:
+            output_col = col_name + "_qcut"
+            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
+                                              handleInvalid=handle_invalid)
+            df = discretizer.fit(df).transform(df)
+        return df
 
     @add_attr(cols)
-    def clip(columns, lower, upper):
+    def clip(columns, lower_bound, upper_bound):
         """
         Trim values at input thresholds
         :param columns: Columns to be trimmed
-        :param lower: Lower
-        :param upper:
+        :param lower_bound: Lower value bound
+        :param upper_bound: Upper value bound
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
 
         def _clip(_col_name, args):
             _lower = args[0]
