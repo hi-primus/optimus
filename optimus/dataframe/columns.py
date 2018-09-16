@@ -984,16 +984,27 @@ def cols(self):
 
     # Operations between columns
     @add_attr(cols)
-    def _math(columns, operator):
+    def _math(columns, operator, col_name):
         """
-        Helper to process arithmetic operation between columns
-        :param columns:
-        :param operator:
+        Helper to process arithmetic operation between columns. If a
+        :param columns: Columns to be used to make the calculation
+        :param operator: a lambda function
         :return:
         """
-        columns = parse_columns(self, columns, ["integer", "float"])
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce(operator, columns, 1))
+
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+
+        df = self
+        for c in columns:
+            df = df.cols.cast(c, "float")
+
+        if len(columns) < 2:
+            raise Exception("Error: 2 or more columns needed")
+
+        a = list(map(lambda x: F.col(x), columns))
+        expr = reduce(operator, a)
+
+        return df.withColumn(col_name, expr)
 
     @add_attr(cols)
     def add(columns):
