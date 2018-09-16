@@ -28,6 +28,8 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
+NUMERIC = ["bigint", "int", "double"]
+
 
 def cols(self):
     @add_attr(cols)
@@ -558,28 +560,23 @@ def cols(self):
         :param more: Return some extra computed values (Median).
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
         result = {}
         for col_name in columns:
 
             _mad = {}
-            print("---")
-            print(self.cols.dtypes(col_name))
-            print("---")
 
-            if any(item == self.cols.dtypes(col_name) for item in ["bigint", "int", "double"]):
+            # return mean(absolute(data - mean(data, axis)), axis)
+            median_value = self.cols.median(col_name)
 
-                # return mean(absolute(data - mean(data, axis)), axis)
-                median_value = self.cols.median(col_name)
+            mad_value = self.select(col_name) \
+                .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+                .cols.median(col_name)
 
-                mad_value = self.select(col_name) \
-                    .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-                    .cols.median(col_name)
-
-                if more:
-                    _mad = {"mad": mad_value, "median": median_value}
-                else:
-                    _mad = {"mad": mad_value}
+            if more:
+                _mad = {"mad": mad_value, "median": median_value}
+            else:
+                _mad = {"mad": mad_value}
 
             result[col_name] = _mad
 
@@ -744,8 +741,8 @@ def cols(self):
 
         columns = parse_columns(self, columns)
 
-        def _remove_accents(col_name, attr):
-            cell_str = col_name
+        def _remove_accents(value, attr):
+            cell_str = str(value)
             # first, normalize strings:
             nfkd_str = unicodedata.normalize('NFKD', cell_str)
             # Keep chars that has no other char combined (i.e. accents chars)
@@ -768,6 +765,7 @@ def cols(self):
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
+            value = str(value)
             return regex.sub("", value)
 
         df = apply(columns, _remove_special_chars, "string")
@@ -792,7 +790,8 @@ def cols(self):
     def date_transform(col_name, new_col, current_format, output_format):
         """
         Tranform a column date format
-        :param  col_name: Name date columns to be transformed. Columns ha
+        :param  col_name: Columns to be transformed.
+        :param  new_col: Column with the transformed date
         :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
@@ -807,6 +806,7 @@ def cols(self):
             _col_name = attr[0]
             _current_format = attr[1]
             _output_format = attr[2]
+
             return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
                 new_col)
 
@@ -1106,16 +1106,18 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        print(columns)
 
         df = self
         for c in columns:
-            new_col = "z_col_" + c
+            new_col = c + "z_col_"
 
-            mean_value = self.cols.mean(columns)
-            stdev_value = self.cols.std(columns)
+            mean_value = self.cols.mean(c)
+            stdev_value = self.cols.std(c)
 
             df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
+
         return df
 
     @add_attr(cols)
@@ -1126,7 +1128,7 @@ def cols(self):
         :param more: Return info about q1 and q3
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
         for c in columns:
             quartile = self.cols.percentile(c, [0.25, 0.75])
             q1 = quartile[0.25]
