@@ -1014,7 +1014,7 @@ def cols(self):
         :return:
         """
 
-        self._math(columns, lambda x, y: self[x] + self[y])
+        return _math(columns, lambda x, y: x + y, "sum")
 
     @add_attr(cols)
     def sub(columns):
@@ -1023,7 +1023,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] - self[y])
+        return _math(columns, lambda x, y: x - y, "sub")
 
     @add_attr(cols)
     def mul(columns):
@@ -1032,7 +1032,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] * self[y])
+        return _math(columns, lambda x, y: x * y, "mul")
 
     @add_attr(cols)
     def div(columns):
@@ -1041,7 +1041,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] / self[y])
+        return _math(columns, lambda x, y: x / y, "div")
 
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
