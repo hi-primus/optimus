@@ -534,7 +534,7 @@ def cols(self):
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         # Get percentiles
         percentile_results = []
@@ -560,7 +560,7 @@ def cols(self):
         :param more: Return some extra computed values (Median).
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         result = {}
         for col_name in columns:
 
@@ -589,6 +589,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.stddev, columns)
 
     @add_attr(cols)
@@ -598,6 +599,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.kurtosis, columns)
 
     @add_attr(cols)
@@ -607,6 +609,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.mean, columns)
 
     @add_attr(cols)
@@ -616,6 +619,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.skewness, columns)
 
     @add_attr(cols)
@@ -625,6 +629,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.sum, columns)
 
     @add_attr(cols)
@@ -634,6 +639,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.variance, columns)
 
     @add_attr(cols)
@@ -643,7 +649,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         df = self
         for col_name in columns:
             df = df.withColumn(col_name, F.abs(F.col(col_name)))
@@ -710,6 +716,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
@@ -739,7 +746,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         def _remove_accents(value, attr):
             cell_str = str(value)
@@ -761,7 +768,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
@@ -778,7 +785,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
@@ -825,7 +832,7 @@ def cols(self):
         """
 
         # Asserting if column if in dataFrame:
-        validate_columns_names(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
@@ -861,12 +868,12 @@ def cols(self):
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
-        
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
         df = self
         output_cols = []
         for col_name in columns:
-            # Imputer requiere not only numeric but float or double
+            # Imputer require not only numeric but float or double
             df = df.cols.cast(col_name, "float")
             output_cols.append(col_name + "_impute")
 
@@ -885,7 +892,7 @@ def cols(self):
         :param value:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         def _fill_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(F.col(_col_name))
@@ -904,6 +911,7 @@ def cols(self):
         :return:
         """
 
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         def _replace_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
 
@@ -930,7 +938,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         expr = []
@@ -953,7 +961,7 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         df = self
         return format_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]).to_json())
 
@@ -1002,7 +1010,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         for c in columns:
@@ -1116,8 +1124,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
-        print(columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         for c in columns:
@@ -1138,7 +1145,7 @@ def cols(self):
         :param more: Return info about q1 and q3
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         for c in columns:
             quartile = self.cols.percentile(c, [0.25, 0.75])
             q1 = quartile[0.25]
@@ -1172,10 +1179,12 @@ def cols(self):
             columns = parse_columns(self, input_cols)
 
         if shape is "vector":
+            columns = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
             vector_assembler = VectorAssembler(
-                inputCols=input_cols,
+                inputCols=columns,
                 outputCol=output_col)
-            df = vector_assembler.transform(self)
+            df = vector_assembler.transform(df)
 
         elif shape is "array":
             df = apply_expr(output_col, F.array(*columns))
@@ -1371,7 +1380,7 @@ def cols(self):
         :return:
         """
         df = self
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         for col_name in columns:
             output_col = col_name + "_qcut"
             discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
@@ -1389,7 +1398,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=NUMERIC)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         def _clip(_col_name, args):
             _lower = args[0]
