@@ -45,14 +45,21 @@ def export(self):
     :param self:
     :return:
     """
-    dict_result = []
+    dict_result = {}
     value = self.collect()
     schema = []
     for col_names in self.cols.names():
         name = col_names
-        data_type = self.schema[col_names].dataType
+
+        data_type = self.cols.schema_dtype(col_names)
+        if isinstance(data_type, ArrayType):
+            data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
+        else:
+            data_type = str(data_type) + "()"
+
         nullable = self.schema[col_names].nullable
-        schema.append("('{name}', {dataType}(), {nullable})".format(name=name, dataType=data_type, nullable=nullable))
+
+        schema.append("('{name}', {dataType}, {nullable})".format(name=name, dataType=data_type, nullable=nullable))
     schema = ",".join(schema)
     schema = "[" + schema + "]"
 
@@ -62,14 +69,14 @@ def export(self):
     else:
         dict_result = [tuple(v.asDict().values()) for v in value]
 
-    def func(path, value):
+    def func(path, _value):
         try:
-            if math.isnan(value):
+            if math.isnan(_value):
                 r = None
             else:
-                r = value
+                r = _value
         except TypeError:
-            r = value
+            r = _value
         return r
 
     dict_result = traverse(dict_result, None, func)
