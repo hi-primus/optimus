@@ -12,23 +12,25 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.functions import Column
 
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
+
+# Functions
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
+
+# Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
-# Helpers
-from optimus.helpers.constants import *
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
+# Profiler
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
-
-NUMERIC = ["bigint", "int", "double"]
 
 
 def cols(self):
@@ -42,9 +44,9 @@ def cols(self):
         :return:
         """
 
-        def lit_array(value):
+        def lit_array(_value):
             temp = []
-            for v in value:
+            for v in _value:
                 temp.append(F.lit(v))
             return F.array(temp)
 
@@ -57,7 +59,7 @@ def cols(self):
         elif is_tuple(value):
             value = lit_array(list(value))
 
-        if is_(value, Column):
+        if is_(value, F.Column):
             df = df.withColumn(col_name, value)
 
         return df
@@ -71,7 +73,7 @@ def cols(self):
         :type cols_values: List of tuples
         :return:
         """
-
+        df_result = None
         # Append a dataframe
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
@@ -116,7 +118,7 @@ def cols(self):
         def func_col_exp(col_name, attr):
             return func
 
-        if is_(func, Column):
+        if is_(func, F.Column):
             _func = func_col_exp
         else:
             _func = func
@@ -294,6 +296,7 @@ def cols(self):
         :param col_and_dtype: Columns to be casted and new data types
         :return:
         """
+        # TODO: Maybe should be possible to cast and array of integer for example to array of double
         cols, attrs = parse_columns(self, col_and_dtype, get_args=True)
         return _cast(cols, attrs)
 
@@ -439,15 +442,15 @@ def cols(self):
             """
             functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
                                "approx_count_distinct", "na", "zeros", "percentile"]
-            result = {}
+            _result = {}
             if is_dict(data):
                 for k, v in data.items():
                     for f in functions_array:
                         temp_func_name = f + "_"
                         if k.startswith(temp_func_name):
                             _col_name = k[len(temp_func_name):]
-                            result.setdefault(_col_name, {})[f] = v
-                return result
+                            _result.setdefault(_col_name, {})[f] = v
+                return _result
             else:
                 return data
 
@@ -463,12 +466,12 @@ def cols(self):
         # df = df.cols.cast(columns, "float")
 
         # Create a Column Expression for every column
-        exprs = []
+        expression = []
         for col_name in columns:
             for func in funcs:
-                exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*exprs).to_json()))
+        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
         # logging.info(result)
         return result
 
@@ -1097,8 +1100,8 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtype(_col_name)
-            _search = [PYTHON_TYPES_[data_type](s) for s in _search]
+            data_type = self.cols.dtypes(_col_name)
+            _search = [PYTHON_TYPES[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
 
@@ -1408,7 +1411,7 @@ def cols(self):
 
         df = self
         for col_name in columns:
-            df = df.cols.apply_expr(col_name, _clip, [lower, upper])
+            df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
         return df
 
     return cols
