@@ -39,7 +39,7 @@ class Test:
         for i in _imports:
             test_file.write(i + "\n")
 
-        test_file.write("op = Optimus()\n")
+        test_file.write("op = Optimus(master='local')\n")
 
         # Global Dataframe
         if self.df is not None:
