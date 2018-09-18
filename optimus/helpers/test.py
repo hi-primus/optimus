@@ -22,8 +22,9 @@ class Test:
         :param args: list of create functions
         :return:
         """
+
         filename = "test_" + self.name + ".py"
-        test_file = open(filename, 'w')
+        test_file = open(filename, 'w', encoding='utf-8')
 
         _imports = [
             "from pyspark.sql.types import *",
