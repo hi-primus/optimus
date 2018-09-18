@@ -1336,11 +1336,13 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        for col_name in columns:
-            df = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
-                buckets).cols.rename(col_name, "value")
 
-        return df.to_json()
+        result = {}
+        for col_name in columns:
+            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
+                buckets).cols.rename(col_name, "value").to_json()
+
+        return result
 
     @add_attr(cols)
     def schema_dtype(columns):
