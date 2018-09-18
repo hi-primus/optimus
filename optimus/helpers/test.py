@@ -1,4 +1,5 @@
 from optimus.helpers.checkit import is_str, is_list_empty
+import logging
 
 
 class Test:
@@ -53,6 +54,7 @@ class Test:
             test_file.write(t)
 
         test_file.close()
+        print("Done")
 
     def create(self, df, func, suffix=None, output="df", *args, **kwargs):
         """
@@ -78,6 +80,9 @@ class Test:
 
         func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
+        print("Creating {test} test...".format(test=func_test_name))
+        logging.info(func_test_name)
+
         add_buffer("@staticmethod\n")
         add_buffer("def " + func_test_name + ":\n")
 
@@ -100,6 +105,8 @@ class Test:
 
         # Process keywords arguments
         for k, v in kwargs.items():
+            if is_str(v):
+                v = "'" + v + "'"
             _kwargs.append(k + "=" + str(v))
 
         # Separator if we have positional and keyword arguments
