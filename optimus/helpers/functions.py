@@ -6,9 +6,10 @@ import random
 import re
 
 from IPython.display import display, HTML
+from pyspark.ml.linalg import DenseVector
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
@@ -30,6 +31,7 @@ def parse_spark_dtypes(value):
     """
 
     value = val_to_list(value)
+
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
 
@@ -333,7 +335,7 @@ def filter_col_name_by_dtypes(df, data_type):
     """
     data_type = parse_spark_dtypes(data_type)
 
-    # isinstace requiere a tuple
+    # isinstace require a tuple
     data_type = tuple(val_to_list(data_type))
 
     # Filter columns by data type
@@ -366,21 +368,19 @@ def traverse(obj, path=None, callback=None):
     if path is None:
         path = []
 
-    if isinstance(obj, dict):
-        # print("dict")
+    if is_(obj, dict):
         value = {k: traverse(v, path + [k], callback)
                  for k, v in obj.items()}
 
-    elif isinstance(obj, list):
-        # print("list")
+    elif is_(obj, list):
         value = [traverse(elem, path + [[]], callback)
                  for elem in obj]
 
-    elif isinstance(obj, tuple):
-        # print("tuple")
+    elif is_(obj, tuple):
         value = tuple(traverse(elem, path + [[]], callback)
                       for elem in obj)
-
+    elif is_(obj, DenseVector):
+        value = DenseVector([traverse(elem, path + [[]], callback) for elem in obj])
     else:
         value = obj
 
