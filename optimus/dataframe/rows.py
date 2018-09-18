@@ -21,24 +21,9 @@ def rows(self):
         :param row: List of values to be appended
         :return: Spark DataFrame
         """
-
         df = self
-
-        assert isinstance(row, list), "Error: row must me a list"
-        assert len(row) > 0, "Error: row list must be greater that 0"
-        assert len(df.dtypes) == len(row), "Error row must be the same length of the dataframe"
-
-        cols = []
-        values = []
-        for d, r in zip(df.dtypes, row):
-            col_name = d[0]
-            data_type = d[1]
-            if data_type in SPARK_DTYPES_DICT_OBJECTS:
-                cols.append((col_name, (SPARK_DTYPES_DICT_OBJECTS[data_type]), True))
-                values.append(r)
-
-        values = [tuple(values)]
-        new_row = op.Create.data_frame(cols, values)
+        columns = [i for i in range(df.cols.count())]
+        new_row = op.Create.df(columns, rows)
 
         return df.union(new_row)
 
@@ -177,7 +162,7 @@ def rows(self):
         """
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
-    #TODO: Merge with select
+    # TODO: Merge with select
     @add_attr(rows)
     def is_in(columns, values):
         """
