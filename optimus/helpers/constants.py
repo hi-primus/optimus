@@ -1,7 +1,7 @@
 import logging
 
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
-    DateType, LongType, ByteType, ShortType
+    DateType, LongType, ByteType, ShortType, TimestampType, BinaryType
 
 """
 Python to PySpark reference
@@ -49,22 +49,26 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       "struct": "struct",
                       "array": "array",
                       "date": "date",
+                      "datetime": "datetime",
                       "byte": "byte",
-                      "short": "short"
-                      # "vector": "vector"
+                      "short": "short",
+                      "binary": "binary"
 
+                      # "vector": "vector"
                       }
 
 SPARK_DTYPES_DICT_OBJECTS = {"string": StringType(), "int": IntegerType(), "float": FloatType(),
                              "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(),
                              "array": ArrayType, "bigint": LongType(),
-                             "date": DateType(), "byte": ByteType(), "short": ShortType()
+                             "date": DateType(), "byte": ByteType(), "short": ShortType(), "datetime": TimestampType(),
+                             "binary": BinaryType()
                              }
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
                      "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
                      "bigint": LongType,
-                     "date": DateType, "byte": ByteType, "short": ShortType
+                     "date": DateType, "byte": ByteType, "short": ShortType, "datetime": TimestampType,
+                     "binary": BinaryType
                      }
 
 # Profiler
