@@ -583,7 +583,7 @@ def cols(self):
 
             result[col_name] = _mad
 
-        return result
+        return format_dict(result)
 
     @add_attr(cols)
     def std(columns):
