@@ -48,7 +48,7 @@ sys.path.append("..")
 # ## Import optimus and start it
 
 from optimus import Optimus
-op= Optimus(master="local")
+op= Optimus(master="local", verbose=True)
 
 # ## Dataframe creation
 #
@@ -229,7 +229,7 @@ df.cols.is_na("*").table()
 # ## Stats
 
 # + {"inputHidden": false, "outputHidden": false}
-df.cols.mean("height")
+df.cols.mean("height(ft)")
 
 # + {"inputHidden": false, "outputHidden": false}
 df.cols.mean("*")
@@ -241,7 +241,7 @@ df.cols.mean("*")
 def func(value, args):
     return value + 1
 
-df.cols.apply("height",func,"float").table()
+df.cols.apply("height(ft)",func,"float").table()
 # -
 
 # ### Histogramming
@@ -372,5 +372,8 @@ df.schema
 # + {"inputHidden": false, "outputHidden": false}
 eval("StringType()")
 
-# + {"inputHidden": false, "outputHidden": false}
+# + {"inputHidden": false, "outputHidden": false, "scrolled": false}
+op.profiler.run(df, "*",infer=False)
+# -
+
 
