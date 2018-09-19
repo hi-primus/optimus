@@ -81,7 +81,7 @@ class Profiler:
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
             temp = col_name + "_type"
-            col_data_type = df.cols.dtype(col_name)
+            col_data_type = df.cols.dtypes(col_name)
 
             count_by_data_type = {}
             count_empty_strings = 0
