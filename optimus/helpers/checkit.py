@@ -1,6 +1,7 @@
 """
 Helpers to check if an object match a date type
 """
+import datetime
 
 from pyspark.sql import DataFrame
 import os
@@ -244,6 +245,15 @@ def is_int(value):
     return isinstance(value, int)
 
 
+def is_float(value):
+    """
+    Check if an object is an integer
+    :param value:
+    :return:
+    """
+    return isinstance(value, float)
+
+
 # TODO: can be confused with is_type
 def is_dataframe(value):
     """
@@ -252,6 +262,35 @@ def is_dataframe(value):
     :return:
     """
     return isinstance(value, DataFrame)
+
+
+def is_datetime(value):
+    """
+    Check if an object is a datetime
+    :param value:
+    :return:
+    """
+
+    return isinstance(value, datetime.datetime)
+
+
+def is_binary(value):
+    """
+    Check if an object is a bytearray
+    :param value:
+    :return:
+    """
+    return isinstance(value, bytearray)
+
+
+def is_date(value):
+    """
+    Check if an object is a date
+    :param value:
+    :return:
+    """
+
+    return isinstance(value, datetime.date)
 
 
 def has_(value, _type):

@@ -3,7 +3,7 @@ import itertools
 import re
 import string
 import unicodedata
-from fastnumbers import fast_float
+from fastnumbers import fast_float, isint, isfloat
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -12,19 +12,23 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.functions import Column
 
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
+
+# Functions
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
+
 # Helpers
-from optimus.helpers.constants import *
+from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_float, is_datetime, is_date
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
+# Profiler
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -40,9 +44,9 @@ def cols(self):
         :return:
         """
 
-        def lit_array(value):
+        def lit_array(_value):
             temp = []
-            for v in value:
+            for v in _value:
                 temp.append(F.lit(v))
             return F.array(temp)
 
@@ -55,7 +59,7 @@ def cols(self):
         elif is_tuple(value):
             value = lit_array(list(value))
 
-        if is_(value, Column):
+        if is_(value, F.Column):
             df = df.withColumn(col_name, value)
 
         return df
@@ -69,7 +73,7 @@ def cols(self):
         :type cols_values: List of tuples
         :return:
         """
-
+        df_result = None
         # Append a dataframe
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
@@ -114,7 +118,7 @@ def cols(self):
         def func_col_exp(col_name, attr):
             return func
 
-        if is_(func, Column):
+        if is_(func, F.Column):
             _func = func_col_exp
         else:
             _func = func
@@ -292,6 +296,7 @@ def cols(self):
         :param col_and_dtype: Columns to be casted and new data types
         :return:
         """
+        # TODO: Maybe should be possible to cast and array of integer for example to array of double
         cols, attrs = parse_columns(self, col_and_dtype, get_args=True)
         return _cast(cols, attrs)
 
@@ -437,15 +442,15 @@ def cols(self):
             """
             functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
                                "approx_count_distinct", "na", "zeros", "percentile"]
-            result = {}
+            _result = {}
             if is_dict(data):
                 for k, v in data.items():
                     for f in functions_array:
                         temp_func_name = f + "_"
                         if k.startswith(temp_func_name):
                             _col_name = k[len(temp_func_name):]
-                            result.setdefault(_col_name, {})[f] = v
-                return result
+                            _result.setdefault(_col_name, {})[f] = v
+                return _result
             else:
                 return data
 
@@ -461,12 +466,12 @@ def cols(self):
         # df = df.cols.cast(columns, "float")
 
         # Create a Column Expression for every column
-        exprs = []
+        expression = []
         for col_name in columns:
             for func in funcs:
-                exprs.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*exprs).to_json()))
+        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
         # logging.info(result)
         return result
 
@@ -532,7 +537,7 @@ def cols(self):
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         # Get percentiles
         percentile_results = []
@@ -551,27 +556,34 @@ def cols(self):
     # Descriptive Analytics
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(col_name, more=None):
+    def mad(columns, more=None):
         """
         Return the Median Absolute Deviation
-        :param col_name: Column to be processed
+        :param columns: Column to be processed
         :param more: Return some extra computed values (Median).
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        result = {}
+        for col_name in columns:
 
-        # return mean(absolute(data - mean(data, axis)), axis)
-        median_value = self.cols.median(col_name)
+            _mad = {}
 
-        mad_value = self.select(col_name) \
-            .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-            .cols.median(col_name)
+            # return mean(absolute(data - mean(data, axis)), axis)
+            median_value = self.cols.median(col_name)
 
-        if more:
-            result = {"mad": mad_value, "median": median_value}
-        else:
-            result = mad_value
+            mad_value = self.select(col_name) \
+                .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+                .cols.median(col_name)
 
-        return result
+            if more:
+                _mad = {"mad": mad_value, "median": median_value}
+            else:
+                _mad = {"mad": mad_value}
+
+            result[col_name] = _mad
+
+        return format_dict(result)
 
     @add_attr(cols)
     def std(columns):
@@ -580,6 +592,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.stddev, columns)
 
     @add_attr(cols)
@@ -589,6 +602,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.kurtosis, columns)
 
     @add_attr(cols)
@@ -598,6 +612,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.mean, columns)
 
     @add_attr(cols)
@@ -607,6 +622,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.skewness, columns)
 
     @add_attr(cols)
@@ -616,6 +632,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.sum, columns)
 
     @add_attr(cols)
@@ -625,7 +642,21 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         return _exprs(F.variance, columns)
+
+    @add_attr(cols)
+    def abs(columns):
+        """
+        Apply abs to the values in a column
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        df = self
+        for col_name in columns:
+            df = df.withColumn(col_name, F.abs(F.col(col_name)))
+        return df
 
     @add_attr(cols)
     def mode(columns):
@@ -688,6 +719,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
@@ -717,10 +749,10 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
-        def _remove_accents(col_name, attr):
-            cell_str = col_name
+        def _remove_accents(value, attr):
+            cell_str = str(value)
             # first, normalize strings:
             nfkd_str = unicodedata.normalize('NFKD', cell_str)
             # Keep chars that has no other char combined (i.e. accents chars)
@@ -739,10 +771,11 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
+            value = str(value)
             return regex.sub("", value)
 
         df = apply(columns, _remove_special_chars, "string")
@@ -755,7 +788,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
@@ -764,10 +797,10 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def date_transform(col_name, new_col, current_format, output_format):
+    def date_transform(columns, current_format, output_format):
         """
         Tranform a column date format
-        :param  col_name: Name date columns to be transformed. Columns ha
+        :param  columns: Columns to be transformed.
         :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
@@ -775,35 +808,39 @@ def cols(self):
         :param  output_format: output date string format to be expected.
         """
 
-        # Asserting if column if in dataFrame:
-        validate_columns_names(self, col_name)
-
-        def _date_transform(new_col, attr):
+        def _date_transform(_new_col_name, attr):
             _col_name = attr[0]
             _current_format = attr[1]
             _output_format = attr[2]
-            return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
-                new_col)
 
-        return apply_expr(new_col, _date_transform, [col_name, current_format, output_format])
+            return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
+                _new_col_name)
+
+        # Asserting if column if in dataFrame:
+        columns = parse_columns(self, columns)
+        df = self
+
+        for col_name in columns:
+            new_col_name = col_name + "_data_transform"
+            df = df.cols.apply_expr(new_col_name, _date_transform, [col_name, current_format, output_format])
+
+        return df
 
     @add_attr(cols)
-    def years_between(col_name, new_col, date_format):
+    def years_between(columns, date_format):
         """
         This method compute the age based on a born date.
-        :param  col_name: Name of the column born dates column.
-        :param  new_col: Name of the new column, the new columns is the resulting column of ages.
+        :param  columns: Name of the column born dates column.
         :param  date_format: String format date of the column provided.
-
-
         """
+
         # Asserting if column if in dataFrame:
-        validate_columns_names(self, col_name)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
 
-        def _years_between(new_col, attr):
+        def _years_between(_new_col_name, attr):
             _date_format = attr[0]
             _col_name = attr[1]
 
@@ -817,26 +854,34 @@ def cols(self):
                             format_dt),
                         F.current_date()) / 12), 4) \
                 .alias(
-                new_col)
+                _new_col_name)
 
-        return apply_expr(new_col, _years_between, [date_format, col_name]).cols.cast(new_col, "float")
+        df = self
+        for col_name in columns:
+            new_col_name = col_name + "_years_between"
+            df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
+        return df
 
     @add_attr(cols)
-    def impute(input_cols, output_cols, strategy="mean"):
+    def impute(columns, strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param input_cols: List of columns to be analyze.
-        :param output_cols: List of output columns with missing values imputed.
+        :param columns: List of columns to be analyze.
         :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-        input_cols = parse_columns(self, input_cols)
-        output_cols = val_to_list(output_cols)
-
-        imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
+        output_cols = []
+        for col_name in columns:
+            # Imputer require not only numeric but float or double
+            df = df.cols.cast(col_name, "float")
+            output_cols.append(col_name + "_impute")
+
+        imputer = Imputer(inputCols=columns, outputCols=output_cols)
+
         model = imputer.setStrategy(strategy).fit(df)
         df = model.transform(df)
 
@@ -850,7 +895,7 @@ def cols(self):
         :param value:
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         def _fill_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(F.col(_col_name))
@@ -868,6 +913,8 @@ def cols(self):
         :param value:
         :return:
         """
+
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         def _replace_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
@@ -895,15 +942,17 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        # columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         expr = []
+        columns = parse_columns(self, columns)
         for col_name in columns:
-            # If type column is Struct parse to String. isnan/isNull can not handle Structure
 
-            if is_(df.cols.schema_dtypes(col_name), (StructType, BooleanType)):
+            # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
+            if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
+
             expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
 
         result = format_dict(df.select(*expr).to_json())
@@ -918,7 +967,7 @@ def cols(self):
         :param type: Accepts integer, float, string or None
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         df = self
         return format_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]).to_json())
 
@@ -959,16 +1008,27 @@ def cols(self):
 
     # Operations between columns
     @add_attr(cols)
-    def _math(columns, operator):
+    def _math(columns, operator, col_name):
         """
-        Helper to process arithmetic operation between columns
-        :param columns:
-        :param operator:
+        Helper to process arithmetic operation between columns. If a
+        :param columns: Columns to be used to make the calculation
+        :param operator: a lambda function
         :return:
         """
-        columns = parse_columns(self, columns, ["integer", "float"])
-        assert len(columns) >= 2, "Error 2 or more columns needed"
-        return self.select(reduce(operator, columns, 1))
+
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        df = self
+        for c in columns:
+            df = df.cols.cast(c, "float")
+
+        if len(columns) < 2:
+            raise Exception("Error: 2 or more columns needed")
+
+        a = list(map(lambda x: F.col(x), columns))
+        expr = reduce(operator, a)
+
+        return df.withColumn(col_name, expr)
 
     @add_attr(cols)
     def add(columns):
@@ -978,7 +1038,7 @@ def cols(self):
         :return:
         """
 
-        self._math(columns, lambda x, y: self[x] + self[y])
+        return _math(columns, lambda x, y: x + y, "sum")
 
     @add_attr(cols)
     def sub(columns):
@@ -987,7 +1047,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] - self[y])
+        return _math(columns, lambda x, y: x - y, "sub")
 
     @add_attr(cols)
     def mul(columns):
@@ -996,7 +1056,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] * self[y])
+        return _math(columns, lambda x, y: x * y, "mul")
 
     @add_attr(cols)
     def div(columns):
@@ -1005,7 +1065,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        self._math(columns, lambda x, y: self[x] / self[y])
+        return _math(columns, lambda x, y: x / y, "div")
 
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
@@ -1043,8 +1103,8 @@ def cols(self):
             return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtype(_col_name)
-            _search = [PYTHON_TYPES_[data_type](s) for s in _search]
+            data_type = self.cols.dtypes(_col_name)
+            _search = [PYTHON_TYPES[data_type](s) for s in _search]
             _df = _df.replace(_search, _replace, _col_name)
             return _df
 
@@ -1070,16 +1130,17 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         for c in columns:
-            new_col = "z_col_" + c
+            new_col = c + "z_col_"
 
-            mean_value = self.cols.mean(columns)
-            stdev_value = self.cols.std(columns)
+            mean_value = self.cols.mean(c)
+            stdev_value = self.cols.std(c)
 
             df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
+
         return df
 
     @add_attr(cols)
@@ -1090,7 +1151,7 @@ def cols(self):
         :param more: Return info about q1 and q3
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         for c in columns:
             quartile = self.cols.percentile(c, [0.25, 0.75])
             q1 = quartile[0.25]
@@ -1124,10 +1185,12 @@ def cols(self):
             columns = parse_columns(self, input_cols)
 
         if shape is "vector":
+            columns = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
             vector_assembler = VectorAssembler(
-                inputCols=input_cols,
+                inputCols=columns,
                 outputCol=output_col)
-            df = vector_assembler.transform(self)
+            df = vector_assembler.transform(df)
 
         elif shape is "array":
             df = apply_expr(output_col, F.array(*columns))
@@ -1140,20 +1203,20 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, mark=None, n=None, index=None):
+    def unnest(columns, mark=None, splits=None, index=None):
         """
         Split an array or string in different columns
         :param columns: Columns to be un-nested
-        :param mark: is column is string
-        :param n: Number of rows to un-nested
+        :param mark: If column is string.
+        :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index:
         :return: Spark DataFrame
         """
 
-        # If a number of split was not defined try to infer the lenght with the first element
-        infer_n = None
-        if n is None:
-            infer_n = True
+        # If a number of split was not defined try to infer the length with the first element
+        infer_splits = None
+        if splits is None:
+            infer_splits = True
 
         columns = parse_columns(self, columns)
 
@@ -1161,7 +1224,6 @@ def cols(self):
 
         for col_name in columns:
             # if the col is array
-            expr = None
 
             col_dtype = self.schema[col_name].dataType
 
@@ -1170,23 +1232,23 @@ def cols(self):
 
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
-                if infer_n is True:
-                    n = len(self.cols.cell(col_name))
+                if infer_splits is True:
+                    splits = len(self.cols.cell(col_name))
 
-                for i in builtins.range(n):
+                for i in builtins.range(splits):
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
             # String
             elif is_(col_dtype, StringType):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
-                if infer_n is True:
-                    n = len(self.cols.cell(col_name).split(mark))
+                if infer_splits is True:
+                    splits = len(self.cols.cell(col_name).split(mark))
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
                 else:
-                    r = builtins.range(0, n)
+                    r = builtins.range(0, splits)
 
                 for i in r:
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
@@ -1199,22 +1261,6 @@ def cols(self):
                 df = df.rdd.map(extract).toDF(df.columns)
 
         return df
-
-    # TODO: Maybe we could merge this with un unnest. Like unnesting to the same column
-    @add_attr(cols)
-    def split(columns, mark):
-        """
-        A shortcut to the Apache Spark split
-        :param columns: Column to be split
-        :param mark: char used to split the column
-        :return:
-        """
-        columns = parse_columns(self, columns)
-
-        def _split(col_name, args):
-            return F.split(F.col(col_name), mark)
-
-        return apply_expr(columns, _split)
 
     @add_attr(cols)
     def cell(column):
@@ -1293,14 +1339,16 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
         df = self
-        for col_name in columns:
-            df = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
-                buckets).cols.rename(col_name, "value")
 
-        return df.to_json()
+        result = {}
+        for col_name in columns:
+            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
+                buckets).cols.rename(col_name, "value").to_json()
+
+        return result
 
     @add_attr(cols)
-    def schema_dtypes(columns):
+    def schema_dtype(columns):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
@@ -1310,7 +1358,7 @@ def cols(self):
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtype(columns):
+    def dtypes(columns):
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
@@ -1323,28 +1371,75 @@ def cols(self):
         return format_dict({c: data_types[c] for c in columns})
 
     @add_attr(cols)
-    def qcut(input_col, output_col, num_buckets):
+    def names():
         """
-        Bin columns into n buckets. Quantile Discretizer
-        :param input_col: Input column to processed
-        :param output_col: Output columns with the bin number
-        :param num_buckets: Number of buckets in which the column will be divided
+        Get column names
         :return:
         """
-        discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=input_col, outputCol=output_col)
-        return discretizer.fit(self).transform(self)
+        return self.schema.names
 
     @add_attr(cols)
-    def clip(columns, lower, upper):
+    def qcut(columns, num_buckets, handle_invalid="skip"):
+        """
+        Bin columns into n buckets. Quantile Discretizer
+        :param columns: Input columns to processed
+        :param num_buckets: Number of buckets in which the column will be divided
+        :param handle_invalid:
+        :return:
+        """
+        df = self
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        for col_name in columns:
+            output_col = col_name + "_qcut"
+            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
+                                              handleInvalid=handle_invalid)
+            df = discretizer.fit(df).transform(df)
+        return df
+
+    @add_attr(cols)
+    def infer():
+        df = self
+        row = df.cols.select("*").limit(1).to_json()
+
+        for r in row:
+            for k, v in r.items():
+                result = None
+                # print(v)
+
+                if is_int(v):
+                    result = "int"
+
+                elif is_float(v):
+                    result = "float"
+
+                elif is_str(v):
+                    result = "str"
+
+                elif is_list(v):
+                    result = "array"
+
+                elif is_datetime(v):
+                    result = "datetime"
+
+                elif is_date(v):
+                    result = "date"
+
+                elif is_date(v):
+                    result = "binary"
+
+                print(parse_spark_dtypes(result))
+
+    @add_attr(cols)
+    def clip(columns, lower_bound, upper_bound):
         """
         Trim values at input thresholds
         :param columns: Columns to be trimmed
-        :param lower: Lower
-        :param upper:
+        :param lower_bound: Lower value bound
+        :param upper_bound: Upper value bound
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         def _clip(_col_name, args):
             _lower = args[0]
@@ -1354,20 +1449,7 @@ def cols(self):
 
         df = self
         for col_name in columns:
-            df = df.cols.apply_expr(col_name, _clip, [lower, upper])
-        return df
-
-    @add_attr(cols)
-    def abs(columns):
-        """
-        Apply abs to the values in a column
-        :param columns:
-        :return:
-        """
-        columns = parse_columns(self, columns)
-        df = self
-        for col_name in columns:
-            df = df.withColumn(col_name, F.abs(F.col(col_name)))
+            df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
         return df
 
     return cols

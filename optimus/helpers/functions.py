@@ -6,9 +6,10 @@ import random
 import re
 
 from IPython.display import display, HTML
+from pyspark.ml.linalg import DenseVector
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
@@ -28,7 +29,9 @@ def parse_spark_dtypes(value):
     :param value:
     :return:
     """
+
     value = val_to_list(value)
+
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
 
@@ -332,7 +335,7 @@ def filter_col_name_by_dtypes(df, data_type):
     """
     data_type = parse_spark_dtypes(data_type)
 
-    # isinstace requiere a tuple
+    # isinstace require a tuple
     data_type = tuple(val_to_list(data_type))
 
     # Filter columns by data type
@@ -351,3 +354,37 @@ def check_env_vars(env_vars):
             logging.info(env_var + "=" + os.environ.get(env_var))
         else:
             logging.info("You don't have " + env_var + " set")
+
+
+# Reference https://nvie.com/posts/modifying-deeply-nested-structures/
+def traverse(obj, path=None, callback=None):
+    """
+    Traverse a deep nested python structure
+    :param obj: object to traverse
+    :param path:
+    :param callback: Function used to transform a value
+    :return:
+    """
+    if path is None:
+        path = []
+
+    if is_(obj, dict):
+        value = {k: traverse(v, path + [k], callback)
+                 for k, v in obj.items()}
+
+    elif is_(obj, list):
+        value = [traverse(elem, path + [[]], callback)
+                 for elem in obj]
+
+    elif is_(obj, tuple):
+        value = tuple(traverse(elem, path + [[]], callback)
+                      for elem in obj)
+    elif is_(obj, DenseVector):
+        value = DenseVector([traverse(elem, path + [[]], callback) for elem in obj])
+    else:
+        value = obj
+
+    if callback is None:  # if a callback is provided, call it to get the new value
+        return value
+    else:
+        return callback(path, value)
