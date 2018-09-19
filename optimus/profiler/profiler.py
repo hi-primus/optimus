@@ -1,10 +1,14 @@
 import configparser
+import configparser
+import json
 import logging
 import os
 from collections import defaultdict
 
 import dateutil
+import humanize
 import jinja2
+import pika
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 from pyspark.sql.types import ArrayType, LongType
@@ -15,12 +19,17 @@ from optimus.helpers.functions import parse_columns
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json
 
-import humanize
-
 
 class Profiler:
 
-    def __init__(self, output_path=None):
+    def __init__(self, output_path=None, queue_url=None, queue_exchange=None, queue_routing_key=None):
+        """
+
+        :param output_path:
+        :param queue_url:
+        :param queue_exchange:
+        :param queue_routing_key:
+        """
 
         config = configparser.ConfigParser()
         # If not path defined. Try to load from the config.ini file
@@ -35,6 +44,9 @@ class Profiler:
                 pass
 
         self.path = output_path
+        self.queue_url = queue_url
+        self.queue_exchange = queue_exchange
+        self.queue_routing_key = queue_routing_key
 
     @staticmethod
     @time_it
@@ -223,8 +235,31 @@ class Profiler:
         # Display HTML
         display(HTML(html))
 
+        # send to queue
+
+        if self.queue_url is not None:
+            self.to_queue(output)
+
         # Save to file
         write_json(output, self.path)
+
+    def to_queue(self, message):
+        """
+        Send the profiler information to a queue. By default it use a public encryted queue.
+        :return:
+        """
+
+        # Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
+        url = os.environ.get('CLOUDAMQP_URL', self.queue_url)
+        params = pika.URLParameters(url)
+        connection = pika.BlockingConnection(params)
+        channel = connection.channel()  # start a channel
+        channel.queue_declare(queue='optimus')  # Declare a queue
+
+        channel.basic_publish(exchange=self.queue_exchange,
+                              routing_key=self.queue_routing_key,
+                              body=json.dumps(message))
+        channel.close()
 
     @staticmethod
     def to_json(df, columns, buckets=40, infer=False, relative_error=1):
