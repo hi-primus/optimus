@@ -3,7 +3,7 @@ import itertools
 import re
 import string
 import unicodedata
-from fastnumbers import fast_float
+from fastnumbers import fast_float, isint, isfloat
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -21,12 +21,12 @@ from optimus.functions import filter_row_by_data_type as fbdt
 
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_float, is_datetime, is_date
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -915,6 +915,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
         def _replace_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
 
@@ -1394,6 +1395,39 @@ def cols(self):
                                               handleInvalid=handle_invalid)
             df = discretizer.fit(df).transform(df)
         return df
+
+    @add_attr(cols)
+    def infer():
+        df = self
+        row = df.cols.select("*").limit(1).to_json()
+
+        for r in row:
+            for k, v in r.items():
+                result = None
+                # print(v)
+
+                if is_int(v):
+                    result = "int"
+
+                elif is_float(v):
+                    result = "float"
+
+                elif is_str(v):
+                    result = "str"
+
+                elif is_list(v):
+                    result = "array"
+
+                elif is_datetime(v):
+                    result = "datetime"
+
+                elif is_date(v):
+                    result = "date"
+
+                elif is_date(v):
+                    result = "binary"
+
+                print(parse_spark_dtypes(result))
 
     @add_attr(cols)
     def clip(columns, lower_bound, upper_bound):
