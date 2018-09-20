@@ -223,7 +223,7 @@ class Profiler:
                     hist_pic = {"hist_pic": hist}
 
             if "frequency" in col:
-                freq_pic = plot_freq({col_name: col["frequency_graph"]}, output="base64")
+                freq_pic = plot_freq({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
@@ -373,8 +373,7 @@ class Profiler:
                 .cols.rename(col_name, "value").to_json())
 
         # Get only ten items to print the table
-        col_info['frequency'] = freq[:10]
-        col_info['frequency_graph'] = freq
+        col_info['frequency'] = freq
         return col_info
 
     @staticmethod

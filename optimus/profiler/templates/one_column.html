@@ -157,7 +157,7 @@
                 <th>Value</th>
                 <th>Count</th>
                 <th>Frecuency (%)</th>
-                {% for vi in data.frequency %}
+                {% for vi in data.frequency[:10] %}
                 <tr>
                     <td>{{vi.value}}</td>
                     <td>{{vi.count}}</td>
