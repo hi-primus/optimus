@@ -72,7 +72,7 @@ SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatTyp
                      }
 
 # Profiler
-PROFILER_TYPES = {"int", "float", "string", "bool", "date", "null", "array"}
+PROFILER_TYPES = {"int", "float", "string", "bool", "date", "null", "array", "double"}
 PROFILER_LEGEND_TYPES = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "bool", "null", "array"}
 
