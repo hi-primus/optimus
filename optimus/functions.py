@@ -333,12 +333,12 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
 
 class Create:
     @staticmethod
-    def data_frame(cols=None, rows=None, inferSchema=True, pdf=None):
+    def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
         """
         Helper to create a Spark dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples if vals with the same number and types that cols
-        :param inferSchema: Try to infer the schema data type.
+        :param infer_schema: Try to infer the schema data type.
         :param pdf: a pandas dataframe
         :return: Dataframe
         """
@@ -358,7 +358,7 @@ class Create:
                 if is_one_element(c):
                     col_name = c
 
-                    if inferSchema is True:
+                    if infer_schema is True:
                         var_type = infer(r)
                     else:
                         var_type = "string"
