@@ -10,9 +10,14 @@ In your terminal just type  `pip install optimuspyspark`
 * Apache Spark>= 2.3.0  
 * Python>=3.6  
 
-## Examples
+## Examples 
 
-After installation go to the [examples](examples/) folder to found notebooks about data cleaning, data munging, and how to create ML and DL models.
+You can go to the 10 minutes to Optimus notebook where you can find the basic to start working. 
+
+Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+
+and check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ironmussa/Optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
+
 
 ## Documentation
   
@@ -26,6 +31,13 @@ https://optimus.featureupvote.com/
  
 And if you want to see some cool information and tutorials about Optimus check out our blog https://medium.com/hi-optimus  
   
+## Start Optimus
+
+```python
+from optimus import Optimus
+op= Optimus()
+```
+
 ## Loading data
 Now Optimus can load data in csv, json, parquet and avro from a local file or an URL.
 
@@ -170,6 +182,16 @@ df.cols.apply_expr("billingid", func, 20).show()
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb)
+
+[![](images/profiler.png)]
+
+## Data enrichment
+
+You can connect to externala API's enrich your data using optimus.
+
+```python
+sdfsadfasdas
+```
 
 ## Machine Learning 
 
