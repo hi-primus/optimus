@@ -5,10 +5,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-import optimus.create as op
+import optimus as op
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit import is_list_of_str_or_int
-from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
 
