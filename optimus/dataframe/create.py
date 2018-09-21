@@ -1,97 +1,13 @@
-from ast import literal_eval
-from fastnumbers import isint, isfloat
-
 import pandas as pd
-from pyspark.sql.types import StructField, StructType, StringType, ArrayType
+from pyspark.sql.types import StructField, StructType
 
 # Helpers
-from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples, is_date, is_binary, is_datetime, \
-    is_list, is_str, is_float, is_int, is_bool, str_to_array, str_to_boolean, str_to_date, is_list_of_str
-from optimus.helpers.functions import get_spark_dtypes_object, parse_spark_dtypes
+from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
+from optimus.helpers.functions import get_spark_dtypes_object, infer
 from optimus.spark import Spark
 
 
 class Create:
-
-    @staticmethod
-    def infer(value):
-
-        result = None
-        # print(v)
-        if value is None:
-            result = "null"
-        elif is_bool(value):
-            result = "bool"
-        elif isint(value):
-            result = "int"
-
-        elif isfloat(value):
-            result = "float"
-
-        elif is_list(value):
-            result = ArrayType(Create.infer(value[0]))
-
-        elif is_datetime(value):
-            result = "datetime"
-
-        elif is_date(value):
-            result = "date"
-
-        elif is_binary(value):
-            result = "binary"
-
-        elif is_str(value):
-            if str_to_boolean(value):
-
-                result = "bool"
-            elif str_to_date(value):
-                result = "string"  # date
-            elif str_to_array(value):
-                result = "string"  # array
-            else:
-                result = "string"
-
-        return get_spark_dtypes_object(result)
-
-    @staticmethod
-    def infer1(value):
-
-        result = None
-        # print(v)
-        if value is None:
-            result = "null"
-        elif is_bool(value):
-            result = "bool"
-        elif isint(value):
-            result = "int"
-
-        elif isfloat(value):
-            result = "float"
-
-        elif is_list(value):
-            result = "string"
-
-        elif is_datetime(value):
-            result = "datetime"
-
-        elif is_date(value):
-            result = "date"
-
-        elif is_binary(value):
-            result = "binary"
-
-        elif is_str(value):
-            if str_to_boolean(value):
-
-                result = "bool"
-            elif str_to_date(value):
-                result = "string"
-            elif str_to_array(value):
-                result = "string"
-            else:
-                result = "string"
-
-        return get_spark_dtypes_object(result)
 
     @staticmethod
     def data_frame(cols=None, rows=None, pdf=None):
@@ -118,7 +34,7 @@ class Create:
                 if is_one_element(c):
                     col_name = c
 
-                    var_type = Create.infer(r)
+                    var_type = infer(r)
                     nullable = True
 
                 elif is_tuple(c):
@@ -135,7 +51,7 @@ class Create:
 
                 # If tuple has not the third param with put it to true to accepts Null in columns
                 specs.append([col_name, var_type, nullable])
-            print(specs)
+
             struct_fields = list(map(lambda x: StructField(*x), specs))
 
             result = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
