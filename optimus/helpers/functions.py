@@ -4,23 +4,62 @@ import os
 import pprint
 import random
 import re
+from fastnumbers import isint, isfloat
 
 from IPython.display import display, HTML
 from pyspark.ml.linalg import DenseVector
+from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_, is_bool, is_datetime, is_date, is_binary, \
+    str_to_boolean, str_to_date, str_to_array
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
 
 
-def random_int(n=5):
+def infer(value):
     """
-    Create a random string of ints
-    :return:
+    Infer a Spark datatype from a value
+    :param value: value to be inferred
+    :return: Spark datatype
     """
-    return str(random.randint(1, 10 ** n))
+    result = None
+    # print(v)
+    if value is None:
+        result = "null"
+    elif is_bool(value):
+        result = "bool"
+    elif isint(value):
+        result = "int"
+
+    elif isfloat(value):
+        result = "float"
+
+    elif is_list(value):
+        result = ArrayType(infer(value[0]))
+
+    elif is_datetime(value):
+        result = "datetime"
+
+    elif is_date(value):
+        result = "date"
+
+    elif is_binary(value):
+        result = "binary"
+
+    elif is_str(value):
+        if str_to_boolean(value):
+
+            result = "bool"
+        elif str_to_date(value):
+            result = "string"  # date
+        elif str_to_array(value):
+            result = "string"  # array
+        else:
+            result = "string"
+
+    return get_spark_dtypes_object(result)
 
 
 def parse_spark_dtypes(value):
@@ -66,6 +105,14 @@ def parse_python_dtypes(value):
     :return:
     """
     return PYTHON_SHORT_TYPES[value.lower()]
+
+
+def random_int(n=5):
+    """
+    Create a random string of ints
+    :return:
+    """
+    return str(random.randint(1, 10 ** n))
 
 
 def print_html(html):

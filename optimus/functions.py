@@ -164,14 +164,14 @@ def plot_freq(column_data=None, output="image"):
     :param output:
     :return:
     """
-
     for col_name, data in column_data.items():
 
-        # Transform Optimus formt to matplotlib format
+        # Transform Optimus' format to matplotlib's format
         x = []
         h = []
 
         for d in data:
+
             x.append(ellipsis(d["value"]))
             h.append(d["count"])
 
