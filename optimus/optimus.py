@@ -2,7 +2,7 @@ import os
 import sys
 from shutil import rmtree
 
-from optimus.create import Create
+from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
 from optimus.functions import concat
 from optimus.helpers.constants import *
