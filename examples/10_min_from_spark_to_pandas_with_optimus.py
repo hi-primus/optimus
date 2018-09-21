@@ -23,12 +23,6 @@
 #     version: 0.11.7
 # ---
 
-# # Reference
-#
-# https://databricks.com/blog/2015/08/12/from-pandas-to-apache-sparks-dataframe.html
-#
-# https://pandas.pydata.org/pandas-docs/stable/10min.html
-
 # %load_ext autoreload
 # %autoreload 2
 
@@ -48,18 +42,12 @@ sys.path.append("..")
 # ## Import optimus and start it
 
 from optimus import Optimus
-op= Optimus(master="local", verbose=True)
+op= Optimus(master="local")
 
 # ## Dataframe creation
 #
 # Create a dataframe to passing a list of values for columns and rows. Unlike pandas you need to specify the column names.
 #
-
-# * https://en.wikipedia.org/wiki/Optimus_Prime
-# * https://en.wikipedia.org/wiki/Bumblebee_(Transformers)
-# * https://en.wikipedia.org/wiki/Ironhide
-# * https://en.wikipedia.org/wiki/Jazz_(Transformers)
-# * https://en.wikipedia.org/wiki/Megatron
 
 df = op.create.df(
     [
@@ -74,12 +62,12 @@ df = op.create.df(
     ],
     [
         
-        ("Optim'us", 28.0, "Leader", 10, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111",[8.5344, 4300]),
-        ("bumbl#ebéé  ", 17.5, "Espionage", 7, 2, ["Bumble","Goldback"], "10.642707,-71.612534",[5.334, 2000]),
-        ("ironhide&", 26.0, "Security", 7, 4, ["Roadbuster"], "37.789563,-122.400356",[7.9248, 4000]),
-        ("Jazz",13.0, "First Lieutenant", 8, 1.8, ["Meister"], "33.670666,-117.841553",[3.9624, 1800]),
-        ("Megatron",None, "None", None, 5.7, ["Megatron"], None,[None,5700]),
-        ("Metroplex_)^$",300 , "Battle Station", 8, None, ["Metroflex"],None,[91.44, None]),
+        ("Optim'us", 28.0, "Leader", 10, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111",[8.5344, 4300.0]),
+        ("bumbl#ebéé  ", 17.5, "Espionage", 7, 2.0, ["Bumble","Goldback"], "10.642707,-71.612534",[5.334, 2000.0]),
+        ("ironhide&", 26.0, "Security", 7, 4.0, ["Roadbuster"], "37.789563,-122.400356",[7.9248, 4000.0]),
+        ("Jazz",13.0, "First Lieutenant", 8, 1.8, ["Meister"], "33.670666,-117.841553",[3.9624, 1800.0]),
+        ("Megatron",None, "None", None, 5.7, ["Megatron"], None,[None,5700.0]),
+        ("Metroplex_)^$",300.0 , "Battle Station", 8, None, ["Metroflex"],None,[91.44, None]),
         
     ]).h_repartition(1)
 df.table()
@@ -229,7 +217,7 @@ df.cols.is_na("*").table()
 # ## Stats
 
 # + {"inputHidden": false, "outputHidden": false}
-df.cols.mean("height(ft)")
+df.cols.mean("height")
 
 # + {"inputHidden": false, "outputHidden": false}
 df.cols.mean("*")
@@ -241,7 +229,7 @@ df.cols.mean("*")
 def func(value, args):
     return value + 1
 
-df.cols.apply("height(ft)",func,"float").table()
+df.cols.apply("height",func,"float").table()
 # -
 
 # ### Histogramming
@@ -295,53 +283,22 @@ op.concat([df,df_new], "rows").table()
 
 
 # + {"inputHidden": false, "outputHidden": false}
-Operations like `join` and `group` are handle using Spark directly
+# Operations like `join` and `group` are handle using Spark directly
 
 # + {"inputHidden": false, "outputHidden": false}
-import pandas as pd
-
-pdf = pd.DataFrame({'A': {0: 'a', 1: 'b', 2: 'c'},
-                   'B': {0: 1, 1: 3, 2: 5},
-                   'C': {0: 2, 1: 4, 2: 6}})
-
-sdf = op.create.df(pdf=pdf)
-sdf.table()
-sdf.melt(id_vars=['A'], value_vars=['B', 'C']).table()
-
-# + {"inputHidden": false, "outputHidden": false}
-pd.DataFrame({'A': {0: 'a', 1: 'b', 2: 'c'},
-                            'B': {0: 1, 1: 3, 2: 5},
-                            'C': {0: 2, 1: 4, 2: 6}})
-
-# + {"inputHidden": false, "outputHidden": false}
-df = op.create.df(
-   [("A","str"), ("B","int"), ("C","int")],
-[
-    ("a",1,2),
-    ("b",3,4),
-    ("c",5,6),        
-])
-df.melt(id_vars=['A'], value_vars=['B', 'C']).table()
-
-[[('A', StringType, True), ('B', StringType, True), ('C', StringType, True)],
- [('a', '1', '2'), ('b', '3', '4'), ('c', '5', '6')]]
-
-# + {"inputHidden": false, "outputHidden": false}
-a = [("A","str"), ("B","int"), ("C","int")],
-[
-    ("a",1,2),
-    ("b",3,4),
-    ("c",5,6),        
-]
-
-# + {"inputHidden": false, "outputHidden": false}
-#df.to_json()
+df_melt = df.melt(id_vars=["names"], value_vars=["height", "function","rank"])
 df.table()
+# -
 
-# + {"inputHidden": false, "outputHidden": false}
-value = df.collect()
-[tuple(v.asDict().values()) for v in value]
+df_melt.pivot("names","variable","value").table()
 
+# ## Ploting
+
+df.plot.hist("height",10)
+
+df.plot.frequency("*",10)
+
+# ## Getting Data In/Out
 
 # + {"inputHidden": false, "outputHidden": false}
 df.cols.names()
@@ -350,30 +307,43 @@ df.cols.names()
 df.export()
 
 # + {"inputHidden": false, "outputHidden": false}
-source_df = op.create.df(
-    ["A", "B", "C"],
-    [
-        ("a", 1, 2),
-        ("b", 3, 4),
-        ("c", 5, 6),
-    ])
-
-
-actual_df = source_df.melt(id_vars=['A'], value_vars=['B', 'C']).table()
-
-expected_df = op.create.df([('A', StringType, True), ('B', StringType, True), ('C', StringType, True)],
-                           [('a', '1', '2'), ('b', '3', '4'), ('c', '5', '6')])
-
-assert (expected_df.collect() == actual_df.collect())
-
-# + {"inputHidden": false, "outputHidden": false}
 df.schema
+# -
 
-# + {"inputHidden": false, "outputHidden": false}
-eval("StringType()")
+df.table()
 
 # + {"inputHidden": false, "outputHidden": false, "scrolled": false}
-op.profiler.run(df, "*",infer=False)
+op.profiler.run(df, "height",infer=True)
 # -
+df_csv =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
+df_csv.table()
+
+df_json =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json").limit(5)
+df_json.table()
+
+df_csv.save.csv("test.csv") 
+
+df.table()
+
+# ## Enrichment
+
+# +
+import requests
+
+def func_request(params):
+    # You can use here whatever header or auth info you need to send. 
+    # For more information see the requests library
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
+
+    return requests.get(url)
+
+def func_response(response):
+    # Here you can parse de response
+    return response["title"]
+
+df_result = op.enrich(df, func_request= func_request, func_response= func_response)
+# -
+
+df_result.table()
 
 
