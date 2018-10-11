@@ -5,6 +5,11 @@ from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
 
+from pysparkling import *
+from pysparkling.ml import H2OAutoML
+from pyspark.sql.functions import *
+from optimus.spark import Spark
+
 
 class ML:
     @staticmethod
@@ -120,3 +125,24 @@ class ML:
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
         return df_model, gbt_model
+
+    @staticmethod
+    def h2o_automl(df, label, columns, **kargs):
+
+        hc = H2OContext.getOrCreate(Spark.spark)
+
+        df_sti = string_to_index(df, input_cols=label)
+        df_va = vector_assembler(df_sti, input_cols=columns)
+        automl = H2OAutoML(convertUnknownCategoricalLevelsToNa=True,
+                           maxRuntimeSecs=60,  # 1 minutes
+                           seed=1,
+                           maxModels=3,
+                           predictionCol=label + "_index",
+                           **kargs)
+
+        model = automl.fit(df_va)
+        df_raw = model.transform(df_va)
+
+        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["value"] > 0.5, 1.0).otherwise(0.0))
+
+        return df_pred, model

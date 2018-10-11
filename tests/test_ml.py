@@ -2,6 +2,7 @@ from pyspark.sql import Row, types
 from pyspark.ml import feature, classification
 from nose.tools import assert_equal
 import pyspark
+import py_sparkling
 
 from optimus import Optimus
 
@@ -89,3 +90,11 @@ def test_gbt():
     assert_spark_df(df_model)
 
     assert isinstance(rf_model, pyspark.ml.classification.GBTClassificationModel), "Not a GBT model"
+
+
+def test_h2o_automl():
+    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis", columns)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
