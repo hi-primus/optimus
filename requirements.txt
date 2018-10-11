@@ -31,3 +31,4 @@ psutil==5.4.7
 backoff==1.6.0
 pymongo
 kombu
+h2o_pysparkling_2.3

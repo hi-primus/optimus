@@ -32,3 +32,4 @@ pymongo
 ratelimit==2.2.0
 tqdm
 kombu
+h2o_pysparkling_2.3
