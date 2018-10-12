@@ -10,6 +10,8 @@ from pysparkling.ml import H2OAutoML
 from pyspark.sql.functions import *
 from optimus.spark import Spark
 
+spark = Spark.spark
+
 
 class ML:
     @staticmethod
@@ -129,7 +131,7 @@ class ML:
     @staticmethod
     def h2o_automl(df, label, columns, **kargs):
 
-        hc = H2OContext.getOrCreate(Spark.spark)
+        H2OContext.getOrCreate(spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
