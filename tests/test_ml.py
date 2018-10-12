@@ -93,7 +93,7 @@ def test_gbt():
 
 
 def test_h2o_automl():
-    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis_index", columns)
+    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis", columns)
 
     assert_spark_df(df_model)
 
