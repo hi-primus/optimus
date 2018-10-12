@@ -36,6 +36,8 @@ class Spark:
                        .appName(self.app_name)
                        .getOrCreate())
 
+        self._sc = self._spark.sparkContext
+
     @property
     def spark(self):
         """
@@ -51,7 +53,7 @@ class Spark:
         Return the Spark Context
         :return:
         """
-        return self._spark.sparkContext
+        return self._sc
 
     @property
     def parallelism(self):
