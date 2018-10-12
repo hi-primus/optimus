@@ -8,9 +8,9 @@ from optimus.ml.feature import string_to_index, vector_assembler
 from pysparkling import *
 from pysparkling.ml import H2OAutoML
 from pyspark.sql.functions import *
-from optimus.spark import Spark
+from pyspark.sql.session import SparkSession
 
-spark = Spark.spark
+spark = SparkSession.builder.getOrCreate()
 
 
 class ML:
