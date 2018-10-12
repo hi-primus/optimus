@@ -148,3 +148,25 @@ class ML:
         df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["value"] > 0.5, 1.0).otherwise(0.0))
 
         return df_pred, model
+    
+    @staticmethod
+    def h2o_deeplearning(df, label, columns, **kargs):
+        
+    H2OContext.getOrCreate(spark)
+    
+    df_sti = fe.string_to_index(df, input_cols=label)
+    df_va  =  fe.vector_assembler(df_sti, input_cols=columns)
+    h2o_deeplearning = H2ODeepLearning(epochs=10,
+                         seed=1,
+                         l1=0.001,
+                         l2=0.0,
+                         hidden=[200, 200],
+                         featuresCols=columns,
+                         predictionCol=label,
+                         **kargs)
+    model = h2o_deeplearning.fit(df_va)
+    df_raw = model.transform(df_va)
+    
+    df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
+    
+    return df_pred, model
