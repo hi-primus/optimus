@@ -15,7 +15,7 @@ before_install:
 
 install:
     - ./install-spark-2-3-1.sh
-    - "pip install -r requirements-test.txt"
+    - "pip install -r requirements-test.txt --progress-bar=off"
 
 jdk:
   - oraclejdk8
