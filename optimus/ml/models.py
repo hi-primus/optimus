@@ -154,8 +154,8 @@ class ML:
         
         H2OContext.getOrCreate(spark)
 
-        df_sti = fe.string_to_index(df, input_cols=label)
-        df_va  =  fe.vector_assembler(df_sti, input_cols=columns)
+        df_sti = string_to_index(df, input_cols=label)
+        df_va  = vector_assembler(df_sti, input_cols=columns)
         h2o_deeplearning = H2ODeepLearning(epochs=10,
                              seed=1,
                              l1=0.001,
