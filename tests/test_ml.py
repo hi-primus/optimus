@@ -18,6 +18,10 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
 
+columns_h2o = ['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+
 
 def assert_spark_df(df):
     assert isinstance(df, pyspark.sql.dataframe.DataFrame), "Not a Spark DF"
@@ -93,7 +97,7 @@ def test_gbt():
 
 
 def test_h2o_automl():
-    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis", columns)
+    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis", columns_h2o)
 
     assert_spark_df(df_model)
 
