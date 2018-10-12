@@ -102,3 +102,10 @@ def test_h2o_automl():
     assert_spark_df(df_model)
 
     assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
+
+def test_h2o_deeplearning():
+    df_model, dl_model = op.ml.h2o_deeplearning(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(dl_model, py_sparkling.ml.models.H2ODeepLearningModel), "Not a H2ODeepLearningModel"
