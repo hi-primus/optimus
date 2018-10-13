@@ -191,6 +191,9 @@ class ML:
     
     @staticmethod
     def h2o_gbm(df, label, columns, **kargs):
+        
+        H2OContext.getOrCreate(spark)
+        
         df_sti = string_to_index(df, input_cols=label)
         df_va  =  vector_assembler(df_sti, input_cols=columns)
         h2o_gbm = H2OGBM(ratio=0.8,
