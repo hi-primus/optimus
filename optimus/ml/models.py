@@ -6,7 +6,7 @@ from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
 
 from pysparkling import *
-from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost
+from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 from pyspark.sql.functions import *
 from pyspark.sql.session import SparkSession
 
@@ -183,6 +183,22 @@ class ML:
                                    predictionCol=label,
                                    **kargs)
         model = h2o_xgboost.fit(df_va)
+        df_raw = model.transform(df_va)
+
+        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
+
+        return df_pred, model
+    
+    @staticmethod
+    def h2o_gbm(df, label, columns, **kargs):
+        df_sti = string_to_index(df, input_cols=label)
+        df_va  =  vector_assembler(df_sti, input_cols=columns)
+        h2o_gbm = H2OGBM(ratio=0.8,
+                         seed=1,
+                         featuresCols=columns,
+                         predictionCol=label,
+                         **kargs)
+        model = h2o_gbm.fit(df_va)
         df_raw = model.transform(df_va)
 
         df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
