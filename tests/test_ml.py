@@ -116,3 +116,10 @@ def test_h2o_xgboost():
     assert_spark_df(df_model)
 
     assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+
+def test_h2o_gbmn():
+    df_model, xgboost_model = op.ml.h2o_gbm(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(gbm_model, py_sparkling.ml.models.H2OGBMModel), "Not a H2OGBMModel"
