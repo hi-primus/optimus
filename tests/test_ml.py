@@ -115,4 +115,4 @@ def test_h2o_xgboost():
 
     assert_spark_df(df_model)
 
-    assert isinstance(dl_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
