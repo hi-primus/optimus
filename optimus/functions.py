@@ -9,7 +9,7 @@ import pandas as pd
 from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StructField, StructType
+from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
@@ -361,7 +361,7 @@ class Create:
                     if infer_schema is True:
                         var_type = infer(r)
                     else:
-                        var_type = "string"
+                        var_type = StringType()
                     nullable = True
 
                 elif is_tuple(c):
