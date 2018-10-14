@@ -1,9 +1,10 @@
-from optimus.helpers.checkit import is_str, is_list_empty
 import logging
+
+from optimus.helpers.checkit import is_str, is_list_empty
 
 
 class Test:
-    def __init__(self, df=None, name=None, imports=None):
+    def __init__(self, op=None, df=None, name=None, imports=None):
         """
         Create python code with unit test for Optimus.
         :param df: Spark Dataframe
@@ -11,7 +12,7 @@ class Test:
         :param imports: Libraries to be added
 
         """
-
+        self.op = op
         self.df = df
         self.name = name
         self.imports = imports
@@ -78,7 +79,12 @@ class Test:
         else:
             suffix = "_" + suffix
 
-        func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
+        # Create func test name. If is None we just test the create.df function a not transform the data frame in
+        # any way
+        if func is None:
+            func_test_name = "test_" + "create_df" + suffix + "()"
+        else:
+            func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
         print("Creating {test} test...".format(test=func_test_name))
         logging.info(func_test_name)
@@ -88,18 +94,22 @@ class Test:
 
         if df is not None:
             source_df = "\tsource_df=op.create.df(" + df.export() + ")\n"
-            method_to_call = df
+            df_func = df
             add_buffer(source_df)
         else:
-            method_to_call = self.df
+            df_func = self.df
 
         # Process simple arguments
         _args = []
         for v in args:
             if is_str(v):
                 _args.append("'" + v + "'")
+            # elif is_list(v):
+            #    _args = v
 
         _args = ','.join(_args)
+
+        print(type(args))
 
         _kwargs = []
 
@@ -114,14 +124,19 @@ class Test:
         if (not is_list_empty(args)) & (not is_list_empty(kwargs)):
             separator = ","
 
-        add_buffer("\tactual_df = source_df." + func + "(" + _args + separator + ','.join(_kwargs) + ")\n")
+        if func is None:
+            add_buffer("\tactual_df = source_df\n")
+        else:
+            add_buffer("\tactual_df = source_df." + func + "(" + _args + separator + ','.join(_kwargs) + ")\n")
 
-        # Process functions
+        # Apply function to the dataframe
+        if func is None:
+            df_result = self.op.create.df(*args, **kwargs)
+        else:
+            for f in func.split("."):
+                df_func = getattr(df_func, f)
 
-        for f in func.split("."):
-            method_to_call = getattr(method_to_call, f)
-
-        df_result = method_to_call(*args, **kwargs)
+            df_result = df_func(*args, **kwargs)
 
         if output == "df":
             expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
@@ -141,7 +156,8 @@ class Test:
 
         # add_buffer(func_test_name + "\n")
 
-        if False:
+        """
+        if args["verbose"] is True:
             print("-----------")
             print("Original dataframe")
 
@@ -153,4 +169,5 @@ class Test:
                 df_result.table()
             elif output == "json":
                 print(df_result)
+        """
         return "".join(buffer)
