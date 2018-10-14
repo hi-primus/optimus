@@ -33,7 +33,7 @@ class ML:
         return df_model, ml_model
 
     @staticmethod
-    def random_forest(df, columns, input_col):
+    def random_forest(df, columns, input_col, **kargs):
         """
         Runs a random forest classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -56,7 +56,7 @@ class ML:
         df = string_to_index(df, input_cols=input_col)
         df = vector_assembler(df, input_cols=feats)
 
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(**kargs)
 
         df = df.cols.rename([(input_col + "_index", "label")])
 
@@ -65,7 +65,7 @@ class ML:
         return df_model, rf_model
 
     @staticmethod
-    def decision_tree(df, columns, input_col):
+    def decision_tree(df, columns, input_col, **kargs):
         """
         Runs a decision tree classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -88,7 +88,7 @@ class ML:
         df = string_to_index(df, input_cols=input_col)
         df = vector_assembler(df, input_cols=feats)
 
-        model = DecisionTreeClassifier()
+        model = DecisionTreeClassifier(**kargs)
 
         df = df.cols.rename([(input_col + "_index", "label")])
 
@@ -97,7 +97,7 @@ class ML:
         return df_model, dt_model
 
     @staticmethod
-    def gbt(df, columns, input_col):
+    def gbt(df, columns, input_col, **kargs):
         """
         Runs a gradient boosting tree classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -120,7 +120,7 @@ class ML:
         df = string_to_index(df, input_cols=input_col)
         df = vector_assembler(df, input_cols=feats)
 
-        model = GBTClassifier()
+        model = GBTClassifier(**kargs)
 
         df = df.cols.rename([(input_col + "_index", "label")])
 
