@@ -5,10 +5,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-import optimus.create as op
+import optimus as op
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit import is_list_of_str_or_int
-from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
 
@@ -22,8 +21,8 @@ def rows(self):
         :return: Spark DataFrame
         """
         df = self
-        columns = [i for i in range(df.cols.count())]
-        new_row = op.Create.df(columns, rows)
+        columns = [str(i) for i in range(df.cols.count())]
+        new_row = op.Create.df(columns, row)
 
         return df.union(new_row)
 

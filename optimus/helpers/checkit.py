@@ -2,7 +2,9 @@
 Helpers to check if an object match a date type
 """
 import datetime
+from ast import literal_eval
 
+import dateutil
 from pyspark.sql import DataFrame
 import os
 
@@ -81,6 +83,33 @@ def is_tuple(value):
     :return:
     """
     return isinstance(value, tuple)
+
+
+def is_list_of_str(value):
+    """
+    Check if an object is a liat of strings
+    :param value:
+    :return:
+    """
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, str) for elem in value)
+
+
+def is_list_of_int(value):
+    """
+    Check if an object is a liat of integers
+    :param value:
+    :return:
+    """
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, int) for elem in value)
+
+
+def is_list_of_float(value):
+    """
+    Check if an object is a liat of floats
+    :param value:
+    :return:
+    """
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, float) for elem in value)
 
 
 def is_list_of_str_or_int(value):
@@ -264,6 +293,10 @@ def is_dataframe(value):
     return isinstance(value, DataFrame)
 
 
+def is_bool(value):
+    return isinstance(value, bool)
+
+
 def is_datetime(value):
     """
     Check if an object is a datetime
@@ -294,4 +327,43 @@ def is_date(value):
 
 
 def has_(value, _type):
+    """
+
+    :param value:
+    :param _type: check if a list has a element of a specific data type
+    :return:
+    """
     return any(isinstance(elem, _type) for elem in value)
+
+
+def str_to_boolean(value):
+    """
+    Check if a str can be converted to boolean
+    :param value:
+    :return:
+    """
+    value = value.lower()
+    if value == "true" or value == "false":
+        return True
+
+
+def str_to_date(value):
+    try:
+        dateutil.parser.parse(value)
+        return True
+    except ValueError:
+        pass
+
+
+def str_to_array(value):
+    """
+    Check if value can be parsed to a tuple or and array.
+    Because Spark can handle tuples we will try to transform tuples to arrays
+    :param value:
+    :return:
+    """
+    try:
+        if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+            return True
+    except (ValueError, SyntaxError,):
+        pass

@@ -2,13 +2,14 @@ import numpy as np
 import seaborn as sns
 from pyspark.sql import DataFrame
 
+from optimus import PYSPARK_NUMERIC_TYPES
 from optimus.functions import plot_hist, plot_freq
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns
 
 
-def plots(self):
-    @add_attr(plots)
+def plot(self):
+    @add_attr(plot)
     def hist(columns=None, buckets=10):
         """
         Plot histogram
@@ -16,13 +17,13 @@ def plots(self):
         :param buckets: Number of buckets
         :return:
         """
-        columns = parse_columns(self, columns)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
             plot_hist({col_name: data}, output="image")
 
-    @add_attr(plots)
+    @add_attr(plot)
     def frequency(columns=None, buckets=10):
         """
         Plot frequency chart
@@ -34,9 +35,9 @@ def plots(self):
 
         for col_name in columns:
             data = self.cols.frequency(col_name, buckets)
-            plot_freq({col_name: data}, output="image")
+            plot_freq(data, output="image")
 
-    @add_attr(plots)
+    @add_attr(plot)
     def correlation(vec_col, method="pearson"):
         """
         Compute the correlation matrix for the input dataset of Vectors using the specified method. Method
@@ -52,7 +53,7 @@ def plots(self):
         return sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
                                                                                                      as_cmap=True))
 
-    return plots
+    return plot
 
 
-DataFrame.plots = property(plots)
+DataFrame.plot = property(plot)

@@ -99,7 +99,11 @@ def sample_n(self, n=10, random=False):
         seed = 0
 
     rows_count = self.count()
-    fraction = n / rows_count
+    if n < rows_count:
+        fraction = n / rows_count
+    else:
+        fraction = 1.0
+
     return self.sample(False, fraction, seed=seed)
 
 

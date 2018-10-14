@@ -1,5 +1,4 @@
 import configparser
-import configparser
 import json
 import logging
 import os
@@ -123,6 +122,7 @@ class Profiler:
                                 "bool": count_by_data_type['bool'],
                                 "int": count_by_data_type['int'],
                                 "float": count_by_data_type['float'],
+                                "double": count_by_data_type['double'],
                                 "date": count_by_data_type['date'],
                                 "array": count_by_data_type['array']
                                 }
@@ -130,13 +130,12 @@ class Profiler:
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
-
             # Get the greatest count by column data type
             greatest_data_type_count = max(data_types_count, key=data_types_count.get)
 
             if greatest_data_type_count is "string":
                 cat = "categorical"
-            elif greatest_data_type_count is "int" or greatest_data_type_count is "float":
+            elif greatest_data_type_count is "int" or greatest_data_type_count is "float" or greatest_data_type_count is "double":
                 cat = "numeric"
             elif greatest_data_type_count is "date":
                 cat = "date"
@@ -208,7 +207,6 @@ class Profiler:
         for col_name in columns:
             hist_pic = None
             col = output["columns"][col_name]
-
             if "hist" in col:
                 if col["column_dtype"] == "date":
                     hist_year = plot_hist({col_name: col["hist"]["years"]}, "base64", "years")
@@ -224,7 +222,7 @@ class Profiler:
                     hist_pic = {"hist_pic": hist}
 
             if "frequency" in col:
-                freq_pic = plot_freq({col_name: col["frequency_graph"]}, output="base64")
+                freq_pic = plot_freq({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
@@ -374,8 +372,7 @@ class Profiler:
                 .cols.rename(col_name, "value").to_json())
 
         # Get only ten items to print the table
-        col_info['frequency'] = freq[:10]
-        col_info['frequency_graph'] = freq
+        col_info['frequency'] = freq
         return col_info
 
     @staticmethod

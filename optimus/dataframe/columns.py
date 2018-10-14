@@ -21,7 +21,7 @@ from optimus.functions import filter_row_by_data_type as fbdt
 
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_float, is_datetime, is_date
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_float, is_datetime, is_date, is_numeric
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
@@ -1318,9 +1318,14 @@ def cols(self):
             hist_data = []
             for i in list(itertools.zip_longest(counts, splits)):
                 if i[0] is None:
-                    hist_data.append({"count": 0, "lower": i[1]["lower"], "upper": i[1]["upper"]})
+                    count = 0
                 elif "count" in i[0]:
-                    hist_data.append({"count": i[0]["count"], "lower": i[1]["lower"], "upper": i[1]["upper"]})
+                    count = i[0]["count"]
+
+                lower = i[1]["lower"]
+                upper = i[1]["upper"]
+
+                hist_data.append({"count": count, "lower": lower, "upper": upper})
 
         return hist_data
 
@@ -1395,39 +1400,6 @@ def cols(self):
                                               handleInvalid=handle_invalid)
             df = discretizer.fit(df).transform(df)
         return df
-
-    @add_attr(cols)
-    def infer():
-        df = self
-        row = df.cols.select("*").limit(1).to_json()
-
-        for r in row:
-            for k, v in r.items():
-                result = None
-                # print(v)
-
-                if is_int(v):
-                    result = "int"
-
-                elif is_float(v):
-                    result = "float"
-
-                elif is_str(v):
-                    result = "str"
-
-                elif is_list(v):
-                    result = "array"
-
-                elif is_datetime(v):
-                    result = "datetime"
-
-                elif is_date(v):
-                    result = "date"
-
-                elif is_date(v):
-                    result = "binary"
-
-                print(parse_spark_dtypes(result))
 
     @add_attr(cols)
     def clip(columns, lower_bound, upper_bound):
