@@ -85,7 +85,7 @@ class Optimus:
 
         if dl is True:
             self._add_spark_packages(
-                ["databricks:spark-deep-learning:1.1.0-spark2.3-s_2.11", "com.databricks:spark-avro_2.11:4.0.0"])
+                ["databricks:spark-deep-learning:1.2.0-spark2.3-s_2.11", "com.databricks:spark-avro_2.11:4.0.0"])
 
             self._start_session()
 

@@ -2,6 +2,7 @@ from pyspark.sql import Row, types
 from pyspark.ml import feature, classification
 from nose.tools import assert_equal
 import pyspark
+import py_sparkling
 
 from optimus import Optimus
 
@@ -14,6 +15,10 @@ sc = op.sc
 
 df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+
+columns_h2o = ['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
 
@@ -89,3 +94,32 @@ def test_gbt():
     assert_spark_df(df_model)
 
     assert isinstance(rf_model, pyspark.ml.classification.GBTClassificationModel), "Not a GBT model"
+
+
+def test_h2o_automl():
+    df_model, automl_model = op.ml.h2o_automl(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
+
+def test_h2o_deeplearning():
+    df_model, dl_model = op.ml.h2o_deeplearning(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(dl_model, py_sparkling.ml.models.H2ODeepLearningModel), "Not a H2ODeepLearningModel"
+
+def test_h2o_xgboost():
+    df_model, xgboost_model = op.ml.h2o_xgboost(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+
+def test_h2o_gbm():
+    df_model, gbm_model = op.ml.h2o_gbm(df_cancer, "diagnosis", columns_h2o)
+
+    assert_spark_df(df_model)
+
+    assert isinstance(gbm_model, py_sparkling.ml.models.H2OGBMModel), "Not a H2OGBMModel"
