@@ -35,8 +35,8 @@ import pandas as pd
 from pyspark.sql.types import *
 from datetime import date, datetime
 
-df = op.create.df(
-    [
+
+cols = [
         ("names", "str"),
         ("height(ft)", ShortType()),
         ("function", "str"),
@@ -54,8 +54,9 @@ df = op.create.df(
         ("function(binary)", BinaryType()),
         ("NullType", NullType())
 
-    ],
-    [
+    ]
+
+rows = [
         ("Optim'us", 28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
          "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
          None),
@@ -73,7 +74,8 @@ df = op.create.df(
         ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
          [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, bytearray("Battle Station", "utf-8"), None),
 
-    ])
+    ]
+df = op.create.df(cols ,rows)
 df.table()
 # -
 
@@ -81,7 +83,43 @@ df.table()
 from optimus.helpers.test import Test
 from pyspark.ml.linalg import Vectors
 
-t = Test(df, "DataFrameCols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+# +
+## Optimus Test
+# -
+
+t = Test(op, None, "Optimus", imports=["import datetime",
+                                "from pyspark.sql import functions as F"])
+
+# +
+
+
+one_column = {"rows":["Argenis", "Favio", "Matthew"], "cols":["name"]}
+plain = {"rows":[("BOB", 1),("JoSe", 2)],"cols":["name","age"]}
+plain_infer_false = {"rows":[("BOB", 1),("JoSe", 2)],"cols":["name","age"],"infer_schema":False}
+with_data_types = {"rows":[("BOB", 1),("JoSe", 2)],"cols":[("name", StringType(), True),("age", IntegerType(), False)]}
+nullable = {"rows":[("BOB", 1),("JoSe", 2)],"cols":[("name", StringType()),("age", IntegerType())]}
+
+df1 = op.create.df(**one_column)
+df2 = op.create.df(**plain)
+df3 = op.create.df(**plain_infer_false)
+df4 = op.create.df(**with_data_types)
+df5 = op.create.df(**nullable)
+
+t.run(
+
+    t.create(df1, None, "one_column", "df", **one_column),
+    t.create(df2, None, "plain", "df", **plain),
+    t.create(df3, None, "plain_infer_false", "df", **plain_infer_false),
+    t.create(df4, None, "with_data_types", "df", **with_data_types),
+    t.create(df5, None, "nullable", "df", **nullable),
+    
+)
+
+# +
+## Columns Test
+# -
+
+t = Test(op, df, "DataFrameCols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                        "import numpy.nan as nan",
                                        "import datetime",
                                        "from pyspark.sql import functions as F"])
@@ -293,3 +331,62 @@ t.run(
     t.create(None, "cols.is_na", None, "df", numeric_col),
 
 )
+# -
+
+t = Test(op,df, "DataFrameRows", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy.nan as nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.functions import abstract_udf as audf"])
+
+rows = [
+        ("Optim'us", 28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+         "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
+         None)
+]
+
+# +
+from pyspark.sql import functions as F
+from optimus.functions import abstract_udf as audf
+
+def func_data_type(value, attr):
+    return value > 1
+        
+t.run(
+
+    t.create(None, "rows.append", None, "df", rows),
+    #t.create(None, "rows.select", None, "df", F.col("rank") == 7),
+    t.create(None, "rows.select_by_dtypes", "integer", "df", "height(ft)", "integer"),
+    t.create(None, "rows.select_by_dtypes", "float", "df", "weight(t)", "float"),
+    
+    
+    t.create(None, "rows.drop_by_dtypes", "integer", "df", "height(ft)", "integer"),
+    t.create(None, "rows.drop_by_dtypes", "float", "df", "weight(t)", "float"),
+    
+    #t.create(None, "rows.drop", None, "df", (F.col("rank") == 10) | (F.col("rank") == 7)),
+    #t.create(None, "rows.drop", "audf", "df", (audf("rank", func_data_type, "boolean"))),
+    
+    t.create(None, "rows.sort", None, "df","rank"),
+    t.create(None, "rows.sort", "desc", "df", "rank", "desc"),
+    t.create(None, "rows.sort", "asc", "df", "rank", "asc"),
+    
+    #t.create(None, "rows.is_in", None, "df", ("rank", 2)),
+)
+
+# +
+import ast
+def a(*args, **kwargs):
+    for a in args:
+        if isinstance (a,F.Column):            
+            #print(args[0].__dict__.keys())
+            print(type(args[0].__dict__["_jc"]))
+            print(args[0].__dict__["_jc"].getClass() )
+            print(args[0].__dict__["_jc"])
+            #print(ast.literal_eval(args))
+            #print(kwargs)
+    
+#a(F.col("rank") == 7)
+a((F.col("rank") == 10) | (F.col("rank") == 7))
+# -
+
+
