@@ -21,8 +21,8 @@ def rows(self):
         :return: Spark DataFrame
         """
         df = self
-        columns = [i for i in range(df.cols.count())]
-        new_row = op.Create.df(columns, rows)
+        columns = [str(i) for i in range(df.cols.count())]
+        new_row = op.Create.df(columns, row)
 
         return df.union(new_row)
 
