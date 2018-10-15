@@ -10,13 +10,11 @@ from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.types import *
 
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse
 from optimus.spark import Spark
-import math
-
-cpu_count = multiprocessing.cpu_count()
 
 
 @add_method(DataFrame)
