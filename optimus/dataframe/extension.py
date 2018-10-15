@@ -1,7 +1,8 @@
+
 import logging
-import multiprocessing
+import math
 import os
-from pyspark.sql.types import *
+
 import humanize
 import jinja2
 from IPython.core.display import display, HTML
@@ -110,9 +111,9 @@ def pivot(self, index, column, values):
     """
     Return reshaped DataFrame organized by given index / column values.
     :param self: Spark Dataframe
-    :param index: Column to use to make new frame’s index.
-    :param column: Column to use to make new frame’s columns.
-    :param values: Column(s) to use for populating new frame’s values.
+    :param index: Column to use to make new frame's index.
+    :param column: Column to use to make new frame's columns.
+    :param values: Column(s) to use for populating new frame's values.
     :return:
     """
     return self.groupby(index).pivot(column).agg(F.first(values))
