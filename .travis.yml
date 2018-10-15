@@ -21,10 +21,10 @@ jdk:
 - oraclejdk8
 
 script:
-- py.test -v --ignore=optimus/dl/ --ignore=tests/test_dl.py
+- py.test -v --ignore=optimus/dl/ --ignore=tests/test_dl.py --ignore=examples/*.py
 
 ignore:
-- examples/*.py
+  - examples/*.py
 
 deploy:
   provider: pypi
