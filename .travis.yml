@@ -1,28 +1,27 @@
-
 language: python
 python:
-    - "3.6"
-    - "3.6-dev" # 3.6 development branch
+- "3.6"
+- "3.6-dev" # 3.6 development branch
 
 env:
-    global:
-        - SPARK_HOME=/tmp/spark-2.3.1-bin-hadoop2.7
+  global:
+  - SPARK_HOME=/tmp/spark-2.3.1-bin-hadoop2.7
 
 before_install:
-    - chmod +x install-spark-2-3-1.sh
-    - pip install --upgrade pip
-    - pip install pytest pytest-cov
-    - pip install coveralls
+- chmod +x install-spark-2-3-1.sh
+- pip install --upgrade pip
+- pip install pytest pytest-cov
+- pip install coveralls
 
 install:
-    - ./install-spark-2-3-1.sh
-    - "pip install -r requirements-test.txt --progress-bar=off"
+- ./install-spark-2-3-1.sh
+- "pip install -r requirements-test.txt --progress-bar=off"
 
 jdk:
-  - oraclejdk8
-    
+- oraclejdk8
+
 script:
-    - py.test -v --ignore=optimus/dl/ --ignore=tests/test_dl.py
+- py.test -v --ignore=optimus/dl/ --ignore=tests/test_dl.py --ignore=examples/*.py
 
 deploy:
   provider: pypi
@@ -34,11 +33,11 @@ deploy:
   on:
     tags: true
     branch: master
-  
+
 notifications:
   email: false
   slack:
     secure: "LsrLufpz5yLaouTM0V5uDy8u3QhBeN42PaT2pbkfUNQysSyF6/9LNMbwlhkUjf4IAEpKkFvRgGg5IlEF8XtXf5xaAJQXTG9Y92EUU62Nv5kj47iXHd7O75gvwgSjqs6a60F1vG0nWkgCJZjmr02eeAnwM25b6bxSM3GgnDyq3e+NJAza5vkkvCgUcwxL5ZtoY/za9xdE16yfgTkAhqRwR2ajzxFBsNOgSN04pgF9K69WM2vopY65N/vBDCQAnQPwlglXxCsf6caKqzXL1ohpQCeqOD5nMbyN1LlF51/UPSrQfMYiKt8ogI61+WYFB0jiueX/trCbd5lBvf8dkd9v6mH8o33sPo6f5ddsrwH9IkRrNsKQtxw/AkekteVmXZ5ym61yISfuRuuqVcy6yYqLrSh+oR9/+NWhZhBfxL03Lb6uotfa/v5s36INW+puyX+Ef22voSjeA9HgUhUMUoKiQkkSxMO1Pr2boOPDDsnyzgiUnKPt/S/PnGv03DYQxdLqdtf6b1jmFNaVSZEwINntmZxtxTArsCaehNKMCA9Amz1MHderkPDHLPGHDmzKq2pv5HCW3a2cH/ic4CudHTtC79JR0Ag85lrEAKXVaijV7FDQIcrFO3Tyug6yMd3CGAhmUIBUZHkcUZ1xNiBkv80HwTIrG3RWqklbdoEJmDYSnFQ="
-  
+
 after_success:
-    - coveralls
+- coveralls
