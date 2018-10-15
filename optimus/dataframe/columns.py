@@ -3,7 +3,7 @@ import itertools
 import re
 import string
 import unicodedata
-from fastnumbers import fast_float, isint, isfloat
+from fastnumbers import fast_float
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -12,21 +12,19 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-
 from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
 
 # Functions
 from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
-
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_float, is_datetime, is_date, is_numeric
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, parse_spark_dtypes
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
