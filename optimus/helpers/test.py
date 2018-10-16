@@ -1,6 +1,6 @@
 import logging
 
-from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric
+from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings
 
 
 class Test:
@@ -105,16 +105,20 @@ class Test:
         for v in args:
             if is_str(v):
                 _args.append("'" + v + "'")
-            if is_numeric(v):
+            elif is_numeric(v):
                 _args.append(str(v))
-            elif is_list_of_numeric(v):
+            elif is_list(v):
+                if is_list_of_strings(v):
+                    lst = ["'" + x + "'" for x in v]
+                elif is_list_of_numeric(v):
+                    lst = [str(x) for x in v]
 
-                lst = [str(x) for x in v]
                 _args.append('[' + ','.join(lst) + ']')
 
         _args = ','.join(_args)
         _kwargs = []
 
+        print(_args)
         # Process keywords arguments
         for k, v in kwargs.items():
             if is_str(v):
