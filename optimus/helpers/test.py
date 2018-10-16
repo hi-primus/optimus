@@ -59,9 +59,10 @@ class Test:
 
     def create(self, df, func, suffix=None, output="df", *args, **kwargs):
         """
-        This is a helper function that output python tests for Optimus transformations.
+        This is a helper function that output python tests for Spark Dataframes.
         :param df: Spark Dataframe
-        :param suffix:
+        :param suffix: The create method will try to create a test function with the func param given.
+        If you want to test a function with different params you can use suffix.
         :param func: Spark dataframe function to be tested
         :param output: can be a 'df' or a 'json'
         :param args: Arguments to be used in the function
