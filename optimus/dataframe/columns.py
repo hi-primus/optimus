@@ -19,7 +19,7 @@ from optimus.functions import abstract_udf as audf, concat
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
@@ -447,6 +447,9 @@ def cols(self):
                         temp_func_name = f + "_"
                         if k.startswith(temp_func_name):
                             _col_name = k[len(temp_func_name):]
+                            # If the value is numeric only get 5 decimals
+                            if is_numeric(v):
+                                v = round(v, 5)
                             _result.setdefault(_col_name, {})[f] = v
                 return _result
             else:
