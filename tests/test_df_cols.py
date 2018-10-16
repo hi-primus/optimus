@@ -1,9 +1,13 @@
 from pyspark.sql.types import *
 from optimus import Optimus
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
-import numpy.nan as nan
+
 import datetime
 from pyspark.sql import functions as F
+
+import numpy as np
+nan = np.nan
+
 
 op = Optimus(master='local')
 source_df = op.create.df(
