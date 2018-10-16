@@ -940,7 +940,7 @@ def cols(self):
         :return:
         """
 
-        # columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
         expr = []
