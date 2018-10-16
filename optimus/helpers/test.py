@@ -156,20 +156,4 @@ class Test:
         elif output == "json":
             add_buffer("\tassert (expected_value == actual_df)\n")
 
-        # add_buffer(func_test_name + "\n")
-
-        """
-        if args["verbose"] is True:
-            print("-----------")
-            print("Original dataframe")
-
-            df.table()
-
-            print("Please check that expression bellow is what is expected")
-
-            if output == "df":
-                df_result.table()
-            elif output == "json":
-                print(df_result)
-        """
         return "".join(buffer)
