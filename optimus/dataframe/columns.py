@@ -915,8 +915,6 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
         def _replace_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
 
