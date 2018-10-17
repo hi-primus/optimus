@@ -1,12 +1,13 @@
 import logging
 
-from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings
+from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
+    is_list_of_tuples
 
 
 class Test:
     def __init__(self, op=None, df=None, name=None, imports=None):
         """
-        Create python code with unit test for Optimus.
+        Create python code with unit test functions for Optimus.
         :param df: Spark Dataframe
         :param name: Name of the Test Class
         :param imports: Libraries to be added
@@ -87,7 +88,7 @@ class Test:
         else:
             func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
-        print("Creating {test} test...".format(test=func_test_name))
+        print("Creating {test} test function...".format(test=func_test_name))
         logging.info(func_test_name)
 
         add_buffer("@staticmethod\n")
@@ -112,13 +113,15 @@ class Test:
                     lst = ["'" + x + "'" for x in v]
                 elif is_list_of_numeric(v):
                     lst = [str(x) for x in v]
+                elif is_list_of_tuples(v):
+                    lst = [str(x) for x in v]
 
                 _args.append('[' + ','.join(lst) + ']')
 
         _args = ','.join(_args)
         _kwargs = []
 
-        print(_args)
+        # print(_args)
         # Process keywords arguments
         for k, v in kwargs.items():
             if is_str(v):
