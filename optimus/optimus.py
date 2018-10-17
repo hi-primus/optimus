@@ -2,9 +2,8 @@ import os
 import sys
 from shutil import rmtree
 
-from optimus.create import Create
 from optimus.enricher import Enricher
-from optimus.functions import concat
+from optimus.functions import concat, Create
 from optimus.helpers.constants import *
 from optimus.helpers.functions import val_to_list
 from optimus.helpers.raiseit import RaiseIt
@@ -27,7 +26,10 @@ class Optimus:
                  jars=None,
                  options=None,
                  additional_options=None,
-                 enricher_localhost="localhost", enricher_port=27017
+                 enricher_host="localhost", enricher_port=27017,
+                 queue_url="",
+                 queue_exchange="",
+                 queue_routing_key="optimus"
                  ):
 
         """
@@ -121,9 +123,13 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
-        self.profiler = Profiler()
+        self.profiler = Profiler(
+            queue_url=queue_url,
+            queue_exchange=queue_exchange,
+            queue_routing_key=queue_routing_key
+        )
         self.ml = ML()
-        self.enricher = Enricher(op=self, host=enricher_localhost, port=enricher_port, )
+        self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
 
     def enrich(self, df, func_request, func_response):
         """

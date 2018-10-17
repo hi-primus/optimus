@@ -4,22 +4,62 @@ import os
 import pprint
 import random
 import re
+from fastnumbers import isint, isfloat
 
 from IPython.display import display, HTML
+from pyspark.ml.linalg import DenseVector
+from pyspark.sql.types import ArrayType
 
 from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
-    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list
+    is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_, is_bool, is_datetime, is_date, is_binary, \
+    str_to_boolean, str_to_date, str_to_array
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
 
 
-def random_int(n=5):
+def infer(value):
     """
-    Create a random string of ints
-    :return:
+    Infer a Spark datatype from a value
+    :param value: value to be inferred
+    :return: Spark datatype
     """
-    return str(random.randint(1, 10 ** n))
+    result = None
+    # print(v)
+    if value is None:
+        result = "null"
+    elif is_bool(value):
+        result = "bool"
+    elif isint(value):
+        result = "int"
+
+    elif isfloat(value):
+        result = "float"
+
+    elif is_list(value):
+        result = ArrayType(infer(value[0]))
+
+    elif is_datetime(value):
+        result = "datetime"
+
+    elif is_date(value):
+        result = "date"
+
+    elif is_binary(value):
+        result = "binary"
+
+    elif is_str(value):
+        if str_to_boolean(value):
+
+            result = "bool"
+        elif str_to_date(value):
+            result = "string"  # date
+        elif str_to_array(value):
+            result = "string"  # array
+        else:
+            result = "string"
+
+    return get_spark_dtypes_object(result)
 
 
 def parse_spark_dtypes(value):
@@ -28,7 +68,9 @@ def parse_spark_dtypes(value):
     :param value:
     :return:
     """
+
     value = val_to_list(value)
+
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
 
@@ -63,6 +105,14 @@ def parse_python_dtypes(value):
     :return:
     """
     return PYTHON_SHORT_TYPES[value.lower()]
+
+
+def random_int(n=5):
+    """
+    Create a random string of ints
+    :return:
+    """
+    return str(random.randint(1, 10 ** n))
 
 
 def print_html(html):
@@ -332,7 +382,7 @@ def filter_col_name_by_dtypes(df, data_type):
     """
     data_type = parse_spark_dtypes(data_type)
 
-    # isinstace requiere a tuple
+    # isinstace require a tuple
     data_type = tuple(val_to_list(data_type))
 
     # Filter columns by data type
@@ -351,3 +401,37 @@ def check_env_vars(env_vars):
             logging.info(env_var + "=" + os.environ.get(env_var))
         else:
             logging.info("You don't have " + env_var + " set")
+
+
+# Reference https://nvie.com/posts/modifying-deeply-nested-structures/
+def traverse(obj, path=None, callback=None):
+    """
+    Traverse a deep nested python structure
+    :param obj: object to traverse
+    :param path:
+    :param callback: Function used to transform a value
+    :return:
+    """
+    if path is None:
+        path = []
+
+    if is_(obj, dict):
+        value = {k: traverse(v, path + [k], callback)
+                 for k, v in obj.items()}
+
+    elif is_(obj, list):
+        value = [traverse(elem, path + [[]], callback)
+                 for elem in obj]
+
+    elif is_(obj, tuple):
+        value = tuple(traverse(elem, path + [[]], callback)
+                      for elem in obj)
+    elif is_(obj, DenseVector):
+        value = DenseVector([traverse(elem, path + [[]], callback) for elem in obj])
+    else:
+        value = obj
+
+    if callback is None:  # if a callback is provided, call it to get the new value
+        return value
+    else:
+        return callback(path, value)

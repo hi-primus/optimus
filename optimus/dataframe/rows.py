@@ -5,10 +5,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-import optimus.create as op
+import optimus as op
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit import is_list_of_str_or_int
-from optimus.helpers.constants import *
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
 
@@ -21,24 +20,9 @@ def rows(self):
         :param row: List of values to be appended
         :return: Spark DataFrame
         """
-
         df = self
-
-        assert isinstance(row, list), "Error: row must me a list"
-        assert len(row) > 0, "Error: row list must be greater that 0"
-        assert len(df.dtypes) == len(row), "Error row must be the same length of the dataframe"
-
-        cols = []
-        values = []
-        for d, r in zip(df.dtypes, row):
-            col_name = d[0]
-            data_type = d[1]
-            if data_type in SPARK_DTYPES_DICT_OBJECTS:
-                cols.append((col_name, (SPARK_DTYPES_DICT_OBJECTS[data_type]), True))
-                values.append(r)
-
-        values = [tuple(values)]
-        new_row = op.Create.data_frame(cols, values)
+        columns = [str(i) for i in range(df.cols.count())]
+        new_row = op.Create.df(columns, row)
 
         return df.union(new_row)
 
@@ -177,6 +161,7 @@ def rows(self):
         """
         return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
+    # TODO: Merge with select
     @add_attr(rows)
     def is_in(columns, values):
         """

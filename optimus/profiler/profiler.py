@@ -1,10 +1,13 @@
 import configparser
+import json
 import logging
 import os
 from collections import defaultdict
 
 import dateutil
+import humanize
 import jinja2
+import pika
 import pyspark.sql.functions as F
 from IPython.core.display import display, HTML
 from pyspark.sql.types import ArrayType, LongType
@@ -15,12 +18,17 @@ from optimus.helpers.functions import parse_columns
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json
 
-import humanize
-
 
 class Profiler:
 
-    def __init__(self, output_path=None):
+    def __init__(self, output_path=None, queue_url=None, queue_exchange=None, queue_routing_key=None):
+        """
+
+        :param output_path:
+        :param queue_url:
+        :param queue_exchange:
+        :param queue_routing_key:
+        """
 
         config = configparser.ConfigParser()
         # If not path defined. Try to load from the config.ini file
@@ -35,6 +43,9 @@ class Profiler:
                 pass
 
         self.path = output_path
+        self.queue_url = queue_url
+        self.queue_exchange = queue_exchange
+        self.queue_routing_key = queue_routing_key
 
     @staticmethod
     @time_it
@@ -81,7 +92,7 @@ class Profiler:
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
             temp = col_name + "_type"
-            col_data_type = df.cols.dtype(col_name)
+            col_data_type = df.cols.dtypes(col_name)
 
             count_by_data_type = {}
             count_empty_strings = 0
@@ -111,6 +122,7 @@ class Profiler:
                                 "bool": count_by_data_type['bool'],
                                 "int": count_by_data_type['int'],
                                 "float": count_by_data_type['float'],
+                                "double": count_by_data_type['double'],
                                 "date": count_by_data_type['date'],
                                 "array": count_by_data_type['array']
                                 }
@@ -118,13 +130,12 @@ class Profiler:
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
-
             # Get the greatest count by column data type
             greatest_data_type_count = max(data_types_count, key=data_types_count.get)
 
             if greatest_data_type_count is "string":
                 cat = "categorical"
-            elif greatest_data_type_count is "int" or greatest_data_type_count is "float":
+            elif greatest_data_type_count is "int" or greatest_data_type_count is "float" or greatest_data_type_count is "double":
                 cat = "numeric"
             elif greatest_data_type_count is "date":
                 cat = "date"
@@ -196,7 +207,6 @@ class Profiler:
         for col_name in columns:
             hist_pic = None
             col = output["columns"][col_name]
-
             if "hist" in col:
                 if col["column_dtype"] == "date":
                     hist_year = plot_hist({col_name: col["hist"]["years"]}, "base64", "years")
@@ -212,7 +222,7 @@ class Profiler:
                     hist_pic = {"hist_pic": hist}
 
             if "frequency" in col:
-                freq_pic = plot_freq({col_name: col["frequency_graph"]}, output="base64")
+                freq_pic = plot_freq({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
@@ -223,8 +233,31 @@ class Profiler:
         # Display HTML
         display(HTML(html))
 
+        # send to queue
+
+        if self.queue_url is not None:
+            self.to_queue(output)
+
         # Save to file
         write_json(output, self.path)
+
+    def to_queue(self, message):
+        """
+        Send the profiler information to a queue. By default it use a public encryted queue.
+        :return:
+        """
+
+        # Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
+        url = os.environ.get('CLOUDAMQP_URL', self.queue_url)
+        params = pika.URLParameters(url)
+        connection = pika.BlockingConnection(params)
+        channel = connection.channel()  # start a channel
+        channel.queue_declare(queue='optimus')  # Declare a queue
+
+        channel.basic_publish(exchange=self.queue_exchange,
+                              routing_key=self.queue_routing_key,
+                              body=json.dumps(message))
+        channel.close()
 
     @staticmethod
     def to_json(df, columns, buckets=40, infer=False, relative_error=1):
@@ -339,8 +372,7 @@ class Profiler:
                 .cols.rename(col_name, "value").to_json())
 
         # Get only ten items to print the table
-        col_info['frequency'] = freq[:10]
-        col_info['frequency_graph'] = freq
+        col_info['frequency'] = freq
         return col_info
 
     @staticmethod

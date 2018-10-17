@@ -649,40 +649,6 @@ class TestDataFrameCols(object):
         assert (actual_df.collect() == expected_df.collect())
 
     @staticmethod
-    def test_nest_vector():
-        source_df = op.create.df(
-            rows=[
-                ("happy", 1, 4),
-                ("excited", 2, 5),
-                ("sad", 3, 6)
-            ],
-            cols=[
-                ("emotion", StringType(), True),
-                ("num", IntegerType(), True),
-                ("num 2", IntegerType(), True)
-            ]
-        )
-
-        actual_df = source_df.cols.nest(["num", "num 2"], "new", shape="vector")
-
-        expected_df = op.create.df(
-            rows=[
-                ("happy", 1, 4, DenseVector([1, 4])),
-                ("excited", 2, 5, DenseVector([2, 5])),
-                ("sad", 3, 6, DenseVector([3, 6]))
-            ],
-            cols=[
-                ("emotion", StringType(), True),
-                ("num", IntegerType(), True),
-                ("num 2", IntegerType(), True),
-                ("new", VectorUDT(), True)
-
-            ]
-        )
-
-        assert (actual_df.collect() == expected_df.collect())
-
-    @staticmethod
     def test_nest_array():
         source_df = op.create.df(
             rows=[

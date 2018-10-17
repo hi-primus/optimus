@@ -5,13 +5,18 @@ from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
+import pandas as pd
 from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.types import StructField, StructType, StringType
 
-from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val, \
-    get_spark_dtypes_object
+# Helpers
+from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
+from optimus.helpers.functions import get_spark_dtypes_object, infer
+from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
+from optimus.spark import Spark
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -108,7 +113,7 @@ def concat(dfs, like="columns"):
     :param like: The way dataframes is going to be concat. like columns or rows
     :return:
     """
-    # Add increasing Ids, and they should be the same.
+
     if like == "columns":
         temp_dfs = []
         col_temp_name = "id_" + random_int()
@@ -164,10 +169,9 @@ def plot_freq(column_data=None, output="image"):
     :param output:
     :return:
     """
-
     for col_name, data in column_data.items():
 
-        # Transform Optimus formt to matplotlib format
+        # Transform Optimus' format to matplotlib's format
         x = []
         h = []
 
@@ -325,3 +329,60 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
 
     col_name = one_list_to_val(col_name)
     return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)
+
+
+class Create:
+    @staticmethod
+    def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
+        """
+        Helper to create a Spark dataframe:
+        :param cols: List of Tuple with name, data type and a flag to accept null
+        :param rows: List of Tuples if vals with the same number and types that cols
+        :param infer_schema: Try to infer the schema data type.
+        :param pdf: a pandas dataframe
+        :return: Dataframe
+        """
+        if is_(pdf, pd.DataFrame):
+            result = Spark.instance.spark.createDataFrame(pdf)
+        else:
+
+            specs = []
+            # Process the rows
+            if not is_list_of_tuples(rows):
+                rows = [(i,) for i in rows]
+
+            # Process the columns
+            for c, r in zip(cols, rows[0]):
+                # Get columns name
+
+                if is_one_element(c):
+                    col_name = c
+
+                    if infer_schema is True:
+                        var_type = infer(r)
+                    else:
+                        var_type = StringType()
+                    nullable = True
+
+                elif is_tuple(c):
+
+                    # Get columns data type
+                    col_name = c[0]
+                    var_type = get_spark_dtypes_object(c[1])
+
+                    count = len(c)
+                    if count == 2:
+                        nullable = True
+                    elif count == 3:
+                        nullable = c[2]
+
+                # If tuple has not the third param with put it to true to accepts Null in columns
+                specs.append([col_name, var_type, nullable])
+
+            struct_fields = list(map(lambda x: StructField(*x), specs))
+
+            result = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
+
+        return result
+
+    df = data_frame
