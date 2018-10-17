@@ -447,9 +447,6 @@ def cols(self):
                         temp_func_name = f + "_"
                         if k.startswith(temp_func_name):
                             _col_name = k[len(temp_func_name):]
-                            # If the value is numeric only get 5 decimals
-                            if is_numeric(v):
-                                v = round(v, 5)
                             _result.setdefault(_col_name, {})[f] = v
                 return _result
             else:
@@ -470,7 +467,8 @@ def cols(self):
         expression = []
         for col_name in columns:
             for func in funcs:
-                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                # If the value is numeric only get 5 decimals
+                expression.append(F.round(func(col_name), 5).alias(func.__name__ + "_" + col_name))
 
         result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
         # logging.info(result)
