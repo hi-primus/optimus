@@ -42,7 +42,7 @@
         }
 
         .gray-light {
-            background-color: #e7e6e6;
+            background-color: #ccc;
         }
 
         .green {
@@ -615,7 +615,206 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
     ("name","names"),
     ("function","task")])</code></pre>
             <span class="commentary">Drop columns from a DataFrame.</span>
+
+            <h3>Nest</h3>
+
+            <pre><code class="python">df = df\
+    .cols.nest(["height", "function", "rank"])</code></pre>
+            <span class="commentary">Merge multiple columns as string</span>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">height</td>
+                            <td class="green">function</td>
+                            <td class="green">rank</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">28.0</td>
+                            <td class="green-light">leader</td>
+                            <td class="green-light">10</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">26.0</td>
+                            <td class="green-light">security</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">17.5</td>
+                            <td class="green-light">espionage</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">_0</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">[28.0, leader, 10]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">[26.0, security, 7]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">[17.5, espionage, 7]</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <pre><code class="python">df = df\
+    .cols.nest(["height", "function", "rank"],
+                "array")</code></pre>
+            <span class="commentary">Merge multiple columns as array</span>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">height</td>
+                            <td class="green">function</td>
+                            <td class="green">rank</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">28.0</td>
+                            <td class="green-light">leader</td>
+                            <td class="green-light">10</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">26.0</td>
+                            <td class="green-light">security</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">17.5</td>
+                            <td class="green-light">espionage</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">_0</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">[28.0, leader, 10]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">[26.0, security, 7]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">[17.5, espionage, 7]</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <pre><code class="python">df = df\
+    .cols.nest(["height", "function", "rank"],
+                "vector")</code></pre>
+            <span class="commentary">Merge multiple columns as vector</span>
+            <div class="flex-row d-flex">
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">height</td>
+                            <td class="green">function</td>
+                            <td class="green">rank</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">28.0</td>
+                            <td class="green-light">leader</td>
+                            <td class="green-light">10</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">26.0</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">17.5</td>
+                            <td class="green-light">espionage</td>
+                            <td class="green-light">7</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="operation-symbol">
+                    🡆
+                </div>
+                <div>
+                    <table class="table-operations-with-data">
+                        <thead>
+                        <tr>
+                            <td class="gray">names</td>
+                            <td class="green">_0</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td class="gray-light">optimus</td>
+                            <td class="green-light">[28.0, 10]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">ironhide</td>
+                            <td class="green-light">[26.0, 7]</td>
+                        </tr>
+                        <tr>
+                            <td class="gray-light">bumblebee</td>
+                            <td class="green-light">[17.5, 7]</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
+
+
         <div class="col-sm-4">
             <h3>Select Rows</h3>
             <div class="flex-row d-flex">
