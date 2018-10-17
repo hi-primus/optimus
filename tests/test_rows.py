@@ -23,8 +23,8 @@ source_df = op.create.df([
 class TestDataFrameRows(object):
     @staticmethod
     def test_append():
-        actual_df = source_df.rows.append(["this is a word", 2, "this is an animal",
-                                           "this is a thing", 64, "this is a filter"])
+        actual_df = source_df.rows.append([("this is a word", 2, "this is an animal",
+                                           "this is a thing", 64, "this is a filter")])
 
         expected_df = op.create.df([
             ("words", "str", True),
