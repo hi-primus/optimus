@@ -917,9 +917,10 @@ def cols(self):
         :param value:
         :return:
         """
+        columns = parse_columns(self, columns)
 
         def _replace_na(_col_name, _value):
-            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), True).otherwise(False)
+            return F.when(F.col(_col_name).isNull(), True).otherwise(False)
 
         df = self
         for col_name in columns:
