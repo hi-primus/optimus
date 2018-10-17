@@ -30,7 +30,7 @@ psutil==5.4.7
 backoff==1.6.0
 pymongo==3.7.2
 ratelimit==2.2.0
-h2o_pysparkling_2.3
+h2o_pysparkling_2.3==2.3.16
 tqdm==4.26.0
 kombu==4.2.1
 pika==0.12.0
