@@ -114,6 +114,8 @@ def append(dfs, like="columns"):
     :return:
     """
 
+    # FIX: Because monotonically_increasing_id can create different sequence for different dataframes the result could be wrong.
+
     if like == "columns":
         temp_dfs = []
         col_temp_name = "id_" + random_int()
