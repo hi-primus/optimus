@@ -7,7 +7,7 @@ from pyspark.sql import functions as F
 # Helpers
 import optimus as op
 from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.helpers.checkit import is_list_of_str_or_int
+from optimus.helpers.checkit import is_list_of_str_or_int, is_list_of_tuples, is_list
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
 
@@ -17,13 +17,15 @@ def rows(self):
     def append(row):
         """
         Append a row at the end of a dataframe
-        :param row: List of values to be appended
+        :param row: List of values or tuples to be appended
         :return: Spark DataFrame
         """
         df = self
         columns = [str(i) for i in range(df.cols.count())]
-        new_row = op.Create.df(columns, row)
+        if not is_list_of_tuples(row):
+            row = [tuple(row)]
 
+        new_row = op.Create.df(columns, row)
         return df.union(new_row)
 
     @add_attr(rows)
