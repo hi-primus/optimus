@@ -3,7 +3,7 @@ import sys
 from shutil import rmtree
 
 from optimus.enricher import Enricher
-from optimus.functions import concat, Create
+from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.functions import val_to_list
 from optimus.helpers.raiseit import RaiseIt
@@ -244,14 +244,14 @@ class Optimus:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
-    def concat(dfs, like):
+    def append(dfs, like):
         """
         Concat multiple dataframes
         :param dfs: List of Dataframes
         :param like: concat as columns or rows
         :return:
         """
-        return concat(dfs, like)
+        return append(dfs, like)
 
     def _add_spark_packages(self, packages):
         """

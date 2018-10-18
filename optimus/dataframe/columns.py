@@ -15,7 +15,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
 
 # Functions
-from optimus.functions import abstract_udf as audf, concat
+from optimus.functions import abstract_udf as audf, append
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -76,7 +76,7 @@ def cols(self):
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
             dfs.insert(0, self)
-            df_result = concat(dfs, like="columns")
+            df_result = append(dfs, like="columns")
 
         elif is_list_of_tuples(cols_values):
             df_result = self

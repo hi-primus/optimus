@@ -106,7 +106,7 @@ def filter_row_by_data_type_audf(col_name, data_type):
     return abstract_udf(col_name, filter_row_by_data_type, "boolean", data_type)
 
 
-def concat(dfs, like="columns"):
+def append(dfs, like="columns"):
     """
     Concat multiple dataframes as columns or rows
     :param dfs:
@@ -120,10 +120,10 @@ def concat(dfs, like="columns"):
         for df in dfs:
             temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
 
-        def _append_df(df1, df2):
+        def _append(df1, df2):
             return df1.join(df2, col_temp_name, "outer")
 
-        df_result = reduce(_append_df, temp_dfs).drop(col_temp_name)
+        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
 
     elif like == "rows":
         df_result = reduce(DataFrame.union, dfs)
