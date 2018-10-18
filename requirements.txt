@@ -1,4 +1,4 @@
-requests==2.19.1
+requests==2.20.0
 tqdm==4.26.0
 pymongo==3.7.2
 fastnumbers==2.1.1
