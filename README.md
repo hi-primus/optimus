@@ -190,7 +190,20 @@ Just run `df.profile("*")` to profile all the columns. For more info about the p
 You can connect to externala API's enrich your data using optimus.
 
 ```python
-sdfsadfasdas
+import requests
+
+def func_request(params):
+    # You can use here whatever header or auth info you need to send. 
+    # For more information see the requests library
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
+
+    return requests.get(url)
+
+def func_response(response):
+    # Here you can parse de response
+    return response["title"]
+
+df_result = op.enrich(df, func_request= func_request, func_response= func_response)
 ```
 
 ## Machine Learning 
