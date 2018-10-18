@@ -1258,10 +1258,22 @@ def cols(self):
 
             # Vector
             elif is_(col_dtype, VectorUDT):
-                def extract(row):
-                    return row + tuple(row.vector.toArray().tolist())
 
-                df = df.rdd.map(extract).toDF(df.columns)
+                def _unnest(row):
+                    _dict = row.asDict()
+
+                    # Get the column we want to unnest
+                    _list = _dict[col_name]
+
+                    # Ensure that float are python floats and not np floats
+                    if index is None:
+                        _list = [float(x) for x in _list]
+                    else:
+                        _list = [float(_list[1])]
+
+                    return row + tuple(_list)
+
+                df = df.rdd.map(_unnest).toDF(df.columns)
 
         return df
 
