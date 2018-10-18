@@ -1,11 +1,9 @@
-
 import logging
 import math
 import os
 
 import humanize
 import jinja2
-from IPython.core.display import display, HTML
 from pyspark.ml.feature import SQLTransformer
 from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -13,8 +11,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
+from optimus import RaiseIt
+from optimus.helpers.checkit import is_str
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
 from optimus.spark import Spark
 
 
@@ -190,7 +190,7 @@ def run(self):
 
 
 @add_method(DataFrame)
-def sql(self, sql_expression):
+def query(self, sql_expression):
     """
     Implements the transformations which are defined by SQL statement. Currently we only support
     SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
@@ -199,10 +199,26 @@ def sql(self, sql_expression):
     :param sql_expression: SQL expression.
     :return: Dataframe with columns changed by SQL statement.
     """
-
     sql_transformer = SQLTransformer(statement=sql_expression)
-
     return sql_transformer.transform(self)
+
+
+@add_method(DataFrame)
+def table_name(self, name=None):
+    """
+    
+    :param self:
+    :param name:
+    :return:
+    """
+    if not is_str(name):
+        RaiseIt.type_error(name, ["string"])
+
+    if len(name) is 0:
+        RaiseIt.value_error(name, ["> 0"])
+
+    self.createOrReplaceTempView(name)
+    return self
 
 
 @add_attr(DataFrame)
