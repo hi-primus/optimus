@@ -204,7 +204,7 @@ df.withColumn("num", col("num").cast(StringType()))
 
 
 df.table()
-df.cols.keep("num").show()
+df.cols.keep("num").table()
 
 # ## Move columns
 # ### Spark
@@ -534,7 +534,7 @@ df.cols.replace('*','.*[Cc]at.*', 'cat_1', regex=True).table()
 
 # ### Merge two columns in a column vector
 
-df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").show()
+df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").table()
 
 # ### Merge two columns in a string columns
 
