@@ -1,22 +1,8 @@
-import inspect
-
-
 class RaiseIt:
-    @staticmethod
-    def _get_name(var):
-        """
-        Get the var name form the var passed to a function
-        :param var:
-        :return:
-        """
-        lcls = inspect.stack()[2][0].f_locals
-        for name in lcls:
-            if id(var) == id(lcls[name]):
-                return name
-        return None
 
     @staticmethod
-    def type_error(var, types):
+    def type_error(var, data_types):
+        from optimus.helpers.functions import get_var_name
         """
         Raise a TypeError exception
         :param var:
