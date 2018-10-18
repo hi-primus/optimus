@@ -289,7 +289,7 @@ df.cols.unnest("two strings","-", index = 1).table()
 # ### Unnest array of string
 
 df\
-    .cols.unnest(["col_array"])\
+    .cols.unnest("col_array")\
     .table()
 
 # ### Unnest and array of ints
