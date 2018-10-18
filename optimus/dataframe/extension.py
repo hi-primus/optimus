@@ -297,7 +297,7 @@ def table(self, limit=100, columns=None):
     try:
         __IPYTHON__
         result = self.table_html(limit=limit, columns=columns)
-        return display(HTML(result))
+        return print_html(result)
     except NameError:
         self.show()
 
