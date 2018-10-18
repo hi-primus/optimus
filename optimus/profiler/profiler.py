@@ -14,7 +14,7 @@ from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.functions import parse_columns, print_html
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json
 
@@ -231,7 +231,7 @@ class Profiler:
         html = html + df.table_html(10)
 
         # Display HTML
-        display(HTML(html))
+        print_html(html)
 
         # send to queue
 

@@ -1,22 +1,8 @@
-import inspect
-
-
 class RaiseIt:
-    @staticmethod
-    def _get_name(var):
-        """
-        Get the var name form the var passed to a function
-        :param var:
-        :return:
-        """
-        lcls = inspect.stack()[2][0].f_locals
-        for name in lcls:
-            if id(var) == id(lcls[name]):
-                return name
-        return None
 
     @staticmethod
-    def type_error(var, types):
+    def type_error(var, data_types):
+        from optimus.helpers.functions import get_var_name
         """
         Raise a TypeError exception
         :param var:
@@ -24,21 +10,22 @@ class RaiseIt:
         :return:
         """
 
-        divisor = None
-        if len(types) == 2:
+        if len(data_types) == 1:
+            divisor = ""
+        elif len(data_types) == 2:
             divisor = " or "
-        elif len(types) > 2:
+        elif len(data_types) > 2:
             divisor = ", "
 
+        _type = divisor.join(map(lambda x: "'" + x + "'", data_types))
+
         raise TypeError(
-            "'{var_name}' must be {type}, received '{var_type}'"
-                .format(var_name=RaiseIt._get_name(var),
-                        type=divisor.join(map(
-                            lambda x: "'" + x + "'",
-                            types)), var_type=type(var)))
+            "'{var_name}' must be of type {type}, received '{var_type}'".format(var_name=get_var_name(var), type=_type,
+                                                                                var_type=type(var)))
 
     @staticmethod
-    def value_error(var, _list):
+    def value_error(var, data_values):
+        from optimus.helpers.functions import get_var_name
         """
         Raise a ValueError exception
         :param var:
@@ -46,25 +33,28 @@ class RaiseIt:
         :return:
         """
 
-        # if not any(r):
-        if len(_list) == 2:
+        if len(data_values) == 1:
+            divisor = ""
+        if len(data_values) == 2:
             divisor = " or "
-        elif len(_list) > 2:
+        elif len(data_values) > 2:
             divisor = ", "
 
-        print(_list)
-        print(len(_list))
+        print(data_values)
+        print(len(data_values))
         raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
-                         .format(var_name=RaiseIt._get_name(var),
+                         .format(var_name=get_var_name(var),
                                  type=divisor.join(map(
                                      lambda x: "'" + x + "'",
-                                     _list)), var_type=var))
+                                     data_values)), var_type=var))
 
     @staticmethod
     def type(cls, var, message):
+        from optimus.helpers.functions import get_var_name
+
         """
         Raise and exception ot type specified
         :param var:
         :return:
         """
-        raise cls("'{var_name}' error".format(var_name=RaiseIt._get_name(var), var_type=var))
+        raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))

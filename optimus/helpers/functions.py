@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 import os
@@ -126,7 +127,7 @@ def print_html(html):
 
 def print_json(value):
     """
-    Print a json in a way that a human can read it
+    Print a human readable json
     :param value: json to be printed
     :return: json
     """
@@ -435,3 +436,16 @@ def traverse(obj, path=None, callback=None):
         return value
     else:
         return callback(path, value)
+
+
+def get_var_name(var):
+    """
+    Get the var name from the var passed to a function
+    :param var:
+    :return:
+    """
+    _locals = inspect.stack()[2][0].f_locals
+    for name in _locals:
+        if id(var) == id(_locals[name]):
+            return name
+    return None
