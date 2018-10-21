@@ -183,11 +183,11 @@ Optimus comes with a powerful and unique data profiler. Besides basic and advanc
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb)
 
-[![](images/profiler.png)]
+![](images/profiler.png)
 
 ## Data enrichment
 
-You can connect to externala API's enrich your data using optimus.
+You can connect to any external API to enrich your data using Otimus.
 
 ```python
 import requests
