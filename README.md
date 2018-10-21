@@ -58,7 +58,7 @@ df = op.load.avro("data/foo.avro").table(5)
 If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro)
 
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/feature/load_save_improvements/examples/data/foo.json", "json")
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json")
 ```
 ## Cleaning and Processing
   
