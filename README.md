@@ -12,7 +12,7 @@ In your terminal just type  `pip install optimuspyspark`
 
 ## Examples 
 
-You can go to the 10 minutes to Optimus notebook where you can find the basic to start working. 
+You can go to the 10 minutes to Optimus [notebook](https://github.com/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb) where you can find the basic to start working. 
 
 Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
