@@ -12,7 +12,7 @@ In your terminal just type  `pip install optimuspyspark`
 
 ## Examples 
 
-You can go to the 10 minutes to Optimus notebook where you can find the basic to start working. 
+You can go to the 10 minutes to Optimus [notebook](https://github.com/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb) where you can find the basic to start working. 
 
 Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
@@ -58,7 +58,7 @@ df = op.load.avro("data/foo.avro").table(5)
 If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro)
 
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/feature/load_save_improvements/examples/data/foo.json", "json")
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json")
 ```
 ## Cleaning and Processing
   
@@ -183,14 +183,27 @@ Optimus comes with a powerful and unique data profiler. Besides basic and advanc
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb)
 
-[![](images/profiler.png)]
+![](images/profiler.png)
 
 ## Data enrichment
 
-You can connect to externala API's enrich your data using optimus.
+You can connect to any external API to enrich your data using Otimus.
 
 ```python
-sdfsadfasdas
+import requests
+
+def func_request(params):
+    # You can use here whatever header or auth info you need to send. 
+    # For more information see the requests library
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
+
+    return requests.get(url)
+
+def func_response(response):
+    # Here you can parse de response
+    return response["title"]
+
+df_result = op.enrich(df, func_request= func_request, func_response= func_response)
 ```
 
 ## Machine Learning 
