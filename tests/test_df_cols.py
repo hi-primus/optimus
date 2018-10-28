@@ -153,7 +153,22 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_count_na_all_columns():
 		actual_df = source_df.cols.count_na('*')
-		expected_value ={'weight(t)': 1, 'rank': 0, 'age': 0, 'height(ft)': 1}
+		expected_value ={'names': 0,
+     'height(ft)': 1,
+     'function': 0,
+     'rank': 0,
+     'age': 0,
+     'weight(t)': 1,
+     'japanese name': 0,
+     'last position seen': 2,
+     'date arrival': 0,
+     'last date seen': 0,
+     'attributes': 0,
+     'DateType': 0,
+     'Tiemstamp': 0,
+     'Cybertronian': 0,
+     'function(binary)': 0,
+     'NullType': 0}
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_zeros():

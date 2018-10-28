@@ -12,7 +12,7 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType, DateType
 
 # Functions
 from optimus.functions import abstract_udf as audf, append
@@ -949,11 +949,19 @@ def cols(self):
         expr = []
 
         for col_name in columns:
-
             # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
             if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
-            expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
+
+            if is_(df.cols.schema_dtype(col_name), (float, int)):
+                expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
+
+            elif is_(df.cols.schema_dtype(col_name), (NullType)):
+                expr.append(F.count(col_name).alias(col_name))
+
+            else:
+                expr.append(F.count(F.when( F.col(col_name).isNull(), col_name)).alias(col_name))
+
 
         result = format_dict(df.select(*expr).to_json())
         return result
