@@ -941,25 +941,21 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
-        :param type: Accepts integer, float, string or None
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
+        columns = parse_columns(self, columns)
         df = self
         expr = []
-        columns = parse_columns(self, columns)
+
         for col_name in columns:
 
             # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
             if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
-
             expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
 
         result = format_dict(df.select(*expr).to_json())
-
         return result
 
     @add_attr(cols)
