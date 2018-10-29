@@ -12,10 +12,10 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType, DateType
 
 # Functions
-from optimus.functions import abstract_udf as audf, concat
+from optimus.functions import abstract_udf as audf, append
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -76,7 +76,7 @@ def cols(self):
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
             dfs.insert(0, self)
-            df_result = concat(dfs, like="columns")
+            df_result = append(dfs, like="columns")
 
         elif is_list_of_tuples(cols_values):
             df_result = self
@@ -941,25 +941,29 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
-        :param type: Accepts integer, float, string or None
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
+        columns = parse_columns(self, columns)
         df = self
         expr = []
-        columns = parse_columns(self, columns)
-        for col_name in columns:
 
+        for col_name in columns:
             # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
             if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
 
-            expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
+            if is_(df.cols.schema_dtype(col_name), (float, int)):
+                expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
+
+            elif is_(df.cols.schema_dtype(col_name), (NullType)):
+                expr.append(F.count(col_name).alias(col_name))
+
+            else:
+                expr.append(F.count(F.when( F.col(col_name).isNull(), col_name)).alias(col_name))
+
 
         result = format_dict(df.select(*expr).to_json())
-
         return result
 
     @add_attr(cols)
@@ -1258,10 +1262,22 @@ def cols(self):
 
             # Vector
             elif is_(col_dtype, VectorUDT):
-                def extract(row):
-                    return row + tuple(row.vector.toArray().tolist())
 
-                df = df.rdd.map(extract).toDF(df.columns)
+                def _unnest(row):
+                    _dict = row.asDict()
+
+                    # Get the column we want to unnest
+                    _list = _dict[col_name]
+
+                    # Ensure that float are python floats and not np floats
+                    if index is None:
+                        _list = [float(x) for x in _list]
+                    else:
+                        _list = [float(_list[1])]
+
+                    return row + tuple(_list)
+
+                df = df.rdd.map(_unnest).toDF(df.columns)
 
         return df
 

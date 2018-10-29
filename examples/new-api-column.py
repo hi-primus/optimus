@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 # ---
 # jupyter:
-#   jupytext_format_version: '1.2'
-#   jupytext_formats: ipynb,py
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.3'
+#       jupytext_version: 0.8.2
 #   kernel_info:
 #     name: python3
 #   kernelspec:
@@ -80,10 +85,8 @@ df.table()
 
 # ### Create a column with a constant value
 
-# + {"scrolled": true}
 df = df.cols.append("new_col_1", 1)
 df.table()
-# -
 
 # ### Create multiple columns with a constant value
 
@@ -201,7 +204,7 @@ df.withColumn("num", col("num").cast(StringType()))
 
 
 df.table()
-df.cols.keep("num").show()
+df.cols.keep("num").table()
 
 # ## Move columns
 # ### Spark
@@ -286,7 +289,7 @@ df.cols.unnest("two strings","-", index = 1).table()
 # ### Unnest array of string
 
 df\
-    .cols.unnest(["col_array"])\
+    .cols.unnest("col_array")\
     .table()
 
 # ### Unnest and array of ints
@@ -298,7 +301,7 @@ df\
 # ### Spits in 3 parts
 
 df\
-    .cols.unnest(["two strings"], n= 3, mark = "-")\
+    .cols.unnest(["two strings"], splits= 3, mark = "-")\
     .table()
 
 # ### Unnest a Vector
@@ -326,7 +329,7 @@ df = df.cols.append("new_col_1", 1)
 df_fill = op.spark.createDataFrame([(1.0, float("nan")), (2.0, float("nan")), 
                                (float("nan"), 3.0), (4.0, 4.0), (5.0, 5.0)], ["a", "b"])
 
-imputer = df_fill.cols.impute(["a", "b"], ["out_a", "out_b"], "median").table()
+imputer = df_fill.cols.impute(["a", "b"], "median").table()
 # -
 
 # ## Get columns by type
@@ -531,7 +534,7 @@ df.cols.replace('*','.*[Cc]at.*', 'cat_1', regex=True).table()
 
 # ### Merge two columns in a column vector
 
-df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").show()
+df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").table()
 
 # ### Merge two columns in a string columns
 
@@ -544,7 +547,7 @@ df.cols.nest(["animals", "two strings","num 2"], "col_nested", shape="array").ta
 # ## Histograms
 
 from pyspark.sql.types import StructType, StructField, StringType, BooleanType, IntegerType, ArrayType
-df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/foo.csv")
+df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
 df.table()
 
@@ -611,9 +614,9 @@ df.cols.z_score("price").table()
 
 # ## Cleaning and Date Operations Operations
 
-df.cols.date_transform("birth", "new_date", "yyyy/MM/dd", "dd-MM-YYYY").table()
+df.cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY").table()
 
-df.cols.years_between("birth", "new date", "yyyyMMdd",).table()
+df.cols.years_between("birth", "yyyyMMdd",).table()
 
 df.cols.remove_accents("lastName").table()
 
@@ -645,8 +648,4 @@ df_abs = op.create.df(
 
 df_abs.cols.abs(["num","num 2"]).table()
 
-df.cols.qcut("billingId","billingId_ad",5).table()
-
-df.dtypes()
-
-
+df.cols.qcut("billingId",5).table()

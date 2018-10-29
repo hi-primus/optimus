@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 # ---
 # jupyter:
-#   jupytext_format_version: '1.2'
-#   jupytext_formats: ipynb,py
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.3'
+#       jupytext_version: 0.8.2
 #   kernel_info:
 #     name: python3
 #   kernelspec:
@@ -265,7 +270,7 @@ df_new = op.create.df(
         
     ]).h_repartition(1)
 
-op.concat([df,df_new], "columns").table()
+op.append([df,df_new], "columns").table()
 
 # +
 df_new = op.create.df(
@@ -312,7 +317,7 @@ df.schema
 
 df.table()
 
-# + {"inputHidden": false, "outputHidden": false, "scrolled": false}
+# + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height",infer=True)
 # -
 df_csv =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
