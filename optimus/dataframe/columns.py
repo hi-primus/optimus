@@ -863,7 +863,7 @@ def cols(self):
         df = self
         for col_name in columns:
             new_col_name = col_name + "_years_between"
-            df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
+            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
         return df
 
     @add_attr(cols)
