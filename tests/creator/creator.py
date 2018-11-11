@@ -29,7 +29,7 @@
 
 import sys
 
-sys.path.append("..")
+sys.path.append("../..")
 
 from optimus import Optimus
 
@@ -96,8 +96,6 @@ t = Test(op, None, "Optimus", imports=["import datetime",
                                 "from pyspark.sql import functions as F"])
 
 # +
-
-
 one_column = {"rows":["Argenis", "Favio", "Matthew"], "cols":["name"]}
 plain = {"rows":[("BOB", 1),("JoSe", 2)],"cols":["name","age"]}
 plain_infer_false = {"rows":[("BOB", 1),("JoSe", 2)],"cols":["name","age"],"infer_schema":False}
@@ -147,7 +145,7 @@ new_col = "new col"
 array_col = "attributes"
 
 t.run(
-
+    
     t.create(None, "cols.min", None, "json", numeric_col),
     t.create(None, "cols.min", "all_columns", "json", "*"),
 
