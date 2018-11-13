@@ -4,4 +4,4 @@ pytest==3.8.1
 matplotlib==3.0.1
 ipython==7.0.1
 ### pyspark==2.2.0 # it has no wheel
-setuptools==40.5.0
+setuptools==40.6.2
