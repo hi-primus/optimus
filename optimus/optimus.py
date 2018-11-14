@@ -27,8 +27,8 @@ class Optimus:
                  options=None,
                  additional_options=None,
                  enricher_host="localhost", enricher_port=27017,
-                 queue_url="",
-                 queue_exchange="",
+                 queue_url=None,
+                 queue_exchange=None,
                  queue_routing_key="optimus"
                  ):
 
