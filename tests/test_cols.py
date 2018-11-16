@@ -8,7 +8,6 @@ from pyspark.sql.types import *
 from optimus import Optimus
 
 op = Optimus()
-# op.sc.setLogLevel("INFO")
 
 s_logger = logging.getLogger('py4j.java_gateway')
 s_logger.setLevel(logging.INFO)
