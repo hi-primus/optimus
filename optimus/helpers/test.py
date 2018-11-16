@@ -52,6 +52,8 @@ class Test:
         cls = "class Test" + self.name + "(object):\n"
 
         test_file.write(cls)
+
+        # Write test to file
         for t in args:
             test_file.write(t)
 

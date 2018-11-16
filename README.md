@@ -75,13 +75,15 @@ op = Optimus()
 def func(value, arg):
     return "this was a number"
     
-df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/foo.csv")
+df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
+
+    
 df\
     .rows.sort("product","desc")\
     .cols.lower(["firstName","lastName"])\
-    .cols.date_transform("birth", "new_date", "yyyy/MM/dd", "dd-MM-YYYY")\
-    .cols.years_between("birth", "years_between", "yyyy/MM/dd")\
+    .cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY")\
+    .cols.years_between("birth", "yyyy/MM/dd")\
     .cols.remove_accents("lastName")\
     .cols.remove_special_chars("lastName")\
     .cols.replace("product","taaaccoo","taco")\
@@ -91,7 +93,7 @@ df\
     .cols.rename(str.lower)\
     .cols.apply_by_dtypes("product",func,"string", data_type="integer")\
     .cols.trim("*")\
-    .show()
+    .table()
 ```
 
 You transform this:
@@ -125,23 +127,23 @@ You transform this:
 into this:
 
 ```
-+---+---------+--------+---------+-----------------+-----+----------+----------+-------------+
-| id|firstname|lastname|billingid|          product|price|     birth|  new_date|years_between|
-+---+---------+--------+---------+-----------------+-----+----------+----------+-------------+
-| 10|    james| maxwell|      875|             taco|    3|1923/03/12|12-03-1923|      95.4355|
-| 11|    isaac|  newton|      992|            pasta|    9|1999/02/15|15-02-1999|      19.5108|
-| 12|     emmy| noether|      234|            pasta|    9|1993/12/08|08-12-1993|      24.6962|
-| 13|      max|  planck|      111|       hamburguer|    4|1994/01/04|04-01-1994|      24.6237|
-| 14|     fred|   hoyle|      553|            pizza|    8|1997/06/27|27-06-1997|      21.1452|
-| 15| heinrich|   hertz|      116|            pizza|    8|1956/11/30|30-11-1956|      61.7204|
-| 16|  william| gilbert|      886|             BEER|    2|1958/03/26|26-03-1958|      60.3978|
-| 17|    marie|   curie|      912|             Rice|    1|2000/03/22|22-03-2000|      18.4086|
-| 18|   arthur| compton|      812|this was a number|    5|1899/01/01|01-01-1899|     119.6317|
-| 19|    james|chadwick|      467|             null|   10|1921/05/03|03-05-1921|       97.293|
-|  7|     carl|   gauss|      323|             taco|    3|1970/07/13|13-07-1970|      48.0995|
-|  8|    david| hilbert|      624|             taco|    3|1950/07/14|14-07-1950|      68.0968|
-|  9| johannes|  kepler|      735|             taco|    3|1920/04/22|22-04-1920|      98.3253|
-+---+---------+--------+---------+-----------------+-----+----------+----------+-------------+
++---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
+| id|           firstname|lastname|billingid|          product|price|     birth|birth_data_transform|birth_years_between|
++---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
+|  9|            johannes|  kepler|      735|             taco|    3|1920/04/22|          22-04-1920|            98.5511|
+|  7|                carl|   gauss|      323|             taco|    3|1970/07/13|          13-07-1970|            48.3253|
+| 10|               james| maxwell|      875|             taco|    3|1923/03/12|          12-03-1923|            95.6613|
+|  8|               david| hilbert|      624|             taco|    3|1950/07/14|          14-07-1950|            68.3226|
+| 14|                fred|   hoyle|      553|            pizza|    8|1997/06/27|          27-06-1997|             21.371|
+| 15|(((   heinrich )))))|   hertz|      116|            pizza|    8|1956/11/30|          30-11-1956|            61.9462|
+| 12|              emmy%%| noether|      234|            pasta|    9|1993/12/08|          08-12-1993|             24.922|
+| 11|               isaac|  newton|      992|            pasta|    9|1999/02/15|          15-02-1999|            19.7366|
+| 19|               james|chadwick|      467|             null|   10|1921/05/03|          03-05-1921|            97.5188|
+| 13|              max!!!|  planck|      111|       hamburguer|    4|1994/01/04|          04-01-1994|            24.8495|
+| 17|               marie|   curie|      912|             Rice|    1|2000/03/22|          22-03-2000|            18.6344|
+| 16|             william| gilbert|      886|             BEER|    2|1958/03/26|          26-03-1958|            60.6237|
+| 18|              arthur| compton|      812|this was a number|    5|1899/01/01|          01-01-1899|           119.8575|
++---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
 ```
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
