@@ -24,12 +24,12 @@ pygments>=2.2.0
 six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
-ipython==7.1.1
+ipython==7.2.0
 ratelimit==2.2.0
 humanize==0.5.1
 psutil==5.4.8
 backoff==1.7.1
-h2o_pysparkling_2.3
+h2o_pysparkling_2.3==2.3.18
 pymongo==3.7.2
 kombu==4.2.1
 pandas==0.23.4

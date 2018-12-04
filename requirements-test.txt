@@ -1,6 +1,6 @@
 mock==2.0.0
 nose==1.3.7
-pylint==2.1.1
+pylint==2.2.2
 fastnumbers==2.1.1
 multipledispatch==0.6.0
 python_dateutil==2.7.5
@@ -23,14 +23,14 @@ pygments>=2.2.0
 six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
-ipython==7.1.1
+ipython==7.2.0
 humanize==0.5.1
 pytest-cov==2.6.0
 psutil==5.4.8
 backoff==1.7.1
 pymongo==3.7.2
 ratelimit==2.2.0
-h2o_pysparkling_2.3
+h2o_pysparkling_2.3==2.3.18
 tqdm==4.28.1
 kombu==4.2.1
 pika==0.12.0
