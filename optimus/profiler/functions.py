@@ -50,6 +50,21 @@ def write_json(data, path):
         pass
 
 
+def write_html(data, path):
+    """
+    Write a json file with the profiler result
+    :param data:
+    :param path:
+    :return:
+    """
+
+    try:
+        with open(path, 'w', encoding='utf-8') as outfile:
+            outfile.write(data)
+    except IOError:
+        pass
+
+
 def sample_size(population_size, confidence_level, confidence_interval):
     """
     Get a sample number of the whole population
@@ -144,5 +159,5 @@ def create_buckets(lower_bound, upper_bound, bins):
     # ensure that the upper bound is exactly the higher value.
     # Because floating point calculation it can miss the upper bound in the final sum
 
-    buckets[bins-1]["upper"] = upper_bound
+    buckets[bins - 1]["upper"] = upper_bound
     return buckets

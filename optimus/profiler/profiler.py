@@ -9,14 +9,14 @@ import humanize
 import jinja2
 import pika
 import pyspark.sql.functions as F
-from IPython.core.display import display, HTML
 from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
-    write_json
+    write_json, write_html
 
 
 class Profiler:
@@ -42,6 +42,8 @@ class Profiler:
                 output_path = "data.json"
                 pass
 
+        self.html = None
+        self.json = None
         self.path = output_path
         self.queue_url = queue_url
         self.queue_exchange = queue_exchange
@@ -238,8 +240,63 @@ class Profiler:
         if self.queue_url is not None:
             self.to_queue(output)
 
-        # Save to file
+        # JSON
+        # Save in case we want to output to a json file
+        self.json = output
+
+        # Save file in json format
         write_json(output, self.path)
+
+        # Save in case we want to output to a html file
+        self.html = html
+
+    def to_file(self, path=None, output=None):
+        """
+        Save profiler data to a file in the specified format (html, json)
+        :param output: html or json
+        :param path: filename in which the data will be saved
+        :return:
+        """
+
+        if path is None:
+            RaiseIt.value_error(path, ["Invalid file path"])
+
+        # We need to append a some extra html tags to display it correctly in the browser.
+        if output is "html":
+            if self.html is None:
+                assert self.html is not None, "Please run the profiler first"
+
+            header = '''<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="apple-touch-icon" href="icon.png">
+  <!-- Place favicon.ico in the root directory -->
+
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>'''
+
+            footer = '''</body></html>'''
+
+            write_html(header + self.html + footer, path)
+        elif output is "json":
+            if self.json is None:
+                assert self.json is not None, "Please run the profiler first"
+
+            write_json(self.json, path)
+        else:
+            print("sdf")
+            RaiseIt.type_error(output, ["html", "json"])
 
     def to_queue(self, message):
         """
