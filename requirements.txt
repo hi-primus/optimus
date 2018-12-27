@@ -29,7 +29,7 @@ ratelimit==2.2.0
 humanize==0.5.1
 psutil==5.4.8
 backoff==1.7.1
-h2o_pysparkling_2.3==2.3.18
+h2o_pysparkling_2.3==2.3.19
 pymongo==3.7.2
 kombu==4.2.2
 pandas==0.23.4
