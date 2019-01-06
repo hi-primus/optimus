@@ -31,6 +31,6 @@ backoff==1.7.1
 pymongo==3.7.2
 ratelimit==2.2.0
 h2o_pysparkling_2.3==2.3.18
-tqdm==4.28.1
+tqdm==4.29.0
 kombu==4.2.2
 pika==0.12.0
