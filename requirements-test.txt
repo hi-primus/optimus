@@ -33,4 +33,4 @@ ratelimit==2.2.0
 h2o_pysparkling_2.3==2.3.18
 tqdm==4.28.1
 kombu==4.2.2
-pika==0.12.0
+pika==0.13.0
