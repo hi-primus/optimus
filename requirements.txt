@@ -32,5 +32,5 @@ backoff==1.8.0
 h2o_pysparkling_2.3==2.3.18
 pymongo==3.7.2
 kombu==4.2.2.post1
-pandas==0.23.4
+pandas==0.24.0
 pika==0.12.0
