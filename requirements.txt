@@ -1,5 +1,5 @@
 requests==2.21.0
-tqdm==4.28.1
+tqdm==4.31.1
 pymongo==3.7.2
 fastnumbers==2.1.1
 multipledispatch==0.6.0
