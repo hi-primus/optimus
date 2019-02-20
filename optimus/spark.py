@@ -38,7 +38,7 @@ class Spark:
         logging.info(STARTING_SPARK)
 
         import os
-        env = '--jars postgresql-42.2.5.jar pyspark-shell'
+        # env = '--jars postgresql-42.2.5.jar pyspark-shell'
         os.environ['PYSPARK_SUBMIT_ARGS'] = ''
 
         # print(os.environ['PYSPARK_SUBMIT_ARGS'])
