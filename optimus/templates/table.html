@@ -58,7 +58,7 @@
     <tr>
         {%for k,v in r.items(): %}
         <td>
-            {{v|string|replace(" ", "\u2E31")}}
+            <div title='{{v|string|replace(" ", "\u2E31")}}'>{{v|string|replace(" ", "\u2E31")|truncate(128)}}</div>
         </td>
         {% endfor %}
     </tr>
