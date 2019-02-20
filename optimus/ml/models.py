@@ -11,7 +11,9 @@ from pyspark.sql.functions import *
 from pyspark.sql.session import SparkSession
 
 spark = SparkSession.builder.getOrCreate()
-
+#TODO: not use getOrCreate use the singleton in optimus.spark
+#from optimus.spark import Spark
+# somethin like Spark.instance.spark.read.json(path)
 
 class ML:
     @staticmethod

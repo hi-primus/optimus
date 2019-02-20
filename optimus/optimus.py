@@ -7,6 +7,7 @@ from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.functions import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
@@ -18,7 +19,8 @@ Spark.instance = None
 
 class Optimus:
 
-    def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
+    def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
+                 file_system="local",
                  verbose=False, dl=False,
                  server=False,
                  repositories=None,
@@ -26,7 +28,8 @@ class Optimus:
                  jars=None,
                  options=None,
                  additional_options=None,
-                 enricher_host="localhost", enricher_port=27017,
+                 enricher_host="localhost",
+                 enricher_port=27017,
                  queue_url=None,
                  queue_exchange=None,
                  queue_routing_key="optimus"
@@ -58,45 +61,61 @@ class Optimus:
         :type jars: (list[str])
 
         """
-        self.master = master
-        self.app_name = app_name
+        if session is None:
+            # print("Creating Spark Session...")
+            # If a Spark session in not passed by argument create it
 
-        if options is None:
-            options = {}
+            self.master = master
+            self.app_name = app_name
 
-        self.options = options
+            if options is None:
+                options = {}
 
-        if packages is None:
-            packages = []
-        else:
-            packages = val_to_list(packages)
+            self.options = options
 
-        self.packages = packages
-        self.repositories = repositories
+            if packages is None:
+                packages = []
+            else:
+                packages = val_to_list(packages)
 
-        if jars is None:
-            jars = {}
+            self.packages = packages
+            self.repositories = repositories
 
-        self.jars = jars
-        self.additional_options = additional_options
+            if jars is None:
+                jars = {}
 
-        self.verbose(verbose)
+            self.jars = jars
+            self.additional_options = additional_options
 
-        if dl is True:
-            self._add_spark_packages(
-                ["databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11", "com.databricks:spark-avro_2.11:4.0.0"])
+            self.verbose(verbose)
 
-            self._start_session()
-
-            from optimus.dl.models import DL
-            self.dl = DL()
-        else:
-
+            # Load Avro.
+            # TODO: if the Spark 2.4 version is going to be used this is not neccesesary.
+            #  Maybe we can check a priori which version fo Spark is going to be used
             self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
-            self._start_session()
 
-        if path is None:
-            path = os.getcwd()
+            if dl is True:
+                self._add_spark_packages(
+                    ["databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11"])
+
+                self._start_session()
+
+                from optimus.dl.models import DL
+                self.dl = DL()
+            else:
+                self._start_session()
+
+            if path is None:
+                path = os.getcwd()
+
+            if checkpoint is True:
+                self._set_check_point_folder(path, file_system)
+
+            # Spark.instance.sc.driver.extraClassPath = "postgresql-42.2.5.jar"
+
+        else:
+            # If a session is passed by arguments  just save the reference
+            Spark.instance = session
 
         # Initialize Spark
         logging.info("""
@@ -109,10 +128,8 @@ class Optimus:
                               """)
 
         logging.info(STARTING_OPTIMUS)
-        if checkpoint is True:
-            self._set_check_point_folder(path, file_system)
 
-        if server is True:
+        if server:
             logging.info("Starting Optimus Server...")
             s = Server()
             s.start()
@@ -130,6 +147,13 @@ class Optimus:
         )
         self.ml = ML()
         self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
+
+    def JDBC(self, url, database, user, password, port):
+        """
+
+        :return:
+        """
+        return JDBC(url, database, user, password, port)
 
     def enrich(self, df, func_request, func_response):
         """

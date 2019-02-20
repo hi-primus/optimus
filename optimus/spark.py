@@ -5,6 +5,14 @@ from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
 
 
 class Spark:
+    @property
+    def spark(self):
+        """
+        Return the Spark Session
+        :return: None
+        """
+
+        return self._spark
 
     def __init__(self, master="local[*]", app_name="optimus"):
         """
@@ -29,23 +37,27 @@ class Spark:
         logging.info("-----")
         logging.info(STARTING_SPARK)
 
+        import os
+        env = '--jars postgresql-42.2.5.jar pyspark-shell'
+        os.environ['PYSPARK_SUBMIT_ARGS'] = ''
+
+        # print(os.environ['PYSPARK_SUBMIT_ARGS'])
+        # print(os.environ)
+
         # Build the spark session
-        self._spark = (SparkSession
-                       .builder
-                       .master(self.master)
-                       .appName(self.app_name)
-                       .getOrCreate())
+        self._spark = SparkSession.builder \
+            .master(master) \
+            .appName(app_name) \
+            .config("spark.jars", "RedshiftJDBC42-1.2.16.1027.jar") \
+            .getOrCreate()
 
+        # .config("spark.jars", "postgresql-42.2.5.jar") \
+        # print(self._spark.conf.getAll())
+
+        # .option("driver", "org.postgresql.Driver")
         self._sc = self._spark.sparkContext
-
-    @property
-    def spark(self):
-        """
-        Return the Spark Session
-        :return: None
-        """
-
-        return self._spark
+        # print(self._sc._conf.getAll())
+        # SparkContext.sc._conf
 
     @property
     def sc(self):
