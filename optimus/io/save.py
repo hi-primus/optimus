@@ -5,6 +5,8 @@ from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
+from packaging import version
+from optimus.spark import Spark
 
 
 def save(self):
@@ -103,10 +105,15 @@ def save(self):
         """
 
         try:
+            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
+                avro_version = "com.databricks.spark.avro"
+            else:
+                avro_version = "avro"
             self.coalesce(num_partitions) \
-                .write.format("com.databricks.spark.avro") \
+                .write.format(avro_version) \
                 .mode(mode) \
                 .save(path)
+
         except IOError as e:
             logging.error(e)
             raise
@@ -165,7 +172,6 @@ def save(self):
             collection = db[collection_name]
 
             for message in messages:
-
                 as_dict = message.asDict(recursive=True)
                 collection.insert_one(as_dict)
             client.close()
