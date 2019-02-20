@@ -86,6 +86,6 @@ class Testdf_sql(object):
     @staticmethod
     def test_query():
         source_df.table_name('temp_name')
-        actual_df = source_df.query('SELECT * FROM temp_name')
+        actual_df = source_df.conn('SELECT * FROM temp_name')
         expected_value = source_df
         assert (expected_value.collect() == actual_df.collect())

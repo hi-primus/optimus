@@ -148,12 +148,12 @@ class Optimus:
         self.ml = ML()
         self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
 
-    def JDBC(self, url, database, user, password, port):
+    def JDBC(self, db_type="redshift", url=None, database=None, user=None, password=None, port=None):
         """
-
+        Create the JDBC string connection
         :return:
         """
-        return JDBC(url, database, user, password, port)
+        return JDBC(db_type, url, database, user, password, port)
 
     def enrich(self, df, func_request, func_response):
         """
