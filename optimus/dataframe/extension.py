@@ -16,7 +16,7 @@ from optimus.helpers.checkit import is_str
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
 from optimus.spark import Spark
-
+from packaging import version
 
 @add_method(DataFrame)
 def roll_out():
@@ -164,9 +164,13 @@ def size(self):
         rdd = rdd._reserialize(AutoBatchedSerializer(PickleSerializer()))
         return rdd.ctx._jvm.org.apache.spark.mllib.api.python.SerDe.pythonToJava(rdd._jrdd, True)
 
-    java_obj = _to_java_object_rdd(self.rdd)
+    if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
+        java_obj = _to_java_object_rdd(self.rdd)
+        n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
+    else:
+        # TODO: At the moment I can not find a way to calculate this in Sparl 2.4
+        n_bytes = "Not available"
 
-    n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     return n_bytes
 
 

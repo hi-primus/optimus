@@ -323,6 +323,8 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: column to calculate the histogram
         :param buckets: buckets on the histogram
+        :param infer:
+        :param relative_error:
         :return: json file
         """
 
