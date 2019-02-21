@@ -3,7 +3,6 @@ import json
 import logging
 import os
 from collections import defaultdict
-from packaging import version
 
 import dateutil
 import humanize
@@ -12,7 +11,6 @@ import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.spark import Spark
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
@@ -371,10 +369,8 @@ class Profiler:
         count_dtypes = Profiler.count_data_types(df, columns, infer)
 
         columns_info["count_types"] = count_dtypes["count_types"]
-        if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
-            columns_info['size'] = humanize.naturalsize(df.size())
-        else:
-            columns_info['size'] = "Not available"
+
+        columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
         df = Profiler.cast_columns(df, columns, count_dtypes).cache()
