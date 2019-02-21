@@ -20,7 +20,7 @@ from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE, IMPUTE_SUFFIX
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
@@ -882,7 +882,7 @@ def cols(self):
         for col_name in columns:
             # Imputer require not only numeric but float or double
             df = df.cols.cast(col_name, "float")
-            output_cols.append(col_name + "_impute")
+            output_cols.append(col_name + IMPUTE_SUFFIX)
 
         imputer = Imputer(inputCols=columns, outputCols=output_cols)
 

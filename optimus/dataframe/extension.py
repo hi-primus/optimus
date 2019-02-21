@@ -11,7 +11,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import RaiseIt
+from optimus import RaiseIt, IMPUTE_SUFFIX
 from optimus.helpers.checkit import is_str
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
@@ -168,7 +168,7 @@ def size(self):
         java_obj = _to_java_object_rdd(self.rdd)
         n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     else:
-        # TODO: At the moment I can not find a way to calculate this in Sparl 2.4
+        # TODO: At the moment I can not find a way to calculate this in Spark 2.4
         n_bytes = "Not available"
 
     return n_bytes
@@ -343,8 +343,8 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
         logging.info("Casting {col_name} to float...".format(col_name=col_name))
 
     # Impute missing values
-    imputed_cols = [c + "_imputed" for c in columns]
-    df = df.cols.impute(columns, imputed_cols, strategy)
+    imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
+    df = df.cols.impute(columns, strategy)
     logging.info("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
 
     # Create Vector necessary to calculate the correlation

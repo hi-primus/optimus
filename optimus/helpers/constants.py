@@ -19,6 +19,8 @@ datetime.time: TimestampType,
 
 """
 
+IMPUTE_SUFFIX = "_imputed"
+
 PYTHON_SHORT_TYPES = {"string": "string",
                       "str": "string",
                       "integer": "int",

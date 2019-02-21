@@ -63,6 +63,6 @@ df.plots.hist(["id", "reclong"], 20)
 
 df.plots.frequency(["id", "reclong"], 10)
 
-df.plots.correlation(["id","mass (g)", "reclat"])
+df.plot.correlation(["id","mass (g)", "reclat"])
 
 df.correlation(["id","mass (g)", "reclat"], output="array")
