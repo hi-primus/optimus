@@ -111,8 +111,6 @@ class Optimus:
             if checkpoint is True:
                 self._set_check_point_folder(path, file_system)
 
-            # Spark.instance.sc.driver.extraClassPath = "postgresql-42.2.5.jar"
-
         else:
             # If a session is passed by arguments  just save the reference
             Spark.instance = session
