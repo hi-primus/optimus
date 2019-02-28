@@ -1,3 +1,5 @@
+import humanize
+
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -32,8 +34,6 @@ class JDBC:
             elif self.db_type is "mysql":
                 self.port = 3306
 
-        print(url)
-
         self.url = url
         self.database = database
         self.user = user
@@ -62,11 +62,20 @@ class JDBC:
         df = self.conn(query)
         df.table()
 
-    def table_to_df(self, table_name, limit=100):
+    def table_to_df(self, table_name, limit=None):
         """
         Return cols from a specific table
         """
+        # We want to count the number of rows to warn the users how much it can take to bring the whole data
         db_table = "public." + table_name
+        if limit is None:
+            query = "(SELECT COUNT(*) FROM " + db_table + ") as t"
+            count = self.conn(query).to_json()[0]["count"]
+        else:
+            count = limit
+
+        print(humanize.intword(count) + " rows in *" + table_name + "* table")
+
         if limit is None:
             query = "(SELECT * FROM " + db_table + ") AS t"
         else:

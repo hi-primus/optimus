@@ -18,6 +18,10 @@ from optimus.helpers.functions import parse_columns, collect_as_dict, random_int
 from optimus.spark import Spark
 from packaging import version
 
+# from apiclient.discovery import build
+# from httplib2 import Http
+# from oauth2client import file, client, tools
+
 
 @add_method(DataFrame)
 def roll_out():
@@ -169,7 +173,7 @@ def size(self):
         java_obj = _to_java_object_rdd(self.rdd)
         n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     else:
-        #TODO: Find a way to calculate the dataframe size in spark 2.4
+        # TODO: Find a way to calculate the dataframe size in spark 2.4
         n_bytes = -1
 
     return n_bytes
@@ -259,7 +263,8 @@ def glom(self):
 @add_method(DataFrame)
 def h_repartition(self, partitions_number=None, col_name=None):
     """
-    Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and a column if you need more control.
+    Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and
+    a column if you need more control.
     See https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
     :param self: Spark Dataframe
     :param partitions_number: Number of partitions

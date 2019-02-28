@@ -79,6 +79,7 @@ class Profiler:
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
         :param columns: Columns to be processed
+        :param infer: infer the column datatype
         :return: json
         """
 

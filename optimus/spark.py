@@ -17,8 +17,8 @@ class Spark:
     def __init__(self, master="local[*]", app_name="optimus"):
         """
 
-        :param master: Sets the Spark master URL to connect to, such as “local” to run locally, “local[4]” to run
-        locally with 4 cores, or “spark://master:7077” to run on a Spark standalone cluster.
+        :param master: Sets the Spark master URL to connect to, such as 'local' to run locally, 'local[4]' to run
+        locally with 4 cores, or spark://master:7077 to run on a Spark standalone cluster.
         :param app_name: Sets a name for the application, which will be shown in the Spark web UI
         """
 
