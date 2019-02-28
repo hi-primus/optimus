@@ -385,6 +385,28 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
 
 
 @add_method(DataFrame)
+def load_schema(self, spreadsheet_id, range_name):
+    """
+    Retrieve sheet data using OAuth credentials and Google Python API.
+    :param self:
+    :param spreadsheet_id:
+    :param range_name:
+    :return:
+    """
+    scopes = 'https://www.googleapis.com/auth/spreadsheets.readonly'
+    # Setup the Sheets API
+    store = file.Storage('credentials.json')
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = client.flow_from_clientsecrets('client_secret.json', scopes)
+        creds = tools.run_flow(flow, store)
+    service = build('sheets', 'v4', http=creds.authorize(Http()))
+
+    # Call the Sheets API
+    gsheet = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
+
+
+@add_method(DataFrame)
 def create_id(self, column="id"):
     """
     Create a unique id for every row.
