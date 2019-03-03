@@ -32,5 +32,5 @@ pymongo==3.7.2
 h2o-pysparkling-2.4==2.4.4
 ratelimit==2.2.1
 tqdm==4.28.1
-kombu==4.2.2.post1
+kombu==4.4.0
 pika==0.12.0
