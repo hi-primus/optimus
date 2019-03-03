@@ -35,3 +35,4 @@ examples/order_products__prior.csv
 examples/server.pid
 
 examples/new-api-jar-test\.ipynb
+venv/
