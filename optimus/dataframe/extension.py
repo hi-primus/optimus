@@ -346,12 +346,12 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
     df = self
     for col_name in columns:
         df = df.cols.cast(col_name, "float")
-        logging.info("Casting {col_name} to float...".format(col_name=col_name))
+        logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
     # Impute missing values
     imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
     df = df.cols.impute(columns, strategy)
-    logging.info("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
+    logger.print("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
 
     # Create Vector necessary to calculate the correlation
     df = df.cols.nest(imputed_cols, "features", "vector")

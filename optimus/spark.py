@@ -3,6 +3,8 @@ from pyspark.sql import SparkSession
 from optimus.helpers.constants import *
 from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
 
+import optimus.helpers.logger as logger
+
 
 class Spark:
     @property
@@ -25,39 +27,29 @@ class Spark:
         self.master = master
         self.app_name = app_name
 
-        logging.info(JUST_CHECKING)
-        logging.info("-----")
-        check_env_vars(["SPARK_HOME", "HADOOP_HOME", "PYSPARK_PYTHON", "PYSPARK_DRIVER_PYTHON", "JAVA_HOME"])
+        logger.info(message=JUST_CHECKING)
+        logger.info("-----")
+        check_env_vars(["SPARK_HOME", "HADOOP_HOME", "PYSPARK_PYTHON", "PYSPARK_DRIVER_PYTHON", "PYSPARK_SUBMIT_ARGS",
+                        "JAVA_HOME"])
 
         if is_pyarrow_installed() is True:
-            logging.info("Pyarrow Installed")
+            logger.info("Pyarrow Installed")
         else:
-            logging.info(
+            logger.info(
                 "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
-        logging.info("-----")
-        logging.info(STARTING_SPARK)
-
-        import os
-        # env = '--jars postgresql-42.2.5.jar pyspark-shell'
-        os.environ['PYSPARK_SUBMIT_ARGS'] = ''
-
-        # print(os.environ['PYSPARK_SUBMIT_ARGS'])
-        # print(os.environ)
+        logger.info("-----")
+        logger.info(STARTING_SPARK)
 
         # Build the spark session
         self._spark = SparkSession.builder \
             .master(master) \
+            .config("spark.executor.heartbeatInterval", "110") \
             .appName(app_name) \
-            .config("spark.jars", "RedshiftJDBC42-1.2.16.1027.jar") \
             .getOrCreate()
-
-        # .config("spark.jars", "postgresql-42.2.5.jar") \
-        # print(self._spark.conf.getAll())
 
         # .option("driver", "org.postgresql.Driver")
         self._sc = self._spark.sparkContext
         # print(self._sc._conf.getAll())
-        # SparkContext.sc._conf
 
     @property
     def sc(self):

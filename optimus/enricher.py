@@ -122,11 +122,11 @@ class Enricher:
                                                upsert=False, full_response=True)
                 else:
                     # The response key will remain blank so we can filter it to try in future request
-                    logging.info(response.status_code)
+                    logger.print(response.status_code)
 
             # Append the data in enrichment to the dataframe
 
-            logging.info("Appending collection info into the dataframe")
+            logger.print("Appending collection info into the dataframe")
             # TODO: An elegant way to handle pickling?
             # take care to the pickling
             host = self.host
@@ -171,7 +171,7 @@ class Enricher:
         """
         count = self.count()
         self.drop_collection(self.collection_name)
-        logging.info("Removed {count} documents".format(count=count))
+        logger.print("Removed {count} documents".format(count=count))
 
     def collection_exists(self, collection_name):
         """
@@ -217,18 +217,18 @@ class Enricher:
 
         source = self.db[source_name]
 
-        logging.info("Dropping {dest_name} collection".format(dest_name=dest_name))
+        logger.print("Dropping {dest_name} collection".format(dest_name=dest_name))
         self.db[dest_name].drop()
         # if data exist in the collection drop it
 
         pipeline = [{"$match": {}},
                     {"$out": dest_name},
                     ]
-        logging.info("Copying {source_name} collection to {dest_name} collection ...".format(source_name=source_name,
+        logger.print("Copying {source_name} collection to {dest_name} collection ...".format(source_name=source_name,
                                                                                              dest_name=dest_name))
 
         source.aggregate(pipeline)
-        logging.info('Done')
+        logger.print('Done')
 
     def head(self, collection_name, n=10):
         """
@@ -285,7 +285,7 @@ class Enricher:
         :return:
         """
         for key in tqdm_notebook(keys, desc='Processing cols'):
-            logging.info("Dropping {key}".format(key=key))
+            logger.print("Dropping {key}".format(key=key))
             collection_name.update_many({}, {'$unset': {key: 1}})
 
     def drop_collection(self, collection_name):
@@ -377,7 +377,7 @@ class Enricher:
             source = self.collection
 
         for c in tqdm_notebook(cols, total=len(cols), desc='Processing cols'):
-            logging.info("Inserting {c}".format(c=c))
+            logger.print("Inserting {c}".format(c=c))
             if c:
                 source.update_many(
                     {c: {'$exists': False}},
@@ -388,7 +388,7 @@ class Enricher:
                     }
                 );
             else:
-                logging.info("Field {c} could not be added".format(c=c))
+                logger.print("Field {c} could not be added".format(c=c))
 
     def cast(self, collection_name, field, convert_to):
         """
@@ -418,4 +418,4 @@ class Enricher:
                 collection.update_one({'_id': c['_id']}, {'$set': {field: val}})
 
             except ValueError:
-                logging.info("Could not convert '{val}' to '{convert_to}'".format(val=val, convert_to=convert_to))
+                logger.print("Could not convert '{val}' to '{convert_to}'".format(val=val, convert_to=convert_to))

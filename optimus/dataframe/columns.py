@@ -476,7 +476,7 @@ def cols(self):
                 expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
         result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
-        # logging.info(result)
+        # logger.print(result)
         return result
 
     # Quantile statistics

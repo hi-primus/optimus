@@ -91,7 +91,7 @@ class Test:
             func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
         print("Creating {test} test function...".format(test=func_test_name))
-        logging.info(func_test_name)
+        logger.print(func_test_name)
 
         add_buffer("@staticmethod\n")
         add_buffer("def " + func_test_name + ":\n")

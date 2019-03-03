@@ -29,14 +29,14 @@ class Server:
         # Verify if server.pid exist
         if os.path.isfile(pid_file):
             pid = int(open(pid_file, 'r').read())
-            logging.info("Server seems to be running with process id {pid}".format(pid=pid))
+            logger.print("Server seems to be running with process id {pid}".format(pid=pid))
             self.pid = pid
 
         else:
             # Start the server
             process = Process(self.path)
             pid = process.id
-            logging.info("Server started with process id " + str(pid))
+            logger.print("Server started with process id " + str(pid))
             open(pid_file, 'w').write(str(pid))
             self.pid = pid
 
@@ -47,7 +47,7 @@ class Server:
         """
         try:
             Process.stop_id(self.pid)
-            logging.info("Optimus Server stopped")
+            logger.print("Optimus Server stopped")
         except (ProcessLookupError, NoSuchProcess):
             os.remove(self.pid_file)
-            logging.info("Optimus could not be stopped. Process id not found")
+            logger.print("Optimus could not be stopped. Process id not found")

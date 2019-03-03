@@ -1,6 +1,5 @@
 import inspect
 import json
-import logging
 import os
 import pprint
 import random
@@ -18,6 +17,7 @@ from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SP
     SPARK_DTYPES_DICT_OBJECTS
 from optimus.helpers.raiseit import RaiseIt
 
+from optimus.helpers.logger import logger
 
 def infer(value):
     """
@@ -399,9 +399,9 @@ def check_env_vars(env_vars):
 
     for env_var in env_vars:
         if env_var in os.environ:
-            logging.info(env_var + "=" + os.environ.get(env_var))
+            logger.print(env_var + "=" + os.environ.get(env_var))
         else:
-            logging.info("You don't have " + env_var + " set")
+            logger.print("You don't have " + env_var + " set")
 
 
 # Reference https://nvie.com/posts/modifying-deeply-nested-structures/

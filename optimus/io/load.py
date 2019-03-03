@@ -150,7 +150,7 @@ class Downloader(object):
             url = self.data_def["url"]
             req = Request(url, None, self.headers)
 
-            logging.info("Downloading %s from %s", display_name, url)
+            logger.print("Downloading %s from %s", display_name, url)
 
             # It seems that avro need a .avro extension file
             with tempfile.NamedTemporaryFile(suffix="." + ext, delete=False) as f:
@@ -160,11 +160,11 @@ class Downloader(object):
         if path:
             try:
                 if bytes_downloaded > 0:
-                    logging.info("Downloaded %s bytes", bytes_downloaded)
-                logging.info("Creating DataFrame for %s. Please wait...", display_name)
+                    logger.print("Downloaded %s bytes", bytes_downloaded)
+                logger.print("Creating DataFrame for %s. Please wait...", display_name)
                 return data_loader(path)
             finally:
-                logging.info("Successfully created DataFrame for '%s'", display_name)
+                logger.print("Successfully created DataFrame for '%s'", display_name)
 
     @staticmethod
     def write(response, file, chunk_size=8192):

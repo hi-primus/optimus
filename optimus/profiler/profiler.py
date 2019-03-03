@@ -18,6 +18,8 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html
 
+from optimus.helpers.logger import logger
+
 
 class Profiler:
 
@@ -38,7 +40,7 @@ class Profiler:
                 config.read("config.ini")
                 output_path = config["PROFILER"]["Output"]
             except (IOError, KeyError):
-                logging.info("Config.ini not found")
+                logger.print("Config.ini not found")
                 output_path = "data.json"
                 pass
 
@@ -90,7 +92,7 @@ class Profiler:
             :param col_name:
             :return:
             """
-            logging.info("Processing column '" + col_name + "'...")
+            logger.print("Processing column '" + col_name + "'...")
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
@@ -381,8 +383,8 @@ class Profiler:
 
         for col_name in columns:
             col_info = {}
-            logging.info("------------------------------")
-            logging.info("Processing column '" + col_name + "'...")
+            logger.print("------------------------------")
+            logger.print("Processing column '" + col_name + "'...")
             columns_info['columns'][col_name] = {}
 
             col_info["stats"] = stats[col_name]

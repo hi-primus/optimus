@@ -14,6 +14,8 @@ from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
 from optimus.spark import Spark
 
+from optimus.helpers.logger import logger
+
 Spark.instance = None
 
 
@@ -92,7 +94,7 @@ class Optimus:
             # Load Avro.
             # TODO: if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
-            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
             if dl is True:
                 self._add_spark_packages(
@@ -116,7 +118,7 @@ class Optimus:
             Spark.instance = session
 
         # Initialize Spark
-        logging.info("""
+        logger.print("""
                              ____        __  _                     
                             / __ \____  / /_(_)___ ___  __  _______
                            / / / / __ \/ __/ / __ `__ \/ / / / ___/
@@ -125,15 +127,15 @@ class Optimus:
                               /_/                                  
                               """)
 
-        logging.info(STARTING_OPTIMUS)
+        logger.print(STARTING_OPTIMUS)
 
         if server:
-            logging.info("Starting Optimus Server...")
+            logger.print("Starting Optimus Server...")
             s = Server()
             s.start()
             self.server_instance = s
 
-        logging.info(SUCCESS)
+        logger.print(SUCCESS)
 
         self.create = Create()
         self.load = Load()
@@ -206,24 +208,24 @@ class Optimus:
             Optimus.delete_check_point_folder(path=path, file_system=file_system)
 
             # Creating file:
-            logging.info("Creating the hadoop folder...")
+            logger.print("Creating the hadoop folder...")
             command = "hadoop fs -mkdir " + folder_path
-            logging.info("$" + command)
+            logger.print("$" + command)
             os.system(command)
-            logging.info("Hadoop folder created. \n")
+            logger.print("Hadoop folder created. \n")
 
-            logging.info("Setting created folder as checkpoint folder...")
+            logger.print("Setting created folder as checkpoint folder...")
             Spark.instance.sc.setCheckpointDir(folder_path)
         elif file_system == "local":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
-            logging.info("Deleting previous folder if exists...")
+            logger.print("Deleting previous folder if exists...")
             if os.path.isdir(folder_path):
                 # Deletes folder if exits:
                 rmtree(folder_path)
 
-            logging.info("Creating the checkpoint directory...")
+            logger.print("Creating the checkpoint directory...")
             # Creates new folder:
             os.mkdir(folder_path)
 
@@ -245,13 +247,13 @@ class Optimus:
         if file_system == "hadoop":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
-            logging.info("Deleting checkpoint folder...")
+            logger.print("Deleting checkpoint folder...")
             command = "hadoop fs -rm -r " + folder_path
             os.system(command)
-            logging.info("$" + command)
-            logging.info("Folder deleted.")
+            logger.print("$" + command)
+            logger.print("Folder deleted.")
         elif file_system == "local":
-            logging.info("Deleting checkpoint folder...")
+            logger.print("Deleting checkpoint folder...")
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
@@ -259,9 +261,9 @@ class Optimus:
                 # Deletes folder if exits:
                 rmtree(folder_path)
                 # Creates new folder:
-                logging.info("Folder deleted.")
+                logger.print("Folder deleted.")
             else:
-                logging.info("Folder deleted.")
+                logger.print("Folder deleted.")
         else:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
 
@@ -368,8 +370,5 @@ class Optimus:
         :param verbose:
         :return:
         """
-        if verbose is True:
-            logging.basicConfig(format="%(message)s", level=logging.INFO)
-        elif verbose is False:
-            logging.propagate = False
-            logging.disable(logging.NOTSET)
+
+        logger.active(verbose)
