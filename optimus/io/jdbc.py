@@ -11,7 +11,7 @@ class JDBC:
 
     def __init__(self, db_type, url, database, user, password, port=None):
         """
-
+        Create the JDBC connection object
         :return:
         """
         # RaiseIt.value_error(db_type, ["redshift", "postgres", "mysql", "sqlite"])
@@ -59,31 +59,47 @@ class JDBC:
             query = ""
 
         # print(query)
-        df = self.conn(query)
+        df = self.execute(query)
         df.table()
 
-    def table_to_df(self, table_name, limit=None):
+    def table_to_df(self, table_name, columns="*", limit=None):
         """
-        Return cols from a specific table
+        Return cols as Spark dataframe from a specific table
         """
+
         # We want to count the number of rows to warn the users how much it can take to bring the whole data
         db_table = "public." + table_name
         if limit is None:
             query = "(SELECT COUNT(*) FROM " + db_table + ") as t"
-            count = self.conn(query).to_json()[0]["count"]
+            count = self.execute(query).to_json()[0]["count"]
         else:
             count = limit
 
         print(humanize.intword(count) + " rows in *" + table_name + "* table")
 
-        if limit is None:
-            query = "(SELECT * FROM " + db_table + ") AS t"
+        if columns is "*":
+            columns_sql = "*"
         else:
-            query = "(SELECT * FROM " + db_table + " LIMIT " + str(limit) + ") AS t"
+            columns_sql = ",".join(columns)
 
-        return self.conn(query)
+        if limit is None:
+            query = "(SELECT " + columns_sql + " FROM " + db_table + ") AS t"
+        else:
+            query = "(SELECT " + columns_sql + "  FROM " + db_table + " LIMIT " + str(limit) + ") AS t"
 
-    def conn(self, query):
+        df = self.execute(query)
+
+        # Bring the data to local machine if not every time we call an action is going to be
+        # retrived from the remote server
+        df = df.run()
+        return df
+
+    def execute(self, query):
+        """
+        Execute a SQL query
+        :param query: SQL query string
+        :return:
+        """
         # query = "(SELECT * FROM " + table_name + " LIMIT 10) AS t"
         return Spark.instance.spark.read \
             .format("jdbc") \
