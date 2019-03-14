@@ -13,6 +13,7 @@ class Singleton(object):
 class Logger(Singleton):
     def __init__(self):
         self.logger = logging.getLogger('optimus')
+        self.is_active = False
 
     def level(self, log_level):
         """
@@ -30,7 +31,7 @@ class Logger(Singleton):
         :return:
         """
         # if self.status is True:
-        if self.active is True:
+        if self.is_active is True:
             self.logger.info(message)
 
     def active(self, activate):
@@ -39,7 +40,7 @@ class Logger(Singleton):
         :param activate:
         :return:
         """
-        self.active = activate
+        self.is_active = activate
 
 
 logger = Logger()
