@@ -325,38 +325,39 @@ def cols(self):
         """
         Move a column to specific position
         :param column: Column to be moved
+        :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
         :param ref_col: Column taken as reference
-        :param position: Column new position. Accepts 'after' or 'before'
         :return: Spark DataFrame
         """
         # Check that column is a string or a list
         column = parse_columns(self, column)
         ref_col = parse_columns(self, ref_col)
 
-        # Asserting if position is 'after' or 'before'
-        assert (position == 'after') or (
-                position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
-
         # Get dataframe columns
         columns = self.columns
 
         # Get source and reference column index position
-
         new_index = columns.index(ref_col[0])
-        old_index = columns.index(column[0])
 
-        # if position is 'after':
+        # Column to move
+        column_to_move_index = columns.index(column[0])
+
         if position == 'after':
             # Check if the movement is from right to left:
-            if new_index >= old_index:
-                columns.insert(new_index, columns.pop(old_index))  # insert and delete a element
-            else:  # the movement is form left to right:
-                columns.insert(new_index + 1, columns.pop(old_index))
-        else:  # If position if before:
-            if new_index[0] >= old_index:  # Check if the movement if from right to left:
-                columns.insert(new_index - 1, columns.pop(old_index))
-            elif new_index[0] < old_index:  # Check if the movement if from left to right:
-                columns.insert(new_index, columns.pop(old_index))
+            if new_index < column_to_move_index:
+                new_index = new_index + 1
+        elif position == 'before':  # If position if before:
+            if new_index >= column_to_move_index:  # Check if the movement if from right to left:
+                new_index = new_index - 1
+        elif position == 'beginning':
+            new_index = 0
+        elif position == 'end':
+            new_index = len(columns)
+        else:
+            RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
+
+        # Move the column to the new place
+        columns.insert(new_index, columns.pop(column_to_move_index))  # insert and delete a element
 
         return self[columns]
 
@@ -863,7 +864,8 @@ def cols(self):
         df = self
         for col_name in columns:
             new_col_name = col_name + "_years_between"
-            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
+            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name,
+                                                                                                     "float")
         return df
 
     @add_attr(cols)
@@ -960,8 +962,7 @@ def cols(self):
                 expr.append(F.count(col_name).alias(col_name))
 
             else:
-                expr.append(F.count(F.when( F.col(col_name).isNull(), col_name)).alias(col_name))
-
+                expr.append(F.count(F.when(F.col(col_name).isNull(), col_name)).alias(col_name))
 
         result = format_dict(df.select(*expr).to_json())
         return result
