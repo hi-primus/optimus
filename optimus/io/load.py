@@ -5,6 +5,7 @@ from urllib.request import Request, urlopen
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 from packaging import version
+from optimus.helpers.logger import logger
 
 
 class Load:
@@ -51,7 +52,7 @@ class Load:
         return Downloader(data_def).download(file_format, type_of)
 
     @staticmethod
-    def json(path):
+    def json(path, *args, **kwargs):
         """
         Return a dataframe from a json file.
         :param path:
@@ -59,7 +60,7 @@ class Load:
         """
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = Spark.instance.spark.read.json(path)
+            df = Spark.instance.spark.read.json(path, *args, **kwargs)
         except IOError as error:
             logging.error(error)
             raise
