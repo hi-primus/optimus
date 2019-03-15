@@ -322,7 +322,7 @@ def cols(self):
         return cast(*args, **kwargs)
 
     @add_attr(cols)
-    def move(column, position, ref_col):
+    def move(column, position, ref_col=None):
         """
         Move a column to specific position
         :param column: Column to be moved
