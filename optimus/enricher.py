@@ -1,6 +1,5 @@
 import csv
 import json
-import logging
 
 import pandas as pd
 import requests
@@ -12,6 +11,7 @@ from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
 from optimus.helpers.checkit import is_function, is_
+from optimus.helpers.logger import logger
 
 # Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
 COL_ID = "jazz_id"
@@ -35,7 +35,6 @@ class Enricher:
         :param args:
         :param kwargs:
         """
-        logging.basicConfig(format="%(message)s", level=logging.INFO)
 
         self.host = host
         self.port = port

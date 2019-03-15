@@ -1,4 +1,4 @@
-import logging
+from optimus.helpers.logger import logger
 
 from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples
