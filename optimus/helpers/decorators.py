@@ -1,7 +1,7 @@
 import timeit
-import logging
-from functools import wraps
 
+from functools import wraps
+from optimus.helpers.logger import logger
 
 def add_method(cls):
     """
