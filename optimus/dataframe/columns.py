@@ -20,7 +20,8 @@ from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE, IMPUTE_SUFFIX
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, IMPUTE_SUFFIX, \
+    PYSPARK_STRING_TYPES
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
@@ -754,7 +755,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
 
         def _remove_accents(value, attr):
             cell_str = str(value)
@@ -776,7 +777,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
