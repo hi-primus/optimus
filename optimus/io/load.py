@@ -1,4 +1,3 @@
-import logging
 import tempfile
 from urllib.request import Request, urlopen
 
@@ -60,9 +59,11 @@ class Load:
         """
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = Spark.instance.spark.read.json(path, *args, **kwargs)
+            df = Spark.instance.spark.read \
+                .option("multiLine", True) \
+                .json(path, *args, **kwargs)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
         return df
 
@@ -105,7 +106,7 @@ class Load:
         try:
             df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
         return df
@@ -127,7 +128,7 @@ class Load:
             df = Spark.instance.spark.read.format(avro_version).load(path, *args, **kwargs)
 
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
         return df

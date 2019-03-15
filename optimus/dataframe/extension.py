@@ -1,4 +1,4 @@
-import logging
+
 import math
 import os
 
@@ -17,6 +17,8 @@ from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
 from optimus.spark import Spark
 from packaging import version
+
+from optimus.helpers.logger import logger
 
 # from apiclient.discovery import build
 # from httplib2 import Http

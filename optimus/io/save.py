@@ -1,5 +1,3 @@
-import logging
-
 from kombu import Connection, Exchange, Queue, Producer
 from pymongo import MongoClient
 from pyspark.sql import DataFrame
@@ -7,6 +5,8 @@ from pyspark.sql import DataFrame
 from optimus.helpers.decorators import *
 from packaging import version
 from optimus.spark import Spark
+
+from optimus.helpers.logger import logger
 
 
 def save(self):
@@ -32,7 +32,7 @@ def save(self):
                 .mode(mode) \
                 .save(path)
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
@@ -55,7 +55,7 @@ def save(self):
         try:
             self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path, sep=sep)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
     @add_attr(save)
@@ -87,7 +87,7 @@ def save(self):
                 .mode(mode) \
                 .parquet(path)
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
@@ -115,7 +115,7 @@ def save(self):
                 .save(path)
 
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
