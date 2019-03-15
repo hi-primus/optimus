@@ -88,7 +88,7 @@ class Load:
                   .options(inferSchema=infer_schema)
                   .csv(path, *args, **kwargs))
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
         return df
 
