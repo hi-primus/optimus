@@ -14,7 +14,7 @@ from pyspark.sql.session import SparkSession
 # spark = Spark.instance.spark()
 # TODO: not use getOrCreate use the singleton in optimus.spark
 
-# spark = SparkSession.builder.getOrCreate()
+spark = SparkSession.builder.getOrCreate()
 
 
 class ML:
