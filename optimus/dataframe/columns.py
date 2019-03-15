@@ -724,7 +724,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
@@ -793,7 +793,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
@@ -840,7 +840,7 @@ def cols(self):
         """
 
         # Asserting if column if in dataFrame:
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
