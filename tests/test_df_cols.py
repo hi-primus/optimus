@@ -1,8 +1,8 @@
 from pyspark.sql.types import *
 from optimus import Optimus
+from optimus.helpers.functions import json_enconding
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
-import json
 nan = np.nan
 import datetime
 from pyspark.sql import functions as F
@@ -12,146 +12,146 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_min():
 		actual_df = source_df.cols.min('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(13, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(13)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_min_all_columns():
 		actual_df = source_df.cols.min('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': {'min': 'Jazz'}, 'height(ft)': {'min': 13}, 'function': {'min': 'Battle Station'}, 'rank': {'min': 7}, 'age': {'min': 5000000}, 'weight(t)': {'min': 1.8}, 'japanese name': {'min': ['Bumble', 'Goldback']}, 'last position seen': {'min': '10.642707,-71.612534'}, 'date arrival': {'min': '1980/04/10'}, 'last date seen': {'min': '2011/04/10'}, 'attributes': {'min': [None, 5700.0]}, 'Date Type': {'min': datetime.date(2011, 4, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1}, 'function(binary)': {'min': bytearray(b'Battle Station')}, 'NullType': {'min': None}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': {'min': 'Jazz'}, 'height(ft)': {'min': 13}, 'function': {'min': 'Battle Station'}, 'rank': {'min': 7}, 'age': {'min': 5000000}, 'weight(t)': {'min': 1.8}, 'japanese name': {'min': ['Bumble', 'Goldback']}, 'last position seen': {'min': '10.642707,-71.612534'}, 'date arrival': {'min': '1980/04/10'}, 'last date seen': {'min': '2011/04/10'}, 'attributes': {'min': [None, 5700.0]}, 'Date Type': {'min': datetime.date(2011, 4, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1}, 'function(binary)': {'min': bytearray(b'Battle Station')}, 'NullType': {'min': None}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max():
 		actual_df = source_df.cols.max('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(300, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(300)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max_all_columns():
 		actual_df = source_df.cols.max('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': {'max': 'ironhide&'}, 'height(ft)': {'max': 300}, 'function': {'max': 'Security'}, 'rank': {'max': 10}, 'age': {'max': 5000000}, 'weight(t)': {'max': 5.7}, 'japanese name': {'max': ['Roadbuster']}, 'last position seen': {'max': '37.789563,-122.400356'}, 'date arrival': {'max': '1980/04/10'}, 'last date seen': {'max': '2016/09/10'}, 'attributes': {'max': [91.44000244140625, None]}, 'Date Type': {'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'max': 1}, 'function(binary)': {'max': bytearray(b'Security')}, 'NullType': {'max': None}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': {'max': 'ironhide&'}, 'height(ft)': {'max': 300}, 'function': {'max': 'Security'}, 'rank': {'max': 10}, 'age': {'max': 5000000}, 'weight(t)': {'max': 5.7}, 'japanese name': {'max': ['Roadbuster']}, 'last position seen': {'max': '37.789563,-122.400356'}, 'date arrival': {'max': '1980/04/10'}, 'last date seen': {'max': '2016/09/10'}, 'attributes': {'max': [91.44000244140625, None]}, 'Date Type': {'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'max': 1}, 'function(binary)': {'max': bytearray(b'Security')}, 'NullType': {'max': None}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_range():
 		actual_df = source_df.cols.range('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'min': 13, 'max': 300}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'min': 13, 'max': 300}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_range_all_columns():
 		actual_df = source_df.cols.range('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': {'min': 'Jazz', 'max': 'ironhide&'}, 'height(ft)': {'min': 13, 'max': 300}, 'function': {'min': 'Battle Station', 'max': 'Security'}, 'rank': {'min': 7, 'max': 10}, 'age': {'min': 5000000, 'max': 5000000}, 'weight(t)': {'min': 1.8, 'max': 5.7}, 'japanese name': {'min': ['Bumble', 'Goldback'], 'max': ['Roadbuster']}, 'last position seen': {'min': '10.642707,-71.612534', 'max': '37.789563,-122.400356'}, 'date arrival': {'min': '1980/04/10', 'max': '1980/04/10'}, 'last date seen': {'min': '2011/04/10', 'max': '2016/09/10'}, 'attributes': {'min': [None, 5700.0], 'max': [91.44000244140625, None]}, 'Date Type': {'min': datetime.date(2011, 4, 10), 'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0), 'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1, 'max': 1}, 'function(binary)': {'min': bytearray(b'Battle Station'), 'max': bytearray(b'Security')}, 'NullType': {'min': None, 'max': None}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': {'min': 'Jazz', 'max': 'ironhide&'}, 'height(ft)': {'min': 13, 'max': 300}, 'function': {'min': 'Battle Station', 'max': 'Security'}, 'rank': {'min': 7, 'max': 10}, 'age': {'min': 5000000, 'max': 5000000}, 'weight(t)': {'min': 1.8, 'max': 5.7}, 'japanese name': {'min': ['Bumble', 'Goldback'], 'max': ['Roadbuster']}, 'last position seen': {'min': '10.642707,-71.612534', 'max': '37.789563,-122.400356'}, 'date arrival': {'min': '1980/04/10', 'max': '1980/04/10'}, 'last date seen': {'min': '2011/04/10', 'max': '2016/09/10'}, 'attributes': {'min': [None, 5700.0], 'max': [91.44000244140625, None]}, 'Date Type': {'min': datetime.date(2011, 4, 10), 'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0), 'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1, 'max': 1}, 'function(binary)': {'min': bytearray(b'Battle Station'), 'max': bytearray(b'Security')}, 'NullType': {'min': None, 'max': None}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median():
 		actual_df = source_df.cols.median('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(13.0, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(13.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median_all_columns():
 		actual_df = source_df.cols.median('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': 13.0, 'rank': 7.0, 'weight(t)': 1.7999999523162842, 'age': 5000000.0}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': 13.0, 'rank': 7.0, 'weight(t)': 1.7999999523162842, 'age': 5000000.0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_percentile():
 		actual_df = source_df.cols.percentile('height(ft)',[0.05,0.25],1)
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({0.05: 13.0, 0.25: 13.0}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({0.05: 13.0, 0.25: 13.0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_percentile_all_columns():
 		actual_df = source_df.cols.percentile('*',[0.05,0.25],1)
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {0.05: 13.0, 0.25: 13.0}, 'rank': {0.05: 7.0, 0.25: 7.0}, 'weight(t)': {0.05: 1.7999999523162842, 0.25: 1.7999999523162842}, 'age': {0.05: 5000000.0, 0.25: 5000000.0}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {0.05: 13.0, 0.25: 13.0}, 'rank': {0.05: 7.0, 0.25: 7.0}, 'weight(t)': {0.05: 1.7999999523162842, 0.25: 1.7999999523162842}, 'age': {0.05: 5000000.0, 0.25: 5000000.0}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad():
 		actual_df = source_df.cols.mad('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(0.0, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(0.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad_all_columns():
 		actual_df = source_df.cols.mad('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': 0.0, 'rank': 0.0, 'weight(t)': 0.0, 'age': 0.0}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': 0.0, 'rank': 0.0, 'weight(t)': 0.0, 'age': 0.0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_std():
 		actual_df = source_df.cols.std('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(124.92678, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(124.92678)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_std_all_columns():
 		actual_df = source_df.cols.std('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'stddev': 124.92678}, 'rank': {'stddev': 1.36626}, 'weight(t)': {'stddev': 1.64712}, 'age': {'stddev': 0.0}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'stddev': 124.92678}, 'rank': {'stddev': 1.36626}, 'weight(t)': {'stddev': 1.64712}, 'age': {'stddev': 0.0}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_kurt():
 		actual_df = source_df.cols.kurt('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(0.23772, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(0.23772)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_kurt_all_columns():
 		actual_df = source_df.cols.kurt('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'kurtosis': 0.23772}, 'rank': {'kurtosis': -1.5}, 'weight(t)': {'kurtosis': -1.43641}, 'age': {'kurtosis': nan}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'kurtosis': 0.23772}, 'rank': {'kurtosis': -1.5}, 'weight(t)': {'kurtosis': -1.43641}, 'age': {'kurtosis': nan}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mean():
 		actual_df = source_df.cols.mean('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(76.8, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(76.8)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mean_all_columns():
 		actual_df = source_df.cols.mean('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'mean': 76.8}, 'rank': {'mean': 8.33333}, 'weight(t)': {'mean': 3.56}, 'age': {'mean': 5000000.0}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'mean': 76.8}, 'rank': {'mean': 8.33333}, 'weight(t)': {'mean': 3.56}, 'age': {'mean': 5000000.0}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_skewness():
 		actual_df = source_df.cols.skewness('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(1.49074, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(1.49074)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_skewness_all_columns():
 		actual_df = source_df.cols.skewness('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'skewness': 1.49074}, 'rank': {'skewness': 0.3818}, 'weight(t)': {'skewness': 0.06521}, 'age': {'skewness': nan}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'skewness': 1.49074}, 'rank': {'skewness': 0.3818}, 'weight(t)': {'skewness': 0.06521}, 'age': {'skewness': nan}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sum():
 		actual_df = source_df.cols.sum('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(384, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(384)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sum_all_columns():
 		actual_df = source_df.cols.sum('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'sum': 384}, 'rank': {'sum': 50}, 'weight(t)': {'sum': 17.8}, 'age': {'sum': 30000000}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'sum': 384}, 'rank': {'sum': 50}, 'weight(t)': {'sum': 17.8}, 'age': {'sum': 30000000}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_variance():
 		actual_df = source_df.cols.variance('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(15606.7, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(15606.7)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_variance_all_columns():
 		actual_df = source_df.cols.variance('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': {'variance': 15606.7}, 'rank': {'variance': 1.86667}, 'weight(t)': {'variance': 2.713}, 'age': {'variance': 0.0}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': {'variance': 15606.7}, 'rank': {'variance': 1.86667}, 'weight(t)': {'variance': 2.713}, 'age': {'variance': 0.0}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_abs():
@@ -166,56 +166,56 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_mode():
 		actual_df = source_df.cols.mode('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps([{'height(ft)': None}], sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding([{'height(ft)': None}])
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mode_all_columns():
 		actual_df = source_df.cols.mode('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps([{'names': None}, {'height(ft)': None}, {'function': None}, {'rank': [8, 7, 10]}, {'age': 5000000}, {'weight(t)': None}, {'japanese name': None}, {'last position seen': None}, {'date arrival': '1980/04/10'}, {'last date seen': None}, {'attributes': None}, {'Date Type': None}, {'Tiemstamp': datetime.datetime(2014, 6, 24, 0, 0)}, {'Cybertronian': True}, {'function(binary)': None}, {'NullType': None}], sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding([{'names': None}, {'height(ft)': None}, {'function': None}, {'rank': [8, 7, 10]}, {'age': 5000000}, {'weight(t)': None}, {'japanese name': None}, {'last position seen': None}, {'date arrival': '1980/04/10'}, {'last date seen': None}, {'attributes': None}, {'Date Type': None}, {'Tiemstamp': datetime.datetime(2014, 6, 24, 0, 0)}, {'Cybertronian': True}, {'function(binary)': None}, {'NullType': None}])
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count():
 		actual_df = source_df.cols.count()
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(16, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(16)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_na():
 		actual_df = source_df.cols.count_na('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(1, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(1)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_na_all_columns():
 		actual_df = source_df.cols.count_na('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': 0, 'height(ft)': 1, 'function': 0, 'rank': 0, 'age': 0, 'weight(t)': 1, 'japanese name': 0, 'last position seen': 2, 'date arrival': 0, 'last date seen': 0, 'attributes': 0, 'Date Type': 0, 'Tiemstamp': 0, 'Cybertronian': 0, 'function(binary)': 0, 'NullType': 0}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': 0, 'height(ft)': 1, 'function': 0, 'rank': 0, 'age': 0, 'weight(t)': 1, 'japanese name': 0, 'last position seen': 2, 'date arrival': 0, 'last date seen': 0, 'attributes': 0, 'Date Type': 0, 'Tiemstamp': 0, 'Cybertronian': 0, 'function(binary)': 0, 'NullType': 0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_zeros():
 		actual_df = source_df.cols.count_zeros('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(0, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_zeros_all_columns():
 		actual_df = source_df.cols.count_zeros('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'height(ft)': 0, 'rank': 0, 'weight(t)': 0, 'age': 0}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'height(ft)': 0, 'rank': 0, 'weight(t)': 0, 'age': 0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_uniques():
 		actual_df = source_df.cols.count_uniques('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(5, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(5)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_uniques_all_columns():
 		actual_df = source_df.cols.count_uniques('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': {'approx_count_distinct': 5}, 'height(ft)': {'approx_count_distinct': 5}, 'function': {'approx_count_distinct': 6}, 'rank': {'approx_count_distinct': 3}, 'age': {'approx_count_distinct': 1}, 'weight(t)': {'approx_count_distinct': 5}, 'japanese name': {'approx_count_distinct': 6}, 'last position seen': {'approx_count_distinct': 4}, 'date arrival': {'approx_count_distinct': 1}, 'last date seen': {'approx_count_distinct': 6}, 'attributes': {'approx_count_distinct': 6}, 'Date Type': {'approx_count_distinct': 6}, 'Tiemstamp': {'approx_count_distinct': 1}, 'Cybertronian': {'approx_count_distinct': 1}, 'function(binary)': {'approx_count_distinct': 6}, 'NullType': {'approx_count_distinct': 0}}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': {'approx_count_distinct': 5}, 'height(ft)': {'approx_count_distinct': 5}, 'function': {'approx_count_distinct': 6}, 'rank': {'approx_count_distinct': 3}, 'age': {'approx_count_distinct': 1}, 'weight(t)': {'approx_count_distinct': 5}, 'japanese name': {'approx_count_distinct': 6}, 'last position seen': {'approx_count_distinct': 4}, 'date arrival': {'approx_count_distinct': 1}, 'last date seen': {'approx_count_distinct': 6}, 'attributes': {'approx_count_distinct': 6}, 'Date Type': {'approx_count_distinct': 6}, 'Tiemstamp': {'approx_count_distinct': 1}, 'Cybertronian': {'approx_count_distinct': 1}, 'function(binary)': {'approx_count_distinct': 6}, 'NullType': {'approx_count_distinct': 0}})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_unique():
@@ -280,14 +280,14 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_iqr():
 		actual_df = source_df.cols.iqr('height(ft)')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(0.0, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(0.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_iqr_all_columns():
 		actual_df = source_df.cols.iqr('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(0.0, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(0.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_lower():
@@ -392,38 +392,38 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_hist():
 		actual_df = source_df.cols.hist('rank',4)
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps([{'count': 2, 'lower': 7.0, 'upper': 7.75}, {'count': 2, 'lower': 7.75, 'upper': 8.5}, {'count': 0, 'lower': 8.5, 'upper': 9.25}, {'count': 2, 'lower': 9.25, 'upper': 10.0}], sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding([{'count': 2, 'lower': 7.0, 'upper': 7.75}, {'count': 2, 'lower': 7.75, 'upper': 8.5}, {'count': 0, 'lower': 8.5, 'upper': 9.25}, {'count': 2, 'lower': 9.25, 'upper': 10.0}])
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_frequency():
 		actual_df = source_df.cols.frequency('rank',4)
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}]}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}]})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_frequency_all_columns():
 		actual_df = source_df.cols.frequency('*',4)
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': 300, 'count': 1}, {'value': 28, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}], 'age': [{'value': 5000000, 'count': 6}], 'weight(t)': [{'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}, {'value': 2.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 2}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': datetime.date(2016, 9, 10), 'count': 1}, {'value': datetime.date(2015, 8, 10), 'count': 1}, {'value': datetime.date(2014, 6, 24), 'count': 1}, {'value': datetime.date(2013, 6, 24), 'count': 1}], 'Tiemstamp': [{'value': datetime.datetime(2014, 6, 24, 0, 0), 'count': 6}], 'Cybertronian': [{'value': True, 'count': 6}], 'function(binary)': [{'value': bytearray(b'Security'), 'count': 1}, {'value': bytearray(b'None'), 'count': 1}, {'value': bytearray(b'Leader'), 'count': 1}, {'value': bytearray(b'First Lieutenant'), 'count': 1}], 'NullType': [{'value': None, 'count': 6}]}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': 300, 'count': 1}, {'value': 28, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}], 'age': [{'value': 5000000, 'count': 6}], 'weight(t)': [{'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}, {'value': 2.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 2}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': datetime.date(2016, 9, 10), 'count': 1}, {'value': datetime.date(2015, 8, 10), 'count': 1}, {'value': datetime.date(2014, 6, 24), 'count': 1}, {'value': datetime.date(2013, 6, 24), 'count': 1}], 'Tiemstamp': [{'value': datetime.datetime(2014, 6, 24, 0, 0), 'count': 6}], 'Cybertronian': [{'value': True, 'count': 6}], 'function(binary)': [{'value': bytearray(b'Security'), 'count': 1}, {'value': bytearray(b'None'), 'count': 1}, {'value': bytearray(b'Leader'), 'count': 1}, {'value': bytearray(b'First Lieutenant'), 'count': 1}], 'NullType': [{'value': None, 'count': 6}]})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_schema_dtype():
 		actual_df = source_df.cols.schema_dtype('rank')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(ByteType, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(ByteType)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_dtypes():
 		actual_df = source_df.cols.dtypes('rank')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps('tinyint', sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding('tinyint')
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_dtypes_all_columns():
 		actual_df = source_df.cols.dtypes('*')
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps({'names': 'string', 'height(ft)': 'smallint', 'function': 'string', 'rank': 'tinyint', 'age': 'int', 'weight(t)': 'float', 'japanese name': 'array<string>', 'last position seen': 'string', 'date arrival': 'string', 'last date seen': 'string', 'attributes': 'array<float>', 'Date Type': 'date', 'Tiemstamp': 'timestamp', 'Cybertronian': 'boolean', 'function(binary)': 'binary', 'NullType': 'null'}, sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'names': 'string', 'height(ft)': 'smallint', 'function': 'string', 'rank': 'tinyint', 'age': 'int', 'weight(t)': 'float', 'japanese name': 'array<string>', 'last position seen': 'string', 'date arrival': 'string', 'last date seen': 'string', 'attributes': 'array<float>', 'Date Type': 'date', 'Tiemstamp': 'timestamp', 'Cybertronian': 'boolean', 'function(binary)': 'binary', 'NullType': 'null'})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_select_by_dtypes_str():
@@ -448,8 +448,8 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_names():
 		actual_df = source_df.cols.names()
-		actual_df =json.dumps(actual_df, sort_keys=True)
-		expected_value =json.dumps(['names', 'height(ft)', 'function', 'rank', 'age', 'weight(t)', 'japanese name', 'last position seen', 'date arrival', 'last date seen', 'attributes', 'Date Type', 'Tiemstamp', 'Cybertronian', 'function(binary)', 'NullType'], sort_keys=True)
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding(['names', 'height(ft)', 'function', 'rank', 'age', 'weight(t)', 'japanese name', 'last position seen', 'date arrival', 'last date seen', 'attributes', 'Date Type', 'Tiemstamp', 'Cybertronian', 'function(binary)', 'NullType'])
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_qcut():

@@ -5,7 +5,7 @@ from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, 
 
 
 class Test:
-    def __init__(self, op=None, df=None, name=None, imports=None):
+    def __init__(self, op=None, df=None, name=None, imports=None, path=None):
         """
         Create python code with unit test functions for Optimus.
         :param df: Spark Dataframe
@@ -17,6 +17,7 @@ class Test:
         self.df = df
         self.name = name
         self.imports = imports
+        self.path = path
 
     def run(self, *args):
 
@@ -26,12 +27,17 @@ class Test:
         :return:
         """
 
-        filename = "test_" + self.name + ".py"
+        if self.path is None:
+            filename = self.path + "/" + "test_" + self.name + ".py"
+        else:
+            filename = "test_" + self.name + ".py"
+
         test_file = open(filename, 'w', encoding='utf-8')
 
         _imports = [
             "from pyspark.sql.types import *",
-            "from optimus import Optimus"
+            "from optimus import Optimus",
+            "from optimus.helpers.functions import json_enconding "
         ]
         if self.imports is not None:
             for i in self.imports:
@@ -156,7 +162,9 @@ class Test:
                 df_result = "'" + df_result + "'"
             else:
                 df_result = str(df_result)
-            expected = "\texpected_value =" + df_result + "\n"
+            add_buffer("\tactual_df =json_enconding(actual_df)\n")
+
+            expected = "\texpected_value =json_enconding(" + df_result + ")\n"
 
         add_buffer(expected)
 
@@ -166,3 +174,4 @@ class Test:
             add_buffer("\tassert (expected_value == actual_df)\n")
 
         return "".join(buffer)
+
