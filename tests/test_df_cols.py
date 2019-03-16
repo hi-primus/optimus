@@ -2,132 +2,156 @@ from pyspark.sql.types import *
 from optimus import Optimus
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
+import json
 nan = np.nan
 import datetime
 from pyspark.sql import functions as F
 op = Optimus(master='local')
 source_df=op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None)])
-
 class Testdf_cols(object):
 	@staticmethod
 	def test_cols_min():
 		actual_df = source_df.cols.min('height(ft)')
-		expected_value =13
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(13, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_min_all_columns():
 		actual_df = source_df.cols.min('*')
-		expected_value ={'names': {'min': 'Jazz'}, 'height(ft)': {'min': 13}, 'function': {'min': 'Battle Station'}, 'rank': {'min': 7}, 'age': {'min': 5000000}, 'weight(t)': {'min': 1.8}, 'japanese name': {'min': ['Bumble', 'Goldback']}, 'last position seen': {'min': '10.642707,-71.612534'}, 'date arrival': {'min': '1980/04/10'}, 'last date seen': {'min': '2011/04/10'}, 'attributes': {'min': [None, 5700.0]}, 'Date Type': {'min': datetime.date(2011, 4, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1}, 'function(binary)': {'min': bytearray(b'Battle Station')}, 'NullType': {'min': None}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': {'min': 'Jazz'}, 'height(ft)': {'min': 13}, 'function': {'min': 'Battle Station'}, 'rank': {'min': 7}, 'age': {'min': 5000000}, 'weight(t)': {'min': 1.8}, 'japanese name': {'min': ['Bumble', 'Goldback']}, 'last position seen': {'min': '10.642707,-71.612534'}, 'date arrival': {'min': '1980/04/10'}, 'last date seen': {'min': '2011/04/10'}, 'attributes': {'min': [None, 5700.0]}, 'Date Type': {'min': datetime.date(2011, 4, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1}, 'function(binary)': {'min': bytearray(b'Battle Station')}, 'NullType': {'min': None}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max():
 		actual_df = source_df.cols.max('height(ft)')
-		expected_value =300
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(300, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max_all_columns():
 		actual_df = source_df.cols.max('*')
-		expected_value ={'names': {'max': 'ironhide&'}, 'height(ft)': {'max': 300}, 'function': {'max': 'Security'}, 'rank': {'max': 10}, 'age': {'max': 5000000}, 'weight(t)': {'max': 5.7}, 'japanese name': {'max': ['Roadbuster']}, 'last position seen': {'max': '37.789563,-122.400356'}, 'date arrival': {'max': '1980/04/10'}, 'last date seen': {'max': '2016/09/10'}, 'attributes': {'max': [91.44000244140625, None]}, 'Date Type': {'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'max': 1}, 'function(binary)': {'max': bytearray(b'Security')}, 'NullType': {'max': None}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': {'max': 'ironhide&'}, 'height(ft)': {'max': 300}, 'function': {'max': 'Security'}, 'rank': {'max': 10}, 'age': {'max': 5000000}, 'weight(t)': {'max': 5.7}, 'japanese name': {'max': ['Roadbuster']}, 'last position seen': {'max': '37.789563,-122.400356'}, 'date arrival': {'max': '1980/04/10'}, 'last date seen': {'max': '2016/09/10'}, 'attributes': {'max': [91.44000244140625, None]}, 'Date Type': {'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'max': 1}, 'function(binary)': {'max': bytearray(b'Security')}, 'NullType': {'max': None}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_range():
 		actual_df = source_df.cols.range('height(ft)')
-		expected_value ={'height(ft)': {'min': 13, 'max': 300}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'min': 13, 'max': 300}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_range_all_columns():
 		actual_df = source_df.cols.range('*')
-		expected_value ={'names': {'min': 'Jazz', 'max': 'ironhide&'}, 'height(ft)': {'min': 13, 'max': 300}, 'function': {'min': 'Battle Station', 'max': 'Security'}, 'rank': {'min': 7, 'max': 10}, 'age': {'min': 5000000, 'max': 5000000}, 'weight(t)': {'min': 1.8, 'max': 5.7}, 'japanese name': {'min': ['Bumble', 'Goldback'], 'max': ['Roadbuster']}, 'last position seen': {'min': '10.642707,-71.612534', 'max': '37.789563,-122.400356'}, 'date arrival': {'min': '1980/04/10', 'max': '1980/04/10'}, 'last date seen': {'min': '2011/04/10', 'max': '2016/09/10'}, 'attributes': {'min': [None, 5700.0], 'max': [91.44000244140625, None]}, 'Date Type': {'min': datetime.date(2011, 4, 10), 'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0), 'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1, 'max': 1}, 'function(binary)': {'min': bytearray(b'Battle Station'), 'max': bytearray(b'Security')}, 'NullType': {'min': None, 'max': None}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': {'min': 'Jazz', 'max': 'ironhide&'}, 'height(ft)': {'min': 13, 'max': 300}, 'function': {'min': 'Battle Station', 'max': 'Security'}, 'rank': {'min': 7, 'max': 10}, 'age': {'min': 5000000, 'max': 5000000}, 'weight(t)': {'min': 1.8, 'max': 5.7}, 'japanese name': {'min': ['Bumble', 'Goldback'], 'max': ['Roadbuster']}, 'last position seen': {'min': '10.642707,-71.612534', 'max': '37.789563,-122.400356'}, 'date arrival': {'min': '1980/04/10', 'max': '1980/04/10'}, 'last date seen': {'min': '2011/04/10', 'max': '2016/09/10'}, 'attributes': {'min': [None, 5700.0], 'max': [91.44000244140625, None]}, 'Date Type': {'min': datetime.date(2011, 4, 10), 'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0), 'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1, 'max': 1}, 'function(binary)': {'min': bytearray(b'Battle Station'), 'max': bytearray(b'Security')}, 'NullType': {'min': None, 'max': None}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median():
 		actual_df = source_df.cols.median('height(ft)')
-		expected_value =13.0
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(13.0, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median_all_columns():
 		actual_df = source_df.cols.median('*')
-		expected_value ={'rank': 7.0, 'height(ft)': 13.0, 'age': 5000000.0, 'weight(t)': 1.7999999523162842}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': 13.0, 'rank': 7.0, 'weight(t)': 1.7999999523162842, 'age': 5000000.0}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_percentile():
 		actual_df = source_df.cols.percentile('height(ft)',[0.05,0.25],1)
-		expected_value ={0.05: 13.0, 0.25: 13.0}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({0.05: 13.0, 0.25: 13.0}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_percentile_all_columns():
 		actual_df = source_df.cols.percentile('*',[0.05,0.25],1)
-		expected_value ={'rank': {0.05: 7.0, 0.25: 7.0}, 'height(ft)': {0.05: 13.0, 0.25: 13.0}, 'age': {0.05: 5000000.0, 0.25: 5000000.0}, 'weight(t)': {0.05: 1.7999999523162842, 0.25: 1.7999999523162842}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {0.05: 13.0, 0.25: 13.0}, 'rank': {0.05: 7.0, 0.25: 7.0}, 'weight(t)': {0.05: 1.7999999523162842, 0.25: 1.7999999523162842}, 'age': {0.05: 5000000.0, 0.25: 5000000.0}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad():
 		actual_df = source_df.cols.mad('height(ft)')
-		expected_value =0.0
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(0.0, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad_all_columns():
 		actual_df = source_df.cols.mad('*')
-		expected_value ={'rank': 0.0, 'height(ft)': 0.0, 'age': 0.0, 'weight(t)': 0.0}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': 0.0, 'rank': 0.0, 'weight(t)': 0.0, 'age': 0.0}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_std():
 		actual_df = source_df.cols.std('height(ft)')
-		expected_value =124.92678
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(124.92678, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_std_all_columns():
 		actual_df = source_df.cols.std('*')
-		expected_value ={'rank': {'stddev': 1.36626}, 'height(ft)': {'stddev': 124.92678}, 'age': {'stddev': 0.0}, 'weight(t)': {'stddev': 1.64712}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'stddev': 124.92678}, 'rank': {'stddev': 1.36626}, 'weight(t)': {'stddev': 1.64712}, 'age': {'stddev': 0.0}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_kurt():
 		actual_df = source_df.cols.kurt('height(ft)')
-		expected_value =0.23772
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(0.23772, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_kurt_all_columns():
 		actual_df = source_df.cols.kurt('*')
-		expected_value ={'rank': {'kurtosis': -1.5}, 'height(ft)': {'kurtosis': 0.23772}, 'age': {'kurtosis': nan}, 'weight(t)': {'kurtosis': -1.43641}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'kurtosis': 0.23772}, 'rank': {'kurtosis': -1.5}, 'weight(t)': {'kurtosis': -1.43641}, 'age': {'kurtosis': nan}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mean():
 		actual_df = source_df.cols.mean('height(ft)')
-		expected_value =76.8
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(76.8, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mean_all_columns():
 		actual_df = source_df.cols.mean('*')
-		expected_value ={'rank': {'mean': 8.33333}, 'height(ft)': {'mean': 76.8}, 'age': {'mean': 5000000.0}, 'weight(t)': {'mean': 3.56}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'mean': 76.8}, 'rank': {'mean': 8.33333}, 'weight(t)': {'mean': 3.56}, 'age': {'mean': 5000000.0}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_skewness():
 		actual_df = source_df.cols.skewness('height(ft)')
-		expected_value =1.49074
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(1.49074, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_skewness_all_columns():
 		actual_df = source_df.cols.skewness('*')
-		expected_value ={'rank': {'skewness': 0.3818}, 'height(ft)': {'skewness': 1.49074}, 'age': {'skewness': nan}, 'weight(t)': {'skewness': 0.06521}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'skewness': 1.49074}, 'rank': {'skewness': 0.3818}, 'weight(t)': {'skewness': 0.06521}, 'age': {'skewness': nan}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sum():
 		actual_df = source_df.cols.sum('height(ft)')
-		expected_value =384
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(384, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sum_all_columns():
 		actual_df = source_df.cols.sum('*')
-		expected_value ={'rank': {'sum': 50}, 'height(ft)': {'sum': 384}, 'age': {'sum': 30000000}, 'weight(t)': {'sum': 17.8}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'sum': 384}, 'rank': {'sum': 50}, 'weight(t)': {'sum': 17.8}, 'age': {'sum': 30000000}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_variance():
 		actual_df = source_df.cols.variance('height(ft)')
-		expected_value =15606.7
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(15606.7, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_variance_all_columns():
 		actual_df = source_df.cols.variance('*')
-		expected_value ={'rank': {'variance': 1.86667}, 'height(ft)': {'variance': 15606.7}, 'age': {'variance': 0.0}, 'weight(t)': {'variance': 2.713}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': {'variance': 15606.7}, 'rank': {'variance': 1.86667}, 'weight(t)': {'variance': 2.713}, 'age': {'variance': 0.0}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_abs():
@@ -142,47 +166,56 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_mode():
 		actual_df = source_df.cols.mode('height(ft)')
-		expected_value =[{'height(ft)': None}]
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps([{'height(ft)': None}], sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mode_all_columns():
 		actual_df = source_df.cols.mode('*')
-		expected_value =[{'names': None}, {'height(ft)': None}, {'function': None}, {'rank': [8, 7, 10]}, {'age': 5000000}, {'weight(t)': None}, {'japanese name': None}, {'last position seen': None}, {'date arrival': '1980/04/10'}, {'last date seen': None}, {'attributes': None}, {'Date Type': None}, {'Tiemstamp': datetime.datetime(2014, 6, 24, 0, 0)}, {'Cybertronian': True}, {'function(binary)': None}, {'NullType': None}]
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps([{'names': None}, {'height(ft)': None}, {'function': None}, {'rank': [8, 7, 10]}, {'age': 5000000}, {'weight(t)': None}, {'japanese name': None}, {'last position seen': None}, {'date arrival': '1980/04/10'}, {'last date seen': None}, {'attributes': None}, {'Date Type': None}, {'Tiemstamp': datetime.datetime(2014, 6, 24, 0, 0)}, {'Cybertronian': True}, {'function(binary)': None}, {'NullType': None}], sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count():
 		actual_df = source_df.cols.count()
-		expected_value =16
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(16, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_na():
 		actual_df = source_df.cols.count_na('height(ft)')
-		expected_value =1
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(1, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_na_all_columns():
 		actual_df = source_df.cols.count_na('*')
-		expected_value ={'names': 0, 'height(ft)': 1, 'function': 0, 'rank': 0, 'age': 0, 'weight(t)': 1, 'japanese name': 0, 'last position seen': 2, 'date arrival': 0, 'last date seen': 0, 'attributes': 0, 'Date Type': 0, 'Tiemstamp': 0, 'Cybertronian': 0, 'function(binary)': 0, 'NullType': 0}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': 0, 'height(ft)': 1, 'function': 0, 'rank': 0, 'age': 0, 'weight(t)': 1, 'japanese name': 0, 'last position seen': 2, 'date arrival': 0, 'last date seen': 0, 'attributes': 0, 'Date Type': 0, 'Tiemstamp': 0, 'Cybertronian': 0, 'function(binary)': 0, 'NullType': 0}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_zeros():
 		actual_df = source_df.cols.count_zeros('height(ft)')
-		expected_value =0
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(0, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_zeros_all_columns():
 		actual_df = source_df.cols.count_zeros('*')
-		expected_value ={'rank': 0, 'height(ft)': 0, 'age': 0, 'weight(t)': 0}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'height(ft)': 0, 'rank': 0, 'weight(t)': 0, 'age': 0}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_uniques():
 		actual_df = source_df.cols.count_uniques('height(ft)')
-		expected_value =5
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(5, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_count_uniques_all_columns():
 		actual_df = source_df.cols.count_uniques('*')
-		expected_value ={'names': {'approx_count_distinct': 5}, 'height(ft)': {'approx_count_distinct': 5}, 'function': {'approx_count_distinct': 6}, 'rank': {'approx_count_distinct': 3}, 'age': {'approx_count_distinct': 1}, 'weight(t)': {'approx_count_distinct': 5}, 'japanese name': {'approx_count_distinct': 6}, 'last position seen': {'approx_count_distinct': 4}, 'date arrival': {'approx_count_distinct': 1}, 'last date seen': {'approx_count_distinct': 6}, 'attributes': {'approx_count_distinct': 6}, 'Date Type': {'approx_count_distinct': 6}, 'Tiemstamp': {'approx_count_distinct': 1}, 'Cybertronian': {'approx_count_distinct': 1}, 'function(binary)': {'approx_count_distinct': 6}, 'NullType': {'approx_count_distinct': 0}}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': {'approx_count_distinct': 5}, 'height(ft)': {'approx_count_distinct': 5}, 'function': {'approx_count_distinct': 6}, 'rank': {'approx_count_distinct': 3}, 'age': {'approx_count_distinct': 1}, 'weight(t)': {'approx_count_distinct': 5}, 'japanese name': {'approx_count_distinct': 6}, 'last position seen': {'approx_count_distinct': 4}, 'date arrival': {'approx_count_distinct': 1}, 'last date seen': {'approx_count_distinct': 6}, 'attributes': {'approx_count_distinct': 6}, 'Date Type': {'approx_count_distinct': 6}, 'Tiemstamp': {'approx_count_distinct': 1}, 'Cybertronian': {'approx_count_distinct': 1}, 'function(binary)': {'approx_count_distinct': 6}, 'NullType': {'approx_count_distinct': 0}}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_unique():
@@ -207,12 +240,12 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_sub():
 		actual_df = source_df.cols.sub(['height(ft)','rank'])
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('sub', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, -18.0), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, -10.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, -19.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, -5.0), ('Megatron', None, 'None', 10.0, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, -292.0)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('sub', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 18.0), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 10.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 19.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 5.0), ('Megatron', None, 'None', 10.0, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 292.0)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_sub_all_columns():
 		actual_df = source_df.cols.sub('*')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('sub', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, -5000022.5), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, -5000012.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, -5000023.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, -5000007.0), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('sub', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, -4999986.5), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, -4999992.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, -4999985.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, -4999997.0), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_mul():
@@ -222,17 +255,17 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_mul_all_columns():
 		actual_df = source_df.cols.mul('*')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('mul', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 6020000256.0), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 1190000000.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 3640000000.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 936000000.0), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('mul', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 6019999744.0), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 1190000000.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 3640000000.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 936000000.0), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_div():
 		actual_df = source_df.cols.div(['height(ft)','rank'])
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('div', DoubleType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 0.35714285714285715), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 0.4117647058823529), ('ironhide&', 26.0, 'Security', 7.0, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 0.2692307692307692), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 0.6153846153846154), ('Megatron', None, 'None', 10.0, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 0.02666666666666667)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('div', DoubleType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 2.8), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 2.4285714285714284), ('ironhide&', 26.0, 'Security', 7.0, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 3.7142857142857144), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 1.625), ('Megatron', None, 'None', 10.0, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 37.5)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_div_all_columns():
 		actual_df = source_df.cols.div('*')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('div', DoubleType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 1.661129494423683e-08), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 4.1176470588235293e-08), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 1.346153846153846e-08), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 6.837607018741565e-08), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('div', DoubleType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 1.3023255236281673e-07), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 2.428571428571428e-07), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 1.8571428571428572e-07), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 1.8055556033864447e-07), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_z_score():
@@ -242,17 +275,19 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_z_score_all_columns():
 		actual_df = source_df.cols.z_score('*')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('rankz_col_', DoubleType(), True),('height(ft)z_col_', DoubleType(), True),('agez_col_', DoubleType(), True),('weight(t)z_col_', DoubleType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 1.2198776221217045, 0.3906288147345189, None, 0.4492691429494289), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 0.9758977061467071, 0.47868039182631617, None, 0.9471076788576425), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 0.9758977061467071, 0.4066381923875729, None, 0.2671329350624119), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 0.24397259672390328, 0.5106991471324243, None, 1.0685317691994), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, 1.2198776221217045, None, None, 1.2992373410954494), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 0.24397259672390328, 1.7866465460808323, None, None)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('height(ft)z_col_', DoubleType(), True),('rankz_col_', DoubleType(), True),('weight(t)z_col_', DoubleType(), True),('agez_col_', DoubleType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 0.3906288147345189, 1.2198776221217045, 0.4492691429494289, None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 0.47868039182631617, 0.9758977061467071, 0.9471076788576425, None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 0.4066381923875729, 0.9758977061467071, 0.2671329350624119, None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 0.5106991471324243, 0.24397259672390328, 1.0685317691994, None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None, 1.2198776221217045, 1.2992373410954494, None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 1.7866465460808323, 0.24397259672390328, None, None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_iqr():
 		actual_df = source_df.cols.iqr('height(ft)')
-		expected_value =0.0
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(0.0, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_iqr_all_columns():
 		actual_df = source_df.cols.iqr('*')
-		expected_value =0.0
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(0.0, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_lower():
@@ -342,7 +377,7 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_years_between_multiple_columns():
 		actual_df = source_df.cols.years_between(['date arrival','last date seen'],'yyyyMMdd')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('date arrival_years_between', FloatType(), True),('last date seen_years_between', FloatType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, None, None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, None, None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, None, None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, None, None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None, None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None, None)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('last date seen_years_between', FloatType(), True),('date arrival_years_between', FloatType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, None, None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, None, None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, None, None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, None, None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, None, None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, None, None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_impute():
@@ -352,42 +387,48 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_impute_all_columns():
 		actual_df = source_df.cols.impute('*')
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('rank_imputed', FloatType(), True),('height(ft)_imputed', FloatType(), True),('age_imputed', FloatType(), True),('weight(t)_imputed', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 10.0, 28.0, 5000000.0, 4.300000190734863), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 7.0, 17.0, 5000000.0, 2.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 7.0, 26.0, 5000000.0, 4.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 8.0, 13.0, 5000000.0, 1.7999999523162842), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, 10.0, 76.80000305175781, 5000000.0, 5.699999809265137), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 8.0, 300.0, 5000000.0, 3.559999942779541)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', FloatType(), True),('function', StringType(), True),('rank', FloatType(), True),('age', FloatType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('height(ft)_imputed', FloatType(), True),('rank_imputed', FloatType(), True),('weight(t)_imputed', FloatType(), True),('age_imputed', FloatType(), True)], [("Optim'us", 28.0, 'Leader', 10.0, 5000000.0, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 28.0, 10.0, 4.300000190734863, 5000000.0), ('bumbl#ebéé  ', 17.0, 'Espionage', 7.0, 5000000.0, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 17.0, 7.0, 2.0, 5000000.0), ('ironhide&', 26.0, 'Security', 7.0, 5000000.0, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 26.0, 7.0, 4.0, 5000000.0), ('Jazz', 13.0, 'First Lieutenant', 8.0, 5000000.0, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 13.0, 8.0, 1.7999999523162842, 5000000.0), ('Megatron', None, 'None', 10.0, 5000000.0, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None, 76.80000305175781, 10.0, 5.699999809265137, 5000000.0), ('Metroplex_)^$', 300.0, 'Battle Station', 8.0, 5000000.0, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None, 300.0, 8.0, 3.559999942779541, 5000000.0)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_hist():
 		actual_df = source_df.cols.hist('rank',4)
-		expected_value =[{'count': 2, 'lower': 7.0, 'upper': 7.75}, {'count': 2, 'lower': 7.75, 'upper': 8.5}, {'count': 0, 'lower': 8.5, 'upper': 9.25}, {'count': 2, 'lower': 9.25, 'upper': 10.0}]
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps([{'count': 2, 'lower': 7.0, 'upper': 7.75}, {'count': 2, 'lower': 7.75, 'upper': 8.5}, {'count': 0, 'lower': 8.5, 'upper': 9.25}, {'count': 2, 'lower': 9.25, 'upper': 10.0}], sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_frequency():
 		actual_df = source_df.cols.frequency('rank',4)
-		expected_value ={'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}]}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}]}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_frequency_all_columns():
 		actual_df = source_df.cols.frequency('*',4)
-		expected_value ={'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': 300, 'count': 1}, {'value': 28, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}], 'age': [{'value': 5000000, 'count': 6}], 'weight(t)': [{'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}, {'value': 2.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 2}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': datetime.date(2016, 9, 10), 'count': 1}, {'value': datetime.date(2015, 8, 10), 'count': 1}, {'value': datetime.date(2014, 6, 24), 'count': 1}, {'value': datetime.date(2013, 6, 24), 'count': 1}], 'Tiemstamp': [{'value': datetime.datetime(2014, 6, 24, 0, 0), 'count': 6}], 'Cybertronian': [{'value': True, 'count': 6}], 'function(binary)': [{'value': bytearray(b'Security'), 'count': 1}, {'value': bytearray(b'None'), 'count': 1}, {'value': bytearray(b'Leader'), 'count': 1}, {'value': bytearray(b'First Lieutenant'), 'count': 1}], 'NullType': [{'value': None, 'count': 6}]}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': 300, 'count': 1}, {'value': 28, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}], 'age': [{'value': 5000000, 'count': 6}], 'weight(t)': [{'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}, {'value': 2.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 2}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': datetime.date(2016, 9, 10), 'count': 1}, {'value': datetime.date(2015, 8, 10), 'count': 1}, {'value': datetime.date(2014, 6, 24), 'count': 1}, {'value': datetime.date(2013, 6, 24), 'count': 1}], 'Tiemstamp': [{'value': datetime.datetime(2014, 6, 24, 0, 0), 'count': 6}], 'Cybertronian': [{'value': True, 'count': 6}], 'function(binary)': [{'value': bytearray(b'Security'), 'count': 1}, {'value': bytearray(b'None'), 'count': 1}, {'value': bytearray(b'Leader'), 'count': 1}, {'value': bytearray(b'First Lieutenant'), 'count': 1}], 'NullType': [{'value': None, 'count': 6}]}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_schema_dtype():
 		actual_df = source_df.cols.schema_dtype('rank')
-		expected_value =ByteType
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(ByteType, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_dtypes():
 		actual_df = source_df.cols.dtypes('rank')
-		expected_value ='tinyint'
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps('tinyint', sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_dtypes_all_columns():
 		actual_df = source_df.cols.dtypes('*')
-		expected_value ={'names': 'string', 'height(ft)': 'smallint', 'function': 'string', 'rank': 'tinyint', 'age': 'int', 'weight(t)': 'float', 'japanese name': 'array<string>', 'last position seen': 'string', 'date arrival': 'string', 'last date seen': 'string', 'attributes': 'array<float>', 'Date Type': 'date', 'Tiemstamp': 'timestamp', 'Cybertronian': 'boolean', 'function(binary)': 'binary', 'NullType': 'null'}
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps({'names': 'string', 'height(ft)': 'smallint', 'function': 'string', 'rank': 'tinyint', 'age': 'int', 'weight(t)': 'float', 'japanese name': 'array<string>', 'last position seen': 'string', 'date arrival': 'string', 'last date seen': 'string', 'attributes': 'array<float>', 'Date Type': 'date', 'Tiemstamp': 'timestamp', 'Cybertronian': 'boolean', 'function(binary)': 'binary', 'NullType': 'null'}, sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_select_by_dtypes_str():
 		actual_df = source_df.cols.select_by_dtypes('str')
-		expected_df = op.create.df([('function', StringType(), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('names', StringType(), True),('last date seen', StringType(), True)], [('Leader', '19.442735,-99.201111', '1980/04/10', "Optim'us", '2016/09/10'), ('Espionage', '10.642707,-71.612534', '1980/04/10', 'bumbl#ebéé  ', '2015/08/10'), ('Security', '37.789563,-122.400356', '1980/04/10', 'ironhide&', '2014/07/10'), ('First Lieutenant', '33.670666,-117.841553', '1980/04/10', 'Jazz', '2013/06/10'), ('None', None, '1980/04/10', 'Megatron', '2012/05/10'), ('Battle Station', None, '1980/04/10', 'Metroplex_)^$', '2011/04/10')])
+		expected_df = op.create.df([('date arrival', StringType(), True),('last date seen', StringType(), True),('function', StringType(), True),('names', StringType(), True),('last position seen', StringType(), True)], [('1980/04/10', '2016/09/10', 'Leader', "Optim'us", '19.442735,-99.201111'), ('1980/04/10', '2015/08/10', 'Espionage', 'bumbl#ebéé  ', '10.642707,-71.612534'), ('1980/04/10', '2014/07/10', 'Security', 'ironhide&', '37.789563,-122.400356'), ('1980/04/10', '2013/06/10', 'First Lieutenant', 'Jazz', '33.670666,-117.841553'), ('1980/04/10', '2012/05/10', 'None', 'Megatron', None), ('1980/04/10', '2011/04/10', 'Battle Station', 'Metroplex_)^$', None)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_select_by_dtypes_int():
@@ -402,12 +443,13 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_select_by_dtypes_array():
 		actual_df = source_df.cols.select_by_dtypes('array')
-		expected_df = op.create.df([('japanese name', ArrayType(StringType(),True), True),('attributes', ArrayType(FloatType(),True), True)], [(['Inochi', 'Convoy'], [8.53439998626709, 4300.0]), (['Bumble', 'Goldback'], [5.334000110626221, 2000.0]), (['Roadbuster'], [7.924799919128418, 4000.0]), (['Meister'], [3.962399959564209, 1800.0]), (['Megatron'], [None, 5700.0]), (['Metroflex'], [91.44000244140625, None])])
+		expected_df = op.create.df([('attributes', ArrayType(FloatType(),True), True),('japanese name', ArrayType(StringType(),True), True)], [([8.53439998626709, 4300.0], ['Inochi', 'Convoy']), ([5.334000110626221, 2000.0], ['Bumble', 'Goldback']), ([7.924799919128418, 4000.0], ['Roadbuster']), ([3.962399959564209, 1800.0], ['Meister']), ([None, 5700.0], ['Megatron']), ([91.44000244140625, None], ['Metroflex'])])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_names():
 		actual_df = source_df.cols.names()
-		expected_value =['names', 'height(ft)', 'function', 'rank', 'age', 'weight(t)', 'japanese name', 'last position seen', 'date arrival', 'last date seen', 'attributes', 'Date Type', 'Tiemstamp', 'Cybertronian', 'function(binary)', 'NullType']
+		actual_df =json.dumps(actual_df, sort_keys=True)
+		expected_value =json.dumps(['names', 'height(ft)', 'function', 'rank', 'age', 'weight(t)', 'japanese name', 'last position seen', 'date arrival', 'last date seen', 'attributes', 'Date Type', 'Tiemstamp', 'Cybertronian', 'function(binary)', 'NullType'], sort_keys=True)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_qcut():
@@ -417,7 +459,7 @@ class Testdf_cols(object):
 	@staticmethod
 	def test_cols_qcut_all_columns():
 		actual_df = source_df.cols.qcut('*',4)
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('rank_qcut', DoubleType(), True),('height(ft)_qcut', DoubleType(), True),('age_qcut', DoubleType(), True),('weight(t)_qcut', DoubleType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 3.0, 3.0, 1.0, 3.0), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 1.0, 1.0, 1.0, 2.0), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 1.0, 2.0, 1.0, 3.0), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 2.0, 0.0, 1.0, 1.0)])
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True),('height(ft)_qcut', DoubleType(), True),('rank_qcut', DoubleType(), True),('weight(t)_qcut', DoubleType(), True),('age_qcut', DoubleType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None, 3.0, 2.0, 3.0, 1.0), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None, 1.0, 1.0, 2.0, 1.0), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None, 2.0, 1.0, 3.0, 1.0), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None, 0.0, 2.0, 1.0, 1.0)])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_cols_clip():
