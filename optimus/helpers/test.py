@@ -1,7 +1,7 @@
 from optimus.helpers.logger import logger
 
 from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
-    is_list_of_tuples
+    is_list_of_tuples, is_function
 
 
 class Test:
@@ -125,6 +125,16 @@ class Test:
                     lst = [str(x) for x in v]
 
                 _args.append('[' + ','.join(lst) + ']')
+            elif is_function(v):
+                _args.append(v.__qualname__)
+            # else:
+            #     import marshal
+            #     code_string = marshal.dumps(v.__code__)
+            #     add_buffer("\tfunction = '" + code_string + "'\n")
+            # import marshal, types
+            #
+            # code = marshal.loads(code_string)
+            # func = types.FunctionType(code, globals(), "some_func_name")
 
         _args = ','.join(_args)
         _kwargs = []
@@ -174,4 +184,3 @@ class Test:
             add_buffer("\tassert (expected_value == actual_df)\n")
 
         return "".join(buffer)
-
