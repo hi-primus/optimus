@@ -110,12 +110,11 @@ def n_gram_fingerprint(df, columns, n_size):
               .cols.remove_white_spaces(output_col)
               .cols.remove_special_chars(output_col)
               .cols.remove_accents(output_col)
-              # For create n-grams we need a Array type column
-              .cols.split(output_col, "")
+              # For create n-grams we need an Array type column
+              .cols.nest(output_col, output_col, 'array')
               .repartition(1)  # Needed for optimization in a single machine
               .cache()
               )
-
         n_gram = NGram(n=n_size, inputCol=output_col, outputCol=n_gram_col)
         df = n_gram.transform(df)
         df = df.cols.apply(n_gram_col, remote_white_spaces_remove_sort_join, "string")
