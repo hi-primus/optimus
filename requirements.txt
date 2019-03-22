@@ -1,5 +1,5 @@
 google-api-python-client
-httplib2
+httplib2==0.12.1
 apiclient
 packaging==17.1
 requests==2.21.0
