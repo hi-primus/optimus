@@ -1,4 +1,3 @@
-
 import math
 import os
 
@@ -19,6 +18,7 @@ from optimus.spark import Spark
 from packaging import version
 
 from optimus.helpers.logger import logger
+
 
 # from apiclient.discovery import build
 # from httplib2 import Http
@@ -305,6 +305,12 @@ def table_html(self, limit=100, columns=None):
 
     # Filter only the columns and data type info need it
     dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+    # Remove not selected columns
+    final_columns = []
+    for i in dtypes:
+        for j in columns:
+            if i[0] == j:
+                final_columns.append(i)
 
     total_rows = self.count()
     if total_rows < limit:
@@ -314,8 +320,9 @@ def table_html(self, limit=100, columns=None):
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
+
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
+    output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions)
     return output
 
