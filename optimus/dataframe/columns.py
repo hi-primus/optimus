@@ -234,7 +234,7 @@ def cols(self):
     def _cast(cols, args):
         """
         Helper function to support the multiple params implementation
-        :param cols:
+        :param cols: Select the columns you want to cast
         :param args:
         :return:
         """
