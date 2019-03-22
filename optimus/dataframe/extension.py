@@ -1,4 +1,3 @@
-import logging
 import math
 import os
 
@@ -11,11 +10,19 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import RaiseIt
+from optimus import RaiseIt, IMPUTE_SUFFIX
 from optimus.helpers.checkit import is_str
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
 from optimus.spark import Spark
+from packaging import version
+
+from optimus.helpers.logger import logger
+
+
+# from apiclient.discovery import build
+# from httplib2 import Http
+# from oauth2client import file, client, tools
 
 
 @add_method(DataFrame)
@@ -164,9 +171,13 @@ def size(self):
         rdd = rdd._reserialize(AutoBatchedSerializer(PickleSerializer()))
         return rdd.ctx._jvm.org.apache.spark.mllib.api.python.SerDe.pythonToJava(rdd._jrdd, True)
 
-    java_obj = _to_java_object_rdd(self.rdd)
+    if version.parse(Spark.instance.spark.version) < version.parse("2.4.0"):
+        java_obj = _to_java_object_rdd(self.rdd)
+        n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
+    else:
+        # TODO: Find a way to calculate the dataframe size in spark 2.4
+        n_bytes = -1
 
-    n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
     return n_bytes
 
 
@@ -254,7 +265,8 @@ def glom(self):
 @add_method(DataFrame)
 def h_repartition(self, partitions_number=None, col_name=None):
     """
-    Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and a column if you need more control.
+    Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and
+    a column if you need more control.
     See https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
     :param self: Spark Dataframe
     :param partitions_number: Number of partitions
@@ -293,6 +305,12 @@ def table_html(self, limit=100, columns=None):
 
     # Filter only the columns and data type info need it
     dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+    # Remove not selected columns
+    final_columns = []
+    for i in dtypes:
+        for j in columns:
+            if i[0] == j:
+                final_columns.append(i)
 
     total_rows = self.count()
     if total_rows < limit:
@@ -302,8 +320,9 @@ def table_html(self, limit=100, columns=None):
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
+
     # Print table
-    output = template.render(cols=dtypes, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
+    output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions)
     return output
 
@@ -336,12 +355,12 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
     df = self
     for col_name in columns:
         df = df.cols.cast(col_name, "float")
-        logging.info("Casting {col_name} to float...".format(col_name=col_name))
+        logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
     # Impute missing values
-    imputed_cols = [c + "_imputed" for c in columns]
-    df = df.cols.impute(columns, imputed_cols, strategy)
-    logging.info("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
+    imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
+    df = df.cols.impute(columns, strategy)
+    logger.print("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
 
     # Create Vector necessary to calculate the correlation
     df = df.cols.nest(imputed_cols, "features", "vector")
@@ -372,6 +391,28 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
     return result
+
+
+@add_method(DataFrame)
+def load_schema(self, spreadsheet_id, range_name):
+    """
+    Retrieve sheet data using OAuth credentials and Google Python API.
+    :param self:
+    :param spreadsheet_id:
+    :param range_name:
+    :return:
+    """
+    scopes = 'https://www.googleapis.com/auth/spreadsheets.readonly'
+    # Setup the Sheets API
+    store = file.Storage('credentials.json')
+    creds = store.get()
+    if not creds or creds.invalid:
+        flow = client.flow_from_clientsecrets('client_secret.json', scopes)
+        creds = tools.run_flow(flow, store)
+    service = build('sheets', 'v4', http=creds.authorize(Http()))
+
+    # Call the Sheets API
+    gsheet = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_name).execute()
 
 
 @add_method(DataFrame)

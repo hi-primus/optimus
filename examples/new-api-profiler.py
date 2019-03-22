@@ -1,7 +1,12 @@
 # ---
 # jupyter:
-#   jupytext_format_version: '1.2'
-#   jupytext_formats: ipynb,py
+#   jupytext:
+#     formats: ipynb,py:light
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.3'
+#       jupytext_version: 0.8.2
 #   kernel_info:
 #     name: python3
 #   kernelspec:
@@ -30,35 +35,25 @@ sys.path.append("..")
 
 # ### Now you can get extra information for the profiler if you activate pass verbose= True to optimus
 
-# + {"scrolled": false}
 # Create optimus
 from optimus import Optimus
-op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True, queue_url="amqp://eujwlcwg:QwZVFnWSqsJFodlF-8xWCWi7Rg6WPSwj@chimpanzee.rmq.cloudamqp.com/eujwlcwg")
-# -
+op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True)
 
 df = op.load.csv("data/Meteorite_Landings.csv").h_repartition()
 
-# + {"scrolled": false}
 df.table(10)
-# -
 
 # ### Profiler dump mode (Faster). It just handle the column data type as present in the dataframe
 
-# + {"scrolled": false}
 op.profiler.run(df, "name", infer=False)
-# -
 
 # ### Profiler smart mode (Slower). It just try to infer the column data type and present extra data acordinly. From example datetype columns get extra histograms about minutes, day, week and month. Also can detect array types on data.
 
-# + {"scrolled": false}
 op.profiler.run(df, "*",infer=True)
-# -
 
 # ### Plot profile for a specific column
 
-# + {"scrolled": false}
 op.profiler.run(df, "reclat")
-# -
 
 # ### Output a json file
 
@@ -68,7 +63,6 @@ df.plots.hist(["id", "reclong"], 20)
 
 df.plots.frequency(["id", "reclong"], 10)
 
-df.plots.correlation(["id","mass (g)", "reclat"])
+df.plot.correlation(["id","mass (g)", "reclat"])
 
-# + {"scrolled": true}
 df.correlation(["id","mass (g)", "reclat"], output="array")

@@ -7,18 +7,22 @@ from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.functions import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
 from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
 from optimus.spark import Spark
 
+from optimus.helpers.logger import logger
+
 Spark.instance = None
 
 
 class Optimus:
 
-    def __init__(self, master="local[*]", app_name="optimus", checkpoint=False, path=None, file_system="local",
+    def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
+                 file_system="local",
                  verbose=False, dl=False,
                  server=False,
                  repositories=None,
@@ -26,7 +30,8 @@ class Optimus:
                  jars=None,
                  options=None,
                  additional_options=None,
-                 enricher_host="localhost", enricher_port=27017,
+                 enricher_host="localhost",
+                 enricher_port=27017,
                  queue_url=None,
                  queue_exchange=None,
                  queue_routing_key="optimus"
@@ -58,48 +63,62 @@ class Optimus:
         :type jars: (list[str])
 
         """
-        self.master = master
-        self.app_name = app_name
+        if session is None:
+            # print("Creating Spark Session...")
+            # If a Spark session in not passed by argument create it
 
-        if options is None:
-            options = {}
+            self.master = master
+            self.app_name = app_name
 
-        self.options = options
+            if options is None:
+                options = {}
 
-        if packages is None:
-            packages = []
+            self.options = options
+
+            if packages is None:
+                packages = []
+            else:
+                packages = val_to_list(packages)
+
+            self.packages = packages
+            self.repositories = repositories
+
+            if jars is None:
+                jars = {}
+
+            self.jars = jars
+            self.additional_options = additional_options
+
+            self.verbose(verbose)
+
+            # Load Avro.
+            # TODO: if the Spark 2.4 version is going to be used this is not neccesesary.
+            #  Maybe we can check a priori which version fo Spark is going to be used
+            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+
+            if dl is True:
+                self._add_spark_packages(
+                    ["databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11"])
+
+                self._start_session()
+
+                from optimus.dl.models import DL
+                self.dl = DL()
+            else:
+                self._start_session()
+
+            if path is None:
+                path = os.getcwd()
+
+            if checkpoint is True:
+                self._set_check_point_folder(path, file_system)
+
         else:
-            packages = val_to_list(packages)
-
-        self.packages = packages
-        self.repositories = repositories
-
-        if jars is None:
-            jars = {}
-
-        self.jars = jars
-        self.additional_options = additional_options
-
-        self.verbose(verbose)
-
-        if dl is True:
-            self._add_spark_packages(
-                ["databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11", "com.databricks:spark-avro_2.11:4.0.0"])
-
-            self._start_session()
-
-            from optimus.dl.models import DL
-            self.dl = DL()
-        else:
-
-            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
-            self._start_session()
-
-        if path is None:
-            path = os.getcwd()
+            # If a session is passed by arguments  just save the reference
+            Spark.instance = session
 
         # Initialize Spark
-        logging.info("""
+        logger.print("""
                              ____        __  _                     
                             / __ \____  / /_(_)___ ___  __  _______
                            / / / / __ \/ __/ / __ `__ \/ / / / ___/
@@ -108,17 +127,15 @@ class Optimus:
                               /_/                                  
                               """)
 
-        logging.info(STARTING_OPTIMUS)
-        if checkpoint is True:
-            self._set_check_point_folder(path, file_system)
+        logger.print(STARTING_OPTIMUS)
 
-        if server is True:
-            logging.info("Starting Optimus Server...")
+        if server:
+            logger.print("Starting Optimus Server...")
             s = Server()
             s.start()
             self.server_instance = s
 
-        logging.info(SUCCESS)
+        logger.print(SUCCESS)
 
         self.create = Create()
         self.load = Load()
@@ -130,6 +147,13 @@ class Optimus:
         )
         self.ml = ML()
         self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
+
+    def connect(self, db_type="redshift", url=None, database=None, user=None, password=None, port=None):
+        """
+        Create the JDBC string connection
+        :return:
+        """
+        return JDBC(db_type, url, database, user, password, port)
 
     def enrich(self, df, func_request, func_response):
         """
@@ -184,24 +208,24 @@ class Optimus:
             Optimus.delete_check_point_folder(path=path, file_system=file_system)
 
             # Creating file:
-            logging.info("Creating the hadoop folder...")
+            logger.print("Creating the hadoop folder...")
             command = "hadoop fs -mkdir " + folder_path
-            logging.info("$" + command)
+            logger.print("$" + command)
             os.system(command)
-            logging.info("Hadoop folder created. \n")
+            logger.print("Hadoop folder created. \n")
 
-            logging.info("Setting created folder as checkpoint folder...")
+            logger.print("Setting created folder as checkpoint folder...")
             Spark.instance.sc.setCheckpointDir(folder_path)
         elif file_system == "local":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
-            logging.info("Deleting previous folder if exists...")
+            logger.print("Deleting previous folder if exists...")
             if os.path.isdir(folder_path):
                 # Deletes folder if exits:
                 rmtree(folder_path)
 
-            logging.info("Creating the checkpoint directory...")
+            logger.print("Creating the checkpoint directory...")
             # Creates new folder:
             os.mkdir(folder_path)
 
@@ -223,13 +247,13 @@ class Optimus:
         if file_system == "hadoop":
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
-            logging.info("Deleting checkpoint folder...")
+            logger.print("Deleting checkpoint folder...")
             command = "hadoop fs -rm -r " + folder_path
             os.system(command)
-            logging.info("$" + command)
-            logging.info("Folder deleted.")
+            logger.print("$" + command)
+            logger.print("Folder deleted.")
         elif file_system == "local":
-            logging.info("Deleting checkpoint folder...")
+            logger.print("Deleting checkpoint folder...")
             # Folder path:
             folder_path = path + "/" + "checkPointFolder"
             # Checking if tempFolder exits:
@@ -237,9 +261,9 @@ class Optimus:
                 # Deletes folder if exits:
                 rmtree(folder_path)
                 # Creates new folder:
-                logging.info("Folder deleted.")
+                logger.print("Folder deleted.")
             else:
-                logging.info("Folder deleted.")
+                logger.print("Folder deleted.")
         else:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
 
@@ -346,8 +370,5 @@ class Optimus:
         :param verbose:
         :return:
         """
-        if verbose is True:
-            logging.basicConfig(format="%(message)s", level=logging.INFO)
-        elif verbose is False:
-            logging.propagate = False
-            logging.disable(logging.NOTSET)
+
+        logger.active(verbose)

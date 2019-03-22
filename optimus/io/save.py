@@ -1,10 +1,12 @@
-import logging
-
 from kombu import Connection, Exchange, Queue, Producer
 from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
+from packaging import version
+from optimus.spark import Spark
+
+from optimus.helpers.logger import logger
 
 
 def save(self):
@@ -30,7 +32,7 @@ def save(self):
                 .mode(mode) \
                 .save(path)
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
@@ -53,7 +55,7 @@ def save(self):
         try:
             self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path, sep=sep)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
     @add_attr(save)
@@ -85,7 +87,7 @@ def save(self):
                 .mode(mode) \
                 .parquet(path)
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
@@ -103,12 +105,17 @@ def save(self):
         """
 
         try:
+            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
+                avro_version = "com.databricks.spark.avro"
+            else:
+                avro_version = "avro"
             self.coalesce(num_partitions) \
-                .write.format("com.databricks.spark.avro") \
+                .write.format(avro_version) \
                 .mode(mode) \
                 .save(path)
+
         except IOError as e:
-            logging.error(e)
+            logger.print(e)
             raise
 
     @add_attr(save)
@@ -165,7 +172,6 @@ def save(self):
             collection = db[collection_name]
 
             for message in messages:
-
                 as_dict = message.asDict(recursive=True)
                 collection.insert_one(as_dict)
             client.close()

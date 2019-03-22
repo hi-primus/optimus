@@ -20,7 +20,8 @@ from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPE
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, IMPUTE_SUFFIX, \
+    PYSPARK_STRING_TYPES
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
@@ -233,7 +234,7 @@ def cols(self):
     def _cast(cols, args):
         """
         Helper function to support the multiple params implementation
-        :param cols:
+        :param cols: Select the columns you want to cast
         :param args:
         :return:
         """
@@ -321,42 +322,43 @@ def cols(self):
         return cast(*args, **kwargs)
 
     @add_attr(cols)
-    def move(column, position, ref_col):
+    def move(column, position, ref_col=None):
         """
         Move a column to specific position
         :param column: Column to be moved
+        :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
         :param ref_col: Column taken as reference
-        :param position: Column new position. Accepts 'after' or 'before'
         :return: Spark DataFrame
         """
         # Check that column is a string or a list
         column = parse_columns(self, column)
         ref_col = parse_columns(self, ref_col)
 
-        # Asserting if position is 'after' or 'before'
-        assert (position == 'after') or (
-                position == 'before'), "Error: Position parameter only can be 'after' or 'before' actually" % position
-
         # Get dataframe columns
         columns = self.columns
 
         # Get source and reference column index position
-
         new_index = columns.index(ref_col[0])
-        old_index = columns.index(column[0])
 
-        # if position is 'after':
+        # Column to move
+        column_to_move_index = columns.index(column[0])
+
         if position == 'after':
             # Check if the movement is from right to left:
-            if new_index >= old_index:
-                columns.insert(new_index, columns.pop(old_index))  # insert and delete a element
-            else:  # the movement is form left to right:
-                columns.insert(new_index + 1, columns.pop(old_index))
-        else:  # If position if before:
-            if new_index[0] >= old_index:  # Check if the movement if from right to left:
-                columns.insert(new_index - 1, columns.pop(old_index))
-            elif new_index[0] < old_index:  # Check if the movement if from left to right:
-                columns.insert(new_index, columns.pop(old_index))
+            if new_index < column_to_move_index:
+                new_index = new_index + 1
+        elif position == 'before':  # If position if before:
+            if new_index >= column_to_move_index:  # Check if the movement if from right to left:
+                new_index = new_index - 1
+        elif position == 'beginning':
+            new_index = 0
+        elif position == 'end':
+            new_index = len(columns)
+        else:
+            RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
+
+        # Move the column to the new place
+        columns.insert(new_index, columns.pop(column_to_move_index))  # insert and delete a element
 
         return self[columns]
 
@@ -476,7 +478,7 @@ def cols(self):
                 expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
         result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
-        # logging.info(result)
+        # logger.print(result)
         return result
 
     # Quantile statistics
@@ -723,7 +725,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
@@ -753,7 +755,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
 
         def _remove_accents(value, attr):
             cell_str = str(value)
@@ -775,7 +777,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
@@ -792,7 +794,7 @@ def cols(self):
         :param columns:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
@@ -839,7 +841,7 @@ def cols(self):
         """
 
         # Asserting if column if in dataFrame:
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPE)
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
@@ -863,7 +865,8 @@ def cols(self):
         df = self
         for col_name in columns:
             new_col_name = col_name + "_years_between"
-            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name, "float")
+            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name,
+                                                                                                     "float")
         return df
 
     @add_attr(cols)
@@ -882,7 +885,7 @@ def cols(self):
         for col_name in columns:
             # Imputer require not only numeric but float or double
             df = df.cols.cast(col_name, "float")
-            output_cols.append(col_name + "_impute")
+            output_cols.append(col_name + IMPUTE_SUFFIX)
 
         imputer = Imputer(inputCols=columns, outputCols=output_cols)
 
@@ -960,8 +963,7 @@ def cols(self):
                 expr.append(F.count(col_name).alias(col_name))
 
             else:
-                expr.append(F.count(F.when( F.col(col_name).isNull(), col_name)).alias(col_name))
-
+                expr.append(F.count(F.when(F.col(col_name).isNull(), col_name)).alias(col_name))
 
         result = format_dict(df.select(*expr).to_json())
         return result

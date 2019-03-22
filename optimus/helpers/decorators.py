@@ -1,7 +1,7 @@
 import timeit
-import logging
-from functools import wraps
 
+from functools import wraps
+from optimus.helpers.logger import logger
 
 def add_method(cls):
     """
@@ -26,7 +26,7 @@ def time_it(method):
         start_time = timeit.default_timer()
         f = method(*args, **kw)
         _time = round(timeit.default_timer() - start_time, 2)
-        logging.info("{name}() executed in {time} sec".format(name=method.__name__, time=_time))
+        logger.print("{name}() executed in {time} sec".format(name=method.__name__, time=_time))
         return f
 
     return timed
@@ -48,7 +48,7 @@ def add_attr(cls, log_time=False):
             f = func(*args, **kwargs)
             _time = round(timeit.default_timer() - start_time, 2)
             if log_time:
-                logging.info("{name}() executed in {time} sec".format(name=func.__name__, time=_time))
+                logger.print("{name}() executed in {time} sec".format(name=func.__name__, time=_time))
             return f
 
         setattr(cls, func.__name__, wrapper)

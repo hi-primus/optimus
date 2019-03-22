@@ -1,3 +1,7 @@
+google-api-python-client
+httplib2
+apiclient
+packaging==17.1
 requests==2.21.0
 tqdm==4.28.1
 pymongo==3.7.2

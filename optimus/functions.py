@@ -40,7 +40,7 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
         RaiseIt.value_error(func_type, types)
 
     # if verbose is True:
-    #    logging.info("Using '{func_type}' to process column '{column}' with function {func_name}"
+    #    logger.print("Using '{func_type}' to process column '{column}' with function {func_name}"
     #                 .format(func_type=func_type, column=col, func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)

@@ -1,6 +1,5 @@
 import configparser
 import json
-import logging
 import os
 from collections import defaultdict
 
@@ -17,6 +16,8 @@ from optimus.helpers.functions import parse_columns, print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html
+
+from optimus.helpers.logger import logger
 
 
 class Profiler:
@@ -38,7 +39,7 @@ class Profiler:
                 config.read("config.ini")
                 output_path = config["PROFILER"]["Output"]
             except (IOError, KeyError):
-                logging.info("Config.ini not found")
+                logger.print("Config.ini not found")
                 output_path = "data.json"
                 pass
 
@@ -79,6 +80,7 @@ class Profiler:
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
         :param columns: Columns to be processed
+        :param infer: infer the column datatype
         :return: json
         """
 
@@ -89,7 +91,7 @@ class Profiler:
             :param col_name:
             :return:
             """
-            logging.info("Processing column '" + col_name + "'...")
+            logger.print("Processing column '" + col_name + "'...")
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
@@ -323,6 +325,8 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: column to calculate the histogram
         :param buckets: buckets on the histogram
+        :param infer:
+        :param relative_error:
         :return: json file
         """
 
@@ -367,6 +371,7 @@ class Profiler:
         count_dtypes = Profiler.count_data_types(df, columns, infer)
 
         columns_info["count_types"] = count_dtypes["count_types"]
+
         columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
@@ -377,8 +382,8 @@ class Profiler:
 
         for col_name in columns:
             col_info = {}
-            logging.info("------------------------------")
-            logging.info("Processing column '" + col_name + "'...")
+            logger.print("------------------------------")
+            logger.print("Processing column '" + col_name + "'...")
             columns_info['columns'][col_name] = {}
 
             col_info["stats"] = stats[col_name]

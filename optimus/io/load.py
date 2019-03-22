@@ -1,45 +1,46 @@
-import logging
 import tempfile
 from urllib.request import Request, urlopen
 
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
+from packaging import version
+from optimus.helpers.logger import logger
 
 
 class Load:
 
     def url(self, path=None, type_of="csv"):
         """
-        Reads a dataset from a URL.
+        Entry point for loading data from a URL. Check that the url is well format
         :param path: string for URL to read
         :param type_of: type of the URL backend (can be csv or json)
         :return: pyspark dataframe from URL.
         """
 
         if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
-            return self.data_loader(str(path), type_of)
+            return self._data_loader(str(path), type_of)
         else:
-            print("Unknown sample data identifier. Please choose an id from the list below")
+            RaiseIt.type_error(type_of, ["https://", "http://", "file://"])
 
-    def data_loader(self, url, type_of):
+    def _data_loader(self, url, type_of):
         """
-        Load data in from a url
-        :param url: url string
+        Select the correct method to download the file depending of the format
+        :param url: string url
         :param type_of: format data type
         :return:
         """
 
-        data_loader = None
+        file_format = None
         if type_of == "csv":
-            data_loader = self.csv
+            file_format = self.csv
         elif type_of == "json":
-            data_loader = self.json
+            file_format = self.json
         elif type_of == "parquet":
-            data_loader = self.parquet
+            file_format = self.parquet
         elif type_of == "avro":
-            data_loader = self.avro
+            file_format = self.avro
         else:
-            RaiseIt.type_error(data_loader, ["csv", "json", "parquet", "avro", ])
+            RaiseIt.type_error(file_format, ["csv", "json", "parquet", "avro", ])
 
         i = url.rfind('/')
         data_name = url[(i + 1):]
@@ -47,10 +48,10 @@ class Load:
             "displayName": data_name,
             "url": url
         }
-        return Downloader(data_def).download(data_loader, type_of)
+        return Downloader(data_def).download(file_format, type_of)
 
     @staticmethod
-    def json(path):
+    def json(path, *args, **kwargs):
         """
         Return a dataframe from a json file.
         :param path:
@@ -58,16 +59,18 @@ class Load:
         """
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = Spark.instance.spark.read.json(path)
+            df = Spark.instance.spark.read \
+                .option("multiLine", True) \
+                .json(path, *args, **kwargs)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
         return df
 
     @staticmethod
     def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
         """
-        Return a dataframe from a csv file.. It is the same read.csv Spark funciont with some predefined
+        Return a dataframe from a csv file.. It is the same read.csv Spark function with some predefined
         params
 
         :param path: Path or location of the file.
@@ -86,7 +89,7 @@ class Load:
                   .options(inferSchema=infer_schema)
                   .csv(path, *args, **kwargs))
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
         return df
 
@@ -95,28 +98,47 @@ class Load:
         """
         Return a dataframe from a parquet file.
         :param path: Path or location of the file. Must be string dataType.
+        :param args: custom argument to be passed to the spark parquet function
+        :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return dataFrame
         """
 
         try:
             df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
         return df
 
     @staticmethod
     def avro(path, *args, **kwargs):
+        """
+        Return a dataframe from a avro file.
+        :param path: Path or location of the file. Must be string dataType.
+        :param args: custom argument to be passed to the spark parquet function
+        :param kwargs: custom keyword arguments to be passed to the spark parquet function
+        :return:
+        """
         try:
-            df = Spark.instance.spark.read.format("com.databricks.spark.avro").load(path, *args, **kwargs)
+            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
+                avro_version = "com.databricks.spark.avro"
+            else:
+                avro_version = "avro "
+            df = Spark.instance.spark.read.format(avro_version).load(path, *args, **kwargs)
+
         except IOError as error:
-            logging.error(error)
+            logger.print(error)
             raise
 
         return df
 
+
 class Downloader(object):
+    """
+    Send the request to download a file
+    """
+
     def __init__(self, data_def):
         self.data_def = data_def
         self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
@@ -130,7 +152,7 @@ class Downloader(object):
             url = self.data_def["url"]
             req = Request(url, None, self.headers)
 
-            logging.info("Downloading %s from %s", display_name, url)
+            logger.print("Downloading %s from %s", display_name, url)
 
             # It seems that avro need a .avro extension file
             with tempfile.NamedTemporaryFile(suffix="." + ext, delete=False) as f:
@@ -140,11 +162,11 @@ class Downloader(object):
         if path:
             try:
                 if bytes_downloaded > 0:
-                    logging.info("Downloaded %s bytes", bytes_downloaded)
-                logging.info("Creating DataFrame for %s. Please wait...", display_name)
+                    logger.print("Downloaded %s bytes", bytes_downloaded)
+                logger.print("Creating DataFrame for %s. Please wait...", display_name)
                 return data_loader(path)
             finally:
-                logging.info("Successfully created DataFrame for '%s'", display_name)
+                logger.print("Successfully created DataFrame for '%s'", display_name)
 
     @staticmethod
     def write(response, file, chunk_size=8192):

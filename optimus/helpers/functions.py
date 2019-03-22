@@ -1,13 +1,13 @@
+import datetime
 import inspect
 import json
-import logging
 import os
 import pprint
 import random
 import re
-from fastnumbers import isint, isfloat
 
 from IPython.display import display, HTML
+from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
@@ -16,6 +16,7 @@ from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, 
     str_to_boolean, str_to_date, str_to_array
 from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
     SPARK_DTYPES_DICT_OBJECTS
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -399,9 +400,9 @@ def check_env_vars(env_vars):
 
     for env_var in env_vars:
         if env_var in os.environ:
-            logging.info(env_var + "=" + os.environ.get(env_var))
+            logger.print(env_var + "=" + os.environ.get(env_var))
         else:
-            logging.info("You don't have " + env_var + " set")
+            logger.print("You don't have " + env_var + " set")
 
 
 # Reference https://nvie.com/posts/modifying-deeply-nested-structures/
@@ -449,3 +450,24 @@ def get_var_name(var):
         if id(var) == id(_locals[name]):
             return name
     return None
+
+
+def json_converter(obj):
+    """
+    Custom converter to be uses with json.dumps
+    :param obj:
+    :return:
+    """
+    if isinstance(obj, datetime.datetime):
+        return obj.strftime('%Y-%m-%d %H:%M:%S')
+    if isinstance(obj, datetime.date):
+        return obj.strftime('%Y-%m-%d')
+
+
+def json_enconding(obj):
+    """
+    Encode a json. Used for testing.
+    :param json:
+    :return:
+    """
+    return json.dumps(obj, sort_keys=True, default=json_converter)

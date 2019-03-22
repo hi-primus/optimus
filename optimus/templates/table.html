@@ -13,6 +13,12 @@
         font-size: 0.8em;
     }
 
+    .optimus_table td {
+        padding: 2px;
+        border-left: 1px solid #cccccc;
+        border-right: 1px solid #cccccc;
+    }
+
     .optimus_table tr:nth-child(even) {
         background-color: #f2f2f2 !important;
     }
@@ -27,6 +33,12 @@
     .optimus_table{
         font-size: 12px;
     }
+
+    .optimus_table tbody{
+        font-family: monospace;
+        border-bottom: 1px solid #cccccc;
+    }
+
 
 </style>
 
@@ -58,7 +70,7 @@
     <tr>
         {%for k,v in r.items(): %}
         <td>
-            {{v|string|replace(" ", "\u2E31")}}
+            <div title='{{v|string|replace(" ", "\u2E31")}}'>{{v|string|replace(" ", "\u2E31")|truncate(128)}}</div>
         </td>
         {% endfor %}
     </tr>

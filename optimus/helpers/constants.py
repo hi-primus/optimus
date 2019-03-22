@@ -1,7 +1,7 @@
-import logging
-
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
     DateType, LongType, ByteType, ShortType, TimestampType, BinaryType, NullType
+
+from optimus.helpers.logger import logger
 
 """
 Python to PySpark reference
@@ -19,6 +19,8 @@ datetime.time: TimestampType,
 
 """
 
+IMPUTE_SUFFIX = "_imputed"
+
 PYTHON_SHORT_TYPES = {"string": "string",
                       "str": "string",
                       "integer": "int",
@@ -33,7 +35,8 @@ PYTHON_SHORT_TYPES = {"string": "string",
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 
 PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
-PYSPARK_NOT_ARRAY_TYPE = ["byte", "short", "big", "int", "double", "float", "double", "string", "date", "bool"]
+PYSPARK_NOT_ARRAY_TYPES = ["byte", "short", "big", "int", "double", "float", "double", "string", "date", "bool"]
+PYSPARK_STRING_TYPES = ["str"]
 
 SPARK_SHORT_DTYPES = {"string": "string",
                       "str": "string",
@@ -81,11 +84,10 @@ JUST_CHECKING = "Just check that Spark and all necessary environments vars are p
 STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
 STARTING_OPTIMUS = "Transform and Roll out..."
 
+SUCCESS = "Optimus successfully imported. Have fun :)."
+
 
 def print_check_point_config(filesystem):
-    return logging.info(
+    logger.print(
         "Setting checkpoint folder %s. If you are in a cluster initialize Optimus with master='your_ip' as param",
         filesystem)
-
-
-SUCCESS = "Optimus successfully imported. Have fun :)."

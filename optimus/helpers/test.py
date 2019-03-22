@@ -1,11 +1,11 @@
-import logging
+from optimus.helpers.logger import logger
 
 from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
-    is_list_of_tuples
+    is_list_of_tuples, is_function
 
 
 class Test:
-    def __init__(self, op=None, df=None, name=None, imports=None):
+    def __init__(self, op=None, df=None, name=None, imports=None, path=None):
         """
         Create python code with unit test functions for Optimus.
         :param df: Spark Dataframe
@@ -17,6 +17,7 @@ class Test:
         self.df = df
         self.name = name
         self.imports = imports
+        self.path = path
 
     def run(self, *args):
 
@@ -26,12 +27,17 @@ class Test:
         :return:
         """
 
-        filename = "test_" + self.name + ".py"
+        if self.path is None:
+            filename = self.path + "/" + "test_" + self.name + ".py"
+        else:
+            filename = "test_" + self.name + ".py"
+
         test_file = open(filename, 'w', encoding='utf-8')
 
         _imports = [
             "from pyspark.sql.types import *",
-            "from optimus import Optimus"
+            "from optimus import Optimus",
+            "from optimus.helpers.functions import json_enconding "
         ]
         if self.imports is not None:
             for i in self.imports:
@@ -91,7 +97,7 @@ class Test:
             func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
 
         print("Creating {test} test function...".format(test=func_test_name))
-        logging.info(func_test_name)
+        logger.print(func_test_name)
 
         add_buffer("@staticmethod\n")
         add_buffer("def " + func_test_name + ":\n")
@@ -119,6 +125,16 @@ class Test:
                     lst = [str(x) for x in v]
 
                 _args.append('[' + ','.join(lst) + ']')
+            elif is_function(v):
+                _args.append(v.__qualname__)
+            # else:
+            #     import marshal
+            #     code_string = marshal.dumps(v.__code__)
+            #     add_buffer("\tfunction = '" + code_string + "'\n")
+            # import marshal, types
+            #
+            # code = marshal.loads(code_string)
+            # func = types.FunctionType(code, globals(), "some_func_name")
 
         _args = ','.join(_args)
         _kwargs = []
@@ -156,7 +172,9 @@ class Test:
                 df_result = "'" + df_result + "'"
             else:
                 df_result = str(df_result)
-            expected = "\texpected_value =" + df_result + "\n"
+            add_buffer("\tactual_df =json_enconding(actual_df)\n")
+
+            expected = "\texpected_value =json_enconding(" + df_result + ")\n"
 
         add_buffer(expected)
 
