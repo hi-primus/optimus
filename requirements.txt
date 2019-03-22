@@ -1,6 +1,6 @@
 google-api-python-client
 httplib2
-apiclient
+apiclient==1.0.4
 packaging==17.1
 requests==2.21.0
 tqdm==4.28.1
