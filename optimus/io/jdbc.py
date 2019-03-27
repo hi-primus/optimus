@@ -1,5 +1,6 @@
 import humanize
 
+from optimus.helpers.functions import format_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -61,6 +62,40 @@ class JDBC:
         # print(query)
         df = self.execute(query)
         df.table()
+
+    def tables_names_to_json(self):
+        """
+        Get the table names from a database in json format
+        :return:
+        """
+        query = None
+        if (self.db_type is "redshift") or (self.db_type is "postgres"):
+            query = """
+                    (SELECT relname as table_name 
+                    FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
+                    WHERE nspname NOT IN ('pg_catalog', 'information_schema') AND relkind='r' ORDER BY reltuples DESC) as t"""
+
+        elif self.db_type is "mysql":
+            query = "(SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
+                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC ) as t"
+
+        elif self.db_type is "sqlite":
+            query = ""
+
+        # print(query)
+        df = self.execute(query)
+        return [i['table_name'] for i in df.to_json()]
+
+    def show(self, limit=10):
+        """
+        Print n rows of every table in a database
+        :param limit: Number of rows to print
+        :return:
+        """
+        tables = self.tables_names_to_json()
+        print("Total Tables:" + str(len(tables)))
+        for table_name in self.tables_names_to_json():
+            self.table_to_df(table_name, "*", limit).table()
 
     def table_to_df(self, table_name, columns="*", limit=None):
         """
