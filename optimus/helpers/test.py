@@ -3,11 +3,14 @@ from optimus.helpers.logger import logger
 from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples, is_function
 
+import pyspark
+
 
 class Test:
-    def __init__(self, op=None, df=None, name=None, imports=None, path=None):
+    def __init__(self, op=None, df=None, name=None, imports=None, path=None, source="source_df"):
         """
         Create python code with unit test functions for Optimus.
+        :param op: optimus instance
         :param df: Spark Dataframe
         :param name: Name of the Test Class
         :param imports: Libraries to be added
@@ -28,12 +31,12 @@ class Test:
         """
 
         if self.path is None:
-            filename = self.path + "/" + "test_" + self.name + ".py"
-        else:
             filename = "test_" + self.name + ".py"
+        else:
+            filename = self.path + "/" + "test_" + self.name + ".py"
 
         test_file = open(filename, 'w', encoding='utf-8')
-
+        print("Creating file " + filename)
         _imports = [
             "from pyspark.sql.types import *",
             "from optimus import Optimus",
@@ -102,12 +105,18 @@ class Test:
         add_buffer("@staticmethod\n")
         add_buffer("def " + func_test_name + ":\n")
 
-        if df is not None:
+        source = "source_df"
+        if df is None:
+            # Use the main df
+            df_func = self.df
+        elif isinstance(df, pyspark.sql.dataframe.DataFrame):
             source_df = "\tsource_df=op.create.df(" + df.export() + ")\n"
             df_func = df
             add_buffer(source_df)
         else:
-            df_func = self.df
+            # TODO: op is not supposed to be hardcoded
+            source = "op"
+            df_func = df
 
         # Process simple arguments
         _args = []
@@ -154,12 +163,13 @@ class Test:
         if func is None:
             add_buffer("\tactual_df = source_df\n")
         else:
-            add_buffer("\tactual_df = source_df." + func + "(" + _args + separator + ','.join(_kwargs) + ")\n")
+            add_buffer("\tactual_df =" + source + "." + func + "(" + _args + separator + ','.join(_kwargs) + ")\n")
 
         # Apply function to the dataframe
         if func is None:
             df_result = self.op.create.df(*args, **kwargs)
         else:
+            # Here we construct the method to be applied to the source object
             for f in func.split("."):
                 df_func = getattr(df_func, f)
 
@@ -175,6 +185,8 @@ class Test:
             add_buffer("\tactual_df =json_enconding(actual_df)\n")
 
             expected = "\texpected_value =json_enconding(" + df_result + ")\n"
+        else:
+            expected = "\t\n"
 
         add_buffer(expected)
 
