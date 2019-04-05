@@ -1252,7 +1252,7 @@ def cols(self):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(self.cols.cell(col_name).split(mark))
+                    splits = len(re.split(mark, self.cols.cell(col_name)))
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
