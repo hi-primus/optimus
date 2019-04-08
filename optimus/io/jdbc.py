@@ -73,7 +73,7 @@ class JDBC:
             query = """
                     (SELECT relname as table_name 
                     FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-                    WHERE nspname IN ('""" + schema + """"') AND relkind='r' ORDER BY reltuples DESC) as t"""
+                    WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC) as t"""
 
         elif self.db_type is "mysql":
             query = "(SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
@@ -82,7 +82,6 @@ class JDBC:
         elif self.db_type is "sqlite":
             query = ""
 
-        # print(query)
         df = self.execute(query)
         return [i['table_name'] for i in df.to_json()]
 
