@@ -284,7 +284,7 @@ def h_repartition(self, partitions_number=None, col_name=None):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=100, columns=None):
+def table_html(self, limit=100, columns=None, title=None):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -320,18 +320,17 @@ def table_html(self, limit=100, columns=None):
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
-
     # Print table
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
-                             partitions=total_partitions)
+                             partitions=total_partitions, title=title)
     return output
 
 
 @add_method(DataFrame)
-def table(self, limit=100, columns=None):
+def table(self, limit=100, columns=None, title=None):
     try:
         __IPYTHON__
-        result = self.table_html(limit=limit, columns=columns)
+        result = self.table_html(title=title, limit=limit, columns=columns)
         return print_html(result)
     except NameError:
         self.show()
