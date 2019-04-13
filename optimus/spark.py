@@ -42,7 +42,7 @@ class Spark:
         logger.print("-----")
         logger.print(STARTING_SPARK)
 
-        print(os.environ['PYSPARK_SUBMIT_ARGS'])
+        # print(os.environ['PYSPARK_SUBMIT_ARGS'])
 
         # Build the spark session
         self._spark = SparkSession.builder \
