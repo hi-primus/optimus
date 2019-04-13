@@ -3,7 +3,7 @@ import seaborn as sns
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.functions import plot_hist, plot_freq
+from optimus.functions import plot_hist, plot_freq, plot_boxplot
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns
 
@@ -21,7 +21,20 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
-            plot_hist({col_name: data}, output="image")
+            plot_hist({col_name: data})
+
+    @add_attr(plot)
+    def boxplot(columns=None):
+        """
+        Plot boxplot
+        :param columns: Columns to be printed
+        :return:
+        """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        for col_name in columns:
+            stats = self.cols.boxplot(col_name)
+            plot_boxplot({col_name: stats})
 
     @add_attr(plot)
     def frequency(columns=None, buckets=10):
@@ -35,7 +48,7 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.frequency(col_name, buckets)
-            plot_freq(data, output="image")
+            plot_freq(data)
 
     @add_attr(plot)
     def correlation(vec_col, strategy="mean", method="pearson"):

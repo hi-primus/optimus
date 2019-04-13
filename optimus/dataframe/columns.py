@@ -25,7 +25,7 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPA
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -520,15 +520,16 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Use pandas or rdd for small datasets?!
-    def median(columns):
+    def median(columns, error=1):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
+        :param error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
         columns = parse_columns(self, columns)
 
-        return percentile(columns, [0.5])
+        return percentile(columns, [0.5], error)
 
     @add_attr(cols, log_time=True)
     def percentile(columns, values=None, error=1):
@@ -536,9 +537,13 @@ def cols(self):
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
-        :param error:
+        :param error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
         :return: percentiles per columns
         """
+
+        # Make sure values are double
+
+        values = list(map(float, values))
 
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -553,6 +558,8 @@ def cols(self):
                 .cols.cast(c, "double") \
                 .approxQuantile(c, values, error)
 
+            # Convert numeric keys to str keys
+            values = list(map(str, values))
             percentile_results.append(dict(zip(values, percentile_per_col)))
 
         percentile_results = dict(zip(columns, percentile_results))
@@ -1162,13 +1169,14 @@ def cols(self):
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         for c in columns:
-            quartile = self.cols.percentile(c, [0.25, 0.75])
-            q1 = quartile[0.25]
-            q3 = quartile[0.75]
+            quartile = self.cols.percentile(c, [0.25, 0.5, 0.75], error=0)
+            q1 = quartile["0.25"]
+            q2 = quartile["0.5"]
+            q3 = quartile["0.75"]
 
         iqr_value = q3 - q1
         if more:
-            result = {"iqr": iqr_value, "q1": q1, "q3": q3}
+            result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
         else:
             result = iqr_value
         return result
@@ -1252,7 +1260,8 @@ def cols(self):
                 expr = F.split(F.col(col_name), mark)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(self.cols.cell(col_name).split(mark))
+                    splits = len(re.split(mark, self.cols.cell(col_name)))
+                    # splits = len(self.cols.cell(col_name).split(mark))
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
@@ -1372,6 +1381,31 @@ def cols(self):
                 buckets).cols.rename(col_name, "value").to_json()
 
         return result
+
+    @add_attr(cols)
+    def boxplot(columns):
+        """
+        Output values frequency in json format
+        :param columns: Columns to be processed
+        :param buckets: Number of buckets
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+
+        for col_name in columns:
+            iqr = df.cols.iqr(col_name, more=True)
+            lb = iqr["q1"] - (iqr["iqr"] * 1.5)
+            ub = iqr["q3"] + (iqr["iqr"] * 1.5)
+
+            mean = df.cols.mean(columns)
+
+            query = ((F.col(col_name) < lb) | (F.col(col_name) > ub))
+            fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
+            stats = [{'mean': mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
+                      'fliers': fliers, 'label': one_list_to_val(col_name)}]
+
+            return stats
 
     @add_attr(cols)
     def schema_dtype(columns):

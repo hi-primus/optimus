@@ -157,18 +157,39 @@ def ellipsis(data, length=20):
     """
     Add a "..." if a string y greater than a specific length
     :param data:
-    :param lenght
+    :param length: length taking into account to cut the string
     :return:
     """
     data = str(data)
     return (data[:length] + '..') if len(data) > length else data
 
 
-def plot_freq(column_data=None, output="image"):
+def plot_boxplot(column_data=None, output=None):
+    """
+    Boxplot
+    :param column_data: column data in json format
+    :param output: image or base64
+    :return:
+    """
+    for col_name, stats in column_data.items():
+        fig, axes = plt.subplots(1, 1)
+        axes.bxp(stats)
+        axes.set_title(col_name)
+        plt.figure(figsize=(12, 5))
+
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+        # Save as base64
+        if output is "base64":
+            return output_base64(fig)
+
+
+def plot_freq(column_data=None, output=None):
     """
     Frequency plot
-    :param column_data:
-    :param output:
+    :param column_data: column data in json format
+    :param output: image or base64
     :return:
     """
     for col_name, data in column_data.items():
@@ -201,7 +222,7 @@ def plot_freq(column_data=None, output="image"):
             return output_base64(fig)
 
 
-def plot_hist(column_data=None, output="image", sub_title=""):
+def plot_hist(column_data=None, output=None, sub_title=""):
     """
     Plot a histogram
     obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
@@ -209,9 +230,9 @@ def plot_hist(column_data=None, output="image", sub_title=""):
     {'lower': -53.66000061035157, 'upper': -36.80666656494141, 'value': 2},
     ...
     ]}
-    :param column_data: histogram in Optimus format
+    :param column_data: column data in json format
     :param output:
-    :return:
+    :return: image or base64
     """
 
     for col_name, data in column_data.items():

@@ -140,6 +140,10 @@ def print_json(value):
     pp.pprint(value)
 
 
+def collect_as_list(df):
+    return df.rdd.flatMap(lambda x: x).collect()
+
+
 def collect_as_dict(value):
     """
     Return a dict from a Collect result
