@@ -94,3 +94,13 @@ class TestDataFrameCols(object):
         except RuntimeError:
             logging.exception('Error creating the json output.')
             sys.exit(1)
+
+    @staticmethod
+    def test_boxplot():
+
+        try:
+            source_df.plot.boxplot(["age", "weight(t)"])
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
