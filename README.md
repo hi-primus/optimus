@@ -7,7 +7,7 @@ Optimus is the missing framework to profile, clean, process and do ML in a distr
 In your terminal just type  `pip install optimuspyspark`
 
 ### Requirements
-* Apache Spark>= 2.3.0  
+* Apache Spark>= 2.4.0  
 * Python>=3.6  
 
 ## Examples 
