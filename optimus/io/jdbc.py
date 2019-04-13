@@ -1,8 +1,6 @@
-import humanize
-
-from optimus.helpers.functions import format_dict
-from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.logger import logger
 from optimus.spark import Spark
+from optimus.helpers.functions import val_to_list
 
 
 class JDBC:
@@ -48,19 +46,19 @@ class JDBC:
         query = None
         if (self.db_type is "redshift") or (self.db_type is "postgres"):
             query = """
-            (SELECT relname as table_name,cast (reltuples as integer) AS count 
+            SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-            WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC) as t"""
+            WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
         elif self.db_type is "mysql":
-            query = "(SELECT TABLE_NAME AS table_name, SUM(TABLE_ROWS) AS count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
-                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC ) as t"
+            query = "SELECT TABLE_NAME AS table_name, SUM(TABLE_ROWS) AS count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
+                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
 
         elif self.db_type is "sqlite":
             query = ""
 
         # print(query)
-        df = self.execute(query)
+        df = self.execute(query, None)
         df.table()
 
     def tables_names_to_json(self, schema='public'):
@@ -71,31 +69,30 @@ class JDBC:
         query = None
         if (self.db_type is "redshift") or (self.db_type is "postgres"):
             query = """
-                    (SELECT relname as table_name 
+                    SELECT relname as table_name 
                     FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-                    WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC) as t"""
+                    WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
         elif self.db_type is "mysql":
-            query = "(SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
-                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC ) as t"
+            query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
+                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
 
         elif self.db_type is "sqlite":
             query = ""
 
-        df = self.execute(query)
+        df = self.execute(query, None)
         return [i['table_name'] for i in df.to_json()]
 
-    def show(self, limit=10):
+    @property
+    def table(self):
         """
         Print n rows of every table in a database
+        :param columns: Column number
         :param limit: Number of rows to print
         :return:
         """
-        tables = self.tables_names_to_json()
-        print("Total Tables:" + str(len(tables)))
-        for table_name in self.tables_names_to_json():
-            self.table_to_df(table_name, "*", limit) \
-                .table(title=table_name)
+        return Table(self)
+        # return t.show(columns, limit)
 
     def table_to_df(self, table_name, columns="*", limit=None):
         """
@@ -105,37 +102,41 @@ class JDBC:
         # We want to count the number of rows to warn the users how much it can take to bring the whole data
         db_table = "public." + table_name
         if limit is None:
-            query = "(SELECT COUNT(*) FROM " + db_table + ") as t"
-            count = self.execute(query).to_json()[0]["count"]
+            query = "SELECT COUNT(*) FROM " + db_table
+            count = self.execute(query, None).to_json()[0]["count"]
         else:
             count = limit
 
-        print(humanize.intword(count) + " rows in *" + table_name + "* table")
+        # print(str(count) + " rows")
 
         if columns is "*":
             columns_sql = "*"
         else:
             columns_sql = ",".join(columns)
 
-        if limit is None:
-            query = "(SELECT " + columns_sql + " FROM " + db_table + ") AS t"
-        else:
-            query = "(SELECT " + columns_sql + "  FROM " + db_table + " LIMIT " + str(limit) + ") AS t"
+        query = "SELECT " + columns_sql + " FROM " + db_table
 
-        df = self.execute(query)
+        df = self.execute(query, limit)
 
         # Bring the data to local machine if not every time we call an action is going to be
-        # retrived from the remote server
+        # retrieved from the remote server
         df = df.run()
         return df
 
-    def execute(self, query):
+    def execute(self, query, limit=10):
         """
         Execute a SQL query
+        :param limit: default limit the whole query. We play defensive here in case the result is a big chunck of data
         :param query: SQL query string
         :return:
         """
-        # query = "(SELECT * FROM " + table_name + " LIMIT 10) AS t"
+        # we use a default limit here in case the query will return a huge chunk of data
+        if limit is None:
+            query = "(" + query + ") AS t"
+        else:
+            query = "(" + query + " LIMIT " + str(limit) + ") AS t"
+
+        logger.print(query)
         return Spark.instance.spark.read \
             .format("jdbc") \
             .option("url", self.url) \
@@ -143,3 +144,22 @@ class JDBC:
             .option("user", self.user) \
             .option("password", self.password) \
             .load()
+
+
+class Table:
+    def __init__(self, db):
+        self.db = db
+
+    def show(self, table_names="*", limit=10):
+        db = self.db
+
+        if table_names is "*":
+            table_names = db.tables_names_to_json()
+        else:
+            table_names = val_to_list(table_names)
+
+        print("Total Tables:" + str(len(table_names)))
+
+        for table_name in table_names:
+            db.table_to_df(table_name, "*", limit) \
+                .table(title=table_name)
