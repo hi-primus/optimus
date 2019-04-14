@@ -3,7 +3,7 @@ import seaborn as sns
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.functions import plot_hist, plot_freq, plot_boxplot
+from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns
 
@@ -22,6 +22,19 @@ def plot(self):
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
             plot_hist({col_name: data})
+
+    @add_attr(plot)
+    def scatterplot(columns=None, buckets=30):
+        """
+        Plot boxplot
+        :param columns: columns to be printed
+        :param buckets: number of buckets
+        :return:
+        """
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        data = self.cols.scatterplot(columns, buckets)
+        plot_scatterplot(data)
 
     @add_attr(plot)
     def boxplot(columns=None):

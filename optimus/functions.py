@@ -164,6 +164,27 @@ def ellipsis(data, length=20):
     return (data[:length] + '..') if len(data) > length else data
 
 
+def plot_scatterplot(column_data=None, output=None):
+    """
+    Boxplot
+    :param column_data: column data in json format
+    :param output: image or base64
+    :return:
+    """
+
+    fig = plt.figure(figsize=(12, 5))
+    plt.scatter(column_data["x"]["data"], column_data["y"]["data"], s=column_data["s"], alpha=0.5)
+    plt.xlabel(column_data["x"]["name"])
+    plt.ylabel(column_data["y"]["name"])
+
+    # Tweak spacing to prevent clipping of tick-labels
+    # plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+    # Save as base64
+    if output is "base64":
+        return output_base64(fig)
+
+
 def plot_boxplot(column_data=None, output=None):
     """
     Boxplot

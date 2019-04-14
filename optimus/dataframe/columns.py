@@ -3,19 +3,20 @@ import itertools
 import re
 import string
 import unicodedata
-from fastnumbers import fast_float
 from functools import reduce
 
+import seaborn as sns
+from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType, DateType
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType
 
 # Functions
-from optimus.functions import abstract_udf as audf, append
+from optimus.functions import abstract_udf as audf
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -542,8 +543,7 @@ def cols(self):
         """
 
         # Make sure values are double
-
-        values = list(map(float, values))
+        values = list(map(fast_float, values))
 
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -1301,6 +1301,36 @@ def cols(self):
         """
         return self.cols.select(column).first()[0]
 
+    @add_attr(cols)
+    def scatterplot(columns, buckets=10):
+
+        if len(columns) != 2:
+            RaiseIt.length_error(columns, "2")
+
+        columns = parse_columns(self, columns)
+        df = self
+        for col_name in columns:
+            values = _exprs([F.min, F.max], columns)
+
+            # Create splits
+            splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
+
+            # Create buckets in the dataFrame
+            df = bucketizer(df, col_name, splits=splits)
+
+        columns_bucket = [col_name + "_buckets" for col_name in columns]
+
+        size_name = "count"
+        result = df.groupby(columns_bucket).agg(F.count('*').alias(size_name),
+                                                F.round((F.max(columns[0]) + F.min(columns[0])) / 2).alias(columns[0]),
+                                                F.round((F.max(columns[1]) + F.min(columns[1])) / 2).alias(columns[1]),
+                                                ).rows.sort(columns).toPandas()
+        x = result[columns[0]].tolist()
+        y = result[columns[1]].tolist()
+        s = result[size_name].tolist()
+
+        return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
+
     @add_attr(cols, log_time=True)
     @dispatch((str, list), (float, int), (float, int), int)
     def hist(columns, min_value, max_value, buckets=10):
@@ -1362,7 +1392,8 @@ def cols(self):
     @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
-        return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
+        values = _exprs([F.min, F.max], columns)
+        return self.cols.hist(columns, fast_float(values[columns]["min"]), fast_float(values[columns]["max"]), buckets)
 
     @add_attr(cols)
     def frequency(columns, buckets=10):
