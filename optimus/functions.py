@@ -1,11 +1,11 @@
 import base64
-from fastnumbers import isint, isfloat
 from functools import reduce
 from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
 import pandas as pd
+from fastnumbers import isint, isfloat
 from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -13,11 +13,11 @@ from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
-from optimus.helpers.functions import get_spark_dtypes_object, infer
-from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
+from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, parse_python_dtypes, \
+    random_int, one_list_to_val
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
-from optimus.helpers.logger import logger
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -245,6 +245,42 @@ def plot_freq(column_data=None, output=None):
             return output_base64(fig)
 
 
+def plot_missing_values(column_data=None, output=None):
+    """
+    Plot missing values
+    :param column_data:
+    :param output: image o base64
+    :return:
+    """
+    values = []
+    columns = []
+    labels = []
+    for col_name, data in column_data["data"].items():
+        values.append(data["missing"])
+        columns.append(col_name)
+        labels.append(data["%"])
+
+    # Plot
+    fig = plt.figure(figsize=(12, 5))
+    plt.bar(columns, values)
+    plt.xticks(columns, columns)
+
+    # Highest limit
+    highest = column_data["count"]
+    plt.ylim(0, 1.05 * highest)
+    plt.title("Missing Values")
+    i = 0
+    for label, val in zip(labels, values):
+        plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
+        i = i + 1
+
+    plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+    # Save as base64
+    if output is "base64":
+        return output_base64(fig)
+
+
 def plot_hist(column_data=None, output=None, sub_title=""):
     """
     Plot a histogram
@@ -254,7 +290,8 @@ def plot_hist(column_data=None, output=None, sub_title=""):
     ...
     ]}
     :param column_data: column data in json format
-    :param output:
+    :param output: image or base64
+    :param sub_title: plot subtitle
     :return: image or base64
     """
 
@@ -289,7 +326,6 @@ def plot_hist(column_data=None, output=None, sub_title=""):
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
-    from ast import literal_eval
     """
     A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
     Also can return the data type
@@ -298,6 +334,8 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     :param get_type: Value to be returned as string or boolean
     :return: True or False
     """
+    from ast import literal_eval
+
     if data_type is not None:
         data_type = parse_python_dtypes(data_type)
 
