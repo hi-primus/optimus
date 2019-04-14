@@ -5,7 +5,6 @@ import string
 import unicodedata
 from functools import reduce
 
-import seaborn as sns
 from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
@@ -1220,15 +1219,18 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, mark=None, splits=None, index=None):
+    def unnest(columns, regex=None, splits=None, index=None):
         """
         Split an array or string in different columns
         :param columns: Columns to be un-nested
-        :param mark: If column is string.
+        :param regex: If column is string.
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index:
         :return: Spark DataFrame
         """
+
+        if regex is None:
+            RaiseIt.value_error(regex, "regular expression")
 
         # If a number of split was not defined try to infer the length with the first element
         infer_splits = None
@@ -1250,18 +1252,23 @@ def cols(self):
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(self.cols.cell(col_name))
+                    splits = df.select(F.size(F.col(col_name)).alias("__size")).cols.max("__size")
+                    # splits = len(self.cols.cell(col_name))
 
                 for i in builtins.range(splits):
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
             # String
             elif is_(col_dtype, StringType):
-                expr = F.split(F.col(col_name), mark)
+                expr = F.split(F.col(col_name), regex)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(re.split(mark, self.cols.cell(col_name)))
-                    # splits = len(self.cols.cell(col_name).split(mark))
+                    # TODO: Maybe can implement something in one pass
+                    # Create a temp column with the string splitted into an array so we can get the max number of splits
+                    def func(value, args):
+                        return len(re.split(args[0], value))
+
+                    splits = df.withColumn("__length", audf("names", func, "int", [regex])).cols.max("__length")
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
