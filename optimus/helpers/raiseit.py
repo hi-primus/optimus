@@ -1,4 +1,5 @@
-from optimus.helpers.functions import val_to_list
+
+
 
 class RaiseIt:
 
@@ -33,7 +34,7 @@ class RaiseIt:
         :param _list: list of values accepted
         :return:
         """
-        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.functions import get_var_name, val_to_list
 
         data_values = val_to_list(data_values)
 
