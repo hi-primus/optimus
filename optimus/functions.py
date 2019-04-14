@@ -17,6 +17,7 @@ from optimus.helpers.functions import get_spark_dtypes_object, infer
 from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
+from optimus.helpers.logger import logger
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -39,9 +40,10 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
-    # if verbose is True:
-    #    logger.print("Using '{func_type}' to process column '{column}' with function {func_name}"
-    #                 .format(func_type=func_type, column=col, func_name=func.__name__))
+    logger.print(
+        "Using '{func_type}' to process column '{column}' with function {func_name}".format(func_type=func_type,
+                                                                                            column=col,
+                                                                                            func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
