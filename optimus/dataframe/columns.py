@@ -1229,9 +1229,6 @@ def cols(self):
         :return: Spark DataFrame
         """
 
-        if regex is None:
-            RaiseIt.value_error(regex, "regular expression")
-
         # If a number of split was not defined try to infer the length with the first element
         infer_splits = None
         if splits is None:
@@ -1260,6 +1257,9 @@ def cols(self):
 
             # String
             elif is_(col_dtype, StringType):
+                if regex is None:
+                    RaiseIt.value_error(regex, "regular expression")
+
                 expr = F.split(F.col(col_name), regex)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
