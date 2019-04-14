@@ -1,3 +1,5 @@
+from optimus.helpers.functions import val_to_list
+
 class RaiseIt:
 
     @staticmethod
@@ -5,7 +7,7 @@ class RaiseIt:
         """
         Raise a TypeError exception
         :param var:
-        :param types:data types as strings
+        :param data_types: data types as strings
         :return:
         """
         from optimus.helpers.functions import get_var_name
@@ -27,10 +29,13 @@ class RaiseIt:
         """
         Raise a ValueError exception
         :param var:
+        :param data_values:
         :param _list: list of values accepted
         :return:
         """
         from optimus.helpers.functions import get_var_name
+
+        data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
             divisor = ""
@@ -39,8 +44,6 @@ class RaiseIt:
         elif len(data_values) > 2:
             divisor = ", "
 
-        print(data_values)
-        print(len(data_values))
         raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
                          .format(var_name=get_var_name(var),
                                  type=divisor.join(map(
