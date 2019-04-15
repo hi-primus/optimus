@@ -1181,7 +1181,7 @@ def cols(self):
                 result = iqr_value
             iqr_result[col_name] = result
 
-        return iqr_result
+        return format_dict(iqr_result)
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
@@ -1428,7 +1428,6 @@ def cols(self):
         """
         Output values frequency in json format
         :param columns: Columns to be processed
-        :param buckets: Number of buckets
         :return:
         """
         columns = parse_columns(self, columns)
