@@ -260,7 +260,7 @@ class Testdf_cols(object):
 	def test_cols_iqr_all_columns():
 		actual_df = source_df.cols.iqr('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(3.0)
+		expected_value =json_enconding(2.3000001907348633)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_lower():
