@@ -1166,19 +1166,22 @@ def cols(self):
         :param more: Return info about q1 and q3
         :return:
         """
+        iqr_result = {}
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        for c in columns:
-            quartile = self.cols.percentile(c, [0.25, 0.5, 0.75], error=0)
+        for col_name in columns:
+            quartile = self.cols.percentile(col_name, [0.25, 0.5, 0.75], error=0)
             q1 = quartile["0.25"]
             q2 = quartile["0.5"]
             q3 = quartile["0.75"]
 
-        iqr_value = q3 - q1
-        if more:
-            result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
-        else:
-            result = iqr_value
-        return result
+            iqr_value = q3 - q1
+            if more:
+                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            else:
+                result = iqr_value
+            iqr_result[col_name] = result
+
+        return iqr_result
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
