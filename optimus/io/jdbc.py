@@ -112,11 +112,12 @@ class JDBC:
         if columns is "*":
             columns_sql = "*"
         else:
+            columns = val_to_list(columns)
             columns_sql = ",".join(columns)
 
         query = "SELECT " + columns_sql + " FROM " + db_table
-
-        df = self.execute(query, limit)
+        logger.print(query)
+        df = self.execute(query, count)
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
