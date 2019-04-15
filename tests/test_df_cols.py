@@ -254,13 +254,13 @@ class Testdf_cols(object):
 	def test_cols_iqr():
 		actual_df = source_df.cols.iqr('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(0.0)
+		expected_value =json_enconding(11.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_iqr_all_columns():
 		actual_df = source_df.cols.iqr('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(0.0)
+		expected_value =json_enconding(3.0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_lower():
