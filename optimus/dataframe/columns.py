@@ -542,7 +542,9 @@ def cols(self):
         """
 
         # Make sure values are double
+        print("hola",values)
         values = list(map(fast_float, values))
+        print("adios",values)
 
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
@@ -552,14 +554,15 @@ def cols(self):
         # Get percentiles
         percentile_results = []
         for c in columns:
+            print(c, values, error)
             percentile_per_col = self \
                 .rows.drop_na(c) \
                 .cols.cast(c, "double") \
                 .approxQuantile(c, values, error)
 
             # Convert numeric keys to str keys
-            values = list(map(str, values))
-            percentile_results.append(dict(zip(values, percentile_per_col)))
+            values_str = list(map(str, values))
+            percentile_results.append(dict(zip(values_str, percentile_per_col)))
 
         percentile_results = dict(zip(columns, percentile_results))
 
