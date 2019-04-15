@@ -151,15 +151,15 @@ def cols(self):
         df = self
 
         def expr(_when):
-            main_query = audf(c, func, func_return_type, args, func_type, verbose=verbose)
+            main_query = audf(col_name, func, func_return_type, args, func_type, verbose=verbose)
             if when is not None:
                 # Use the data type to filter the query
-                main_query = F.when(_when, main_query).otherwise(F.col(c))
+                main_query = F.when(_when, main_query).otherwise(F.col(col_name))
 
             return main_query
 
-        for c in columns:
-            df = df.withColumn(c, expr(when))
+        for col_name in columns:
+            df = df.withColumn(col_name, expr(when))
         return df
 
     @add_attr(cols)
@@ -176,9 +176,9 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        for c in columns:
-            df = self.cols.apply(c, func, func_return_type, args=args, func_type=func_type,
-                                 when=fbdt(c, data_type))
+        for col_name in columns:
+            df = self.cols.apply(col_name, func, func_return_type, args=args, func_type=func_type,
+                                 when=fbdt(col_name, data_type))
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -202,12 +202,12 @@ def cols(self):
             # Check that the 1st element in the tuple is a valid set of columns
 
             validate_columns_names(self, columns_old_new)
-            for c in columns_old_new:
-                old_col_name = c[0]
+            for col_name in columns_old_new:
+                old_col_name = col_name[0]
                 if is_str(old_col_name):
-                    df = df.withColumnRenamed(old_col_name, c[1])
+                    df = df.withColumnRenamed(old_col_name, col_name[1])
                 elif is_int(old_col_name):
-                    df = df.withColumnRenamed(self.schema.names[old_col_name], c[1])
+                    df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
 
         return df
 
@@ -412,8 +412,8 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
 
-        for column in columns:
-            df = df.drop(column)
+        for col_name in columns:
+            df = df.drop(col_name)
         return df
 
     @add_attr(cols, log_time=True)
@@ -511,10 +511,10 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         range_result = {}
-        for c in columns:
-            max_val = self.cols.max(c)
-            min_val = self.cols.min(c)
-            range_result[c] = {'min': min_val, 'max': max_val}
+        for col_name in columns:
+            max_val = self.cols.max(col_name)
+            min_val = self.cols.min(col_name)
+            range_result[col_name] = {'min': min_val, 'max': max_val}
 
         return range_result
 
@@ -542,10 +542,7 @@ def cols(self):
         """
 
         # Make sure values are double
-        print("hola",values)
         values = list(map(fast_float, values))
-        print("adios",values)
-
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -553,12 +550,11 @@ def cols(self):
 
         # Get percentiles
         percentile_results = []
-        for c in columns:
-            print(c, values, error)
+        for col_name in columns:
             percentile_per_col = self \
-                .rows.drop_na(c) \
-                .cols.cast(c, "double") \
-                .approxQuantile(c, values, error)
+                .rows.drop_na(col_name) \
+                .cols.cast(col_name, "double") \
+                .approxQuantile(col_name, values, error)
 
             # Convert numeric keys to str keys
             values_str = list(map(str, values))
@@ -987,7 +983,8 @@ def cols(self):
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         df = self
-        return format_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]).to_json())
+        return format_dict(df.select(
+            [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json())
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
@@ -1004,7 +1001,7 @@ def cols(self):
             result = _exprs(F.approx_count_distinct, columns)
         else:
             df = self
-            result = {c: df.select(c).distinct().count() for c in columns}
+            result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
         return result
 
     @add_attr(cols)
@@ -1037,8 +1034,8 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
-        for c in columns:
-            df = df.cols.cast(c, "float")
+        for col_name in columns:
+            df = df.cols.cast(col_name, "float")
 
         if len(columns) < 2:
             raise Exception("Error: 2 or more columns needed")
@@ -1118,7 +1115,7 @@ def cols(self):
         # if regex or normal replace we use regexp or replace functions
         # TODO check if .contains can be used instead of regexp
         def func_regex(_df, _col_name, _search, _replace):
-            return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
+            return _df.withColumn(col_name, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
             data_type = self.cols.dtypes(_col_name)
@@ -1134,8 +1131,8 @@ def cols(self):
         df = self
 
         columns = parse_columns(self, columns, filter_by_column_dtypes="string")
-        for c in columns:
-            df = func(df, c, search, _replace)
+        for col_name in columns:
+            df = func(df, col_name, search, _replace)
 
         return df
 
@@ -1151,13 +1148,13 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
-        for c in columns:
-            new_col = c + "z_col_"
+        for col_name in columns:
+            new_col = col_name + "z_col_"
 
-            mean_value = self.cols.mean(c)
-            stdev_value = self.cols.std(c)
+            mean_value = self.cols.mean(col_name)
+            stdev_value = self.cols.std(col_name)
 
-            df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
+            df = df.withColumn(new_col, F.abs((F.col(col_name) - mean_value) / stdev_value))
 
         return df
 
@@ -1469,7 +1466,7 @@ def cols(self):
         columns = parse_columns(self, columns)
         data_types = tuple_to_dict(self.dtypes)
 
-        return format_dict({c: data_types[c] for c in columns})
+        return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
     def names():
