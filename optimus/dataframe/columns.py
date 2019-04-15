@@ -1023,7 +1023,7 @@ def cols(self):
 
     # Operations between columns
     @add_attr(cols)
-    def _math(columns, operator, col_name):
+    def _math(columns, operator, new_column):
         """
         Helper to process arithmetic operation between columns. If a
         :param columns: Columns to be used to make the calculation
@@ -1040,47 +1040,51 @@ def cols(self):
         if len(columns) < 2:
             raise Exception("Error: 2 or more columns needed")
 
-        a = list(map(lambda x: F.col(x), columns))
-        expr = reduce(operator, a)
+        cols = list(map(lambda x: F.col(x), columns))
+        expr = reduce(operator, cols)
 
-        return df.withColumn(col_name, expr)
+        return df.withColumn(new_column, expr)
 
     @add_attr(cols)
-    def add(columns):
+    def add(columns, col_name="sum"):
         """
         Add two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
 
-        return _math(columns, lambda x, y: x + y, "sum")
+        return _math(columns, lambda x, y: x + y, col_name)
 
     @add_attr(cols)
-    def sub(columns):
+    def sub(columns, col_name="sub"):
         """
         Subs two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x - y, "sub")
+        return _math(columns, lambda x, y: x - y, col_name)
 
     @add_attr(cols)
-    def mul(columns):
+    def mul(columns, col_name="mul"):
         """
         Multiply two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x * y, "mul")
+        return _math(columns, lambda x, y: x * y, col_name)
 
     @add_attr(cols)
-    def div(columns):
+    def div(columns, col_name="div"):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x / y, "div")
+        return _math(columns, lambda x, y: x / y, col_name)
 
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
