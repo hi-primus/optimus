@@ -35,6 +35,6 @@ h2o-pysparkling-2.4==2.4.4
 psutil==5.6.1
 backoff==1.8.0
 pymongo==3.7.2
-kombu==4.2.2.post1
+kombu==4.5.0
 pandas==0.24.2
 pika==0.12.0
