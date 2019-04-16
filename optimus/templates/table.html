@@ -41,8 +41,11 @@
 
 
 </style>
-
+{% if title is not none %}
+    <h1>{{title}}</h1>
+{%endif%}
 {% macro header_footer(limit, total_rows, total_cols, partitions) %}
+
 <div class="info_items">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
 <div class="info_items">{{partitions}} partition(s)</div>
 {% endmacro %}

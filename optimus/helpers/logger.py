@@ -23,7 +23,7 @@ class Logger(Singleton):
         """
         self.logger.setLevel(log_level)
 
-    def print(self, message):
+    def print(self, *args):
         """
         Print a message
         :param self:
@@ -32,7 +32,7 @@ class Logger(Singleton):
         """
         # if self.status is True:
         if self.is_active is True:
-            self.logger.info(message)
+            self.logger.info(*args)
 
     def active(self, activate):
         """
