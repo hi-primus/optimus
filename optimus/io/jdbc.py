@@ -2,6 +2,11 @@ from optimus.helpers.logger import logger
 from optimus.spark import Spark
 from optimus.helpers.functions import val_to_list
 
+# Optimus play defensive with the number of rows to be retrieved from the server so a limit is not specified in
+# a function that required it only will retrieve the LIMIT value
+LIMIT = 1000
+LIMIT_TABLE = 10
+
 
 class JDBC:
     """
@@ -58,7 +63,7 @@ class JDBC:
             query = ""
 
         # print(query)
-        df = self.execute(query, None)
+        df = self.execute(query, "all")
         df.table()
 
     def tables_names_to_json(self, schema='public'):
@@ -80,34 +85,32 @@ class JDBC:
         elif self.db_type is "sqlite":
             query = ""
 
-        df = self.execute(query, None)
+        df = self.execute(query, "all")
         return [i['table_name'] for i in df.to_json()]
 
     @property
     def table(self):
         """
         Print n rows of every table in a database
-        :param columns: Column number
-        :param limit: Number of rows to print
-        :return:
+        :return: Table Object
         """
         return Table(self)
-        # return t.show(columns, limit)
 
     def table_to_df(self, table_name, columns="*", limit=None):
         """
         Return cols as Spark dataframe from a specific table
+        :type table_name: object
+        :param columns:
+        :param limit: how many rows will be retrieved
         """
 
-        # We want to count the number of rows to warn the users how much it can take to bring the whole data
         db_table = "public." + table_name
-        if limit is None:
+        if self._limit(limit) is "":
             query = "SELECT COUNT(*) FROM " + db_table
-            count = self.execute(query, None).to_json()[0]["count"]
-        else:
-            count = limit
+            # We want to count the number of rows to warn the users how much it can take to bring the whole data
+            count = self.execute(query, "all").to_json()[0]["count"]
 
-        # print(str(count) + " rows")
+            print(str(count) + " rows")
 
         if columns is "*":
             columns_sql = "*"
@@ -117,25 +120,22 @@ class JDBC:
 
         query = "SELECT " + columns_sql + " FROM " + db_table
         logger.print(query)
-        df = self.execute(query, count)
+        df = self.execute(query, limit)
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         df = df.run()
         return df
 
-    def execute(self, query, limit=10):
+    def execute(self, query, limit=None):
         """
         Execute a SQL query
         :param limit: default limit the whole query. We play defensive here in case the result is a big chunck of data
         :param query: SQL query string
         :return:
         """
-        # we use a default limit here in case the query will return a huge chunk of data
-        if limit is None:
-            query = "(" + query + ") AS t"
-        else:
-            query = "(" + query + " LIMIT " + str(limit) + ") AS t"
+
+        query = "(" + query + self._limit(limit) + ") AS t"
 
         logger.print(query)
         return Spark.instance.spark.read \
@@ -146,12 +146,28 @@ class JDBC:
             .option("password", self.password) \
             .load()
 
+    @staticmethod
+    def _limit(limit=None):
+        """
+        Handle limit defensive so we do not retrieve the whole at we explicit want
+        :param limit:
+        :return:
+        """
+        # we use a default limit here in case the query will return a huge chunk of data
+        if limit is None:
+            limit_query = " LIMIT " + str(LIMIT_TABLE)
+        elif limit is "all":
+            limit_query = ""
+        else:
+            limit_query = " LIMIT " + str(limit)
+        return limit_query
+
 
 class Table:
     def __init__(self, db):
         self.db = db
 
-    def show(self, table_names="*", limit=10):
+    def show(self, table_names="*", limit="all"):
         db = self.db
 
         if table_names is "*":
