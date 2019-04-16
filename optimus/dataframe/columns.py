@@ -3,19 +3,19 @@ import itertools
 import re
 import string
 import unicodedata
-from fastnumbers import fast_float
 from functools import reduce
 
+from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType, DateType
+from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType
 
 # Functions
-from optimus.functions import abstract_udf as audf, append
+from optimus.functions import abstract_udf as audf
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -25,7 +25,7 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPA
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -151,15 +151,15 @@ def cols(self):
         df = self
 
         def expr(_when):
-            main_query = audf(c, func, func_return_type, args, func_type, verbose=verbose)
+            main_query = audf(col_name, func, func_return_type, args, func_type, verbose=verbose)
             if when is not None:
                 # Use the data type to filter the query
-                main_query = F.when(_when, main_query).otherwise(F.col(c))
+                main_query = F.when(_when, main_query).otherwise(F.col(col_name))
 
             return main_query
 
-        for c in columns:
-            df = df.withColumn(c, expr(when))
+        for col_name in columns:
+            df = df.withColumn(col_name, expr(when))
         return df
 
     @add_attr(cols)
@@ -176,9 +176,9 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        for c in columns:
-            df = self.cols.apply(c, func, func_return_type, args=args, func_type=func_type,
-                                 when=fbdt(c, data_type))
+        for col_name in columns:
+            df = self.cols.apply(col_name, func, func_return_type, args=args, func_type=func_type,
+                                 when=fbdt(col_name, data_type))
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -202,12 +202,12 @@ def cols(self):
             # Check that the 1st element in the tuple is a valid set of columns
 
             validate_columns_names(self, columns_old_new)
-            for c in columns_old_new:
-                old_col_name = c[0]
+            for col_name in columns_old_new:
+                old_col_name = col_name[0]
                 if is_str(old_col_name):
-                    df = df.withColumnRenamed(old_col_name, c[1])
+                    df = df.withColumnRenamed(old_col_name, col_name[1])
                 elif is_int(old_col_name):
-                    df = df.withColumnRenamed(self.schema.names[old_col_name], c[1])
+                    df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
 
         return df
 
@@ -412,8 +412,8 @@ def cols(self):
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
 
-        for column in columns:
-            df = df.drop(column)
+        for col_name in columns:
+            df = df.drop(col_name)
         return df
 
     @add_attr(cols, log_time=True)
@@ -511,24 +511,25 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         range_result = {}
-        for c in columns:
-            max_val = self.cols.max(c)
-            min_val = self.cols.min(c)
-            range_result[c] = {'min': min_val, 'max': max_val}
+        for col_name in columns:
+            max_val = self.cols.max(col_name)
+            min_val = self.cols.min(col_name)
+            range_result[col_name] = {'min': min_val, 'max': max_val}
 
         return range_result
 
     @add_attr(cols)
     # TODO: Use pandas or rdd for small datasets?!
-    def median(columns):
+    def median(columns, error=1):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
+        :param error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
         columns = parse_columns(self, columns)
 
-        return percentile(columns, [0.5])
+        return percentile(columns, [0.5], error)
 
     @add_attr(cols, log_time=True)
     def percentile(columns, values=None, error=1):
@@ -536,10 +537,12 @@ def cols(self):
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
-        :param error:
+        :param error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
         :return: percentiles per columns
         """
 
+        # Make sure values are double
+        values = list(map(fast_float, values))
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
@@ -547,13 +550,15 @@ def cols(self):
 
         # Get percentiles
         percentile_results = []
-        for c in columns:
+        for col_name in columns:
             percentile_per_col = self \
-                .rows.drop_na(c) \
-                .cols.cast(c, "double") \
-                .approxQuantile(c, values, error)
+                .rows.drop_na(col_name) \
+                .cols.cast(col_name, "double") \
+                .approxQuantile(col_name, values, error)
 
-            percentile_results.append(dict(zip(values, percentile_per_col)))
+            # Convert numeric keys to str keys
+            values_str = list(map(str, values))
+            percentile_results.append(dict(zip(values_str, percentile_per_col)))
 
         percentile_results = dict(zip(columns, percentile_results))
 
@@ -978,7 +983,8 @@ def cols(self):
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         df = self
-        return format_dict(df.select([F.count(F.when(F.col(c) == 0, c)).alias(c) for c in columns]).to_json())
+        return format_dict(df.select(
+            [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json())
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
@@ -995,7 +1001,7 @@ def cols(self):
             result = _exprs(F.approx_count_distinct, columns)
         else:
             df = self
-            result = {c: df.select(c).distinct().count() for c in columns}
+            result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
         return result
 
     @add_attr(cols)
@@ -1017,7 +1023,7 @@ def cols(self):
 
     # Operations between columns
     @add_attr(cols)
-    def _math(columns, operator, col_name):
+    def _math(columns, operator, new_column):
         """
         Helper to process arithmetic operation between columns. If a
         :param columns: Columns to be used to make the calculation
@@ -1028,53 +1034,57 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
-        for c in columns:
-            df = df.cols.cast(c, "float")
+        for col_name in columns:
+            df = df.cols.cast(col_name, "float")
 
         if len(columns) < 2:
             raise Exception("Error: 2 or more columns needed")
 
-        a = list(map(lambda x: F.col(x), columns))
-        expr = reduce(operator, a)
+        cols = list(map(lambda x: F.col(x), columns))
+        expr = reduce(operator, cols)
 
-        return df.withColumn(col_name, expr)
+        return df.withColumn(new_column, expr)
 
     @add_attr(cols)
-    def add(columns):
+    def add(columns, col_name="sum"):
         """
         Add two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
 
-        return _math(columns, lambda x, y: x + y, "sum")
+        return _math(columns, lambda x, y: x + y, col_name)
 
     @add_attr(cols)
-    def sub(columns):
+    def sub(columns, col_name="sub"):
         """
         Subs two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x - y, "sub")
+        return _math(columns, lambda x, y: x - y, col_name)
 
     @add_attr(cols)
-    def mul(columns):
+    def mul(columns, col_name="mul"):
         """
         Multiply two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x * y, "mul")
+        return _math(columns, lambda x, y: x * y, col_name)
 
     @add_attr(cols)
-    def div(columns):
+    def div(columns, col_name="div"):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name.
+        :param col_name:
         :return:
         """
-        return _math(columns, lambda x, y: x / y, "div")
+        return _math(columns, lambda x, y: x / y, col_name)
 
     @add_attr(cols)
     def replace(columns, search_and_replace=None, value=None, regex=None):
@@ -1109,7 +1119,7 @@ def cols(self):
         # if regex or normal replace we use regexp or replace functions
         # TODO check if .contains can be used instead of regexp
         def func_regex(_df, _col_name, _search, _replace):
-            return _df.withColumn(c, F.regexp_replace(_col_name, _search, _replace))
+            return _df.withColumn(col_name, F.regexp_replace(_col_name, _search, _replace))
 
         def func_replace(_df, _col_name, _search, _replace):
             data_type = self.cols.dtypes(_col_name)
@@ -1125,8 +1135,8 @@ def cols(self):
         df = self
 
         columns = parse_columns(self, columns, filter_by_column_dtypes="string")
-        for c in columns:
-            df = func(df, c, search, _replace)
+        for col_name in columns:
+            df = func(df, col_name, search, _replace)
 
         return df
 
@@ -1142,13 +1152,13 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
         df = self
-        for c in columns:
-            new_col = c + "z_col_"
+        for col_name in columns:
+            new_col = col_name + "z_col_"
 
-            mean_value = self.cols.mean(c)
-            stdev_value = self.cols.std(c)
+            mean_value = self.cols.mean(col_name)
+            stdev_value = self.cols.std(col_name)
 
-            df = df.withColumn(new_col, F.abs((F.col(c) - mean_value) / stdev_value))
+            df = df.withColumn(new_col, F.abs((F.col(col_name) - mean_value) / stdev_value))
 
         return df
 
@@ -1160,18 +1170,22 @@ def cols(self):
         :param more: Return info about q1 and q3
         :return:
         """
+        iqr_result = {}
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        for c in columns:
-            quartile = self.cols.percentile(c, [0.25, 0.75])
-            q1 = quartile[0.25]
-            q3 = quartile[0.75]
+        for col_name in columns:
+            quartile = self.cols.percentile(col_name, [0.25, 0.5, 0.75], error=0)
+            q1 = quartile["0.25"]
+            q2 = quartile["0.5"]
+            q3 = quartile["0.75"]
 
-        iqr_value = q3 - q1
-        if more:
-            result = {"iqr": iqr_value, "q1": q1, "q3": q3}
-        else:
-            result = iqr_value
-        return result
+            iqr_value = q3 - q1
+            if more:
+                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            else:
+                result = iqr_value
+            iqr_result[col_name] = result
+
+        return format_dict(iqr_result)
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
@@ -1212,11 +1226,11 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, mark=None, splits=None, index=None):
+    def unnest(columns, regex=None, splits=None, index=None):
         """
         Split an array or string in different columns
         :param columns: Columns to be un-nested
-        :param mark: If column is string.
+        :param regex: If column is string.
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index:
         :return: Spark DataFrame
@@ -1242,17 +1256,26 @@ def cols(self):
                 expr = F.col(col_name)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(self.cols.cell(col_name))
+                    splits = df.select(F.size(F.col(col_name)).alias("__size")).cols.max("__size")
+                    # splits = len(self.cols.cell(col_name))
 
                 for i in builtins.range(splits):
                     df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
 
             # String
             elif is_(col_dtype, StringType):
-                expr = F.split(F.col(col_name), mark)
+                if regex is None:
+                    RaiseIt.value_error(regex, "regular expression")
+
+                expr = F.split(F.col(col_name), regex)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = len(self.cols.cell(col_name).split(mark))
+                    # TODO: Maybe can implement something in one pass
+                    # Create a temp column with the string splitted into an array so we can get the max number of splits
+                    def func(value, args):
+                        return len(re.split(args[0], value))
+
+                    splits = df.withColumn("__length", audf("names", func, "int", [regex])).cols.max("__length")
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
@@ -1291,6 +1314,36 @@ def cols(self):
         :return:
         """
         return self.cols.select(column).first()[0]
+
+    @add_attr(cols)
+    def scatterplot(columns, buckets=10):
+
+        if len(columns) != 2:
+            RaiseIt.length_error(columns, "2")
+
+        columns = parse_columns(self, columns)
+        df = self
+        for col_name in columns:
+            values = _exprs([F.min, F.max], columns)
+
+            # Create splits
+            splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
+
+            # Create buckets in the dataFrame
+            df = bucketizer(df, col_name, splits=splits)
+
+        columns_bucket = [col_name + "_buckets" for col_name in columns]
+
+        size_name = "count"
+        result = df.groupby(columns_bucket).agg(F.count('*').alias(size_name),
+                                                F.round((F.max(columns[0]) + F.min(columns[0])) / 2).alias(columns[0]),
+                                                F.round((F.max(columns[1]) + F.min(columns[1])) / 2).alias(columns[1]),
+                                                ).rows.sort(columns).toPandas()
+        x = result[columns[0]].tolist()
+        y = result[columns[1]].tolist()
+        s = result[size_name].tolist()
+
+        return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     @add_attr(cols, log_time=True)
     @dispatch((str, list), (float, int), (float, int), int)
@@ -1353,7 +1406,8 @@ def cols(self):
     @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
-        return self.cols.hist(columns, fast_float(self.cols.min(columns)), fast_float(self.cols.max(columns)), buckets)
+        values = _exprs([F.min, F.max], columns)
+        return self.cols.hist(columns, fast_float(values[columns]["min"]), fast_float(values[columns]["max"]), buckets)
 
     @add_attr(cols)
     def frequency(columns, buckets=10):
@@ -1372,6 +1426,30 @@ def cols(self):
                 buckets).cols.rename(col_name, "value").to_json()
 
         return result
+
+    @add_attr(cols)
+    def boxplot(columns):
+        """
+        Output values frequency in json format
+        :param columns: Columns to be processed
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+
+        for col_name in columns:
+            iqr = df.cols.iqr(col_name, more=True)
+            lb = iqr["q1"] - (iqr["iqr"] * 1.5)
+            ub = iqr["q3"] + (iqr["iqr"] * 1.5)
+
+            mean = df.cols.mean(columns)
+
+            query = ((F.col(col_name) < lb) | (F.col(col_name) > ub))
+            fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
+            stats = [{'mean': mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
+                      'fliers': fliers, 'label': one_list_to_val(col_name)}]
+
+            return stats
 
     @add_attr(cols)
     def schema_dtype(columns):
@@ -1394,7 +1472,7 @@ def cols(self):
         columns = parse_columns(self, columns)
         data_types = tuple_to_dict(self.dtypes)
 
-        return format_dict({c: data_types[c] for c in columns})
+        return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
     def names():
