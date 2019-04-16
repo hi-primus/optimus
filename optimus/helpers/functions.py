@@ -140,12 +140,17 @@ def print_json(value):
     pp.pprint(value)
 
 
+def collect_as_list(df):
+    return df.rdd.flatMap(lambda x: x).collect()
+
+
 def collect_as_dict(value):
     """
     Return a dict from a Collect result
     :param value:
     :return:
     """
+
     dict_result = []
 
     # if there is only an element in the dict just return the value
@@ -402,7 +407,7 @@ def check_env_vars(env_vars):
         if env_var in os.environ:
             logger.print(env_var + "=" + os.environ.get(env_var))
         else:
-            logger.print("You don't have " + env_var + " set")
+            logger.print(env_var + " is not set")
 
 
 # Reference https://nvie.com/posts/modifying-deeply-nested-structures/
@@ -460,14 +465,15 @@ def json_converter(obj):
     """
     if isinstance(obj, datetime.datetime):
         return obj.strftime('%Y-%m-%d %H:%M:%S')
-    if isinstance(obj, datetime.date):
+
+    elif isinstance(obj, datetime.date):
         return obj.strftime('%Y-%m-%d')
 
 
 def json_enconding(obj):
     """
     Encode a json. Used for testing.
-    :param json:
+    :param obj:
     :return:
     """
     return json.dumps(obj, sort_keys=True, default=json_converter)

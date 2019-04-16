@@ -94,3 +94,43 @@ class TestDataFrameCols(object):
         except RuntimeError:
             logging.exception('Error creating the json output.')
             sys.exit(1)
+
+    @staticmethod
+    def test_boxplot():
+
+        try:
+            source_df.plot.boxplot(["age", "weight(t)"])
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
+
+    @staticmethod
+    def test_scatterplot():
+
+        try:
+            source_df.plot.scatterplot(["age", "weight(t)"])
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
+
+    @staticmethod
+    def test_hist():
+
+        try:
+            source_df.plot.hist("age")
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
+
+    @staticmethod
+    def test_frequency():
+
+        try:
+            source_df.plot.frequency("age")
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)

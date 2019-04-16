@@ -1,9 +1,11 @@
+import os
+
 from pyspark.sql import SparkSession
 
 from optimus.helpers.constants import *
 from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
 
-import optimus.helpers.logger as logger
+from optimus.helpers.logger import logger
 
 
 class Spark:
@@ -27,28 +29,32 @@ class Spark:
         self.master = master
         self.app_name = app_name
 
-        logger.info(message=JUST_CHECKING)
-        logger.info("-----")
+        logger.print(JUST_CHECKING)
+        logger.print("-----")
         check_env_vars(["SPARK_HOME", "HADOOP_HOME", "PYSPARK_PYTHON", "PYSPARK_DRIVER_PYTHON", "PYSPARK_SUBMIT_ARGS",
                         "JAVA_HOME"])
 
         if is_pyarrow_installed() is True:
-            logger.info("Pyarrow Installed")
+            logger.print("Pyarrow Installed")
         else:
-            logger.info(
+            logger.print(
                 "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
-        logger.info("-----")
-        logger.info(STARTING_SPARK)
+        logger.print("-----")
+        logger.print(STARTING_SPARK)
+
+        # print(os.environ['PYSPARK_SUBMIT_ARGS'])
 
         # Build the spark session
         self._spark = SparkSession.builder \
+            .appName(app_name) \
             .master(master) \
             .config("spark.executor.heartbeatInterval", "110") \
-            .appName(app_name) \
+            .config("spark.jars.packages", "ml.combust.mleap:mleap-spark_2.11:0.13.0") \
             .getOrCreate()
 
         # .option("driver", "org.postgresql.Driver")
         self._sc = self._spark.sparkContext
+        logger.print("Spark Version:" + self._sc.version)
         # print(self._sc._conf.getAll())
 
     @property
