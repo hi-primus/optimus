@@ -1,15 +1,17 @@
+
+
+
 class RaiseIt:
 
     @staticmethod
     def type_error(var, data_types):
-        from optimus.helpers.functions import get_var_name
         """
         Raise a TypeError exception
         :param var:
-        :param types:data types as strings
+        :param data_types: data types as strings
         :return:
         """
-
+        from optimus.helpers.functions import get_var_name
         if len(data_types) == 1:
             divisor = ""
         elif len(data_types) == 2:
@@ -25,23 +27,24 @@ class RaiseIt:
 
     @staticmethod
     def value_error(var, data_values):
-        from optimus.helpers.functions import get_var_name
         """
         Raise a ValueError exception
         :param var:
+        :param data_values:
         :param _list: list of values accepted
         :return:
         """
+        from optimus.helpers.functions import get_var_name, val_to_list
+
+        data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
             divisor = ""
-        if len(data_values) == 2:
+        elif len(data_values) == 2:
             divisor = " or "
         elif len(data_values) > 2:
             divisor = ", "
 
-        print(data_values)
-        print(len(data_values))
         raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
                          .format(var_name=get_var_name(var),
                                  type=divisor.join(map(
@@ -49,12 +52,24 @@ class RaiseIt:
                                      data_values)), var_type=var))
 
     @staticmethod
-    def type(cls, var, message):
+    def length_error(var, length):
+        """
+        Raise a ValueError exception when the var length is nor correct
+        :param var:
+        :param length: Expected var length
+        :return:
+        """
         from optimus.helpers.functions import get_var_name
+        raise ValueError("'{var_name}' must be {length}, received '{var_length}'"
+                         .format(var_name=get_var_name(var),
+                                 length=length, var_length=len(var)))
 
+    @staticmethod
+    def type(cls, var, message):
         """
         Raise and exception ot type specified
         :param var:
         :return:
         """
+        from optimus.helpers.functions import get_var_name
         raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))

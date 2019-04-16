@@ -25,8 +25,7 @@ __pycache__
 .cache
 .coverage*
 .DS_Store
-.pytest_cache/v/cache/lastfailed
-.pytest_cache/v/cache/nodeids
+.pytest_cache/
 examples/example.json
 examples/random.csv
 data.json
@@ -36,3 +35,8 @@ examples/server.pid
 
 examples/new-api-jar-test\.ipynb
 venv/
+
+# Test
+tests/test.csv/
+tests/test.json/
+tests/test.parquet/
