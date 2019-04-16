@@ -22,12 +22,12 @@ class OutlierDetector:
 
         columns = parse_columns(df, columns)
 
-        for c in columns:
-            iqr = df.cols.iqr(c, more=True)
+        for column in columns:
+            iqr = df.cols.iqr(column, more=True)
             lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
             upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-            df = df.rows.drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
+            df = df.rows.drop((F.col(column) > upper_bound) | (F.col(column) < lower_bound))
 
         return df
 
