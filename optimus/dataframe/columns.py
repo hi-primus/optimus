@@ -98,6 +98,10 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
+
+        # Spark can not handle point character in columns names so We enclose the name with `` to ensure
+        columns = ["`" + col + "`" for col in columns]
+
         return self.select(columns)
 
     @add_attr(cols)

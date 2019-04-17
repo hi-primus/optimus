@@ -289,15 +289,16 @@ def table_html(self, limit=100, columns=None, title=None):
     Return a HTML table with the dataframe cols, data types and values
     :param self:
     :param columns: Columns to be printed
-    :param limit: how many rows will be printed
+    :param limit: How many rows will be printed
+    :param title: Table title
     :return:
     """
 
     columns = parse_columns(self, columns)
 
-    data = self.select(columns).limit(limit).to_json()
+    data = self.cols.select(columns).limit(limit).to_json()
 
-    # Load template
+    # Load the Jinja template
     path = os.path.dirname(os.path.abspath(__file__))
     template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -305,6 +306,7 @@ def table_html(self, limit=100, columns=None, title=None):
 
     # Filter only the columns and data type info need it
     dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+
     # Remove not selected columns
     final_columns = []
     for i in dtypes:
@@ -320,7 +322,6 @@ def table_html(self, limit=100, columns=None, title=None):
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
-    # Print table
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title)
     return output
@@ -330,6 +331,7 @@ def table_html(self, limit=100, columns=None, title=None):
 def table(self, limit=100, columns=None, title=None):
     try:
         __IPYTHON__
+
         result = self.table_html(title=title, limit=limit, columns=columns)
         return print_html(result)
     except NameError:
