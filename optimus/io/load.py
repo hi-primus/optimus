@@ -1,10 +1,12 @@
 import tempfile
 from urllib.request import Request, urlopen
 
+from packaging import version
+
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
-from packaging import version
-from optimus.helpers.logger import logger
+import pandas as pd
 
 
 class Load:
@@ -39,8 +41,10 @@ class Load:
             file_format = self.parquet
         elif type_of == "avro":
             file_format = self.avro
+        elif type_of == "excel":
+            file_format = self.avro
         else:
-            RaiseIt.type_error(file_format, ["csv", "json", "parquet", "avro", ])
+            RaiseIt.type_error(file_format, ["csv", "json", "parquet", "avro", "excel"])
 
         i = url.rfind('/')
         data_name = url[(i + 1):]
@@ -97,10 +101,10 @@ class Load:
     def parquet(path, *args, **kwargs):
         """
         Return a dataframe from a parquet file.
-        :param path: Path or location of the file. Must be string dataType.
+        :param path: Path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
-        :return dataFrame
+        :return: Spark Dataframe
         """
 
         try:
@@ -115,10 +119,10 @@ class Load:
     def avro(path, *args, **kwargs):
         """
         Return a dataframe from a avro file.
-        :param path: Path or location of the file. Must be string dataType.
+        :param path: Path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
-        :return:
+        :return: Spark Dataframe
         """
         try:
             if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
@@ -130,6 +134,32 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
+
+        return df
+
+    @staticmethod
+    def excel(path, *args, **kwargs):
+        """
+        Return a dataframe from a excel file.
+        :param path: Path or location of the file. Must be string dataType
+         :param args: custom argument to be passed to the spark parquet function
+        :param kwargs: custom keyword arguments to be passed to the spark parquet function
+        :return: Spark Dataframe
+        """
+        pdf = pd.read_excel(path, *args, **kwargs)
+
+        # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
+        # exception when Spark try to infer the column data type
+        col_names = list(pdf.select_dtypes(include=['object']))
+
+        column_dtype = {}
+        for col in col_names:
+            column_dtype[col] = str
+
+        pdf = pdf.astype(column_dtype)
+
+        # Create spark data frame
+        df = Spark.instance.spark.createDataFrame(pdf)
 
         return df
 
