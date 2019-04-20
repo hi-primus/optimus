@@ -298,7 +298,7 @@ class Profiler:
 
             write_json(self.json, path)
         else:
-            print("sdf")
+
             RaiseIt.type_error(output, ["html", "json"])
 
     def to_queue(self, message):

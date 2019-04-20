@@ -135,13 +135,13 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value", dat
     :param value_vars: Column names that are going to be converted to columns values
     :param var_name: Column name for vars
     :param value_name: Column name for values
-    :param data_type: All columns must have the same type. It will transform all collumns to this datatype.
+    :param data_type: All columns must have the same type. It will transform all columns to this data type.
     :return:
     """
 
     df = self
     id_vars = val_to_list(id_vars)
-    # Cast all colums to the same type
+    # Cast all columns to the same type
     df = df.cols.cast(id_vars + value_vars, data_type)
 
     vars_and_vals = [F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars]
@@ -295,7 +295,7 @@ def table_html(self, limit=100, columns=None, title=None):
     """
 
     columns = parse_columns(self, columns)
-
+    # print(columns)
     data = self.cols.select(columns).limit(limit).to_json()
 
     # Load the Jinja template
