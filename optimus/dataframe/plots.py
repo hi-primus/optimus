@@ -1,11 +1,9 @@
-import numpy as np
-import seaborn as sns
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot
+from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot, plot_correlation
 from optimus.helpers.decorators import add_attr
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.functions import parse_columns, check_column_numbers
 
 
 def plot(self):
@@ -18,13 +16,14 @@ def plot(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
             plot_hist({col_name: data})
 
     @add_attr(plot)
-    def scatterplot(columns=None, buckets=30):
+    def scatter(columns=None, buckets=30):
         """
         Plot boxplot
         :param columns: columns to be printed
@@ -32,18 +31,20 @@ def plot(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         data = self.cols.scatterplot(columns, buckets)
         plot_scatterplot(data)
 
     @add_attr(plot)
-    def boxplot(columns=None):
+    def box(columns=None):
         """
         Plot boxplot
         :param columns: Columns to be printed
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         for col_name in columns:
             stats = self.cols.boxplot(col_name)
@@ -64,11 +65,11 @@ def plot(self):
             plot_freq(data)
 
     @add_attr(plot)
-    def correlation(vec_col, strategy="mean", method="pearson"):
+    def correlation(col_name, strategy="mean", method="pearson"):
         """
-        Compute the correlation matrix for the input dataset of Vectors using the specified method. Method
+        Compute the correlation matrix for the input data set of Vectors using the specified method. Method
         mapped from  pyspark.ml.stat.Correlation.
-        :param vec_col: The name of the column of vectors for which the correlation coefficient needs to be computed.
+        :param col_name: The name of the column of vectors for which the correlation coefficient needs to be computed.
         :param strategy:
         This must be a column of the dataset, and it must contain Vector objects.
         :param method: String specifying the method to use for computing correlation. Supported: pearson (default),
@@ -76,9 +77,8 @@ def plot(self):
         :return: Heatmap plot of the corr matrix using seaborn.
         """
 
-        corr = self.correlation(vec_col, method, strategy, output="array")
-        return sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10,
-                                                                                                     as_cmap=True))
+        corr = self.correlation(col_name, method, strategy, output="array")
+        plot_correlation(corr)
 
     return plot
 

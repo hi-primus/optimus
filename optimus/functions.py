@@ -325,6 +325,16 @@ def plot_hist(column_data=None, output=None, sub_title=""):
             return output_base64(fig)
 
 
+def plot_correlation(column_data):
+    """
+    Plot a correlation plot
+    :param column_data:
+    :return:
+    """
+    return sns.heatmap(column_data, mask=np.zeros_like(column_data, dtype=np.bool),
+                       cmap=sns.diverging_palette(220, 10, as_cmap=True))
+
+
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     """
     A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
