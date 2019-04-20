@@ -89,6 +89,31 @@ def cols(self):
         return df_result
 
     @add_attr(cols)
+    def stratify(col1, col2):
+        """
+        Like Spark groupby but using filter. This is more effective because not use shuffling
+        :param col1:
+        :param col2:
+        :return:
+        """
+        # https: // stackoverflow.com / questions / 50544852 / avoiding - shuffle - on - group - by - in -spark - sql?noredirect = 1 & lq = 1
+        exprs = []
+
+        col1_list = self.cols.unique(col1).to_json()
+        col2_list = self.cols.unique(col2).to_json()
+
+        for col1_dict in col1_list:
+            for cols2_dict in col2_list:
+                col1_val = col1_dict.get(col1)
+                col2_val = cols2_dict.get(col2)
+                expr = F.array(F.lit(col1_val), F.lit(col2_val),
+                               F.count(F.when((F.col(col1) == col1_val) & (F.col(col2) == col2_val), True)))
+                exprs.append(expr.alias(str(col1_val) + str(col2_val)))
+
+        pdf = self.agg(*exprs).toPandas()
+        return pdf
+
+    @add_attr(cols)
     def select(columns=None, regex=None, data_type=None):
         """
         Select columns using index, column name, regex to data type
