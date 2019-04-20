@@ -25,7 +25,8 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPA
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val
+    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val, \
+    check_column_numbers
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -123,9 +124,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
-
         # Spark can not handle point character in columns names so We enclose the name with `` to ensure
-        columns = ["`" + col + "`" for col in columns]
+        # columns = escape_columns(columns)
 
         return self.select(columns)
 
@@ -152,6 +152,7 @@ def cols(self):
             _func = func
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
+        check_column_numbers(columns, "*")
 
         df = self
         for col_name in columns:
@@ -176,6 +177,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
+        check_column_numbers(columns, "*")
 
         df = self
 
@@ -440,6 +442,7 @@ def cols(self):
             columns = list((r.match, self.columns))
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
+        check_column_numbers(columns, "*")
 
         for col_name in columns:
             df = df.drop(col_name)
@@ -549,26 +552,28 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Use pandas or rdd for small datasets?!
-    def median(columns, error=1):
+    def median(columns, relative_error=1):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
-        :param error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
+        :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
-        columns = parse_columns(self, columns)
+        # columns = parse_columns(self, columns)
 
-        return percentile(columns, [0.5], error)
+        return percentile(columns, [0.5], relative_error)
 
     @add_attr(cols, log_time=True)
-    def percentile(columns, values=None, error=1):
+    def percentile(columns, values=None, relative_error=1):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
-        :param error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
+        :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
         :return: percentiles per columns
         """
+
+        values = val_to_list(values)
 
         # Make sure values are double
         values = list(map(fast_float, values))
@@ -576,21 +581,25 @@ def cols(self):
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         # Get percentiles
         percentile_results = []
+
         for col_name in columns:
             percentile_per_col = self \
                 .rows.drop_na(col_name) \
                 .cols.cast(col_name, "double") \
-                .approxQuantile(col_name, values, error)
+                .approxQuantile(col_name, values, relative_error)
 
             # Convert numeric keys to str keys
             values_str = list(map(str, values))
+
             percentile_results.append(dict(zip(values_str, percentile_per_col)))
 
         percentile_results = dict(zip(columns, percentile_results))
 
+        print(percentile_results)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
@@ -604,6 +613,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         result = {}
         for col_name in columns:
 
@@ -633,6 +644,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.stddev, columns)
 
     @add_attr(cols)
@@ -643,6 +656,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.kurtosis, columns)
 
     @add_attr(cols)
@@ -653,6 +668,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.mean, columns)
 
     @add_attr(cols)
@@ -663,6 +680,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.skewness, columns)
 
     @add_attr(cols)
@@ -673,6 +692,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.sum, columns)
 
     @add_attr(cols)
@@ -683,6 +704,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         return _exprs(F.variance, columns)
 
     @add_attr(cols)
@@ -693,6 +716,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         df = self
         for col_name in columns:
             df = df.withColumn(col_name, F.abs(F.col(col_name)))
@@ -710,9 +735,9 @@ def cols(self):
         mode_result = []
 
         for col_name in columns:
-            cnts = self.groupBy(col_name).count()
-            mode_df = cnts.join(
-                cnts.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
+            count = self.groupBy(col_name).count()
+            mode_df = count.join(
+                count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
             )
 
             # if none of the values are repeated we not have mode
@@ -760,6 +785,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+        check_column_numbers(columns, "*")
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
@@ -790,6 +816,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+        check_column_numbers(columns, "*")
 
         def _remove_accents(value, attr):
             cell_str = str(value)
@@ -812,6 +839,8 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+        check_column_numbers(columns, "*")
+
         regex = re.compile("[%s]" % re.escape(string.punctuation))
 
         def _remove_special_chars(value, attr):
@@ -829,6 +858,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+        check_column_numbers(columns, "*")
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
@@ -876,6 +906,7 @@ def cols(self):
 
         # Asserting if column if in dataFrame:
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+        check_column_numbers(columns, "*")
 
         # Output format date
         format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
@@ -913,6 +944,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         df = self
         output_cols = []
@@ -937,6 +969,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         def _fill_na(_col_name, _value):
             return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(F.col(_col_name))
@@ -1011,6 +1044,8 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         df = self
         return format_dict(df.select(
             [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json())
@@ -1090,6 +1125,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         df = self
         for col_name in columns:
@@ -1193,6 +1229,8 @@ def cols(self):
         df = self
 
         columns = parse_columns(self, columns, filter_by_column_dtypes="string")
+        check_column_numbers(columns, "*")
+
         for col_name in columns:
             df = func(df, col_name, search, _replace)
 
@@ -1208,6 +1246,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         df = self
         for col_name in columns:
@@ -1230,8 +1269,10 @@ def cols(self):
         """
         iqr_result = {}
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         for col_name in columns:
-            quartile = self.cols.percentile(col_name, [0.25, 0.5, 0.75], error=0)
+            quartile = self.cols.percentile(col_name, [0.25, 0.5, 0.75], relative_error=0)
             q1 = quartile["0.25"]
             q2 = quartile["0.5"]
             q3 = quartile["0.75"]
@@ -1267,6 +1308,7 @@ def cols(self):
 
         if shape is "vector":
             columns = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
 
             vector_assembler = VectorAssembler(
                 inputCols=columns,
@@ -1551,6 +1593,8 @@ def cols(self):
         """
         df = self
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
         for col_name in columns:
             output_col = col_name + "_qcut"
             discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
@@ -1569,6 +1613,7 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
         def _clip(_col_name, args):
             _lower = args[0]
