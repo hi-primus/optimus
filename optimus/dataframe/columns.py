@@ -1031,12 +1031,41 @@ def cols(self):
         else:
             df = self
             result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
-        return result
+        return format_dict(result)
+
+    @add_attr(cols)
+    def value_counts(columns):
+        """
+        Return the counts of uniques values
+        :param columns:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        # check_column_numbers(columns, 1)
+
+        return self.groupBy(columns).count().orderBy('count')
 
     @add_attr(cols)
     def unique(columns):
+        """
+        Return unique values from a columns
+        :param columns:
+        :return:
+        """
         columns = parse_columns(self, columns)
+        check_column_numbers(columns, 1)
+
         return self.select(columns).distinct()
+
+    @add_attr(cols)
+    def nunique(*args, **kwargs):
+        """
+        Just a pandas compatible shortcut for count uniques
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        return count_uniques(*args, **kwargs)
 
     @add_attr(cols)
     def select_by_dtypes(data_type):
