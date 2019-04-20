@@ -274,12 +274,67 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(set(col_names) - set(df.columns))
+    missing_columns = list(set(col_names) - set(df.cols.names()))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
 
     return False
+
+
+def replace_multiple_characters(string, to_be_replaced, replace_by):
+    """
+    Replace multiple single characters in s string
+    :param string:
+    :param to_be_replaced: Character to be replaced
+    :param replace_by: character or string that will replace the matched character
+    :return:
+    """
+    # Iterate over the strings to be replaced
+    for elem in to_be_replaced:
+        # Check if string is in the main string
+        if elem in string:
+            # Replace the string
+            string = string.replace(elem, replace_by)
+    return string
+
+
+def replace_columns_special_characters(df, replace_by="_"):
+    """
+    Remove special character from Spark column name
+    :param df: Spark Dataframe
+    :param replace_by: character or string that will replace the matched character
+    :return:
+    """
+    for col_name in df.cols.names():
+        df = df.cols.rename(col_name, replace_multiple_characters(col_name, ["."], replace_by))
+    return df
+
+
+def escape_columns(columns):
+    """
+    Add a backtick to a columns name to prevent the dot in name problem
+    :param columns:
+    :return:
+    """
+
+    escaped_columns = []
+    if is_list(columns):
+        for col in columns:
+            # Check if the column is already escaped
+            if col[0] != "`" and col[len(col) - 1] != "`":
+                escaped_columns.append("`" + col + "`")
+            else:
+                escaped_columns.append(col)
+    else:
+        # Check if the column is already escaped
+        if columns[0] != "`" and columns[len(columns) - 1] != "`":
+            escaped_columns = "`" + columns + "`"
+        else:
+            escaped_columns.append(columns)
+    # print(escaped_columns)
+
+    return escaped_columns
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
@@ -289,17 +344,16 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
     Also accept a regex.
     If a list of tuples return to list. The first element is the columns name the others element are params.
-    This params can me used to create custom transformation functions. You can find and example in cols().cast()
+    This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the dataframe
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
-    :param filter_by_column_dtypes:
+    :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the dataframe
     :return: A list of columns string names
     """
 
-    cols = None
     attrs = None
 
     # ensure that cols_args is a list
@@ -312,6 +366,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     elif cols_args == "*" or cols_args is None:
         cols = df.columns
+
+
+    # Return filtered columns
+    # columns_filtered = list(set(columns) - set(columns_filtered))
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -338,22 +396,55 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     # Filter by column data type
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
 
+    columns_residual = None
+
+    # If necessary filter the columns be data type
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
-        # Intersect the columns filtered per datatype from the whole dataframe with the columns passed to the function
-        cols = list(set(cols).intersection(columns_filtered))
+        # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
+        final_columns = list(set(cols).intersection(columns_filtered))
 
+        # This columns match filtered data type
+        columns_residual = list(set(cols) - set(columns_filtered))
+    else:
+        final_columns = cols
+    # final_columns = escape_columns(final_columns)
     # Return cols or cols an params
+    cols_params = []
+
     if get_args is True:
-        params = cols, attrs
+        cols_params = final_columns, attrs
     elif get_args is False:
-        params = cols
+        cols_params = final_columns
     else:
         RaiseIt.value_error(get_args, ["True", "False"])
 
-    return params
+    if columns_residual:
+        print(columns_residual, "column(s) was not processed because is not", filter_by_column_dtypes)
+
+    return cols_params
+
+
+# just one
+# multiple
+
+def check_column_numbers(columns, number=0):
+    """
+    Check if the columns number match number expected
+    :param columns:
+    :param number: Number of columns to check
+    :return:
+    """
+    if number is "*":
+        if not len(columns) >= 1:
+            RaiseIt.value_error(columns, "There are not column(s) to process ")
+    elif not len(columns) == number:
+        count = len(columns)
+        RaiseIt.value_error(count, "{} ".format(number, columns))
+
+        # RaiseIt.value_error(columns, "There are not column(s) to process ")
 
 
 def tuple_to_dict(value):
