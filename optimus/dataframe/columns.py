@@ -723,7 +723,7 @@ def cols(self):
 
             mode_result.append({col_name: filter_list(mode_list)})
 
-        return mode_result
+        return format_dict(mode_result)
 
     # String Operations
     @add_attr(cols)
