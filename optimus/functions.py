@@ -4,7 +4,9 @@ from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from fastnumbers import isint, isfloat
 from numpy import array
 from pyspark.sql import DataFrame
@@ -196,11 +198,20 @@ def plot_boxplot(column_data=None, output=None):
     """
     for col_name, stats in column_data.items():
         fig, axes = plt.subplots(1, 1)
-        axes.bxp(stats)
+
+        bp = axes.bxp(stats, patch_artist=True)
+
         axes.set_title(col_name)
         plt.figure(figsize=(12, 5))
 
-        # Tweak spacing to prevent clipping of tick-labels
+        # 'fliers', 'means', 'medians', 'caps'
+        for element in ['boxes', 'whiskers']:
+            plt.setp(bp[element], color='#1f77b4')
+
+        for patch in bp['boxes']:
+            patch.set(facecolor='white')
+
+            # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
