@@ -37,6 +37,7 @@ PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
 PYSPARK_NOT_ARRAY_TYPES = ["byte", "short", "big", "int", "double", "float", "string", "date", "bool"]
 PYSPARK_STRING_TYPES = ["str"]
+PYSPARK_ARRAY_TYPES = ["array"]
 
 SPARK_SHORT_DTYPES = {"string": "string",
                       "str": "string",

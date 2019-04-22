@@ -8,6 +8,8 @@ import dateutil
 from pyspark.sql import DataFrame
 import os
 
+from optimus.helpers.functions import parse_spark_dtypes, val_to_list
+
 
 def is_same_class(class1, class2):
     """
@@ -85,9 +87,18 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
+def is_column_a(df, column, dtypes):
+    data_type = parse_spark_dtypes(dtypes)
+
+    data_type = tuple(val_to_list(data_type))
+
+    # Filter columns by data type
+    return isinstance(df.schema[column].dataType, data_type)
+
+
 def is_list_of_str(value):
     """
-    Check if an object is a liat of strings
+    Check if an object is a list of strings
     :param value:
     :return:
     """
@@ -96,7 +107,7 @@ def is_list_of_str(value):
 
 def is_list_of_int(value):
     """
-    Check if an object is a liat of integers
+    Check if an object is a list of integers
     :param value:
     :return:
     """
@@ -105,7 +116,7 @@ def is_list_of_int(value):
 
 def is_list_of_float(value):
     """
-    Check if an object is a liat of floats
+    Check if an object is a list of floats
     :param value:
     :return:
     """

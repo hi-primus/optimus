@@ -5,6 +5,7 @@ import string
 import unicodedata
 from functools import reduce
 
+import pandas as pd
 from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
@@ -19,10 +20,10 @@ from optimus.functions import abstract_udf as audf
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
+    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric, is_column_a
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, IMPUTE_SUFFIX, \
-    PYSPARK_STRING_TYPES
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
@@ -996,7 +997,8 @@ def cols(self):
             for col_name in columns:
                 value = df.cols.mode(col_name)
                 print(
-                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name, value))
+                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name,
+                                                                            value))
                 df = df.cols.fill_na(col_name, value)
 
         return df
@@ -1009,14 +1011,22 @@ def cols(self):
         :param value:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        columns = parse_columns(self, columns)
         check_column_numbers(columns, "*")
 
         def _fill_na(_col_name, _value):
-            return F.when(F.isnan(_col_name) | F.col(_col_name).isNull(), _value).otherwise(F.col(_col_name))
+
+            return F.when(match_nulls_strings(_col_name), _value).otherwise(F.col(_col_name))
 
         df = self
         for col_name in columns:
+            if is_column_a(self, col_name, PYSPARK_NUMERIC_TYPES):
+                value = fast_float(str)
+            elif is_column_a(self, col_name, PYSPARK_STRING_TYPES):
+                value = str(value)
+            elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
+                value = val_to_list(value)
+
             df = df.cols.apply_expr(col_name, _fill_na, value)
         return df
 
@@ -1063,20 +1073,19 @@ def cols(self):
         for col_name in columns:
 
             # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
-            if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
+            if is_column_a(df, col_name, ["struct", "boolean"]):
                 df = df.cols.cast(col_name, "string")
 
             # Select the nan/null rows depending of the columns data type
             # If numeric
-            if is_(df.cols.schema_dtype(col_name), tuple(parse_spark_dtypes(PYSPARK_NUMERIC_TYPES))):
+            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                 expr.append(F.count(F.when(match_nulls_integers(col_name), col_name)).alias(col_name))
             # If string. Include 'nan' string
-            elif is_(df.cols.schema_dtype(col_name), StringType):
+            elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
                 expr.append(F.count(
                     F.when(match_nulls_strings(col_name), col_name)).alias(
                     col_name))
                 print("Including 'nan' as Null in '{}'".format(col_name))
-            # If null
             else:
                 expr.append(F.count(F.when(match_null(col_name), col_name)).alias(col_name))
 
