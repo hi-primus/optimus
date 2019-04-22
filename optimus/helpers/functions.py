@@ -437,11 +437,13 @@ def check_column_numbers(columns, number=0):
     :param number: Number of columns to check
     :return:
     """
+    count = len(columns)
+
     if number is "*":
         if not len(columns) >= 1:
-            RaiseIt.value_error(columns, "There are not column(s) to process ")
+            RaiseIt.value_error(len(columns), ["more than 1"])
     elif not len(columns) == number:
-        count = len(columns)
+
         RaiseIt.value_error(count, "{} ".format(number, columns))
 
         # RaiseIt.value_error(columns, "There are not column(s) to process ")
