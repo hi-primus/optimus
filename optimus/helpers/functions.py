@@ -22,9 +22,9 @@ from optimus.helpers.raiseit import RaiseIt
 
 def infer(value):
     """
-    Infer a Spark datatype from a value
+    Infer a Spark data type from a value
     :param value: value to be inferred
-    :return: Spark datatype
+    :return: Spark data type
     """
     result = None
     # print(v)
@@ -119,7 +119,7 @@ def random_int(n=5):
 
 def print_html(html):
     """
-    Just a display() helper to print html code
+    Display() helper to print html code
     :param html: html code to be printed
     :return:
     """

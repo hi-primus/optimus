@@ -81,7 +81,7 @@ def rows(self):
     @dispatch(list)
     def sort(col_sort):
         """
-        Sort columns taking in account multiple columns
+        Sort rows taking in account multiple columns
         :param col_sort: column and sort type combination (col_name, "asc")
         :type col_sort: list of tuples
         """

@@ -894,7 +894,7 @@ def cols(self):
     @add_attr(cols)
     def date_transform(columns, current_format, output_format):
         """
-        Tranform a column date format
+        Transform a column date format
         :param  columns: Columns to be transformed.
         :param  current_format: current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
@@ -1023,9 +1023,8 @@ def cols(self):
     @add_attr(cols)
     def is_na(columns):
         """
-        Replace null values per True and non null per False
+        Replace null values with True and non null with False
         :param columns:
-        :param value:
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1089,7 +1088,6 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
-        :param type: Accepts integer, float, string or None
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
