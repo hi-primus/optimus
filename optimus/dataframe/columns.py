@@ -1032,22 +1032,30 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
+        check_column_numbers(columns, "*")
+
         df = self
         expr = []
 
         for col_name in columns:
+
             # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
             if is_(df.cols.schema_dtype(col_name), (StructType, BooleanType)):
                 df = df.cols.cast(col_name, "string")
 
-            if is_(df.cols.schema_dtype(col_name), (float, int)):
-                expr.append(F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name)).alias(col_name))
-
-            elif is_(df.cols.schema_dtype(col_name), (NullType)):
-                expr.append(F.count(col_name).alias(col_name))
-
+            # Select the nan/null rows depending of the columns data type
+            # If numeric
+            if is_(df.cols.schema_dtype(col_name), tuple(parse_spark_dtypes(PYSPARK_NUMERIC_TYPES))):
+                expr.append(F.count(F.when(match_nulls_integers(col_name), col_name)).alias(col_name))
+            # If string. Include 'nan' string
+            elif is_(df.cols.schema_dtype(col_name), StringType):
+                expr.append(F.count(
+                    F.when(match_nulls_strings(col_name), col_name)).alias(
+                    col_name))
+                print("Including 'nan' as Null in '{}'".format(col_name))
+            # If null
             else:
-                expr.append(F.count(F.when(F.col(col_name).isNull(), col_name)).alias(col_name))
+                expr.append(F.count(F.when(match_null(col_name), col_name)).alias(col_name))
 
         result = format_dict(df.select(*expr).to_json())
         return result
