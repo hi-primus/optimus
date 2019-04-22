@@ -20,13 +20,14 @@ from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric
+from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, IMPUTE_SUFFIX, \
     PYSPARK_STRING_TYPES
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val, \
-    check_column_numbers
+    check_column_numbers, parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -935,28 +936,44 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def impute(columns, strategy="mean"):
+    def impute(columns, data_type="continuous", strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
         :param columns: List of columns to be analyze.
-        :param strategy: String that specifies the way of computing missing data. Can be "mean" or "median"
+        :param data_type: continuous or categorical
+        :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
+        or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        if data_type is "continuous":
+            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES + PYSPARK_STRING_TYPES)
+            check_column_numbers(columns, "*")
 
-        df = self
-        output_cols = []
-        for col_name in columns:
-            # Imputer require not only numeric but float or double
-            df = df.cols.cast(col_name, "float")
-            output_cols.append(col_name + IMPUTE_SUFFIX)
+            df = self
+            output_cols = []
+            for col_name in columns:
+                # Imputer require not only numeric but float or double
+                print("{} values imputed for column(s) '{}'".format(df.cols.count_na(col_name), col_name))
+                df = df.cols.cast(col_name, "float")
+                output_cols.append(col_name + IMPUTE_SUFFIX)
 
-        imputer = Imputer(inputCols=columns, outputCols=output_cols)
+            imputer = Imputer(inputCols=columns, outputCols=output_cols)
 
-        model = imputer.setStrategy(strategy).fit(df)
-        df = model.transform(df)
+            model = imputer.setStrategy(strategy).fit(df)
+            df = model.transform(df)
+            print()
+        elif data_type is "categorical":
+
+            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+            check_column_numbers(columns, "*")
+
+            df = self
+            for col_name in columns:
+                value = df.cols.mode(col_name)
+                print(
+                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name, value))
+                df = df.cols.fill_na(col_name, value)
 
         return df
 
