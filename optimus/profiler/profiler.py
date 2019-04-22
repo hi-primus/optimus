@@ -10,7 +10,7 @@ import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq
+from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -187,6 +187,7 @@ class Profiler:
         :param df: Dataframe to be analyzed
         :param columns: Columns to be analized
         :param buckets: Number of buckets calculated to print the histogram
+        :param infer: infer data type
         :param relative_error: Relative Error for quantile discretizer calculation
         :return:
         """
@@ -484,8 +485,8 @@ class Profiler:
         mean = stats[col_name]['mean']
 
         col_info['range'] = max_value - min_value
-        col_info['median'] = quantile[0.5]
-        col_info['interquartile_range'] = quantile[0.75] - quantile[0.25]
+        col_info['median'] = quantile["0.5"]
+        col_info['interquartile_range'] = quantile["0.75"] - quantile["0.25"]
 
         col_info['coef_variation'] = round((stddev / mean), 5)
         col_info['mad'] = round(df.cols.mad(col_name), 5)
@@ -643,3 +644,27 @@ class Profiler:
         result = df.cols.hist(col_name_len, min_value, max_value, buckets_for_string)
 
         return result
+
+    @staticmethod
+    def missing_values(df, columns):
+        """
+        Rerturn the missing values columns statistics
+        :param df: Dataframe to be analyzed
+        :param columns: columns to be analyzed
+        :return:
+        """
+        columns = parse_columns(df, columns)
+
+        data = {}
+        cols = {}
+        rows_count = df.count()
+        for col_name in columns:
+            missing_count = df.cols.count_na(col_name)
+
+            data[col_name] = {"missing": missing_count,
+                              "%": str(round(missing_count / rows_count, 2)) + "%"}
+
+        cols["data"] = data
+        cols["count"] = rows_count
+
+        plot_missing_values(cols)

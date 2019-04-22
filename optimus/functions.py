@@ -1,11 +1,11 @@
 import base64
-from fastnumbers import isint, isfloat
 from functools import reduce
 from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
 import pandas as pd
+from fastnumbers import isint, isfloat
 from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -13,8 +13,9 @@ from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
-from optimus.helpers.functions import get_spark_dtypes_object, infer
-from optimus.helpers.functions import is_pyarrow_installed, parse_python_dtypes, random_int, one_list_to_val
+from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, parse_python_dtypes, \
+    random_int, one_list_to_val
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -39,9 +40,10 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
-    # if verbose is True:
-    #    logger.print("Using '{func_type}' to process column '{column}' with function {func_name}"
-    #                 .format(func_type=func_type, column=col, func_name=func.__name__))
+    logger.print(
+        "Using '{func_type}' to process column '{column}' with function {func_name}".format(func_type=func_type,
+                                                                                            column=col,
+                                                                                            func_name=func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, func)(col)
@@ -157,18 +159,60 @@ def ellipsis(data, length=20):
     """
     Add a "..." if a string y greater than a specific length
     :param data:
-    :param lenght
+    :param length: length taking into account to cut the string
     :return:
     """
     data = str(data)
     return (data[:length] + '..') if len(data) > length else data
 
 
-def plot_freq(column_data=None, output="image"):
+def plot_scatterplot(column_data=None, output=None):
+    """
+    Boxplot
+    :param column_data: column data in json format
+    :param output: image or base64
+    :return:
+    """
+
+    fig = plt.figure(figsize=(12, 5))
+    plt.scatter(column_data["x"]["data"], column_data["y"]["data"], s=column_data["s"], alpha=0.5)
+    plt.xlabel(column_data["x"]["name"])
+    plt.ylabel(column_data["y"]["name"])
+
+    # Tweak spacing to prevent clipping of tick-labels
+    # plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+    # Save as base64
+    if output is "base64":
+        return output_base64(fig)
+
+
+def plot_boxplot(column_data=None, output=None):
+    """
+    Boxplot
+    :param column_data: column data in json format
+    :param output: image or base64
+    :return:
+    """
+    for col_name, stats in column_data.items():
+        fig, axes = plt.subplots(1, 1)
+        axes.bxp(stats)
+        axes.set_title(col_name)
+        plt.figure(figsize=(12, 5))
+
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+        # Save as base64
+        if output is "base64":
+            return output_base64(fig)
+
+
+def plot_freq(column_data=None, output=None):
     """
     Frequency plot
-    :param column_data:
-    :param output:
+    :param column_data: column data in json format
+    :param output: image or base64
     :return:
     """
     for col_name, data in column_data.items():
@@ -201,7 +245,43 @@ def plot_freq(column_data=None, output="image"):
             return output_base64(fig)
 
 
-def plot_hist(column_data=None, output="image", sub_title=""):
+def plot_missing_values(column_data=None, output=None):
+    """
+    Plot missing values
+    :param column_data:
+    :param output: image o base64
+    :return:
+    """
+    values = []
+    columns = []
+    labels = []
+    for col_name, data in column_data["data"].items():
+        values.append(data["missing"])
+        columns.append(col_name)
+        labels.append(data["%"])
+
+    # Plot
+    fig = plt.figure(figsize=(12, 5))
+    plt.bar(columns, values)
+    plt.xticks(columns, columns)
+
+    # Highest limit
+    highest = column_data["count"]
+    plt.ylim(0, 1.05 * highest)
+    plt.title("Missing Values")
+    i = 0
+    for label, val in zip(labels, values):
+        plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
+        i = i + 1
+
+    plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+    # Save as base64
+    if output is "base64":
+        return output_base64(fig)
+
+
+def plot_hist(column_data=None, output=None, sub_title=""):
     """
     Plot a histogram
     obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
@@ -209,9 +289,10 @@ def plot_hist(column_data=None, output="image", sub_title=""):
     {'lower': -53.66000061035157, 'upper': -36.80666656494141, 'value': 2},
     ...
     ]}
-    :param column_data: histogram in Optimus format
-    :param output:
-    :return:
+    :param column_data: column data in json format
+    :param output: image or base64
+    :param sub_title: plot subtitle
+    :return: image or base64
     """
 
     for col_name, data in column_data.items():
@@ -245,7 +326,6 @@ def plot_hist(column_data=None, output="image", sub_title=""):
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
-    from ast import literal_eval
     """
     A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
     Also can return the data type
@@ -254,6 +334,8 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     :param get_type: Value to be returned as string or boolean
     :return: True or False
     """
+    from ast import literal_eval
+
     if data_type is not None:
         data_type = parse_python_dtypes(data_type)
 

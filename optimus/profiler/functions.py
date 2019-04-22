@@ -98,10 +98,10 @@ def sample_size(population_size, confidence_level, confidence_interval):
 @time_it
 def bucketizer(df, columns, splits):
     """
-
+    Bucketize multiples columns at the same time.
     :param df:
     :param columns:
-    :param splits:
+    :param splits: Number of splits
     :return:
     """
     columns = parse_columns(df, columns)
