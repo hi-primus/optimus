@@ -91,29 +91,53 @@ def cols(self):
         return df_result
 
     @add_attr(cols)
-    def stratify(col1, col2):
+    def stratify(columns):
         """
         Like Spark groupby but using filter. This is more effective because not use shuffling
-        :param col1:
-        :param col2:
+        :param columns:
         :return:
         """
-        # https: // stackoverflow.com / questions / 50544852 / avoiding - shuffle - on - group - by - in -spark - sql?noredirect = 1 & lq = 1
+
+        distinct_values = []
         exprs = []
+        for column in columns:
+            distinct_values.append([x.get(column) for x in self.cols.unique(column).to_json()])
 
-        col1_list = self.cols.unique(col1).to_json()
-        col2_list = self.cols.unique(col2).to_json()
+        product = list(itertools.product(*distinct_values))
 
-        for col1_dict in col1_list:
-            for cols2_dict in col2_list:
-                col1_val = col1_dict.get(col1)
-                col2_val = cols2_dict.get(col2)
-                expr = F.array(F.lit(col1_val), F.lit(col2_val),
-                               F.count(F.when((F.col(col1) == col1_val) & (F.col(col2) == col2_val), True)))
-                exprs.append(expr.alias(str(col1_val) + str(col2_val)))
+        for arg in product:
+            # Get columns names
+            _cols = [F.lit(a) for a in arg]
 
-        pdf = self.agg(*exprs).toPandas()
-        return pdf
+            # Construct every column conditional
+            _filter = [F.col(c) == v for c, v in zip(columns, arg)]
+
+            # Merge column conditional using and operator
+            r = F.when(reduce(lambda a, b: a & b, _filter), True)
+
+            # Apply the aggregation function
+            agg_func = F.count(r)
+
+            # Assemble the whole expresion
+            expr = F.array(*_cols, agg_func)
+
+            exprs.append(expr.alias(reduce(lambda a, b: str(a) + str(b), arg)))
+
+        pdf0 = self.agg(*exprs).toPandas()
+
+        pdf = pdf0.transpose()
+
+        # Unnn est array
+        pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
+
+        num_columns = len(pdf.columns) - 1
+
+        # Convert to int
+        pdf = pdf.astype({num_columns: int})
+
+        # Remove count 0
+        pdf = pdf[pdf[num_columns] != 0]
+        print(pdf)
 
     @add_attr(cols)
     def select(columns=None, regex=None, data_type=None):
