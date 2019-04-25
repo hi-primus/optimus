@@ -13,7 +13,7 @@ from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StringType, StructType, BooleanType, ArrayType, NullType
+from pyspark.sql.types import StringType, ArrayType
 
 # Functions
 from optimus.functions import abstract_udf as audf
@@ -24,13 +24,14 @@ from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_li
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, IMPUTE_SUFFIX, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, val_to_list, filter_list, get_spark_dtypes_object, collect_as_list, one_list_to_val, \
-    check_column_numbers, parse_spark_dtypes
+    tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
+from optimus.internals import _z_score_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -625,7 +626,6 @@ def cols(self):
 
         percentile_results = dict(zip(columns, percentile_results))
 
-        print(percentile_results)
         return format_dict(percentile_results)
 
     # Descriptive Analytics
@@ -1306,12 +1306,11 @@ def cols(self):
 
         df = self
         for col_name in columns:
-            new_col = col_name + "z_col_"
+            z_col_name = _z_score_col_name(col_name)
 
             mean_value = self.cols.mean(col_name)
             stdev_value = self.cols.std(col_name)
-
-            df = df.withColumn(new_col, F.abs((F.col(col_name) - mean_value) / stdev_value))
+            df = df.withColumn(z_col_name, F.abs((F.col(col_name) - mean_value) / stdev_value))
 
         return df
 

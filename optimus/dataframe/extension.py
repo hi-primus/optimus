@@ -1,8 +1,9 @@
-import math
 import os
 
 import humanize
 import jinja2
+import math
+from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -12,12 +13,11 @@ from pyspark.sql.types import *
 
 from optimus import RaiseIt, IMPUTE_SUFFIX
 from optimus.helpers.checkit import is_str
+from optimus.helpers.convert import val_to_list
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
-from optimus.spark import Spark
-from packaging import version
-
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
+from optimus.spark import Spark
 
 
 # from apiclient.discovery import build

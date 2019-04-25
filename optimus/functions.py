@@ -15,8 +15,9 @@ from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
-from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, parse_python_dtypes, \
-    random_int, one_list_to_val
+from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
+from optimus.helpers.parser import parse_python_dtypes
+from optimus.helpers.convert import one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark

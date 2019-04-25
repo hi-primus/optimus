@@ -33,7 +33,8 @@ class RaiseIt:
         :param data_values:
         :return:
         """
-        from optimus.helpers.functions import get_var_name, val_to_list
+        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.convert import val_to_list
 
         data_values = val_to_list(data_values)
 

@@ -11,12 +11,13 @@ from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
-from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
+from optimus.helpers.checkit import is_list_of_strings, is_list_of_tuples, \
     is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_, is_bool, is_datetime, is_date, is_binary, \
-    str_to_boolean, str_to_date, str_to_array
-from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
-    SPARK_DTYPES_DICT_OBJECTS
+    str_to_boolean, str_to_date, str_to_array, is_list_of_one_element
+from optimus.helpers.constants import SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT_OBJECTS
+from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
+from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -30,8 +31,10 @@ def infer(value):
     # print(v)
     if value is None:
         result = "null"
+
     elif is_bool(value):
         result = "bool"
+
     elif isint(value):
         result = "int"
 
@@ -52,7 +55,6 @@ def infer(value):
 
     elif is_str(value):
         if str_to_boolean(value):
-
             result = "bool"
         elif str_to_date(value):
             result = "string"  # date
@@ -62,25 +64,6 @@ def infer(value):
             result = "string"
 
     return get_spark_dtypes_object(result)
-
-
-def parse_spark_dtypes(value):
-    """
-    Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
-    :param value:
-    :return:
-    """
-
-    value = val_to_list(value)
-
-    try:
-        data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
-
-    except KeyError:
-        data_type = value
-
-    data_type = one_list_to_val(data_type)
-    return data_type
 
 
 def get_spark_dtypes_object(value):
@@ -98,15 +81,6 @@ def get_spark_dtypes_object(value):
 
     data_type = one_list_to_val(data_type)
     return data_type
-
-
-def parse_python_dtypes(value):
-    """
-    Get a spark data type from a string
-    :param value:
-    :return:
-    """
-    return PYTHON_SHORT_TYPES[value.lower()]
 
 
 def random_int(n=5):
@@ -160,32 +134,6 @@ def collect_as_dict(value):
         dict_result = [v.asDict() for v in value]
 
     return dict_result
-
-
-def one_list_to_val(val):
-    """
-    Convert a single list element to val
-    :param val:
-    :return:
-    """
-    if is_list_of_one_element(val):
-        result = val[0]
-    else:
-        result = val
-
-    return result
-
-
-def val_to_list(val):
-    """
-    Convert a single value string or number to a list
-    :param val:
-    :return:
-    """
-    if not is_list(val):
-        val = [val]
-
-    return val
 
 
 def filter_list(val, index=0):
