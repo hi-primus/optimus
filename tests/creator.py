@@ -6,32 +6,25 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 0.8.2
+#       format_version: '1.4'
+#       jupytext_version: 1.1.1
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
-#   language_info:
-#     codemirror_mode:
-#       name: ipython
-#       version: 3
-#     file_extension: .py
-#     mimetype: text/x-python
-#     name: python
-#     nbconvert_exporter: python
-#     pygments_lexer: ipython3
-#     version: 3.6.5
 # ---
+
+# ### All this cell must be run to executed the tests
 
 # %load_ext autoreload
 # %autoreload 2
 
 import sys
 
-sys.path.append("../..")
+sys.path.append("..")
 
 from optimus import Optimus
+from optimus.helpers.test import Test
 
 op = Optimus(master='local')
 
@@ -53,7 +46,7 @@ cols = [
         "date arrival",
         "last date seen",
         ("attributes", ArrayType(FloatType())),
-        ("DateType", DateType()),
+        ("Date Type", DateType()),
         ("Tiemstamp", TimestampType()),
         ("Cybertronian", BooleanType()),
         ("function(binary)", BinaryType()),
@@ -85,7 +78,10 @@ df.table()
 # -
 
 
-from optimus.helpers.test import Test
+# ### End Init Section
+
+# ### Test
+
 from pyspark.ml.linalg import Vectors
 
 # +
@@ -117,10 +113,11 @@ t.run(
     t.create(df5, None, "nullable", "df", **nullable),
     
 )
-
-# +
-## Columns Test
 # -
+
+# ## Columns Test
+
+from pyspark.ml.linalg import Vectors
 
 t = Test(op, df, "df_cols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
@@ -234,7 +231,7 @@ t.run(
     t.create(None, "cols.reverse", "all_columns", "df", "*"),
 
     t.create(None, "cols.remove_accents", None, "df", numeric_col),
-    t.create(None, "cols.remove_accents", "all_columns", "df", "*"),
+    t.create(None, "cols.remove_accents", "all_columns", "df", "Date Type"),
 
     t.create(None, "cols.remove_special_chars", None, "df", numeric_col),
     t.create(None, "cols.remove_special_chars", "all_columns", "df", "*"),
@@ -304,7 +301,10 @@ t.run(
 
     t.create(None, "cols.keep", None, "df", numeric_col_B),
 
-    t.create(None, "cols.move", None, "df", numeric_col_B, "after", array_col),
+    t.create(None, "cols.move", "after", "df", numeric_col_B, "after", array_col),
+    t.create(None, "cols.move", "before", "df", numeric_col_B, "before", array_col),
+    t.create(None, "cols.move", "beginning", "df", numeric_col_B, "beginning"),
+    t.create(None, "cols.move", "end", "df", numeric_col_B, "end"),
 
     t.create(None, "cols.select", None, "df", 0, numeric_col),
 
@@ -334,6 +334,9 @@ t.run(
     t.create(None, "cols.is_na", None, "df", numeric_col),
 
 )
+
+# +
+# Rows Test
 # -
 
 t = Test(op,df, "df_rows", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
@@ -349,35 +352,32 @@ rows = [
          None)
 ]
 
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+
+t = Test(op, df, "op_io", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"])
+
 # +
-from pyspark.sql import functions as F
-from optimus.functions import abstract_udf as audf
-
-def func_data_type(value, attr):
-    return value > 1
-        
 t.run(
+    
+    t.create(op, "load.csv", None, "df", "../examples/data/foo.csv"),
+    t.create(op, "load.json", None, "df", "../examples/data/foo.json"),
+    t.create(op, "load.parquet", None, "df", "../examples/data/foo.parquet"),
 
-    t.create(None, "rows.append", None, "df", rows),
-    #t.create(None, "rows.select", None, "df", F.col("rank") == 7),
-    t.create(None, "rows.select_by_dtypes", "integer", "df", "height(ft)", "integer"),
-    t.create(None, "rows.select_by_dtypes", "float", "df", "weight(t)", "float"),
+    t.create(op, "load.url", "csv", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv"),
+    t.create(op, "load.url", "json", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json","json"),
+    t.create(op, "load.url", "parquet", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet","parquet"),
     
+     t.create(None, "save.csv", None, None, "test.csv"),
+     t.create(None, "save.json", None, None, "test.json"),
+     t.create(None, "save.parquet", None, None, "test.parquet"),
     
-    t.create(None, "rows.drop_by_dtypes", "integer", "df", "height(ft)", "integer"),
-    t.create(None, "rows.drop_by_dtypes", "float", "df", "weight(t)", "float"),
+     
     
-    #t.create(None, "rows.drop", None, "df", (F.col("rank") == 10) | (F.col("rank") == 7)),
-    #t.create(None, "rows.drop", "audf", "df", (audf("rank", func_data_type, "boolean"))),
-    
-    t.create(None, "rows.sort", None, "df","rank"),
-    t.create(None, "rows.sort", "desc", "df", "rank", "desc"),
-    t.create(None, "rows.sort", "asc", "df", "rank", "asc"),
-    
-    #t.create(None, "rows.is_in", None, "df", ("rank", 2)),
 )
-
-
 # -
 
 
