@@ -26,7 +26,7 @@ flask==1.0.2
 ipython==7.2.0
 humanize==0.5.1
 pytest-cov==2.6.1
-psutil==5.6.1
+psutil==5.6.2
 backoff==1.8.0
 pymongo==3.7.2
 h2o-pysparkling-2.4==2.4.4
