@@ -11,27 +11,30 @@ from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
-from optimus.helpers.checkit import is_list_of_one_element, is_list_of_strings, is_list_of_tuples, \
+from optimus.helpers.checkit import is_list_of_strings, is_list_of_tuples, \
     is_str, is_dict_of_one_element, is_tuple, is_dict, is_list, is_, is_bool, is_datetime, is_date, is_binary, \
-    str_to_boolean, str_to_date, str_to_array
-from optimus.helpers.constants import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, \
-    SPARK_DTYPES_DICT_OBJECTS
+    str_to_boolean, str_to_date, str_to_array, is_list_of_one_element
+from optimus.helpers.constants import SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT_OBJECTS
+from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
+from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
 def infer(value):
     """
-    Infer a Spark datatype from a value
+    Infer a Spark data type from a value
     :param value: value to be inferred
-    :return: Spark datatype
+    :return: Spark data type
     """
     result = None
     # print(v)
     if value is None:
         result = "null"
+
     elif is_bool(value):
         result = "bool"
+
     elif isint(value):
         result = "int"
 
@@ -52,7 +55,6 @@ def infer(value):
 
     elif is_str(value):
         if str_to_boolean(value):
-
             result = "bool"
         elif str_to_date(value):
             result = "string"  # date
@@ -62,25 +64,6 @@ def infer(value):
             result = "string"
 
     return get_spark_dtypes_object(result)
-
-
-def parse_spark_dtypes(value):
-    """
-    Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
-    :param value:
-    :return:
-    """
-
-    value = val_to_list(value)
-
-    try:
-        data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
-
-    except KeyError:
-        data_type = value
-
-    data_type = one_list_to_val(data_type)
-    return data_type
 
 
 def get_spark_dtypes_object(value):
@@ -100,15 +83,6 @@ def get_spark_dtypes_object(value):
     return data_type
 
 
-def parse_python_dtypes(value):
-    """
-    Get a spark data type from a string
-    :param value:
-    :return:
-    """
-    return PYTHON_SHORT_TYPES[value.lower()]
-
-
 def random_int(n=5):
     """
     Create a random string of ints
@@ -119,7 +93,7 @@ def random_int(n=5):
 
 def print_html(html):
     """
-    Just a display() helper to print html code
+    Display() helper to print html code
     :param html: html code to be printed
     :return:
     """
@@ -160,32 +134,6 @@ def collect_as_dict(value):
         dict_result = [v.asDict() for v in value]
 
     return dict_result
-
-
-def one_list_to_val(val):
-    """
-    Convert a single list element to val
-    :param val:
-    :return:
-    """
-    if is_list_of_one_element(val):
-        result = val[0]
-    else:
-        result = val
-
-    return result
-
-
-def val_to_list(val):
-    """
-    Convert a single value string or number to a list
-    :param val:
-    :return:
-    """
-    if not is_list(val):
-        val = [val]
-
-    return val
 
 
 def filter_list(val, index=0):
@@ -274,12 +222,67 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(set(col_names) - set(df.columns))
+    missing_columns = list(set(col_names) - set(df.cols.names()))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
 
     return False
+
+
+def replace_multiple_characters(string, to_be_replaced, replace_by):
+    """
+    Replace multiple single characters in s string
+    :param string:
+    :param to_be_replaced: Character to be replaced
+    :param replace_by: character or string that will replace the matched character
+    :return:
+    """
+    # Iterate over the strings to be replaced
+    for elem in to_be_replaced:
+        # Check if string is in the main string
+        if elem in string:
+            # Replace the string
+            string = string.replace(elem, replace_by)
+    return string
+
+
+def replace_columns_special_characters(df, replace_by="_"):
+    """
+    Remove special character from Spark column name
+    :param df: Spark Dataframe
+    :param replace_by: character or string that will replace the matched character
+    :return:
+    """
+    for col_name in df.cols.names():
+        df = df.cols.rename(col_name, replace_multiple_characters(col_name, ["."], replace_by))
+    return df
+
+
+def escape_columns(columns):
+    """
+    Add a backtick to a columns name to prevent the dot in name problem
+    :param columns:
+    :return:
+    """
+
+    escaped_columns = []
+    if is_list(columns):
+        for col in columns:
+            # Check if the column is already escaped
+            if col[0] != "`" and col[len(col) - 1] != "`":
+                escaped_columns.append("`" + col + "`")
+            else:
+                escaped_columns.append(col)
+    else:
+        # Check if the column is already escaped
+        if columns[0] != "`" and columns[len(columns) - 1] != "`":
+            escaped_columns = "`" + columns + "`"
+        else:
+            escaped_columns.append(columns)
+    # print(escaped_columns)
+
+    return escaped_columns
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
@@ -289,17 +292,16 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
     Also accept a regex.
     If a list of tuples return to list. The first element is the columns name the others element are params.
-    This params can me used to create custom transformation functions. You can find and example in cols().cast()
+    This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the dataframe
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
-    :param filter_by_column_dtypes:
+    :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the dataframe
     :return: A list of columns string names
     """
 
-    cols = None
     attrs = None
 
     # ensure that cols_args is a list
@@ -312,6 +314,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     elif cols_args == "*" or cols_args is None:
         cols = df.columns
+
+
+    # Return filtered columns
+    # columns_filtered = list(set(columns) - set(columns_filtered))
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -338,22 +344,57 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     # Filter by column data type
     filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
 
+    columns_residual = None
+
+    # If necessary filter the columns be data type
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
-        # Intersect the columns filtered per datatype from the whole dataframe with the columns passed to the function
-        cols = list(set(cols).intersection(columns_filtered))
+        # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
+        final_columns = list(set(cols).intersection(columns_filtered))
 
+        # This columns match filtered data type
+        columns_residual = list(set(cols) - set(columns_filtered))
+    else:
+        final_columns = cols
+    # final_columns = escape_columns(final_columns)
     # Return cols or cols an params
+    cols_params = []
+
     if get_args is True:
-        params = cols, attrs
+        cols_params = final_columns, attrs
     elif get_args is False:
-        params = cols
+        cols_params = final_columns
     else:
         RaiseIt.value_error(get_args, ["True", "False"])
 
-    return params
+    if columns_residual:
+        print(columns_residual, "column(s) was not processed because is not", filter_by_column_dtypes)
+
+    return cols_params
+
+
+# just one
+# multiple
+
+def check_column_numbers(columns, number=0):
+    """
+    Check if the columns number match number expected
+    :param columns:
+    :param number: Number of columns to check
+    :return:
+    """
+    count = len(columns)
+
+    if number is "*":
+        if not len(columns) >= 1:
+            RaiseIt.value_error(len(columns), ["more than 1"])
+    elif not len(columns) == number:
+
+        RaiseIt.value_error(count, "{} ".format(number, columns))
+
+        # RaiseIt.value_error(columns, "There are not column(s) to process ")
 
 
 def tuple_to_dict(value):

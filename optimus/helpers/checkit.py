@@ -2,11 +2,14 @@
 Helpers to check if an object match a date type
 """
 import datetime
+import os
 from ast import literal_eval
 
 import dateutil
 from pyspark.sql import DataFrame
-import os
+
+from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.convert import val_to_list
 
 
 def is_same_class(class1, class2):
@@ -85,9 +88,24 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
+def is_column_a(df, column, dtypes):
+    """
+    Check if column match a list of data types
+    :param df:
+    :param column:
+    :param dtypes:
+    :return:
+    """
+
+    data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
+
+    # Filter columns by data type
+    return isinstance(df.schema[column].dataType, data_type)
+
+
 def is_list_of_str(value):
     """
-    Check if an object is a liat of strings
+    Check if an object is a list of strings
     :param value:
     :return:
     """
@@ -96,7 +114,7 @@ def is_list_of_str(value):
 
 def is_list_of_int(value):
     """
-    Check if an object is a liat of integers
+    Check if an object is a list of integers
     :param value:
     :return:
     """
@@ -105,7 +123,7 @@ def is_list_of_int(value):
 
 def is_list_of_float(value):
     """
-    Check if an object is a liat of floats
+    Check if an object is a list of floats
     :param value:
     :return:
     """

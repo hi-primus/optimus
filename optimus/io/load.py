@@ -1,12 +1,13 @@
 import tempfile
 from urllib.request import Request, urlopen
 
+import pandas as pd
 from packaging import version
 
+from optimus.helpers.functions import replace_columns_special_characters
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
-import pandas as pd
 
 
 class Load:
@@ -66,10 +67,11 @@ class Load:
             df = Spark.instance.spark.read \
                 .option("multiLine", True) \
                 .json(path, *args, **kwargs)
+
         except IOError as error:
             logger.print(error)
             raise
-        return df
+        return replace_columns_special_characters(df)
 
     @staticmethod
     def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
@@ -95,7 +97,7 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        return df
+        return replace_columns_special_characters(df)
 
     @staticmethod
     def parquet(path, *args, **kwargs):
@@ -138,30 +140,36 @@ class Load:
         return df
 
     @staticmethod
-    def excel(path, *args, **kwargs):
+    def excel(path, sheet_name=0, *args, **kwargs):
         """
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
+        :param sheet_name: excel sheet name
          :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-        pdf = pd.read_excel(path, *args, **kwargs)
+        try:
+            pdf = pd.read_excel(path, sheet_name=sheet_name, *args, **kwargs)
 
-        # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
-        # exception when Spark try to infer the column data type
-        col_names = list(pdf.select_dtypes(include=['object']))
+            # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
+            # exception when Spark try to infer the column data type
+            col_names = list(pdf.select_dtypes(include=['object']))
 
-        column_dtype = {}
-        for col in col_names:
-            column_dtype[col] = str
+            column_dtype = {}
+            for col in col_names:
+                column_dtype[col] = str
 
-        pdf = pdf.astype(column_dtype)
+            # Convert object columns to string
+            pdf = pdf.astype(column_dtype)
 
-        # Create spark data frame
-        df = Spark.instance.spark.createDataFrame(pdf)
+            # Create spark data frame
+            df = Spark.instance.spark.createDataFrame(pdf)
+        except IOError as error:
+            logger.print(error)
+            raise
 
-        return df
+        return replace_columns_special_characters(df)
 
 
 class Downloader(object):

@@ -40,3 +40,7 @@ venv/
 tests/test.csv/
 tests/test.json/
 tests/test.parquet/
+
+handyspark \.ipynb
+
+handyspark1\.ipynb

@@ -9,7 +9,8 @@ import optimus as op
 from optimus.functions import filter_row_by_data_type as fbdt
 from optimus.helpers.checkit import is_list_of_str_or_int, is_list_of_tuples, is_list
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import validate_columns_names, parse_columns, one_list_to_val, val_to_list
+from optimus.helpers.functions import validate_columns_names, parse_columns
+from optimus.helpers.convert import val_to_list, one_list_to_val
 
 
 def rows(self):
@@ -81,7 +82,7 @@ def rows(self):
     @dispatch(list)
     def sort(col_sort):
         """
-        Sort columns taking in account multiple columns
+        Sort rows taking in account multiple columns
         :param col_sort: column and sort type combination (col_name, "asc")
         :type col_sort: list of tuples
         """
@@ -144,13 +145,19 @@ def rows(self):
         return self.dropna(how, subset=columns)
 
     @add_attr(rows)
-    def drop_duplicates(columns=None):
+    def drop_duplicates(columns=None, keep="first"):
         """
         Drop duplicates values in a dataframe
         :param columns: List of columns to make the comparison, this only  will consider this subset of columns,
-        for dropping duplicates. The default behavior will only drop the identical rows.
+        :param keep: keep or delete the duplicated row
+        for dropping duplicates. The default behavior will only drop the whole identical rows.
         :return: Return a new DataFrame with duplicate rows removed
         """
+        # TODO:
+        #  add param
+        #  first : Drop duplicates except for the first occurrence.
+        #  last : Drop duplicates except for the last occurrence.
+        #  all: Drop all duplicates except for the last occurrence.
 
         columns = parse_columns(self, columns)
         return self.drop_duplicates(subset=columns)

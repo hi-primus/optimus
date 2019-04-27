@@ -1,6 +1,6 @@
+from optimus.helpers.convert import val_to_list
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
-from optimus.helpers.functions import val_to_list
 
 # Optimus play defensive with the number of rows to be retrieved from the server so a limit is not specified in
 # a function that required it only will retrieve the LIMIT value

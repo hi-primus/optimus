@@ -1,4 +1,26 @@
-[![Logo Optimus](https://github.com/ironmussa/Optimus/blob/master/images/logoOptimus.png)](https://hioptimus.com)  
+---
+jupyter:
+  jupytext:
+    formats: ipynb,md
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.1'
+      jupytext_version: 1.1.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```python
+%load_ext autoreload
+%autoreload 2
+import sys
+sys.path.append("..")
+```
+
+[![Logo Optimus](images/logoOptimus.png)](https://hioptimus.com)  
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e01572e2af5640fcbcdd58e7408f3ea0)](https://www.codacy.com/app/favio.vazquezp/Optimus?utm_source=github.com&utm_medium=referral&utm_content=ironmussa/Optimus&utm_campaign=badger) [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/iron-mussa/devops)  [![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Code Health](https://landscape.io/github/ironmussa/Optimus/develop/landscape.svg?style=flat)](https://landscape.io/github/ironmussa/Optimus/develop) [![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)  [![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ironmussa/Optimus/master)
 
@@ -18,7 +40,7 @@ You can go to the 10 minutes to Optimus [notebook](https://github.com/ironmussa/
 
 Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
-and check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ironmussa/Optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
+Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ironmussa/Optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
 
 
 ## Documentation
@@ -28,11 +50,8 @@ and check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ir
 ## Feedback 
 Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  https://optimusdata.typeform.com/to/aEnYRY  
 
-Also If you want to know what features are the most requested or have and idea you want to see in Optimus let us know at  
-https://optimus.featureupvote.com/  
+Also if you want to a suggestion or feature request use https://github.com/ironmussa/optimus/issues
  
-And if you want to see some cool information and tutorials about Optimus check out our blog https://medium.com/hi-optimus  
-  
 ## Start Optimus
 
 ```python
@@ -41,20 +60,23 @@ op= Optimus()
 ```
 
 ## Loading data
-Now Optimus can load data in csv, json, parquet and avro from a local file or an URL.
+Now Optimus can load data in csv, json, parquet, avro excel from a local file or URL.
 
 ```python
 #csv
-df = op.load.csv("data/foo.csv")
+df = op.load.csv("examples/data/foo.csv")
 
 #json
-df = op.load.json("data/foo.json")
+df = op.load.json("examples/data/foo.json")
 
 # parquet
-df = op.load.parquet("data/foo.parquet")
+df = op.load.parquet("examples/data/foo.parquet")
 
 # avro
-df = op.load.avro("data/foo.avro").table(5)
+# df = op.load.avro("examples/data/foo.avro").table(5)
+
+# excel 
+df = op.load.excel("examples/data/titanic3.xls")
 ```
 
 If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro)
@@ -70,18 +92,13 @@ Optimus expand the Spark DataFrame functionality adding .rows and .cols attribut
 For example you can load data from a url, transform and apply some predefined cleaning functions:
 
 ```python
-from optimus import Optimus
-op = Optimus()
-
 # This is a custom function
 def func(value, arg):
     return "this was a number"
     
 df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
-
-
     
-df\
+new_df = df\
     .rows.sort("product","desc")\
     .cols.lower(["firstName","lastName"])\
     .cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY")\
@@ -94,59 +111,21 @@ df\
     .cols.drop("dummyCol")\
     .cols.rename(str.lower)\
     .cols.apply_by_dtypes("product",func,"string", data_type="integer")\
-    .cols.trim("*")\
-    .table()
+    .cols.trim("*")
 ```
 
-You transform this:
+You transform this
 
-```
-+---+--------------------+--------------------+---------+----------+-----+----------+--------+
-| id|           firstName|            lastName|billingId|   product|price|     birth|dummyCol|
-+---+--------------------+--------------------+---------+----------+-----+----------+--------+
-|  1|                Luis|         Alvarez$$%!|      123|      Cake|   10|1980/07/07|   never|
-|  2|               André|              Ampère|      423|      piza|    8|1950/07/08|   gonna|
-|  3|               NiELS|          Böhr//((%%|      551|     pizza|    8|1990/07/09|    give|
-|  4|                PAUL|              dirac$|      521|     pizza|    8|1954/07/10|     you|
-|  5|              Albert|            Einstein|      634|     pizza|    8|1990/07/11|      up|
-|  6|             Galileo|             GALiLEI|      672|     arepa|    5|1930/08/12|   never|
-|  7|                CaRL|            Ga%%%uss|      323|      taco|    3|1970/07/13|   gonna|
-|  8|               David|          H$$$ilbert|      624|  taaaccoo|    3|1950/07/14|     let|
-|  9|            Johannes|              KEPLER|      735|      taco|    3|1920/04/22|     you|
-| 10|               JaMES|         M$$ax%%well|      875|      taco|    3|1923/03/12|    down|
-| 11|               Isaac|              Newton|      992|     pasta|    9|1999/02/15|  never |
-| 12|              Emmy%%|            Nöether$|      234|     pasta|    9|1993/12/08|   gonna|
-| 13|              Max!!!|           Planck!!!|      111|hamburguer|    4|1994/01/04|    run |
-| 14|                Fred|            Hoy&&&le|      553|    pizzza|    8|1997/06/27|  around|
-| 15|(((   Heinrich )))))|               Hertz|      116|     pizza|    8|1956/11/30|     and|
-| 16|             William|          Gilbert###|      886|      BEER|    2|1958/03/26|  desert|
-| 17|               Marie|               CURIE|      912|      Rice|    1|2000/03/22|     you|
-| 18|              Arthur|          COM%%%pton|      812|    110790|    5|1899/01/01|       #|
-| 19|               JAMES|            Chadwick|      467|      null|   10|1921/05/03|       #|
-+---+--------------------+--------------------+---------+----------+-----+----------+--------+
+```python
+df.table()
 ```
 
-into this:
+Into this
 
+```python
+new_df.table()
 ```
-+---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
-| id|           firstname|lastname|billingid|          product|price|     birth|birth_data_transform|birth_years_between|
-+---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
-|  9|            johannes|  kepler|      735|             taco|    3|1920/04/22|          22-04-1920|            98.5511|
-|  7|                carl|   gauss|      323|             taco|    3|1970/07/13|          13-07-1970|            48.3253|
-| 10|               james| maxwell|      875|             taco|    3|1923/03/12|          12-03-1923|            95.6613|
-|  8|               david| hilbert|      624|             taco|    3|1950/07/14|          14-07-1950|            68.3226|
-| 14|                fred|   hoyle|      553|            pizza|    8|1997/06/27|          27-06-1997|             21.371|
-| 15|(((   heinrich )))))|   hertz|      116|            pizza|    8|1956/11/30|          30-11-1956|            61.9462|
-| 12|              emmy%%| noether|      234|            pasta|    9|1993/12/08|          08-12-1993|             24.922|
-| 11|               isaac|  newton|      992|            pasta|    9|1999/02/15|          15-02-1999|            19.7366|
-| 19|               james|chadwick|      467|             null|   10|1921/05/03|          03-05-1921|            97.5188|
-| 13|              max!!!|  planck|      111|       hamburguer|    4|1994/01/04|          04-01-1994|            24.8495|
-| 17|               marie|   curie|      912|             Rice|    1|2000/03/22|          22-03-2000|            18.6344|
-| 16|             william| gilbert|      886|             BEER|    2|1958/03/26|          26-03-1958|            60.6237|
-| 18|              arthur| compton|      812|this was a number|    5|1899/01/01|          01-01-1899|           119.8575|
-+---+--------------------+--------+---------+-----------------+-----+----------+--------------------+-------------------+
-```
+
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
 ### Custom functions
@@ -154,47 +133,43 @@ Spark have multiple ways to transform your data like rdd, Column Expression ,udf
 
 Here you apply a function to the "billingid" column. Sum 1 and 2 to the current column value. All powered by Pandas UDF
 ```python
-from optimus import Optimus
-op = Optimus()
-  
-df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/foo.csv")
-
 def func(value, args):
-    return value +args[0] + args[1]
+    return value + args[0] + args[1]
 
-df.cols.apply("billingid",func,"int", [1,2]).show()
+df.cols.apply("billingid",func,"int", [1,2]).table()
 ```
 
 If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
 
 ```python
-from pyspark.sql import functions as F
-from optimus import Optimus
-op = Optimus()
-  
-
-df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/foo.csv")
-
 def func(col_name, args):
     return F.col(col_name)/20
 
-df.cols.apply_expr("billingid", func, 20).show()
+df.cols.apply_expr("billingid", func, 20).table()
 ```
- 
+
+```python
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
+```
+
 ## Data profiling
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb).
 
-![](images/summary_profiler.png)
-![](images/missing.png)
-![](images/profiler.png)
-For date columns iOptimus can give you extra data
-![](images/date_year.png)
+```python
+op.profiler.run(df, "name", infer=False)
+```
+
+For dates data types Optimus can give you extra data
+```python
+op.profiler.run(df, "year", infer=True)
+```
 
 ## Plots
 Besides histograms, frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
+
 ```python
 df.plot.scatterplot(["Age", "Fare"], buckets=30)
 ```
@@ -210,7 +185,7 @@ df.plot.correlation("Age")
 
 ## Database connection
 Optimus have handy tools to connect to databases ans extract informacion. Optimus have specific function for Redshift, postgres and mysql
- 
+ df
 ```python
 # Put your db credentials here
 db =  op.connect(
@@ -230,7 +205,7 @@ db.table.show("*",20)
 # Get a table as dataframe
 db.table_to_df("tablename")
 ```
- 
+
 
 ## Data enrichment
 
@@ -358,8 +333,8 @@ including:
 ## Backers  
 [[Become a backer](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.  
 [![OpenCollective](https://opencollective.com/optimus/backers/badge.svg)](#backers)   
-  
-  
+
+
 ## Sponsors  
 [[Become a sponsor](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.  
 [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)  
@@ -382,3 +357,7 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 [![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
   
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
+
+```python
+
+```

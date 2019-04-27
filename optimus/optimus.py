@@ -5,7 +5,7 @@ from shutil import rmtree
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
-from optimus.helpers.functions import val_to_list
+from optimus.helpers.convert import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
@@ -49,7 +49,7 @@ class Optimus:
 
         :param options: Configuration options that are passed to spark-submit.
             See `the list of possible options
-            <https://spark.apache.org/docs/2.1.0/configuration.html#available-properties>`_.
+            <https://spark.apache.org/docs/2.4.1/configuration.html#available-properties>`_.
             Note that any options set already through PYSPARK_SUBMIT_ARGS will override
             these.
         :type options: (dict[str,str])

@@ -4,7 +4,9 @@ from io import BytesIO
 
 import dateutil.parser
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from fastnumbers import isint, isfloat
 from numpy import array
 from pyspark.sql import DataFrame
@@ -13,8 +15,9 @@ from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
-from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, parse_python_dtypes, \
-    random_int, one_list_to_val
+from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
+from optimus.helpers.parser import parse_python_dtypes
+from optimus.helpers.convert import one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
@@ -196,11 +199,20 @@ def plot_boxplot(column_data=None, output=None):
     """
     for col_name, stats in column_data.items():
         fig, axes = plt.subplots(1, 1)
-        axes.bxp(stats)
+
+        bp = axes.bxp(stats, patch_artist=True)
+
         axes.set_title(col_name)
         plt.figure(figsize=(12, 5))
 
-        # Tweak spacing to prevent clipping of tick-labels
+        # 'fliers', 'means', 'medians', 'caps'
+        for element in ['boxes', 'whiskers']:
+            plt.setp(bp[element], color='#1f77b4')
+
+        for patch in bp['boxes']:
+            patch.set(facecolor='white')
+
+            # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
@@ -323,6 +335,16 @@ def plot_hist(column_data=None, output=None, sub_title=""):
         # Save as base64
         if output is "base64":
             return output_base64(fig)
+
+
+def plot_correlation(column_data):
+    """
+    Plot a correlation plot
+    :param column_data:
+    :return:
+    """
+    return sns.heatmap(column_data, mask=np.zeros_like(column_data, dtype=np.bool),
+                       cmap=sns.diverging_palette(220, 10, as_cmap=True))
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
