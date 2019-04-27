@@ -6,6 +6,7 @@ from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.convert import val_to_list
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
@@ -13,8 +14,6 @@ from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
 from optimus.spark import Spark
-
-from optimus.helpers.logger import logger
 
 Spark.instance = None
 
@@ -92,7 +91,8 @@ class Optimus:
             self.verbose(verbose)
 
             # Load Avro.
-            # TODO: if the Spark 2.4 version is going to be used this is not neccesesary.
+            # TODO:
+            #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
             # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
@@ -114,8 +114,9 @@ class Optimus:
                 self._set_check_point_folder(path, file_system)
 
         else:
-            # If a session is passed by arguments  just save the reference
-            Spark.instance = session
+            # If a session is passed by arguments just save the reference
+
+            Spark.instance = Spark().load(session)
 
         # Initialize Spark
         logger.print("""
@@ -148,7 +149,8 @@ class Optimus:
         self.ml = ML()
         self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
 
-    def connect(self, db_type="redshift", url=None, database=None, user=None, password=None, port=None):
+    @staticmethod
+    def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
         """
         Create the JDBC string connection
         :return:
@@ -343,7 +345,7 @@ class Optimus:
 
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
-        Spark.instance = Spark(self.master, self.app_name)
+        Spark.instance = Spark().create(self.master, self.app_name)
 
     def has_package(self, package_prefix):
         """
