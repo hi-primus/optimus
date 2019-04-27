@@ -2,7 +2,7 @@ Optimus is the missing framework to profile, clean, process and do ML in a distr
 
 - Requirements:
 
-* Apache Spark>=2.3.0
+* Apache Spark>=2.4.0
 * Python>=3.6
 
 - Installation:
