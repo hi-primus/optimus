@@ -1514,6 +1514,12 @@ def cols(self):
 
     @add_attr(cols)
     def scatterplot(columns, buckets=10):
+        """
+        Return scatter plot data in json format
+        :param columns:
+        :param buckets: number of buckets
+        :return:
+        """
 
         if len(columns) != 2:
             RaiseIt.length_error(columns, "2")

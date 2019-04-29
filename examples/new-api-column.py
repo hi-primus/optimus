@@ -6,26 +6,14 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 0.8.2
+#       format_version: '1.4'
+#       jupytext_version: 1.1.1
 #   kernel_info:
 #     name: python3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
-#   language_info:
-#     codemirror_mode:
-#       name: ipython
-#       version: 3
-#     file_extension: .py
-#     mimetype: text/x-python
-#     name: python
-#     nbconvert_exporter: python
-#     pygments_lexer: ipython3
-#     version: 3.6.5
-#   nteract:
-#     version: 0.11.6
 # ---
 
 # Hi, this notebook will show you almost all the columns operation availables in Optimus. For row operation, IO, ML and DL please go to the examples folder in the repo
@@ -301,7 +289,7 @@ df\
 # ### Spits in 3 parts
 
 df\
-    .cols.unnest(["two strings"], splits= 3, mark = "-")\
+    .cols.unnest(["two strings"], splits= 3, separator= "-")\
     .table()
 
 # ### Unnest a Vector
@@ -312,7 +300,7 @@ from pyspark.ml.linalg import Vectors
 df1 = op.sc.parallelize([
     ("assert", Vectors.dense([1, 2, 3])),
     ("require", Vectors.sparse(3, {1: 2}))
-]).toDF(["word", "vector"])    
+]).toDF()
 # -
 
 df1\
@@ -325,12 +313,19 @@ df = df.cols.append("new_col_1", 1)
 
 # ### Fill missing data
 
-# +
-df_fill = op.spark.createDataFrame([(1.0, float("nan")), (2.0, float("nan")), 
-                               (float("nan"), 3.0), (4.0, 4.0), (5.0, 5.0)], ["a", "b"])
+df_fill = op.spark.createDataFrame([(1.0, float("nan"),"1"), 
+                                    (2.0, float("nan"),"nan"),
+                                    (float("nan"), 3.0, None), 
+                                    (4.0, 4.0, "2"), 
+                                    (5.0, 5.0,"2")
+                                   ], ["a", "b","c"]
+                                  )
 
-imputer = df_fill.cols.impute(["a", "b"], "median").table()
-# -
+df_fill.table()
+
+df_fill.cols.impute(["a", "b"], "continuous", "median").table()
+
+df_fill.cols.impute(["c"], "categorical").table()
 
 # ## Get columns by type
 # ### Spark
@@ -508,11 +503,13 @@ df.cols.dtypes('*')
 
 # ## Replace
 
+df.table()
+
 # ### Replace "dog","cat" in column "animals" by the word "animals"
 
 df.cols.replace("animals",["dog","cat"],"animals").table()
 
-# ### Replace "dog-tv", "cat", "eagle", "fish" in columns "two strings","animals" by "animals"
+# ### Replace "dog-tv", "cat", "eagle", "fish" in columns "two strings","animals" by the string "animals"
 
 df.cols.replace(["two strings","animals"], ["dog-tv", "cat", "eagle", "fish"], "animals").table()
 
@@ -524,15 +521,34 @@ df.cols.replace("animals",[("dog","dog_1"),("cat","cat_1")]).table()
 
 df.cols.replace("animals","dog","animal").table()
 
+# ### Replace a,b,c by % in all columns
+
+df.cols.replace("*",["a","b","c"],"%").table()
+
+# ### Replace 3 and 2 by 10 in a numeric columns
+
 df.cols.replace('num',["3",2], 10).table()
 
-df.cols.replace('num',[("3",6),(2,6)]).table()
+# ### Replace 3 by 6 and 2 by 12 in a numeric columns
 
-df.cols.replace('*','.*[Cc]at.*', 'cat_1', regex=True).table()
+df.cols.replace('num',[("3",6),(2,12)]).table()
+
+# ### Replace as words
+
+df.cols.replace("animals","dog","animal", search_by = "words").table()
+
+df.cols.replace("animals",[("dog","dog_1"),("cat","cat_1")], "words").table()
+
+df.cols.replace("animals",["dog","cat"],"animals", "words").table()
+
+# ### Use Regex
+
+df.cols.replace_regex('*','.*[Cc]at.*', 'cat_1').table()
 
 # ## Nest
 
 # ### Merge two columns in a column vector
+# #### Match the string as a word not as a substring
 
 df.cols.nest(["num", "new_col_1"], output_col = "col_nested", shape ="vector").table()
 
@@ -617,6 +633,8 @@ df.cols.z_score("price").table()
 df.cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY").table()
 
 df.cols.years_between("birth", "yyyyMMdd",).table()
+
+df.cols.remove("*",["&","%"]).table()
 
 df.cols.remove_accents("lastName").table()
 
