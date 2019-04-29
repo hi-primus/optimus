@@ -5,6 +5,7 @@ import os
 import pprint
 import random
 import re
+from inspect import currentframe, getframeinfo
 
 from IPython.display import display, HTML
 from fastnumbers import isint, isfloat
@@ -501,7 +502,7 @@ def get_var_name(var):
 
 def json_converter(obj):
     """
-    Custom converter to be uses with json.dumps
+    Custom converter to be used with json.dumps
     :param obj:
     :return:
     """
@@ -519,3 +520,14 @@ def json_enconding(obj):
     :return:
     """
     return json.dumps(obj, sort_keys=True, default=json_converter)
+
+
+def debug(value):
+    """
+    print a message with line and file name
+    :param value: string to be printed
+    :return:
+    """
+
+    frame_info = getframeinfo(currentframe())
+    print("{}->{}:{}".format(value,frame_info.filename, frame_info.lineno, ))
