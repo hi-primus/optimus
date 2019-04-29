@@ -1,13 +1,13 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_int
+from optimus.helpers.checkit import is_dataframe, is_int, is_numeric
 from optimus.helpers.functions import parse_columns
 from optimus.internals import _z_score_col_name
 
 
 class ZScore:
     """
-
+    Handle outliers using z Score
     """
 
     def __init__(self, df, columns, threshold):
@@ -33,8 +33,8 @@ class ZScore:
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
-        if not is_int(threshold):
-            raise TypeError("Integer expected")
+        if not is_numeric(threshold):
+            raise TypeError("Numeric expected")
 
         columns = parse_columns(df, columns)
 

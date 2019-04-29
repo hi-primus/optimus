@@ -6,7 +6,7 @@ from optimus.helpers.functions import parse_columns
 
 class MAD:
     """
-    Delete outlier using mad
+    Handle outliers using mad
     """
 
     def __init__(self, df, columns, threshold):

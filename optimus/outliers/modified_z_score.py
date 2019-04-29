@@ -1,13 +1,13 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_float
+from optimus.helpers.checkit import is_dataframe, is_float, is_numeric
 from optimus.helpers.functions import parse_columns
 from optimus.internals import _m_z_score_col_name
 
 
 class ModifiedZScore:
     """
-    Delete outliers from a DataFrame using modified z score
+    Handle outliers from a DataFrame using modified z score
     Reference: http://colingorrie.github.io/outlier-detection.html#modified-z-score-method
     :return:
     """
@@ -37,8 +37,8 @@ class ModifiedZScore:
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
-        if not is_float(threshold):
-            raise TypeError("Integer expected")
+        if not is_numeric(threshold):
+            raise TypeError("Numeric expected")
 
         columns = parse_columns(df, columns)
 
