@@ -857,8 +857,10 @@ def cols(self):
 
         def _remove_accents(value, attr):
             cell_str = str(value)
+
             # first, normalize strings:
             nfkd_str = unicodedata.normalize('NFKD', cell_str)
+
             # Keep chars that has no other char combined (i.e. accents chars)
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
@@ -878,13 +880,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
         check_column_numbers(columns, "*")
 
-        regex = re.compile("[%s]" % re.escape(string.punctuation))
-
-        def _remove_special_chars(value, attr):
-            value = str(value)
-            return regex.sub("", value)
-
-        df = apply(columns, _remove_special_chars, "string")
+        df = self.cols.replace(columns, [s for s in string.punctuation], "", "chars")
         return df
 
     @add_attr(cols)
@@ -975,18 +971,18 @@ def cols(self):
     def impute(columns, data_type="continuous", strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param columns: List of columns to be analyze.
+        :param columns: list of columns to be analyze.
         :param data_type: continuous or categorical
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
         or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
         """
+        df = self
 
         if data_type is "continuous":
             columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES + PYSPARK_STRING_TYPES)
             check_column_numbers(columns, "*")
 
-            df = self
             output_cols = []
             for col_name in columns:
                 # Imputer require not only numeric but float or double
@@ -998,28 +994,29 @@ def cols(self):
 
             model = imputer.setStrategy(strategy).fit(df)
             df = model.transform(df)
-            print()
+
         elif data_type is "categorical":
 
             columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
             check_column_numbers(columns, "*")
 
-            df = self
             for col_name in columns:
                 value = df.cols.mode(col_name)
                 print(
                     "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name,
                                                                             value))
                 df = df.cols.fill_na(col_name, value)
+        else:
+            RaiseIt.value_error(data_type, ["continuous", "categorical"])
 
         return df
 
     @add_attr(cols)
-    def fill_na(columns, value):
+    def fill_na(columns, value, new_column=None):
         """
         Replace null data with a specified value
-        :param columns:
-        :param value:
+        :param columns: '*', list of columns names or a single column name.
+        :param value: value to replace the nan/None values
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1045,7 +1042,7 @@ def cols(self):
     def is_na(columns):
         """
         Replace null values with True and non null with False
-        :param columns:
+        :param columns: '*', list of columns names or a single column name.
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1096,7 +1093,7 @@ def cols(self):
                 expr.append(F.count(
                     F.when(match_nulls_strings(col_name), col_name)).alias(
                     col_name))
-                print("Including 'nan' as Null in '{}'".format(col_name))
+                print("Including 'nan' as Null in processing '{}'".format(col_name))
             else:
                 expr.append(F.count(F.when(match_null(col_name), col_name)).alias(col_name))
 
@@ -1248,58 +1245,92 @@ def cols(self):
         return _math(columns, lambda x, y: x / y, col_name)
 
     @add_attr(cols)
-    def replace(columns, search_and_replace=None, value=None, regex=None):
+    def replace_regex(columns, regex=None, value=None):
         """
-        Replace a value or a list of values by a specified string
+        Use a Regex to replace values
         :param columns: '*', list of columns names or a single column name.
-        :param search_and_replace: values to look at to be replaced
+        :param regex: values to look at to be replaced
         :param value: new value to replace the old one
-        :param regex:
         :return:
         """
-        _replace = None
-        search = None
-
-        if is_list_of_tuples(search_and_replace):
-            params = list(zip(*search_and_replace))
-            search = list(params[0])
-            _replace = list(params[1])
-
-        elif is_list(search_and_replace):
-            search = search_and_replace
-            _replace = value
-
-        elif is_one_element(search_and_replace):
-            search = val_to_list(search_and_replace)
-            _replace = value
-
-        if regex:
-            search = search_and_replace
-            _replace = value
 
         # if regex or normal replace we use regexp or replace functions
         # TODO check if .contains can be used instead of regexp
-        def func_regex(_df, _col_name, _search, _replace):
-            return _df.withColumn(col_name, F.regexp_replace(_col_name, _search, _replace))
-
-        def func_replace(_df, _col_name, _search, _replace):
-            data_type = self.cols.dtypes(_col_name)
-            _search = [PYTHON_TYPES[data_type](s) for s in _search]
-            _df = _df.replace(_search, _replace, _col_name)
-            return _df
-
-        if regex:
-            func = func_regex
-        else:
-            func = func_replace
 
         df = self
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes="string")
+        columns = parse_columns(df, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+        check_column_numbers(columns, "*")
+
+        def func_regex(_df, _col_name, _search, _replace):
+            return _df.withColumn(col_name, F.regexp_replace(_col_name, _search, _replace))
+
+        for col_name in columns:
+            df = func_regex(df, col_name, regex, value)
+
+        return df
+
+    @add_attr(cols)
+    def replace(columns, search=None, replace_by=None, search_by="chars"):
+        """
+        Replace a value, list of values by a specified string
+        :param columns: '*', list of columns names or a single column name.
+        :param search: values to look at to be replaced
+        :param replace_by: new value to replace the old one
+        :param search_by: Match substring or words
+        :return:
+        """
+
+        # TODO check if .contains can be used instead of regexp
+        def func_chars(_df, _col_name, __search, __replace):
+
+            # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
+
+            def multiple_replace(_value, attr):
+                # Create a regular expression from all of the dictionary keys
+                _regex = re.compile("|".join(map(re.escape, attr.keys())))
+                return _regex.sub(lambda match: attr[match.group(0)], str(_value))
+
+            _df = apply(columns, multiple_replace, "string", __search)
+            return _df
+
+        def func_words(_df, _col_name, _search, _replace):
+
+            # Convert the value to column data type
+            data_type = self.cols.dtypes(_col_name)
+            _search = [PYTHON_TYPES[data_type](s) for s in _search]
+
+            _df = _df.replace(_search, _replace, _col_name)
+            return _df
+
+        search_dict = {}
+        if search_by is "words":
+            search_dict = val_to_list(search)
+            func = func_words
+        elif search_by is "chars":
+            # Create as dict
+            if is_list_of_tuples(search):
+                search_dict = dict(tuple(search))
+            elif is_list(search):
+                search_dict = {s: replace_by for s in search}
+            elif is_one_element(search):
+                search_dict = {search: replace_by}
+
+            search_dict = {str(k): str(v) for k, v in search_dict.items()}
+            func = func_chars
+        else:
+            RaiseIt.value_error(search_by, ["words", "chars"])
+
+        df = self
+
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         for col_name in columns:
-            df = func(df, col_name, search, _replace)
+            if is_column_a(df, col_name, "int"):
+                df = df.cols.cast(col_name, "str")
+
+            df = func(df, col_name, search_dict, replace_by)
 
         return df
 
@@ -1392,11 +1423,11 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, regex=None, splits=None, index=None):
+    def unnest(columns, separator=None, splits=None, index=None):
         """
         Split an array or string in different columns
         :param columns: Columns to be un-nested
-        :param regex: If column is string.
+        :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index:
         :return: Spark DataFrame
@@ -1430,10 +1461,10 @@ def cols(self):
 
             # String
             elif is_(col_dtype, StringType):
-                if regex is None:
-                    RaiseIt.value_error(regex, "regular expression")
+                if separator is None:
+                    RaiseIt.value_error(separator, "regular expression")
 
-                expr = F.split(F.col(col_name), regex)
+                expr = F.split(F.col(col_name), separator)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
                     # TODO: Maybe can implement something in one pass
@@ -1441,7 +1472,7 @@ def cols(self):
                     def func(value, args):
                         return len(re.split(args[0], value))
 
-                    splits = df.withColumn("__length", audf("names", func, "int", [regex])).cols.max("__length")
+                    splits = df.withColumn("__length", audf(col_name, func, "int", [separator])).cols.max("__length")
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
