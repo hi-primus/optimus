@@ -59,8 +59,16 @@ from optimus import Optimus
 op= Optimus()
 ```
 
+You also can use an already created Spark session:
+
+```python
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName('abc').getOrCreate()
+op= Optimus(spark)
+```
+
 ## Loading data
-Now Optimus can load data in csv, json, parquet, avro excel from a local file or URL.
+Now Optimus can load data in csv, json, parquet, avro, excel from a local file or URL.
 
 ```python
 #csv
@@ -79,11 +87,19 @@ df = op.load.parquet("examples/data/foo.parquet")
 df = op.load.excel("examples/data/titanic3.xls")
 ```
 
-If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro)
+If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro and excel). Optimus will try to infer the file format from the file extension
 
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json")
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 ```
+```python
+With .table() you hace a 
+```
+
+```python
+df.table()
+```
+
 ## Cleaning and Processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
@@ -96,10 +112,9 @@ For example you can load data from a url, transform and apply some predefined cl
 def func(value, arg):
     return "this was a number"
     
-df =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
-    
 new_df = df\
     .rows.sort("product","desc")\
+    .withColumn('id1', df.id)\
     .cols.lower(["firstName","lastName"])\
     .cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY")\
     .cols.years_between("birth", "yyyy/MM/dd")\
@@ -114,7 +129,7 @@ new_df = df\
     .cols.trim("*")
 ```
 
-You transform this
+You transform this:
 
 ```python
 df.table()
@@ -126,7 +141,7 @@ Into this
 new_df.table()
 ```
 
-Note that you can use Optimus functions and Spark functions(`.WithColumn()`) at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
+Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
 ### Custom functions
 Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
@@ -142,14 +157,12 @@ df.cols.apply("billingid",func,"int", [1,2]).table()
 If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
 
 ```python
+from pyspark.sql import functions as F
+
 def func(col_name, args):
     return F.col(col_name)/20
 
 df.cols.apply_expr("billingid", func, 20).table()
-```
-
-```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
 ```
 
 ## Data profiling
@@ -157,6 +170,12 @@ df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/exa
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb).
+
+Let's load a "big" dataset
+
+```python
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
+```
 
 ```python
 op.profiler.run(df, "name", infer=False)
@@ -171,21 +190,53 @@ op.profiler.run(df, "year", infer=True)
 Besides histograms, frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
 
 ```python
-df.plot.scatterplot(["Age", "Fare"], buckets=30)
+df = op.load.excel("examples/data/titanic3.xls")
+df = df.rows.drop_na(["age","fare"])
 ```
-![](images/scatter_plot.png)
+
 ```python
-df.plot.boxplot("Age")
+df.table()
 ```
-![](images/box_plot.png)
+
 ```python
-df.plot.correlation("Age")
+df.plot.scatter(["fare", "age"], buckets=30)
 ```
-![](images/correlation_plot.png)
+
+```python
+df.plot.box("age")
+```
+```python
+df.plot.correlation(["age","fare","survived"])
+```
+## Outliers
+
+```python
+df.table()
+```
+
+### Get the ouliers using iqr
+
+```python
+df.outliers.iqr("age").select().table()
+```
+
+### Remove the outliers using iqr
+
+```python
+df.outliers.iqr("age").drop().table()
+```
+
+### You can also use z_score, modified_z_score or mad
+
+```python
+df.outliers.z_score("age", threshold=2).drop()
+df.outliers.modified_z_score("age", threshold = 2 ).drop()
+df.outliers.mad("age", threshold = 2).drop()
+```
 
 ## Database connection
-Optimus have handy tools to connect to databases ans extract informacion. Optimus have specific function for Redshift, postgres and mysql
- df
+Optimus have handy tools to connect to databases and extract informacion. Optimus can handle Redshift, postgres and mysql
+
 ```python
 # Put your db credentials here
 db =  op.connect(
@@ -209,7 +260,13 @@ db.table_to_df("tablename")
 
 ## Data enrichment
 
-You can connect to any external API to enrich your data using Otimus.
+You can connect to any external API to enrich your data using Optimus. Optimus use MongoDB to download the data and then merge it with the Spark Dataframe. You need to install MongoDB
+
+Let's load a tiny dataset we can enrich
+
+```python
+df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json")
+```
 
 ```python
 import requests
@@ -217,15 +274,22 @@ import requests
 def func_request(params):
     # You can use here whatever header or auth info you need to send. 
     # For more information see the requests library
-    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
-
+    
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["id"])
     return requests.get(url)
 
 def func_response(response):
     # Here you can parse de response
     return response["title"]
 
-df_result = op.enrich(df, func_request= func_request, func_response= func_response)
+
+e = op.enrich()
+
+df_result = e.run(df, func_request, func_response, calls= 60, period = 60, max_tries = 8)
+```
+
+```python
+df_result.table()
 ```
 
 ## Machine Learning 
@@ -238,25 +302,25 @@ Machine Learning Pipelines.
 
 Even though this task is not extremely hard, is not easy. The way most Machine Learning models work on Spark
 are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
-section inside the Transformer.
+section inside Optimus.
 
-To import the Machine Learning Library you just need to say to import Optimus and the ML API:
-
-```python
-    from optimus import Optimus
-
-    op = Optimus()
-```
 
 One of the best "tree" models for machine learning is Random Forest. What about creating a RF model with just
 one line? With Optimus is really easy.
 
 ```python
-    df_cancer =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
-    columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+df_cancer =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+```
+
+```python
+df_cancer.table(5)
+```
+
+```python
+columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
-    df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
+df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
 This will create a DataFrame with the predictions of the Random Forest model.
@@ -265,54 +329,7 @@ So lets see the prediction compared with the actual label:
 
 
 ```python
-    df_predict.cols.select(["label","prediction"]).show()
-```
-
-```
-+-----+----------+
-|label|prediction|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       0.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  1.0|       1.0|
-+-----+----------+
-|  0.0|       0.0|
-+-----+----------+
-only showing top 20 rows
+df_predict.cols.select(["label","prediction"]).table()
 ```
 
 The rf_model variable contains the Random Forest model for analysis.
