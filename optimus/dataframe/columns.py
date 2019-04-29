@@ -834,6 +834,17 @@ def cols(self):
         return df
 
     @add_attr(cols)
+    def remove(columns, search=None, search_by="chars"):
+        """
+        Remove chars or words
+        :param columns: '*', list of columns names or a single column name.
+        :param search: values to look at to be replaced
+        :param search_by: Match substring or words
+        :return:
+        """
+        return self.cols.replace(columns, search, "", search_by)
+
+    @add_attr(cols)
     def remove_accents(columns):
         """
         Remove accents in specific columns
