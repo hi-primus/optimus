@@ -2,12 +2,15 @@ import os
 import sys
 from shutil import rmtree
 
+import jinja2
+from flask import url_for
 from pyspark.sql import DataFrame
 
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.convert import val_to_list
+from optimus.helpers.functions import print_html
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
@@ -147,6 +150,25 @@ class Optimus:
             queue_routing_key=queue_routing_key
         )
         self.ml = ML()
+        self._load_css()
+
+    @staticmethod
+    def _load_css():
+        """
+        Try to load the css for templates
+        :return:
+        """
+        try:
+            if __IPYTHON__:
+                # # Load the Jinja template
+
+                path = os.path.dirname(os.path.abspath(__file__))                
+                url = path + "//style//css.css"
+                styles = open(url, "r").read()
+                s = '<style>%s</style>' % styles
+                print_html(s)
+        except NameError:
+            pass
 
     @staticmethod
     def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
@@ -171,8 +193,6 @@ class Optimus:
         :param output: "ascii" or "html"
         :return:
         """
-
-        # RaiseIt.value_error(output, ["ascii", "html"])
         DataFrame.output = output
 
     @property
