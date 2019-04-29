@@ -360,7 +360,7 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
 
     # Impute missing values
     imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
-    df = df.cols.impute(columns, strategy)
+    df = df.cols.impute(columns, "continuous", strategy)
     logger.print("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
 
     # Create Vector necessary to calculate the correlation
