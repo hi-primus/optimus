@@ -219,18 +219,21 @@ df.plot.correlation(["age","fare","survived"])
 ### Get the ouliers using iqr
 
 ```python
-df.outliers.iqr("age").select()
+df.outliers.iqr("age").select().table(5)
 ```
 
 ### Remove the outliers using iqr
 
 ```python
-df.outliers.iqr("age").drop()
+df.outliers.iqr("age").drop().table(5)
 ```
 
 ### You can also use z_score, modified_z_score or mad
 
-```python
+
+
+
+```
 df.outliers.z_score("age", threshold=2).drop()
 df.outliers.modified_z_score("age", threshold = 2 ).drop()
 df.outliers.mad("age", threshold = 2).drop()
@@ -238,6 +241,8 @@ df.outliers.mad("age", threshold = 2).drop()
 
 ## Database connection
 Optimus have handy tools to connect to databases and extract informacion. Optimus can handle Redshift, postgres and mysql
+
+
 
 
 ```
@@ -259,7 +264,6 @@ db.table.show("*",20)
 #Get a table as dataframe
 db.table_to_df("tablename")
 ```
-
 
 
 ## Data enrichment
