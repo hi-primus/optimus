@@ -29,8 +29,6 @@ class Optimus:
                  jars=None,
                  options=None,
                  additional_options=None,
-                 enricher_host="localhost",
-                 enricher_port=27017,
                  queue_url=None,
                  queue_exchange=None,
                  queue_routing_key="optimus"
@@ -147,7 +145,6 @@ class Optimus:
             queue_routing_key=queue_routing_key
         )
         self.ml = ML()
-        self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
 
     @staticmethod
     def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
@@ -157,16 +154,13 @@ class Optimus:
         """
         return JDBC(db_type, url, database, user, password, port)
 
-    def enrich(self, df, func_request, func_response):
+    def enrich(self, host="localhost", port=27017):
         """
-
-        :param df:
-        :param func_request:
-        :param func_response:
+        :param host:
+        :param port:
         :return:
         """
-
-        return self.enricher.run(df, func_request=func_request, func_response=func_response)
+        return Enricher(op=self, host=host, port=port, )
 
     @property
     def spark(self):
