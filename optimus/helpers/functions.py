@@ -352,7 +352,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
-        final_columns = list(set(cols).intersection(columns_filtered))
+        final_columns = list(set(columns_filtered).intersection(cols))
 
         # This columns match filtered data type
         columns_residual = list(set(cols) - set(columns_filtered))
