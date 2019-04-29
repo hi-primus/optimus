@@ -2,6 +2,8 @@ import os
 import sys
 from shutil import rmtree
 
+from pyspark.sql import DataFrame
+
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
@@ -161,6 +163,17 @@ class Optimus:
         :return:
         """
         return Enricher(op=self, host=host, port=port, )
+
+    @staticmethod
+    def output(output):
+        """
+        Change the table output style
+        :param output: "ascii" or "html"
+        :return:
+        """
+
+        # RaiseIt.value_error(output, ["ascii", "html"])
+        DataFrame.output = output
 
     @property
     def spark(self):
