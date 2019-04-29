@@ -1,3 +1,4 @@
+import os
 import tempfile
 from urllib.request import Request, urlopen
 
@@ -12,38 +13,43 @@ from optimus.spark import Spark
 
 class Load:
 
-    def url(self, path=None, type_of="csv"):
+    def url(self, url=None, file_format=None):
         """
         Entry point for loading data from a URL. Check that the url is well format
-        :param path: string for URL to read
-        :param type_of: type of the URL backend (can be csv or json)
+        :param url: string for URL to read
+        :param file_format: type of the URL backend (can be csv or json)
         :return: pyspark dataframe from URL.
         """
 
-        if "https://" in str(path) or "http://" in str(path) or "file://" in str(path):
-            return self._data_loader(str(path), type_of)
+        if "https://" in str(url) or "http://" in str(url) or "file://" in str(url):
+            return self._data_loader(str(url), file_format)
         else:
-            RaiseIt.type_error(type_of, ["https://", "http://", "file://"])
+            RaiseIt.type_error(file_format, ["https://", "http://", "file://"])
 
-    def _data_loader(self, url, type_of):
+    def _data_loader(self, url, file_format=None):
         """
         Select the correct method to download the file depending of the format
         :param url: string url
-        :param type_of: format data type
+        :param file_format: format data type
         :return:
         """
 
-        file_format = None
-        if type_of == "csv":
-            file_format = self.csv
-        elif type_of == "json":
-            file_format = self.json
-        elif type_of == "parquet":
-            file_format = self.parquet
-        elif type_of == "avro":
-            file_format = self.avro
-        elif type_of == "excel":
-            file_format = self.avro
+        # try to infer the file format using the file extension
+        if file_format is None:
+            filename, file_format = os.path.splitext(url)
+            file_format = file_format.replace('.', '')
+
+        data_loader = None
+        if file_format == "csv":
+            data_loader = self.csv
+        elif file_format == "json":
+            data_loader = self.json
+        elif file_format == "parquet":
+            data_loader = self.parquet
+        elif file_format == "avro":
+            data_loader = self.avro
+        elif file_format == "excel":
+            data_loader = self.avro
         else:
             RaiseIt.type_error(file_format, ["csv", "json", "parquet", "avro", "excel"])
 
@@ -53,19 +59,22 @@ class Load:
             "displayName": data_name,
             "url": url
         }
-        return Downloader(data_def).download(file_format, type_of)
+
+        return Downloader(data_def).download(data_loader, file_format)
 
     @staticmethod
-    def json(path, *args, **kwargs):
+    def json(path, multiline=False, *args, **kwargs):
         """
         Return a dataframe from a json file.
-        :param path:
+        :param path: path or location of the file.
+        :param multiline:
         :return:
         """
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read \
-                .option("multiLine", True) \
+                .option("multiLine", multiline) \
+                .option("mode", "PERMISSIVE") \
                 .json(path, *args, **kwargs)
 
         except IOError as error:
@@ -79,10 +88,10 @@ class Load:
         Return a dataframe from a csv file.. It is the same read.csv Spark function with some predefined
         params
 
-        :param path: Path or location of the file.
-        :param sep: Usually delimiter mark are ',' or ';'.
-        :param  header: Tell the function whether dataset has a header row. 'true' default.
-        :param infer_schema: Infers the input schema automatically from data.
+        :param path: path or location of the file.
+        :param sep: usually delimiter mark are ',' or ';'.
+        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param infer_schema: infers the input schema automatically from data.
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
@@ -103,7 +112,7 @@ class Load:
     def parquet(path, *args, **kwargs):
         """
         Return a dataframe from a parquet file.
-        :param path: Path or location of the file. Must be string dataType
+        :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
@@ -121,7 +130,7 @@ class Load:
     def avro(path, *args, **kwargs):
         """
         Return a dataframe from a avro file.
-        :param path: Path or location of the file. Must be string dataType
+        :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
@@ -145,7 +154,7 @@ class Load:
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
-         :param args: custom argument to be passed to the spark parquet function
+        :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
@@ -181,7 +190,7 @@ class Downloader(object):
         self.data_def = data_def
         self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
 
-    def download(self, data_loader, ext):
+    def download(self, data_loader, file_format):
         display_name = self.data_def["displayName"]
         bytes_downloaded = 0
         if "path" in self.data_def:
@@ -193,7 +202,7 @@ class Downloader(object):
             logger.print("Downloading %s from %s", display_name, url)
 
             # It seems that avro need a .avro extension file
-            with tempfile.NamedTemporaryFile(suffix="." + ext, delete=False) as f:
+            with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
                 bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
@@ -210,7 +219,7 @@ class Downloader(object):
     def write(response, file, chunk_size=8192):
         """
         Load the data from the http request and save it to disk
-        :param response: data retruned
+        :param response: data returned from the server
         :param file:
         :param chunk_size: size chunk size of the data
         :return:
