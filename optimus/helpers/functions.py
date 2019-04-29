@@ -8,6 +8,7 @@ import re
 
 from IPython.display import display, HTML
 from fastnumbers import isint, isfloat
+from ordered_set import OrderedSet
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
@@ -208,7 +209,7 @@ def validate_columns_names(df, col_names, index=0):
 
     # Remove duplicates in the list
     if is_list_of_strings(columns):
-        columns = set(columns)
+        columns = OrderedSet(columns)
 
     check_for_missing_columns(df, columns)
 
@@ -222,7 +223,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(set(col_names) - set(df.cols.names()))
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.cols.names()))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
@@ -352,10 +353,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
-        final_columns = list(set(columns_filtered).intersection(cols))
+        final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 
         # This columns match filtered data type
-        columns_residual = list(set(cols) - set(columns_filtered))
+        columns_residual = list(OrderedSet(cols) - OrderedSet(columns_filtered))
     else:
         final_columns = cols
     # final_columns = escape_columns(final_columns)
