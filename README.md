@@ -92,13 +92,16 @@ If you want to load from a URL you just need to use load.url() with the path and
 ```python
 df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 ```
-```python
-With .table() you hace a 
-```
+With .table() you hace a beautifull way to show your data. You have extra informacion like column number, column data type and marked white spaces 
 
-```python
+
+```
 df.table()
 ```
+
+
+![](images/table.png)
+
 
 ## Cleaning and Processing
   
@@ -127,6 +130,12 @@ new_df = df\
     .cols.rename(str.lower)\
     .cols.apply_by_dtypes("product",func,"string", data_type="integer")\
     .cols.trim("*")
+```
+
+You can change the table output back to ascii if you which
+
+```python
+op.output("ascii")
 ```
 
 You transform this:
@@ -195,10 +204,6 @@ df = df.rows.drop_na(["age","fare"])
 ```
 
 ```python
-df.table()
-```
-
-```python
 df.plot.scatter(["fare", "age"], buckets=30)
 ```
 
@@ -210,20 +215,17 @@ df.plot.correlation(["age","fare","survived"])
 ```
 ## Outliers
 
-```python
-df.table()
-```
 
 ### Get the ouliers using iqr
 
 ```python
-df.outliers.iqr("age").select().table()
+df.outliers.iqr("age").select()
 ```
 
 ### Remove the outliers using iqr
 
 ```python
-df.outliers.iqr("age").drop().table()
+df.outliers.iqr("age").drop()
 ```
 
 ### You can also use z_score, modified_z_score or mad
@@ -237,8 +239,9 @@ df.outliers.mad("age", threshold = 2).drop()
 ## Database connection
 Optimus have handy tools to connect to databases and extract informacion. Optimus can handle Redshift, postgres and mysql
 
-```python
-# Put your db credentials here
+
+```
+#Put your db credentials here
 db =  op.connect(
     db_type="redshift",
     url="iron.******.us-east-1.redshift.amazonaws.com",
@@ -247,15 +250,16 @@ db =  op.connect(
     password = "******",
     port="5439")
     
-# Show all tables names
+#Show all tables names
 db.tables()
 
 #Show a summary of every table
 db.table.show("*",20)
 
-# Get a table as dataframe
+#Get a table as dataframe
 db.table_to_df("tablename")
 ```
+
 
 
 ## Data enrichment
@@ -310,10 +314,6 @@ one line? With Optimus is really easy.
 
 ```python
 df_cancer =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
-```
-
-```python
-df_cancer.table(5)
 ```
 
 ```python
