@@ -65,19 +65,17 @@ def plot(self):
             plot_freq(data)
 
     @add_attr(plot)
-    def correlation(col_name, strategy="mean", method="pearson"):
+    def correlation(col_name, method="pearson"):
         """
         Compute the correlation matrix for the input data set of Vectors using the specified method. Method
-        mapped from  pyspark.ml.stat.Correlation.
-        :param col_name: The name of the column of vectors for which the correlation coefficient needs to be computed.
-        :param strategy:
-        This must be a column of the dataset, and it must contain Vector objects.
+        mapped from pyspark.ml.stat.Correlation.
+        :param col_name: The name of the column for which the correlation coefficient needs to be computed.
         :param method: String specifying the method to use for computing correlation. Supported: pearson (default),
         spearman.
         :return: Heatmap plot of the corr matrix using seaborn.
         """
 
-        corr = self.correlation(col_name, method, strategy, output="array")
+        corr = self.correlation(col_name, method, output="array")
         plot_correlation(corr)
 
     return plot

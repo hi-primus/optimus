@@ -12,8 +12,8 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus import RaiseIt, IMPUTE_SUFFIX
-from optimus.helpers.checkit import is_str
-from optimus.helpers.convert import val_to_list
+from optimus.helpers.checkit import is_str, is_column_a
+from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
@@ -339,14 +339,13 @@ def table(self, limit=100, columns=None, title=None):
 
 
 @add_method(DataFrame)
-def correlation(self, columns, method="pearson", strategy="mean", output="json"):
+def correlation(self, columns, method="pearson", output="json"):
     """
     Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
     missing values
     :param self:
     :param columns: Columns to be processed
     :param method: Method used to calculate the correlation
-    :param strategy: Imputing strategy
     :param output: array or json
     :return:
     """
@@ -354,19 +353,19 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
     # try to parse the select column to float and create a vector
 
     df = self
-    for col_name in columns:
-        df = df.cols.cast(col_name, "float")
-        logger.print("Casting {col_name} to float...".format(col_name=col_name))
+    if len(columns) == 1:
+        if is_column_a(df, columns, "vector"):
+            new_column = one_list_to_val(columns)
+    else:
+        new_column = "correlation_features"
+        for col_name in columns:
+            df = df.cols.cast(col_name, "float")
+            logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
-    # Impute missing values
-    imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
-    df = df.cols.impute(columns, "continuous", strategy)
-    logger.print("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
+        df = df.cols.nest(columns, new_column, "vector")
 
     # Create Vector necessary to calculate the correlation
-    df = df.cols.nest(imputed_cols, "features", "vector")
-
-    corr = Correlation.corr(df, "features", method).head()[0].toArray()
+    corr = Correlation.corr(df, new_column, method).head()[0].toArray()
 
     if output is "array":
         result = corr

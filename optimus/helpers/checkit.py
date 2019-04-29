@@ -9,7 +9,7 @@ import dateutil
 from pyspark.sql import DataFrame
 
 from optimus.helpers.parser import parse_spark_dtypes
-from optimus.helpers.convert import val_to_list
+from optimus.helpers.convert import val_to_list, one_list_to_val
 
 
 def is_same_class(class1, class2):
@@ -98,6 +98,8 @@ def is_column_a(df, column, dtypes):
     """
 
     data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
+
+    column = one_list_to_val(column)
 
     # Filter columns by data type
     return isinstance(df.schema[column].dataType, data_type)

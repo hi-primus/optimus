@@ -1,6 +1,7 @@
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
     DateType, LongType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
+from pyspark.ml.linalg import VectorUDT
 from optimus.helpers.logger import logger
 
 """
@@ -57,15 +58,14 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       "byte": "byte",
                       "short": "short",
                       "binary": "binary",
-                      "null": "null"
-
-                      # "vector": "vector"
+                      "null": "null",
+                      "vector": "vector"
                       }
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
                      "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
                      "bigint": LongType, "date": DateType, "byte": ByteType, "short": ShortType,
-                     "datetime": TimestampType, "binary": BinaryType, "null": NullType
+                     "datetime": TimestampType, "binary": BinaryType, "null": NullType, "vector": VectorUDT
                      }
 
 SPARK_DTYPES_DICT_OBJECTS = \
