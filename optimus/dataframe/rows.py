@@ -129,7 +129,7 @@ def rows(self):
         return self.rows.drop(fbdt(col_name, data_type))
 
     @add_attr(rows)
-    def drop_na(columns, how="all"):
+    def drop_na(columns, how="any"):
         """
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
