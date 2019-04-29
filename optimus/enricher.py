@@ -10,7 +10,7 @@ from pyspark.sql.functions import pandas_udf, PandasUDFType
 from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
-from optimus.helpers.checkit import is_function, is_
+from optimus.helpers.checkit import is_function, is_, is_dataframe
 from optimus.helpers.logger import logger
 
 # Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
@@ -23,8 +23,8 @@ class Enricher:
     Enrich data from a Pandas or Spark dataframe
     """
 
-    def __init__(self, op=None, host="localhost", port=27017, db_name="jazz", collection_name="data", *args,
-                 **kwargs):
+    def __init__(self, op=None, host="localhost", port=27017, db_name="jazz", collection_name="data",
+                 *args, **kwargs):
         """
 
         :param host: Mongo server host
@@ -43,9 +43,13 @@ class Enricher:
         self.client = MongoClient(host, port, *args, **kwargs)
         self.op = op
 
-    def send(self, df):
+        # print(self.client.db_name.command('ping'))
+        # {u'ok': 1.0}
+
+    def load(self, df):
         """
-        Send the dataframe to the mongo collection
+
+        Load the dataframe to the mongo collection
         :param df: dataframe to be send to the enricher
         :return:
         """
@@ -57,30 +61,27 @@ class Enricher:
         else:
             raise Exception("df must by a Spark Dataframe or Pandas Dataframe")
 
-    def run(self, df, collection_name=None, func_request=None, func_response=None, return_type="json", calls=60,
+    def run(self, df, func_request=None, func_response=None, return_type="json", calls=60,
             period=60, max_tries=8):
         """
         Read a the url key from a mongo collection an make a request to a service
         :param df: Dataframe to me loaded to the enricher collection.
-        :param collection_name: Custom collection to save the data.
         :param func_request: help to create a custom request
         :param func_response: help to create a custom response
-        :param return_type:
-        :param calls: how many call can you make
-        :param period: in which period ot time can the call be made
+        :param calls: how many call can you make by period of time
+        :param period: in which period ot time can the call be made in seconds
         :param max_tries: how many retries should we do
+        :param return_type:
         :return:
         """
 
-        # Load the dataframe data in the enricher
-        if is_(df, DataFrame):
+        if is_dataframe(df):
             df = df.create_id(COL_ID)
 
         # Load the dataframe data in the enricher
-        self.send(df)
+        self.load(df)
 
-        if collection_name is None:
-            collection_name = self.collection_name
+        collection_name = self.collection_name
         collection = self.get_collection(collection_name)
 
         # Get data that is not yet enriched
@@ -389,23 +390,23 @@ class Enricher:
             else:
                 logger.print("Field {c} could not be added".format(c=c))
 
-    def cast(self, collection_name, field, convert_to):
+    def cast(self, collection_name, field, cast_to):
         """
-
+        Cast a field to int, float or string
         :param collection_name:
         :param field:
-        :param convert_to:
+        :param cast_to:
         :return:
         """
         collection = self.get_collection(collection_name)
         cursor = collection.find({field: {'$exists': True}}).limit(0)
-        desc = 'Converting', field, 'to', convert_to
+        # desc = 'Converting', field, 'to', convert_to
 
-        if convert_to == 'int':
-            data_type = float
-        elif convert_to == 'float':
+        if cast_to == 'int':
             data_type = int
-        elif convert_to == 'string':
+        elif cast_to == 'float':
+            data_type = float
+        elif cast_to == 'string':
             data_type = str
         else:
             raise ValueError('Only int, float or string accepted in field param', field, 'value present')
@@ -417,4 +418,4 @@ class Enricher:
                 collection.update_one({'_id': c['_id']}, {'$set': {field: val}})
 
             except ValueError:
-                logger.print("Could not convert '{val}' to '{convert_to}'".format(val=val, convert_to=convert_to))
+                logger.print("Could not convert '{val}' to '{convert_to}'".format(val=val, convert_to=cast_to))
