@@ -162,8 +162,8 @@ class Optimus:
             if __IPYTHON__:
                 # # Load the Jinja template
 
-                path = os.path.dirname(os.path.abspath(__file__))                
-                url = path + "//style//css.css"
+                path = os.path.dirname(os.path.abspath(__file__))
+                url = path + "//css//styles.css"
                 styles = open(url, "r").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
