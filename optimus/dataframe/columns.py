@@ -1425,10 +1425,12 @@ def cols(self):
             df = vector_assembler.transform(df)
 
         elif shape is "array":
-            df = apply_expr(output_col, F.array(*columns))
+            # Arrays needs all the elements with the same data type. We try to cast to type
+            df = df.cols.cast("*", "str")
+            df = df.cols.apply_expr(output_col, F.array(*columns))
 
         elif shape is "string":
-            df = apply_expr(output_col, F.concat_ws(separator, *columns))
+            df = df.cols.apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
