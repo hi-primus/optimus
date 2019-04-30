@@ -5,62 +5,36 @@ from urllib.request import Request, urlopen
 import pandas as pd
 from packaging import version
 
+from optimus.helpers.checkit import is_url
 from optimus.helpers.functions import replace_columns_special_characters
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
 
 class Load:
 
-    def url(self, url=None, file_format=None):
-        """
-        Entry point for loading data from a URL. Check that the url is well format
-        :param url: string for URL to read
-        :param file_format: type of the URL backend (can be csv or json)
-        :return: pyspark dataframe from URL.
-        """
-
-        if "https://" in str(url) or "http://" in str(url) or "file://" in str(url):
-            return self._data_loader(str(url), file_format)
-        else:
-            RaiseIt.type_error(file_format, ["https://", "http://", "file://"])
-
-    def _data_loader(self, url, file_format=None):
+    @staticmethod
+    def _data_loader(path, file_format=None):
         """
         Select the correct method to download the file depending of the format
-        :param url: string url
+        :param path: string url
         :param file_format: format data type
         :return:
         """
 
         # try to infer the file format using the file extension
         if file_format is None:
-            filename, file_format = os.path.splitext(url)
+            filename, file_format = os.path.splitext(path)
             file_format = file_format.replace('.', '')
 
-        data_loader = None
-        if file_format == "csv":
-            data_loader = self.csv
-        elif file_format == "json":
-            data_loader = self.json
-        elif file_format == "parquet":
-            data_loader = self.parquet
-        elif file_format == "avro":
-            data_loader = self.avro
-        elif file_format == "excel":
-            data_loader = self.avro
-        else:
-            RaiseIt.type_error(file_format, ["csv", "json", "parquet", "avro", "excel"])
-
-        i = url.rfind('/')
-        data_name = url[(i + 1):]
+        i = path.rfind('/')
+        data_name = path[(i + 1):]
         data_def = {
             "displayName": data_name,
-            "url": url
+            "url": path
         }
 
-        return Downloader(data_def).download(data_loader, file_format)
+        return Downloader(data_def).download(file_format)
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
@@ -70,6 +44,9 @@ class Load:
         :param multiline:
         :return:
         """
+        if is_url(path):
+            path = Load._data_loader(path, "json")
+
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read \
@@ -96,6 +73,9 @@ class Load:
 
         :return dataFrame
         """
+        if is_url(path):
+            path = Load._data_loader(path, "csv")
+
         try:
             df = (Spark.instance.spark.read
                   .options(header=header)
@@ -117,6 +97,8 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
+        if is_url(path):
+            path = Load._data_loader(path, "parquet")
 
         try:
             df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
@@ -131,10 +113,13 @@ class Load:
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark parquet function
-        :param kwargs: custom keyword arguments to be passed to the spark parquet function
+        :param args: custom argument to be passed to the spark avro function
+        :param kwargs: custom keyword arguments to be passed to the spark avro function
         :return: Spark Dataframe
         """
+        if is_url(path):
+            path = Load._data_loader(path, "avro")
+
         try:
             if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
                 avro_version = "com.databricks.spark.avro"
@@ -154,10 +139,13 @@ class Load:
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
-        :param args: custom argument to be passed to the spark parquet function
-        :param kwargs: custom keyword arguments to be passed to the spark parquet function
+        :param args: custom argument to be passed to the excel function
+        :param kwargs: custom keyword arguments to be passed to the excel function
         :return: Spark Dataframe
         """
+        if is_url(path):
+            path = Load._data_loader(path, "xls")
+
         try:
             pdf = pd.read_excel(path, sheet_name=sheet_name, *args, **kwargs)
 
@@ -190,7 +178,7 @@ class Downloader(object):
         self.data_def = data_def
         self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
 
-    def download(self, data_loader, file_format):
+    def download(self, file_format):
         display_name = self.data_def["displayName"]
         bytes_downloaded = 0
         if "path" in self.data_def:
@@ -206,12 +194,13 @@ class Downloader(object):
                 bytes_downloaded = self.write(urlopen(req), f)
                 path = f.name
                 self.data_def["path"] = path = f.name
+
         if path:
             try:
                 if bytes_downloaded > 0:
                     logger.print("Downloaded %s bytes", bytes_downloaded)
                 logger.print("Creating DataFrame for %s. Please wait...", display_name)
-                return data_loader(path)
+                return path
             finally:
                 logger.print("Successfully created DataFrame for '%s'", display_name)
 
