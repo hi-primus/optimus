@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-import logging
-
+# + {}
 from pyspark.sql.types import *
 import datetime
 import sys
+
 from optimus import Optimus
+# -
 
 op = Optimus()
-
-s_logger = logging.getLogger('py4j.java_gateway')
-s_logger.setLevel(logging.INFO)
 
 source_df = op.create.df(
     [('names', StringType(), True), ('height(ft)', ShortType(), True), ('function', StringType(), True),
@@ -84,13 +82,15 @@ source_df = op.create.df(
                                                                                      True, bytearray(b'Battle Station'),
                                                                                      None)])
 
+source_df.table()
+
 
 class TestDataFrameCols(object):
     @staticmethod
     def test_correlation():
 
         try:
-            source_df.plot.correlation(["age", "weight(t)"])
+            source_df.plot.correlation(["age", "rank"])
 
         except RuntimeError:
             logging.exception('Error creating the json output.')

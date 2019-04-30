@@ -295,7 +295,10 @@ t.create(None, "cols.frequency", "all_columns", "json", "*", 4)
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
-t.create(None, "cols.schema_dtype", "all_columns", "json", "*")
+
+# Problems with casting
+# t.delete(None, "cols.schema_dtype", "all_columns", "json", "*")
+t.run()
 
 t.create(None, "cols.dtypes", None, "json", numeric_col_B)
 
@@ -321,15 +324,8 @@ t.create(None, "cols.clip", "all_columns", "df", "*", 3, 5)
 
 t.create(None, "cols.replace", None, "df", string_col, ["Security", "Leader"], "Match")
 
-import re
-_value = None
-attr ={'Jazz': 'Match', 'Leader': 'Match'}
-_regex = re.compile("|".join(map(re.escape, attr.keys())))
-result = _regex.sub(lambda match: attr[match.group(0)], str(_value))
-print(result)
-
 t.create(None, "cols.replace", "all_columns", "df", "*", ["Jazz", "Leader"], "Match")
-source_df.table()
+t.run()
 
 # Its necesary to save the function 
 t.delete(None, "cols.apply_expr", None, "df", numeric_col_B, func)
@@ -426,12 +422,15 @@ nan = np.nan
 import datetime
 
 # +
-actual_df =source_df.cols.remove_special_chars('function')
-expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [("Optim'us", -28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None), (None, None, 'None', None, None, None, None, None, None, None, None, None, None, None, None, None)])
+actual_df =op.load.json('https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json')
+expected_df = op.create.df([('billingId', LongType(), True),('birth', StringType(), True),('dummyCol', StringType(), True),('firstName', StringType(), True),('id', LongType(), True),('lastName', StringType(), True),('price', LongType(), True),('product', StringType(), True)], [(123, '1980/07/07', 'never', 'Luis', 1, 'Alvarez$$%!', 10, 'Cake')])
 
 # assert (expected_df.collect() == actual_df.collect())
 
 from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+
+actual_df.table()
+expected_df.table()
 
 # source_df.table()
 # print(actual_df.to_json())
@@ -442,11 +441,10 @@ e1 = expected_df.to_json()
 
 # -
 
-actual_df.table()
-expected_df.table()
-
 ddiff = DeepDiff(a1, e1, ignore_order=False)
 print(ddiff)
+
+
 
 # # Rows Test
 
@@ -465,30 +463,29 @@ rows = [
 
 df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
-t = Test(op, df, "op_io", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+t = Test(op, source_df, "op_io", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"])
+                                        "from pyspark.sql import functions as F"],path = "op_io", final_path="..")
 
-# +
-t.run(
-    
-    t.create(op, "load.csv", None, "df", "../examples/data/foo.csv"),
-    t.create(op, "load.json", None, "df", "../examples/data/foo.json"),
-    t.create(op, "load.parquet", None, "df", "../examples/data/foo.parquet"),
+t.create(op, "load.csv", "local_csv", "df", "../../examples/data/foo.csv")
+t.create(op, "load.json", "local_json", "df", "../../examples/data/foo.json")
+t.create(op, "load.parquet", "local_parquet", "df", "../../examples/data/foo.parquet")
+t.create(op, "load.csv", "remote_csv", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
-    t.create(op, "load.url", "csv", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv"),
-    t.create(op, "load.url", "json", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json","json"),
-    t.create(op, "load.url", "parquet", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet","parquet"),
-    
-     t.create(None, "save.csv", None, None, "test.csv"),
-     t.create(None, "save.json", None, None, "test.json"),
-     t.create(None, "save.parquet", None, None, "test.parquet"),
-    
-     
-    
-)
-# -
+t.create(op, "load.json", "remote_json", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+
+t.create(op, "load.parquet", "remote_parquet", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
+
+# df_string = source_df.cols.cast("*","str")
+t.create(source_df, "save.csv", None, None, "test.csv")
+
+t.create(None, "save.json", None, None, "test.json")
+
+t.create(None, "save.parquet", None, None, "test.parquet")
+
+t.run()
 
 
+source_df.table()
