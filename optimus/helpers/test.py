@@ -231,3 +231,41 @@ class Test:
             test_file.write(b)
 
         # return "".join(buffer)
+
+    def delete(self, df, func, suffix=None, output="df", *args, **kwargs):
+        """
+        This is a helper function that output python tests for Spark Dataframes.
+        :param df: Spark Dataframe
+        :param suffix: The create method will try to create a test function with the func param given.
+        If you want to test a function with different params you can use suffix.
+        :param func: Spark dataframe function to be tested
+        :param output: can be a 'df' or a 'json'
+        :param args: Arguments to be used in the function
+        :param kwargs: Keyword arguments to be used in the functions
+        :return:
+        """
+
+        if suffix is None:
+            suffix = ""
+        else:
+            suffix = "_" + suffix
+
+        # Create func test name. If is None we just test the create.df function a not transform the data frame in
+        # any way
+        if func is None:
+            func_test_name = "test_" + "create_df" + suffix + "()"
+            filename = "create_df" + suffix + ".test"
+
+        else:
+            func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
+
+            filename = func.replace(".", "_") + suffix + ".test"
+
+        filename = self.path + "//" + filename
+
+        print("Deleting file {test}...".format(test=filename))
+        logger.print(func_test_name)
+        try:
+            os.remove(filename)
+        except FileNotFoundError:
+            print("File NOT found")

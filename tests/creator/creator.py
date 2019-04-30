@@ -74,8 +74,8 @@ rows = [
         (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
 
     ]
-df = op.create.df(cols ,rows)
-df.table()
+source_df = op.create.df(cols ,rows)
+source_df.table()
 # -
 
 
@@ -120,7 +120,7 @@ t.run()
 
 from pyspark.ml.linalg import Vectors
 
-t = Test(op, df, "df_cols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
@@ -261,6 +261,8 @@ t.create(None, "cols.remove_accents", None, "df", string_col)
 
 t.create(None, "cols.remove_accents", "all_columns", "df", string_col)
 
+source_df.table()
+
 t.create(None, "cols.remove_special_chars", None, "df", string_col)
 
 t.create(None, "cols.remove_special_chars", "all_columns", "df", "*")
@@ -273,7 +275,7 @@ t.create(None, "cols.date_transform", None, "df", date_col, "yyyy/MM/dd", "dd-MM
 
 t.create(None, "cols.date_transform", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
 
-t.create(None, "cols.years_between", None, "df", data_col, "yyyyMMdd")
+t.create(None, "cols.years_between", None, "df", date_col, "yyyyMMdd")
 
 t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyyMMdd")
 
@@ -317,13 +319,23 @@ t.create(None, "cols.clip", None, "df", numeric_col_B, 3, 5)
 
 t.create(None, "cols.clip", "all_columns", "df", "*", 3, 5)
 
-t.create(None, "cols.replace", None, "df", string_col, [("Security", "Leader")], "Match")
+t.create(None, "cols.replace", None, "df", string_col, ["Security", "Leader"], "Match")
 
-t.create(None, "cols.replace", "all_columns", "df", "*", [("Jazz", "Leader")], "Match")
+import re
+_value = None
+attr ={'Jazz': 'Match', 'Leader': 'Match'}
+_regex = re.compile("|".join(map(re.escape, attr.keys())))
+result = _regex.sub(lambda match: attr[match.group(0)], str(_value))
+print(result)
 
-t.create(None, "cols.apply_expr", None, "df", numeric_col_B, func)
+t.create(None, "cols.replace", "all_columns", "df", "*", ["Jazz", "Leader"], "Match")
+source_df.table()
 
-t.create(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B,numeric_col_C], func)
+# Its necesary to save the function 
+t.delete(None, "cols.apply_expr", None, "df", numeric_col_B, func)
+
+# Its necesary to save the function 
+t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B,numeric_col_C], func)
 
 t.create(None, "cols.append", "number", "df", new_col, 1)
 
@@ -345,7 +357,8 @@ t.create(None, "cols.cast", None, "df", string_col, "string")
 
 t.create(None, "cols.cast", "all_columns", "df", "*", "string")
 
-t.create(None, "cols.cast", "vector", "df", array_col, Vectors)
+# Problems with precision
+t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
 
 t.create(None, "cols.keep", None, "df", numeric_col_B)
 
@@ -371,7 +384,9 @@ t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
 
 t.create(None, "cols.fill_na", "array", "df", "japanese name", ["1","2"])
 
-t.create(None, "cols.fill_na", "all_columns", "df", "*", "2")
+t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", False)
+
+t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "function", "rank", "age"], "2")
 
 t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], new_col, separator=" ")
 
@@ -379,7 +394,7 @@ t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], new_col, s
 # t.create(None, "cols.nest", "mix", "df", [F.col(numeric_col_C), F.col(numeric_col_B)], "E", separator="--")
 
 # +
-df_na = df.cols.drop("NullType").rows.drop_na("*")
+df_na = source_df.cols.drop("NullType").rows.drop_na("*")
 
 t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
 # -
@@ -401,6 +416,37 @@ t.create(None, "cols.is_na", "all_columns", "df", "*")
 t.create(None, "cols.is_na", None, "df", numeric_col)
 
 t.run()
+
+from pyspark.sql.types import *
+from optimus import Optimus
+from optimus.helpers.functions import json_enconding 
+from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
+import numpy as np
+nan = np.nan
+import datetime
+
+# +
+actual_df =source_df.cols.remove_special_chars('function')
+expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [("Optim'us", -28, 'Leader', 10, 5000000, 4.300000190734863, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None), ('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None), ('Megatron', None, 'None', 10, 5000000, 5.699999809265137, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None), ('Metroplex_)^$', 300, 'Battle Station', 8, 5000000, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None), (None, None, 'None', None, None, None, None, None, None, None, None, None, None, None, None, None)])
+
+# assert (expected_df.collect() == actual_df.collect())
+
+from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+
+# source_df.table()
+# print(actual_df.to_json())
+# print(expected_df.to_json())
+a1 = actual_df.to_json()
+e1 = expected_df.to_json()
+
+
+# -
+
+actual_df.table()
+expected_df.table()
+
+ddiff = DeepDiff(a1, e1, ignore_order=False)
+print(ddiff)
 
 # # Rows Test
 
