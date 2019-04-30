@@ -4,7 +4,7 @@ import re
 import string
 import unicodedata
 from functools import reduce
-
+import math
 import pandas as pd
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -29,6 +29,7 @@ from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
     tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers
+from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.internals import _z_score_col_name
@@ -1012,7 +1013,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def fill_na(columns, value, new_column=None):
+    def fill_na(columns, value):
         """
         Replace null data with a specified value
         :param columns: '*', list of columns names or a single column name.
@@ -1024,19 +1025,27 @@ def cols(self):
 
         df = self
         for col_name in columns:
+
             if is_column_a(self, col_name, PYSPARK_NUMERIC_TYPES):
-                value = fast_float(value)
-                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
+                new_value = fast_float(value)
+                func = F.when(match_nulls_strings(col_name), new_value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_STRING_TYPES):
-                value = str(value)
-                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
+                # print(col_name)
+                new_value = str(value)
+                func = F.when(match_nulls_strings(col_name), new_value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
                 if is_one_element(value):
-                    value = F.array(F.lit(value))
+                    new_value = F.array(F.lit(value))
                 else:
-                    value = F.array(*[F.lit(v) for v in value])
+                    new_value = F.array(*[F.lit(v) for v in value])
+                func = F.when(match_null(col_name), new_value).otherwise(F.col(col_name))
+            else:
 
-                func = F.when(match_null(col_name), value).otherwise(F.col(col_name))
+                if df.cols.dtypes(col_name) == parse_python_dtypes(type(value).__name__):
+                    new_value = value
+                    func = F.when(match_null(col_name), new_value).otherwise(F.col(col_name))
+                else:
+                    RaiseIt.type_error(value, [df.cols.dtypes(col_name)])
 
             df = df.cols.apply_expr(col_name, func)
         return df
@@ -1295,13 +1304,17 @@ def cols(self):
 
         # TODO check if .contains can be used instead of regexp
         def func_chars(_df, _col_name, __search, __replace):
-
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             def multiple_replace(_value, attr):
+                import numpy as np
                 # Create a regular expression from all of the dictionary keys
-                _regex = re.compile("|".join(map(re.escape, attr.keys())))
-                return _regex.sub(lambda match: attr[match.group(0)], str(_value))
+                if _value is not None:
+                    _regex = re.compile("|".join(map(re.escape, attr.keys())))
+                    result = _regex.sub(lambda match: attr[match.group(0)], str(_value))
+                else:
+                    result = None
+                return result
 
             _df = apply(columns, multiple_replace, "string", __search)
             return _df
@@ -1321,15 +1334,14 @@ def cols(self):
             func = func_words
         elif search_by is "chars":
             # Create as dict
-            if is_list_of_tuples(search):
-                search_dict = dict(tuple(search))
-            elif is_list(search):
+            if is_list(search):
                 search_dict = {s: replace_by for s in search}
             elif is_one_element(search):
                 search_dict = {search: replace_by}
 
             search_dict = {str(k): str(v) for k, v in search_dict.items()}
             func = func_chars
+
         else:
             RaiseIt.value_error(search_by, ["words", "chars"])
 
