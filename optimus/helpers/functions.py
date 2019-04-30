@@ -372,7 +372,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         RaiseIt.value_error(get_args, ["True", "False"])
 
     if columns_residual:
-        print(columns_residual, "column(s) was not processed because is not", filter_by_column_dtypes)
+        print(",".join(escape_columns(columns_residual)), "column(s) was not processed because is/are not",
+              ",".join(filter_by_column_dtypes))
 
     return cols_params
 
@@ -530,4 +531,4 @@ def debug(value):
     """
 
     frame_info = getframeinfo(currentframe())
-    print("{}->{}:{}".format(value,frame_info.filename, frame_info.lineno, ))
+    print("{}->{}:{}".format(value, frame_info.filename, frame_info.lineno, ))
