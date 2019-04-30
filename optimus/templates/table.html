@@ -30,7 +30,7 @@
     <tr>
         {%for k,v in r.items(): %}
         <td>
-            <div title='{{v|string|replace(" ", "\u2E31")}}'>{{v|string|replace(" ", "\u2E31")|truncate(128)}}</div>
+            <div class="{% if v is none or v is not defined %} none {% endif %}" title='{{v|string|replace(" ", "\u2E31")}}'>{{v|string|replace(" ", "\u2E31")|truncate(128)}}</div>
         </td>
         {% endfor %}
     </tr>
