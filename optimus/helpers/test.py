@@ -10,7 +10,7 @@ from optimus.helpers.logger import logger
 
 
 class Test:
-    def __init__(self, op=None, df=None, name=None, imports=None, path=None, source="source_df"):
+    def __init__(self, op=None, df=None, name=None, imports=None, path=None, final_path=None, source="source_df"):
         """
         Create python code with unit test functions for Optimus.
         :param op: optimus instance
@@ -25,6 +25,7 @@ class Test:
         self.name = name
         self.imports = imports
         self.path = path
+        self.final_path = final_path
 
     def run(self):
 
@@ -33,10 +34,11 @@ class Test:
         :return:
         """
 
+        final_path = self.final_path
         if self.path is None:
-            filename = self.name + ".py"
+            filename = "test_" + self.name + ".py"
         else:
-            filename = self.path + "/" + self.name + ".py"
+            filename = final_path + "/" + "test_" + self.name + ".py"
 
         test_file = open(filename, 'w', encoding='utf-8')
         print("Creating file " + filename)
@@ -193,8 +195,10 @@ class Test:
             df_result = df_func(*args, **kwargs)
 
         if output == "df":
+            df_result.table()
             expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
         elif output == "json":
+            print(df_result)
             if is_str(df_result):
                 df_result = "'" + df_result + "'"
             else:
