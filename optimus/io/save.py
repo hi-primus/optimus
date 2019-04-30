@@ -4,8 +4,9 @@ from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.decorators import *
+from optimus.helpers.functions import parse_columns
 from optimus.helpers.logger import logger
-from optimus.spark import Spark
+from optimus.spark import Spark, PYSPARK_NUMERIC_TYPES
 
 
 def save(self):
@@ -52,7 +53,12 @@ def save(self):
         """
 
         try:
-            self.repartition(num_partitions).write.options(header=header).mode(mode).csv(path, sep=sep)
+            df = self
+            columns = parse_columns(self, "*", filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
+            df = df.cols.cast(columns, "str").repartition(num_partitions)
+
+            # Save to csv
+            df.write.options(header=header).mode(mode).csv(path, sep=sep)
         except IOError as error:
             logger.print(error)
             raise
@@ -79,6 +85,9 @@ def save(self):
             return col_name
 
         df = self.cols.rename(func)
+
+        columns = parse_columns(self, "*", filter_by_column_dtypes=["null"])
+        df = df.cols.cast(columns, "str")
 
         try:
             df.coalesce(num_partitions) \

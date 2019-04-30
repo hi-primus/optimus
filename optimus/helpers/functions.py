@@ -224,7 +224,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.cols.names()))
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.schema.names))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
@@ -348,7 +348,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     columns_residual = None
 
-    # If necessary filter the columns be data type
+    # If necessary filter the columns by data type
     if is_list_of_strings(filter_by_column_dtypes):
         # Get columns for every data type
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
