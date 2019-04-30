@@ -1022,20 +1022,19 @@ def cols(self):
         columns = parse_columns(self, columns)
         check_column_numbers(columns, "*")
 
-        def _fill_na(_col_name, _value):
-
-            return F.when(match_nulls_strings(_col_name), _value).otherwise(F.col(_col_name))
-
         df = self
         for col_name in columns:
             if is_column_a(self, col_name, PYSPARK_NUMERIC_TYPES):
-                value = fast_float(str)
+                value = fast_float(value)
+                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_STRING_TYPES):
                 value = str(value)
+                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
-                value = val_to_list(value)
+                value = F.array(F.lit(value))
+                func = F.when(match_null(col_name), value).otherwise(F.col(col_name))
 
-            df = df.cols.apply_expr(col_name, _fill_na, value)
+            df = df.cols.apply_expr(col_name, func)
         return df
 
     @add_attr(cols)
