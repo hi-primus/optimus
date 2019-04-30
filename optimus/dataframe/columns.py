@@ -1309,13 +1309,9 @@ def cols(self):
             def multiple_replace(_value, attr):
                 import numpy as np
                 # Create a regular expression from all of the dictionary keys
-                if _value is not None:
-                    _regex = re.compile("|".join(map(re.escape, attr.keys())))
-                    result = _regex.sub(lambda match: attr[match.group(0)], str(_value))
-                else:
-                    result = None
-                return result
-
+                _regex = re.compile("|".join(map(re.escape, attr.keys())))
+                return _regex.sub(lambda match: attr[match.group(0)], str(_value))
+               
             _df = apply(columns, multiple_replace, "string", __search)
             return _df
 
