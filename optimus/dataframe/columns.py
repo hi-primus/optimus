@@ -1677,7 +1677,7 @@ def cols(self):
             return stats
 
     @add_attr(cols)
-    def schema_dtype(columns):
+    def schema_dtype(columns="*"):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
@@ -1687,7 +1687,7 @@ def cols(self):
         return format_dict([self.schema[col_name].dataType for col_name in columns])
 
     @add_attr(cols)
-    def dtypes(columns):
+    def dtypes(columns="*"):
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
@@ -1700,12 +1700,13 @@ def cols(self):
         return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
-    def names():
+    def names(filter_by_column_dtypes=None):
         """
         Get column names
         :return:
         """
-        return self.schema.names
+        columns = parse_columns(self, "*", filter_by_column_dtypes=filter_by_column_dtypes)
+        return columns
 
     @add_attr(cols)
     def qcut(columns, num_buckets, handle_invalid="skip"):
