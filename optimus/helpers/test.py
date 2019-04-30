@@ -72,7 +72,7 @@ class Test:
                 if file.endswith(".test"):
                     full_path = os.path.join(root, file)
 
-                    with open(full_path, 'r') as opened_file:
+                    with open(full_path, 'r', encoding='utf-8') as opened_file:
                         try:
                             text = opened_file.read()
 
