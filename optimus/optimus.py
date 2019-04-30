@@ -2,15 +2,14 @@ import os
 import sys
 from shutil import rmtree
 
-import jinja2
-from flask import url_for
+from deepdiff import DeepDiff  # For Deep Difference of 2 objects
 from pyspark.sql import DataFrame
 
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
 from optimus.helpers.convert import val_to_list
-from optimus.helpers.functions import print_html
+from optimus.helpers.functions import print_html, print_json
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
@@ -406,3 +405,20 @@ class Optimus:
         """
 
         logger.active(verbose)
+
+    @staticmethod
+    def compare(df1, df2, method="json"):
+        """
+        Compare 2 Spark dataframes
+        :param df1:
+        :param df2:
+        :param method: json or a
+        :return:
+        """
+        if method is "json":
+            diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
+            print_json(diff)
+        elif method is "collect":
+            assert (df1.collect() == df2.collect())
+        else:
+            RaiseIt.type_error(method, ["json", "collect"])
