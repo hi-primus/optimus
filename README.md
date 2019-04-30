@@ -75,7 +75,10 @@ Now Optimus can load data in csv, json, parquet, avro, excel from a local file o
 df = op.load.csv("examples/data/foo.csv")
 
 #json
+# Use a local file
 df = op.load.json("examples/data/foo.json")
+# Use a url
+df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
 # parquet
 df = op.load.parquet("examples/data/foo.parquet")
@@ -87,10 +90,8 @@ df = op.load.parquet("examples/data/foo.parquet")
 df = op.load.excel("examples/data/titanic3.xls")
 ```
 
-If you want to load from a URL you just need to use load.url() with the path and the type file (csv, json, parquet, avro and excel). Optimus will try to infer the file format from the file extension
-
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 ```
 With .table() you hace a beautifull way to show your data. You have extra informacion like column number, column data type and marked white spaces 
 
