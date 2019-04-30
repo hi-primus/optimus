@@ -1,9 +1,12 @@
-from optimus.helpers.logger import logger
+import errno
+import os
+from io import UnsupportedOperation
+
+import pyspark
 
 from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples, is_function
-
-import pyspark
+from optimus.helpers.logger import logger
 
 
 class Test:
@@ -14,6 +17,7 @@ class Test:
         :param df: Spark Dataframe
         :param name: Name of the Test Class
         :param imports: Libraries to be added
+        :type path: folder where the tes will be written
 
         """
         self.op = op
@@ -22,18 +26,17 @@ class Test:
         self.imports = imports
         self.path = path
 
-    def run(self, *args):
+    def run(self):
 
         """
         Return the tests in text format
-        :param args: list of create functions
         :return:
         """
 
         if self.path is None:
-            filename = "test_" + self.name + ".py"
+            filename = self.name + ".py"
         else:
-            filename = self.path + "/" + "test_" + self.name + ".py"
+            filename = self.path + "/" + self.name + ".py"
 
         test_file = open(filename, 'w', encoding='utf-8')
         print("Creating file " + filename)
@@ -62,9 +65,19 @@ class Test:
 
         test_file.write(cls)
 
-        # Write test to file
-        for t in args:
-            test_file.write(t)
+        for root, dirs, files in os.walk(self.path):
+            for file in files:
+                if file.endswith(".test"):
+                    full_path = os.path.join(root, file)
+
+                    with open(full_path, 'r') as opened_file:
+                        try:
+                            text = opened_file.read()
+
+                            test_file.write(text)
+                            opened_file.close()
+                        except UnsupportedOperation:
+                            print("file seems to be empty")
 
         test_file.close()
         print("Done")
@@ -96,8 +109,12 @@ class Test:
         # any way
         if func is None:
             func_test_name = "test_" + "create_df" + suffix + "()"
+            filename = "create_df" + suffix + ".test"
+
         else:
             func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
+
+            filename = func.replace(".", "_") + suffix + ".test"
 
         print("Creating {test} test function...".format(test=func_test_name))
         logger.print(func_test_name)
@@ -195,4 +212,18 @@ class Test:
         elif output == "json":
             add_buffer("\tassert (expected_value == actual_df)\n")
 
-        return "".join(buffer)
+        filename = self.path + "//" + filename
+        if not os.path.exists(os.path.dirname(filename)):
+            try:
+                os.makedirs(os.path.dirname(filename))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
+        # write file
+        test_file = open(filename, 'w', encoding='utf-8')
+
+        for b in buffer:
+            test_file.write(b)
+
+        # return "".join(buffer)
