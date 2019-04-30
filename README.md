@@ -138,7 +138,7 @@ You can change the table output back to ascii if you which
 op.output("ascii")
 ```
 
-You transform this:
+You transform this
 
 ```python
 df.table()

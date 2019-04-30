@@ -150,7 +150,12 @@ class Optimus:
             queue_routing_key=queue_routing_key
         )
         self.ml = ML()
+
+        #
         self._load_css()
+
+        # Set global output as html
+        self.output("html")
 
     @staticmethod
     def _load_css():

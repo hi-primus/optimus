@@ -1022,20 +1022,23 @@ def cols(self):
         columns = parse_columns(self, columns)
         check_column_numbers(columns, "*")
 
-        def _fill_na(_col_name, _value):
-
-            return F.when(match_nulls_strings(_col_name), _value).otherwise(F.col(_col_name))
-
         df = self
         for col_name in columns:
             if is_column_a(self, col_name, PYSPARK_NUMERIC_TYPES):
-                value = fast_float(str)
+                value = fast_float(value)
+                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_STRING_TYPES):
                 value = str(value)
+                func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
-                value = val_to_list(value)
+                if is_one_element(value):
+                    value = F.array(F.lit(value))
+                else:
+                    value = F.array(*[F.lit(v) for v in value])
 
-            df = df.cols.apply_expr(col_name, _fill_na, value)
+                func = F.when(match_null(col_name), value).otherwise(F.col(col_name))
+
+            df = df.cols.apply_expr(col_name, func)
         return df
 
     @add_attr(cols)
@@ -1152,9 +1155,18 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        check_column_numbers(columns, 1)
+        check_column_numbers(columns, "*")
 
-        return self.select(columns).distinct()
+        result = {}
+        for col_name in columns:
+            unique_results = self.select(col_name).distinct().to_json()
+            uniques = []
+            for unique_dict in unique_results:
+                for k, v in unique_dict.items():
+                    uniques.append(v)
+            result[col_name] = uniques
+
+        return result
 
     @add_attr(cols)
     def nunique(*args, **kwargs):
@@ -1413,10 +1425,12 @@ def cols(self):
             df = vector_assembler.transform(df)
 
         elif shape is "array":
-            df = apply_expr(output_col, F.array(*columns))
+            # Arrays needs all the elements with the same data type. We try to cast to type
+            df = df.cols.cast("*", "str")
+            df = df.cols.apply_expr(output_col, F.array(*columns))
 
         elif shape is "string":
-            df = apply_expr(output_col, F.concat_ws(separator, *columns))
+            df = df.cols.apply_expr(output_col, F.concat_ws(separator, *columns))
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 

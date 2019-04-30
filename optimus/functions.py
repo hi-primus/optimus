@@ -443,7 +443,7 @@ class Create:
         """
         Helper to create a Spark dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
-        :param rows: List of Tuples if vals with the same number and types that cols
+        :param rows: List of Tuples with the same number and types that cols
         :param infer_schema: Try to infer the schema data type.
         :param pdf: a pandas dataframe
         :return: Dataframe
