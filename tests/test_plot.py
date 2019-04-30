@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 
 from pyspark.sql.types import *
@@ -99,7 +100,7 @@ class TestDataFrameCols(object):
     def test_boxplot():
 
         try:
-            source_df.plot.boxplot(["age", "weight(t)"])
+            source_df.plot.box(["age", "weight(t)"])
 
         except RuntimeError:
             logging.exception('Error creating the json output.')
@@ -109,7 +110,7 @@ class TestDataFrameCols(object):
     def test_scatterplot():
 
         try:
-            source_df.plot.scatterplot(["age", "weight(t)"])
+            source_df.plot.scatter(["age", "weight(t)"])
 
         except RuntimeError:
             logging.exception('Error creating the json output.')
