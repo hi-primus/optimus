@@ -1031,7 +1031,11 @@ def cols(self):
                 value = str(value)
                 func = F.when(match_nulls_strings(col_name), value).otherwise(F.col(col_name))
             elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
-                value = F.array(F.lit(value))
+                if is_one_element(value):
+                    value = F.array(F.lit(value))
+                else:
+                    value = F.array(*[F.lit(v) for v in value])
+
                 func = F.when(match_null(col_name), value).otherwise(F.col(col_name))
 
             df = df.cols.apply_expr(col_name, func)
