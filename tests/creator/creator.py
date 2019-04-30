@@ -55,7 +55,7 @@ cols = [
     ]
 
 rows = [
-        ("Optim'us", 28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+        ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
          "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
          None),
         ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
@@ -71,6 +71,7 @@ rows = [
          date(2012, 5, 10), datetime(2014, 6, 24), True, bytearray("None", "utf-8"), None),
         ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
          [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, bytearray("Battle Station", "utf-8"), None),
+        (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
 
     ]
 df = op.create.df(cols ,rows)
@@ -86,8 +87,8 @@ df.table()
 
 from pyspark.ml.linalg import Vectors
 
-t = Test(op, None, "Optimus", imports=["import datetime",
-                                "from pyspark.sql import functions as F"], path = "create_df")
+t = Test(op, None, "create_df", imports=["import datetime",
+                                "from pyspark.sql import functions as F"], path = "..", final_path="..")
 
 # +
 one_column = {"rows":["Argenis", "Favio", "Matthew"], "cols":["name"]}
@@ -123,7 +124,7 @@ t = Test(op, df, "df_cols", imports=["from pyspark.ml.linalg import Vectors, Vec
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_cols")
+                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
 # +
 from pyspark.sql import functions as F
@@ -368,17 +369,22 @@ t.create(None, "cols.sort", "asc", "df", "asc")
 
 t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
 
+t.create(None, "cols.fill_na", "array", "df", "japanese name", ["1","2"])
+
 t.create(None, "cols.fill_na", "all_columns", "df", "*", "2")
 
 t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], new_col, separator=" ")
 
 # +
 # t.create(None, "cols.nest", "mix", "df", [F.col(numeric_col_C), F.col(numeric_col_B)], "E", separator="--")
+
+# +
+df_na = df.cols.drop("NullType").rows.drop_na("*")
+
+t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
 # -
 
-t.create(None, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
-
-t.create(None, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
+t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
 
 t.create(None, "cols.nest", "array_all_columns", "df", "*", new_col, shape="array")
 
@@ -392,7 +398,7 @@ t.create(None, "cols.unnest", "array_all_columns", "df", array_col)
 
 t.create(None, "cols.is_na", "all_columns", "df", "*")
 
-t.create(None, "cols.is_na", None, "df", numeric_col),
+t.create(None, "cols.is_na", None, "df", numeric_col)
 
 t.run()
 
