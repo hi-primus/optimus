@@ -1307,7 +1307,6 @@ def cols(self):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             def multiple_replace(_value, attr):
-                import numpy as np
                 # Create a regular expression from all of the dictionary keys
                 if _value is not None:
                     _regex = re.compile("|".join(map(re.escape, attr.keys())))
