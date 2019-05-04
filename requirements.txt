@@ -28,7 +28,7 @@ pygments>=2.2.0
 six>=1.10.0
 h5py>=2.7.0
 flask==1.0.2
-ipython==7.2.0
+ipython==7.5.0
 ratelimit==2.2.1
 humanize==0.5.1
 h2o-pysparkling-2.4==2.4.4
