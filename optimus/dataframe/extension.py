@@ -1,8 +1,9 @@
-import math
 import os
 
 import humanize
 import jinja2
+import math
+from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -11,13 +12,12 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus import RaiseIt, IMPUTE_SUFFIX
-from optimus.helpers.checkit import is_str
+from optimus.helpers.checkit import is_str, is_column_a
+from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, val_to_list, traverse, print_html
-from optimus.spark import Spark
-from packaging import version
-
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
+from optimus.spark import Spark
 
 
 # from apiclient.discovery import build
@@ -135,13 +135,13 @@ def melt(self, id_vars, value_vars, var_name="variable", value_name="value", dat
     :param value_vars: Column names that are going to be converted to columns values
     :param var_name: Column name for vars
     :param value_name: Column name for values
-    :param data_type: All columns must have the same type. It will transform all collumns to this datatype.
+    :param data_type: All columns must have the same type. It will transform all columns to this data type.
     :return:
     """
 
     df = self
     id_vars = val_to_list(id_vars)
-    # Cast all colums to the same type
+    # Cast all columns to the same type
     df = df.cols.cast(id_vars + value_vars, data_type)
 
     vars_and_vals = [F.struct(F.lit(c).alias(var_name), F.col(c).alias(value_name)) for c in value_vars]
@@ -289,15 +289,16 @@ def table_html(self, limit=100, columns=None, title=None):
     Return a HTML table with the dataframe cols, data types and values
     :param self:
     :param columns: Columns to be printed
-    :param limit: how many rows will be printed
+    :param limit: How many rows will be printed
+    :param title: Table title
     :return:
     """
 
     columns = parse_columns(self, columns)
+    # print(columns)
+    data = self.cols.select(columns).limit(limit).to_json()
 
-    data = self.select(columns).limit(limit).to_json()
-
-    # Load template
+    # Load the Jinja template
     path = os.path.dirname(os.path.abspath(__file__))
     template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -305,6 +306,7 @@ def table_html(self, limit=100, columns=None, title=None):
 
     # Filter only the columns and data type info need it
     dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+
     # Remove not selected columns
     final_columns = []
     for i in dtypes:
@@ -320,7 +322,6 @@ def table_html(self, limit=100, columns=None, title=None):
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
-    # Print table
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title)
     return output
@@ -329,22 +330,24 @@ def table_html(self, limit=100, columns=None, title=None):
 @add_method(DataFrame)
 def table(self, limit=100, columns=None, title=None):
     try:
-        __IPYTHON__
-        result = self.table_html(title=title, limit=limit, columns=columns)
-        return print_html(result)
+        if __IPYTHON__ and DataFrame.output is "html":
+            result = self.table_html(title=title, limit=limit, columns=columns)
+            return print_html(result)
+        else:
+
+            self.show()
     except NameError:
         self.show()
 
 
 @add_method(DataFrame)
-def correlation(self, columns, method="pearson", strategy="mean", output="json"):
+def correlation(self, columns, method="pearson", output="json"):
     """
     Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
     missing values
     :param self:
     :param columns: Columns to be processed
     :param method: Method used to calculate the correlation
-    :param strategy: Imputing strategy
     :param output: array or json
     :return:
     """
@@ -352,19 +355,19 @@ def correlation(self, columns, method="pearson", strategy="mean", output="json")
     # try to parse the select column to float and create a vector
 
     df = self
-    for col_name in columns:
-        df = df.cols.cast(col_name, "float")
-        logger.print("Casting {col_name} to float...".format(col_name=col_name))
+    if len(columns) == 1:
+        if is_column_a(df, columns, "vector"):
+            new_column = one_list_to_val(columns)
+    else:
+        new_column = "correlation_features"
+        for col_name in columns:
+            df = df.cols.cast(col_name, "float")
+            logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
-    # Impute missing values
-    imputed_cols = [c + IMPUTE_SUFFIX for c in columns]
-    df = df.cols.impute(columns, strategy)
-    logger.print("Imputing {columns}, Using '{strategy}'...".format(columns=columns, strategy=strategy))
+        df = df.cols.nest(columns, new_column, "vector")
 
     # Create Vector necessary to calculate the correlation
-    df = df.cols.nest(imputed_cols, "features", "vector")
-
-    corr = Correlation.corr(df, "features", method).head()[0].toArray()
+    corr = Correlation.corr(df, new_column, method).head()[0].toArray()
 
     if output is "array":
         result = corr

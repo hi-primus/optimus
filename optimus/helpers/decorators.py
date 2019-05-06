@@ -1,7 +1,8 @@
 import timeit
-
 from functools import wraps
+
 from optimus.helpers.logger import logger
+
 
 def add_method(cls):
     """
@@ -52,6 +53,31 @@ def add_attr(cls, log_time=False):
             return f
 
         setattr(cls, func.__name__, wrapper)
+        return func
+
+    return decorator
+
+
+def add_prop(cls, log_time=False):
+    """
+    Attach a function to another functions as an attribute
+    :param cls: class where the function will be attached
+    :param log_time: Print the execution time. Verbose must be true on the Optimus constructor
+    :type log_time: bool
+    :return:
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = timeit.default_timer()
+            f = func(*args, **kwargs)
+            _time = round(timeit.default_timer() - start_time, 2)
+            if log_time:
+                logger.print("{name}() executed in {time} sec".format(name=func.__name__, time=_time))
+            return f
+
+        property(cls, func.__name__, wrapper)
         return func
 
     return decorator

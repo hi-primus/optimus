@@ -2,11 +2,15 @@
 Helpers to check if an object match a date type
 """
 import datetime
+import os
+import re
 from ast import literal_eval
 
 import dateutil
 from pyspark.sql import DataFrame
-import os
+
+from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.convert import val_to_list, one_list_to_val
 
 
 def is_same_class(class1, class2):
@@ -85,9 +89,26 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
+def is_column_a(df, column, dtypes):
+    """
+    Check if column match a list of data types
+    :param df:
+    :param column:
+    :param dtypes:
+    :return:
+    """
+
+    data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
+
+    column = one_list_to_val(column)
+
+    # Filter columns by data type
+    return isinstance(df.schema[column].dataType, data_type)
+
+
 def is_list_of_str(value):
     """
-    Check if an object is a liat of strings
+    Check if an object is a list of strings
     :param value:
     :return:
     """
@@ -96,7 +117,7 @@ def is_list_of_str(value):
 
 def is_list_of_int(value):
     """
-    Check if an object is a liat of integers
+    Check if an object is a list of integers
     :param value:
     :return:
     """
@@ -105,7 +126,7 @@ def is_list_of_int(value):
 
 def is_list_of_float(value):
     """
-    Check if an object is a liat of floats
+    Check if an object is a list of floats
     :param value:
     :return:
     """
@@ -272,6 +293,18 @@ def is_int(value):
     :return:
     """
     return isinstance(value, int)
+
+
+def is_url(value):
+    regex = re.compile(
+        r'^(?:http|ftp)s?://'  # http:// or https://
+        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+        r'localhost|'  # localhost...
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+        r'(?::\d+)?'  # optional port
+        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+
+    return re.match(regex, value)
 
 
 def is_float(value):

@@ -1,0 +1,73 @@
+ /* Tables*/
+
+ .data_type {
+        font-size: 0.8em;
+        font-weight: normal;
+    }
+
+    .column_name {
+        font-size: 1.2em;
+    }
+
+    .info_items {
+        margin: 10px 0;
+        font-size: 0.8em;
+    }
+
+    .optimus_table td {
+        padding: 2px;
+        border-left: 1px solid #cccccc;
+        border-right: 1px solid #cccccc;
+    }
+
+    .optimus_table tr:nth-child(even) {
+        background-color: #f2f2f2 !important;
+    }
+
+    .optimus_table tr:nth-child(odd) {
+        background-color: #ffffff !important;
+    }
+
+    .optimus_table thead {
+        border-bottom: 1px solid black;
+    }
+    .optimus_table{
+        font-size: 12px;
+    }
+
+    .optimus_table tbody{
+        font-family: monospace;
+        border-bottom: 1px solid #cccccc;
+    }
+
+    /* Profiler */
+        .main{
+        width:100%;
+        overflow:auto;
+        border-bottom:1px solid #eeeeee;
+        padding: 10px 0;
+    }
+    .panel_profiler{
+        margin-right:2%;
+        float:left;
+        padding-bottom:2%;
+    }
+    .panel_profiler tbody{
+        font-family:monospace;
+    }
+    .title_profiler{
+        padding:20px;
+        background-color: #eeeeee
+    }
+    .info{
+        overflow: auto
+    }
+    .main td, main th{
+        padding:0em
+    }
+    .panel_profiler td {
+        padding:0.2em
+    }
+    .none{
+        color:#0000ff
+    }

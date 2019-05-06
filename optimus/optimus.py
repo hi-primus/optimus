@@ -2,10 +2,15 @@ import os
 import sys
 from shutil import rmtree
 
+from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+from pyspark.sql import DataFrame
+
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
 from optimus.helpers.constants import *
-from optimus.helpers.functions import val_to_list
+from optimus.helpers.convert import val_to_list
+from optimus.helpers.functions import print_html, print_json
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
@@ -13,8 +18,6 @@ from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
 from optimus.spark import Spark
-
-from optimus.helpers.logger import logger
 
 Spark.instance = None
 
@@ -30,8 +33,6 @@ class Optimus:
                  jars=None,
                  options=None,
                  additional_options=None,
-                 enricher_host="localhost",
-                 enricher_port=27017,
                  queue_url=None,
                  queue_exchange=None,
                  queue_routing_key="optimus"
@@ -49,7 +50,7 @@ class Optimus:
 
         :param options: Configuration options that are passed to spark-submit.
             See `the list of possible options
-            <https://spark.apache.org/docs/2.1.0/configuration.html#available-properties>`_.
+            <https://spark.apache.org/docs/2.4.1/configuration.html#available-properties>`_.
             Note that any options set already through PYSPARK_SUBMIT_ARGS will override
             these.
         :type options: (dict[str,str])
@@ -92,7 +93,8 @@ class Optimus:
             self.verbose(verbose)
 
             # Load Avro.
-            # TODO: if the Spark 2.4 version is going to be used this is not neccesesary.
+            # TODO:
+            #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
             # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
@@ -114,8 +116,9 @@ class Optimus:
                 self._set_check_point_folder(path, file_system)
 
         else:
-            # If a session is passed by arguments  just save the reference
-            Spark.instance = session
+            # If a session is passed by arguments just save the reference
+
+            Spark.instance = Spark().load(session)
 
         # Initialize Spark
         logger.print("""
@@ -146,25 +149,55 @@ class Optimus:
             queue_routing_key=queue_routing_key
         )
         self.ml = ML()
-        self.enricher = Enricher(op=self, host=enricher_host, port=enricher_port, )
 
-    def connect(self, db_type="redshift", url=None, database=None, user=None, password=None, port=None):
+        #
+        self._load_css()
+
+        # Set global output as html
+        self.output("html")
+
+    @staticmethod
+    def _load_css():
+        """
+        Try to load the css for templates
+        :return:
+        """
+        try:
+            if __IPYTHON__:
+                # # Load the Jinja template
+
+                path = os.path.dirname(os.path.abspath(__file__))
+                url = path + "//css//styles.css"
+                styles = open(url, "r").read()
+                s = '<style>%s</style>' % styles
+                print_html(s)
+        except NameError:
+            pass
+
+    @staticmethod
+    def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
         """
         Create the JDBC string connection
         :return:
         """
         return JDBC(db_type, url, database, user, password, port)
 
-    def enrich(self, df, func_request, func_response):
+    def enrich(self, host="localhost", port=27017):
         """
-
-        :param df:
-        :param func_request:
-        :param func_response:
+        :param host:
+        :param port:
         :return:
         """
+        return Enricher(op=self, host=host, port=port, )
 
-        return self.enricher.run(df, func_request=func_request, func_response=func_response)
+    @staticmethod
+    def output(output):
+        """
+        Change the table output style
+        :param output: "ascii" or "html"
+        :return:
+        """
+        DataFrame.output = output
 
     @property
     def spark(self):
@@ -343,7 +376,7 @@ class Optimus:
 
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
-        Spark.instance = Spark(self.master, self.app_name)
+        Spark.instance = Spark().create(self.master, self.app_name)
 
     def has_package(self, package_prefix):
         """
@@ -372,3 +405,20 @@ class Optimus:
         """
 
         logger.active(verbose)
+
+    @staticmethod
+    def compare(df1, df2, method="json"):
+        """
+        Compare 2 Spark dataframes
+        :param df1:
+        :param df2:
+        :param method: json or a
+        :return:
+        """
+        if method is "json":
+            diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
+            print_json(diff)
+        elif method is "collect":
+            assert (df1.collect() == df2.collect())
+        else:
+            RaiseIt.type_error(method, ["json", "collect"])

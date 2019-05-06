@@ -31,10 +31,10 @@ class RaiseIt:
         Raise a ValueError exception
         :param var:
         :param data_values:
-        :param _list: list of values accepted
         :return:
         """
-        from optimus.helpers.functions import get_var_name, val_to_list
+        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.convert import val_to_list
 
         data_values = val_to_list(data_values)
 

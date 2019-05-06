@@ -1,29 +1,5 @@
-<style>
-    .main{
-        width:100%;
-        overflow:auto;
-        border-bottom:1px solid #eeeeee;
-        padding: 10px 0;
-    }
-    .panel_profiler{
-        margin-right:2%;
-        float:left;
-        padding-bottom:2%;
-    }
-    .panel_profiler tbody{
-        font-family:monospace;
-    }
-    .title_profiler{
-        padding:20px;
-        background-color: #eeeeee
-    }
-    .info{
-        overflow: auto
-    }
+<link rel="stylesheet" type="text/css" href="optimus/styles/styles.css">
 
-
-
-</style>
 
 <div class="main">
     <div class="info">
@@ -34,7 +10,7 @@
         <div class="panel_profiler">
             <div>
                 <h2>{{data.name}}</h2>
-                <div>{{data.column_type}}</div>
+                <span>{{data.column_type}}</span>
             </div>
             <table>
                 <tbody>
