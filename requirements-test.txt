@@ -25,8 +25,8 @@ h5py>=2.7.0
 flask==1.0.2
 ipython==7.5.0
 humanize==0.5.1
+psutil==5.6.2
 pytest-cov==2.7.1
-psutil==5.6.1
 backoff==1.8.0
 pymongo==3.8.0
 h2o-pysparkling-2.4==2.4.4
