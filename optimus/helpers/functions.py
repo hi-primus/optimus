@@ -287,6 +287,24 @@ def escape_columns(columns):
     return escaped_columns
 
 
+def get_output_cols(input_cols, output_cols):
+    # Construct input and output columns names
+    if is_list(input_cols) and is_list(output_cols):
+        if len(input_cols) != len(output_cols):
+            RaiseIt.length_error(input_cols, output_cols)
+    elif is_list(input_cols) and is_str(output_cols):
+        if len(input_cols) > 1:
+            output_cols = list([i + output_cols for i in input_cols])
+        else:
+            output_cols = val_to_list(output_cols)
+    elif is_str(input_cols) and is_str(output_cols):
+        output_cols = val_to_list(output_cols)
+    elif output_cols is None:
+        output_cols = input_cols
+
+    return input_cols, output_cols
+
+
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False):
     """

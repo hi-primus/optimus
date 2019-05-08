@@ -28,7 +28,7 @@ from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers
+    tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers, get_output_cols
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
@@ -158,11 +158,12 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_expr(columns, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
+    def apply_expr(input_cols, output_cols=None, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
         """
         Apply a expression to column.
-        :param columns: Columns in which the function is going to be applied
-        :param func: function to be applied
+        :param input_cols: Columns in which the function is going to be applied
+        :param output_cols: Columns in which the transformed data will saved
+        :param func: Function to be applied to the data
         :type func: A plain expression or a function
         :param args: Argument passed to the function
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
@@ -179,20 +180,26 @@ def cols(self):
         else:
             _func = func
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
-        check_column_numbers(columns, "*")
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                   accepts_missing_cols=True)
+        check_column_numbers(input_cols, "*")
+
+        input_cols, output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
-        for col_name in columns:
-            df = df.withColumn(col_name, audf(col_name, _func, attrs=args, func_type="column_exp", verbose=verbose))
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, audf(input_col, _func, attrs=args, func_type="column_exp", verbose=verbose))
         return df
 
     @add_attr(cols)
-    def apply(columns, func, func_return_type, args=None, func_type=None, when=None, filter_col_by_dtypes=None,
+    def apply(input_cols, output_cols=None, func=None, func_return_type=None, args=None, func_type=None, when=None,
+              filter_col_by_dtypes=None,
               verbose=True):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
-        :param columns: Columns in which the function is going to be applied
+        :param input_cols: Columns in which the function is going to be applied
+        :param output_cols: Columns in which the transformed data will saved
         :param func: Functions to be applied to a columns. The declaration must have always 2 params.
             def func(value, args):
         :param func_return_type: function return type. This is required by UDF and Pandas UDF.
@@ -204,21 +211,25 @@ def cols(self):
         :return: DataFrame
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=filter_col_by_dtypes, accepts_missing_cols=True)
-        check_column_numbers(columns, "*")
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                   accepts_missing_cols=True)
+
+        check_column_numbers(input_cols, "*")
+
+        input_cols, output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
 
         def expr(_when):
-            main_query = audf(col_name, func, func_return_type, args, func_type, verbose=verbose)
+            main_query = audf(input_col, func, func_return_type, args, func_type, verbose=verbose)
             if when is not None:
                 # Use the data type to filter the query
-                main_query = F.when(_when, main_query).otherwise(F.col(col_name))
+                main_query = F.when(_when, main_query).otherwise(F.col(input_col))
 
             return main_query
 
-        for col_name in columns:
-            df = df.withColumn(col_name, expr(when))
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, expr(when))
         return df
 
     @add_attr(cols)
