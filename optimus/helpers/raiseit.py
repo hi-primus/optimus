@@ -1,6 +1,3 @@
-
-
-
 class RaiseIt:
 
     @staticmethod
@@ -24,6 +21,24 @@ class RaiseIt:
         raise TypeError(
             "'{var_name}' must be of type {type}, received '{var_type}'".format(var_name=get_var_name(var), type=_type,
                                                                                 var_type=type(var)))
+
+    @staticmethod
+    def length_error(var1, var2):
+        """
+        Raise a ValueError exception
+        :param var1:
+        :param var2:
+        :return:
+        """
+        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.checkit import is_int
+        if is_int(var2):
+            length_var2 = str(var2)
+        else:
+            length_var2 = str(len(var2))
+
+        raise ValueError("'{var2_name}' must be length '{var1_length}', received '{var2_length}'"
+                         .format(var2_name=get_var_name(var2), var1_length=str(len(var1)), var2_length=length_var2))
 
     @staticmethod
     def value_error(var, data_values):
@@ -50,19 +65,6 @@ class RaiseIt:
                                  type=divisor.join(map(
                                      lambda x: "'" + x + "'",
                                      data_values)), var_type=var))
-
-    @staticmethod
-    def length_error(var, length):
-        """
-        Raise a ValueError exception when the var length is nor correct
-        :param var:
-        :param length: Expected var length
-        :return:
-        """
-        from optimus.helpers.functions import get_var_name
-        raise ValueError("'{var_name}' must be {length}, received '{var_length}'"
-                         .format(var_name=get_var_name(var),
-                                 length=length, var_length=len(var)))
 
     @staticmethod
     def type(cls, var, message):
