@@ -4,7 +4,7 @@ import re
 import string
 import unicodedata
 from functools import reduce
-import math
+
 import pandas as pd
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -290,10 +290,10 @@ def cols(self):
     def rename(old_column, new_column):
         return rename([(old_column, new_column)], None)
 
-    def _cast(cols, args):
+    def _cast(columns, args):
         """
         Helper function to support the multiple params implementation
-        :param cols: Select the columns you want to cast
+        :param columns: Select the columns you want to cast
         :param args:
         :return:
         """
@@ -308,7 +308,7 @@ def cols(self):
             if is_type(cls, Vectors):
                 func_type = "udf"
 
-                def cast_to_vectors(val, attr):
+                def cast_to(val, attr):
                     return Vectors.dense(val)
 
                 func_return_type = VectorUDT()
@@ -317,7 +317,7 @@ def cols(self):
 
                 func_type = "column_exp"
 
-                def cast_to_vectors(col_name, attr):
+                def cast_to(col_name, attr):
                     return F.col(col_name).cast(get_spark_dtypes_object(cls))
 
                 func_return_type = None
@@ -326,10 +326,10 @@ def cols(self):
             else:
                 RaiseIt.value_error(cls)
 
-            return func_return_type, cast_to_vectors, func_type
+            return func_return_type, cast_to, func_type
 
         df = self
-        for col, args in zip(cols, args):
+        for col, args in zip(columns, args):
             return_type, func, func_type = cast_factory(args[0])
             df = df.withColumn(col, audf(col, func,
                                          func_return_type=return_type,
