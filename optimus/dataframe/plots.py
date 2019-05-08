@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot, plot_correlation
+from optimus.plots import plot_correlation, plot_hist, plot_freq, plot_boxplot, plot_scatterplot
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns, check_column_numbers
 
@@ -20,7 +20,7 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
-            plot_hist({col_name: data})
+            return plot_hist({col_name: data})
 
     @add_attr(plot)
     def scatter(columns=None, buckets=30):
@@ -62,7 +62,7 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.frequency(col_name, buckets)
-            plot_freq(data)
+            return plot_freq(data)
 
     @add_attr(plot)
     def correlation(col_name, method="pearson"):

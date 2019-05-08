@@ -1,3 +1,4 @@
+altair
 httplib2==0.12.1
 google-api-python-client==1.7.8
 apiclient==1.0.4

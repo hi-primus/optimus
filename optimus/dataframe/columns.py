@@ -1,10 +1,11 @@
 import builtins
 import itertools
+import json
 import re
 import string
 import unicodedata
 from functools import reduce
-import math
+
 import pandas as pd
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -15,6 +16,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, ArrayType
 
+from optimus.constants import ALTAIR_HIST_TEMPLATE, ALTAIR_BAR_TEMPLATE
 # Functions
 from optimus.functions import abstract_udf as audf
 from optimus.functions import filter_row_by_data_type as fbdt
@@ -1382,7 +1384,7 @@ def cols(self):
     @add_attr(cols)
     def iqr(columns, more=None):
         """
-        Return the column data type
+        Return the interquartile info
         :param columns:
         :param more: Return info about q1 and q3
         :return:
@@ -1492,11 +1494,11 @@ def cols(self):
                 expr = F.split(F.col(col_name), separator)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    # TODO: Maybe can implement something in one pass
                     # Create a temp column with the string splitted into an array so we can get the max number of splits
                     def func(value, args):
                         return len(re.split(args[0], value))
 
+                    # TODO: Maybe can implement something in one pass
                     splits = df.withColumn("__length", audf(col_name, func, "int", [separator])).cols.max("__length")
 
                 if is_int(index):
@@ -1627,9 +1629,12 @@ def cols(self):
                 lower = i[1]["lower"]
                 upper = i[1]["upper"]
 
-                hist_data.append({"count": count, "lower": lower, "upper": upper})
+                hist_data.append({"count": count, "bin_start": lower, "bin_end": upper})
 
-        return hist_data
+            result = ALTAIR_HIST_TEMPLATE
+            result["data"]["values"] = hist_data
+
+        return result
 
     @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
@@ -1648,12 +1653,15 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
 
-        result = {}
+        freq_data = {}
+
         for col_name in columns:
-            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
+            freq_data[col_name] = ALTAIR_BAR_TEMPLATE
+            freq_data[col_name]["data"]["values"] = df.groupBy(col_name).count().rows.sort(
+                [("count", "desc"), (col_name, "desc")]).limit(
                 buckets).cols.rename(col_name, "value").to_json()
 
-        return result
+        return freq_data
 
     @add_attr(cols)
     def boxplot(columns):

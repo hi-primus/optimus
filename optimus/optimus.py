@@ -409,10 +409,10 @@ class Optimus:
     @staticmethod
     def compare(df1, df2, method="json"):
         """
-        Compare 2 Spark dataframes
-        :param df1:
-        :param df2:
-        :param method: json or a
+        Compare 2 Spark dataframes. Can compare a json
+        :param df1: Spark dataframe 1
+        :param df2: Spark dataframe 2
+        :param method: json or collect
         :return:
         """
         if method is "json":

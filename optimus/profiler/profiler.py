@@ -10,7 +10,8 @@ import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
+from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.plots import plot_hist, plot_missing_values, plot_freq
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
 from optimus.helpers.raiseit import RaiseIt
