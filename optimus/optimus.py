@@ -168,7 +168,7 @@ class Optimus:
 
                 path = os.path.dirname(os.path.abspath(__file__))
                 url = path + "//css//styles.css"
-                styles = open(url, "r").read()
+                styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
         except NameError:
