@@ -28,7 +28,7 @@ flask==1.0.2
 ipython==7.2.0
 ratelimit==2.2.1
 humanize==0.5.1
-h2o-pysparkling-2.4==2.4.4
+h2o-pysparkling-2.4==2.4.10
 psutil==5.6.1
 backoff==1.8.0
 pymongo==3.7.2
