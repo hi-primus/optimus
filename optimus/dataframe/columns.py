@@ -1438,13 +1438,14 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(columns, separator=None, splits=None, index=None):
+    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None):
         """
         Split an array or string in different columns
-        :param columns: Columns to be un-nested
+        :param input_cols: Columns to be un-nested
+        :param output_cols:
         :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
-        :param index:
+        :param index: Return a specific index from the nest
         :return: Spark DataFrame
         """
 
@@ -1453,58 +1454,49 @@ def cols(self):
         if splits is None:
             infer_splits = True
 
-        columns = parse_columns(self, columns)
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
 
-        for col_name in columns:
-            # if the col is array
-
-            col_dtype = self.schema[col_name].dataType
-
+        for input_col, output_col in zip(input_cols, output_cols):
             # Array
-            if is_(col_dtype, ArrayType):
+            if is_column_a(df, input_col, ArrayType):
 
-                expr = F.col(col_name)
+                expr = F.col(input_col)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = df.select(F.size(F.col(col_name)).alias("__size")).cols.max("__size")
-                    # splits = len(self.cols.cell(col_name))
+                    splits = format_dict(self.agg(F.max(F.size(input_col))).to_json())
 
                 for i in builtins.range(splits):
-                    df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
+                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
 
             # String
-            elif is_(col_dtype, StringType):
+            elif is_column_a(df, input_col, StringType):
                 if separator is None:
                     RaiseIt.value_error(separator, "regular expression")
 
-                expr = F.split(F.col(col_name), separator)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    # TODO: Maybe can implement something in one pass
-                    # Create a temp column with the string splitted into an array so we can get the max number of splits
-                    def func(value, args):
-                        return len(re.split(args[0], value))
-
-                    splits = df.withColumn("__length", audf(col_name, func, "int", [separator])).cols.max("__length")
+                    splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_json())
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
                 else:
                     r = builtins.range(0, splits)
 
+                expr = F.split(F.col(input_col), separator)
                 for i in r:
-                    df = df.withColumn(col_name + "_" + str(i), expr.getItem(i))
+                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
 
             # Vector
-            elif is_(col_dtype, VectorUDT):
+            elif is_column_a(df, input_col, VectorUDT):
 
                 def _unnest(row):
                     _dict = row.asDict()
 
                     # Get the column we want to unnest
-                    _list = _dict[col_name]
+                    _list = _dict[input_col]
 
                     # Ensure that float are python floats and not np floats
                     if index is None:
