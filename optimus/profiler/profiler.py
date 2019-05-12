@@ -11,13 +11,14 @@ import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
+from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html
-
-from optimus.helpers.logger import logger
+from optimus.profiler.templates.html import FOOTER, HEADER
 
 
 class Profiler:
@@ -41,7 +42,6 @@ class Profiler:
             except (IOError, KeyError):
                 logger.print("Config.ini not found")
                 output_path = "data.json"
-                pass
 
         self.html = None
         self.json = None
@@ -253,7 +253,7 @@ class Profiler:
         # Save in case we want to output to a html file
         self.html = html
 
-    def to_file(self, path=None, output=None):
+    def to_file(self, path=None, output="html"):
         """
         Save profiler data to a file in the specified format (html, json)
         :param output: html or json
@@ -428,15 +428,9 @@ class Profiler:
         :return:
         """
 
-        def na(col_name):
-            return F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name))
-
-        def zeros(col_name):
-            return F.count(F.when(F.col(col_name) == 0, col_name))
-
         stats = df.cols._exprs(
-            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
-             zeros],
+            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na_agg,
+             zeros_agg],
             columns)
         return stats
 
@@ -509,7 +503,10 @@ class Profiler:
         column_type = count_dtypes["columns"][col_name]['type']
         col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
 
-        na = stats[col_name]["na"]
+        if "na" in stats[col_name]:
+            na = stats[col_name]["na"]
+        else:
+            na = 0
 
         col_info['name'] = col_name
         col_info['column_type'] = column_type
@@ -550,6 +547,7 @@ class Profiler:
                 date = dateutil.parser.parse(value)
                 result = [date.year, date.month, date.weekday(), date.hour, date.minute]
             return result
+
 
         df = (df
               .cols.select(col_name)
@@ -612,10 +610,11 @@ class Profiler:
         """
 
         col_name_len = col_name + "_len"
-        df = df.cols.apply_expr(col_name_len, F.length(F.col(col_name)))
+        df = df.cols.apply(col_name_len, func=F.length(F.col(col_name)))
+
+
         min_value = df.cols.min(col_name_len)
         max_value = df.cols.max(col_name_len)
-
         # Max value can be considered as the number of buckets
         buckets_for_string = buckets
         if max_value <= 50:

@@ -1,15 +1,14 @@
 import json
-import math
+from functools import reduce
 
+import math
 from bson import json_util
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import parse_columns
-
-confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
+from optimus.helpers.functions import json_converter
 
 
 def fill_missing_col_types(col_types):
@@ -79,7 +78,7 @@ def sample_size(population_size, confidence_level, confidence_interval):
     n = population_size
 
     # Loop through supported confidence levels and find the num sdd deviations for that confidence level
-    for i in confidence_level_constant:
+    for i in CONFIDENCE_LEVEL_CONSTANT:
         if i[0] == confidence_level:
             z = i[1]
 
@@ -135,7 +134,7 @@ def create_buckets(lower_bound, upper_bound, bins):
     Create a dictionary with bins
     :param lower_bound: low range
     :param upper_bound: high range
-    :param buckets: number of buckets
+    :param bins: number of buckets
     :return:
     """
     range_value = (upper_bound - lower_bound) / bins
