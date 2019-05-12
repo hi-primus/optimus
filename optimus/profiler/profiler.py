@@ -11,13 +11,14 @@ import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
 from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
+from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import parse_columns, print_html
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html
-
-from optimus.helpers.logger import logger
+from optimus.profiler.templates.html import FOOTER, HEADER
 
 
 class Profiler:
@@ -41,7 +42,6 @@ class Profiler:
             except (IOError, KeyError):
                 logger.print("Config.ini not found")
                 output_path = "data.json"
-                pass
 
         self.html = None
         self.json = None
@@ -253,7 +253,7 @@ class Profiler:
         # Save in case we want to output to a html file
         self.html = html
 
-    def to_file(self, path=None, output=None):
+    def to_file(self, path=None, output="html"):
         """
         Save profiler data to a file in the specified format (html, json)
         :param output: html or json
@@ -262,36 +262,16 @@ class Profiler:
         """
 
         if path is None:
-            RaiseIt.value_error(path, ["Invalid file path"])
+            RaiseIt.value_error(path, "str")
 
         # We need to append a some extra html tags to display it correctly in the browser.
         if output is "html":
             if self.html is None:
+                RaiseIt.not_ready_error(
+                    "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
                 assert self.html is not None, "Please run the profiler first"
 
-            header = '''<!doctype html>
-<html class="no-js" lang="">
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title></title>
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-  <link rel="manifest" href="site.webmanifest">
-  <link rel="apple-touch-icon" href="icon.png">
-  <!-- Place favicon.ico in the root directory -->
-
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/main.css">
-</head>
-
-<body>'''
-
-            footer = '''</body></html>'''
-
-            write_html(header + self.html + footer, path)
+            write_html(HEADER + self.html + FOOTER, path)
         elif output is "json":
             if self.json is None:
                 assert self.json is not None, "Please run the profiler first"
@@ -448,15 +428,9 @@ class Profiler:
         :return:
         """
 
-        def na(col_name):
-            return F.count(F.when(F.isnan(col_name) | F.col(col_name).isNull(), col_name))
-
-        def zeros(col_name):
-            return F.count(F.when(F.col(col_name) == 0, col_name))
-
         stats = df.cols._exprs(
-            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na,
-             zeros],
+            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na_agg,
+             zeros_agg],
             columns)
         return stats
 
@@ -529,7 +503,10 @@ class Profiler:
         column_type = count_dtypes["columns"][col_name]['type']
         col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
 
-        na = stats[col_name]["na"]
+        if "na" in stats[col_name]:
+            na = stats[col_name]["na"]
+        else:
+            na = 0
 
         col_info['name'] = col_name
         col_info['column_type'] = column_type
@@ -570,6 +547,7 @@ class Profiler:
                 date = dateutil.parser.parse(value)
                 result = [date.year, date.month, date.weekday(), date.hour, date.minute]
             return result
+
 
         df = (df
               .cols.select(col_name)
@@ -632,10 +610,11 @@ class Profiler:
         """
 
         col_name_len = col_name + "_len"
-        df = df.cols.apply_expr(col_name_len, F.length(F.col(col_name)))
+        df = df.cols.apply(col_name_len, func=F.length(F.col(col_name)))
+
+
         min_value = df.cols.min(col_name_len)
         max_value = df.cols.max(col_name_len)
-
         # Max value can be considered as the number of buckets
         buckets_for_string = buckets
         if max_value <= 50:

@@ -584,7 +584,9 @@ print(df.cols.std(["billingId","price"]))
 
 print(df.cols.min("*"))
 
+# + {"active": ""}
 # ### Descriptive Statistics
+# -
 
 print(df.cols.kurt("billingId"))
 print(df.cols.mean("billingId"))
@@ -629,8 +631,6 @@ df.cols.iqr("price", more= True)
 df.cols.z_score("price").table()
 
 # ## Cleaning and Date Operations Operations
-
-df.cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY").table()
 
 df.cols.years_between("birth", "yyyyMMdd",).table()
 

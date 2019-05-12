@@ -287,6 +287,24 @@ def escape_columns(columns):
     return escaped_columns
 
 
+def get_output_cols(input_cols, output_cols):
+    # Construct input and output columns names
+    if is_list(input_cols) and is_list(output_cols):
+        if len(input_cols) != len(output_cols):
+            RaiseIt.length_error(input_cols, output_cols)
+    elif is_list(input_cols) and is_str(output_cols):
+        if len(input_cols) > 1:
+            output_cols = list([i + output_cols for i in input_cols])
+        else:
+            output_cols = val_to_list(output_cols)
+    elif is_str(input_cols) and is_str(output_cols):
+        output_cols = val_to_list(output_cols)
+    elif output_cols is None:
+        output_cols = input_cols
+
+    return output_cols
+
+
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False):
     """
@@ -378,9 +396,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     return cols_params
 
 
-# just one
-# multiple
-
 def check_column_numbers(columns, number=0):
     """
     Check if the columns number match number expected
@@ -395,9 +410,7 @@ def check_column_numbers(columns, number=0):
             RaiseIt.value_error(len(columns), ["more than 1"])
     elif not len(columns) == number:
 
-        RaiseIt.value_error(count, "{} ".format(number, columns))
-
-        # RaiseIt.value_error(columns, "There are not column(s) to process ")
+        RaiseIt.value_error(count, "Receive {} columns, {} needed".format(number, columns))
 
 
 def tuple_to_dict(value):
