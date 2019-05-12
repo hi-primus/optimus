@@ -262,36 +262,16 @@ class Profiler:
         """
 
         if path is None:
-            RaiseIt.value_error(path, ["Invalid file path"])
+            RaiseIt.value_error(path, "str")
 
         # We need to append a some extra html tags to display it correctly in the browser.
         if output is "html":
             if self.html is None:
+                RaiseIt.not_ready_error(
+                    "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
                 assert self.html is not None, "Please run the profiler first"
 
-            header = '''<!doctype html>
-<html class="no-js" lang="">
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title></title>
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-  <link rel="manifest" href="site.webmanifest">
-  <link rel="apple-touch-icon" href="icon.png">
-  <!-- Place favicon.ico in the root directory -->
-
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/main.css">
-</head>
-
-<body>'''
-
-            footer = '''</body></html>'''
-
-            write_html(header + self.html + footer, path)
+            write_html(HEADER + self.html + FOOTER, path)
         elif output is "json":
             if self.json is None:
                 assert self.json is not None, "Please run the profiler first"
