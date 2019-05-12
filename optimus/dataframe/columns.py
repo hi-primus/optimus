@@ -284,18 +284,48 @@ def cols(self):
     def rename(old_column, new_column):
         return rename([(old_column, new_column)], None)
 
-    def _cast(columns, args):
+    # TODO: Maybe should be possible to cast and array of integer for example to array of double
+    @add_attr(cols)
+    def cast(input_cols=None, dtype=None, columns=None, output_cols=None):
         """
-        Helper function to support the multiple params implementation
-        :param columns: Select the columns you want to cast
-        :param args:
-        :return:
+        Cast a column or a list of columns to a specific data type
+        :param input_cols: Columns names to be casted
+        :param output_cols:
+        :param dtype: final data type
+        :param columns: List of tuples of column names and types to be casted. This variable should have the
+                following structure:
+
+                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+
+                The first parameter in each tuple is the column name, the second is the final datatype of column after
+                the transformation is made.
+        :return: Spark DataFrame
         """
 
-        # assert validate_columns_names(self, cols_and_types, 0)
-        # cols, attrs = parse_columns(self, cols_and_dtypes, get_args=True)
+        _dtype = []
+        # Parse params
+        if columns is None:
 
-        # if parse_spark_dtypes(attr[0])
+            if is_list(input_cols) or is_one_element(input_cols):
+                input_cols = parse_columns(self, input_cols)
+                output_cols = get_output_cols(input_cols, output_cols)
+
+                for _ in builtins.range(0, len(input_cols)):
+                    _dtype.append(dtype)
+        else:
+            input_cols = list([c[0] for c in columns])
+            if len(columns[0]) == 2:
+                output_cols = get_output_cols(input_cols, output_cols)
+                _dtype = list([c[1] for c in columns])
+            elif len(columns[0]) == 3:
+                output_cols = list([c[1] for c in columns])
+                _dtype = list([c[2] for c in columns])
+
+            output_cols = get_output_cols(input_cols, output_cols)
+
+        # print(input_cols, output_cols, _dtype)
+
+        # Helper function to return
         def cast_factory(cls):
 
             # Parse to Vector
@@ -323,55 +353,27 @@ def cols(self):
             return func_return_type, cast_to, func_type
 
         df = self
-        for col, args in zip(columns, args):
-            return_type, func, func_type = cast_factory(args[0])
-            df = df.withColumn(col, audf(col, func,
-                                         func_return_type=return_type,
-                                         attrs=args[0],
-                                         func_type=func_type, verbose=False)
-                               )
+
+        for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
+            return_type, func, func_type = cast_factory(data_type)
+
+            func = audf(input_col, func,
+                        func_return_type=return_type,
+                        attrs=data_type,
+                        func_type=func_type, verbose=False)
+
+            df = df.withColumn(output_col, func)
         return df
-
-    @add_attr(cols)
-    @dispatch(list)
-    def cast(col_and_dtype):
-        """
-        Cast multiple columns to a specific datatype
-        List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-
-        :param col_and_dtype: Columns to be casted and new data types
-        :return:
-        """
-        # TODO: Maybe should be possible to cast and array of integer for example to array of double
-        cols, attrs = parse_columns(self, col_and_dtype, get_args=True)
-        return _cast(cols, attrs)
-
-    @add_attr(cols)
-    @dispatch((list, str), object)
-    def cast(columns, dtype):
-        """
-        Cast a column or a list of columns to a specific datatype
-        :param columns: Columns names to be casted
-        :param dtype: final data type
-        :return: Spark DataFrame
-        """
-
-        cols = parse_columns(self, columns)
-        attrs = []
-        for _ in builtins.range(0, len(cols)):
-            attrs.append((dtype,))
-
-        return _cast(cols, attrs)
 
     @add_attr(cols)
     @add_attr(cols)
     def astype(*args, **kwargs):
+        """
+        Like pandas helper
+        :param args:
+        :param kwargs:
+        :return:
+        """
         return cast(*args, **kwargs)
 
     @add_attr(cols)
