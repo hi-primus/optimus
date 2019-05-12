@@ -15,3 +15,15 @@ def match_nan(col_name):
 
 def match_null(col_name):
     return F.isnull(col_name)
+
+
+def na_agg_integer(col_name):
+    return F.count(F.when(match_nulls_integers(col_name), col_name))
+
+
+def na_agg(col_name):
+    return F.count(F.when(match_null(col_name), col_name))
+
+
+def zeros_agg(col_name):
+    return F.count(F.when(F.col(col_name) == 0, col_name))
