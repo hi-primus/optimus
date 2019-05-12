@@ -302,7 +302,7 @@ def get_output_cols(input_cols, output_cols):
     elif output_cols is None:
         output_cols = input_cols
 
-    return input_cols, output_cols
+    return output_cols
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
