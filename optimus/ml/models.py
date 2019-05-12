@@ -1,14 +1,13 @@
 from pyspark.ml import feature, classification
 from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
+from pyspark.sql.functions import *
+from pyspark.sql.session import SparkSession
+from pysparkling import *
+from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
-
-from pysparkling import *
-from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
-from pyspark.sql.functions import *
-from pyspark.sql.session import SparkSession
 
 # from optimus.spark import Spark
 # spark = Spark.instance.spark()
@@ -46,12 +45,7 @@ class ML:
         :return: DataFrame with random forest and prediction run.
         """
 
-        if not is_dataframe(df):
-            raise TypeError("Spark dataframe expected")
-
         columns = parse_columns(df, columns)
-
-        assert isinstance(input_col, str), "Error, input column must be a string"
 
         data = df.select(columns)
         feats = data.columns
