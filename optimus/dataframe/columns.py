@@ -33,7 +33,7 @@ from optimus.helpers.functions \
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
-from optimus.internals import _z_score_col_name
+from optimus.internals import _z_score_col_name, _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -1572,7 +1572,7 @@ def cols(self):
             # Create buckets in the dataFrame
             df = bucketizer(df, col_name, splits=splits)
 
-        columns_bucket = [col_name + "_buckets" for col_name in columns]
+        columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
 
         size_name = "count"
         result = df.groupby(columns_bucket).agg(F.count('*').alias(size_name),
@@ -1603,9 +1603,9 @@ def cols(self):
             splits = create_buckets(min_value, max_value, buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(self, col_name, splits=splits)
+            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=_bucket_col_name(col_name))
 
-            col_bucket = col_name + "_buckets"
+            col_bucket = _bucket_col_name(col_name)
 
             counts = (df
                       .h_repartition(col_name=col_bucket)
