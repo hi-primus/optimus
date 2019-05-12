@@ -33,7 +33,7 @@ from optimus.helpers.functions \
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
-from optimus.internals import _z_score_col_name, _bucket_col_name
+from optimus.internals import _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -1348,26 +1348,20 @@ def cols(self):
 
     # Stats
     @add_attr(cols)
-    def z_score(inputs_cols, output_cols):
+    def z_score(input_cols, output_cols=None):
         """
         Return the column data type
-        :param inputs_cols: '*', list of columns names or a single column name
+        :param input_cols: '*', list of columns names or a single column name
         :param output_cols:
         :return:
         """
 
-        inputs_cols = parse_columns(self, inputs_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(inputs_cols, "*")
-
-        df = self
-        for col_name in inputs_cols:
-            z_col_name = _z_score_col_name(col_name)
-
+        def _z_score(col_name, attr):
             mean_value = self.cols.mean(col_name)
             stdev_value = self.cols.std(col_name)
-            df = df.withColumn(z_col_name, F.abs((F.col(col_name) - mean_value) / stdev_value))
+            return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-        return df
+        return apply(input_cols, func=_z_score, output_cols=output_cols)
 
     @add_attr(cols)
     def iqr(columns, more=None):
