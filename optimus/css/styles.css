@@ -68,6 +68,6 @@
     .panel_profiler td {
         padding:0.2em
     }
-    .none{
+    .none, .true{
         color:#0000ff
     }
