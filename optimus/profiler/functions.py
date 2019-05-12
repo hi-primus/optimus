@@ -96,15 +96,15 @@ def sample_size(population_size, confidence_level, confidence_interval):
 
 
 @time_it
-def bucketizer(df, columns, splits):
+def bucketizer(df, input_cols, splits, output_cols):
     """
     Bucketize multiples columns at the same time.
     :param df:
-    :param columns:
+    :param input_cols:
     :param splits: Number of splits
+    :param output_cols:
     :return:
     """
-    columns = parse_columns(df, columns)
 
     def _bucketizer(col_name, args):
         """
@@ -112,29 +112,20 @@ def bucketizer(df, columns, splits):
         :param col_name: Column to be processed
         :return:
         """
-        out_in_columns = args[1]
-        col_name_input = out_in_columns[col_name]
 
-        buckets = args[0]
+        buckets = args
+        expr = []
 
-        expr = None
-        i = 0
-
-        # TODO: seems that this can be written with reduce
-        for b in buckets:
+        for i, b in enumerate(buckets):
             if i == 0:
-                expr = when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]), b["bucket"])
+                expr = when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]), b["bucket"])
             else:
-                expr = expr.when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]),
+                expr = expr.when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]),
                                  b["bucket"])
-            i = i + 1
 
         return expr
 
-    output_columns = [c + "_buckets" for c in columns]
-
-    # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
-    df = df.cols.apply_expr(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
+    df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
 
     return df
 
