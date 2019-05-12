@@ -7,10 +7,11 @@ import re
 from ast import literal_eval
 
 import dateutil
+from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
 
-from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.parser import parse_spark_dtypes
 
 
 def is_same_class(class1, class2):
@@ -87,6 +88,14 @@ def is_tuple(value):
     :return:
     """
     return isinstance(value, tuple)
+
+
+def is_column(value):
+    """
+    Check if a object is a column
+    :return:
+    """
+    return isinstance(value, F.Column)
 
 
 def is_column_a(df, column, dtypes):
