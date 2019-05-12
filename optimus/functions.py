@@ -14,7 +14,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
-from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples
+from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples, is_column
 from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.convert import one_list_to_val
@@ -45,13 +45,22 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
+    # It handle if func param is a plain expression or a function returning and expression
+    def func_col_exp(col_name, attr):
+        return func
+
+    if is_column(func):
+        _func = func_col_exp
+    else:
+        _func = func
+
     logger.print(
         "Using '{func_type}' to process column '{column}' with function {func_name}".format(func_type=func_type,
                                                                                             column=col,
-                                                                                            func_name=func.__name__))
-
+                                                                                            func_name=_func.__name__))
     df_func = func_factory(func_type, func_return_type)
-    return df_func(attrs, func)(col)
+
+    return df_func(attrs, _func)(col)
 
 
 def func_factory(func_type=None, func_return_type=None):

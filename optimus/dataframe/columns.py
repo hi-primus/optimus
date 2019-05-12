@@ -159,43 +159,25 @@ def cols(self):
         return self.select(columns)
 
     @add_attr(cols)
-    def apply_expr(input_cols, output_cols=None, func=None, args=None, filter_col_by_dtypes=None, verbose=True):
+    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, verbose=True):
         """
         Apply a expression to column.
         :param input_cols: Columns in which the function is going to be applied
-        :param output_cols: Columns in which the transformed data will saved
         :param func: Function to be applied to the data
         :type func: A plain expression or a function
         :param args: Argument passed to the function
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
+        :param output_cols: Columns in which the transformed data will saved
         :param verbose: Print additional information about
         :return: Dataframe
         """
 
-        # It handle if func param is a plain expression or a function returning and expression
-        def func_col_exp(col_name, attr):
-            return func
-
-        if is_(func, F.Column):
-            _func = func_col_exp
-        else:
-            _func = func
-
-        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                   accepts_missing_cols=True)
-        check_column_numbers(input_cols, "*")
-
-        input_cols, output_cols = get_output_cols(input_cols, output_cols)
-
-        df = self
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.withColumn(output_col, audf(input_col, _func, attrs=args, func_type="column_exp", verbose=verbose))
-        return df
+        return apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
+                     output_cols=output_cols, verbose=verbose)
 
     @add_attr(cols)
-    def apply(input_cols, output_cols=None, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None,
+    def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+              filter_col_by_dtypes=None, output_cols=None,
               verbose=True):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
