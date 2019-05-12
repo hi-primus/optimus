@@ -1,3 +1,7 @@
+from optimus.helpers.convert import val_to_list
+from optimus.helpers.checkit import is_int
+
+
 class RaiseIt:
 
     @staticmethod
@@ -5,7 +9,7 @@ class RaiseIt:
         """
         Raise a TypeError exception
         :param var:
-        :param data_types: data types as strings
+        :param data_types: data types expected as strings
         :return:
         """
         from optimus.helpers.functions import get_var_name
@@ -31,7 +35,7 @@ class RaiseIt:
         :return:
         """
         from optimus.helpers.functions import get_var_name
-        from optimus.helpers.checkit import is_int
+
         if is_int(var2):
             length_var2 = str(var2)
         else:
@@ -41,16 +45,20 @@ class RaiseIt:
                          .format(var2_name=get_var_name(var2), var1_length=str(len(var1)), var2_length=length_var2))
 
     @staticmethod
-    def value_error(var, data_values):
+    def not_ready_error(message):
+        raise NotReady(message)
+
+    @staticmethod
+    def value_error(var=None, data_values=None):
         """
         Raise a ValueError exception
         :param var:
-        :param data_values:
+        :param data_values: values accepted by the variable
+        :type data_values: str
+        :param message:
         :return:
         """
         from optimus.helpers.functions import get_var_name
-        from optimus.helpers.convert import val_to_list
-
         data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
@@ -67,11 +75,24 @@ class RaiseIt:
                                      data_values)), var_type=var))
 
     @staticmethod
-    def type(cls, var, message):
+    def type(cls, var):
         """
-        Raise and exception ot type specified
+        Raise and exception of the type specified
         :param var:
         :return:
         """
         from optimus.helpers.functions import get_var_name
+
+        from optimus.helpers.functions import get_var_name
         raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))
+
+
+# define Python user-defined exceptions
+class Error(Exception):
+    """Base class for other exceptions"""
+    pass
+
+
+class NotReady(Error):
+    """Raised when the input value is too small"""
+    pass
