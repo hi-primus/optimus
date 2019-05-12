@@ -396,9 +396,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     return cols_params
 
 
-# just one
-# multiple
-
 def check_column_numbers(columns, number=0):
     """
     Check if the columns number match number expected
@@ -413,9 +410,7 @@ def check_column_numbers(columns, number=0):
             RaiseIt.value_error(len(columns), ["more than 1"])
     elif not len(columns) == number:
 
-        RaiseIt.value_error(count, "{} ".format(number, columns))
-
-        # RaiseIt.value_error(columns, "There are not column(s) to process ")
+        RaiseIt.value_error(count, "Receive {} columns, {} needed".format(number, columns))
 
 
 def tuple_to_dict(value):
