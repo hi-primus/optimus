@@ -131,7 +131,7 @@ def cols(self):
 
         pdf = pdf0.transpose()
 
-        # Unnn est array
+        # Unnest array
         pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
 
         num_columns = len(pdf.columns) - 1
@@ -199,7 +199,7 @@ def cols(self):
 
         check_column_numbers(input_cols, "*")
 
-        input_cols, output_cols = get_output_cols(input_cols, output_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
 
@@ -516,25 +516,30 @@ def cols(self):
 
             return _result
 
-        columns = parse_columns(self, columns)
-
         # Ensure that is a list
         funcs = val_to_list(funcs)
 
-        df = self
+        columns = parse_columns(self, columns)
 
-        # Parse the columns to float. Seems that spark can handle some aggregation with string columns giving
-        # unexpected results
-        # df = df.cols.cast(columns, "float")
+        df = self
 
         # Create a Column Expression for every column
         expression = []
         for col_name in columns:
             for func in funcs:
-                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
+                # Std dev is can not process date columns. So we do not calculated
 
+                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]) and (
+                        is_column_a(df, col_name, "date"))):
+                    # A different function must be use to calculate null in integers or data column data types
+                    if func is na_agg and is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                        func = na_agg_integer
+
+                    expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+
+            # print(expression)
         result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
-        # logger.print(result)
         return result
 
     # Quantile statistics
@@ -775,58 +780,60 @@ def cols(self):
 
     # String Operations
     @add_attr(cols)
-    def lower(columns):
+    def lower(input_cols, output_cols=None):
         """
         Lowercase all the string in a column
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name
+        :param output_cols:
         :return:
         """
 
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply_expr(columns, _lower, filter_col_by_dtypes="string")
+        return apply(input_cols, output_cols, func=_lower, filter_col_by_dtypes="string")
 
     @add_attr(cols)
-    def upper(columns):
+    def upper(input_cols, output_cols=None):
         """
         Uppercase all the strings column
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
 
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply_expr(columns, _upper, filter_col_by_dtypes="string")
+        return apply(input_cols, output_cols, _upper, filter_col_by_dtypes="string")
 
     @add_attr(cols)
-    def trim(columns):
+    def trim(input_cols, output_cols=None):
         """
         Trim the string in a column
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
-        check_column_numbers(columns, "*")
 
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
 
-        return apply_expr(columns, _trim)
+        return apply(input_cols, output_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES)
 
     @add_attr(cols)
-    def reverse(columns):
+    def reverse(input_cols, output_cols=None):
         """
         Reverse the order of all the string in a column
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
 
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_expr(columns, _reverse, filter_col_by_dtypes="string")
+        df = apply_expr(input_cols, output_cols, _reverse, filter_col_by_dtypes="string")
 
         return df
 
@@ -842,15 +849,13 @@ def cols(self):
         return self.cols.replace(columns, search, "", search_by)
 
     @add_attr(cols)
-    def remove_accents(columns):
+    def remove_accents(input_cols, output_cols):
         """
         Remove accents in specific columns
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
-
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
-        check_column_numbers(columns, "*")
 
         def _remove_accents(value, attr):
             cell_str = str(value)
@@ -862,113 +867,193 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(columns, _remove_accents, "string")
+        df = apply(input_cols, _remove_accents, "string", output_cols=output_cols)
         return df
 
     @add_attr(cols)
-    def remove_special_chars(columns):
+    def remove_special_chars(input_cols, output_cols=None):
         """
         Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
         This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
-        check_column_numbers(columns, "*")
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+        check_column_numbers(input_cols, "*")
 
-        df = self.cols.replace(columns, [s for s in string.punctuation], "", "chars")
+        df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
         return df
 
     @add_attr(cols)
-    def remove_white_spaces(columns):
+    def remove_white_spaces(input_cols, output_cols=None):
         """
         Remove all the white spaces from a string
-        :param columns:
+        :param input_cols:
+        :param output_cols:
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
-        check_column_numbers(columns, "*")
 
         def _remove_white_spaces(col_name, args):
             return F.regexp_replace(F.col(col_name), " ", "")
 
-        df = apply_expr(columns, _remove_white_spaces)
+        df = apply(input_cols, _remove_white_spaces, output_cols=output_cols,
+                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES)
         return df
 
     @add_attr(cols)
-    def date_transform(columns, current_format, output_format):
+    def date_transform(input_cols, output_cols=None, current_format=None, output_format=None):
         """
-        Transform a column date format
-        :param  columns: Columns to be transformed.
-        :param  current_format: current_format is the current string dat format of columns specified. Of course,
+        Transform a column date to a specified format
+        :param input_cols: Columns to be transformed.
+        :param output_cols: Output columns
+        :param current_format: Current_format is the current string dat format of columns specified. Of course,
                                 all columns specified must have the same format. Otherwise the function is going
                                 to return tons of null values because the transformations in the columns with
-                                different formats will fail.
-        :param  output_format: output date string format to be expected.
+                                different formats will fail. For example "yyyy/MM/dd"
+        :param output_format: Output date string format to be expected. For example "dd-MM-YYYY"
         """
 
-        def _date_transform(_new_col_name, attr):
-            _col_name = attr[0]
-            _current_format = attr[1]
-            _output_format = attr[2]
+        def _date_transform(col_name, attr):
+            _current_format = attr[0]
+            _output_format = attr[1]
 
-            return F.date_format(F.unix_timestamp(_col_name, _current_format).cast("timestamp"), _output_format).alias(
-                _new_col_name)
+            return F.date_format(F.unix_timestamp(col_name, _current_format).cast("timestamp"), _output_format).alias(
+                col_name)
 
         # Asserting if column if in dataFrame:
-        columns = parse_columns(self, columns)
-        df = self
-
-        for col_name in columns:
-            new_col_name = col_name + "_data_transform"
-            df = df.cols.apply_expr(new_col_name, _date_transform, [col_name, current_format, output_format])
+        df = apply(input_cols, output_cols, func=_date_transform, args=[current_format, output_format])
 
         return df
 
     @add_attr(cols)
-    def years_between(columns, date_format):
+    def years_between(input_cols, output_cols=None, date_format=None):
         """
         This method compute the age based on a born date.
-        :param  columns: Name of the column born dates column.
-        :param  date_format: String format date of the column provided.
+        :param input_cols: Name of the column born dates column.
+        :param output_cols:
+        :param date_format: String format date of the column provided. For example "yyyyMMdd"
         """
 
-        # Asserting if column if in dataFrame:
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NOT_ARRAY_TYPES)
-        check_column_numbers(columns, "*")
-
         # Output format date
-        format_dt = "yyyy-MM-dd"  # Some SimpleDateFormat string
+        format_dt = "yyyy-MM-dd"
 
-        def _years_between(_new_col_name, attr):
+        def _years_between(col_name, attr):
             _date_format = attr[0]
-            _col_name = attr[1]
 
             return F.format_number(
                 F.abs(
                     F.months_between(
                         F.date_format(
                             F.unix_timestamp(
-                                _col_name,
+                                col_name,
                                 _date_format).cast("timestamp"),
                             format_dt),
                         F.current_date()) / 12), 4) \
                 .alias(
-                _new_col_name)
+                col_name)
 
-        df = self
-        for col_name in columns:
-            new_col_name = col_name + "_years_between"
-            df = df.cols.apply_expr(new_col_name, _years_between, [date_format, col_name]).cols.cast(new_col_name,
-                                                                                                     "float")
+        df = apply(input_cols, func=_years_between, args=[date_format],
+                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
+
+        df = df.cols.cast(output_cols, "float")
+
         return df
 
     @add_attr(cols)
-    def impute(columns, data_type="continuous", strategy="mean"):
+    def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+        """
+        Replace a value, list of values by a specified string
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :param search: Values to look at to be replaced
+        :param replace_by: New value to replace the old one
+        :param search_by: Match substring or words
+        :return:
+        """
+
+        # TODO check if .contains can be used instead of regexp
+        def func_chars(_df, _input_col, _output_col, _search, _replace_by):
+            # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
+
+            # Create as dict
+            if is_list(search):
+                _search_and_replace_by = {s: _replace_by for s in search}
+            elif is_one_element(search):
+                _search_and_replace_by = {search: _replace_by}
+
+            _search_and_replace_by = {str(k): str(v) for k, v in _search_and_replace_by.items()}
+
+            def multiple_replace(_value, __search_and_replace_by):
+                # Create a regular expression from all of the dictionary keys
+                if _value is not None:
+
+                    _regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
+                    result = _regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
+                else:
+                    result = None
+                return result
+
+            return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
+                                  output_cols=_output_col)
+
+        def func_words(_df, _col_name, _search, _replace_by):
+            _search = val_to_list(search)
+            # Convert the value to column data type
+            data_type = self.cols.dtypes(_col_name)
+            _search = [PYTHON_TYPES[data_type](s) for s in _search]
+
+            return _df.replace(_search, _replace_by, _col_name)
+
+        if search_by is "words":
+            func = func_words
+        elif search_by is "chars":
+            func = func_chars
+        else:
+            RaiseIt.value_error(search_by, ["words", "chars"])
+
+        input_cols = parse_columns(self, input_cols,
+                                   filter_by_column_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(input_cols, "*")
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        df = self
+        for input_col, output_col in zip(input_cols, output_cols):
+            if is_column_a(df, input_col, "int"):
+                df = df.cols.cast(input_col, "str", output_col)
+
+            df = func(df, input_col, output_col, search, replace_by)
+
+        return df
+
+    @add_attr(cols)
+    def replace_regex(input_cols, regex=None, value=None, output_cols=None):
+        """
+        Use a Regex to replace values
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :param regex: values to look at to be replaced
+        :param value: new value to replace the old one
+        :return:
+        """
+
+        # if regex or normal replace we use regexp or replace functions
+        # TODO check if .contains can be used instead of regexp
+
+        def func_regex(_input_cols, attr):
+            _search = attr[0]
+            _replace = attr[1]
+            return F.regexp_replace(_input_cols, _search, _replace)
+
+        return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols)
+
+    @add_attr(cols)
+    def impute(input_cols, output_cols=None, data_type="continuous", strategy="mean"):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param columns: list of columns to be analyze.
+        :param input_cols: list of columns to be analyze.
+        :param output_cols:
         :param data_type: continuous or categorical
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
         or "mode" for categorical columns
@@ -977,27 +1062,29 @@ def cols(self):
         df = self
 
         if data_type is "continuous":
-            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES + PYSPARK_STRING_TYPES)
-            check_column_numbers(columns, "*")
+            input_cols = parse_columns(self, input_cols,
+                                       filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES + PYSPARK_STRING_TYPES)
+            check_column_numbers(input_cols, "*")
 
-            output_cols = []
-            for col_name in columns:
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            for col_name in input_cols:
                 # Imputer require not only numeric but float or double
                 print("{} values imputed for column(s) '{}'".format(df.cols.count_na(col_name), col_name))
                 df = df.cols.cast(col_name, "float")
-                output_cols.append(col_name + IMPUTE_SUFFIX)
 
-            imputer = Imputer(inputCols=columns, outputCols=output_cols)
+            imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
 
             model = imputer.setStrategy(strategy).fit(df)
             df = model.transform(df)
 
         elif data_type is "categorical":
 
-            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
-            check_column_numbers(columns, "*")
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
+            check_column_numbers(input_cols, "*")
+            output_cols = get_output_cols(input_cols, output_cols)
 
-            for col_name in columns:
+            for col_name in input_cols:
                 value = df.cols.mode(col_name)
                 print(
                     "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name,
@@ -1009,60 +1096,58 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def fill_na(columns, value):
+    def fill_na(input_cols, output_cols=None, value=None):
         """
         Replace null data with a specified value
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :param value: value to replace the nan/None values
         :return:
         """
-        columns = parse_columns(self, columns)
-        check_column_numbers(columns, "*")
+        input_cols = parse_columns(self, input_cols)
+        check_column_numbers(input_cols, "*")
+        output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
-        for col_name in columns:
+        for input_col, output_col in zip(input_cols, output_cols):
 
-            if is_column_a(self, col_name, PYSPARK_NUMERIC_TYPES):
+            if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
                 new_value = fast_float(value)
-                func = F.when(match_nulls_strings(col_name), new_value).otherwise(F.col(col_name))
-            elif is_column_a(self, col_name, PYSPARK_STRING_TYPES):
+                func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+            elif is_column_a(self, input_col, PYSPARK_STRING_TYPES):
                 # print(col_name)
                 new_value = str(value)
-                func = F.when(match_nulls_strings(col_name), new_value).otherwise(F.col(col_name))
-            elif is_column_a(self, col_name, PYSPARK_ARRAY_TYPES):
+                func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+            elif is_column_a(self, input_col, PYSPARK_ARRAY_TYPES):
                 if is_one_element(value):
                     new_value = F.array(F.lit(value))
                 else:
                     new_value = F.array(*[F.lit(v) for v in value])
-                func = F.when(match_null(col_name), new_value).otherwise(F.col(col_name))
+                func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
             else:
 
-                if df.cols.dtypes(col_name) == parse_python_dtypes(type(value).__name__):
+                if df.cols.dtypes(input_col) == parse_python_dtypes(type(value).__name__):
                     new_value = value
-                    func = F.when(match_null(col_name), new_value).otherwise(F.col(col_name))
+                    func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
-                    RaiseIt.type_error(value, [df.cols.dtypes(col_name)])
+                    RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-            df = df.cols.apply_expr(col_name, func)
+            df = df.cols.apply(input_col, func, output_cols=output_col)
         return df
 
     @add_attr(cols)
-    def is_na(columns):
+    def is_na(input_cols, output_cols):
         """
         Replace null values with True and non null with False
-        :param columns: '*', list of columns names or a single column name.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
         :return:
         """
-        columns = parse_columns(self, columns)
 
         def _replace_na(_col_name, _value):
             return F.when(F.col(_col_name).isNull(), True).otherwise(False)
 
-        df = self
-        for col_name in columns:
-            df = df.cols.apply_expr(col_name, _replace_na)
-
-        return df
+        return self.cols.apply(input_cols, _replace_na, output_cols=output_cols)
 
     @add_attr(cols)
     def count():
@@ -1201,7 +1286,7 @@ def cols(self):
         """
         Helper to process arithmetic operation between columns. If a
         :param columns: Columns to be used to make the calculation
-        :param operator: a lambda function
+        :param operator: A lambda function
         :return:
         """
 
@@ -1224,7 +1309,7 @@ def cols(self):
     def add(columns, col_name="sum"):
         """
         Add two or more columns
-        :param columns: '*', list of columns names or a single column name.
+        :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
@@ -1235,7 +1320,7 @@ def cols(self):
     def sub(columns, col_name="sub"):
         """
         Subs two or more columns
-        :param columns: '*', list of columns names or a single column name.
+        :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
@@ -1245,7 +1330,7 @@ def cols(self):
     def mul(columns, col_name="mul"):
         """
         Multiply two or more columns
-        :param columns: '*', list of columns names or a single column name.
+        :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
@@ -1255,118 +1340,27 @@ def cols(self):
     def div(columns, col_name="div"):
         """
         Divide two or more columns
-        :param columns: '*', list of columns names or a single column name.
+        :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
         return _math(columns, lambda x, y: x / y, col_name)
 
-    @add_attr(cols)
-    def replace_regex(columns, regex=None, value=None):
-        """
-        Use a Regex to replace values
-        :param columns: '*', list of columns names or a single column name.
-        :param regex: values to look at to be replaced
-        :param value: new value to replace the old one
-        :return:
-        """
-
-        # if regex or normal replace we use regexp or replace functions
-        # TODO check if .contains can be used instead of regexp
-
-        df = self
-
-        columns = parse_columns(df, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
-        check_column_numbers(columns, "*")
-
-        def func_regex(_df, _col_name, _search, _replace):
-            return _df.withColumn(col_name, F.regexp_replace(_col_name, _search, _replace))
-
-        for col_name in columns:
-            df = func_regex(df, col_name, regex, value)
-
-        return df
-
-    @add_attr(cols)
-    def replace(columns, search=None, replace_by=None, search_by="chars"):
-        """
-        Replace a value, list of values by a specified string
-        :param columns: '*', list of columns names or a single column name.
-        :param search: values to look at to be replaced
-        :param replace_by: new value to replace the old one
-        :param search_by: Match substring or words
-        :return:
-        """
-
-        # TODO check if .contains can be used instead of regexp
-        def func_chars(_df, _col_name, __search, __replace):
-            # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
-
-            def multiple_replace(_value, attr):
-                # Create a regular expression from all of the dictionary keys
-                if _value is not None:
-                    _regex = re.compile("|".join(map(re.escape, attr.keys())))
-                    result = _regex.sub(lambda match: attr[match.group(0)], str(_value))
-                else:
-                    result = None
-                return result
-
-            _df = apply(columns, multiple_replace, "string", __search)
-            return _df
-
-        def func_words(_df, _col_name, _search, _replace):
-
-            # Convert the value to column data type
-            data_type = self.cols.dtypes(_col_name)
-            _search = [PYTHON_TYPES[data_type](s) for s in _search]
-
-            _df = _df.replace(_search, _replace, _col_name)
-            return _df
-
-        search_dict = {}
-        if search_by is "words":
-            search_dict = val_to_list(search)
-            func = func_words
-        elif search_by is "chars":
-            # Create as dict
-            if is_list(search):
-                search_dict = {s: replace_by for s in search}
-            elif is_one_element(search):
-                search_dict = {search: replace_by}
-
-            search_dict = {str(k): str(v) for k, v in search_dict.items()}
-            func = func_chars
-
-        else:
-            RaiseIt.value_error(search_by, ["words", "chars"])
-
-        df = self
-
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        for col_name in columns:
-            if is_column_a(df, col_name, "int"):
-                df = df.cols.cast(col_name, "str")
-
-            df = func(df, col_name, search_dict, replace_by)
-
-        return df
-
     # Stats
     @add_attr(cols)
-    def z_score(columns):
+    def z_score(inputs_cols, output_cols):
         """
         Return the column data type
-        :param columns:
+        :param inputs_cols: '*', list of columns names or a single column name
+        :param output_cols:
         :return:
         """
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        inputs_cols = parse_columns(self, inputs_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        check_column_numbers(inputs_cols, "*")
 
         df = self
-        for col_name in columns:
+        for col_name in inputs_cols:
             z_col_name = _z_score_col_name(col_name)
 
             mean_value = self.cols.mean(col_name)
