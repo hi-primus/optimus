@@ -53,9 +53,10 @@ class RaiseIt:
         """
         Raise a ValueError exception
         :param var:
+        :type var:
+
         :param data_values: values accepted by the variable
-        :type data_values: str
-        :param message:
+        :type data_values: str/list
         :return:
         """
         from optimus.helpers.functions import get_var_name

@@ -98,6 +98,8 @@ def sample_n(self, n=10, random=False):
         seed = random_int()
     elif random is False:
         seed = 0
+    else:
+        RaiseIt.value_error(random, ["True", "False"])
 
     rows_count = self.count()
     if n < rows_count:
