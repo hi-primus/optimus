@@ -791,7 +791,7 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply(input_cols, func=_lower, filter_col_by_dtypes="string", output_cols=output_cols)
+        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols)
 
     @add_attr(cols)
     def upper(input_cols, output_cols=None):
@@ -923,7 +923,7 @@ def cols(self):
                 col_name)
 
         # Asserting if column if in dataFrame:
-        df = apply(input_cols, func=_date_transform, args=[current_format, output_format], output_cols=output_cols)
+        df = apply(input_cols, _date_transform, args=[current_format, output_format], output_cols=output_cols)
 
         return df
 

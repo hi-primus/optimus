@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns
 from optimus.helpers.logger import logger
-from optimus.spark import Spark, PYSPARK_NUMERIC_TYPES
+from optimus.spark import Spark
 
 
 def save(self):

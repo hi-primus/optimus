@@ -4,21 +4,20 @@ from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, F
 
 from optimus.helpers.logger import logger
 
-"""
-Python to PySpark reference
 
-type(None): NullType,
-bool: BooleanType,
-int: LongType,
-float: DoubleType,
-str: StringType,
-bytearray: BinaryType,
-decimal.Decimal: DecimalType,
-datetime.date: DateType,
-datetime.datetime: TimestampType,
-datetime.time: TimestampType,
+# Python to PySpark reference
+#
+# type(None): NullType,
+# bool: BooleanType,
+# int: LongType,
+# float: DoubleType,
+# str: StringType,
+# bytearray: BinaryType,
+# decimal.Decimal: DecimalType,
+# datetime.date: DateType,
+# datetime.datetime: TimestampType,
+# datetime.time: TimestampType,
 
-"""
 
 IMPUTE_SUFFIX = "_imputed"
 
