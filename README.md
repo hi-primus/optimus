@@ -1,9 +1,25 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,md
+    text_representation:
+      extension: .md
+      format_name: markdown
+      format_version: '1.1'
+      jupytext_version: 1.1.1
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
 
 
 [![Logo Optimus](images/logoOptimus.png)](https://hioptimus.com) 
 
 
-[![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e01572e2af5640fcbcdd58e7408f3ea0)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&utm_medium=referral&utm_content=ironmussa/Optimus&utm_campaign=badger) [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/iron-mussa/devops)  [![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20Mac%20OS%20%7C%20Windows-blue.svg)](https://spark.apache.org/docs/2.2.0/#downloading) [![Code Health](https://landscape.io/github/ironmussa/Optimus/master/landscape.svg?style=flat)](https://landscape.io/github/ironmussa/Optimus/master)
+[![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ironmussa/Optimus&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)  [![Join the chat at https://gitter.im/optimuspyspark/Lobby](https://badges.gitter.im/optimuspyspark/Lobby.svg)](https://gitter.im/optimuspyspark/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
 
 
@@ -43,6 +59,16 @@ Also if you want to a suggestion or feature request use https://github.com/ironm
 ## Start Optimus
 
 ```python
+%load_ext autoreload
+%autoreload 2
+```
+
+```python
+import sys
+sys.path.append("..")
+```
+
+```python
 from optimus import Optimus
 op= Optimus()
 ```
@@ -51,7 +77,7 @@ You also can use an already created Spark session:
 
 ```python
 from pyspark.sql import SparkSession
-spark = SparkSession.builder.appName('abc').getOrCreate()
+spark = SparkSession.builder.appName('optimus').getOrCreate()
 op= Optimus(spark)
 ```
 
@@ -78,14 +104,56 @@ df = op.load.parquet("examples/data/foo.parquet")
 df = op.load.excel("examples/data/titanic3.xls")
 ```
 
+Also you can create a dataframe from scratch
 ```python
-df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+from pyspark.sql.types import *
+from datetime import date, datetime
+
+df = op.create.df(
+    [
+        ("names", "str", True), 
+        ("height(ft)","int", True), 
+        ("function", "str", True), 
+        ("rank", "int", True), 
+        ("age","int",True),
+        ("weight(t)","float",True),
+        ("japanese name", ArrayType(StringType()), True),
+        ("last position seen", "str", True),
+        ("date arrival", "str", True),
+        ("last date seen", "str", True),
+        ("attributes", ArrayType(FloatType()), True),
+        ("DateType"),
+        ("Tiemstamp"),
+        ("Cybertronian", "bool", True), 
+        ("NullType", "null", True),
+
+    ],
+    [
+        ("Optim'us", 28, "Leader", 10, 5000000, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+         "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True,
+         None),
+        ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
+         "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True,
+         None),
+        ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
+         "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True,
+         None),
+        ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
+         "2013/06/10", [3.9624, 1800.0], date(2013, 6, 24), datetime(2014, 6, 24), True, None),
+        ("Megatron", None, "None", 10, 5000000, 5.70, ["Megatron"], None, "1980/04/10", "2012/05/10", [None, 5700.0],
+         date(2012, 5, 10), datetime(2014, 6, 24), True, None),
+        ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
+         [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, None),
+
+    ], infer_schema = True).h_repartition(1)
 ```
+
 With .table() you hace a beautifull way to show your data. You have extra informacion like column number, column data type and marked white spaces 
 
 
-```
-df.table()
+```python
+# df.table()
+df.table_image("images/table.png")
 ```
 
 
@@ -105,39 +173,42 @@ def func(value, arg):
     return "this was a number"
     
 new_df = df\
-    .rows.sort("product","desc")\
-    .withColumn('id1', df.id)\
-    .cols.lower(["firstName","lastName"])\
-    .cols.date_transform("birth", "yyyy/MM/dd", "dd-MM-YYYY")\
-    .cols.years_between("birth", "yyyy/MM/dd")\
-    .cols.remove_accents("lastName")\
-    .cols.remove_special_chars("lastName")\
-    .cols.replace("product","taaaccoo","taco")\
-    .cols.replace("product",["piza","pizzza"],"pizza")\
-    .rows.drop(df["id"]<7)\
-    .cols.drop("dummyCol")\
+    .rows.sort("rank","desc")\
+    .withColumn('new_age', df.age)\
+    .cols.lower(["names","function"])\
+    .cols.date_transform("date arrival", "yyyy/MM/dd", "dd-MM-YYYY")\
+    .cols.years_between("date arrival", "dd-MM-YYYY", output_cols = "from arrival")\
+    .cols.remove_accents("names")\
+    .cols.remove_special_chars("names")\
+    .rows.drop(df["rank"]>8)\
     .cols.rename(str.lower)\
-    .cols.apply_by_dtypes("product",func,"string", data_type="integer")\
-    .cols.trim("*")
-```
+    .cols.trim("*")\
+    .cols.unnest("japanese name", output_cols="other names")\
+    .cols.unnest("last position seen",separator=",", output_cols="pos")\
+    .cols.drop(["last position seen", "japanese name","date arrival", "cybertronian", "nulltype"])
 
-You can change the table output back to ascii if you which
-
-```python
-op.output("ascii")
+# .cols.apply_by_dtypes("product",func=func, func_return_type="string", data_type="integer")\
+# .cols.replace("product","taaaccoo","taco")\
+# .cols.replace("product",["piza","pizzza"],"pizza")\
 ```
 
 You transform this
 
 ```python
-df.table()
+df.table_image("images/table1.png")
 ```
+
+![](images/table1.png)
+
 
 Into this
 
 ```python
-new_df.table()
+new_df.table_image("images/table2.png")
 ```
+
+![](images/table2.png)
+
 
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
@@ -160,7 +231,17 @@ from pyspark.sql import functions as F
 def func(col_name, args):
     return F.col(col_name)/20
 
-df.cols.apply_expr("billingid", func, 20).table()
+df.cols.apply("billingid", func=func, args=20).table()
+```
+
+You can change the table output back to ascii if you which
+
+```python
+op.output("ascii")
+```
+
+```python
+df.table()
 ```
 
 ## Data profiling
@@ -367,7 +448,3 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 [![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
   
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
-
-```python
-
-```
