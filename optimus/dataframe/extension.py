@@ -1,6 +1,7 @@
 import os
 
 import humanize
+import imgkit
 import jinja2
 import math
 from packaging import version
@@ -17,6 +18,7 @@ from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
+from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 
@@ -281,18 +283,35 @@ def h_repartition(self, partitions_number=None, col_name=None):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=100, columns=None, title=None):
+def table_image(self, path):
+    """
+
+    :param self:
+    :param path:
+    :return:
+    """
+    # imgkit.from_url('http://google.com', 'out.jpg')
+    path_css = os.path.dirname(os.path.abspath(__file__))
+    css = path_css + "//..//css//styles.css"
+
+    imgkit.from_string(self.table_html(full=True), path, css=css)
+
+
+@add_method(DataFrame)
+def table_html(self, limit=100, columns=None, title=None, full=False):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
     :param columns: Columns to be printed
     :param limit: How many rows will be printed
     :param title: Table title
+    :param full: Include html header and footer
+
     :return:
     """
 
     columns = parse_columns(self, columns)
-    # print(columns)
+
     data = self.cols.select(columns).limit(limit).to_json()
 
     # Load the Jinja template
@@ -321,19 +340,24 @@ def table_html(self, limit=100, columns=None, title=None):
 
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title)
+
+    if full is True:
+        output = HEADER + output + FOOTER
     return output
 
 
 @add_method(DataFrame)
 def table(self, limit=100, columns=None, title=None):
+
     try:
         if __IPYTHON__ and DataFrame.output is "html":
+
             result = self.table_html(title=title, limit=limit, columns=columns)
             return print_html(result)
         else:
-
             self.show()
     except NameError:
+
         self.show()
 
 
