@@ -15,9 +15,7 @@
     }
 
     .optimus_table td {
-        padding: 2px;
-        border-left: 1px solid #cccccc;
-        border-right: 1px solid #cccccc;
+        border: 0px;
     }
 
     .optimus_table tr:nth-child(even) {
@@ -70,4 +68,12 @@
     }
     .none, .true{
         color:#0000ff
+    }
+    .optimus_table th {
+        font-family:sans-serif;
+    }
+
+    .info_items{
+        font-family:sans-serif;
+        font-size:10px;
     }
