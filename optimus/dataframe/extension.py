@@ -216,7 +216,7 @@ def query(self, sql_expression):
 @add_method(DataFrame)
 def table_name(self, name=None):
     """
-    
+    Create a temp view for a data frame
     :param self:
     :param name:
     :return:
@@ -348,7 +348,6 @@ def table_html(self, limit=100, columns=None, title=None, full=False):
 
 @add_method(DataFrame)
 def table(self, limit=100, columns=None, title=None):
-
     try:
         if __IPYTHON__ and DataFrame.output is "html":
 
