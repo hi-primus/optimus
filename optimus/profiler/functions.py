@@ -1,15 +1,12 @@
 import json
-import math
 
-from bson import json_util
+import math
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import parse_columns
-
-confidence_level_constant = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
+from optimus.helpers.functions import json_converter
 
 
 def fill_missing_col_types(col_types):
@@ -45,7 +42,7 @@ def write_json(data, path):
     """
     try:
         with open(path, 'w', encoding='utf-8') as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False, default=json_util.default)
+            json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False, default=json_converter)
     except IOError:
         pass
 
@@ -79,7 +76,7 @@ def sample_size(population_size, confidence_level, confidence_interval):
     n = population_size
 
     # Loop through supported confidence levels and find the num sdd deviations for that confidence level
-    for i in confidence_level_constant:
+    for i in CONFIDENCE_LEVEL_CONSTANT:
         if i[0] == confidence_level:
             z = i[1]
 
@@ -96,15 +93,15 @@ def sample_size(population_size, confidence_level, confidence_interval):
 
 
 @time_it
-def bucketizer(df, columns, splits):
+def bucketizer(df, input_cols, splits, output_cols):
     """
     Bucketize multiples columns at the same time.
     :param df:
-    :param columns:
+    :param input_cols:
     :param splits: Number of splits
+    :param output_cols:
     :return:
     """
-    columns = parse_columns(df, columns)
 
     def _bucketizer(col_name, args):
         """
@@ -112,29 +109,20 @@ def bucketizer(df, columns, splits):
         :param col_name: Column to be processed
         :return:
         """
-        out_in_columns = args[1]
-        col_name_input = out_in_columns[col_name]
 
-        buckets = args[0]
+        buckets = args
+        expr = []
 
-        expr = None
-        i = 0
-
-        # TODO: seems that this can be written with reduce
-        for b in buckets:
+        for i, b in enumerate(buckets):
             if i == 0:
-                expr = when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]), b["bucket"])
+                expr = when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]), b["bucket"])
             else:
-                expr = expr.when((F.col(col_name_input) >= b["lower"]) & (F.col(col_name_input) <= b["upper"]),
+                expr = expr.when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]),
                                  b["bucket"])
-            i = i + 1
 
         return expr
 
-    output_columns = [c + "_buckets" for c in columns]
-
-    # TODO: This seems weird but I can not find another way. Send the actual column name to the func not seems right
-    df = df.cols.apply_expr(output_columns, _bucketizer, [splits, dict(zip(output_columns, columns))])
+    df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
 
     return df
 
@@ -144,7 +132,7 @@ def create_buckets(lower_bound, upper_bound, bins):
     Create a dictionary with bins
     :param lower_bound: low range
     :param upper_bound: high range
-    :param buckets: number of buckets
+    :param bins: number of buckets
     :return:
     """
     range_value = (upper_bound - lower_bound) / bins

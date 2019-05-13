@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_int, is_numeric
+from optimus.helpers.checkit import is_dataframe, is_numeric
 from optimus.helpers.functions import parse_columns
 from optimus.internals import _z_score_col_name
 

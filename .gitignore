@@ -45,3 +45,5 @@ tests/test.parquet/
 handyspark \.ipynb
 
 handyspark1\.ipynb
+
+examples/new-api-sandbox\.ipynb

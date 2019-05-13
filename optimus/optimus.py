@@ -164,11 +164,9 @@ class Optimus:
         """
         try:
             if __IPYTHON__:
-                # # Load the Jinja template
-
                 path = os.path.dirname(os.path.abspath(__file__))
                 url = path + "//css//styles.css"
-                styles = open(url, "r").read()
+                styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
         except NameError:
@@ -419,6 +417,12 @@ class Optimus:
             diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
             print_json(diff)
         elif method is "collect":
-            assert (df1.collect() == df2.collect())
+            if df1.collect() == df2.collect():
+                print("Dataframes are equal")
+                return True
+            else:
+                print("Dataframes not equal. Use 'json' param to check for diffrences")
+                return False
+
         else:
             RaiseIt.type_error(method, ["json", "collect"])

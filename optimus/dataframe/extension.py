@@ -11,18 +11,13 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import RaiseIt, IMPUTE_SUFFIX
+from optimus import RaiseIt
 from optimus.helpers.checkit import is_str, is_column_a
 from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
-
-
-# from apiclient.discovery import build
-# from httplib2 import Http
-# from oauth2client import file, client, tools
 
 
 @add_method(DataFrame)
@@ -103,6 +98,8 @@ def sample_n(self, n=10, random=False):
         seed = random_int()
     elif random is False:
         seed = 0
+    else:
+        RaiseIt.value_error(random, ["True", "False"])
 
     rows_count = self.count()
     if n < rows_count:

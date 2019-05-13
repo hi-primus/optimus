@@ -1,7 +1,7 @@
+from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
     DateType, LongType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
-from pyspark.ml.linalg import VectorUDT
 from optimus.helpers.logger import logger
 
 """
@@ -86,6 +86,8 @@ STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
 STARTING_OPTIMUS = "Transform and Roll out..."
 
 SUCCESS = "Optimus successfully imported. Have fun :)."
+
+CONFIDENCE_LEVEL_CONSTANT = [50, .67], [68, .99], [90, 1.64], [95, 1.96], [99, 2.57]
 
 
 def print_check_point_config(filesystem):

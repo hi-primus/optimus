@@ -2,8 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 FROM jupyter/scipy-notebook
 
-MAINTAINER Jupyter Project <jupyter@googlegroups.com>
-
 USER root
 
 RUN pip install --no-cache-dir optimuspyspark -U
