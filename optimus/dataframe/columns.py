@@ -286,7 +286,7 @@ def cols(self):
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     @add_attr(cols)
-    def cast(input_cols=None, dtype=None, columns=None, output_cols=None):
+    def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
         """
         Cast a column or a list of columns to a specific data type
         :param input_cols: Columns names to be casted
@@ -313,6 +313,7 @@ def cols(self):
                 for _ in builtins.range(0, len(input_cols)):
                     _dtype.append(dtype)
         else:
+
             input_cols = list([c[0] for c in columns])
             if len(columns[0]) == 2:
                 output_cols = get_output_cols(input_cols, output_cols)
@@ -323,7 +324,7 @@ def cols(self):
 
             output_cols = get_output_cols(input_cols, output_cols)
 
-        # print(input_cols, output_cols, _dtype)
+        print(input_cols, output_cols, _dtype)
 
         # Helper function to return
         def cast_factory(cls):
@@ -356,13 +357,9 @@ def cols(self):
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
+            df = apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
+                       output_cols=output_col, verbose=False)
 
-            func = audf(input_col, func,
-                        func_return_type=return_type,
-                        attrs=data_type,
-                        func_type=func_type, verbose=False)
-
-            df = df.withColumn(output_col, func)
         return df
 
     @add_attr(cols)
@@ -1073,8 +1070,7 @@ def cols(self):
             # Imputer require not only numeric but float or double
             # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
             df = df.cols.cast(input_cols, "float", output_cols)
-
-            imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
+            imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
 
             model = imputer.setStrategy(strategy).fit(df)
             df = model.transform(df)
@@ -1085,12 +1081,8 @@ def cols(self):
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
-            for input_col, output_col in zip(input_cols, output_cols):
-                value = df.cols.mode(input_col)
-                print(
-                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(input_col), input_col,
-                                                                            value))
-                df = df.cols.fill_na(input_col, value, output_col)
+            value = df.cols.mode(input_cols, output_cols)
+            df = df.cols.fill_na(output_cols, value, output_cols)
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical"])
 
