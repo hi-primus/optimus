@@ -355,8 +355,6 @@ def cols(self):
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
-            df = apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                       output_cols=output_col, verbose=False)
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
                                output_cols=output_col, verbose=False)
