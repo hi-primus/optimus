@@ -219,6 +219,8 @@ t.create(None, "cols.unique", "all_columns", "json", "*")
 
 t.create(None, "cols.add", None, "df", [numeric_col, numeric_col_B])
 
+df_na.plot.scatter(["height(ft)", "rank"])
+
 t.create(None, "cols.add", "all_columns", "df", "*"),
 
 t.create(None, "cols.sub", None, "df", [numeric_col, numeric_col_B])
@@ -249,6 +251,8 @@ t.create(None, "cols.upper", None, "df", string_col)
 
 t.create(None, "cols.upper", "all_columns", "df", "*")
 
+
+
 t.create(None, "cols.trim", None, "df", numeric_col)
 
 t.create(None, "cols.trim", "all_columns", "df", "*")
@@ -273,11 +277,15 @@ t.create(None, "cols.remove_white_spaces", "all_columns", "df", "*")
 
 t.create(None, "cols.date_transform", None, "df", date_col, "yyyy/MM/dd", "dd-MM-YYYY")
 
+t.run()
+
 t.create(None, "cols.date_transform", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
 
-t.create(None, "cols.years_between", None, "df", date_col, "yyyyMMdd")
+t.create(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
 
-t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyyMMdd")
+t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+
+t.run()
 
 t.create(None, "cols.impute", None, "df", numeric_col_B)
 
@@ -355,6 +363,8 @@ t.create(None, "cols.cast", None, "df", string_col, "string")
 
 t.create(None, "cols.cast", "all_columns", "df", "*", "string")
 
+t.run()
+
 # Problems with precision
 t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
 
@@ -384,9 +394,11 @@ t.create(None, "cols.fill_na", "array", "df", "japanese name", ["1","2"])
 
 t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", False)
 
+# + {"jupyter": {"outputs_hidden": true}}
 t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "function", "rank", "age"], "2")
+# -
 
-t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], new_col, separator=" ")
+t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], separator=" ",output_cols=new_col)
 
 # +
 # t.create(None, "cols.nest", "mix", "df", [F.col(numeric_col_C), F.col(numeric_col_B)], "E", separator="--")
@@ -394,14 +406,16 @@ t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], new_col, s
 # +
 df_na = source_df.cols.drop("NullType").rows.drop_na("*")
 
-t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
+t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], shape="vector", output_cols=new_col)
 # -
 
-t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], new_col, shape="vector")
+t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], shape="vector",output_cols=new_col)
 
-t.create(None, "cols.nest", "array_all_columns", "df", "*", new_col, shape="array")
+t.delete(None, "cols.nest", "array_all_columns", "df", "*", shape="array", output_cols=new_col)
 
-t.create(None, "cols.nest", "array", "df", [numeric_col, numeric_col_B,numeric_col_C], new_col, shape="array")
+t.create(None, "cols.nest", "array", "df", [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_cols=new_col)
+
+t.run()
 
 t.create(None, "cols.unnest", "array_all_columns", "df", array_col, "-", index=1)
 

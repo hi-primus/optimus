@@ -370,9 +370,9 @@ def is_date(value):
 
 def has_(value, _type):
     """
-
-    :param value:
-    :param _type: check if a list has a element of a specific data type
+    Check if a list has a element of a specific data type
+    :param value: list
+    :param _type: data type to check
     :return:
     """
     return any(isinstance(elem, _type) for elem in value)

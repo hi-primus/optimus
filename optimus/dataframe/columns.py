@@ -1396,26 +1396,26 @@ def cols(self):
 
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
-            columns = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
+            input_cols = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
         else:
-            columns = parse_columns(self, input_cols)
+            input_cols = parse_columns(self, input_cols)
 
         if shape is "vector":
-            columns = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            check_column_numbers(columns, "*")
-
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+            
+            check_column_numbers(input_cols, "*")
             vector_assembler = VectorAssembler(
-                inputCols=columns,
+                inputCols=input_cols,
                 outputCol=output_cols)
             df = vector_assembler.transform(df)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
-            df = df.cols.apply(input_cols, F.array(*columns), output_cols=output_cols)
+            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_cols)
 
         elif shape is "string":
-            df = df.cols.apply(input_cols, F.concat_ws(separator, *columns), output_cols=output_cols)
+            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_cols)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
@@ -1504,7 +1504,7 @@ def cols(self):
         return self.cols.select(column).first()[0]
 
     @add_attr(cols)
-    def scatterplot(columns, buckets=10):
+    def scatter(columns, buckets=10):
         """
         Return scatter plot data in json format
         :param columns:
@@ -1524,8 +1524,8 @@ def cols(self):
             splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits)
-
+            df = bucketizer(df, col_name, splits=splits, output_cols=_bucket_col_name(col_name))
+        
         columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
 
         size_name = "count"

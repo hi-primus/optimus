@@ -33,7 +33,7 @@ def plot(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        data = self.cols.scatterplot(columns, buckets)
+        data = self.cols.scatter(columns, buckets)
         plot_scatterplot(data)
 
     @add_attr(plot)

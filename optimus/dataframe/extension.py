@@ -377,17 +377,17 @@ def correlation(self, columns, method="pearson", output="json"):
     df = self
     if len(columns) == 1:
         if is_column_a(df, columns, "vector"):
-            new_column = one_list_to_val(columns)
+            output_col = one_list_to_val(columns)
     else:
-        new_column = "_correlation_features"
+        output_col = "_correlation_features"
         for col_name in columns:
             df = df.cols.cast(col_name, "float")
             logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
-        df = df.cols.nest(columns, "vector", new_column)
+        df = df.cols.nest(columns, "vector", output_cols=output_col)
 
     # Create Vector necessary to calculate the correlation
-    corr = Correlation.corr(df, new_column, method).head()[0].toArray()
+    corr = Correlation.corr(df, output_col, method).head()[0].toArray()
 
     if output is "array":
         result = corr
