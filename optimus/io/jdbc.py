@@ -105,7 +105,7 @@ class JDBC:
         """
 
         db_table = "public." + table_name
-        if self._limit(limit) is "":
+        if self._limit(limit) is "all":
             query = "SELECT COUNT(*) FROM " + db_table
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
             count = self.execute(query, "all").to_json()[0]["count"]
