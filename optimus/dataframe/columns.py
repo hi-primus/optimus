@@ -1353,7 +1353,7 @@ def cols(self):
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-        return apply(input_cols, func=_z_score, output_cols=output_cols)
+        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
 
     @add_attr(cols)
     def iqr(columns, more=None):
