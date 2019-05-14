@@ -1081,7 +1081,7 @@ def cols(self):
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
-            value = df.cols.mode(input_cols, output_cols)
+            value = df.cols.mode(input_cols)
             df = df.cols.fill_na(output_cols, value, output_cols)
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical"])
