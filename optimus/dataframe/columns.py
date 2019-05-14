@@ -1132,7 +1132,7 @@ def cols(self):
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-            df = df.cols.apply(input_cols, func=func, output_cols=output_cols)
+            df = df.cols.apply(input_col, func=func, output_cols=output_col)
         return df
 
     @add_attr(cols)
