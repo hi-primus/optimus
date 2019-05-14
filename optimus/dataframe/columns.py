@@ -805,7 +805,7 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply(input_cols, output_cols, _upper, filter_col_by_dtypes="string")
+        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols)
 
     @add_attr(cols)
     def trim(input_cols, output_cols=None):
@@ -833,7 +833,7 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_expr(input_cols, output_cols, _reverse, filter_col_by_dtypes="string")
+        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols)
 
         return df
 
@@ -1070,10 +1070,9 @@ def cols(self):
 
             output_cols = get_output_cols(input_cols, output_cols)
 
-            for col_name in input_cols:
-                # Imputer require not only numeric but float or double
-                print("{} values imputed for column(s) '{}'".format(df.cols.count_na(col_name), col_name))
-                df = df.cols.cast(col_name, "float")
+            # Imputer require not only numeric but float or double
+            # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
+            df = df.cols.cast(input_cols, "float", output_cols)
 
             imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
 
@@ -1086,19 +1085,19 @@ def cols(self):
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
-            for col_name in input_cols:
-                value = df.cols.mode(col_name)
+            for input_col, output_col in zip(input_cols, output_cols):
+                value = df.cols.mode(input_col)
                 print(
-                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name,
+                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(input_col), input_col,
                                                                             value))
-                df = df.cols.fill_na(col_name, value)
+                df = df.cols.fill_na(input_col, value, output_col)
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical"])
 
         return df
 
     @add_attr(cols)
-    def fill_na(input_cols, output_cols=None, value=None):
+    def fill_na(input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
         :param input_cols: '*', list of columns names or a single column name.
@@ -1112,7 +1111,6 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-
             if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
                 new_value = fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
@@ -1134,11 +1132,11 @@ def cols(self):
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-            df = df.cols.apply(input_col, func, output_cols=output_col)
+            df = df.cols.apply(input_cols, func=func, output_cols=output_cols)
         return df
 
     @add_attr(cols)
-    def is_na(input_cols, output_cols):
+    def is_na(input_cols, output_cols=None):
         """
         Replace null values with True and non null with False
         :param input_cols: '*', list of columns names or a single column name.
@@ -1424,10 +1422,10 @@ def cols(self):
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
-            df = df.cols.apply_expr(output_cols, F.array(*columns))
+            df = df.cols.apply(input_cols, F.array(*columns), output_cols)
 
         elif shape is "string":
-            df = df.cols.apply_expr(output_cols, F.concat_ws(separator, *columns))
+            df = df.cols.apply(input_cols, F.concat_ws(separator, *columns), output_cols)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
