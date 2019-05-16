@@ -834,15 +834,16 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def remove(columns, search=None, search_by="chars"):
+    def remove(columns, search=None, search_by="chars", output_cols=None):
         """
         Remove chars or words
         :param columns: '*', list of columns names or a single column name.
         :param search: values to look at to be replaced
         :param search_by: Match substring or words
+        :param output_cols:
         :return:
         """
-        return self.cols.replace(columns, search, "", search_by)
+        return self.cols.replace(columns, search, "", search_by, output_cols)
 
     @add_attr(cols)
     def remove_accents(input_cols, output_cols=None):
@@ -1402,7 +1403,7 @@ def cols(self):
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            
+
             check_column_numbers(input_cols, "*")
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
@@ -1525,7 +1526,7 @@ def cols(self):
 
             # Create buckets in the dataFrame
             df = bucketizer(df, col_name, splits=splits, output_cols=_bucket_col_name(col_name))
-        
+
         columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
 
         size_name = "count"
