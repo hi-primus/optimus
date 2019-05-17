@@ -585,8 +585,6 @@ df.cols.nest(["animals", "two strings", "num 2"], "col_nested", shape="array").t
 
 # ## Histograms
 
-from pyspark.sql.types import StringType, IntegerType, ArrayType
-
 df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
 df.table()
