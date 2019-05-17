@@ -269,12 +269,12 @@ class Profiler:
             if self.html is None:
                 RaiseIt.not_ready_error(
                     "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
-                assert self.html is not None, "Please run the profiler first"
 
             write_html(HEADER + self.html + FOOTER, path)
         elif output is "json":
             if self.json is None:
-                assert self.json is not None, "Please run the profiler first"
+                RaiseIt.not_ready_error(
+                    "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
 
             write_json(self.json, path)
         else:
@@ -548,7 +548,6 @@ class Profiler:
                 result = [date.year, date.month, date.weekday(), date.hour, date.minute]
             return result
 
-
         df = (df
               .cols.select(col_name)
               .cols.apply(col_name, func_infer_date, ArrayType(LongType()))
@@ -611,7 +610,6 @@ class Profiler:
 
         col_name_len = col_name + "_len"
         df = df.cols.apply(col_name_len, func=F.length(F.col(col_name)))
-
 
         min_value = df.cols.min(col_name_len)
         max_value = df.cols.max(col_name_len)

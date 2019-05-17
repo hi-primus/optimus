@@ -230,7 +230,7 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         for col_name in columns:
-            df = self.cols.apply(col_name, func, func_return_type, args=args, func_type=func_type,
+            df = self.cols.apply(col_name, func=func, func_return_type=func_return_type, args=args, func_type=func_type,
                                  when=fbdt(col_name, data_type))
         return df
 
@@ -286,7 +286,7 @@ def cols(self):
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     @add_attr(cols)
-    def cast(input_cols=None, dtype=None, columns=None, output_cols=None):
+    def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
         """
         Cast a column or a list of columns to a specific data type
         :param input_cols: Columns names to be casted
@@ -305,14 +305,15 @@ def cols(self):
         _dtype = []
         # Parse params
         if columns is None:
-
+            input_cols = parse_columns(self, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
-                input_cols = parse_columns(self, input_cols)
+
                 output_cols = get_output_cols(input_cols, output_cols)
 
                 for _ in builtins.range(0, len(input_cols)):
                     _dtype.append(dtype)
         else:
+
             input_cols = list([c[0] for c in columns])
             if len(columns[0]) == 2:
                 output_cols = get_output_cols(input_cols, output_cols)
@@ -323,46 +324,41 @@ def cols(self):
 
             output_cols = get_output_cols(input_cols, output_cols)
 
-        # print(input_cols, output_cols, _dtype)
-
         # Helper function to return
         def cast_factory(cls):
 
             # Parse to Vector
             if is_type(cls, Vectors):
-                func_type = "udf"
+                _func_type = "udf"
 
-                def cast_to(val, attr):
+                def _cast_to(val, attr):
                     return Vectors.dense(val)
 
-                func_return_type = VectorUDT()
+                _func_return_type = VectorUDT()
             # Parse standard data types
             elif get_spark_dtypes_object(cls):
 
-                func_type = "column_exp"
+                _func_type = "column_exp"
 
-                def cast_to(col_name, attr):
+                def _cast_to(col_name, attr):
                     return F.col(col_name).cast(get_spark_dtypes_object(cls))
 
-                func_return_type = None
+                _func_return_type = None
 
             # Add here any other parse you want
             else:
                 RaiseIt.value_error(cls)
 
-            return func_return_type, cast_to, func_type
+            return _func_return_type, _cast_to, _func_type
 
         df = self
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
 
-            func = audf(input_col, func,
-                        func_return_type=return_type,
-                        attrs=data_type,
-                        func_type=func_type, verbose=False)
+            df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
+                               output_cols=output_col, verbose=False)
 
-            df = df.withColumn(output_col, func)
         return df
 
     @add_attr(cols)
@@ -791,7 +787,7 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply(input_cols, output_cols, func=_lower, filter_col_by_dtypes="string")
+        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols)
 
     @add_attr(cols)
     def upper(input_cols, output_cols=None):
@@ -805,7 +801,7 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply(input_cols, output_cols, _upper, filter_col_by_dtypes="string")
+        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols)
 
     @add_attr(cols)
     def trim(input_cols, output_cols=None):
@@ -819,7 +815,7 @@ def cols(self):
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
 
-        return apply(input_cols, output_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+        return apply(input_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
 
     @add_attr(cols)
     def reverse(input_cols, output_cols=None):
@@ -833,23 +829,24 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_expr(input_cols, output_cols, _reverse, filter_col_by_dtypes="string")
+        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols)
 
         return df
 
     @add_attr(cols)
-    def remove(columns, search=None, search_by="chars"):
+    def remove(columns, search=None, search_by="chars", output_cols=None):
         """
         Remove chars or words
         :param columns: '*', list of columns names or a single column name.
         :param search: values to look at to be replaced
         :param search_by: Match substring or words
+        :param output_cols:
         :return:
         """
-        return self.cols.replace(columns, search, "", search_by)
+        return self.cols.replace(columns, search, "", search_by, output_cols)
 
     @add_attr(cols)
-    def remove_accents(input_cols, output_cols):
+    def remove_accents(input_cols, output_cols=None):
         """
         Remove accents in specific columns
         :param input_cols: '*', list of columns names or a single column name.
@@ -903,7 +900,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def date_transform(input_cols, output_cols=None, current_format=None, output_format=None):
+    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
         """
         Transform a column date to a specified format
         :param input_cols: Columns to be transformed.
@@ -923,12 +920,12 @@ def cols(self):
                 col_name)
 
         # Asserting if column if in dataFrame:
-        df = apply(input_cols, output_cols, func=_date_transform, args=[current_format, output_format])
+        df = apply(input_cols, _date_transform, args=[current_format, output_format], output_cols=output_cols)
 
         return df
 
     @add_attr(cols)
-    def years_between(input_cols, output_cols=None, date_format=None):
+    def years_between(input_cols, date_format=None, output_cols=None):
         """
         This method compute the age based on a born date.
         :param input_cols: Name of the column born dates column.
@@ -953,6 +950,8 @@ def cols(self):
                         F.current_date()) / 12), 4) \
                 .alias(
                 col_name)
+
+        output_cols = get_output_cols(input_cols, output_cols)
 
         df = apply(input_cols, func=_years_between, args=[date_format],
                    filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
@@ -1049,7 +1048,7 @@ def cols(self):
         return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols)
 
     @add_attr(cols)
-    def impute(input_cols, output_cols=None, data_type="continuous", strategy="mean"):
+    def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: list of columns to be analyze.
@@ -1063,17 +1062,14 @@ def cols(self):
 
         if data_type is "continuous":
             input_cols = parse_columns(self, input_cols,
-                                       filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES + PYSPARK_STRING_TYPES)
+                                       filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
             check_column_numbers(input_cols, "*")
-
             output_cols = get_output_cols(input_cols, output_cols)
 
-            for col_name in input_cols:
-                # Imputer require not only numeric but float or double
-                print("{} values imputed for column(s) '{}'".format(df.cols.count_na(col_name), col_name))
-                df = df.cols.cast(col_name, "float")
-
-            imputer = Imputer(inputCols=input_cols, outputCols=output_cols)
+            # Imputer require not only numeric but float or double
+            # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
+            df = df.cols.cast(input_cols, "float", output_cols)
+            imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
 
             model = imputer.setStrategy(strategy).fit(df)
             df = model.transform(df)
@@ -1084,19 +1080,15 @@ def cols(self):
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
-            for col_name in input_cols:
-                value = df.cols.mode(col_name)
-                print(
-                    "{} values imputed for column(s) '{}' with '{}'".format(df.cols.count_na(col_name), col_name,
-                                                                            value))
-                df = df.cols.fill_na(col_name, value)
+            value = df.cols.mode(input_cols)
+            df = df.cols.fill_na(output_cols, value, output_cols)
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical"])
 
         return df
 
     @add_attr(cols)
-    def fill_na(input_cols, output_cols=None, value=None):
+    def fill_na(input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
         :param input_cols: '*', list of columns names or a single column name.
@@ -1110,7 +1102,6 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-
             if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
                 new_value = fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
@@ -1132,11 +1123,11 @@ def cols(self):
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-            df = df.cols.apply(input_col, func, output_cols=output_col)
+            df = df.cols.apply(input_col, func=func, output_cols=output_col)
         return df
 
     @add_attr(cols)
-    def is_na(input_cols, output_cols):
+    def is_na(input_cols, output_cols=None):
         """
         Replace null values with True and non null with False
         :param input_cols: '*', list of columns names or a single column name.
@@ -1361,7 +1352,7 @@ def cols(self):
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-        return apply(input_cols, func=_z_score, output_cols=output_cols)
+        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
 
     @add_attr(cols)
     def iqr(columns, more=None):
@@ -1392,13 +1383,13 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, output_col, shape="string", separator=""):
+    def nest(input_cols, shape="string", separator="", output_cols=None):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
-        :param output_col: final column with the nested content
         :param separator: char to be used as separator at the concat time
         :param shape: final data type, 'array', 'string' or 'vector'
+        :param output_cols:
         :return: Spark DataFrame
         """
 
@@ -1406,26 +1397,26 @@ def cols(self):
 
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
-            columns = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
+            input_cols = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
         else:
-            columns = parse_columns(self, input_cols)
+            input_cols = parse_columns(self, input_cols)
 
         if shape is "vector":
-            columns = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            check_column_numbers(columns, "*")
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
+            check_column_numbers(input_cols, "*")
             vector_assembler = VectorAssembler(
-                inputCols=columns,
-                outputCol=output_col)
+                inputCols=input_cols,
+                outputCol=output_cols)
             df = vector_assembler.transform(df)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
-            df = df.cols.apply_expr(output_col, F.array(*columns))
+            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_cols)
 
         elif shape is "string":
-            df = df.cols.apply_expr(output_col, F.concat_ws(separator, *columns))
+            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_cols)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
@@ -1514,7 +1505,7 @@ def cols(self):
         return self.cols.select(column).first()[0]
 
     @add_attr(cols)
-    def scatterplot(columns, buckets=10):
+    def scatter(columns, buckets=10):
         """
         Return scatter plot data in json format
         :param columns:
@@ -1534,7 +1525,7 @@ def cols(self):
             splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits)
+            df = bucketizer(df, col_name, splits=splits, output_cols=_bucket_col_name(col_name))
 
         columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
 

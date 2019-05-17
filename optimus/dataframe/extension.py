@@ -1,6 +1,7 @@
 import os
 
 import humanize
+import imgkit
 import jinja2
 import math
 from packaging import version
@@ -17,6 +18,7 @@ from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
 from optimus.helpers.logger import logger
+from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 
@@ -214,7 +216,7 @@ def query(self, sql_expression):
 @add_method(DataFrame)
 def table_name(self, name=None):
     """
-    
+    Create a temp view for a data frame
     :param self:
     :param name:
     :return:
@@ -281,18 +283,35 @@ def h_repartition(self, partitions_number=None, col_name=None):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=100, columns=None, title=None):
+def table_image(self, path):
+    """
+
+    :param self:
+    :param path:
+    :return:
+    """
+    # imgkit.from_url('http://google.com', 'out.jpg')
+    path_css = os.path.dirname(os.path.abspath(__file__))
+    css = path_css + "//..//css//styles.css"
+
+    imgkit.from_string(self.table_html(full=True), path, css=css)
+
+
+@add_method(DataFrame)
+def table_html(self, limit=100, columns=None, title=None, full=False):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
     :param columns: Columns to be printed
     :param limit: How many rows will be printed
     :param title: Table title
+    :param full: Include html header and footer
+
     :return:
     """
 
     columns = parse_columns(self, columns)
-    # print(columns)
+
     data = self.cols.select(columns).limit(limit).to_json()
 
     # Load the Jinja template
@@ -321,6 +340,9 @@ def table_html(self, limit=100, columns=None, title=None):
 
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title)
+
+    if full is True:
+        output = HEADER + output + FOOTER
     return output
 
 
@@ -328,12 +350,13 @@ def table_html(self, limit=100, columns=None, title=None):
 def table(self, limit=100, columns=None, title=None):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
+
             result = self.table_html(title=title, limit=limit, columns=columns)
             return print_html(result)
         else:
-
             self.show()
     except NameError:
+
         self.show()
 
 
@@ -354,17 +377,17 @@ def correlation(self, columns, method="pearson", output="json"):
     df = self
     if len(columns) == 1:
         if is_column_a(df, columns, "vector"):
-            new_column = one_list_to_val(columns)
+            output_col = one_list_to_val(columns)
     else:
-        new_column = "correlation_features"
+        output_col = "_correlation_features"
         for col_name in columns:
             df = df.cols.cast(col_name, "float")
             logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
-        df = df.cols.nest(columns, new_column, "vector")
+        df = df.cols.nest(columns, "vector", output_cols=output_col)
 
     # Create Vector necessary to calculate the correlation
-    corr = Correlation.corr(df, new_column, method).head()[0].toArray()
+    corr = Correlation.corr(df, output_col, method).head()[0].toArray()
 
     if output is "array":
         result = corr

@@ -82,7 +82,6 @@ class RaiseIt:
         :param var:
         :return:
         """
-        from optimus.helpers.functions import get_var_name
 
         from optimus.helpers.functions import get_var_name
         raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))

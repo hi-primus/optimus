@@ -20,6 +20,7 @@
 # %autoreload 2
 
 import sys
+
 sys.path.append("..")
 
 # ## Install Optimus 
@@ -35,7 +36,8 @@ sys.path.append("..")
 # ## Import optimus and start it
 
 from optimus import Optimus
-op= Optimus(master="local")
+
+op = Optimus(master="local")
 
 # ## Dataframe creation
 #
@@ -54,14 +56,14 @@ df = op.create.df(
         "attributes"
     ],
     [
-        
-        ("Optim'us", 28.0, "Leader", 10, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111",[8.5344, 4300.0]),
-        ("bumbl#ebéé  ", 17.5, "Espionage", 7, 2.0, ["Bumble","Goldback"], "10.642707,-71.612534",[5.334, 2000.0]),
-        ("ironhide&", 26.0, "Security", 7, 4.0, ["Roadbuster"], "37.789563,-122.400356",[7.9248, 4000.0]),
-        ("Jazz",13.0, "First Lieutenant", 8, 1.8, ["Meister"], "33.670666,-117.841553",[3.9624, 1800.0]),
-        ("Megatron",None, "None", None, 5.7, ["Megatron"], None,[None,5700.0]),
-        ("Metroplex_)^$",300.0 , "Battle Station", 8, None, ["Metroflex"],None,[91.44, None]),
-        
+
+        ("Optim'us", 28.0, "Leader", 10, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111", [8.5344, 4300.0]),
+        ("bumbl#ebéé  ", 17.5, "Espionage", 7, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", [5.334, 2000.0]),
+        ("ironhide&", 26.0, "Security", 7, 4.0, ["Roadbuster"], "37.789563,-122.400356", [7.9248, 4000.0]),
+        ("Jazz", 13.0, "First Lieutenant", 8, 1.8, ["Meister"], "33.670666,-117.841553", [3.9624, 1800.0]),
+        ("Megatron", None, "None", None, 5.7, ["Megatron"], None, [None, 5700.0]),
+        ("Metroplex_)^$", 300.0, "Battle Station", 8, None, ["Metroflex"], None, [91.44, None]),
+
     ]).h_repartition(1)
 df.table()
 
@@ -84,9 +86,9 @@ df = op.create.df(
         ("bumbl#ebéé  ", 17.5, "Espionage", 7),
         ("Optim'us", 28.0, "Leader", 10),
         ("ironhide&", 26.0, "Security", 7),
-        ("Jazz",13.0, "First Lieutenant", 8),
-        ("Megatron",None, "None", None),
-        
+        ("Jazz", 13.0, "First Lieutenant", 8),
+        ("Megatron", None, "None", None),
+
     ])
 df.table()
 
@@ -103,9 +105,9 @@ df = op.create.df(
         ("bumbl#ebéé  ", 17.5, "Espionage", 7),
         ("Optim'us", 28.0, "Leader", 10),
         ("ironhide&", 26.0, "Security", 7),
-        ("Jazz",13.0, "First Lieutenant", 8),
-        ("Megatron",None, "None", None),
-        
+        ("Jazz", 13.0, "First Lieutenant", 8),
+        ("Megatron", None, "None", None),
+
     ])
 df.table()
 
@@ -113,17 +115,16 @@ df.table()
 
 # +
 import pandas as pd
-import numpy as np
 
 data = [("bumbl#ebéé  ", 17.5, "Espionage", 7),
-         ("Optim'us", 28.0, "Leader", 10),
-         ("ironhide&", 26.0, "Security", 7)]
+        ("Optim'us", 28.0, "Leader", 10),
+        ("ironhide&", 26.0, "Security", 7)]
 labels = ["names", "height", "function", "rank"]
 
 # Create pandas dataframe
 pdf = pd.DataFrame.from_records(data, columns=labels)
 
-df = op.create.df(pdf = pdf)
+df = op.create.df(pdf=pdf)
 df.table()
 # -
 
@@ -177,11 +178,11 @@ df.cols.select("names").table()
 
 # Select rows from a Dataframe where a the condition is meet
 
-df.rows.select(df["rank"]>7).table()
+df.rows.select(df["rank"] > 7).table()
 
 # Select rows by specific values on it
 
-df.rows.is_in("rank",[7, 10]).table()
+df.rows.is_in("rank", [7, 10]).table()
 
 # Create and unique id for every row.
 
@@ -189,17 +190,17 @@ df.create_id().table()
 
 # Create wew columns
 
-df.cols.append("Affiliation","Autobot").table()
+df.cols.append("Affiliation", "Autobot").table()
 
 # ## Missing Data
 
 # + {"inputHidden": false, "outputHidden": false}
-df.rows.drop_na("*",how='any').table()
+df.rows.drop_na("*", how='any').table()
 # -
 
 # Filling missing data.
 
-df.cols.fill_na("*","N//A").table()
+df.cols.fill_na("*", "N//A").table()
 
 # To get the boolean mask where values are nan.
 
@@ -224,7 +225,8 @@ df.cols.mean("*")
 def func(value, args):
     return value + 1
 
-df.cols.apply("height",func,"float").table()
+
+df.cols.apply("height", func, "float").table()
 # -
 
 # ### Histogramming
@@ -234,8 +236,8 @@ df.cols.count_uniques("*")
 # ### String Methods
 
 # + {"inputHidden": false, "outputHidden": false}
-df\
-    .cols.lower("names")\
+df \
+    .cols.lower("names") \
     .cols.upper("function").table()
 # -
 
@@ -256,11 +258,10 @@ df_new = op.create.df(
         ("Autobot"),
         ("Autobot"),
         ("Decepticons"),
-        
-        
+
     ]).h_repartition(1)
 
-op.concat([df,df_new], "columns").table()
+op.concat([df, df_new], "columns").table()
 
 # +
 df_new = op.create.df(
@@ -271,27 +272,26 @@ df_new = op.create.df(
         "rank",
     ],
     [
-        ("Grimlock", 22.9, "Dinobot Commander", 9),               
+        ("Grimlock", 22.9, "Dinobot Commander", 9),
     ]).h_repartition(1)
 
-op.concat([df,df_new], "rows").table()
-
+op.concat([df, df_new], "rows").table()
 
 # + {"inputHidden": false, "outputHidden": false}
 # Operations like `join` and `group` are handle using Spark directly
 
 # + {"inputHidden": false, "outputHidden": false}
-df_melt = df.melt(id_vars=["names"], value_vars=["height", "function","rank"])
+df_melt = df.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
 df.table()
 # -
 
-df_melt.pivot("names","variable","value").table()
+df_melt.pivot("names", "variable", "value").table()
 
 # ## Ploting
 
-df.plot.hist("height",10)
+df.plot.hist("height", 10)
 
-df.plot.frequency("*",10)
+df.plot.frequency("*", 10)
 
 # ## Getting Data In/Out
 
@@ -308,15 +308,16 @@ df.schema
 df.table()
 
 # + {"inputHidden": false, "outputHidden": false}
-op.profiler.run(df, "height",infer=True)
+op.profiler.run(df, "height", infer=True)
 # -
-df_csv =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
+df_csv = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
 df_csv.table()
 
-df_json =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json").limit(5)
+df_json = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json",
+                      "json").limit(5)
 df_json.table()
 
-df_csv.save.csv("test.csv") 
+df_csv.save.csv("test.csv")
 
 df.table()
 
@@ -325,20 +326,21 @@ df.table()
 # +
 import requests
 
+
 def func_request(params):
     # You can use here whatever header or auth info you need to send. 
     # For more information see the requests library
-    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
+    url = "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
 
     return requests.get(url)
+
 
 def func_response(response):
     # Here you can parse de response
     return response["title"]
 
-df_result = op.enrich(df, func_request= func_request, func_response= func_response)
+
+df_result = op.enrich(df, func_request=func_request, func_response=func_response)
 # -
 
 df_result.table()
-
-
