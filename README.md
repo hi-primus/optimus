@@ -1,19 +1,3 @@
----
-jupyter:
-  jupytext:
-    formats: ipynb,md
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.1'
-      jupytext_version: 1.1.1
-  kernelspec:
-    display_name: Python 3
-    language: python
-    name: python3
----
-
-
 
 [![Logo Optimus](images/logoOptimus.png)](https://hioptimus.com) 
 
@@ -59,13 +43,9 @@ Also if you want to a suggestion or feature request use https://github.com/ironm
 ## Start Optimus
 
 ```python
-%load_ext autoreload
-%autoreload 2
 ```
 
 ```python
-import sys
-sys.path.append("..")
 ```
 
 ```python
@@ -126,7 +106,6 @@ df = op.create.df(
         ("Tiemstamp"),
         ("Cybertronian", "bool", True), 
         ("NullType", "null", True),
-
     ],
     [
         ("Optim'us", 28, "Leader", 10, 5000000, 4.3, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
@@ -152,11 +131,8 @@ With .table() you hace a beautifull way to show your data. You have extra inform
 
 
 ```python
-# df.table()
-df.table_image("images/table.png")
+df.table()
 ```
-
-
 ![](images/table.png)
 
 
@@ -195,20 +171,16 @@ new_df = df\
 You transform this
 
 ```python
-df.table_image("images/table1.png")
+df.table()
 ```
-
 ![](images/table1.png)
-
 
 Into this
 
 ```python
-new_df.table_image("images/table2.png")
+new_df.table()
 ```
-
 ![](images/table2.png)
-
 
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
@@ -220,8 +192,9 @@ Here you apply a function to the "billingid" column. Sum 1 and 2 to the current 
 def func(value, args):
     return value + args[0] + args[1]
 
-df.cols.apply("billingid",func,"int", [1,2]).table()
+df.cols.apply("height(ft)",func,"int", [1,2]).table()
 ```
+![](images/table3.png)
 
 If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
 
@@ -231,8 +204,9 @@ from pyspark.sql import functions as F
 def func(col_name, args):
     return F.col(col_name)/20
 
-df.cols.apply("billingid", func=func, args=20).table()
+df.cols.apply("height(ft)", func=func, args=20).table()
 ```
+![](images/table4.png)
 
 You can change the table output back to ascii if you which
 
@@ -240,8 +214,10 @@ You can change the table output back to ascii if you which
 op.output("ascii")
 ```
 
+To return to HTML just:
+
 ```python
-df.table()
+op.output("html")
 ```
 
 ## Data profiling
@@ -253,17 +229,25 @@ Just run `df.profile("*")` to profile all the columns. For more info about the p
 Let's load a "big" dataset
 
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
+df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
 ```
 
 ```python
 op.profiler.run(df, "name", infer=False)
 ```
 
+```python
+```
+![](images/profiler.png)
+
 For dates data types Optimus can give you extra data
 ```python
 op.profiler.run(df, "year", infer=True)
 ```
+
+```python
+```
+![](images/profiler1.png)
 
 ## Plots
 Besides histograms, frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
@@ -289,14 +273,16 @@ df.plot.correlation(["age","fare","survived"])
 ### Get the ouliers using iqr
 
 ```python
-df.outliers.iqr("age").select().table(5)
+df.outliers.iqr("age").select().table()
 ```
+![](images/table5.png)
 
 ### Remove the outliers using iqr
 
 ```python
-df.outliers.iqr("age").drop().table(5)
+df.outliers.iqr("age").drop().table()
 ```
+![](images/table6.png)
 
 ### You can also use z_score, modified_z_score or mad
 
@@ -343,7 +329,7 @@ You can connect to any external API to enrich your data using Optimus. Optimus u
 Let's load a tiny dataset we can enrich
 
 ```python
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", "json")
+df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 ```
 
 ```python
@@ -369,6 +355,7 @@ df_result = e.run(df, func_request, func_response, calls= 60, period = 60, max_t
 ```python
 df_result.table()
 ```
+![](images/table7.png)
 
 ## Machine Learning 
 
@@ -387,7 +374,7 @@ One of the best "tree" models for machine learning is Random Forest. What about 
 one line? With Optimus is really easy.
 
 ```python
-df_cancer =op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+df_cancer =op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
 ```
 
 ```python
@@ -405,6 +392,7 @@ So lets see the prediction compared with the actual label:
 ```python
 df_predict.cols.select(["label","prediction"]).table()
 ```
+![](images/table8.png)
 
 The rf_model variable contains the Random Forest model for analysis.
  
@@ -448,3 +436,5 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 [![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
   
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
+
+

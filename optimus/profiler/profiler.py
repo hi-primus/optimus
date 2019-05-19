@@ -1,3 +1,4 @@
+import imgkit
 import configparser
 import json
 import os
@@ -253,6 +254,20 @@ class Profiler:
         # Save in case we want to output to a html file
         self.html = html
 
+    def to_image(self, path):
+        """
+        Save the profiler result as image
+        :param self:
+        :param path:
+        :return:
+        """
+        path_css = os.path.dirname(os.path.abspath(__file__))
+        css = path_css + "//..//css//styles.css"
+
+        imgkit.from_string(self.html, path, css=css)
+
+        print_html("<img src='" + path + "'>")
+
     def to_file(self, path=None, output="html"):
         """
         Save profiler data to a file in the specified format (html, json)
@@ -283,7 +298,7 @@ class Profiler:
 
     def to_queue(self, message):
         """
-        Send the profiler information to a queue. By default it use a public encryted queue.
+        Send the profiler information to a queue. By default it use a public encrypted queue.
         :return:
         """
 
