@@ -26,7 +26,7 @@ class Optimus:
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
-                 verbose=False, dl=False,
+                 verbose=False,
                  server=False,
                  repositories=None,
                  packages=None,
@@ -98,14 +98,7 @@ class Optimus:
             #  Maybe we can check a priori which version fo Spark is going to be used
             # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            if dl is True:
-                self._add_spark_packages(
-                    ["databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11"])
-
-                self._start_session()
-
-            else:
-                self._start_session()
+            self._start_session()
 
             if path is None:
                 path = os.getcwd()

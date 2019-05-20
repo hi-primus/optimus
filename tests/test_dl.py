@@ -3,7 +3,11 @@ import pyspark
 from pyspark.ml.image import ImageSchema
 from pyspark.sql.functions import lit
 
-op = Optimus(dl=True)
+import os
+SUBMIT_ARGS = "--packages databricks:spark-deep-learning:1.5.0-spark2.4-s_2.11 pyspark-shell"
+os.environ["PYSPARK_SUBMIT_ARGS"] = SUBMIT_ARGS
+
+op = Optimus()
 from sparkdl.image import imageIO
 
 
