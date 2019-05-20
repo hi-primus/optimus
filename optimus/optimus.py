@@ -104,8 +104,6 @@ class Optimus:
 
                 self._start_session()
 
-                from optimus.dl.models import DL
-                self.dl = DL()
             else:
                 self._start_session()
 
