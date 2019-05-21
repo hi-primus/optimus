@@ -1,4 +1,3 @@
-
 [![Logo Optimus](images/logoOptimus.png)](https://hioptimus.com) 
 
 
