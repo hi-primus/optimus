@@ -1,4 +1,4 @@
-imgkit==1.0.1
+imgkit==1.0.2
 bson==0.5.8
 httplib2==0.12.1
 google-api-python-client==1.7.8
