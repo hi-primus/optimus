@@ -15,10 +15,10 @@ from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
 from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples, is_column
-from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
-from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.convert import one_list_to_val
+from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
 from optimus.helpers.logger import logger
+from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -130,7 +130,8 @@ def append(dfs, like="columns"):
     :return:
     """
 
-    # FIX: Because monotonically_increasing_id can create different sequence for different dataframes the result could be wrong.
+    # FIX: Because monotonically_increasing_id can create different
+    # sequence for different dataframes the result could be wrong.
 
     if like == "columns":
         temp_dfs = []
@@ -151,6 +152,17 @@ def append(dfs, like="columns"):
     return df_result
 
 
+def output_image(path):
+    """
+    Output a png file
+    :param path: Matplotlib figure
+    :return: Base64 encode image
+    """
+
+    plt.savefig(path, format='png')
+    plt.close()
+
+
 def output_base64(fig):
     """
     Output a matplotlib as base64 encode
@@ -159,7 +171,6 @@ def output_base64(fig):
     """
     fig_file = BytesIO()
     plt.savefig(fig_file, format='png')
-
     # rewind to beginning of file
     fig_file.seek(0)
 
@@ -180,11 +191,12 @@ def ellipsis(data, length=20):
     return (data[:length] + '..') if len(data) > length else data
 
 
-def plot_scatterplot(column_data=None, output=None):
+def plot_scatterplot(column_data=None, output=None, path=None):
     """
     Boxplot
     :param column_data: column data in json format
     :param output: image or base64
+    :param path:
     :return:
     """
 
@@ -199,13 +211,16 @@ def plot_scatterplot(column_data=None, output=None):
     # Save as base64
     if output is "base64":
         return output_base64(fig)
+    elif output is "image":
+        return output_image(path)
 
 
-def plot_boxplot(column_data=None, output=None):
+def plot_boxplot(column_data=None, output=None, path=None):
     """
     Boxplot
     :param column_data: column data in json format
     :param output: image or base64
+    :param path:
     :return:
     """
     for col_name, stats in column_data.items():
@@ -224,18 +239,21 @@ def plot_boxplot(column_data=None, output=None):
             patch.set(facecolor='white')
 
             # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         # Save as base64
         if output is "base64":
             return output_base64(fig)
+        elif output is "image":
+            return output_image(path)
+        else:
+            plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
-
-def plot_freq(column_data=None, output=None):
+def plot_freq(column_data=None, output=None, path=None):
     """
     Frequency plot
     :param column_data: column data in json format
     :param output: image or base64
+    :param path:
     :return:
     """
     for col_name, data in column_data.items():
@@ -266,6 +284,8 @@ def plot_freq(column_data=None, output=None):
         # Save as base64
         if output is "base64":
             return output_base64(fig)
+        elif output is "image":
+            return output_image(path)
 
 
 def plot_missing_values(column_data=None, output=None):
@@ -304,7 +324,7 @@ def plot_missing_values(column_data=None, output=None):
         return output_base64(fig)
 
 
-def plot_hist(column_data=None, output=None, sub_title=""):
+def plot_hist(column_data=None, output=None, sub_title="", path=None):
     """
     Plot a histogram
     obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
@@ -315,7 +335,8 @@ def plot_hist(column_data=None, output=None, sub_title=""):
     :param column_data: column data in json format
     :param output: image or base64
     :param sub_title: plot subtitle
-    :return: image or base64
+    :param path:
+    :return: plot, image or base64
     """
 
     for col_name, data in column_data.items():
@@ -346,9 +367,11 @@ def plot_hist(column_data=None, output=None, sub_title=""):
         # Save as base64
         if output is "base64":
             return output_base64(fig)
+        elif output is "image":
+            return output_image(path)
 
 
-def plot_correlation(column_data):
+def plot_correlation(column_data, output=None, path=None):
     """
     Plot a correlation plot
     :param column_data:
