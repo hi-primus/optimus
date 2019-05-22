@@ -3,10 +3,12 @@ python:
 - "3.6"
 - "3.6-dev" # 3.6 development branch
 
+jdk:
+- oraclejdk8
+
 env:
   global:
   - SPARK_HOME=/tmp/spark-2.4.1-bin-hadoop2.7
-  - JAVA_HOME=/usr/lib/jvm/java-8-oracle
 
 before_install:
 - chmod +x install-spark.sh
@@ -17,9 +19,6 @@ before_install:
 install:
 - ./install-spark.sh
 - "pip install -r requirements-test.txt --progress-bar=off"
-
-jdk:
-- oraclejdk8
 
 script:
 - py.test -v --ignore=optimus/dl/ --ignore=examples/ --ignore=tests/creator --ignore=tests/test_dl.py
