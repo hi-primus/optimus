@@ -18,7 +18,7 @@ install:
 - "pip install -r requirements-test.txt --progress-bar=off"
 
 jdk:
-- oraclejdk8
+- oraclejdk11
 
 script:
 - py.test -v --ignore=optimus/dl/ --ignore=examples/ --ignore=tests/creator --ignore=tests/test_dl.py
