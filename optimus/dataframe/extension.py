@@ -266,7 +266,8 @@ def h_repartition(self, partitions_number=None, col_name=None):
     """
     Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and
     a column if you need more control.
-    See https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
+    See
+    https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
     :param self: Spark Dataframe
     :param partitions_number: Number of partitions
     :param col_name: Column to be used to apply the repartition id necessary
@@ -283,10 +284,11 @@ def h_repartition(self, partitions_number=None, col_name=None):
 
 
 @add_method(DataFrame)
-def table_image(self, path):
+def table_image(self, path, limit=10):
     """
 
     :param self:
+    :param limit:
     :param path:
     :return:
     """
@@ -294,11 +296,12 @@ def table_image(self, path):
     path_css = os.path.dirname(os.path.abspath(__file__))
     css = path_css + "//..//css//styles.css"
 
-    imgkit.from_string(self.table_html(full=True), path, css=css)
+    imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
+    print_html("<img src='" + path + "'>")
 
 
 @add_method(DataFrame)
-def table_html(self, limit=100, columns=None, title=None, full=False):
+def table_html(self, limit=10, columns=None, title=None, full=False):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:

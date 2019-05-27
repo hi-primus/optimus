@@ -43,7 +43,7 @@ class ZScore:
             z_col_name = _z_score_col_name(col_name)
 
             if action is "drop":
-                df = df.cols.z_score(col_name) \
+                df = df.cols.z_score(col_name,z_col_name) \
                     .rows.drop(F.col(z_col_name) > threshold) \
                     .cols.drop(z_col_name)
 
