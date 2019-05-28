@@ -1,6 +1,9 @@
 dateutil
 imgkit==1.0.1
 bson==0.5.8
+httplib2==0.12.1
+google-api-python-client==1.7.9
+apiclient==1.0.4
 packaging==19.0
 requests==2.21.0
 tqdm==4.28.1
