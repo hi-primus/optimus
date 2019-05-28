@@ -143,6 +143,14 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
+t.create(None, "cols.remove", None, "df", string_col, "i")
+
+t.create(None, "cols.remove", "list", "df", string_col, ["a","i","Es"])
+
+t.create(None, "cols.remove", "list_output", "df", string_col, ["a","i","Es"], output_cols=string_col+"_new")
+
+t.run()
+
 t.create(None, "cols.min", None, "json", numeric_col)
 
 t.create(None, "cols.min", "all_columns", "json", "*")
@@ -219,8 +227,6 @@ t.create(None, "cols.unique", "all_columns", "json", "*")
 
 t.create(None, "cols.add", None, "df", [numeric_col, numeric_col_B])
 
-df_na.plot.scatter(["height(ft)", "rank"])
-
 t.create(None, "cols.add", "all_columns", "df", "*"),
 
 t.create(None, "cols.sub", None, "df", [numeric_col, numeric_col_B])
@@ -281,9 +287,13 @@ t.run()
 
 t.create(None, "cols.date_transform", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
 
-t.create(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
+# t.create(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
+t.delete(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
 
-t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+
+# t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+t.delete(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+
 
 t.run()
 
@@ -505,3 +515,40 @@ t.run()
 
 
 source_df.table()
+
+# ## Ouliers
+
+t = Test(op, source_df, "df_outliers", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
+
+# +
+from pyspark.sql import functions as F
+
+
+def func(col_name, attrs):
+    return F.col(col_name) * 2
+
+numeric_col = "height(ft)"
+numeric_col_B = "rank"
+numeric_col_C = "rank"
+string_col = "function"
+date_col = "date arrival"
+date_col_B = "last date seen"
+new_col = "new col"
+array_col = "attributes"
+# -
+
+t.create(None, "outliers.iqr", None, "df", numeric_col)
+
+t.create(None, "outliers.iqr", None, "df", numeric_col)
+
+df.outliers.z_score("age", threshold=2).drop()
+
+df.outliers.modified_z_score("age", threshold = 2).drop()
+
+df.outliers.mad("age", threshold = 2).drop()
+
+

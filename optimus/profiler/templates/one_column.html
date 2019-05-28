@@ -132,10 +132,12 @@
         <div class="panel_profiler">
             <h3>Frequency</h3>
             <table>
-                <tbody>
-                <th>Value</th>
-                <th>Count</th>
-                <th>Frecuency (%)</th>
+
+                <tr>
+                    <th>Value</th>
+                    <th>Count</th>
+                    <th>Frecuency (%)</th>
+                </tr>
                 {% for vi in data.frequency[:10] %}
                 <tr>
                     <td>{{vi.value}}</td>
@@ -149,7 +151,7 @@
                     <td>{{data.stats.missing_count}}</td>
                     <td>{{data.stats.p_missing}}%</td>
                 </tr>
-                </tbody>
+
             </table>
         </div>
         {% endif %}
