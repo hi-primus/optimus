@@ -1,4 +1,3 @@
-dateutil
 imgkit==1.0.1
 bson==0.5.8
 packaging==19.0
