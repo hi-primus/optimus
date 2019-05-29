@@ -14,7 +14,6 @@ def get_version():
 with open('requirements.txt') as f:
     required = f.read().splitlines()
 
-
 if sys.version_info < (3, 6):
     raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
 
@@ -29,10 +28,10 @@ lint_requires = [
     'pyflakes'
 ]
 
-tests_require = ['pytest','mock', 'nose']
+tests_require = ['pytest', 'mock', 'nose']
 
 dependency_links = []
-setup_requires=['pytest-runner']
+setup_requires = ['pytest-runner']
 if 'nosetests' in sys.argv[1:]:
     setup_requires.append('nose')
 
@@ -42,7 +41,7 @@ setup(
     author='Favio Vazquez and Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.2.4.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/2.2.5.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
@@ -62,12 +61,12 @@ setup(
     test_suite='nose.collector',
     include_package_data=True,
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    keywords=['datacleaner', 'apachespark', 'spark', 'pyspark', 'data-wrangling', 'data-cleansing'],
+    keywords=['datacleaner', 'apachespark', 'spark', 'pyspark', 'data-wrangling', 'data-cleansing','data-profiling'],
 )
