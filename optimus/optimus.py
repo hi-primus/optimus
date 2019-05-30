@@ -2,7 +2,7 @@ import os
 import sys
 from shutil import rmtree
 
-from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 from optimus.enricher import Enricher
@@ -96,7 +96,7 @@ class Optimus:
             # TODO:
             #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
-            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
             self._start_session()
 
