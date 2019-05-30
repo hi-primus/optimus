@@ -2,13 +2,7 @@ import re
 import sys
 from setuptools import setup, find_packages
 
-
-# Get version without importing, which avoids dependency issues
-def get_version():
-    with open('optimus/version.py') as version_file:
-        return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
-                         version_file.read()).group('version')
-
+__version__ = '2.2.51'
 
 # Requirements
 with open('requirements.txt') as f:
@@ -37,11 +31,11 @@ if 'nosetests' in sys.argv[1:]:
 
 setup(
     name='optimuspyspark',
-    version=get_version(),
+    version=__version__,
     author='Favio Vazquez and Argenis Leon',
     author_email='favio.vazquez@ironmussa.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.2.51.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/' + __version__ + '.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
@@ -68,5 +62,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    keywords=['datacleaner', 'apachespark', 'spark', 'pyspark', 'data-wrangling', 'data-cleansing','data-profiling'],
+    keywords=['datacleaner', 'apachespark', 'spark', 'pyspark', 'data-wrangling', 'data-cleansing', 'data-profiling'],
 )
