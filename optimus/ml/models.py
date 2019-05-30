@@ -1,19 +1,13 @@
 from pyspark.ml import feature, classification
 from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
 from pyspark.sql.functions import *
-from pyspark.sql.session import SparkSession
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 from optimus.helpers.checkit import is_dataframe
 from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
-
-# from optimus.spark import Spark
-# spark = Spark.instance.spark()
-# TODO: not use getOrCreate use the singleton in optimus.spark
-
-spark = SparkSession.builder.getOrCreate()
+from optimus.spark import Spark
 
 
 class ML:
@@ -129,7 +123,7 @@ class ML:
     @staticmethod
     def h2o_automl(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
@@ -150,7 +144,7 @@ class ML:
     @staticmethod
     def h2o_deeplearning(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
@@ -172,7 +166,7 @@ class ML:
     @staticmethod
     def h2o_xgboost(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
@@ -190,7 +184,7 @@ class ML:
     @staticmethod
     def h2o_gbm(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
