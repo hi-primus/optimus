@@ -21,12 +21,23 @@
 
 import sys
 
-sys.path.append("../..")
+# +
+# import pyspark as ps
+
+# +
+# ps.version.__version__ 
+# -
+
+
+
+# +
+# sys.path.append("../..")
+# -
 
 from optimus import Optimus
 from optimus.helpers.test import Test
 
-op = Optimus(master='local')
+op = Optimus(master='local', verbose=True)
 
 # +
 import pandas as pd
