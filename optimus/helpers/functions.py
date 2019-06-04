@@ -1,3 +1,4 @@
+import collections
 import datetime
 import inspect
 import json
@@ -30,7 +31,6 @@ def infer(value):
     :return: Spark data type
     """
     result = None
-    # print(v)
     if value is None:
         result = "null"
 
@@ -133,8 +133,16 @@ def collect_as_dict(df):
     if len(dict_result) == 1:
         dict_result = next(iter(dict_result.values()))
     else:
+        col_names = parse_columns(df, "*")
         # https://stackoverflow.com/questions/49432167/convert-rows-into-dictionary-in-pyspark
-        dict_result = [v.asDict() for v in df.collect()]
+
+        r = collections.OrderedDict()
+        # Because asDict can return messed columns names we order
+        for row in df.collect():
+            _row = row.asDict()
+            for col in col_names:
+                r[col] = _row[col]
+            dict_result.append(r)
 
     return dict_result
 
