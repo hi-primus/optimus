@@ -130,7 +130,7 @@ class JDBC:
     def execute(self, query, limit=None):
         """
         Execute a SQL query
-        :param limit: default limit the whole query. We play defensive here in case the result is a big chunck of data
+        :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
         :param query: SQL query string
         :return:
         """
@@ -145,6 +145,23 @@ class JDBC:
             .option("user", self.user) \
             .option("password", self.password) \
             .load()
+
+    def df_to_table(self, df, table, mode="overwrite"):
+        """
+        Send a dataframe to the database
+        :param df:
+        :param table:
+        :param mode
+        :return:
+        """
+        return df.write \
+            .format("jdbc") \
+            .mode(mode) \
+            .option("url", self.url) \
+            .option("dbtable", table) \
+            .option("user", self.user) \
+            .option("password", self.password) \
+            .save()
 
     @staticmethod
     def _limit(limit=None):
@@ -167,7 +184,7 @@ class Table:
     def __init__(self, db):
         self.db = db
 
-    def show(self, table_names="*", limit="all"):
+    def show(self, table_names="*", limit=None):
         db = self.db
 
         if table_names is "*":
