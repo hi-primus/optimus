@@ -56,11 +56,12 @@ class Livy:
 
         try:
             if type == "GET":
-                return requests.get(url, data=json.dumps(data), headers=HEADERS, verify=False).json()
+                return requests.get(url, data=json.dumps(data), headers=HEADERS, verify=False, timeout=TIMEOUT).json()
             elif type == "POST":
-                return requests.post(url, data=json.dumps(data), headers=HEADERS, verify=False).json()
+                return requests.post(url, data=json.dumps(data), headers=HEADERS, verify=False, timeout=TIMEOUT).json()
             elif type == "DELETE":
-                return requests.delete(url, data=json.dumps(data), headers=HEADERS, verify=False).json()
+                return requests.delete(url, data=json.dumps(data), headers=HEADERS, verify=False,
+                                       timeout=TIMEOUT).json()
 
         except requests.exceptions.HTTPError as e:
             # Whoops it wasn't a 200
