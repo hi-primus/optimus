@@ -38,7 +38,7 @@ def to_json(self):
     :param self:
     :return:
     """
-    return collect_as_dict(self.collect())
+    return collect_as_dict(self)
 
 
 @add_method(DataFrame)

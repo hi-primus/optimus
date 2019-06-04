@@ -120,10 +120,10 @@ def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
 
 
-def collect_as_dict(value):
+def collect_as_dict(df):
     """
     Return a dict from a Collect result
-    :param value:
+    :param df:
     :return:
     """
 
@@ -133,7 +133,8 @@ def collect_as_dict(value):
     if len(dict_result) == 1:
         dict_result = next(iter(dict_result.values()))
     else:
-        dict_result = [v.asDict() for v in value]
+        # https://stackoverflow.com/questions/49432167/convert-rows-into-dictionary-in-pyspark
+        dict_result = [v.asDict() for v in df.collect()]
 
     return dict_result
 
