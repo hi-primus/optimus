@@ -542,7 +542,7 @@ def json_enconding(obj):
     :param obj:
     :return:
     """
-    return json.dumps(obj, sort_keys=True, default=json_converter)
+    return json.dumps(obj, default=json_converter)
 
 
 def debug(value):
