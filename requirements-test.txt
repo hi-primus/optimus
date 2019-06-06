@@ -1,6 +1,6 @@
 imgkit==1.0.1
 bson==0.5.8
-mock==2.0.0
+mock==3.0.5
 nose==1.3.7
 pylint==2.3.1
 fastnumbers==2.2.1
