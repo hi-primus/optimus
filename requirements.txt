@@ -1,6 +1,6 @@
 imgkit==1.0.1
 bson==0.5.8
-httplib2==0.12.1
+httplib2==0.13.0
 google-api-python-client==1.7.9
 apiclient==1.0.4
 packaging==19.0
