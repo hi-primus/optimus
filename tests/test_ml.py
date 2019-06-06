@@ -72,6 +72,24 @@ def test_n_gram():
     assert_equal(df_model.select('sentence', 'features').count(), 2)
 
 
+def test_string_to_index_kargs():
+    df = op.spark.createDataFrame([(0, "a"), (1, "b"), (2, "c"), (3, "a"), (4, "a"), (5, "c")],
+                                 ["id", "category"])
+
+    df_indexed = fe.string_to_index(df, "category", stringOrderType="frequencyAsc")
+
+    assert_spark_model(df_indexed)
+
+    expected_collect = [Row(id=0, category='a', category_index=2.0),
+                        Row(id=1, category='b', category_index=0.0),
+                        Row(id=2, category='c', category_index=1.0),
+                        Row(id=3, category='a', category_index=2.0),
+                        Row(id=4, category='a', category_index=2.0),
+                        Row(id=5, category='c', category_index=1.0)]
+
+    assert_equal(df_indexed.collect(), expected_collect)
+
+
 def test_random_forest():
     df_model, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
