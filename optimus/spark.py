@@ -36,10 +36,8 @@ class Spark:
             .appName(app_name) \
             .master(master) \
             .config("spark.executor.heartbeatInterval", "110") \
-            .config("spark.jars.packages", "ml.combust.mleap:mleap-spark_2.11:0.13.0") \
             .getOrCreate()
 
-        # .option("driver", "org.postgresql.Driver")
         self._sc = self._spark.sparkContext
         logger.print("Spark Version:" + self._sc.version)
 
