@@ -13,7 +13,7 @@ spark = op.spark
 sc = op.sc
 
 
-df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
+df_cancer = op.spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
