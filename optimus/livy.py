@@ -24,7 +24,6 @@ class Livy:
         """
         self.session_url = self.host + '/sessions'
         r = self.send(self.session_url, data=START, type="POST")
-        print(r)
         self.session_id = r['id']
 
     def session(self):
@@ -43,7 +42,6 @@ class Livy:
         """
 
         data = {'code': textwrap.dedent(code)}
-
         url = "{HOST}/sessions/{SESSION_ID}/statements".format(HOST=self.host, SESSION_ID=self.session_id)
 
         r = self.send(url, data=data, type="POST")
@@ -52,7 +50,6 @@ class Livy:
 
         filter_string = ["id", "output", "progress", "state"]
         return {k: v for (k, v) in r.items() if k in filter_string}
-        # r.headers['location']
 
     def result(self, id=None):
         """
@@ -91,11 +88,14 @@ class Livy:
                                        timeout=TIMEOUT).json()
 
         except requests.exceptions.HTTPError as e:
-            # Whoops it wasn't a 200
             print("Error: " + str(e))
             raise SystemExit(0)
 
     def finish(self):
+        """
+        Finish a session
+        :return:
+        """
         self.delete_session(self.session_id)
 
     def sessions(self):

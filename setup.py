@@ -1,8 +1,7 @@
-import re
 import sys
 from setuptools import setup, find_packages
 
-__version__ = '2.2.51'
+__version__ = current_version
 
 # Requirements
 with open('requirements.txt') as f:
