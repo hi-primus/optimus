@@ -29,7 +29,7 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols):
+def string_to_index(df, input_cols, **kargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
@@ -40,7 +40,7 @@ def string_to_index(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(df) for column in
+    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index", **kargs).fit(df) for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
@@ -49,7 +49,7 @@ def string_to_index(df, input_cols):
     return df
 
 
-def index_to_string(df, input_cols):
+def index_to_string(df, input_cols, **kargs):
     """
     Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
@@ -61,7 +61,7 @@ def index_to_string(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    indexers = [IndexToString(inputCol=column, outputCol=column + "_string") for column in
+    indexers = [IndexToString(inputCol=column, outputCol=column + "_string", **kargs) for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
@@ -70,7 +70,7 @@ def index_to_string(df, input_cols):
     return df
 
 
-def one_hot_encoder(df, input_cols):
+def one_hot_encoder(df, input_cols, **kargs):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
     :param df: Dataframe to be transformed
@@ -80,7 +80,7 @@ def one_hot_encoder(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
+    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded", **kargs) for column in
               list(set(input_cols))]
 
     pipeline = Pipeline(stages=encode)
