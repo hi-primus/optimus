@@ -9,28 +9,24 @@ from pyspark import SparkContext
 
 
 @pytest.fixture(scope="session")
-def spark_context(request):
-    """ fixture for creating a spark context
-    Args:
-        request: pytest.FixtureRequest object
-    """
-    sc = SparkContext.getOrCreate()
-    request.addfinalizer(lambda: sc.stop())
+def spark_context():
+    """ fixture for creating a spark context"""
 
-    return sc
+    spark_context = SparkContext.getOrCreate()
+
+    yield spark_context
 
 
 @pytest.fixture(scope="session")
-def spark_session(request):
+def spark_session():
     """Fixture for creating a spark session."""
 
-    spark = (SparkSession
+    spark_session = (SparkSession
              .builder
              .enableHiveSupport()
              .getOrCreate())
-    request.addfinalizer(lambda: spark.stop())
 
-    return spark
+    yield spark_session
 
 
 def pytest_assertrepr_compare(config, op, left, right):

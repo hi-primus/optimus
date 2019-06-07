@@ -8,9 +8,7 @@ from optimus import Optimus
 
 import optimus.ml.feature as fe
 
-op = Optimus()
-spark = op.spark
-sc = op.sc
+op = Optimus(spark_session)
 
 
 df_cancer = op.spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
@@ -32,7 +30,7 @@ def assert_spark_model(model):
 
 
 def test_ml_pipe():
-    df = sc. \
+    df = op.sc. \
          parallelize([Row(sentence='this is a test', label=0.),
                      Row(sentence='this is another test', label=1.)]). \
          toDF()
@@ -121,6 +119,7 @@ def test_h2o_automl():
 
     assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
 
+
 def test_h2o_deeplearning():
     df_model, dl_model = op.ml.h2o_deeplearning(df_cancer, "diagnosis", columns_h2o)
 
@@ -128,12 +127,14 @@ def test_h2o_deeplearning():
 
     assert isinstance(dl_model, py_sparkling.ml.models.H2ODeepLearningModel), "Not a H2ODeepLearningModel"
 
+
 def test_h2o_xgboost():
     df_model, xgboost_model = op.ml.h2o_xgboost(df_cancer, "diagnosis", columns_h2o)
 
     assert_spark_df(df_model)
 
     assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+
 
 def test_h2o_gbm():
     df_model, gbm_model = op.ml.h2o_gbm(df_cancer, "diagnosis", columns_h2o)
