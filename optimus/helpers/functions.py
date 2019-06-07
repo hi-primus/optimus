@@ -134,16 +134,14 @@ def collect_as_dict(df):
         dict_result = next(iter(dict_result.values()))
     else:
         col_names = parse_columns(df, "*")
-        # https://stackoverflow.com/questions/49432167/convert-rows-into-dictionary-in-pyspark
 
-        r = collections.OrderedDict()
         # Because asDict can return messed columns names we order
         for row in df.collect():
             _row = row.asDict()
+            r = collections.OrderedDict()
             for col in col_names:
                 r[col] = _row[col]
             dict_result.append(r)
-
     return dict_result
 
 
