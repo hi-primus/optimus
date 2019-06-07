@@ -31,6 +31,7 @@ class Optimus:
                  repositories=None,
                  packages=None,
                  jars=None,
+                 driver_class_path=None,
                  options=None,
                  additional_options=None,
                  queue_url=None,
@@ -84,10 +85,19 @@ class Optimus:
             self.packages = packages
             self.repositories = repositories
 
+            # Jars
             if jars is None:
                 jars = {}
 
-            self.jars = jars
+            self.jars = val_to_list(jars)
+
+            # Class Drive Path
+            if driver_class_path is None:
+                driver_class_path = {}
+
+            self.driver_class_path = val_to_list(driver_class_path)
+
+            # Additional Options
             self.additional_options = additional_options
 
             self.verbose(verbose)
@@ -326,6 +336,12 @@ class Optimus:
         else:
             return ''
 
+    def _setup_driver_class_path(self):
+        if self.jars:
+            return '--driver-class-path {}'.format(','.join(self.driver_class_path))
+        else:
+            return ''
+
     def _setup_options(self, additional_options):
         options = {}
 
@@ -359,6 +375,7 @@ class Optimus:
             self._setup_repositories(),
             self._setup_packages(),
             self._setup_jars(),
+            self._setup_driver_class_path(),
             self._setup_options(self.additional_options),
             'pyspark-shell',
         ]
