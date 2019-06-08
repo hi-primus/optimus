@@ -1670,12 +1670,15 @@ def cols(self):
         return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
-    def names(filter_by_column_dtypes=None):
+    def names(col_names="*", filter_by_column_dtypes=None, invert=False):
         """
-        Get column names
+        Get columns names
+        :param col_names: Columns names to be processed '*' for all or a list of column names
+        :param filter_by_column_dtypes: Data type used to select the columns
+        :param invert: Invert the columns selection
         :return:
         """
-        columns = parse_columns(self, "*", filter_by_column_dtypes=filter_by_column_dtypes)
+        columns = parse_columns(self, col_names, filter_by_column_dtypes=filter_by_column_dtypes, invert=invert)
         return columns
 
     @add_attr(cols)
