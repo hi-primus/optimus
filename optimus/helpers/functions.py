@@ -289,7 +289,6 @@ def escape_columns(columns):
             escaped_columns = "`" + columns + "`"
         else:
             escaped_columns.append(columns)
-    # print(escaped_columns)
 
     return escaped_columns
 

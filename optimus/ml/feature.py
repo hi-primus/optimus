@@ -118,7 +118,6 @@ def normalizer(df, input_cols, p=2.0):
     """
 
     # Check if columns argument must be a string or list datatype:
-
     if is_(input_cols, [str, list]):
         RaiseIt.type_error(input_cols, [str, list])
 
