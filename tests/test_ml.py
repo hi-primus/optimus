@@ -8,7 +8,7 @@ from optimus import Optimus
 
 import optimus.ml.feature as fe
 
-op = Optimus()
+op = Optimus(master='local')
 
 
 df_cancer = op.spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
