@@ -4,7 +4,7 @@ from pyspark.sql.functions import *
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.helpers.checkit import is_dataframe
+from optimus.helpers.checkit import is_dataframe, is_str
 from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
 from optimus.spark import Spark
@@ -71,7 +71,8 @@ class ML:
 
         columns = parse_columns(df, columns)
 
-        assert isinstance(input_col, str), "Error, input column must be a string"
+        if not is_str(input_col):
+            raise TypeError("Error, input column must be a string")
 
         data = df.select(columns)
         feats = data.columns
@@ -103,7 +104,8 @@ class ML:
 
         columns = parse_columns(df, columns)
 
-        assert isinstance(input_col, str), "Error, input column must be a string"
+        if not is_str(input_col):
+            raise TypeError("Error, input column must be a string")
 
         data = df.select(columns)
         feats = data.columns
