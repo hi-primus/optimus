@@ -37,6 +37,8 @@ from optimus.internals import _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
+from optimus.functions import append as _append
+
 
 def cols(self):
     @add_attr(cols)
@@ -83,7 +85,7 @@ def cols(self):
         if is_list_of_dataframes(cols_values):
             dfs = cols_values
             dfs.insert(0, self)
-            df_result = append(dfs, like="columns")
+            df_result = _append(dfs, like="columns")
 
         elif is_list_of_tuples(cols_values):
             df_result = self
