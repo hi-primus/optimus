@@ -35,7 +35,6 @@ class Spark:
         self._spark = SparkSession.builder \
             .appName(app_name) \
             .master(master) \
-            .config("spark.executor.heartbeatInterval", "110") \
             .getOrCreate()
 
         self._sc = self._spark.sparkContext
