@@ -313,7 +313,7 @@ def get_output_cols(input_cols, output_cols):
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
-                  accepts_missing_cols=False):
+                  accepts_missing_cols=False, invert=False):
     """
     Return a list of columns and check that columns exists in the dataframe
     Accept '*' as parameter in which case return a list of all columns in the dataframe.
@@ -326,13 +326,12 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     :param is_regex: Use True is col_attrs is a regex
     :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the dataframe
+    :param invert: Invert the final selection. For example if you want to select not integers
+
     :return: A list of columns string names
     """
 
     attrs = None
-
-    # ensure that cols_args is a list
-    # cols_args = val_to_list(cols_args)
 
     # if columns value is * get all dataframes columns
     if is_regex is True:
@@ -341,10 +340,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     elif cols_args == "*" or cols_args is None:
         cols = df.columns
-
-
-    # Return filtered columns
-    # columns_filtered = list(set(columns) - set(columns_filtered))
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -369,13 +364,15 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         check_for_missing_columns(df, cols)
 
     # Filter by column data type
-    filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    if filter_by_column_dtypes is not None:
+        filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
 
     columns_residual = None
 
     # If necessary filter the columns by data type
-    if is_list_of_strings(filter_by_column_dtypes):
+    if filter_by_column_dtypes:
         # Get columns for every data type
+
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
@@ -385,9 +382,12 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         columns_residual = list(OrderedSet(cols) - OrderedSet(columns_filtered))
     else:
         final_columns = cols
-    # final_columns = escape_columns(final_columns)
+
     # Return cols or cols an params
     cols_params = []
+
+    if invert:
+        final_columns = list(OrderedSet(cols) - OrderedSet(final_columns))
 
     if get_args is True:
         cols_params = final_columns, attrs
@@ -396,9 +396,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     else:
         RaiseIt.value_error(get_args, ["True", "False"])
 
-    if columns_residual:
-        print(",".join(escape_columns(columns_residual)), "column(s) was not processed because is/are not",
-              ",".join(filter_by_column_dtypes))
+    # if columns_residual:
+    #     print(",".join(escape_columns(columns_residual)), "column(s) was not processed because is/are not",
+    #           ",".join(filter_by_column_dtypes))
 
     return cols_params
 
