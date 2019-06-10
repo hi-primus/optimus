@@ -42,7 +42,15 @@ Also if you want to a suggestion or feature request use https://github.com/ironm
  
 ## Start Optimus
 
+```python
+%load_ext autoreload
+%autoreload 2
+```
 
+```python
+import sys
+sys.path.append("..")
+```
 
 ```python
 from optimus import Optimus
@@ -232,6 +240,14 @@ df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/exa
 
 ```python
 op.profiler.run(df, "mass (g)", infer=False)
+```
+
+```python
+```
+![](images/profiler_numeric.png)
+
+```python
+op.profiler.run(df, "name", infer=False)
 ```
 
 ![](images/profiler_numeric.png)
