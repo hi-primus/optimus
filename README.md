@@ -1,3 +1,4 @@
+
 [![Logo Optimus](images/logoOptimus.png)](https://hioptimus.com) 
 
 
@@ -42,9 +43,13 @@ Also if you want to a suggestion or feature request use https://github.com/ironm
 ## Start Optimus
 
 ```python
+%load_ext autoreload
+%autoreload 2
 ```
 
 ```python
+import sys
+sys.path.append("..")
 ```
 
 ```python
@@ -231,6 +236,16 @@ Let's load a "big" dataset
 df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
 ```
 
+### Numeric
+
+```python
+op.profiler.run(df, "mass (g)", infer=False)
+```
+
+```python
+```
+![](images/profiler_numeric.png)
+
 ```python
 op.profiler.run(df, "name", infer=False)
 ```
@@ -257,15 +272,29 @@ df = df.rows.drop_na(["age","fare"])
 ```
 
 ```python
-df.plot.scatter(["fare", "age"], buckets=30)
+df.plot.hist("fare", output="image", path="images/hist.png")
 ```
 
 ```python
-df.plot.box("age")
+df.plot.frequency("age", output="image", path="images/frequency.png")
+```
+
+```python
+df.plot.scatter(["fare", "age"], buckets=30, output="image", path="images/scatter.png")
+```
+
+```python
+df.plot.box("age", output="image", path="images/box.png")
 ```
 ```python
 df.plot.correlation(["age","fare","survived"])
 ```
+### Using other plotting libraries
+
+
+Optimus has a tiny API so you can use any plotting library. For example, you can use df.cols.scatter(), df.cols.frequency(), df.cols.boxplot() or df.cols.hist() to output a JSON that you can process to adapt the data to any plotting library.
+
+
 ## Outliers
 
 
@@ -288,9 +317,9 @@ df.outliers.iqr("age").drop().table()
 
 
 
-```
+```python
 df.outliers.z_score("age", threshold=2).drop()
-df.outliers.modified_z_score("age", threshold = 2 ).drop()
+df.outliers.modified_z_score("age", threshold = 2).drop()
 df.outliers.mad("age", threshold = 2).drop()
 ```
 
