@@ -554,7 +554,7 @@ for i, line in enumerate(fileinput.input(output_file, inplace=1)):
         flag=False
     elif flag is True:
         flag = False
-        print("```python", end="")
+        print("```python")
         print(line,end="")
     else:
         print(line, end="")
