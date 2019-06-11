@@ -76,7 +76,7 @@ def test_string_to_index_kargs():
 
     df_indexed = fe.string_to_index(df, "category", stringOrderType="frequencyAsc")
 
-    assert_spark_model(df_indexed)
+    assert_spark_df(df_indexed)
 
     expected_collect = [Row(id=0, category='a', category_index=2.0),
                         Row(id=1, category='b', category_index=0.0),
@@ -117,7 +117,7 @@ def test_h2o_automl():
 
     assert_spark_df(df_model)
 
-    assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
+    assert isinstance(automl_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
 
 
 def test_h2o_deeplearning():
@@ -125,7 +125,7 @@ def test_h2o_deeplearning():
 
     assert_spark_df(df_model)
 
-    assert isinstance(dl_model, py_sparkling.ml.models.H2ODeepLearningModel), "Not a H2ODeepLearningModel"
+    assert isinstance(dl_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
 
 
 def test_h2o_xgboost():
@@ -133,7 +133,7 @@ def test_h2o_xgboost():
 
     assert_spark_df(df_model)
 
-    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
 
 
 def test_h2o_gbm():
@@ -141,4 +141,4 @@ def test_h2o_gbm():
 
     assert_spark_df(df_model)
 
-    assert isinstance(gbm_model, py_sparkling.ml.models.H2OGBMModel), "Not a H2OGBMModel"
+    assert isinstance(gbm_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"

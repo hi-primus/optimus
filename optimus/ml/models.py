@@ -133,7 +133,7 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           predictionCol=label + "_index",
+                           labelCol=label + "_index",
                            **kargs)
 
         model = automl.fit(df_va)
@@ -156,7 +156,7 @@ class ML:
                                            l2=0.0,
                                            hidden=[200, 200],
                                            featuresCols=columns,
-                                           predictionCol=label,
+                                           labelCol=label,
                                            **kargs)
         model = h2o_deeplearning.fit(df_va)
         df_raw = model.transform(df_va)
@@ -174,7 +174,7 @@ class ML:
         df_va = vector_assembler(df_sti, input_cols=columns)
         h2o_xgboost = H2OXGBoost(convertUnknownCategoricalLevelsToNa=True,
                                  featuresCols=columns,
-                                 predictionCol=label,
+                                 labelCol=label,
                                  **kargs)
         model = h2o_xgboost.fit(df_va)
         df_raw = model.transform(df_va)
@@ -193,7 +193,7 @@ class ML:
         h2o_gbm = H2OGBM(ratio=0.8,
                          seed=1,
                          featuresCols=columns,
-                         predictionCol=label,
+                         labelCol=label,
                          **kargs)
         model = h2o_gbm.fit(df_va)
         df_raw = model.transform(df_va)
