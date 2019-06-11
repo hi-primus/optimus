@@ -8,12 +8,10 @@ from optimus import Optimus
 
 import optimus.ml.feature as fe
 
-op = Optimus()
-spark = op.spark
-sc = op.sc
+op = Optimus(master='local')
 
 
-df_cancer = spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
+df_cancer = op.spark.read.csv('tests/data_cancer.csv', sep=',', header=True, inferSchema=True)
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
@@ -32,7 +30,7 @@ def assert_spark_model(model):
 
 
 def test_ml_pipe():
-    df = sc. \
+    df = op.sc. \
          parallelize([Row(sentence='this is a test', label=0.),
                      Row(sentence='this is another test', label=1.)]). \
          toDF()
@@ -72,6 +70,24 @@ def test_n_gram():
     assert_equal(df_model.select('sentence', 'features').count(), 2)
 
 
+def test_string_to_index_kargs():
+    df = op.spark.createDataFrame([(0, "a"), (1, "b"), (2, "c"), (3, "a"), (4, "a"), (5, "c")],
+                                 ["id", "category"])
+
+    df_indexed = fe.string_to_index(df, "category", stringOrderType="frequencyAsc")
+
+    assert_spark_df(df_indexed)
+
+    expected_collect = op.sc.parallelize([Row(id=0, category='a', category_index=2.0),
+                                          Row(id=1, category='b', category_index=0.0),
+                                          Row(id=2, category='c', category_index=1.0),
+                                          Row(id=3, category='a', category_index=2.0),
+                                          Row(id=4, category='a', category_index=2.0),
+                                          Row(id=5, category='c', category_index=1.0)]).toDF()
+
+    assert_equal(df_indexed.select("category", "category_index", "id").collect(), expected_collect.collect())
+
+
 def test_random_forest():
     df_model, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 
@@ -101,25 +117,28 @@ def test_h2o_automl():
 
     assert_spark_df(df_model)
 
-    assert isinstance(automl_model, py_sparkling.ml.models.H2OAutoMLModel), "Not a H2OAutoMLModel"
+    assert isinstance(automl_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
+
 
 def test_h2o_deeplearning():
     df_model, dl_model = op.ml.h2o_deeplearning(df_cancer, "diagnosis", columns_h2o)
 
     assert_spark_df(df_model)
 
-    assert isinstance(dl_model, py_sparkling.ml.models.H2ODeepLearningModel), "Not a H2ODeepLearningModel"
+    assert isinstance(dl_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
+
 
 def test_h2o_xgboost():
     df_model, xgboost_model = op.ml.h2o_xgboost(df_cancer, "diagnosis", columns_h2o)
 
     assert_spark_df(df_model)
 
-    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OXGBoostModel), "Not a H2OXGBoostModel"
+    assert isinstance(xgboost_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"
+
 
 def test_h2o_gbm():
     df_model, gbm_model = op.ml.h2o_gbm(df_cancer, "diagnosis", columns_h2o)
 
     assert_spark_df(df_model)
 
-    assert isinstance(gbm_model, py_sparkling.ml.models.H2OGBMModel), "Not a H2OGBMModel"
+    assert isinstance(gbm_model, py_sparkling.ml.models.H2OMOJOModel), "Not a H2OMOJOModel"

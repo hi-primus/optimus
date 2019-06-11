@@ -1,3 +1,4 @@
+import json
 import os
 
 import humanize
@@ -12,11 +13,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import RaiseIt
+from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.checkit import is_str, is_column_a
 from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html
+from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html, json_converter
 from optimus.helpers.logger import logger
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
@@ -38,7 +39,7 @@ def to_json(self):
     :param self:
     :return:
     """
-    return collect_as_dict(self.collect())
+    return json.loads(json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter))
 
 
 @add_method(DataFrame)

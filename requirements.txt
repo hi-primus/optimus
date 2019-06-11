@@ -1,8 +1,4 @@
 imgkit==1.0.1
-bson==0.5.8
-httplib2==0.13.0
-google-api-python-client==1.7.9
-apiclient==1.0.4
 packaging==19.0
 requests==2.21.0
 tqdm==4.28.1
@@ -25,8 +21,8 @@ flask==1.0.2
 ipython==7.5.0
 ratelimit==2.2.1
 humanize==0.5.1
-h2o-pysparkling-2.4==2.4.10
-psutil==5.6.2
+h2o-pysparkling-2.4==2.4.12
+psutil==5.6.3
 backoff==1.8.0
 pymongo==3.8.0
 kombu==4.6.1

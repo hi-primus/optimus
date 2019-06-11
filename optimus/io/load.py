@@ -60,9 +60,22 @@ class Load:
         return replace_columns_special_characters(df)
 
     @staticmethod
+    def tsv(path, header='true', infer_schema='true', *args, **kwargs):
+        """
+        Return a dataframe from a tsv file.
+        :param path: path or location of the file.
+        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param infer_schema: infers the input schema automatically from data.
+        It requires one extra pass over the data. 'true' default.
+
+        :return:
+        """
+        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
+
+    @staticmethod
     def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
         """
-        Return a dataframe from a csv file.. It is the same read.csv Spark function with some predefined
+        Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
         :param path: path or location of the file.

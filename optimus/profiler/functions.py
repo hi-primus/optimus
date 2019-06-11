@@ -42,7 +42,7 @@ def write_json(data, path):
     """
     try:
         with open(path, 'w', encoding='utf-8') as outfile:
-            json.dump(data, outfile, sort_keys=True, indent=4, ensure_ascii=False, default=json_converter)
+            json.dump(data, outfile, indent=4, ensure_ascii=False, default=json_converter)
     except IOError:
         pass
 

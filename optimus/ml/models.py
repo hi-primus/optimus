@@ -1,19 +1,13 @@
 from pyspark.ml import feature, classification
 from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
 from pyspark.sql.functions import *
-from pyspark.sql.session import SparkSession
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.helpers.checkit import is_dataframe
+from optimus.helpers.checkit import is_dataframe, is_str
 from optimus.helpers.functions import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
-
-# from optimus.spark import Spark
-# spark = Spark.instance.spark()
-# TODO: not use getOrCreate use the singleton in optimus.spark
-
-spark = SparkSession.builder.getOrCreate()
+from optimus.spark import Spark
 
 
 class ML:
@@ -77,7 +71,8 @@ class ML:
 
         columns = parse_columns(df, columns)
 
-        assert isinstance(input_col, str), "Error, input column must be a string"
+        if not is_str(input_col):
+            raise TypeError("Error, input column must be a string")
 
         data = df.select(columns)
         feats = data.columns
@@ -109,7 +104,8 @@ class ML:
 
         columns = parse_columns(df, columns)
 
-        assert isinstance(input_col, str), "Error, input column must be a string"
+        if not is_str(input_col):
+            raise TypeError("Error, input column must be a string")
 
         data = df.select(columns)
         feats = data.columns
@@ -129,7 +125,7 @@ class ML:
     @staticmethod
     def h2o_automl(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
@@ -137,7 +133,7 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           predictionCol=label + "_index",
+                           labelCol=label + "_index",
                            **kargs)
 
         model = automl.fit(df_va)
@@ -150,7 +146,7 @@ class ML:
     @staticmethod
     def h2o_deeplearning(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
@@ -160,7 +156,7 @@ class ML:
                                            l2=0.0,
                                            hidden=[200, 200],
                                            featuresCols=columns,
-                                           predictionCol=label,
+                                           labelCol=label,
                                            **kargs)
         model = h2o_deeplearning.fit(df_va)
         df_raw = model.transform(df_va)
@@ -172,13 +168,13 @@ class ML:
     @staticmethod
     def h2o_xgboost(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
         h2o_xgboost = H2OXGBoost(convertUnknownCategoricalLevelsToNa=True,
                                  featuresCols=columns,
-                                 predictionCol=label,
+                                 labelCol=label,
                                  **kargs)
         model = h2o_xgboost.fit(df_va)
         df_raw = model.transform(df_va)
@@ -190,14 +186,14 @@ class ML:
     @staticmethod
     def h2o_gbm(df, label, columns, **kargs):
 
-        H2OContext.getOrCreate(spark)
+        H2OContext.getOrCreate(Spark.instance.spark)
 
         df_sti = string_to_index(df, input_cols=label)
         df_va = vector_assembler(df_sti, input_cols=columns)
         h2o_gbm = H2OGBM(ratio=0.8,
                          seed=1,
                          featuresCols=columns,
-                         predictionCol=label,
+                         labelCol=label,
                          **kargs)
         model = h2o_gbm.fit(df_va)
         df_raw = model.transform(df_va)

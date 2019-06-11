@@ -1,12 +1,14 @@
 import os
 import sys
+from pathlib import Path
 from shutil import rmtree
 
-from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
+from optimus.helpers.checkit import is_list
 from optimus.helpers.constants import *
 from optimus.helpers.convert import val_to_list
 from optimus.helpers.functions import print_html, print_json
@@ -31,6 +33,7 @@ class Optimus:
                  repositories=None,
                  packages=None,
                  jars=None,
+                 driver_class_path=None,
                  options=None,
                  additional_options=None,
                  queue_url=None,
@@ -84,10 +87,15 @@ class Optimus:
             self.packages = packages
             self.repositories = repositories
 
-            if jars is None:
-                jars = {}
-
+            # Jars
             self.jars = jars
+            self._add_jars(jars)
+
+            # Class Drive Path
+            self.driver_class_path = driver_class_path
+            self._add_driver_class_path(driver_class_path)
+
+            # Additional Options
             self.additional_options = additional_options
 
             self.verbose(verbose)
@@ -96,7 +104,20 @@ class Optimus:
             # TODO:
             #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
-            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+
+            def c(files):
+                return [Path(path + file).as_posix() for file in files]
+
+            path = os.path.dirname(os.path.abspath(__file__))
+
+            # Add databases jars
+            self._add_jars(["../jars/RedshiftJDBC42-1.2.16.1027.jar", "../jars/mysql-connector-java-8.0.16.jar",
+                            "../jars/ojdbc7.jar", "../jars/postgresql-42.2.5.jar"])
+
+            self._add_driver_class_path(
+                c(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
+                   "//jars//ojdbc7.jar", "//jars//postgresql-42.2.5.jar"]))
 
             self._start_session()
 
@@ -299,20 +320,22 @@ class Optimus:
         """
         return append(dfs, like)
 
+    def _setup_repositories(self):
+        if self.repositories:
+            return '--repositories {}'.format(','.join(self.repositories))
+        else:
+            return ''
+
+    # Spark Package
     def _add_spark_packages(self, packages):
         """
         Define the Spark packages that must be loaded at start time
         :param packages:
         :return:
         """
-        for p in packages:
-            self.packages.append(p)
 
-    def _setup_repositories(self):
-        if self.repositories:
-            return '--repositories {}'.format(','.join(self.repositories))
-        else:
-            return ''
+        for p in val_to_list(packages):
+            self.packages.append(p)
 
     def _setup_packages(self):
         if self.packages:
@@ -320,12 +343,37 @@ class Optimus:
         else:
             return ''
 
+    # Jar
+    def _add_jars(self, jar):
+        if self.jars is None:
+            self.jars = []
+
+        if is_list(jar):
+            for j in val_to_list(jar):
+                self.jars.append(j)
+
     def _setup_jars(self):
         if self.jars:
             return '--jars {}'.format(','.join(self.jars))
         else:
             return ''
 
+    # Driver class path
+    def _add_driver_class_path(self, driver_class_path):
+        if self.driver_class_path is None:
+            self.driver_class_path = []
+
+        if is_list(driver_class_path):
+            for d in val_to_list(driver_class_path):
+                self.driver_class_path.append(d)
+
+    def _setup_driver_class_path(self):
+        if self.driver_class_path:
+            return '--driver-class-path {}'.format(';'.join(self.driver_class_path))
+        else:
+            return ''
+
+    # Options
     def _setup_options(self, additional_options):
         options = {}
 
@@ -359,6 +407,7 @@ class Optimus:
             self._setup_repositories(),
             self._setup_packages(),
             self._setup_jars(),
+            self._setup_driver_class_path(),
             self._setup_options(self.additional_options),
             'pyspark-shell',
         ]

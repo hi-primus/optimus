@@ -1,10 +1,9 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
-from pyspark.ml.linalg import DenseVector, VectorUDT
-from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_
+from optimus.helpers.checkit import is_dataframe, is_, is_str
 from optimus.helpers.functions import parse_columns
+from optimus.helpers.raiseit import RaiseIt
 
 
 def n_gram(df, input_col, n=2):
@@ -29,7 +28,7 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols):
+def string_to_index(df, input_cols, **kargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
@@ -40,7 +39,7 @@ def string_to_index(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index").fit(df) for column in
+    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index", **kargs).fit(df) for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
@@ -49,7 +48,7 @@ def string_to_index(df, input_cols):
     return df
 
 
-def index_to_string(df, input_cols):
+def index_to_string(df, input_cols, **kargs):
     """
     Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
@@ -61,7 +60,7 @@ def index_to_string(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    indexers = [IndexToString(inputCol=column, outputCol=column + "_string") for column in
+    indexers = [IndexToString(inputCol=column, outputCol=column + "_string", **kargs) for column in
                 list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
@@ -70,7 +69,7 @@ def index_to_string(df, input_cols):
     return df
 
 
-def one_hot_encoder(df, input_cols):
+def one_hot_encoder(df, input_cols, **kargs):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
     :param df: Dataframe to be transformed
@@ -80,7 +79,7 @@ def one_hot_encoder(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
 
-    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded") for column in
+    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded", **kargs) for column in
               list(set(input_cols))]
 
     pipeline = Pipeline(stages=encode)
@@ -119,31 +118,16 @@ def normalizer(df, input_cols, p=2.0):
     """
 
     # Check if columns argument must be a string or list datatype:
+    if is_(input_cols, [str, list]):
+        RaiseIt.type_error(input_cols, [str, list])
 
-    assert isinstance(input_cols, (str, list)), \
-        "Error: %s argument must be a string or a list." % "input_cols"
-
-    if isinstance(input_cols, str):
+    if is_str(input_cols):
         input_cols = [input_cols]
 
-    assert isinstance(p, (float, int)), "Error: p argument must be a numeric value."
+    if is_(input_cols, [float, int]):
+        RaiseIt.type_error(input_cols, [float, int])
 
-    # Convert ArrayType() column to DenseVector
-    def arr_to_vec(arr_column):
-        """
-        :param arr_column: Column name
-        :return: Returns DenseVector by converting an ArrayType() column
-        """
-        return DenseVector(arr_column)
-
-    # User-Defined function
-    # TODO: use apply() to use Pyarrow
-    udf_arr_to_vec = F.udf(arr_to_vec, VectorUDT())
-
-    # Check for columns which are not DenseVector types and convert them into DenseVector
-    for col in input_cols:
-        if not is_(df[col], DenseVector):
-            df = df.withColumn(col, udf_arr_to_vec(df[col]))
+    df = df.cols.cast(input_cols, "vector")
 
     normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
               list(set(input_cols))]
