@@ -490,27 +490,26 @@ pattern = r'"([A-Za-z0-9_\./\\-]*)"'
 jupytext_header = False
 flag_remove = False
 
+remove = ["load_ext", "autoreload","import sys","sys.path.append"]
+
 for i, line in enumerate(fileinput.input(output_file, inplace=1)):
     done= False
     try:
         # Remove some helper lines
-#         for r in remove:
-#             if re.search(r, line):
-#                 line.strip()
-#                 done= True
+        for r in remove:
+            if re.search(r, line):
+                done= True
         
         #Remove the post process code
         if re.search("Post-process", line):
             flag_remove = True
             
         if flag_remove is True:
-            line.strip()
             done = True        
             
         
         # Remove jupytext header
         if jupytext_header is True:
-            line.strip()
             done = True
             
         if  "---\n" == line: 
@@ -523,31 +522,43 @@ for i, line in enumerate(fileinput.input(output_file, inplace=1)):
             chars_image=re.search(".to_image", line)
             
             if chars_table:
-                line.strip()
                 print(line[0:int(chars_table.start())]+".table()")
 
                 m = re.search(r'table_image\("(.*?)"\)', line).group(1)
                 if m:
                     buffer = "![]("+ m + ")"              
             elif chars_image:
-#                 line.strip()
                 m = re.search(r'to_image\(path="(.*?)"\)', line).group(1)
                 if m:
                     buffer = "![]("+ m + ")"  
             else:
                 sys.stdout.write(line)
                 
-            if "```\n"==line and buffer:
-                
-#                 print("```")
+            if "```\n"==line and buffer:                
                 print(buffer)
-#                 print("```")
                 buffer = None
                 
-                            
-                    
     except Exception as e:
         print(e)
+        
+fileinput.close()
+
+
+# Remove empyt python cells
+flag = False
+for i, line in enumerate(fileinput.input(output_file, inplace=1)):
+   
+    if re.search("```python", line):     
+        flag = True
+    elif re.search("```", line) and flag is True:
+        flag=False
+    elif flag is True:
+        flag = False
+        print("```python", end="")
+        print(line,end="")
+    else:
+        print(line, end="")
+                    
         
 fileinput.close()
 ```
