@@ -42,8 +42,6 @@ Also if you want to a suggestion or feature request use https://github.com/ironm
  
 ## Start Optimus
 
-
-
 ```python
 from optimus import Optimus
 op= Optimus()
