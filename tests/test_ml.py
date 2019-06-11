@@ -78,14 +78,14 @@ def test_string_to_index_kargs():
 
     assert_spark_df(df_indexed)
 
-    expected_collect = [Row(id=0, category='a', category_index=2.0),
-                        Row(id=1, category='b', category_index=0.0),
-                        Row(id=2, category='c', category_index=1.0),
-                        Row(id=3, category='a', category_index=2.0),
-                        Row(id=4, category='a', category_index=2.0),
-                        Row(id=5, category='c', category_index=1.0)]
+    expected_collect = op.sc.parallelize([Row(id=0, category='a', category_index=2.0),
+                                          Row(id=1, category='b', category_index=0.0),
+                                          Row(id=2, category='c', category_index=1.0),
+                                          Row(id=3, category='a', category_index=2.0),
+                                          Row(id=4, category='a', category_index=2.0),
+                                          Row(id=5, category='c', category_index=1.0)]).toDF()
 
-    assert_equal(df_indexed.collect(), expected_collect)
+    assert_equal(df_indexed.select("category", "category_index", "id").collect(), expected_collect.collect())
 
 
 def test_random_forest():
