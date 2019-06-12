@@ -21,13 +21,7 @@ class JDBC:
         # RaiseIt.value_error(db_type, ["redshift", "postgres", "mysql", "sqlite"])
         self.db_type = db_type
 
-        # Create string connection
-        if self.db_type is "sqlite":
-            url = "jdbc:" + db_type + ":" + url + "/" + database
-        else:
-            url = "jdbc:" + db_type + "://" + url + "/" + database
-
-        # Handle the default port
+         # Handle the default port
         if port is None:
             if self.db_type is "redshift":
                 self.port = 5439
@@ -37,6 +31,12 @@ class JDBC:
 
             elif self.db_type is "mysql":
                 self.port = 3306
+
+        # Create string connection
+        if self.db_type is "sqlite":
+            url = "jdbc:" + db_type + ":" + url + "/" + database
+        else:
+            url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database
 
         self.url = url
         self.database = database
