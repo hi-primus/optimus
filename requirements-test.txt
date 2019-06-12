@@ -8,7 +8,7 @@ python_dateutil==2.7.5
 numpy==1.16.4
 matplotlib==3.0.3
 pyspark==2.4.1
-pytest==4.6.2
+pytest==4.6.3
 findspark==1.3.0
 nose==1.3.7
 seaborn==0.9.0
