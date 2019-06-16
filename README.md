@@ -308,7 +308,7 @@ df.outliers.mad("age", threshold = 2).drop()
 ```
 
 ## Database connection
-Optimus have handy tools to connect to databases and extract informacion. Optimus can handle Redshift, postgres and mysql
+Optimus have handy tools to connect to databases and extract information. Optimus can handle Redshift, postgres and mysql
 
 
 
