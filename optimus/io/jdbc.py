@@ -13,7 +13,7 @@ class JDBC:
     Helper for JDBC connections and queries
     """
 
-    def __init__(self, db_type, url, database, user, password, port=None):
+    def __init__(self, db_type, url, database, user, password, port=None, schema="public"):
         """
         Create the JDBC connection object
         :return:
@@ -25,18 +25,21 @@ class JDBC:
         if self.db_type is "sqlite":
             url = "jdbc:" + db_type + ":" + url + "/" + database
         else:
-            url = "jdbc:" + db_type + "://" + url + "/" + database
+            url = "jdbc:" + db_type + "://" + url + "/" + database + "?currentSchema=" + schema
 
         # Handle the default port
         if port is None:
             if self.db_type is "redshift":
                 self.port = 5439
 
-            if self.db_type is "postgres":
+            elif self.db_type is "postgres":
                 self.port = 5432
 
             elif self.db_type is "mysql":
                 self.port = 3306
+
+            elif self.db_type is "sqlserver":
+                self.port = 1433
 
         self.url = url
         self.database = database
