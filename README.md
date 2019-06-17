@@ -121,7 +121,7 @@ df = op.create.df(
     ], infer_schema = True).h_repartition(1)
 ```
 
-With .table() you hace a beautifull way to show your data. You have extra informacion like column number, column data type and marked white spaces 
+With .table() you have a beautifull way to show your data. You have extra information like column number, column data type and marked white spaces 
 
 
 ```python
@@ -133,7 +133,7 @@ df.table()
 ## Cleaning and Processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
-Optimus expand the Spark DataFrame functionality adding .rows and .cols attributes.
+Optimus expands the Spark DataFrame functionality adding .rows and .cols attributes.
 
 For example you can load data from a url, transform and apply some predefined cleaning functions:
 
@@ -179,7 +179,7 @@ new_df.table()
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
 ### Custom functions
-Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
+Spark has multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we created the `apply()` and `apply_expr` which handles all the implementation complexity.
 
 Here you apply a function to the "billingid" column. Sum 1 and 2 to the current column value. All powered by Pandas UDF
 ```python
@@ -190,7 +190,7 @@ df.cols.apply("height(ft)",func,"int", [1,2]).table()
 ```
 ![](images/table3.png)
 
-If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
+If you want to apply a Column Expression use `apply_expr()` like this. In this case we pass an argument 10 to divide the actual column value
 
 ```python
 from pyspark.sql import functions as F
@@ -202,7 +202,7 @@ df.cols.apply("height(ft)", func=func, args=20).table()
 ```
 ![](images/table4.png)
 
-You can change the table output back to ascii if you which
+You can change the table output back to ascii if you wish
 
 ```python
 op.output("ascii")
@@ -216,8 +216,8 @@ op.output("html")
 
 ## Data profiling
 
-Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
-it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
+Optimus comes with a powerful and unique data profiler. Besides basic and advanced stats like min, max, kurtosis, mad etc, 
+it also lets you know the data type of every column. For example if a string column has string, integer, float, bool, date Optimus can give you a unique overview about your data. 
 Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb).
 
 Let's load a "big" dataset
@@ -240,7 +240,7 @@ op.profiler.run(df, "name", infer=False)
 
 ![](images/profiler.png)
 
-For dates data types Optimus can give you extra data
+For date data types Optimus can give you extra data
 ```python
 op.profiler.run(df, "year", infer=True)
 ```
@@ -248,7 +248,7 @@ op.profiler.run(df, "year", infer=True)
 ![](images/profiler1.png)
 
 ## Plots
-Besides histograms, frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
+Besides histograms and frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
 
 ```python
 df = op.load.excel("examples/data/titanic3.xls")
@@ -308,7 +308,7 @@ df.outliers.mad("age", threshold = 2).drop()
 ```
 
 ## Database connection
-Optimus have handy tools to connect to databases and extract informacion. Optimus can handle Redshift, postgres and mysql
+Optimus has handy tools to connect to databases and extract information. Optimus can handle Redshift, postgres and mysql
 
 
 
@@ -336,7 +336,7 @@ db.table_to_df("tablename")
 
 ## Data enrichment
 
-You can connect to any external API to enrich your data using Optimus. Optimus use MongoDB to download the data and then merge it with the Spark Dataframe. You need to install MongoDB
+You can connect to any external API to enrich your data using Optimus. Optimus uses MongoDB to download the data and then merge it with the Spark Dataframe. You need to install MongoDB
 
 Let's load a tiny dataset we can enrich
 
@@ -374,11 +374,10 @@ df_result.table()
 Machine Learning is one of the last steps, and the goal for most Data Science WorkFlows.
 
 Apache Spark created a library called MLlib where they coded great algorithms for Machine Learning. Now
-with the ML library we can take advantage of the Dataframe API and its optimization to create easily
-Machine Learning Pipelines.
+with the ML library we can take advantage of the Dataframe API and its optimization to easily create Machine Learning Pipelines.
 
-Even though this task is not extremely hard, is not easy. The way most Machine Learning models work on Spark
-are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
+Even though this task is not extremely hard, it is not easy. The way most Machine Learning models work on Spark
+are not straightforward, and they need lots of feature engineering to work. That's why we created the feature engineering
 section inside Optimus.
 
 
@@ -412,13 +411,13 @@ The rf_model variable contains the Random Forest model for analysis.
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
 including:  
   
-* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or   bugfixes.  
+* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or bugfixes.  
 * Spelling or grammar fixes.  
 * README.md corrections or redesigns.  
 * Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests)   
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.  
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.  
-* [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features.  
+* [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) about Optimus and its many features.  
 * Helping others in our optimus [gitter channel](https://gitter.im/optimuspyspark/Lobby).    
   
 ## Backers  
