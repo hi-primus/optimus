@@ -393,7 +393,7 @@ def str_to_date(value):
     try:
         dateutil.parser.parse(value)
         return True
-    except ValueError:
+    except (ValueError, OverflowError):
         pass
 
 
