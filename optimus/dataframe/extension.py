@@ -293,7 +293,6 @@ def table_image(self, path, limit=10):
     :param path:
     :return:
     """
-    # imgkit.from_url('http://google.com', 'out.jpg')
     path_css = os.path.dirname(os.path.abspath(__file__))
     css = path_css + "//..//css//styles.css"
 

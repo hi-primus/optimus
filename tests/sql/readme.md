@@ -22,7 +22,7 @@ This is just postgres with some confgiruation options to looks like redshit
 sudo docker run --name=redshift -d -p 5439:5439 -e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus guildeducation/docker-amazon-redshift
 ```
 
-### Mysql server
+### Mssql server
 ```
 sudo docker run --name=mssql -d -p 1433:1433  -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=SA123' microsoft/mssql-server-linux:2017-latest
 ```
