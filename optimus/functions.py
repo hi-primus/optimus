@@ -410,7 +410,7 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             try:
                 dateutil.parser.parse(value)
                 return True
-            except ValueError:
+            except (ValueError, OverflowError):
                 pass
 
         def str_to_array(value):
