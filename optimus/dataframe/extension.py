@@ -356,7 +356,7 @@ def table(self, limit=100, columns=None, title=None):
         if __IPYTHON__ and DataFrame.output is "html":
 
             result = self.table_html(title=title, limit=limit, columns=columns)
-            return print_html(result)
+            print_html(result)
         else:
             self.show()
     except NameError:

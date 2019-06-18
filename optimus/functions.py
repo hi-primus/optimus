@@ -423,7 +423,7 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             try:
                 if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
                     return True
-            except (ValueError, SyntaxError,):
+            except (ValueError, SyntaxError):
                 pass
 
         def func(value):
@@ -434,7 +434,6 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             """
             if isinstance(value, bool):
                 _data_type = "bool"
-            # _data_type = data_type
             elif isint(value):  # Check if value is integer
                 _data_type = "int"
             elif isfloat(value):
