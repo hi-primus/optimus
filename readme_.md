@@ -50,7 +50,7 @@ Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.co
 [![Documentation](https://media.readthedocs.com/corporate/img/header-logo.png)](http://docs.hioptimus.com/en/latest/)  
   
 ## Feedback 
-Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  https://optimusdata.typeform.com/to/aEnYRY  
+Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  http://bit.ly/optimus_survey  
 
 Also if you want to a suggestion or feature request use https://github.com/ironmussa/optimus/issues
  
