@@ -565,9 +565,5 @@ fileinput.close()
 ```
 
 ```python
-re.search(r'to_image\(path="(.*?)"\)', 'op.profiler.to_image(path="images/profiler.png")').group(1)
-```
-
-```python
 
 ```
