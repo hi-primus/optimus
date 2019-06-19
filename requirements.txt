@@ -14,7 +14,7 @@ deprecated==1.2.5
 setuptools==41.0.1
 pyarrow==0.13.0
 Jinja2==2.10.1
-tensorflow==1.13.1
+tensorflow==1.14.0
 keras==2.2.4
 pygments>=2.2.0
 flask==1.0.2
