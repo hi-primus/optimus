@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.1'
-      jupytext_version: 1.1.5
+      jupytext_version: 1.1.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -492,6 +492,7 @@ flag_remove = False
 
 remove = ["load_ext", "autoreload","import sys","sys.path.append"]
 
+buffer = None
 for i, line in enumerate(fileinput.input(output_file, inplace=1)):
     done= False
     try:
