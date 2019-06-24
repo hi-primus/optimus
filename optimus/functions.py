@@ -390,21 +390,16 @@ def plot_qqplots(dataframe=data, grid_rows=3, grid_cols=3, sample_perc=0.2):
     :param grid_cols: number of columns to include in plotting grid
     :param sample_perc: float value between 0 and 1 of sampling percentage of rows from dataframe
     """
-    
     fig = plt.figure(figsize=(12,7))
-    
     feature_list = list(dataframe.select_dtypes(include=['int']).columns)
-
     for feature, num in zip(feature_list, range(1,len(feature_list))):
-        
         ax = fig.add_subplot(grid_rows, grid_cols, num)
         sm.qqplot(dataframe[feature].sample(frac=sample_perc), line='q', ax=ax, color='C0', alpha=0.3)
         ax.set_xlabel('')
         ax.set_ylabel('')
         ax.set_title(feature.upper())
-        
+    
     plt.tight_layout()
-
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     """
