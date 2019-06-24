@@ -394,7 +394,7 @@ def plot_qqplots(dataframe=data, grid_rows=3, grid_cols=3, sample_perc=0.2):
     fig = plt.figure(figsize=(12,7))
     
     feature_list = list(dataframe.select_dtypes(include=['int']).columns)
-        
+
     for feature, num in zip(feature_list, range(1,len(feature_list))):
         
         ax = fig.add_subplot(grid_rows, grid_cols, num)
