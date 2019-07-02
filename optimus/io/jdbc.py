@@ -64,18 +64,21 @@ class JDBC:
             database = self.database
 
         query = None
-        if (self.db_driver is "redshift") or (self.db_driver is "postgres"):
+        if (self.db_driver == "redshift") or (self.db_driver == "postgres"):
             query = """
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
             WHERE nspname IN ('""" + database + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_driver is "mysql":
+        elif self.db_driver == "mysql":
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
 
-        elif self.db_driver is "sqlite":
-
+        elif self.db_driver == "sqlite":
             query = ""
+
+        elif self.db_driver == "oracle":
+            query = """SELECT table_name, to_number(extractvalue(xmltype(dbms_xmlgen.getxml('SELECT count(*) c 
+            FROM '||owner||'.'||table_name)),'/ROWSET/ROW/C')) as count FROM all_tables"""
 
         df = self.execute(query, "all")
         return df
