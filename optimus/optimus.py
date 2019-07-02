@@ -106,18 +106,19 @@ class Optimus:
             #  Maybe we can check a priori which version fo Spark is going to be used
             self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            def c(files):
+            def absolute_path(files):
                 return [Path(path + file).as_posix() for file in files]
 
             path = os.path.dirname(os.path.abspath(__file__))
 
             # Add databases jars
-            self._add_jars(["../jars/RedshiftJDBC42-1.2.16.1027.jar", "../jars/mysql-connector-java-8.0.16.jar",
-                            "../jars/ojdbc7.jar", "../jars/postgresql-42.2.5.jar"])
+            self._add_jars(
+                absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
+                               "//jars/ojdbc7.jar", "//jars/postgresql-42.2.5.jar"]))
 
             self._add_driver_class_path(
-                c(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                   "//jars//ojdbc7.jar", "//jars//postgresql-42.2.5.jar"]))
+                absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
+                               "//jars//ojdbc7.jar", "//jars//postgresql-42.2.5.jar"]))
 
             self._start_session()
 
@@ -185,12 +186,14 @@ class Optimus:
             pass
 
     @staticmethod
-    def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
+    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None):
         """
         Create the JDBC string connection
-        :return:
+        :return: JDBC object
         """
-        return JDBC(db_type, url, database, user, password, port)
+        print (db_type)
+
+        return JDBC(db_type, host, database, user, password, port)
 
     def enrich(self, host="localhost", port=27017):
         """
@@ -354,7 +357,7 @@ class Optimus:
 
     def _setup_jars(self):
         if self.jars:
-            return '--jars {}'.format(','.join(self.jars))
+            return '--jars "{}"'.format(','.join(self.jars))
         else:
             return ''
 
@@ -369,7 +372,7 @@ class Optimus:
 
     def _setup_driver_class_path(self):
         if self.driver_class_path:
-            return '--driver-class-path {}'.format(';'.join(self.driver_class_path))
+            return '--driver-class-path "{}"'.format(':'.join(self.driver_class_path))
         else:
             return ''
 
