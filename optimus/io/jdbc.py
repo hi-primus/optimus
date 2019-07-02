@@ -13,79 +13,94 @@ class JDBC:
     Helper for JDBC connections and queries
     """
 
-    def __init__(self, db_type, url, database, user, password, port=None, schema="public"):
+    def __init__(self, driver, host, database, user, password, port=None, schema="public"):
         """
         Create the JDBC connection object
         :return:
         """
-        # RaiseIt.value_error(db_type, ["redshift", "postgres", "mysql", "sqlite"])
-        self.db_type = db_type
 
-        # Create string connection
-        if self.db_type is "sqlite":
-            url = "jdbc:" + db_type + ":" + url + "/" + database
-        else:
-            url = "jdbc:" + db_type + "://" + url + "/" + database + "?currentSchema=" + schema
+        self.db_driver = driver
 
         # Handle the default port
         if port is None:
-            if self.db_type is "redshift":
+            if self.db_driver == "redshift":
                 self.port = 5439
 
-            elif self.db_type is "postgres":
+            elif self.db_driver == "postgres":
                 self.port = 5432
 
-            elif self.db_type is "mysql":
+            elif self.db_driver == "mysql":
                 self.port = 3306
 
-            elif self.db_type is "sqlserver":
+            elif self.db_driver == "sqlserver":
                 self.port = 1433
+            # else:
+            #     RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
 
+        # Create string connection
+        if self.db_driver == "sqlite":
+            url = "jdbc:" + driver + ":" + host + "/" + database
+        else:
+            # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
+            url = "jdbc:{DB_TYPE}://{URL}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_TYPE=driver, URL=host,
+                                                                                           PORT=port, DATABASE=database,
+                                                                                           SCHEMA=schema)
+
+        logger.print(url)
         self.url = url
         self.database = database
         self.user = user
         self.password = password
+        self.schema = schema
 
-    def tables(self, schema='public'):
+    def tables(self, database=None):
         """
         Return all the tables in a database
         :return:
         """
+        # Override the schema used in the constructor
+        if database is None:
+            database = self.database
+
         query = None
-        if (self.db_type is "redshift") or (self.db_type is "postgres"):
+        if (self.db_driver is "redshift") or (self.db_driver is "postgres"):
             query = """
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-            WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
+            WHERE nspname IN ('""" + database + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_type is "mysql":
-            query = "SELECT TABLE_NAME AS table_name, SUM(TABLE_ROWS) AS count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
-                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
+        elif self.db_driver is "mysql":
+            query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
 
-        elif self.db_type is "sqlite":
+        elif self.db_driver is "sqlite":
+
             query = ""
 
-        # print(query)
         df = self.execute(query, "all")
-        df.table()
+        return df
 
-    def tables_names_to_json(self, schema='public'):
+    def tables_names_to_json(self, schema=None):
         """
         Get the table names from a database in json format
         :return:
         """
-        query = None
-        if (self.db_type is "redshift") or (self.db_type is "postgres"):
-            query = """
-                    SELECT relname as table_name 
-                    FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-                    WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_type is "mysql":
+        # Override the schema used in the constructor
+        if schema is None:
+            schema = self.schema
+
+        query = None
+        if (self.db_driver is "redshift") or (self.db_driver is "postgres"):
+            query = """
+                        SELECT relname as table_name 
+                        FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
+                        WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
+
+        elif self.db_driver is "mysql":
             query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
                     + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
 
-        elif self.db_type is "sqlite":
+        elif self.db_driver is "sqlite":
             query = ""
 
         df = self.execute(query, "all")
