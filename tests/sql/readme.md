@@ -11,6 +11,12 @@ mysql://SA:SA123@localhost/optimus
 sudo docker run --name=mysql -d -p 3306:3306 -e MYSQL_USER=SA -e MYSQL_PASSWORD=SA123 -e MYSQL_DATABASE=optimus mysql/mysql-server
 ```
 
+if you already run the last command just start the container
+
+```
+sudo docker start mysql
+```
+
 ### Postgres
 ```
 sudo docker run --name postgres --e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus -p 5432:5432 -d postgres
