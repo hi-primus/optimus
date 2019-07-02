@@ -13,12 +13,12 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.checkit import is_str, is_column_a
 from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html, json_converter
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
@@ -39,7 +39,8 @@ def to_json(self):
     :param self:
     :return:
     """
-    return json.loads(json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter))
+
+    return self.toJSON().collect()
 
 
 @add_method(DataFrame)
@@ -314,8 +315,9 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     """
 
     columns = parse_columns(self, columns)
+    self.cols.select(columns).limit(limit).show()
 
-    data = self.cols.select(columns).limit(limit).to_json()
+    data = collect_as_dict(self.cols.select(columns).limit(limit))
 
     # Load the Jinja template
     path = os.path.dirname(os.path.abspath(__file__))
@@ -353,7 +355,6 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 def table(self, limit=100, columns=None, title=None):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
-
             result = self.table_html(title=title, limit=limit, columns=columns)
             return print_html(result)
         else:
