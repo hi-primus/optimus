@@ -112,13 +112,19 @@ class Optimus:
             path = os.path.dirname(os.path.abspath(__file__))
 
             # Add databases jars
+            # self._add_jars(
+            #     absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
+            #                    "//jars/ojdbc7.jar", "//jars/postgresql-42.2.5.jar"]))
+            #
+
+            # Linux
             self._add_jars(
                 absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
-                               "//jars/ojdbc7.jar", "//jars/postgresql-42.2.5.jar"]))
+                               "//jars/ojdbc8.jar", "//jars/postgresql-42.2.5.jar"]))
 
             self._add_driver_class_path(
                 absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                               "//jars//ojdbc7.jar", "//jars//postgresql-42.2.5.jar"]))
+                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
 
             self._start_session()
 
@@ -186,14 +192,15 @@ class Optimus:
             pass
 
     @staticmethod
-    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None):
+    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
+                oracle_tns=None, oracle_service_name=None, oracle_sid=None):
         """
         Create the JDBC string connection
         :return: JDBC object
         """
-        print (db_type)
+        print(db_type)
 
-        return JDBC(db_type, host, database, user, password, port)
+        return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid)
 
     def enrich(self, host="localhost", port=27017):
         """

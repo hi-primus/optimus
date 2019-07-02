@@ -1,10 +1,9 @@
-# from optimus import RaiseIt
 from optimus.helpers.convert import val_to_list
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
 
-# Optimus play defensive with the number of rows to be retrieved from the server so a limit is not specified in
-# a function that required it only will retrieve the LIMIT value
+# Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
+# only will retrieve the LIMIT value
 LIMIT = 1000
 LIMIT_TABLE = 10
 
@@ -14,7 +13,8 @@ class JDBC:
     Helper for JDBC connections and queries
     """
 
-    def __init__(self, driver, host, database, user, password, port=None, schema="public"):
+    def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
+                 oracle_service_name=None, oracle_sid=None):
         """
         Create the JDBC connection object
         :return:
@@ -35,17 +35,43 @@ class JDBC:
 
             elif self.db_driver == "sqlserver":
                 self.port = 1433
-            # else:
-            #     RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
+
+            elif self.db_driver == "oracle":
+                self.port = 1521
+
+            else:
+                print("Driver not supported")
+                # RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
+
+        if database is None:
+            database = ""
 
         # Create string connection
         if self.db_driver == "sqlite":
-            url = "jdbc:" + driver + ":" + host + "/" + database
-        else:
+            url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
+        elif self.db_driver == "postgres" or self.db_driver == "redsfhit" or self.db_driver == "mysql":
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
-            url = "jdbc:{DB_TYPE}://{URL}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_TYPE=driver, URL=host,
-                                                                                           PORT=port, DATABASE=database,
-                                                                                           SCHEMA=schema)
+            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=driver,
+                                                                                              HOST=host,
+                                                                                              PORT=port,
+                                                                                              DATABASE=database,
+                                                                                              SCHEMA=schema)
+        elif self.db_driver == "oracle":
+            if oracle_sid:
+                url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(DB_DRIVER=driver,
+                                                                                 HOST=host,
+                                                                                 PORT=port,
+                                                                                 DATABASE=database,
+                                                                                 ORACLE_SID=oracle_sid)
+            elif oracle_service_name:
+                url = "jdbc:{DB_DRIVER}:thin:@//{HOST}:{PORT}/{ORACLE_SERVICE_NAME}".format(DB_DRIVER=driver,
+                                                                                            HOST=host,
+                                                                                            PORT=port,
+                                                                                            DATABASE=database,
+                                                                                            ORACLE_SERVICE_NAME=oracle_service_name)
+
+            elif oracle_tns:
+                url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
 
         logger.print(url)
         self.url = url
@@ -163,6 +189,7 @@ class JDBC:
 
         return Spark.instance.spark.read \
             .format("jdbc") \
+            .option("driver", "oracle.jdbc.OracleDriver") \
             .option("url", self.url) \
             .option("dbtable", query) \
             .option("user", self.user) \
