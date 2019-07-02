@@ -1,3 +1,4 @@
+# from optimus import RaiseIt
 from optimus.helpers.convert import val_to_list
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
@@ -154,8 +155,9 @@ class JDBC:
         """
 
         query = "(" + query + self._limit(limit) + ") AS t"
-
         logger.print(query)
+        logger.print(self.url)
+
         return Spark.instance.spark.read \
             .format("jdbc") \
             .option("url", self.url) \
