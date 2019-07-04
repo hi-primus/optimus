@@ -248,6 +248,7 @@ def plot_boxplot(column_data=None, output=None, path=None):
         else:
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
+
 def plot_freq(column_data=None, output=None, path=None):
     """
     Frequency plot
