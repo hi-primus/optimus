@@ -39,8 +39,7 @@ def to_json(self):
     :param self:
     :return:
     """
-
-    return self.toJSON().collect()
+    return json.loads(json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter))
 
 
 @add_method(DataFrame)
@@ -315,7 +314,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     """
 
     columns = parse_columns(self, columns)
-    self.cols.select(columns).limit(limit).show()
+    # self.cols.select(columns).limit(limit).show()
 
     data = collect_as_dict(self.cols.select(columns).limit(limit))
 
