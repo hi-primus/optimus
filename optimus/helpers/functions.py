@@ -130,9 +130,8 @@ def collect_as_dict(df):
     dict_result = []
 
     for x in df.toJSON().collect():
-        print(x)
         dict_result.append(json.loads(x, object_pairs_hook=collections.OrderedDict))
-    return  dict_result
+    return dict_result
 
 
 def filter_list(val, index=0):
