@@ -5,26 +5,14 @@
 #     text_representation:
 #       extension: .py
 #       format_name: light
-#       format_version: '1.3'
-#       jupytext_version: 0.8.2
+#       format_version: '1.4'
+#       jupytext_version: 1.1.5
 #   kernel_info:
 #     name: python3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
-#   language_info:
-#     codemirror_mode:
-#       name: ipython
-#       version: 3
-#     file_extension: .py
-#     mimetype: text/x-python
-#     name: python
-#     nbconvert_exporter: python
-#     pygments_lexer: ipython3
-#     version: 3.6.5
-#   nteract:
-#     version: 0.11.6
 # ---
 
 # %load_ext autoreload
