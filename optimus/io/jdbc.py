@@ -21,6 +21,7 @@ class JDBC:
         """
 
         self.db_driver = driver
+        self.oracle_sid = oracle_sid
 
         # Handle the default port
         if port is None:
@@ -58,11 +59,13 @@ class JDBC:
                                                                                               SCHEMA=schema)
         elif self.db_driver == "oracle":
             if oracle_sid:
-                url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(DB_DRIVER=driver,
-                                                                                 HOST=host,
-                                                                                 PORT=port,
-                                                                                 DATABASE=database,
-                                                                                 ORACLE_SID=oracle_sid)
+                url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(
+                    DB_DRIVER=driver,
+                    HOST=host,
+                    PORT=port,
+                    DATABASE=database,
+                    ORACLE_SID=oracle_sid,
+                    SCHEMA=schema)
             elif oracle_service_name:
                 url = "jdbc:{DB_DRIVER}:thin:@//{HOST}:{PORT}/{ORACLE_SERVICE_NAME}".format(DB_DRIVER=driver,
                                                                                             HOST=host,
@@ -103,11 +106,12 @@ class JDBC:
             query = ""
 
         elif self.db_driver == "oracle":
-            query = """SELECT table_name, to_number(extractvalue(xmltype(dbms_xmlgen.getxml('SELECT count(*) c 
-            FROM '||owner||'.'||table_name)),'/ROWSET/ROW/C')) as count FROM all_tables"""
+            query = """SELECT table_name, 
+                extractvalue(xmltype( dbms_xmlgen.getxml('select count(*) c from '||table_name)) ,'/ROWSET/ROW/C') count 
+                    FROM user_tables ORDER BY table_name"""
 
         df = self.execute(query, "all")
-        return df
+        return df.table()
 
     def tables_names_to_json(self, schema=None):
         """
@@ -115,26 +119,30 @@ class JDBC:
         :return:
         """
 
-        # Override the schema used in the constructor
+        # Override the schema used in the constructors
         if schema is None:
             schema = self.schema
 
         query = None
-        if (self.db_driver is "redshift") or (self.db_driver is "postgres"):
+        if (self.db_driver == "redshift") or (self.db_driver == "postgres"):
             query = """
                         SELECT relname as table_name 
                         FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
                         WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_driver is "mysql":
+        elif self.db_driver == "mysql":
             query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
                     + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
 
-        elif self.db_driver is "sqlite":
+        elif self.db_driver == "sqlite":
             query = ""
 
+        elif self.db_driver == "oracle":
+            query = "SELECT table_name FROM user_tables"
+
         df = self.execute(query, "all")
-        return [i['table_name'] for i in df.to_json()]
+
+        return [i['TABLE_NAME'] for i in df.to_json()]
 
     @property
     def table(self):
@@ -152,15 +160,18 @@ class JDBC:
         :param limit: how many rows will be retrieved
         """
 
-        db_table = "public." + table_name
-        if self._limit(limit) is "all":
-            query = "SELECT COUNT(*) FROM " + db_table
+        db_table = table_name
+        if limit == "all":
+            if self.db_driver == "oracle":
+                query = "SELECT COUNT(*) count FROM " + db_table
+            else:
+                query = "SELECT COUNT(*) as count FROM " + db_table
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
-            count = self.execute(query, "all").to_json()[0]["count"]
+            count = self.execute(query, "all").to_json()[0]["COUNT"]
 
             print(str(count) + " rows")
 
-        if columns is "*":
+        if columns == "*":
             columns_sql = "*"
         else:
             columns = val_to_list(columns)
@@ -183,7 +194,14 @@ class JDBC:
         :return:
         """
 
-        query = "(" + query + self._limit(limit) + ") AS t"
+        # play defensive with a select clause
+        if self.db_driver == "oracle":
+            alias = " t"
+        else:
+            alias = " AS t"
+
+        query = "(" + query + self._limit(limit) + ")" + alias
+
         logger.print(query)
         logger.print(self.url)
 

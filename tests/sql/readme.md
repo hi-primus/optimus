@@ -3,7 +3,6 @@
 
 ## Run containers
 First you need to run the containers
-mysql://SA:SA123@localhost/optimus
 
 
 ### Mysql
@@ -33,9 +32,10 @@ sudo docker run --name=redshift -d -p 5439:5439 -e POSTGRES_USER=SA -e POSTGRES_
 sudo docker run --name=mssql -d -p 1433:1433  -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=SA123' microsoft/mssql-server-linux:2017-latest
 ```
 
-## Helpers
+## Some Tips
 
 Connect to container
+
 ```
 sudo docker exec -i -t container_name /bin/bash
 ```
@@ -62,4 +62,10 @@ First you need to stop the container so you can remove it
 sudo docker stop container_name
 sudo docker rm container_name
 ```
+## Create dummy data
+
+
+https://mockaroo.com/
+
+
  

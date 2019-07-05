@@ -198,7 +198,6 @@ class Optimus:
         Create the JDBC string connection
         :return: JDBC object
         """
-        print(db_type)
 
         return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid)
 
