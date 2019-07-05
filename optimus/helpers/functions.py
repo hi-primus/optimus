@@ -132,19 +132,8 @@ def collect_as_dict(df):
 
     dict_result = []
 
-    # if there is only an element in the dict just return the value
-    if len(dict_result) == 1:
-        dict_result = next(iter(dict_result.values()))
-    else:
-        col_names = parse_columns(df, "*")
-
-        # Because asDict can return messed columns names we order
-        for row in df.collect():
-            _row = row.asDict()
-            r = collections.OrderedDict()
-            for col in col_names:
-                r[col] = _row[col]
-            dict_result.append(r)
+    for x in df.toJSON().collect():
+        dict_result.append(json.loads(x, object_pairs_hook=collections.OrderedDict))
     return dict_result
 
 
