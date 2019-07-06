@@ -24,25 +24,31 @@ class JDBC:
         self.oracle_sid = oracle_sid
 
         # Handle the default port
-        if port is None:
-            if self.db_driver == "redshift":
-                self.port = 5439
 
-            elif self.db_driver == "postgres":
-                self.port = 5432
+        if self.db_driver == "redshift":
+            if port is None: self.port = 5439
+            # "com.databricks.spark.redshift"
 
-            elif self.db_driver == "mysql":
-                self.port = 3306
+        elif self.db_driver == "postgres":
+            if port is None: self.port = 5432
+            # "org.postgresql.Driver"
 
-            elif self.db_driver == "sqlserver":
-                self.port = 1433
+        elif self.db_driver == "mysql":
+            if port is None: self.port = 3306
+            # "com.mysql.jdbc.Driver"
 
-            elif self.db_driver == "oracle":
-                self.port = 1521
+        elif self.db_driver == "sqlserver":
+            if port is None: self.port = 1433
+            # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
 
-            else:
-                print("Driver not supported")
-                # RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
+        elif self.db_driver == "oracle":
+            if port is None: self.port = 1521
+            self.driver_option = "oracle.jdbc.OracleDriver"
+
+        # add mongo?
+        else:
+            print("Driver not supported")
+            # RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
 
         if database is None:
             database = ""
@@ -50,13 +56,14 @@ class JDBC:
         # Create string connection
         if self.db_driver == "sqlite":
             url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
-        elif self.db_driver == "postgres" or self.db_driver == "redsfhit" or self.db_driver == "mysql":
+        elif self.db_driver == "postgres" or self.db_driver == "redshift" or self.db_driver == "mysql":
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
             url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=driver,
                                                                                               HOST=host,
                                                                                               PORT=port,
                                                                                               DATABASE=database,
                                                                                               SCHEMA=schema)
+            print(url)
         elif self.db_driver == "oracle":
             if oracle_sid:
                 url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(
@@ -83,7 +90,7 @@ class JDBC:
         self.password = password
         self.schema = schema
 
-    def tables(self, database=None):
+    def tables(self, schema=None, database=None):
         """
         Return all the tables in a database
         :return:
@@ -92,12 +99,15 @@ class JDBC:
         if database is None:
             database = self.database
 
+        if schema is None:
+            schema = self.schema
+
         query = None
         if (self.db_driver == "redshift") or (self.db_driver == "postgres"):
             query = """
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-            WHERE nspname IN ('""" + database + """') AND relkind='r' ORDER BY reltuples DESC"""
+            WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
         elif self.db_driver == "mysql":
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
@@ -163,11 +173,13 @@ class JDBC:
         db_table = table_name
         if limit == "all":
             if self.db_driver == "oracle":
-                query = "SELECT COUNT(*) count FROM " + db_table
+                query = "SELECT COUNT(*) COUNT FROM " + db_table
+                count = self.execute(query, "all").to_json()[0]["COUNT"]
             else:
-                query = "SELECT COUNT(*) as count FROM " + db_table
+                query = "SELECT COUNT(*) as COUNT FROM " + db_table
+                count = self.execute(query, "all").to_json()[0]["count"]
+
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
-            count = self.execute(query, "all").to_json()[0]["COUNT"]
 
             print(str(count) + " rows")
 
@@ -205,14 +217,17 @@ class JDBC:
         logger.print(query)
         logger.print(self.url)
 
-        return Spark.instance.spark.read \
+        conf = Spark.instance.spark.read \
             .format("jdbc") \
-            .option("driver", "oracle.jdbc.OracleDriver") \
             .option("url", self.url) \
             .option("dbtable", query) \
             .option("user", self.user) \
-            .option("password", self.password) \
-            .load()
+            .option("password", self.password)
+
+        if self.db_driver == "oracle":
+            conf.option("driver", self.driver_option)
+
+        return conf.load()
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
@@ -222,14 +237,18 @@ class JDBC:
         :param mode
         :return:
         """
-        return df.write \
+        conf = df.write \
             .format("jdbc") \
             .mode(mode) \
             .option("url", self.url) \
             .option("dbtable", table) \
             .option("user", self.user) \
-            .option("password", self.password) \
-            .save()
+            .option("password", self.password)
+
+        if self.db_driver == "oracle":
+            conf.option("driver", self.driver_option)
+
+        conf.save()
 
     @staticmethod
     def _limit(limit=None):
