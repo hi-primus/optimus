@@ -4,6 +4,11 @@ from optimus import PYSPARK_NUMERIC_TYPES
 from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot, plot_correlation
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import parse_columns, check_column_numbers
+from optimus.dataframe.extension import sample_n
+
+import matplotlib.pyplot as plt
+
+import statsmodels.api as sm
 
 
 def plot(self):
@@ -88,5 +93,29 @@ def plot(self):
 
     return plot
 
+    @add_attr(plot)
+    def qqplots(dataframe=data, grid_rows=3, grid_cols=3, n_obs=100):
+        """
+        QQ Plots
+        :param dataframe: spark dataframe
+        :param grid_rows: number of rows to include in plotting grid
+        :param grid_cols: number of columns to include in plotting grid
+        :param n_obs: number of observations (sample) to plot
+        """
+
+        sample_data = sample_n(dataframe, n=n_obs, random=True)
+        feature_list = parse_columns(sample_data, cols_args='*', filter_by_column_dtypes='int')
+
+        fig = plt.figure(figsize=(12, 5))
+
+        for feature, num in zip(feature_list, range(1, len(feature_list))):
+            ax = fig.add_subplot(grid_rows, grid_cols, num)
+
+            sm.qqplot(sample_data.toPandas()[feature], line='q', ax=ax, color='C0', alpha=0.3)
+            ax.set_xlabel('')
+            ax.set_ylabel('')
+            ax.set_title(feature.upper())
+
+        plt.tight_layout()
 
 DataFrame.plot = property(plot)
