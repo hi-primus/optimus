@@ -199,3 +199,14 @@ def traverse(obj, path=None, callback=None):
         return value
     else:
         return callback(path, value)
+
+
+def ellipsis(data, length=20):
+    """
+    Add a "..." if a string y greater than a specific length
+    :param data:
+    :param length: length taking into account to cut the string
+    :return:
+    """
+    data = str(data)
+    return (data[:length] + '..') if len(data) > length else data

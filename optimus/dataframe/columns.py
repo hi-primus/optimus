@@ -16,11 +16,11 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
-from optimus.functions import abstract_udf as audf
-from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric, is_column_a
+from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
@@ -30,15 +30,12 @@ from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import format_dict, \
     filter_list, collect_as_list
-from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.internals import _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
-
-from optimus.functions import append as _append
 
 
 def cols(self):

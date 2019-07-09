@@ -3,7 +3,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
-from optimus.functions import ellipsis
+from optimus.helpers.functions import ellipsis
 from optimus.helpers.output import output_image, output_base64
 
 

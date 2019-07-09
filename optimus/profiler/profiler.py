@@ -11,8 +11,8 @@ import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.functions import filter_row_by_data_type as fbdt
-from optimus.plots import plot_freq, plot_missing_values, plot_hist
+from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.dataframe.plots.functions import plot_freq, plot_missing_values, plot_hist
 from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
 from optimus import print_html

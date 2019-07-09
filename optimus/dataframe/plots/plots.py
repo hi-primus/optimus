@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.plots import plot_scatterplot, plot_boxplot, plot_freq, plot_hist, plot_correlation
+from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_freq, plot_hist, plot_correlation
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.columns import parse_columns, check_column_numbers
 

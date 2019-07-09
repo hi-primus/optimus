@@ -5,6 +5,7 @@ from .optimus import *
 patch()
 
 # Monkey patch for Spark DataFrames
-from optimus.dataframe import rows, columns, extension, plots
+from optimus.dataframe import rows, columns, extension
+from optimus.dataframe.plots import plots
 from optimus.outliers import outliers
 from optimus.io import save

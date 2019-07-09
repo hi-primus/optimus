@@ -1,20 +1,12 @@
-from functools import reduce
-
 import dateutil.parser
-import pandas as pd
 from fastnumbers import isint, isfloat
-from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import StructField, StructType, StringType
 
-# Helpers
-from optimus.helpers.check import is_tuple, is_, is_one_element, is_list_of_tuples, is_column
+from optimus import RaiseIt, logger
+from optimus.helpers.check import is_column
 from optimus.helpers.converter import one_list_to_val
-from optimus.helpers.functions import infer, is_pyarrow_installed, random_int
-from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
-from optimus.helpers.raiseit import RaiseIt
-from optimus.spark import Spark
+from optimus.helpers.functions import is_pyarrow_installed
+from optimus.helpers.parser import parse_spark_class_dtypes, parse_python_dtypes
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
@@ -116,17 +108,6 @@ def filter_row_by_data_type_audf(col_name, data_type):
     return abstract_udf(col_name, filter_row_by_data_type, "boolean", data_type)
 
 
-def ellipsis(data, length=20):
-    """
-    Add a "..." if a string y greater than a specific length
-    :param data:
-    :param length: length taking into account to cut the string
-    :return:
-    """
-    data = str(data)
-    return (data[:length] + '..') if len(data) > length else data
-
-
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     """
     A Pandas UDF function that returns bool if the value match with the data_type param passed to the function.
@@ -214,90 +195,3 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
 
     col_name = one_list_to_val(col_name)
     return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)
-
-
-class Create:
-    @staticmethod
-    def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
-        """
-        Helper to create a Spark dataframe:
-        :param cols: List of Tuple with name, data type and a flag to accept null
-        :param rows: List of Tuples with the same number and types that cols
-        :param infer_schema: Try to infer the schema data type.
-        :param pdf: a pandas dataframe
-        :return: Dataframe
-        """
-        if is_(pdf, pd.DataFrame):
-            result = Spark.instance.spark.createDataFrame(pdf)
-        else:
-
-            specs = []
-            # Process the rows
-            if not is_list_of_tuples(rows):
-                rows = [(i,) for i in rows]
-
-            # Process the columns
-            for c, r in zip(cols, rows[0]):
-                # Get columns name
-
-                if is_one_element(c):
-                    col_name = c
-
-                    if infer_schema is True:
-                        var_type = infer(r)
-                    else:
-                        var_type = StringType()
-                    nullable = True
-
-                elif is_tuple(c):
-
-                    # Get columns data type
-                    col_name = c[0]
-                    var_type = parse_spark_class_dtypes(c[1])
-
-                    count = len(c)
-                    if count == 2:
-                        nullable = True
-                    elif count == 3:
-                        nullable = c[2]
-
-                # If tuple has not the third param with put it to true to accepts Null in columns
-                specs.append([col_name, var_type, nullable])
-
-            struct_fields = list(map(lambda x: StructField(*x), specs))
-
-            result = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
-
-        return result
-
-    df = data_frame
-
-
-def append(dfs, like="columns"):
-    """
-    Concat multiple dataframes as columns or rows
-    :param dfs: Dataframes to be appended
-    :param like: The way dataframes is going to be concat. like columns or rows
-    :return:
-    """
-
-    # FIX: Because monotonically_increasing_id can create different
-    # sequence for different dataframes the result could be wrong.
-
-    if like == "columns":
-        temp_dfs = []
-        col_temp_name = "id_" + random_int()
-        for df in dfs:
-            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
-
-        def _append(df1, df2):
-            return df1.join(df2, col_temp_name, "outer")
-
-        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
-
-    elif like == "rows":
-        df_result = reduce(DataFrame.union, dfs)
-    else:
-        RaiseIt.value_error(like, ["columns", "rows"])
-
-    return df_result
