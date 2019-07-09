@@ -8,10 +8,10 @@ from pyspark.sql import DataFrame
 
 from optimus.enricher import Enricher
 from optimus.functions import append, Create
-from optimus.helpers.checkit import is_list
+from optimus.helpers.check import is_list
 from optimus.helpers.constants import *
-from optimus.helpers.convert import val_to_list
-from optimus.helpers.functions import print_html, print_json
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.output import print_html, print_json
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC

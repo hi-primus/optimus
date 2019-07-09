@@ -13,10 +13,13 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.checkit import is_str, is_column_a
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.check import is_str, is_column_a
+from optimus.helpers.converter import val_to_list, one_list_to_val
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html, json_converter
+from optimus.helpers.functions import collect_as_dict, random_int, traverse
+from optimus.helpers.output import print_html
+from optimus.helpers.json import json_converter
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER

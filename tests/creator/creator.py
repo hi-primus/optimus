@@ -452,7 +452,7 @@ t.run()
 
 from pyspark.sql.types import *
 from optimus import Optimus
-from optimus.helpers.functions import json_enconding 
+from optimus.helpers.json import json_enconding
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan

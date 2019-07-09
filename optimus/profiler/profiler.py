@@ -11,10 +11,12 @@ import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
+from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.plots import plot_freq, plot_missing_values, plot_hist
 from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import parse_columns, print_html
+from optimus import print_html
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \

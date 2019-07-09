@@ -1,9 +1,9 @@
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.functions import plot_hist, plot_freq, plot_boxplot, plot_scatterplot, plot_correlation
+from optimus.plots import plot_scatterplot, plot_boxplot, plot_freq, plot_hist, plot_correlation
 from optimus.helpers.decorators import add_attr
-from optimus.helpers.functions import parse_columns, check_column_numbers
+from optimus.helpers.columns import parse_columns, check_column_numbers
 
 
 def plot(self):

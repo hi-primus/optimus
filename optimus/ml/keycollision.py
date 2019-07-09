@@ -1,7 +1,7 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.columns import parse_columns
 
 
 def fingerprint(df, columns):

@@ -4,7 +4,7 @@ from io import UnsupportedOperation
 
 import pyspark
 
-from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
+from optimus.helpers.check import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples, is_function
 from optimus.helpers.logger import logger
 

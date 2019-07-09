@@ -10,7 +10,7 @@ import dateutil
 from pyspark.sql import functions as F
 from pyspark.sql import DataFrame
 
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.converter import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_spark_dtypes
 
 

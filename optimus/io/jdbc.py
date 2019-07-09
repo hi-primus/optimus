@@ -1,4 +1,4 @@
-from optimus.helpers.convert import val_to_list
+from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
 

@@ -6,7 +6,7 @@ from pyspark.sql.functions import when
 
 from optimus.helpers.constants import *
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import json_converter
+from optimus.helpers.json import json_converter
 
 
 def fill_missing_col_types(col_types):

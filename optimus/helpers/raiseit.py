@@ -1,5 +1,5 @@
-from optimus.helpers.convert import val_to_list
-from optimus.helpers.checkit import is_int
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.check import is_int
 
 
 class RaiseIt:
@@ -12,7 +12,7 @@ class RaiseIt:
         :param data_types: data types expected as strings
         :return:
         """
-        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.debug import get_var_name
         if len(data_types) == 1:
             divisor = ""
         elif len(data_types) == 2:
@@ -34,7 +34,7 @@ class RaiseIt:
         :param var2:
         :return:
         """
-        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.debug import get_var_name
 
         if is_int(var2):
             length_var2 = str(var2)
@@ -59,7 +59,7 @@ class RaiseIt:
         :type data_values: str/list
         :return:
         """
-        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.debug import get_var_name
         data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
@@ -83,7 +83,7 @@ class RaiseIt:
         :return:
         """
 
-        from optimus.helpers.functions import get_var_name
+        from optimus.helpers.debug import get_var_name
         raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))
 
 

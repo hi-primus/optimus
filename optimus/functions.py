@@ -1,24 +1,18 @@
-import base64
 from functools import reduce
-from io import BytesIO
 
 import dateutil.parser
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-import seaborn as sns
 from fastnumbers import isint, isfloat
-from numpy import array
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import StructField, StructType, StringType
 
 # Helpers
-from optimus.helpers.checkit import is_tuple, is_, is_one_element, is_list_of_tuples, is_column
-from optimus.helpers.convert import one_list_to_val
-from optimus.helpers.functions import get_spark_dtypes_object, infer, is_pyarrow_installed, random_int
+from optimus.helpers.check import is_tuple, is_, is_one_element, is_list_of_tuples, is_column
+from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.functions import infer, is_pyarrow_installed, random_int
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes
+from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
@@ -72,7 +66,7 @@ def func_factory(func_type=None, func_return_type=None):
     """
 
     # if func_return_type is not None:
-    func_return_type = get_spark_dtypes_object(func_return_type)
+    func_return_type = parse_spark_class_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):
         # TODO: Get the column type, so is not necessary to pass the return type as param.
@@ -122,64 +116,6 @@ def filter_row_by_data_type_audf(col_name, data_type):
     return abstract_udf(col_name, filter_row_by_data_type, "boolean", data_type)
 
 
-def append(dfs, like="columns"):
-    """
-    Concat multiple dataframes as columns or rows
-    :param dfs:
-    :param like: The way dataframes is going to be concat. like columns or rows
-    :return:
-    """
-
-    # FIX: Because monotonically_increasing_id can create different
-    # sequence for different dataframes the result could be wrong.
-
-    if like == "columns":
-        temp_dfs = []
-        col_temp_name = "id_" + random_int()
-        for df in dfs:
-            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
-
-        def _append(df1, df2):
-            return df1.join(df2, col_temp_name, "outer")
-
-        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
-
-    elif like == "rows":
-        df_result = reduce(DataFrame.union, dfs)
-    else:
-        RaiseIt.value_error(like, ["columns", "rows"])
-
-    return df_result
-
-
-def output_image(path):
-    """
-    Output a png file
-    :param path: Matplotlib figure
-    :return: Base64 encode image
-    """
-
-    plt.savefig(path, format='png')
-    plt.close()
-
-
-def output_base64(fig):
-    """
-    Output a matplotlib as base64 encode
-    :param fig: Matplotlib figure
-    :return: Base64 encode image
-    """
-    fig_file = BytesIO()
-    plt.savefig(fig_file, format='png')
-    # rewind to beginning of file
-    fig_file.seek(0)
-
-    fig_png = base64.b64encode(fig_file.getvalue())
-    plt.close(fig)
-
-    return fig_png.decode('utf8')
-
-
 def ellipsis(data, length=20):
     """
     Add a "..." if a string y greater than a specific length
@@ -189,197 +125,6 @@ def ellipsis(data, length=20):
     """
     data = str(data)
     return (data[:length] + '..') if len(data) > length else data
-
-
-def plot_scatterplot(column_data=None, output=None, path=None):
-    """
-    Boxplot
-    :param column_data: column data in json format
-    :param output: image or base64
-    :param path:
-    :return:
-    """
-
-    fig = plt.figure(figsize=(12, 5))
-    plt.scatter(column_data["x"]["data"], column_data["y"]["data"], s=column_data["s"], alpha=0.5)
-    plt.xlabel(column_data["x"]["name"])
-    plt.ylabel(column_data["y"]["name"])
-
-    # Tweak spacing to prevent clipping of tick-labels
-    # plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-    # Save as base64
-    if output is "base64":
-        return output_base64(fig)
-    elif output is "image":
-        return output_image(path)
-
-
-def plot_boxplot(column_data=None, output=None, path=None):
-    """
-    Boxplot
-    :param column_data: column data in json format
-    :param output: image or base64
-    :param path:
-    :return:
-    """
-    for col_name, stats in column_data.items():
-        fig, axes = plt.subplots(1, 1)
-
-        bp = axes.bxp(stats, patch_artist=True)
-
-        axes.set_title(col_name)
-        plt.figure(figsize=(12, 5))
-
-        # 'fliers', 'means', 'medians', 'caps'
-        for element in ['boxes', 'whiskers']:
-            plt.setp(bp[element], color='#1f77b4')
-
-        for patch in bp['boxes']:
-            patch.set(facecolor='white')
-
-            # Tweak spacing to prevent clipping of tick-labels
-
-        # Save as base64
-        if output is "base64":
-            return output_base64(fig)
-        elif output is "image":
-            return output_image(path)
-        else:
-            plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-
-def plot_freq(column_data=None, output=None, path=None):
-    """
-    Frequency plot
-    :param column_data: column data in json format
-    :param output: image or base64
-    :param path:
-    :return:
-    """
-    for col_name, data in column_data.items():
-
-        # Transform Optimus' format to matplotlib's format
-        x = []
-        h = []
-
-        for d in data:
-            x.append(ellipsis(d["value"]))
-            h.append(d["count"])
-
-        # Plot
-        fig = plt.figure(figsize=(12, 5))
-
-        # Need to to this to plot string labels on x
-        x_i = range(len(x))
-        plt.bar(x_i, h)
-        plt.xticks(x_i, x)
-
-        plt.title("Frequency '" + col_name + "'")
-
-        plt.xticks(rotation=45, ha="right")
-
-        # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-        # Save as base64
-        if output is "base64":
-            return output_base64(fig)
-        elif output is "image":
-            return output_image(path)
-
-
-def plot_missing_values(column_data=None, output=None):
-    """
-    Plot missing values
-    :param column_data:
-    :param output: image o base64
-    :return:
-    """
-    values = []
-    columns = []
-    labels = []
-    for col_name, data in column_data["data"].items():
-        values.append(data["missing"])
-        columns.append(col_name)
-        labels.append(data["%"])
-
-    # Plot
-    fig = plt.figure(figsize=(12, 5))
-    plt.bar(columns, values)
-    plt.xticks(columns, columns)
-
-    # Highest limit
-    highest = column_data["count"]
-    plt.ylim(0, 1.05 * highest)
-    plt.title("Missing Values")
-    i = 0
-    for label, val in zip(labels, values):
-        plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
-        i = i + 1
-
-    plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-    # Save as base64
-    if output is "base64":
-        return output_base64(fig)
-
-
-def plot_hist(column_data=None, output=None, sub_title="", path=None):
-    """
-    Plot a histogram
-    obj = {"col_name":[{'lower': -87.36666870117188, 'upper': -70.51333465576172, 'value': 0},
-    {'lower': -70.51333465576172, 'upper': -53.66000061035157, 'value': 22094},
-    {'lower': -53.66000061035157, 'upper': -36.80666656494141, 'value': 2},
-    ...
-    ]}
-    :param column_data: column data in json format
-    :param output: image or base64
-    :param sub_title: plot subtitle
-    :param path:
-    :return: plot, image or base64
-    """
-
-    for col_name, data in column_data.items():
-        bins = []
-        for d in data:
-            bins.append(d['lower'])
-
-        last = data[len(data) - 1]["upper"]
-        bins.append(last)
-
-        # Transform hist Optimus format to matplot lib format
-        hist = []
-        for d in data:
-            if d is not None:
-                hist.append(d["count"])
-
-        bins = array(bins)
-        center = (bins[:-1] + bins[1:]) / 2
-        width = 0.9 * (bins[1] - bins[0])
-
-        # Plot
-        fig = plt.figure(figsize=(12, 5))
-        plt.bar(center, hist, width=width)
-        plt.title("Histogram '" + col_name + "' " + sub_title)
-
-        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-        # Save as base64
-        if output is "base64":
-            return output_base64(fig)
-        elif output is "image":
-            return output_image(path)
-
-
-def plot_correlation(column_data, output=None, path=None):
-    """
-    Plot a correlation plot
-    :param column_data:
-    :return:
-    """
-    return sns.heatmap(column_data, mask=np.zeros_like(column_data, dtype=np.bool),
-                       cmap=sns.diverging_palette(220, 10, as_cmap=True))
 
 
 def filter_row_by_data_type(col_name, data_type=None, get_type=False):
@@ -508,7 +253,7 @@ class Create:
 
                     # Get columns data type
                     col_name = c[0]
-                    var_type = get_spark_dtypes_object(c[1])
+                    var_type = parse_spark_class_dtypes(c[1])
 
                     count = len(c)
                     if count == 2:
@@ -526,3 +271,33 @@ class Create:
         return result
 
     df = data_frame
+
+
+def append(dfs, like="columns"):
+    """
+    Concat multiple dataframes as columns or rows
+    :param dfs: Dataframes to be appended
+    :param like: The way dataframes is going to be concat. like columns or rows
+    :return:
+    """
+
+    # FIX: Because monotonically_increasing_id can create different
+    # sequence for different dataframes the result could be wrong.
+
+    if like == "columns":
+        temp_dfs = []
+        col_temp_name = "id_" + random_int()
+        for df in dfs:
+            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+        def _append(df1, df2):
+            return df1.join(df2, col_temp_name, "outer")
+
+        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
+
+    elif like == "rows":
+        df_result = reduce(DataFrame.union, dfs)
+    else:
+        RaiseIt.value_error(like, ["columns", "rows"])
+
+    return df_result

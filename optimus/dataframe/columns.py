@@ -19,18 +19,19 @@ from pyspark.sql.types import StringType, ArrayType
 from optimus.functions import abstract_udf as audf
 from optimus.functions import filter_row_by_data_type as fbdt
 # Helpers
-from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric, is_column_a
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.converter import val_to_list, one_list_to_val, tuple_to_dict
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers, get_output_cols
-from optimus.helpers.parser import parse_python_dtypes
+    import format_dict, \
+    filter_list, collect_as_list
+from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names
+from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.internals import _bucket_col_name
@@ -338,12 +339,12 @@ def cols(self):
 
                 _func_return_type = VectorUDT()
             # Parse standard data types
-            elif get_spark_dtypes_object(cls):
+            elif parse_spark_class_dtypes(cls):
 
                 _func_type = "column_exp"
 
                 def _cast_to(col_name, attr):
-                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
+                    return F.col(col_name).cast(parse_spark_class_dtypes(cls))
 
                 _func_return_type = None
 
