@@ -507,24 +507,23 @@ def cols(self):
             :return: json
             """
             functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                               "approx_count_distinct", "na", "zeros", "percentile"]
+                               "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count"]
             _result = {}
-            if is_dict(data):
-                for k, v in data.items():
-                    for f in functions_array:
-                        temp_func_name = f + "_"
-                        if k.startswith(temp_func_name):
-                            _col_name = k[len(temp_func_name):]
-                            # If the value is numeric only get 5 decimals
-                            if is_numeric(v):
-                                v = round(v, 5)
-                            _result.setdefault(_col_name, {})[f] = v
-            else:
-                if is_numeric(data):
-                    data = round(data, 5)
-                _result = data
+            for k, v in data[0].items():
+                for f in functions_array:
+                    temp_func_name = f + "_"
+                    if k.startswith(temp_func_name):
+                        _col_name = k[len(temp_func_name):]
+                        # If the value is numeric only get 5 decimals
+                        if is_numeric(v):
+                            v = round(v, 5)
+                        if is_nan(v):
+                            print(
+                                "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that {COL_NAME} has 'nan' values".format(
+                                    FUNCTION=f,
+                                    COL_NAME=_col_name))
 
-            return _result
+                        _result.setdefault(_col_name, {})[f] = v
 
         # Ensure that is a list
         funcs = val_to_list(funcs)
@@ -540,17 +539,16 @@ def cols(self):
                 # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
                 # Std dev is can not process date columns. So we do not calculated
 
-                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]) and (
-                        is_column_a(df, col_name, "date"))):
+                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                  F.count, zeros_agg]) and (
+                                is_column_a(df, col_name, "date"))):
                     # A different function must be use to calculate null in integers or data column data types
                     if func is na_agg and is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                         func = na_agg_integer
 
                     expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-            # print(expression)
-        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
-        return result
+        return format_dict(parse_col_names_funcs_to_keys(df.agg(*expression).to_json()))
 
     # Quantile statistics
     @add_attr(cols)
