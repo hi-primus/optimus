@@ -1,6 +1,5 @@
-from optimus import val_to_list, SPARK_DTYPES_DICT_OBJECTS, SPARK_SHORT_DTYPES
-from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYTHON_SHORT_TYPES
-from optimus.helpers.converter import val_to_list, one_list_to_val
+from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYTHON_SHORT_TYPES, \
+    SPARK_DTYPES_DICT_OBJECTS
 
 
 def parse_spark_dtypes(value):
@@ -10,7 +9,8 @@ def parse_spark_dtypes(value):
     :return:
     """
 
-    value = val_to_list(value)
+    if not isinstance(value, list):
+        value = [value]
 
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
@@ -18,8 +18,12 @@ def parse_spark_dtypes(value):
     except KeyError:
         data_type = value
 
-    data_type = one_list_to_val(data_type)
-    return data_type
+    if isinstance(data_type, list) and len(data_type) == 1:
+        result = data_type[0]
+    else:
+        result = data_type
+
+    return result
 
 
 def parse_python_dtypes(value):
@@ -37,12 +41,18 @@ def parse_spark_class_dtypes(value):
     :param value:
     :return:
     """
-    value = val_to_list(value)
+    if not isinstance(value, list):
+        value = [value]
+
     try:
         data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
 
     except (KeyError, TypeError):
         data_type = value
 
-    data_type = one_list_to_val(data_type)
-    return data_type
+    if isinstance(data_type, list) and len(data_type) == 1:
+        result = data_type[0]
+    else:
+        result = data_type
+
+    return result

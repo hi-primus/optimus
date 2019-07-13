@@ -2,15 +2,15 @@ import collections
 import json
 import os
 import random
+from pathlib import Path
 
 from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
-from optimus.helpers.check import is_str, is_dict_of_one_element, is_dict, is_list, is_, is_bool, is_datetime, \
+from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
     is_date, is_binary, \
-    str_to_boolean, str_to_date, str_to_array, is_list_of_one_element
-from optimus.helpers.converter import one_list_to_val
+    str_to_boolean, str_to_date, str_to_array, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
 
@@ -101,43 +101,9 @@ def filter_list(val, index=0):
         return one_list_to_val([column[index] for column in val])
 
 
-def format_dict(val):
-    """
-    This function format a dict. If the main dict or a deep dict has only on element
-     {"col_name":{0.5: 200}} we get 200
-    :param val: dict to be formatted
-    :return:
-    """
-
-    def _format_dict(_val):
-        if not is_dict(_val):
-            return _val
-
-        for k, v in _val.items():
-            if is_dict(v):
-                if len(v) == 1:
-                    _val[k] = next(iter(v.values()))
-            else:
-                if len(_val) == 1:
-                    _val = v
-        return _val
-
-    if is_list_of_one_element(val):
-        val = val[0]
-    elif is_dict_of_one_element(val):
-        val = next(iter(val.values()))
-
-    # Some aggregation like min or max return a string column
-
-    def repeat(f, n, x):
-        if n == 1:  # note 1, not 0
-            return f(x)
-        else:
-            return f(repeat(f, n - 1, x))  # call f with returned value
-
-    # TODO: Maybe this can be done in a recursive way
-    # We apply two passes to the dict so we can process internals dicts and the superiors ones
-    return repeat(_format_dict, 2, val)
+def absolute_path(files):
+    path = os.path.dirname(os.path.abspath(__file__))
+    return [Path(path + file).absolute().as_uri() for file in files]
 
 
 def is_pyarrow_installed():

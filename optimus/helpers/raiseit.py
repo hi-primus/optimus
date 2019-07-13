@@ -1,7 +1,3 @@
-from optimus.helpers.converter import val_to_list
-from optimus.helpers.check import is_int
-
-
 class RaiseIt:
 
     @staticmethod
@@ -27,16 +23,16 @@ class RaiseIt:
                                                                                 var_type=type(var)))
 
     @staticmethod
-    def length_error(var1, var2):
+    def length_error(var1: list, var2: (list, int)) -> Exception:
         """
         Raise a ValueError exception
-        :param var1:
-        :param var2:
+        :param var1: variable to check for length
+        :param var2: variable or integer to compare with var1
         :return:
         """
         from optimus.helpers.debug import get_var_name
 
-        if is_int(var2):
+        if isinstance(var2, int):
             length_var2 = str(var2)
         else:
             length_var2 = str(len(var2))
@@ -60,7 +56,11 @@ class RaiseIt:
         :return:
         """
         from optimus.helpers.debug import get_var_name
-        data_values = val_to_list(data_values)
+
+        if not isinstance(data_values, list):
+            data_values = [data_values]
+
+        # data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
             divisor = ""

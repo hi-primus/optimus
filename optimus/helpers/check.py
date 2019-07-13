@@ -7,11 +7,28 @@ import re
 from ast import literal_eval
 
 import dateutil
-from pyspark.sql import functions as F
+import math
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 
-from optimus.helpers.converter import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.raiseit import RaiseIt
+
+
+def is_nan(value):
+    """
+    Check if a value is nan
+    :param value:
+    :return:
+    """
+    result = False
+    if is_str(value):
+        if value.lower() == "nan":
+            result = True
+    elif is_numeric(value):
+        if math.isnan(value):
+            result = True
+    return result
 
 
 def is_same_class(class1, class2):
@@ -101,11 +118,15 @@ def is_column(value):
 def is_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
-    :param df:
-    :param column:
-    :param dtypes:
+    :param df: dataframe
+    :param column: column to be compared with
+    :param dtypes: types to be checked
     :return:
     """
+    column = val_to_list(column)
+
+    if len(column) > 1:
+        RaiseIt.length_error(column, 1)
 
     data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
 
@@ -409,3 +430,78 @@ def str_to_array(value):
             return True
     except (ValueError, SyntaxError,):
         pass
+
+
+def val_to_list(val):
+    """
+    Convert a single value string or number to a list
+    :param val:
+    :return:
+    """
+    if not isinstance(val, list):
+        val = [val]
+
+    return val
+
+
+def one_list_to_val(val):
+    """
+    Convert a single list element to val
+    :param val:
+    :return:
+    """
+    if isinstance(val, list) and len(val) == 1:
+        result = val[0]
+    else:
+        result = val
+
+    return result
+
+
+def tuple_to_dict(value):
+    """
+    Convert tuple to dict
+    :param value: tuple to be converted
+    :return:
+    """
+
+    return format_dict(dict((x, y) for x, y in value))
+
+
+def format_dict(val):
+    """
+    This function format a dict. If the main dict or a deep dict has only on element
+     {"col_name":{0.5: 200}} we get 200
+    :param val: dict to be formatted
+    :return:
+    """
+
+    def _format_dict(_val):
+        if not is_dict(_val):
+            return _val
+
+        for k, v in _val.items():
+            if is_dict(v):
+                if len(v) == 1:
+                    _val[k] = next(iter(v.values()))
+            else:
+                if len(_val) == 1:
+                    _val = v
+        return _val
+
+    if is_list_of_one_element(val):
+        val = val[0]
+    elif is_dict_of_one_element(val):
+        val = next(iter(val.values()))
+
+    # Some aggregation like min or max return a string column
+
+    def repeat(f, n, x):
+        if n == 1:  # note 1, not 0
+            return f(x)
+        else:
+            return f(repeat(f, n - 1, x))  # call f with returned value
+
+    # TODO: Maybe this can be done in a recursive way
+    # We apply two passes to the dict so we can process internals dicts and the superiors ones
+    return repeat(_format_dict, 2, val)

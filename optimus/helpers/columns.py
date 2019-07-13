@@ -2,9 +2,12 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus import is_list, RaiseIt, val_to_list
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings
+from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, val_to_list, \
+    one_list_to_val
+from optimus.helpers.functions import ellipsis
+from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.raiseit import RaiseIt
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -62,7 +65,13 @@ def escape_columns(columns):
 
 
 def get_output_cols(input_cols, output_cols):
-    # Construct input and output columns names
+    """
+    Construct output columns names
+    :param input_cols:
+    :param output_cols:
+    :return:
+    """
+
     if is_list(input_cols) and is_list(output_cols):
         if len(input_cols) != len(output_cols):
             RaiseIt.length_error(input_cols, output_cols)
@@ -163,9 +172,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     else:
         RaiseIt.value_error(get_args, ["True", "False"])
 
-    # if columns_residual:
-    #     print(",".join(escape_columns(columns_residual)), "column(s) was not processed because is/are not",
-    #           ",".join(filter_by_column_dtypes))
+    if columns_residual:
+        logger.print("%s %s %s", ",".join(escape_columns(columns_residual)),
+                     "column(s) was not processed because is/are not",
+                     ",".join(filter_by_column_dtypes))
 
     return cols_params
 
@@ -240,3 +250,19 @@ def filter_col_name_by_dtypes(df, data_type):
 
     # Filter columns by data type
     return [c for c in df.columns if isinstance(df.schema[c].dataType, data_type)]
+
+
+def name_col(col_names: str, append: str) -> str:
+    """
+    Whenever you want to name and output user this function. This ensure that we manage and Standard when naming
+    :param col_names: Column name
+    :param append: string to be appended
+    :return:
+    """
+    col_names = val_to_list(col_names)
+    if len(col_names) > 1:
+        output_col = ellipsis('_'.join(str(elem) for elem in col_names), 10)
+    else:
+        output_col = one_list_to_val(col_names)
+
+    return output_col + "_" + append.upper()
