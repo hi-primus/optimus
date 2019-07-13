@@ -7,8 +7,8 @@ from pyspark.sql import functions as F
 # Helpers
 import optimus as op
 from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples
-from optimus.helpers.converter import val_to_list, one_list_to_val
+from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, one_list_to_val
+from optimus import val_to_list
 from optimus.helpers.decorators import *
 from optimus.helpers.columns import parse_columns, validate_columns_names
 
@@ -30,7 +30,7 @@ def rows(self):
         return df.union(new_row)
 
     @add_attr(rows)
-    def select_by_dtypes(col_name, data_type=None):
+    def select_by_dtypes(input_cols, data_type=None):
         """
         This function has built in order to filter some type of row depending of the var type detected by python
         for Example if you have a column with
@@ -42,13 +42,13 @@ def rows(self):
 
         | 1 |
 
-        :param col_name: Column to be filtered
+        :param input_cols: Column to be filtered
         :param data_type: Datatype use filter values
         :return: Spark DataFrame
         """
-        col_name = parse_columns(self, col_name)
+        input_cols = parse_columns(self, input_cols)
 
-        return self.where(fbdt(col_name, data_type))
+        return self.where(fbdt(input_cols, data_type))
 
     @add_attr(rows)
     def select(*args, **kwargs):
@@ -62,12 +62,12 @@ def rows(self):
 
     @add_attr(rows)
     @dispatch(str)
-    def sort(columns):
+    def sort(input_cols):
         """
         Sort column by row
         """
-        columns = parse_columns(self, columns)
-        return self.rows.sort([(columns, "desc",)])
+        input_cols = parse_columns(self, input_cols)
+        return self.rows.sort([(input_cols, "desc",)])
 
     @add_attr(rows)
     @dispatch(str, str)
@@ -118,37 +118,37 @@ def rows(self):
         return self.where(~where)
 
     @add_attr(rows)
-    def drop_by_dtypes(col_name, data_type=None):
+    def drop_by_dtypes(input_cols, data_type=None):
         """
         Drop rows by cell data type
-        :param col_name: Column in which the filter is going to be apllied
+        :param input_cols: Column in which the filter is going to be apllied
         :param data_type: filter by string, integer, float or boolean
         :return: Spark DataFrame
         """
-        validate_columns_names(self, col_name)
-        return self.rows.drop(fbdt(col_name, data_type))
+        validate_columns_names(self, input_cols)
+        return self.rows.drop(fbdt(input_cols, data_type))
 
     @add_attr(rows)
-    def drop_na(columns, how="any"):
+    def drop_na(input_cols, how="any"):
         """
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
 
-        :param columns:
+        :param input_cols:
         :param how: ‘any’ or ‘all’. If ‘any’, drop a row if it contains any nulls. If ‘all’, drop a row only if all its
         values are null. The default is 'all'.
         :return: Returns a new DataFrame omitting rows with null values.
         """
 
-        columns = parse_columns(self, columns)
+        input_cols = parse_columns(self, input_cols)
 
-        return self.dropna(how, subset=columns)
+        return self.dropna(how, subset=input_cols)
 
     @add_attr(rows)
-    def drop_duplicates(columns=None, keep="first"):
+    def drop_duplicates(input_cols=None, keep="first"):
         """
         Drop duplicates values in a dataframe
-        :param columns: List of columns to make the comparison, this only  will consider this subset of columns,
+        :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
         :param keep: keep or delete the duplicated row
         for dropping duplicates. The default behavior will only drop the whole identical rows.
         :return: Return a new DataFrame with duplicate rows removed
@@ -159,8 +159,8 @@ def rows(self):
         #  last : Drop duplicates except for the last occurrence.
         #  all: Drop all duplicates except for the last occurrence.
 
-        columns = parse_columns(self, columns)
-        return self.drop_duplicates(subset=columns)
+        input_cols = parse_columns(self, input_cols)
+        return self.drop_duplicates(subset=input_cols)
 
     @add_attr(rows)
     def drop_first():
