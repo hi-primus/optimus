@@ -588,7 +588,6 @@ def cols(self):
         return range_result
 
     @add_attr(cols)
-    # TODO: Use pandas or rdd for small datasets?!
     def median(columns, relative_error=1):
         """
         Return the median of a column dataframe
@@ -641,11 +640,12 @@ def cols(self):
     # Descriptive Analytics
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(columns, more=None):
+    def mad(columns, relative_error=1, more=None):
         """
         Return the Median Absolute Deviation
         :param columns: Column to be processed
         :param more: Return some extra computed values (Median).
+        :param relative_error: Relative error calculating the media
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
