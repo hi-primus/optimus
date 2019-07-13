@@ -8,30 +8,22 @@
 #       format_name: light
 #       format_version: '1.4'
 #       jupytext_version: 1.1.1
+#   kernel_info:
+#     name: python3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
-# ### All this cell must be run to executed the tests
+# # This notebook create the test in python code. All this cell must be run to executed the tests
 
 # %load_ext autoreload
 # %autoreload 2
 
+# + {"outputHidden": false, "inputHidden": false}
 import sys
-
-# +
-# import pyspark as ps
-
-# +
-# ps.version.__version__ 
-# -
-
-
-
-# +
-# sys.path.append("../..")
+sys.path.append("../..")
 # -
 
 from optimus import Optimus
@@ -554,12 +546,58 @@ array_col = "attributes"
 
 t.create(None, "outliers.iqr", None, "df", numeric_col)
 
-t.create(None, "outliers.iqr", None, "df", numeric_col)
-
 df.outliers.z_score("age", threshold=2).drop()
 
 df.outliers.modified_z_score("age", threshold = 2).drop()
 
 df.outliers.mad("age", threshold = 2).drop()
+
+# ## Keycolision
+
+df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+
+t = Test(op, df, "df_keycolision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"], path = "df_keycoliision", final_path="..")
+from optimus.ml import keycollision as keyCol
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "fingerprint", "df", None, df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "fingerprint_cluster", None, None, df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "n_gram_fingerprint", None, None, df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "n_gram_fingerprint_cluster", None, None, df, "STATE", 2)
+
+# + {"outputHidden": false, "inputHidden": false}
+t.run()
+# -
+
+# ## Distance cluster
+
+# + {"outputHidden": false, "inputHidden": false}
+t = Test(op, df, "df_distance_cluster", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
+
+from optimus.ml import distancecluster as dc
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(dc, "levenshtein_matrix", None, None, df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(dc, "levenshtein_filter", None, None, df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.run()
+# -
 
 
