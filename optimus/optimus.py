@@ -1,7 +1,6 @@
 import os
 import sys
 from functools import reduce
-from pathlib import Path
 from shutil import rmtree
 
 from deepdiff import DeepDiff
@@ -10,10 +9,9 @@ from pyspark.sql import functions as F
 
 from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
-from optimus.helpers.check import is_list
+from optimus.helpers.check import is_list, val_to_list
 from optimus.helpers.constants import *
-from optimus.helpers.converter import val_to_list
-from optimus.helpers.functions import random_int
+from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html, print_json
 from optimus.helpers.raiseit import RaiseIt
@@ -70,6 +68,8 @@ class Optimus:
         :type jars: (list[str])
 
         """
+        os.environ['PYSPARK_SUBMIT_ARGS'] = ''
+
         if session is None:
             # print("Creating Spark Session...")
             # If a Spark session in not passed by argument create it
@@ -107,27 +107,15 @@ class Optimus:
             # TODO:
             #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
-            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            def absolute_path(files):
-                return [Path(path + file).as_posix() for file in files]
-
-            path = os.path.dirname(os.path.abspath(__file__))
-
-            # Add databases jars
-            # self._add_jars(
-            #     absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
-            #                    "//jars/ojdbc7.jar", "//jars/postgresql-42.2.5.jar"]))
-            #
-
-            # Linux
             self._add_jars(
-                absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
-                               "//jars/ojdbc8.jar", "//jars/postgresql-42.2.5.jar"]))
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]))
 
             self._add_driver_class_path(
-                absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]))
 
             self._start_session()
 
@@ -443,7 +431,6 @@ class Optimus:
             self._setup_options(self.additional_options),
             'pyspark-shell',
         ]
-
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
         Spark.instance = Spark().create(self.master, self.app_name)
