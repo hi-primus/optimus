@@ -153,10 +153,24 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
-        # Spark can not handle point character in columns names so We enclose the name with `` to ensure
-        # columns = escape_columns(columns)
 
         return self.select(columns)
+
+    @add_attr(cols)
+    def copy(input_cols, output_cols):
+        """
+        Copy one or multiple columns
+        :param input_cols: Source column to be copied
+        :param output_cols: Destination column
+        :return:
+        """
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        df = self
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, F.col(input_col))
+        return df
 
     @add_attr(cols)
     def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, verbose=True):
