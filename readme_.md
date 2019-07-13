@@ -68,7 +68,7 @@ sys.path.append("..")
 
 ```python
 from optimus import Optimus
-op= Optimus()
+op= Optimus(verbose=True)
 ```
 
 You also can use an already created Spark session:
@@ -89,6 +89,7 @@ df = op.load.csv("examples/data/foo.csv")
 #json
 # Use a local file
 df = op.load.json("examples/data/foo.json")
+
 # Use a url
 df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
@@ -101,6 +102,40 @@ df = op.load.parquet("examples/data/foo.parquet")
 # excel 
 df = op.load.excel("examples/data/titanic3.xls")
 ```
+
+Also you can load data from oracle, redshit, mysql and postgres. See ***Database connection***
+
+
+## Saving Data
+
+```python
+#csv
+df.save.csv("examples/data/foo.csv")
+
+# json
+df.save.json("examples/data/foo.json")
+
+# parquet
+df.save.parquet("examples/data/foo.parquet")
+
+# avro
+#df.save.avro("examples/data/foo.avro")
+```
+
+Also you can save data to oracle, redshit, mysql and postgres. See ***Database connection***
+
+
+## Handling Spark jars, packages and repositories
+
+
+With optimus is easy to loading jars, packages and repos. You can init optimus/spark like 
+
+```python
+op= Optimus(repositories = , packages=, jars=, additional_options=)
+```
+
+## Create dataframes
+
 
 Also you can create a dataframe from scratch
 ```python
@@ -153,6 +188,20 @@ df.table_image("images/table.png")
 ```
 
 
+Also you can create a dataframe from a panda dataframe
+
+```python
+import pandas as pd
+pdf = pd.DataFrame({'A': {0: 'a', 1: 'b', 2: 'c',3:'d'},
+                    'B': {0: 1, 1: 3, 2: 5,3:7},
+                       'C': {0: 2, 1: 4, 2: 6,3:None},
+                       'D': {0:'1980/04/10',1:'1980/04/10',2:'1980/04/10',3:'1980/04/10'},
+                       })
+
+s_pdf = op.create.df(pdf=pdf)
+s_pdf.table_image("images/pandas.png")
+```
+
 ## Cleaning and Processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
@@ -180,9 +229,6 @@ new_df = df\
     .cols.unnest("last position seen",separator=",", output_cols="pos")\
     .cols.drop(["last position seen", "japanese name","date arrival", "cybertronian", "nulltype"])
 
-# .cols.apply_by_dtypes("product",func=func, func_return_type="string", data_type="integer")\
-# .cols.replace("product","taaaccoo","taco")\
-# .cols.replace("product",["piza","pizzza"],"pizza")\
 ```
 
 You transform this
@@ -198,6 +244,46 @@ new_df.table_image("images/table2.png")
 ```
 
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
+
+
+### Handling column output
+
+With Optimus you can handle how the output column from a transformation in going to be handled.
+
+```python
+from pyspark.sql import functions as F
+
+def func(col_name, attr):
+    return F.upper(F.col(col_name))
+```
+
+If a **string** is passed to **input_cols** and **output_cols** is not defined the result from the operation is going to be saved in the same input column
+
+```python
+output_df = df.cols.apply(input_cols="names", output_cols=None,func=func)
+output_df.table_image("images/column_output_1.png")
+```
+
+If a **string** is passed to **input_cols** and a **string** is passed to **output_cols** the output is going to be saved in the output column
+
+```python
+output_df = df.cols.apply(input_cols="names", output_cols="names_up",func=func)
+output_df.table_image("images/column_output_2.png")
+```
+
+If a **list** is passed to **input_cols** and a **string** is passed to **out_cols** Optimus will concatenate the list with every element in the list to create a new column name with the output
+
+```python
+output_df = df.cols.apply(input_cols=["names","function"], output_cols="_up",func=func)
+output_df.table_image("images/column_output_3.png")
+```
+
+If a **list** is passed to **input_cols** and a **list** is passed in **out_cols** Optimus will output every input column in the respective output column
+
+```python
+output_df = df.cols.apply(input_cols=["names","function"], output_cols=["names_up","function_up"],func=func)
+output_df.table_image("images/column_output_4.png")
+```
 
 ### Custom functions
 Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
@@ -237,7 +323,7 @@ op.output("html")
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
-Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/new-api-profiler.ipynb).
+Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](examples/profiler.ipynb).
 
 Let's load a "big" dataset
 
@@ -354,6 +440,9 @@ db.table.show("*",20)
 
 #Get a table as dataframe
 db.table_to_df("tablename")
+
+# Create new table in the database
+db.df_to_table("tablename")
 ```
 
 
@@ -451,9 +540,6 @@ including:
 [[Become a sponsor](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.  
 [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)  
   
-## Optimus for Spark 1.6.x  
-  
-Optimus main stable branch will work now for Spark 2.3.1 The 1.6.x version is now under maintenance, the last tag release for this Spark version is the 0.4.0. We strongly suggest that you use the >2.x version of the framework because the new improvements and features will be added now on this version.
 ## Core Team
 Argenis Leon and Favio Vazquez
 
@@ -474,7 +560,9 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 # Post-process readme
 
 
-Process the readme file to remove header from jupytext, python comments and convert/add table to images
+The bellow script process the ```readme_.md``` that is ouputed from this notebook and remove the header from jupytext, python comments and convert/add table to images and output ```readme.md```.
+
+To make ```table_image()``` function be sure to install imagekit ```pip install imgkit```
 
 ```python
 from shutil import copyfile
