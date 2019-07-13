@@ -1,8 +1,7 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_dataframe, is_numeric
-from optimus.helpers.columns import parse_columns
-from optimus.internals import _z_score_col_name
+from optimus.helpers.check import is_dataframe, is_numeric, one_list_to_val
+from optimus.helpers.columns import parse_columns, name_col
 
 
 class ZScore:
@@ -10,52 +9,47 @@ class ZScore:
     Handle outliers using z Score
     """
 
-    def __init__(self, df, columns, threshold):
+    def __init__(self, df, col_name, threshold):
         """
 
-        :param df:
-        :param columns:
+        :param df: Spark Dataframe
+        :param col_name:
         """
-        self.df = df
-        self.columns = columns
-        self.threshold = threshold
-
-    def _z_score(self, action):
-        """
-        Get outlier using z score
-
-        :return:
-        """
-        df = self.df
-        columns = self.columns
-        threshold = self.threshold
 
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
+        self.df = df
+
         if not is_numeric(threshold):
             raise TypeError("Numeric expected")
+        self.threshold = threshold
 
-        columns = parse_columns(df, columns)
-
-        for col_name in columns:
-            # the column with the z_col value is always the string z_col plus the name of column
-            z_col_name = _z_score_col_name(col_name)
-
-            if action is "drop":
-                df = df.cols.z_score(col_name,z_col_name) \
-                    .rows.drop(F.col(z_col_name) > threshold) \
-                    .cols.drop(z_col_name)
-
-            elif action is "select":
-                df = df.cols.z_score(col_name) \
-                    .rows.select(F.col(z_col_name) > threshold) \
-                    .cols.drop(z_col_name)
-
-        return df
+        self.col_name = one_list_to_val(parse_columns(df, col_name))
 
     def drop(self):
-        return self._z_score("drop")
+        col_name = self.col_name
+        z_col_name = name_col(col_name, "z_score")
+        threshold = self.threshold
+
+        return self.df.cols.z_score(col_name, z_col_name) \
+            .rows.drop(F.col(z_col_name) > threshold) \
+            .cols.drop(z_col_name)
 
     def select(self):
-        return self._z_score("select")
+        col_name = self.col_name
+        z_col_name = name_col(col_name, "z_score")
+        threshold = self.threshold
+
+        return self.df.cols.z_score(col_name, z_col_name) \
+            .rows.select(F.col(z_col_name) > threshold) \
+            .cols.drop(z_col_name)
+
+    def non_outliers_count(self):
+        return self.drop().count()
+
+    def count(self):
+        return self.select().count()
+
+    def info(self):
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count()}

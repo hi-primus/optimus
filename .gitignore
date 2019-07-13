@@ -8,7 +8,10 @@
 # Optimus
 
 examples/checkPointFolder
-examples/data
+examples/data/foo.csv
+examples/data/foo.json
+examples/data/foo.parquet
+
 metastore_db
 spark-warehouse
 projectFilesBackup/tests.py
