@@ -1537,9 +1537,9 @@ def cols(self):
             splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits, output_cols=_bucket_col_name(col_name))
+            df = bucketizer(df, col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
 
-        columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
+        columns_bucket = [name_col(col_name, "bucketizer") for col_name in columns]
 
         size_name = "count"
         result = df.groupby(columns_bucket).agg(F.count('*').alias(size_name),
@@ -1570,9 +1570,8 @@ def cols(self):
             splits = create_buckets(min_value, max_value, buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=_bucket_col_name(col_name))
-
-            col_bucket = _bucket_col_name(col_name)
+            col_bucket = name_col(col_name, "bucketizer")
+            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=col_bucket)
 
             counts = (df
                       .h_repartition(col_name=col_bucket)
@@ -1707,8 +1706,8 @@ def cols(self):
         check_column_numbers(columns, "*")
 
         for col_name in columns:
-            output_col = col_name + "_qcut"
-            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
+            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name,
+                                              outputCol=name_col(col_name, "qcut"),
                                               handleInvalid=handle_invalid)
             df = discretizer.fit(df).transform(df)
         return df
