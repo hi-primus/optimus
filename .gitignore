@@ -7,8 +7,10 @@
 
 # Optimus
 
-metastore_db/
-checkPointFolder/
+examples/checkPointFolder
+examples/data
+metastore_db
+spark-warehouse
 projectFilesBackup/tests.py
 
 # Distribution / packaging
@@ -26,13 +28,8 @@ __pycache__
 .coverage*
 .DS_Store
 .pytest_cache/
-examples/example.json
-examples/random.csv
 data.json
 .pytest_cache/README.md
-examples/order_products__prior.csv
-examples/server.pid
-
 examples/new-api-jar-test\.ipynb
 venv/
 
@@ -42,10 +39,3 @@ tests/test.json/
 tests/test.parquet/
 *.test
 
-handyspark \.ipynb
-
-handyspark1\.ipynb
-
-examples/new-api-sandbox\.ipynb
-
-examples/new-api-optimus-jars\.ipynb
