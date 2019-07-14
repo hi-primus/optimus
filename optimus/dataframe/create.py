@@ -1,7 +1,7 @@
 import pandas as pd
 from pyspark.sql.types import StringType, StructField, StructType
 
-from optimus import Spark
+from optimus.spark import Spark
 from optimus.helpers.check import is_, is_list_of_tuples, is_one_element, is_tuple
 from optimus.helpers.functions import infer
 from optimus.helpers.parser import parse_spark_class_dtypes
