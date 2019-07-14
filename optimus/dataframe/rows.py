@@ -7,7 +7,8 @@ from pyspark.sql import functions as F
 # Helpers
 import optimus as op
 from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, one_list_to_val
+from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples
+from optimus.helpers.converter import one_list_to_val
 from optimus import val_to_list
 from optimus.helpers.decorators import *
 from optimus.helpers.columns import parse_columns, validate_columns_names

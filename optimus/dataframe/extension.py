@@ -13,7 +13,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.check import is_str, is_column_a, val_to_list, one_list_to_val
+from optimus.helpers.check import is_str, is_column_a
+from optimus.helpers.converter import one_list_to_val
+from optimus import val_to_list
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse
 from optimus.helpers.output import print_html

@@ -9,8 +9,8 @@ from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
 from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
-    is_date, is_binary, \
-    str_to_boolean, str_to_date, str_to_array, one_list_to_val
+    is_date, is_binary
+from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
 

@@ -19,8 +19,9 @@ from pyspark.sql.types import StringType, ArrayType
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_numeric, is_column_a, val_to_list, \
-    one_list_to_val, tuple_to_dict, format_dict, is_nan
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_numeric, is_column_a, is_nan
+from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
+
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
