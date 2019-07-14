@@ -109,12 +109,12 @@ class Optimus:
             # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
             self._add_jars(
-                absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "uri"))
 
             self._add_driver_class_path(
-                absolute_path(["/jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "posfix"))
             self._start_session()
 
             if path is None:
@@ -172,8 +172,8 @@ class Optimus:
         """
         try:
             if __IPYTHON__:
-                path = os.path.dirname(os.path.abspath(__file__))
-                url = path + "//css//styles.css"
+                url = absolute_path("/css/styles.css")
+                print(url)
                 styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
@@ -387,7 +387,7 @@ class Optimus:
 
     def _setup_driver_class_path(self):
         if self.driver_class_path:
-            return '--driver-class-path "{}"'.format(':'.join(self.driver_class_path))
+            return '--driver-class-path "{}"'.format(';'.join(self.driver_class_path))
         else:
             return ''
 

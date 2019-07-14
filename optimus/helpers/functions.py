@@ -8,9 +8,10 @@ from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql.types import ArrayType
 
+from optimus import ROOT_DIR
 from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
     is_date, is_binary
-from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array
+from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
 
@@ -101,9 +102,13 @@ def filter_list(val, index=0):
         return one_list_to_val([column[index] for column in val])
 
 
-def absolute_path(files):
-    path = os.path.dirname(os.path.abspath(__file__))
-    return [Path(path + file).absolute().as_uri() for file in files]
+def absolute_path(files, format="posix"):
+    files = val_to_list(files)
+    if format == "uri":
+        result = [Path(ROOT_DIR + file).as_uri() for file in files]
+    elif format == "posfix":
+        result = [Path(ROOT_DIR + file).as_posix() for file in files]
+    return result
 
 
 def is_pyarrow_installed():
