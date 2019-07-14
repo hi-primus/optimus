@@ -19,21 +19,20 @@ from pyspark.sql.types import StringType, ArrayType
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric, is_column_a
-from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_numeric, is_column_a, val_to_list, \
+    one_list_to_val, tuple_to_dict, format_dict, is_nan
+from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
+    name_col
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
-from optimus.helpers.converter import val_to_list, one_list_to_val, tuple_to_dict
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import format_dict, \
-    filter_list, collect_as_list
+    import filter_list, collect_as_list
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
-from optimus.internals import _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
 
@@ -655,13 +654,10 @@ def cols(self):
         for col_name in columns:
 
             _mad = {}
+            median_value = self.cols.median(col_name, relative_error)
 
-            # return mean(absolute(data - mean(data, axis)), axis)
-            median_value = self.cols.median(col_name)
-
-            mad_value = self.select(col_name) \
-                .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-                .cols.median(col_name)
+            mad_value = self.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+                .cols.median(col_name, relative_error)
 
             if more:
                 _mad = {"mad": mad_value, "median": median_value}
@@ -1050,8 +1046,6 @@ def cols(self):
         """
 
         # if regex or normal replace we use regexp or replace functions
-        # TODO check if .contains can be used instead of regexp
-
         def func_regex(_input_cols, attr):
             _search = attr[0]
             _replace = attr[1]
