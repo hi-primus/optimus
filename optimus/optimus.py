@@ -109,12 +109,12 @@ class Optimus:
             # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
             self._add_jars(
-                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]))
+                absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
+                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
 
             self._add_driver_class_path(
-                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]))
+                absolute_path(["/jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
+                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
             self._start_session()
 
             if path is None:
