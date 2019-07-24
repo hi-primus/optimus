@@ -9,7 +9,7 @@ from optimus.helpers.output import output_image, output_base64
 
 def plot_scatterplot(column_data=None, output=None, path=None):
     """
-    Boxplot
+    Scatter plot
     :param column_data: column data in json format
     :param output: image or base64
     :param path:
@@ -21,21 +21,21 @@ def plot_scatterplot(column_data=None, output=None, path=None):
     plt.xlabel(column_data["x"]["name"])
     plt.ylabel(column_data["y"]["name"])
 
-    # Tweak spacing to prevent clipping of tick-labels
-    # plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-    # Save as base64
     if output is "base64":
         return output_base64(fig)
     elif output is "image":
         return output_image(path)
+    elif output is "plot":
+        # Tweak spacing to prevent clipping of tick-labels
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
 def plot_boxplot(column_data=None, output=None, path=None):
     """
-    Boxplot
+    Box plot
     :param column_data: column data in json format
-    :param output: image or base64
+    :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    image to the notebook
     :param path:
     :return:
     """
@@ -65,11 +65,12 @@ def plot_boxplot(column_data=None, output=None, path=None):
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
-def plot_freq(column_data=None, output=None, path=None):
+def plot_frequency(column_data=None, output=None, path=None):
     """
     Frequency plot
     :param column_data: column data in json format
-    :param output: image or base64
+    :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    image to the notebook
     :param path:
     :return:
     """
@@ -95,50 +96,13 @@ def plot_freq(column_data=None, output=None, path=None):
 
         plt.xticks(rotation=45, ha="right")
 
-        # Tweak spacing to prevent clipping of tick-labels
-        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-        # Save as base64
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
             return output_image(path)
-
-
-def plot_missing_values(column_data=None, output=None):
-    """
-    Plot missing values
-    :param column_data:
-    :param output: image o base64
-    :return:
-    """
-    values = []
-    columns = []
-    labels = []
-    for col_name, data in column_data["data"].items():
-        values.append(data["missing"])
-        columns.append(col_name)
-        labels.append(data["%"])
-
-    # Plot
-    fig = plt.figure(figsize=(12, 5))
-    plt.bar(columns, values)
-    plt.xticks(columns, columns)
-
-    # Highest limit
-    highest = column_data["count"]
-    plt.ylim(0, 1.05 * highest)
-    plt.title("Missing Values")
-    i = 0
-    for label, val in zip(labels, values):
-        plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
-        i = i + 1
-
-    plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-    # Save as base64
-    if output is "base64":
-        return output_base64(fig)
+        elif output is "plot":
+            # Tweak spacing to prevent clipping of tick-labels
+            plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
 def plot_hist(column_data=None, output=None, sub_title="", path=None):
@@ -150,7 +114,8 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
     ...
     ]}
     :param column_data: column data in json format
-    :param output: image or base64
+    :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    image to the notebook
     :param sub_title: plot subtitle
     :param path:
     :return: plot, image or base64
@@ -179,16 +144,15 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
         plt.bar(center, hist, width=width)
         plt.title("Histogram '" + col_name + "' " + sub_title)
 
-        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-        # Save as base64
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
             return output_image(path)
+        elif output is "plot":
+            plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
-def plot_correlation(column_data, output=None, path=None):
+def plot_correlation(column_data):
     """
     Plot a correlation plot
     :param column_data:
@@ -196,3 +160,41 @@ def plot_correlation(column_data, output=None, path=None):
     """
     return sns.heatmap(column_data, mask=np.zeros_like(column_data, dtype=np.bool),
                        cmap=sns.diverging_palette(220, 10, as_cmap=True))
+
+
+def plot_missing_values(column_data=None, output=None, path=None):
+    """
+    Plot missing values
+    :param column_data:
+    :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    image to the notebook
+    :return:
+    """
+    values = []
+    columns = []
+    labels = []
+    for col_name, data in column_data["data"].items():
+        values.append(data["missing"])
+        columns.append(col_name)
+        labels.append(data["%"])
+
+    # Plot
+    fig = plt.figure(figsize=(12, 5))
+    plt.bar(columns, values)
+    plt.xticks(columns, columns)
+
+    # Highest limit
+    highest = column_data["count"]
+    plt.ylim(0, 1.05 * highest)
+    plt.title("Missing Values")
+    i = 0
+    for label, val in zip(labels, values):
+        plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
+        i = i + 1
+
+    if output is "base64":
+        return output_base64(fig)
+    elif output is "image":
+        return output_image(path)
+    elif output is "plot":
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)

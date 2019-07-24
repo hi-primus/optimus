@@ -1,14 +1,14 @@
 from pyspark.sql import DataFrame
 
 from optimus import PYSPARK_NUMERIC_TYPES
-from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_freq, plot_hist, plot_correlation
+from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, plot_correlation
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.columns import parse_columns, check_column_numbers
 
 
 def plot(self):
     @add_attr(plot)
-    def hist(columns=None, buckets=10, output_format="base64", ouput_path=None):
+    def hist(columns=None, buckets=10, output_format="plot", ouput_path=None):
         """
         Plot histogram
         :param columns: Columns to be printed
@@ -25,7 +25,7 @@ def plot(self):
             plot_hist({col_name: data}, output=output_format, path=ouput_path)
 
     @add_attr(plot)
-    def scatter(columns=None, buckets=30, output_format="image", output_path=None):
+    def scatter(columns=None, buckets=30, output_format="plot", output_path=None):
         """
         Plot boxplot
         :param columns: columns to be printed
@@ -41,7 +41,7 @@ def plot(self):
         plot_scatterplot(data, output=output_format, path=output_path)
 
     @add_attr(plot)
-    def box(columns=None, output_format="image", output_path=None):
+    def box(columns=None, output_format="plot", output_path=None):
         """
         Plot boxplot
         :param columns: Columns to be printed
@@ -57,7 +57,7 @@ def plot(self):
             plot_boxplot({col_name: stats}, output=output_format, path=output_path)
 
     @add_attr(plot)
-    def frequency(columns=None, buckets=10, output_format="image", output_path=None):
+    def frequency(columns=None, buckets=10, output_format="plot", output_path=None):
         """
         Plot frequency chart
         :param columns: Columns to be printed
@@ -70,10 +70,10 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.frequency(col_name, buckets)
-            plot_freq(data, output=output_format, path=output_path)
+            plot_frequency(data, output=output_format, path=output_path)
 
     @add_attr(plot)
-    def correlation(col_name, method="pearson", output_format="image", output_path=None):
+    def correlation(col_name, method="pearson", output_format="plot", output_path=None):
         """
         Compute the correlation matrix for the input data set of Vectors using the specified method. Method
         mapped from pyspark.ml.stat.Correlation.
