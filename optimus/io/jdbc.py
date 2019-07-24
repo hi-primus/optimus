@@ -22,11 +22,11 @@ class JDBC:
         :return:
         """
 
+
         self.db_driver = driver
         self.oracle_sid = oracle_sid
 
         # Handle the default port
-
         if self.db_driver == "redshift":
             if port is None: self.port = 5439
             # "com.databricks.spark.redshift"
@@ -38,7 +38,7 @@ class JDBC:
         elif self.db_driver == "mysql":
             if port is None: self.port = 3306
             # "com.mysql.jdbc.Driver"
-
+            
         elif self.db_driver == "sqlserver":
             if port is None: self.port = 1433
             # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
@@ -86,6 +86,7 @@ class JDBC:
                 url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
 
         logger.print(url)
+
         self.url = url
         self.database = database
         self.user = user

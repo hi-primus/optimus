@@ -1193,7 +1193,6 @@ def cols(self):
         else:
             df = self
             result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
-            print(result)
         return format_dict(result)
 
     @add_attr(cols)
