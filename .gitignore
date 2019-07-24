@@ -8,9 +8,6 @@
 # Optimus
 
 examples/checkPointFolder
-examples/data/foo.csv
-examples/data/foo.json
-examples/data/foo.parquet
 
 metastore_db
 spark-warehouse
@@ -42,3 +39,7 @@ tests/test.json/
 tests/test.parquet/
 *.test
 
+
+examples/new-api-optimus-jars\.ipynb
+
+readme/credentials\.py
