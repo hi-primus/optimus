@@ -1,3 +1,6 @@
+from optimus.helpers.converter import one_list_to_val
+
+
 class RaiseIt:
 
     @staticmethod
@@ -73,7 +76,7 @@ class RaiseIt:
                          .format(var_name=get_var_name(var),
                                  type=divisor.join(map(
                                      lambda x: "'" + x + "'",
-                                     data_values)), var_type=var))
+                                     data_values)), var_type=one_list_to_val(var)))
 
     @staticmethod
     def type(cls, var):

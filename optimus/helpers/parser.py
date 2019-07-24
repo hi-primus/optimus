@@ -33,7 +33,7 @@ def parse_col_names_funcs_to_keys(data):
                 # If the value is numeric only get 5 decimals
                 if is_nan(v):
                     print(
-                        "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that {COL_NAME} has 'nan' values".format(
+                        "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that '{COL_NAME}' has 'nan' values".format(
                             FUNCTION=f,
                             COL_NAME=_col_name))
                 elif is_numeric(v):
