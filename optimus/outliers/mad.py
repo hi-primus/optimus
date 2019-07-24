@@ -1,7 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_int
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.filters import dict_filter
 
 
 class MAD:
@@ -9,47 +8,66 @@ class MAD:
     Handle outliers using mad
     """
 
-    def __init__(self, df, columns, threshold):
+    def __init__(self, df, col_name, threshold, relative_error=1):
         """
 
         :param df:
-        :param columns:
+        :param col_name:
         """
         self.df = df
-        self.columns = columns
+        self.col_name = col_name
         self.threshold = threshold
+        self.relative_error = relative_error
 
-    def _mad(self, action):
+    def whiskers(self):
         """
+        Get the wisker used to defined outliers
+        :return:
+        """
+        mad_value = self.df.cols.mad(self.col_name, self.relative_error, more=True)
+        lower_bound = mad_value["median"] - self.threshold * mad_value["mad"]
+        upper_bound = mad_value["median"] + self.threshold * mad_value["mad"]
 
-               :type action:
-               :return:
-               """
-
-        df = self.df
-        columns = self.columns
-        threshold = self.threshold
-
-        if not is_dataframe(df):
-            raise TypeError("Spark Dataframe expected")
-
-        if not is_int(threshold):
-            raise TypeError("Integer expected")
-
-        columns = parse_columns(df, columns)
-        for c in columns:
-            mad_value = df.cols.mad(c, more=True)
-            lower_bound = mad_value["median"] - threshold * mad_value["mad"]
-            upper_bound = mad_value["median"] + threshold * mad_value["mad"]
-
-            if action is "select":
-                df = df.rows.select((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
-            elif action is "drop":
-                df = df.rows.drop((F.col(c) > upper_bound) | (F.col(c) < lower_bound))
-        return df
+        return {"lower_bound": lower_bound, "upper_bound": upper_bound}
 
     def drop(self):
-        return self._mad("drop")
+        col_name = self.col_name
+        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
+        return self.df.rows.drop((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
 
     def select(self):
-        return self._mad("select")
+        """
+        Select outliers rows using the selected column
+        :return:
+        """
+        col_name = self.col_name
+        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
+        return self.df.rows.select((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+
+    def count(self):
+        """
+        Count the outliers rows using the selected column
+        :return:
+        """
+
+        return self.select().count()
+
+    def non_outliers_count(self):
+        """
+        Count non outliers rows using the selected column
+        :return:
+        """
+
+        return self.drop().count()
+
+    def info(self):
+        """
+        Get whiskers, iqrs and outliers and non outliers count
+        :return:
+        """
+        upper_bound, lower_bound, = dict_filter(self.whiskers(),
+                                                ["upper_bound", "lower_bound"])
+
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound, }

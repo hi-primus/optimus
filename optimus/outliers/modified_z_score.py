@@ -1,8 +1,8 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.checkit import is_dataframe, is_numeric
-from optimus.helpers.functions import parse_columns
-from optimus.internals import _m_z_score_col_name
+from optimus.helpers.check import is_dataframe, is_numeric
+from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.columns import parse_columns, name_col
 
 
 class ModifiedZScore:
@@ -12,51 +12,54 @@ class ModifiedZScore:
     :return:
     """
 
-    def __init__(self, df, columns, threshold):
+    def __init__(self, df, col_name, threshold, relative_error):
         """
 
         :param df:
-        :param columns:
+        :param col_name:
         :param threshold:
         """
-        self.df = df
-        self.columns = columns
-        self.threshold = threshold
-
-    def _modified_z_score(self, action):
-        """
-
-        :param action:
-        :return:
-        """
-
-        df = self.df
-        columns = self.columns
-        threshold = self.threshold
-
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
         if not is_numeric(threshold):
             raise TypeError("Numeric expected")
 
-        columns = parse_columns(df, columns)
+        if not is_numeric(relative_error):
+            raise TypeError("Numeric expected")
 
-        for col_name in columns:
-            median = df.cols.median(col_name)
-            median_absolute_deviation = df.select(F.abs(F.col(col_name) - median).alias(col_name)).cols.median(col_name)
+        self.df = df
+        self.threshold = threshold
+        self.relative_error = relative_error
 
-            m_z_col_name = _m_z_score_col_name(col_name)
+        self.col_name = one_list_to_val(parse_columns(df, col_name))
 
-            df = df.withColumn(m_z_col_name, F.abs(0.6745 * (F.col(col_name) - median) / median_absolute_deviation))
-            if action is "select":
-                df = df.rows.select(F.col(m_z_col_name) > threshold)
-            elif action is "drop":
-                df = df.rows.drop(F.col(m_z_col_name) > threshold)
-        return df
+    def _m_z_score(self):
+        df = self.df
+        col_name = self.col_name
+
+        mad = df.cols.mad(col_name, self.relative_error, True)
+        m_z_col_name = name_col(col_name, "modified_z_score")
+
+        return df.withColumn(m_z_col_name, F.abs(0.6745 * (F.col(col_name) - mad["median"]) / mad["mad"]))
 
     def select(self):
-        return self._modified_z_score("select")
+
+        m_z_col_name = name_col(self.col_name, "modified_z_score")
+        df = self._m_z_score()
+        return df.rows.select(F.col(m_z_col_name) > self.threshold).cols.drop(m_z_col_name)
 
     def drop(self):
-        return self._modified_z_score("drop")
+
+        m_z_col_name = name_col(self.col_name, "modified_z_score")
+        df = self._m_z_score()
+        return df.rows.drop(F.col(m_z_col_name) > self.threshold).cols.drop(m_z_col_name)
+
+    def non_outliers_count(self):
+        return self.drop().count()
+
+    def count(self):
+        return self.select().count()
+
+    def info(self):
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count()}

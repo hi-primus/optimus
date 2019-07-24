@@ -4,8 +4,8 @@ from pyspark.sql.functions import *
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.helpers.checkit import is_dataframe, is_str
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.check import is_dataframe, is_str
+from optimus.helpers.columns import parse_columns
 from optimus.ml.feature import string_to_index, vector_assembler
 from optimus.spark import Spark
 

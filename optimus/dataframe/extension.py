@@ -13,10 +13,14 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.checkit import is_str, is_column_a
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.check import is_str, is_column_a
+from optimus.helpers.converter import one_list_to_val
+from optimus import val_to_list
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html, json_converter
+from optimus.helpers.functions import collect_as_dict, random_int, traverse
+from optimus.helpers.output import print_html
+from optimus.helpers.json import json_converter
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -351,7 +355,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=100, columns=None, title=None):
+def table(self, limit=10, columns=None, title=None):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
             result = self.table_html(title=title, limit=limit, columns=columns)
@@ -364,30 +368,28 @@ def table(self, limit=100, columns=None, title=None):
 
 
 @add_method(DataFrame)
-def correlation(self, columns, method="pearson", output="json"):
+def correlation(self, input_cols, method="pearson", output="json"):
     """
     Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
     missing values
     :param self:
-    :param columns: Columns to be processed
+    :param input_cols: Columns to be processed
     :param method: Method used to calculate the correlation
     :param output: array or json
     :return:
     """
-    columns = parse_columns(self, columns)
+    input_cols = parse_columns(self, input_cols)
     # try to parse the select column to float and create a vector
 
     df = self
-    if len(columns) == 1:
-        if is_column_a(df, columns, "vector"):
-            output_col = one_list_to_val(columns)
-    else:
-        output_col = "_correlation_features"
-        for col_name in columns:
+
+    # Input is not a vector transfor to vector
+    if not is_column_a(df, input_cols, "vector"):
+        for col_name in input_cols:
             df = df.cols.cast(col_name, "float")
             logger.print("Casting {col_name} to float...".format(col_name=col_name))
-
-        df = df.cols.nest(columns, "vector", output_cols=output_col)
+        output_col = name_col(input_cols, "correlation")
+        df = df.cols.nest(input_cols, "vector", output_cols="output_col")
 
     # Create Vector necessary to calculate the correlation
     corr = Correlation.corr(df, output_col, method).head()[0].toArray()
@@ -399,8 +401,8 @@ def correlation(self, columns, method="pearson", output="json"):
 
         # Parse result to json
         col_pair = []
-        for col_name in columns:
-            for col_name_2 in columns:
+        for col_name in input_cols:
+            for col_name_2 in input_cols:
                 col_pair.append({"between": col_name, "an": col_name_2})
 
         # flat array

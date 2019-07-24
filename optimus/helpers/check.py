@@ -4,14 +4,30 @@ Helpers to check if an object match a date type
 import datetime
 import os
 import re
-from ast import literal_eval
 
-import dateutil
-from pyspark.sql import functions as F
+import math
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.raiseit import RaiseIt
+
+
+def is_nan(value):
+    """
+    Check if a value is nan
+    :param value:
+    :return:
+    """
+    result = False
+    if is_str(value):
+        if value.lower() == "nan":
+            result = True
+    elif is_numeric(value):
+        if math.isnan(value):
+            result = True
+    return result
 
 
 def is_same_class(class1, class2):
@@ -101,14 +117,17 @@ def is_column(value):
 def is_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
-    :param df:
-    :param column:
-    :param dtypes:
+    :param df: dataframe
+    :param column: column to be compared with
+    :param dtypes: types to be checked
     :return:
     """
+    column = val_to_list(column)
+
+    if len(column) > 1:
+        RaiseIt.length_error(column, 1)
 
     data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
-
     column = one_list_to_val(column)
 
     # Filter columns by data type
@@ -376,36 +395,3 @@ def has_(value, _type):
     :return:
     """
     return any(isinstance(elem, _type) for elem in value)
-
-
-def str_to_boolean(value):
-    """
-    Check if a str can be converted to boolean
-    :param value:
-    :return:
-    """
-    value = value.lower()
-    if value == "true" or value == "false":
-        return True
-
-
-def str_to_date(value):
-    try:
-        dateutil.parser.parse(value)
-        return True
-    except (ValueError, OverflowError):
-        pass
-
-
-def str_to_array(value):
-    """
-    Check if value can be parsed to a tuple or and array.
-    Because Spark can handle tuples we will try to transform tuples to arrays
-    :param value:
-    :return:
-    """
-    try:
-        if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
-            return True
-    except (ValueError, SyntaxError,):
-        pass

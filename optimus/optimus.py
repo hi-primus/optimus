@@ -1,18 +1,20 @@
 import os
 import sys
-from pathlib import Path
+from functools import reduce
 from shutil import rmtree
 
 from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 
+from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
-from optimus.functions import append, Create
-from optimus.helpers.checkit import is_list
+from optimus.helpers.check import is_list
 from optimus.helpers.constants import *
-from optimus.helpers.convert import val_to_list
-from optimus.helpers.functions import print_html, print_json
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html, print_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
@@ -104,28 +106,15 @@ class Optimus:
             # TODO:
             #  if the Spark 2.4 version is going to be used this is not neccesesary.
             #  Maybe we can check a priori which version fo Spark is going to be used
-            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            def absolute_path(files):
-                return [Path(path + file).as_posix() for file in files]
-
-            path = os.path.dirname(os.path.abspath(__file__))
-
-            # Add databases jars
-            # self._add_jars(
-            #     absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
-            #                    "//jars/ojdbc7.jar", "//jars/postgresql-42.2.5.jar"]))
-            #
-
-            # Linux
             self._add_jars(
-                absolute_path(["//jars/RedshiftJDBC42-1.2.16.1027.jar", "//jars/mysql-connector-java-8.0.16.jar",
-                               "//jars/ojdbc8.jar", "//jars/postgresql-42.2.5.jar"]))
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "uri"))
 
             self._add_driver_class_path(
-                absolute_path(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                               "//jars//ojdbc8.jar", "//jars//postgresql-42.2.5.jar"]))
-
+                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "posfix"))
             self._start_session()
 
             if path is None:
@@ -183,8 +172,8 @@ class Optimus:
         """
         try:
             if __IPYTHON__:
-                path = os.path.dirname(os.path.abspath(__file__))
-                url = path + "//css//styles.css"
+                url = absolute_path("/css/styles.css")
+                print(url)
                 styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
@@ -320,14 +309,34 @@ class Optimus:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
-    def append(dfs, like):
+    def append(dfs, like="columns"):
         """
         Concat multiple dataframes
         :param dfs: List of Dataframes
         :param like: concat as columns or rows
         :return:
         """
-        return append(dfs, like)
+
+        # FIX: Because monotonically_increasing_id can create different
+        # sequence for different dataframes the result could be wrong.
+
+        if like == "columns":
+            temp_dfs = []
+            col_temp_name = "id_" + random_int()
+            for df in dfs:
+                temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+            def _append(df1, df2):
+                return df1.join(df2, col_temp_name, "outer")
+
+            df_result = reduce(_append, temp_dfs).drop(col_temp_name)
+
+        elif like == "rows":
+            df_result = reduce(DataFrame.union, dfs)
+        else:
+            RaiseIt.value_error(like, ["columns", "rows"])
+
+        return df_result
 
     def _setup_repositories(self):
         if self.repositories:
@@ -378,7 +387,7 @@ class Optimus:
 
     def _setup_driver_class_path(self):
         if self.driver_class_path:
-            return '--driver-class-path "{}"'.format(':'.join(self.driver_class_path))
+            return '--driver-class-path "{}"'.format(';'.join(self.driver_class_path))
         else:
             return ''
 

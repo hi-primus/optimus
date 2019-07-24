@@ -1,3 +1,4 @@
+# TODO: We shold implement this has and interface
 class TemplateOutlierClass:
     """
     This is a template class to expand the outliers methods
@@ -23,7 +24,7 @@ class TemplateOutlierClass:
 
         df = self.df
 
-        # Calculate the outliers with the dataframe
+        # Calculate the outliers to filter the rows
 
         # Return here the df the outliers rows
         return df
@@ -35,7 +36,31 @@ class TemplateOutlierClass:
         """
         df = self.df
 
-        # Calculate the outliers with the dataframe
+        # Calculate the outliers to filter the rows
 
         # Return here the df without the outliers rows
         return df
+
+    def count(self):
+        """
+        Count the outliers rows using the selected column
+        :return:
+        """
+
+        return self.df.select().count()
+
+    def non_outliers_count(self):
+        """
+        Count non outliers rows using the selected column
+        :return:
+        """
+
+        return self.drop().count()
+
+    def info(self):
+        """
+        Get whiskers, iqrs and outliers and non outliers count
+        :return:
+        """
+
+        return {}

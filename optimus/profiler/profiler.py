@@ -1,4 +1,3 @@
-import imgkit
 import configparser
 import json
 import os
@@ -6,16 +5,19 @@ from collections import defaultdict
 
 import dateutil
 import humanize
+import imgkit
 import jinja2
 import pika
 import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
-from optimus.functions import filter_row_by_data_type as fbdt, plot_hist, plot_freq, plot_missing_values
+from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.dataframe.plots.functions import plot_freq, plot_missing_values, plot_hist
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import parse_columns, print_html
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html
@@ -181,7 +183,7 @@ class Profiler:
         return results
 
     @time_it
-    def run(self, df, columns, buckets=40, infer=False, relative_error=1):
+    def run(self, df, columns, buckets=40, infer=False, relative_error=1, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
 
@@ -190,6 +192,7 @@ class Profiler:
         :param buckets: Number of buckets calculated to print the histogram
         :param infer: infer data type
         :param relative_error: Relative Error for quantile discretizer calculation
+        :param approx_count: User approx_count_distinct or countDistinct
         :return:
         """
 
@@ -315,7 +318,7 @@ class Profiler:
         channel.close()
 
     @staticmethod
-    def to_json(df, columns, buckets=40, infer=False, relative_error=1):
+    def to_json(df, columns, buckets=40, infer=False, relative_error=1, approx_count=False):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -327,7 +330,7 @@ class Profiler:
         """
 
         # Get the stats for all the columns
-        output = Profiler.columns(df, columns, buckets, infer, relative_error)
+        output = Profiler.columns(df, columns, buckets, infer, relative_error, approx_count)
 
         # Add the data summary to the output
         output["summary"] = Profiler.dataset_info(df)
@@ -341,14 +344,15 @@ class Profiler:
         return output
 
     @staticmethod
-    def columns(df, columns, buckets=40, infer=False, relative_error=1):
+    def columns(df, columns, buckets=40, infer=False, relative_error=1, approx_count=False):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
         :param buckets: Create buckets divided by range. Each bin is equal.
+        :param infer: try to infer the column datatype
         :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
-        :return: json object with the
+        :return: json object
         """
 
         columns = parse_columns(df, columns)
@@ -374,7 +378,7 @@ class Profiler:
         df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
-        stats = Profiler.general_stats(df, columns)
+        stats = Profiler.general_stats(df, columns, approx_count)
 
         for col_name in columns:
             col_info = {}
@@ -435,18 +439,22 @@ class Profiler:
 
     @staticmethod
     @time_it
-    def general_stats(df, columns):
+    def general_stats(df, columns, approx_count=True):
         """
         Return General stats for a column
         :param df:
         :param columns:
+        :param approx_count: Use  approx_count
         :return:
         """
 
-        stats = df.cols._exprs(
-            [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct, na_agg,
-             zeros_agg],
-            columns)
+        exprs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, na_agg, zeros_agg]
+        if approx_count is True:
+            exprs = exprs.append(F.approx_count_distinct)
+        else:
+            exprs = exprs.append(F.countDistinct)
+
+        stats = df.cols._exprs(exprs, columns)
         return stats
 
     @staticmethod
@@ -538,6 +546,8 @@ class Profiler:
 
         # Uniques
         uniques = stats[col_name].pop("approx_count_distinct")
+        uniques = uniques.pop("countDistinct")
+
         col_info['stats']["uniques_count"] = uniques
         col_info['stats']["p_uniques"] = round((uniques / rows_count) * 100, 3)
         return col_info

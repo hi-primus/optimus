@@ -16,28 +16,26 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
-from optimus.functions import abstract_udf as audf
-from optimus.functions import filter_row_by_data_type as fbdt
+from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
-from optimus.helpers.checkit import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_dict, is_str, has_, is_numeric, is_column_a
+from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_numeric, is_column_a, is_nan
+from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
+
+from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
+    name_col
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
-from optimus.helpers.convert import val_to_list, one_list_to_val
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
-    import validate_columns_names, parse_columns, format_dict, \
-    tuple_to_dict, filter_list, get_spark_dtypes_object, collect_as_list, check_column_numbers, get_output_cols
-from optimus.helpers.parser import parse_python_dtypes
+    import filter_list, collect_as_list
+from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
-from optimus.internals import _bucket_col_name
 from optimus.profiler.functions import bucketizer
 from optimus.profiler.functions import create_buckets
-
-from optimus.functions import append as _append
 
 
 def cols(self):
@@ -155,10 +153,24 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
-        # Spark can not handle point character in columns names so We enclose the name with `` to ensure
-        # columns = escape_columns(columns)
 
         return self.select(columns)
+
+    @add_attr(cols)
+    def copy(input_cols, output_cols):
+        """
+        Copy one or multiple columns
+        :param input_cols: Source column to be copied
+        :param output_cols: Destination column
+        :return:
+        """
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        df = self
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, F.col(input_col))
+        return df
 
     @add_attr(cols)
     def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, verbose=True):
@@ -338,12 +350,12 @@ def cols(self):
 
                 _func_return_type = VectorUDT()
             # Parse standard data types
-            elif get_spark_dtypes_object(cls):
+            elif parse_spark_class_dtypes(cls):
 
                 _func_type = "column_exp"
 
                 def _cast_to(col_name, attr):
-                    return F.col(col_name).cast(get_spark_dtypes_object(cls))
+                    return F.col(col_name).cast(parse_spark_class_dtypes(cls))
 
                 _func_return_type = None
 
@@ -495,24 +507,23 @@ def cols(self):
             :return: json
             """
             functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                               "approx_count_distinct", "na", "zeros", "percentile"]
+                               "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count"]
             _result = {}
-            if is_dict(data):
-                for k, v in data.items():
-                    for f in functions_array:
-                        temp_func_name = f + "_"
-                        if k.startswith(temp_func_name):
-                            _col_name = k[len(temp_func_name):]
-                            # If the value is numeric only get 5 decimals
-                            if is_numeric(v):
-                                v = round(v, 5)
-                            _result.setdefault(_col_name, {})[f] = v
-            else:
-                if is_numeric(data):
-                    data = round(data, 5)
-                _result = data
+            for k, v in data[0].items():
+                for f in functions_array:
+                    temp_func_name = f + "_"
+                    if k.startswith(temp_func_name):
+                        _col_name = k[len(temp_func_name):]
+                        # If the value is numeric only get 5 decimals
+                        if is_numeric(v):
+                            v = round(v, 5)
+                        if is_nan(v):
+                            print(
+                                "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that {COL_NAME} has 'nan' values".format(
+                                    FUNCTION=f,
+                                    COL_NAME=_col_name))
 
-            return _result
+                        _result.setdefault(_col_name, {})[f] = v
 
         # Ensure that is a list
         funcs = val_to_list(funcs)
@@ -528,17 +539,16 @@ def cols(self):
                 # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
                 # Std dev is can not process date columns. So we do not calculated
 
-                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]) and (
-                        is_column_a(df, col_name, "date"))):
+                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                  F.count, zeros_agg]) and (
+                                is_column_a(df, col_name, "date"))):
                     # A different function must be use to calculate null in integers or data column data types
                     if func is na_agg and is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                         func = na_agg_integer
 
                     expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
 
-            # print(expression)
-        result = parse_col_names_funcs_to_keys(format_dict(df.agg(*expression).to_json()))
-        return result
+        return format_dict(parse_col_names_funcs_to_keys(df.agg(*expression).to_json()))
 
     # Quantile statistics
     @add_attr(cols)
@@ -578,7 +588,6 @@ def cols(self):
         return range_result
 
     @add_attr(cols)
-    # TODO: Use pandas or rdd for small datasets?!
     def median(columns, relative_error=1):
         """
         Return the median of a column dataframe
@@ -631,11 +640,12 @@ def cols(self):
     # Descriptive Analytics
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(columns, more=None):
+    def mad(columns, relative_error=1, more=None):
         """
         Return the Median Absolute Deviation
         :param columns: Column to be processed
         :param more: Return some extra computed values (Median).
+        :param relative_error: Relative error calculating the media
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
@@ -645,13 +655,10 @@ def cols(self):
         for col_name in columns:
 
             _mad = {}
+            median_value = self.cols.median(col_name, relative_error)
 
-            # return mean(absolute(data - mean(data, axis)), axis)
-            median_value = self.cols.median(col_name)
-
-            mad_value = self.select(col_name) \
-                .withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-                .cols.median(col_name)
+            mad_value = self.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+                .cols.median(col_name, relative_error)
 
             if more:
                 _mad = {"mad": mad_value, "median": median_value}
@@ -1040,8 +1047,6 @@ def cols(self):
         """
 
         # if regex or normal replace we use regexp or replace functions
-        # TODO check if .contains can be used instead of regexp
-
         def func_regex(_input_cols, attr):
             _search = attr[0]
             _replace = attr[1]
@@ -1527,9 +1532,9 @@ def cols(self):
             splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits, output_cols=_bucket_col_name(col_name))
+            df = bucketizer(df, col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
 
-        columns_bucket = [_bucket_col_name(col_name) for col_name in columns]
+        columns_bucket = [name_col(col_name, "bucketizer") for col_name in columns]
 
         size_name = "count"
         result = df.groupby(columns_bucket).agg(F.count('*').alias(size_name),
@@ -1560,9 +1565,8 @@ def cols(self):
             splits = create_buckets(min_value, max_value, buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=_bucket_col_name(col_name))
-
-            col_bucket = _bucket_col_name(col_name)
+            col_bucket = name_col(col_name, "bucketizer")
+            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=col_bucket)
 
             counts = (df
                       .h_repartition(col_name=col_bucket)
@@ -1697,8 +1701,8 @@ def cols(self):
         check_column_numbers(columns, "*")
 
         for col_name in columns:
-            output_col = col_name + "_qcut"
-            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name, outputCol=output_col,
+            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name,
+                                              outputCol=name_col(col_name, "qcut"),
                                               handleInvalid=handle_invalid)
             df = discretizer.fit(df).transform(df)
         return df
