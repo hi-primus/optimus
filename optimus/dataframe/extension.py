@@ -1,5 +1,4 @@
 import json
-import os
 
 import humanize
 import imgkit
@@ -13,19 +12,18 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.check import is_str, is_column_a
-from optimus.helpers.converter import one_list_to_val
 from optimus import val_to_list
+from optimus.helpers.check import is_str
+from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
-from optimus.helpers.output import print_html
 from optimus.helpers.json import json_converter
-from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
-
 
 @add_method(DataFrame)
 def roll_out():
@@ -385,10 +383,14 @@ def correlation(self, input_cols, method="pearson", output="json"):
     :param output: array or json
     :return:
     """
-    input_cols = parse_columns(self, input_cols)
-    # try to parse the select column to float and create a vector
 
     df = self
+
+    # Values in columns can not be null. Warn user
+    input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+    # try to parse the select column to float and create a vector
+
+    # print(self.cols.count_na(input_cols))
 
     # Input is not a vector transform to a vector
     output_col = name_col(input_cols, "correlation")
