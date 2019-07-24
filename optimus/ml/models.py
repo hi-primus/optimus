@@ -115,7 +115,7 @@ class ML:
 
         model = GBTClassifier(**kargs)
 
-        df = df.cols.rename([(input_col + "_index", "label")])
+        df = df.cols.rename((input_col + "_index", "label"))
 
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
