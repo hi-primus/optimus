@@ -5,7 +5,7 @@ from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 from optimus.helpers.check import is_dataframe, is_str
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.ml.feature import string_to_index, vector_assembler
 from optimus.spark import Spark
 
@@ -49,8 +49,7 @@ class ML:
         df = vector_assembler(df, input_cols=feats)
 
         model = RandomForestClassifier(**kargs)
-
-        df = df.cols.rename([(input_col + "_index", "label")])
+        df = df.cols.rename(name_col(input_col, "index"), "label")
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -83,7 +82,7 @@ class ML:
 
         model = DecisionTreeClassifier(**kargs)
 
-        df = df.cols.rename([(input_col + "_index", "label")])
+        df = df.cols.rename(name_col(input_col, "index"), "label")
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
