@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
 from optimus.helpers.functions import ellipsis
-from optimus.helpers.output import output_image, output_base64
+from optimus.helpers.output import output_image, output_base64, print_html
 
 
 def plot_scatterplot(column_data=None, output=None, path=None):
@@ -24,7 +24,8 @@ def plot_scatterplot(column_data=None, output=None, path=None):
     if output is "base64":
         return output_base64(fig)
     elif output is "image":
-        return output_image(path)
+        output_image(path)
+        print_html("<img src='" + path + "'>")
     elif output is "plot":
         # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
@@ -99,7 +100,8 @@ def plot_frequency(column_data=None, output=None, path=None):
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
-            return output_image(path)
+            output_image(path)
+            print_html("<img src='" + path + "'>")
         elif output is "plot":
             # Tweak spacing to prevent clipping of tick-labels
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
@@ -144,10 +146,16 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
         plt.bar(center, hist, width=width)
         plt.title("Histogram '" + col_name + "' " + sub_title)
 
+        fig.tight_layout()
+
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
-            return output_image(path)
+            # Save image
+            output_image(path)
+            print_html("<img src='" + path + "'>")
+            # Print in jupyter notebook
+
         elif output is "plot":
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 

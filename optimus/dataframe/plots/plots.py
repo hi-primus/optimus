@@ -1,6 +1,6 @@
 from pyspark.sql import DataFrame
 
-from optimus import PYSPARK_NUMERIC_TYPES
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, plot_correlation
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.columns import parse_columns, check_column_numbers
@@ -86,7 +86,7 @@ def plot(self):
         """
 
         corr = self.correlation(col_name, method, output="array")
-        plot_correlation(corr, output=output_format, path=output_path)
+        plot_correlation(corr)
 
     return plot
 
