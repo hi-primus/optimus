@@ -16,10 +16,10 @@ class Outliers:
     def z_score(self, columns, threshold):
         return ZScore(self.df, columns, threshold)
 
-    def mad(self, columns, threshold, relative_error):
+    def mad(self, columns, threshold, relative_error=1):
         return MAD(self.df, columns, threshold, relative_error)
 
-    def modified_z_score(self, columns, threshold, relative_error):
+    def modified_z_score(self, columns, threshold, relative_error=1):
         return ModifiedZScore(self.df, columns, threshold, relative_error)
 
 

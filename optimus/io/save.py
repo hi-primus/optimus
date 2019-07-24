@@ -3,6 +3,7 @@ from packaging import version
 from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
+from optimus.helpers.functions import absolute_path, format_path
 from optimus.helpers.decorators import *
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.logger import logger

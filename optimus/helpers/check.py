@@ -30,6 +30,21 @@ def is_nan(value):
     return result
 
 
+def is_none(value):
+    """
+    Check if a value is none
+    :param value:
+    :return:
+    """
+    result = False
+    if is_str(value):
+        if value.lower() == "none":
+            result = True
+    elif value is None:
+        result = True
+    return result
+
+
 def is_same_class(class1, class2):
     """
     Check if 2 class are the same

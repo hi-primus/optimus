@@ -84,7 +84,7 @@ class Test:
         test_file.close()
         print("Done")
 
-    def create(self, obj, method, suffix=None, output="df", more_methods= None, *args, **kwargs):
+    def create(self, obj, method, suffix=None, output="df", additional_method=None, *args, **kwargs):
         """
         This is a helper function that output python tests for Spark Dataframes.
         :param obj: Object to be tested
@@ -92,6 +92,7 @@ class Test:
         :param suffix: The test name will be create using the method param. suffix will add a string in case you want
         to customize the test name.
         :param output: can be a 'df' or a 'json'
+        :param additional_method:
         :param args: Arguments to be used in the method
         :param kwargs: Keyword arguments to be used in the functions
         :return:
@@ -102,21 +103,22 @@ class Test:
         def add_buffer(value):
             buffer.append("\t" + value)
 
-        if suffix is None:
-            suffix = ""
-        else:
-            suffix = "_" + suffix
+        # Create name
+        name = []
 
-        # Create func test name. If is None we just test the create.df function a not transform the data frame in
-        # any way
-        if method is None:
-            func_test_name = "test_" + "create_df" + suffix + "()"
-            filename = "create_df" + suffix + ".test"
+        if method is not None:
+            name.append(method.replace(".", "_"))
 
-        else:
-            func_test_name = "test_" + method.replace(".", "_") + suffix + "()"
+        if additional_method is not None:
+            name.append(additional_method)
 
-            filename = method.replace(".", "_") + suffix + ".test"
+        if suffix is not None:
+            name.append(suffix)
+
+        test_name = "_".join(name)
+
+        func_test_name = "test_" + test_name + "()"
+        filename = test_name + ".test"
 
         print("Creating {test} test function...".format(test=func_test_name))
         logger.print(func_test_name)
@@ -182,7 +184,8 @@ class Test:
         if method is None:
             add_buffer("\tactual_df = source_df\n")
         else:
-            add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(_kwargs) + ")\n")
+            add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
+                _kwargs) + ")\n")
 
         # Apply function to the dataframe
         if method is None:
@@ -194,12 +197,17 @@ class Test:
 
             df_result = df_func(*args, **kwargs)
 
+        # Additional Methods
+        if additional_method is not None:
+            df_result = getattr(df_result, additional_method)()
+
         if output == "df":
-            df_result = getattr(df_result, more_methods)()
+
             df_result.table()
             expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
         elif output == "json":
             print(df_result)
+
             if is_str(df_result):
                 df_result = "'" + df_result + "'"
             else:
@@ -212,6 +220,7 @@ class Test:
 
         add_buffer(expected)
 
+        # Output
         if output == "df":
             add_buffer("\tassert (expected_df.collect() == actual_df.collect())\n")
         elif output == "json":
@@ -225,7 +234,7 @@ class Test:
                 if exc.errno != errno.EEXIST:
                     raise
 
-        # write file
+        # Write file
         test_file = open(filename, 'w', encoding='utf-8')
 
         for b in buffer:
@@ -233,16 +242,12 @@ class Test:
 
         # return "".join(buffer)
 
-    def delete(self, df, func, suffix=None, output="df", *args, **kwargs):
+    def delete(self, func, suffix=None):
         """
-        This is a helper function that output python tests for Spark Dataframes.
-        :param df: Spark Dataframe
+        This is a helper function that delete python tests files used to construct the final Test file.
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
         :param func: Spark dataframe function to be tested
-        :param output: can be a 'df' or a 'json'
-        :param args: Arguments to be used in the function
-        :param kwargs: Keyword arguments to be used in the functions
         :return:
         """
 

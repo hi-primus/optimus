@@ -2,6 +2,8 @@ import collections
 import json
 import os
 import random
+import re
+import subprocess
 from pathlib import Path
 
 from fastnumbers import isint, isfloat
@@ -11,9 +13,11 @@ from pyspark.sql.types import ArrayType
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
     is_date, is_binary
+
 from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
+from optimus.helpers.raiseit import RaiseIt
 
 
 def infer(value):
@@ -78,11 +82,22 @@ def collect_as_dict(df):
     :param df:
     :return:
     """
-
+    from optimus.helpers.columns import parse_columns
     dict_result = []
 
-    for x in df.toJSON().collect():
-        dict_result.append(json.loads(x, object_pairs_hook=collections.OrderedDict))
+    # if there is only an element in the dict just return the value
+    if len(dict_result) == 1:
+        dict_result = next(iter(dict_result.values()))
+    else:
+        col_names = parse_columns(df, "*")
+
+        # Because asDict can return messed columns names we order
+        for row in df.collect():
+            _row = row.asDict()
+            r = collections.OrderedDict()
+            for col in col_names:
+                r[col] = _row[col]
+            dict_result.append(r)
     return dict_result
 
 
@@ -103,12 +118,42 @@ def filter_list(val, index=0):
 
 
 def absolute_path(files, format="posix"):
+    """
+    User project base folder to construct and absolute path
+    :param files: path files
+    :param format: posix or uri
+    :return:
+    """
     files = val_to_list(files)
     if format == "uri":
         result = [Path(ROOT_DIR + file).as_uri() for file in files]
-    elif format == "posfix":
+    elif format == "posix":
         result = [Path(ROOT_DIR + file).as_posix() for file in files]
+    else:
+        RaiseIt.value_error(format, ["posix", "uri"])
+
+    result = one_list_to_val(result)
     return result
+
+
+def format_path(path, format="posix"):
+    """
+    Format a path depending fo the operative system
+    :param path:
+    :param format:
+    :return:
+    """
+    if format == "uri":
+        result = Path(path).as_uri()
+    elif format == "posix":
+        result = Path(path).as_posix()
+    return result
+
+
+def java_version():
+    version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
+    pattern = '\"(\d+\.\d+).*\"'
+    print(re.re.search(pattern, version).groups()[0])
 
 
 def is_pyarrow_installed():

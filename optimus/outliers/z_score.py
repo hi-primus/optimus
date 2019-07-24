@@ -40,10 +40,9 @@ class ZScore:
     def select(self):
         col_name = self.col_name
         z_col_name = name_col(col_name, "z_score")
-        threshold = self.threshold
 
         return self.df.cols.z_score(col_name, z_col_name) \
-            .rows.select(F.col(z_col_name) > threshold) \
+            .rows.select(F.col(z_col_name) > self.threshold) \
             .cols.drop(z_col_name)
 
     def non_outliers_count(self):
@@ -53,4 +52,10 @@ class ZScore:
         return self.select().count()
 
     def info(self):
-        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count()}
+        col_name = self.col_name
+        z_col_name = name_col(col_name, "z_score")
+
+        max_z_score = self.df.cols.z_score(col_name, z_col_name) \
+            .cols.max(z_col_name)
+
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(), "max_z_score": max_z_score}

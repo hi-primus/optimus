@@ -1,17 +1,19 @@
 import os
+import platform
 import sys
 from functools import reduce
 from shutil import rmtree
 
 from deepdiff import DeepDiff
+from packaging import version
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
-from optimus.helpers.check import is_list
 from optimus.helpers.constants import *
 from optimus.helpers.converter import val_to_list
+from optimus.helpers.debug import debug
 from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html, print_json
@@ -34,13 +36,14 @@ class Optimus:
                  server=False,
                  repositories=None,
                  packages=None,
-                 jars=None,
-                 driver_class_path=None,
+                 jars=[],
+                 driver_class_path=[],
                  options=None,
                  additional_options=None,
                  queue_url=None,
                  queue_exchange=None,
-                 queue_routing_key="optimus"
+                 queue_routing_key="optimus",
+                 load_avro=False
                  ):
 
         """
@@ -81,40 +84,29 @@ class Optimus:
 
             self.options = options
 
-            if packages is None:
-                packages = []
-            else:
-                packages = val_to_list(packages)
+            # Initialize as lists
+            self.packages = val_to_list(packages)
+            self.repositories = val_to_list(repositories)
+            self.jars = val_to_list(jars)
+            self.driver_class_path = val_to_list(driver_class_path)
 
-            self.packages = packages
-            self.repositories = repositories
-
-            # Jars
-            self.jars = jars
-            self._add_jars(jars)
-
-            # Class Drive Path
-            self.driver_class_path = driver_class_path
-            self._add_driver_class_path(driver_class_path)
-
-            # Additional Options
             self.additional_options = additional_options
 
             self.verbose(verbose)
 
-            # Load Avro.
-            # TODO:
-            #  if the Spark 2.4 version is going to be used this is not neccesesary.
-            #  Maybe we can check a priori which version fo Spark is going to be used
-            # self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            # Because avro depends of a external package you can decide if should be loaded
+            if load_avro == "2.4":
+                self._add_spark_packages(["org.apache.spark:spark-avro_2.12:2.4.3"])
 
-            self._add_jars(
-                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "uri"))
+            elif load_avro == "2.3":
+                self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            self._add_driver_class_path(
-                absolute_path(["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                               "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"], "posfix"))
+            jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]
+
+            self._add_jars(absolute_path(jdbc_jars, "uri"))
+            self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
+
             self._start_session()
 
             if path is None:
@@ -125,7 +117,7 @@ class Optimus:
 
         else:
             # If a session is passed by arguments just save the reference
-
+            # logger.print("Spark session")
             Spark.instance = Spark().load(session)
 
         # Initialize Spark
@@ -173,7 +165,6 @@ class Optimus:
         try:
             if __IPYTHON__:
                 url = absolute_path("/css/styles.css")
-                print(url)
                 styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
@@ -190,13 +181,20 @@ class Optimus:
 
         return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid)
 
-    def enrich(self, host="localhost", port=27017):
+    def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
+               collection_name="data"):
         """
-        :param host:
-        :param port:
+        Create a enricher object
+        :param host: url to mongodb
+        :param port: port used my mongodb
+        :param username: database username
+        :param password: database password
+        :param db_name: db user by the enricher
+        :param collection_name: collection used by the enricher
         :return:
         """
-        return Enricher(op=self, host=host, port=port, )
+        return Enricher(op=self, host=host, port=port, username=username, password=password, db_name=db_name,
+                        collection_name=collection_name)
 
     @staticmethod
     def output(output):
@@ -363,12 +361,8 @@ class Optimus:
 
     # Jar
     def _add_jars(self, jar):
-        if self.jars is None:
-            self.jars = []
-
-        if is_list(jar):
-            for j in val_to_list(jar):
-                self.jars.append(j)
+        for j in val_to_list(jar):
+            self.jars.append(j)
 
     def _setup_jars(self):
         if self.jars:
@@ -378,16 +372,21 @@ class Optimus:
 
     # Driver class path
     def _add_driver_class_path(self, driver_class_path):
-        if self.driver_class_path is None:
-            self.driver_class_path = []
 
-        if is_list(driver_class_path):
-            for d in val_to_list(driver_class_path):
-                self.driver_class_path.append(d)
+        for d in val_to_list(driver_class_path):
+            self.driver_class_path.append(d)
 
     def _setup_driver_class_path(self):
+
+        p = platform.system()
+        logger.print("Operative System:" + p)
+        if p == "Linux":
+            separator = ":"
+        elif p == "Windows":
+            separator = ";"
+
         if self.driver_class_path:
-            return '--driver-class-path "{}"'.format(';'.join(self.driver_class_path))
+            return '--driver-class-path "{}"'.format(separator.join(self.driver_class_path))
         else:
             return ''
 

@@ -62,4 +62,10 @@ class ModifiedZScore:
         return self.select().count()
 
     def info(self):
-        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count()}
+        m_z_col_name = name_col(self.col_name, "modified_z_score")
+
+        df = self._m_z_score()
+        max_m_z_score = df.rows.select(F.col(m_z_col_name) > self.threshold).cols.max(m_z_col_name)
+
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
+                "max_m_z_score": max_m_z_score}

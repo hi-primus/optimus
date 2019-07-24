@@ -1,5 +1,5 @@
 import inspect
-from inspect import getframeinfo, currentframe
+from inspect import getframeinfo, stack
 
 
 def get_var_name(var):
@@ -22,5 +22,5 @@ def debug(value):
     :return:
     """
 
-    frame_info = getframeinfo(currentframe())
+    frame_info = getframeinfo((stack()[1][0]))
     print("{}->{}:{}".format(value, frame_info.filename, frame_info.lineno, ))

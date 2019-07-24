@@ -16,6 +16,7 @@ from optimus.dataframe.plots.functions import plot_freq, plot_missing_values, pl
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
+from optimus.helpers.functions import absolute_path
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -186,18 +187,18 @@ class Profiler:
     def run(self, df, columns, buckets=40, infer=False, relative_error=1, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
-
         :param df: Dataframe to be analyzed
-        :param columns: Columns to be analized
+        :param columns: Columns to be analyzed
         :param buckets: Number of buckets calculated to print the histogram
         :param infer: infer data type
         :param relative_error: Relative Error for quantile discretizer calculation
-        :param approx_count: User approx_count_distinct or countDistinct
+        :param approx_count: Use approx_count_distinct or countDistinct
         :return:
         """
 
         columns = parse_columns(df, columns)
-        output = Profiler.to_json(df, columns, buckets, infer, relative_error)
+
+        output = Profiler.to_json(df, columns, buckets, infer, relative_error, approx_count)
 
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
@@ -257,19 +258,17 @@ class Profiler:
         # Save in case we want to output to a html file
         self.html = html
 
-    def to_image(self, path):
+    def to_image(self, output_path):
         """
         Save the profiler result as image
         :param self:
-        :param path:
+        :param output_path: path where the image will be saved
         :return:
         """
-        path_css = os.path.dirname(os.path.abspath(__file__))
-        css = path_css + "//..//css//styles.css"
+        css = absolute_path("/css/styles.css")
+        imgkit.from_string(self.html, output_path, css=css)
 
-        imgkit.from_string(self.html, path, css=css)
-
-        print_html("<img src='" + path + "'>")
+        print_html("<img src='" + output_path + "'>")
 
     def to_file(self, path=None, output="html"):
         """
@@ -318,7 +317,7 @@ class Profiler:
         channel.close()
 
     @staticmethod
-    def to_json(df, columns, buckets=40, infer=False, relative_error=1, approx_count=False):
+    def to_json(df, columns, buckets=40, infer=False, relative_error=1, approx_count=True):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -326,6 +325,7 @@ class Profiler:
         :param buckets: buckets on the histogram
         :param infer:
         :param relative_error:
+        :param approx_count:
         :return: json file
         """
 
@@ -344,7 +344,7 @@ class Profiler:
         return output
 
     @staticmethod
-    def columns(df, columns, buckets=40, infer=False, relative_error=1, approx_count=False):
+    def columns(df, columns, buckets=40, infer=False, relative_error=1, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -352,6 +352,7 @@ class Profiler:
         :param buckets: Create buckets divided by range. Each bin is equal.
         :param infer: try to infer the column datatype
         :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
+        :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :return: json object
         """
 
@@ -450,11 +451,10 @@ class Profiler:
 
         exprs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, na_agg, zeros_agg]
         if approx_count is True:
-            exprs = exprs.append(F.approx_count_distinct)
+            exprs.append(F.approx_count_distinct)
         else:
-            exprs = exprs.append(F.countDistinct)
-
-        stats = df.cols._exprs(exprs, columns)
+            exprs.append(F.countDistinct)
+        stats = df.cols.agg_exprs(exprs, columns)
         return stats
 
     @staticmethod
@@ -545,8 +545,10 @@ class Profiler:
         col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
 
         # Uniques
-        uniques = stats[col_name].pop("approx_count_distinct")
-        uniques = uniques.pop("countDistinct")
+        if "approx_count_distinct" in stats[col_name]:
+            uniques = stats[col_name].pop("approx_count_distinct")
+        elif "countDistinct" in stats[col_name]:
+            uniques = stats[col_name].pop("countDistinct")
 
         col_info['stats']["uniques_count"] = uniques
         col_info['stats']["p_uniques"] = round((uniques / rows_count) * 100, 3)

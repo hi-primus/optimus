@@ -33,7 +33,7 @@ df.table(10)
 
 # ### Profiler dump mode (Faster). It just handle the column data type as present in the dataframe
 
-op.profiler.run(df, "name", infer=False)
+op.profiler.run(df, "name", infer=False, approx_count= True)
 
 # ### Profiler smart mode (Slower). It just try to infer the column data type and present extra data acordinly. From example datetype columns get extra histograms about minutes, day, week and month. Also can detect array types on data.
 

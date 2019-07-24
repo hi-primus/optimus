@@ -19,19 +19,19 @@ from pyspark.sql.types import StringType, ArrayType
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_numeric, is_column_a, is_nan
-from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
-
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
+from optimus.helpers.debug import debug
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions \
     import filter_list, collect_as_list
-from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
+from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
 # Profiler
 from optimus.profiler.functions import bucketizer
@@ -483,47 +483,13 @@ def cols(self):
         return df
 
     @add_attr(cols, log_time=True)
-    def _exprs(funcs, columns):
+    def agg_exprs(funcs, columns):
         """
         Helper function to apply multiple columns expression to multiple columns
         :param funcs: Aggregation functions from Apache Spark
         :param columns: list or string of columns names or a .
         :return:
         """
-
-        def parse_col_names_funcs_to_keys(data):
-            """
-            Helper function that return a formatted json with function:value inside columns. Transform from
-            {'max_antiguedad_anos': 15,
-            'max_m2_superficie_construida': 1800000,
-            'min_antiguedad_anos': 2,
-            'min_m2_superficie_construida': 20}
-
-            to
-
-            {'m2_superficie_construida': {'min': 20, 'max': 1800000}, 'antiguedad_anos': {'min': 2, 'max': 15}}
-
-            :param data: json data
-            :return: json
-            """
-            functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                               "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count"]
-            _result = {}
-            for k, v in data[0].items():
-                for f in functions_array:
-                    temp_func_name = f + "_"
-                    if k.startswith(temp_func_name):
-                        _col_name = k[len(temp_func_name):]
-                        # If the value is numeric only get 5 decimals
-                        if is_numeric(v):
-                            v = round(v, 5)
-                        if is_nan(v):
-                            print(
-                                "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that {COL_NAME} has 'nan' values".format(
-                                    FUNCTION=f,
-                                    COL_NAME=_col_name))
-
-                        _result.setdefault(_col_name, {})[f] = v
 
         # Ensure that is a list
         funcs = val_to_list(funcs)
@@ -537,7 +503,7 @@ def cols(self):
         for col_name in columns:
             for func in funcs:
                 # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
-                # Std dev is can not process date columns. So we do not calculated
+                # Std dev can not process date columns. So we do not calculated it
 
                 if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                                   F.count, zeros_agg]) and (
@@ -547,8 +513,9 @@ def cols(self):
                         func = na_agg_integer
 
                     expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+        full_result = parse_col_names_funcs_to_keys(df.agg(*expression).to_json())
 
-        return format_dict(parse_col_names_funcs_to_keys(df.agg(*expression).to_json()))
+        return format_dict(full_result)
 
     # Quantile statistics
     @add_attr(cols)
@@ -558,7 +525,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return _exprs(F.min, columns)
+        return agg_exprs(F.min, columns)
 
     @add_attr(cols)
     def max(columns):
@@ -567,7 +534,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return _exprs(F.max, columns)
+        return agg_exprs(F.max, columns)
 
     @add_attr(cols)
     def range(columns):
@@ -679,7 +646,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.stddev, columns)
+        return agg_exprs(F.stddev, columns)
 
     @add_attr(cols)
     def kurt(columns):
@@ -691,7 +658,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.kurtosis, columns)
+        return agg_exprs(F.kurtosis, columns)
 
     @add_attr(cols)
     def mean(columns):
@@ -703,7 +670,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.mean, columns)
+        return agg_exprs(F.mean, columns)
 
     @add_attr(cols)
     def skewness(columns):
@@ -715,7 +682,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.skewness, columns)
+        return agg_exprs(F.skewness, columns)
 
     @add_attr(cols)
     def sum(columns):
@@ -727,7 +694,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.sum, columns)
+        return agg_exprs(F.sum, columns)
 
     @add_attr(cols)
     def variance(columns):
@@ -739,7 +706,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return _exprs(F.variance, columns)
+        return agg_exprs(F.variance, columns)
 
     @add_attr(cols)
     def abs(columns):
@@ -1217,7 +1184,7 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         if estimate is True:
-            result = _exprs(F.approx_count_distinct, columns)
+            result = agg_exprs(F.approx_count_distinct, columns)
         else:
             df = self
             result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
@@ -1526,7 +1493,7 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
         for col_name in columns:
-            values = _exprs([F.min, F.max], columns)
+            values = agg_exprs([F.min, F.max], columns)
 
             # Create splits
             splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
@@ -1607,8 +1574,9 @@ def cols(self):
     @add_attr(cols, log_time=True)
     @dispatch((str, list), int)
     def hist(columns, buckets=10):
-        values = _exprs([F.min, F.max], columns)
-        return self.cols.hist(columns, fast_float(values[columns]["min"]), fast_float(values[columns]["max"]), buckets)
+
+        values = agg_exprs([F.min, F.max], columns)
+        return self.cols.hist(columns, fast_float(values["min"]), fast_float(values["max"]), buckets)
 
     @add_attr(cols)
     def frequency(columns, buckets=10):

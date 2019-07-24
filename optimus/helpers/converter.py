@@ -2,14 +2,16 @@ from ast import literal_eval
 
 import dateutil
 
+
 def val_to_list(val):
     """
     Convert a single value string or number to a list
     :param val:
     :return:
     """
-    if not isinstance(val, list):
-        val = [val]
+    if val is not None:
+        if not isinstance(val, list):
+            val = [val]
 
     return val
 

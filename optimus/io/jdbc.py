@@ -1,3 +1,4 @@
+from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 
@@ -46,10 +47,10 @@ class JDBC:
             if port is None: self.port = 1521
             self.driver_option = "oracle.jdbc.OracleDriver"
 
-        # add mongo?
+        # TODO: add mongo?
         else:
-            print("Driver not supported")
-            # RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
+            # print("Driver not supported")
+            RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
 
         if database is None:
             database = ""
@@ -64,7 +65,7 @@ class JDBC:
                                                                                               PORT=port,
                                                                                               DATABASE=database,
                                                                                               SCHEMA=schema)
-            print(url)
+
         elif self.db_driver == "oracle":
             if oracle_sid:
                 url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(
@@ -91,7 +92,7 @@ class JDBC:
         self.password = password
         self.schema = schema
 
-    def tables(self, schema=None, database=None):
+    def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
         :return:
@@ -121,8 +122,8 @@ class JDBC:
                 extractvalue(xmltype( dbms_xmlgen.getxml('select count(*) c from '||table_name)) ,'/ROWSET/ROW/C') count 
                     FROM user_tables ORDER BY table_name"""
 
-        df = self.execute(query, "all")
-        return df.table()
+        df = self.execute(query, limit)
+        return df.table(limit)
 
     def tables_names_to_json(self, schema=None):
         """
@@ -149,11 +150,11 @@ class JDBC:
             query = ""
 
         elif self.db_driver == "oracle":
-            query = "SELECT table_name FROM user_tables"
+            query = "SELECT table_name as 'table_name' FROM user_tables"
 
         df = self.execute(query, "all")
-
-        return [i['TABLE_NAME'] for i in df.to_json()]
+        print(df.to_json())
+        return [i['table_name'] for i in df.to_json()]
 
     @property
     def table(self):
@@ -261,7 +262,7 @@ class JDBC:
         # we use a default limit here in case the query will return a huge chunk of data
         if limit is None:
             limit_query = " LIMIT " + str(LIMIT_TABLE)
-        elif limit is "all":
+        elif limit == "all":
             limit_query = ""
         else:
             limit_query = " LIMIT " + str(limit)

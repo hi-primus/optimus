@@ -17,7 +17,7 @@ from optimus.helpers.check import is_str, is_column_a
 from optimus.helpers.converter import one_list_to_val
 from optimus import val_to_list
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import collect_as_dict, random_int, traverse
+from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
 from optimus.helpers.output import print_html
 from optimus.helpers.json import json_converter
 from optimus.helpers.columns import parse_columns, name_col
@@ -297,8 +297,8 @@ def table_image(self, path, limit=10):
     :param path:
     :return:
     """
-    path_css = os.path.dirname(os.path.abspath(__file__))
-    css = path_css + "//..//css//styles.css"
+
+    css = absolute_path("/css/styles.css")
 
     imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
     print_html("<img src='" + path + "'>")
@@ -318,13 +318,18 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     """
 
     columns = parse_columns(self, columns)
-    # self.cols.select(columns).limit(limit).show()
 
-    data = collect_as_dict(self.cols.select(columns).limit(limit))
+    if limit is None:
+        limit = 10
+
+    if limit == "all":
+
+        data = collect_as_dict(self.cols.select(columns))
+    else:
+        data = collect_as_dict(self.cols.select(columns).limit(limit))
 
     # Load the Jinja template
-    path = os.path.dirname(os.path.abspath(__file__))
-    template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
+    template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates"))
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
     template = template_env.get_template("table.html")
 
@@ -339,7 +344,9 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
                 final_columns.append(i)
 
     total_rows = self.count()
-    if total_rows < limit:
+    if limit == "all":
+        limit = total_rows
+    elif total_rows < limit:
         limit = total_rows
 
     total_rows = humanize.intword(total_rows)
@@ -355,7 +362,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=10, columns=None, title=None):
+def table(self, limit=None, columns=None, title=None):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
             result = self.table_html(title=title, limit=limit, columns=columns)
