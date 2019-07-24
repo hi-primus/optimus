@@ -495,24 +495,29 @@ def cols(self):
         funcs = val_to_list(funcs)
 
         columns = parse_columns(self, columns)
-
         df = self
 
         # Create a Column Expression for every column
         expression = []
+
         for col_name in columns:
+
             for func in funcs:
+                print(col_name, func)
                 # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
                 # Std dev can not process date columns. So we do not calculated it
+                # if (func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                #              F.count, zeros_agg]):
 
-                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                  F.count, zeros_agg]) and (
-                                is_column_a(df, col_name, "date"))):
-                    # A different function must be use to calculate null in integers or data column data types
-                    if func is na_agg and is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                        func = na_agg_integer
+                debug(func)
+                # A different function must be use to calculate null in integers or data column date types
+                if func is na_agg and (
+                        is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES) or is_column_a(df, col_name, "date")):
+                    func = na_agg_integer
 
-                    expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
+                # print(df.agg(*expression).to_json())
+        print(*expression)
         full_result = parse_col_names_funcs_to_keys(df.agg(*expression).to_json())
 
         return format_dict(full_result)
@@ -1188,6 +1193,7 @@ def cols(self):
         else:
             df = self
             result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
+            print(result)
         return format_dict(result)
 
     @add_attr(cols)
