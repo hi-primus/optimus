@@ -390,15 +390,15 @@ def correlation(self, input_cols, method="pearson", output="json"):
 
     df = self
 
-    # Input is not a vector transfor to vector
-    if not is_column_a(df, input_cols, "vector"):
+    # Input is not a vector transform to a vector
+    output_col = name_col(input_cols, "correlation")
+    if len(input_cols) > 1:
         for col_name in input_cols:
             df = df.cols.cast(col_name, "float")
             logger.print("Casting {col_name} to float...".format(col_name=col_name))
-        output_col = name_col(input_cols, "correlation")
-        df = df.cols.nest(input_cols, "vector", output_cols="output_col")
 
-    # Create Vector necessary to calculate the correlation
+        df = df.cols.nest(input_cols, "vector", output_cols=output_col)
+
     corr = Correlation.corr(df, output_col, method).head()[0].toArray()
 
     if output is "array":
