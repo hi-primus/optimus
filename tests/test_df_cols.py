@@ -1,6 +1,6 @@
 from pyspark.sql.types import *
 from optimus import Optimus
-from optimus.helpers.json import json_enconding
+from optimus.helpers.functions import json_enconding 
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
@@ -163,7 +163,7 @@ class Testdf_cols(object):
 	def test_cols_frequency_all_columns():
 		actual_df =source_df.cols.frequency('*',4)
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': None, 'count': 2}, {'value': 300, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}, {'value': None, 'count': 1}], 'age': [{'value': 5000000, 'count': 6}, {'value': None, 'count': 1}], 'weight(t)': [{'value': None, 'count': 2}, {'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 3}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}, {'value': None, 'count': 1}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': datetime.date(2016, 9, 10), 'count': 1}, {'value': datetime.date(2015, 8, 10), 'count': 1}, {'value': datetime.date(2014, 6, 24), 'count': 1}, {'value': datetime.date(2013, 6, 24), 'count': 1}], 'Tiemstamp': [{'value': datetime.datetime(2014, 6, 24, 0, 0), 'count': 6}, {'value': None, 'count': 1}], 'Cybertronian': [{'value': True, 'count': 6}, {'value': None, 'count': 1}], 'function(binary)': [{'value': bytearray(b'Security'), 'count': 1}, {'value': bytearray(b'None'), 'count': 1}, {'value': bytearray(b'Leader'), 'count': 1}, {'value': bytearray(b'First Lieutenant'), 'count': 1}], 'NullType': [{'value': None, 'count': 7}]})
+		expected_value =json_enconding({'names': [{'value': 'ironhide&', 'count': 1}, {'value': 'bumbl#ebéé  ', 'count': 1}, {'value': "Optim'us", 'count': 1}, {'value': 'Metroplex_)^$', 'count': 1}], 'height(ft)': [{'value': None, 'count': 2}, {'value': 300, 'count': 1}, {'value': 26, 'count': 1}, {'value': 17, 'count': 1}], 'function': [{'value': 'Security', 'count': 1}, {'value': 'None', 'count': 1}, {'value': 'Leader', 'count': 1}, {'value': 'First Lieutenant', 'count': 1}], 'rank': [{'value': 10, 'count': 2}, {'value': 8, 'count': 2}, {'value': 7, 'count': 2}, {'value': None, 'count': 1}], 'age': [{'value': 5000000, 'count': 6}, {'value': None, 'count': 1}], 'weight(t)': [{'value': None, 'count': 2}, {'value': 5.699999809265137, 'count': 1}, {'value': 4.300000190734863, 'count': 1}, {'value': 4.0, 'count': 1}], 'japanese name': [{'value': ['Roadbuster'], 'count': 1}, {'value': ['Metroflex'], 'count': 1}, {'value': ['Meister'], 'count': 1}, {'value': ['Megatron'], 'count': 1}], 'last position seen': [{'value': None, 'count': 3}, {'value': '37.789563,-122.400356', 'count': 1}, {'value': '33.670666,-117.841553', 'count': 1}, {'value': '19.442735,-99.201111', 'count': 1}], 'date arrival': [{'value': '1980/04/10', 'count': 6}, {'value': None, 'count': 1}], 'last date seen': [{'value': '2016/09/10', 'count': 1}, {'value': '2015/08/10', 'count': 1}, {'value': '2014/07/10', 'count': 1}, {'value': '2013/06/10', 'count': 1}], 'attributes': [{'value': [91.44000244140625, None], 'count': 1}, {'value': [8.53439998626709, 4300.0], 'count': 1}, {'value': [7.924799919128418, 4000.0], 'count': 1}, {'value': [5.334000110626221, 2000.0], 'count': 1}], 'Date Type': [{'value': '2016-09-10', 'count': 1}, {'value': '2015-08-10', 'count': 1}, {'value': '2014-06-24', 'count': 1}, {'value': '2013-06-24', 'count': 1}], 'Tiemstamp': [{'value': '2014-06-24 00:00:00', 'count': 6}, {'value': None, 'count': 1}], 'Cybertronian': [{'value': True, 'count': 6}, {'value': None, 'count': 1}], 'function(binary)': [{'value': None, 'count': 1}, {'value': None, 'count': 1}, {'value': None, 'count': 1}, {'value': None, 'count': 1}], 'NullType': [{'value': None, 'count': 7}]})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_hist():
@@ -218,7 +218,7 @@ class Testdf_cols(object):
 	def test_cols_kurt_all_columns():
 		actual_df =source_df.cols.kurt('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'kurtosis': 0.13863}, 'rank': {'kurtosis': -1.5}, 'age': {'kurtosis': nan}, 'weight(t)': {'kurtosis': -1.43641}})
+		expected_value =json_enconding({'height(ft)': 0.13863, 'rank': -1.5, 'age': nan, 'weight(t)': -1.43641})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_lower():
@@ -252,7 +252,7 @@ class Testdf_cols(object):
 	def test_cols_max_all_columns():
 		actual_df =source_df.cols.max('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'names': {'max': 'ironhide&'}, 'height(ft)': {'max': 300}, 'function': {'max': 'Security'}, 'rank': {'max': 10}, 'age': {'max': 5000000}, 'weight(t)': {'max': 5.7}, 'japanese name': {'max': ['Roadbuster']}, 'last position seen': {'max': '37.789563,-122.400356'}, 'date arrival': {'max': '1980/04/10'}, 'last date seen': {'max': '2016/09/10'}, 'attributes': {'max': [91.44000244140625, None]}, 'Date Type': {'max': datetime.date(2016, 9, 10)}, 'Tiemstamp': {'max': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'max': 1}, 'function(binary)': {'max': bytearray(b'Security')}, 'NullType': {'max': None}})
+		expected_value =json_enconding({'names': 'ironhide&', 'height(ft)': 300, 'function': 'Security', 'rank': 10, 'age': 5000000, 'weight(t)': 5.7, 'japanese name': ['Roadbuster'], 'last position seen': '37.789563,-122.400356', 'date arrival': '1980/04/10', 'last date seen': '2016/09/10', 'attributes': [91.44000244140625, None], 'Date Type': '2016-09-10', 'Tiemstamp': '2014-06-24 00:00:00', 'Cybertronian': 1, 'function(binary)': None, 'NullType': None})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mean():
@@ -264,7 +264,7 @@ class Testdf_cols(object):
 	def test_cols_mean_all_columns():
 		actual_df =source_df.cols.mean('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'mean': 65.6}, 'rank': {'mean': 8.33333}, 'age': {'mean': 5000000.0}, 'weight(t)': {'mean': 3.56}})
+		expected_value =json_enconding({'height(ft)': 65.6, 'rank': 8.33333, 'age': 5000000.0, 'weight(t)': 3.56})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median():
@@ -288,7 +288,7 @@ class Testdf_cols(object):
 	def test_cols_min_all_columns():
 		actual_df =source_df.cols.min('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'names': {'min': 'Jazz'}, 'height(ft)': {'min': -28}, 'function': {'min': 'Battle Station'}, 'rank': {'min': 7}, 'age': {'min': 5000000}, 'weight(t)': {'min': 1.8}, 'japanese name': {'min': ['Bumble', 'Goldback']}, 'last position seen': {'min': '10.642707,-71.612534'}, 'date arrival': {'min': '1980/04/10'}, 'last date seen': {'min': '2011/04/10'}, 'attributes': {'min': [None, 5700.0]}, 'Date Type': {'min': datetime.date(2011, 4, 10)}, 'Tiemstamp': {'min': datetime.datetime(2014, 6, 24, 0, 0)}, 'Cybertronian': {'min': 1}, 'function(binary)': {'min': bytearray(b'Battle Station')}, 'NullType': {'min': None}})
+		expected_value =json_enconding({'names': 'Jazz', 'height(ft)': -28, 'function': 'Battle Station', 'rank': 7, 'age': 5000000, 'weight(t)': 1.8, 'japanese name': ['Bumble', 'Goldback'], 'last position seen': '10.642707,-71.612534', 'date arrival': '1980/04/10', 'last date seen': '2011/04/10', 'attributes': [None, 5700.0], 'Date Type': '2011-04-10', 'Tiemstamp': '2014-06-24 00:00:00', 'Cybertronian': 1, 'function(binary)': None, 'NullType': None})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mode():
@@ -515,7 +515,7 @@ class Testdf_cols(object):
 	def test_cols_skewness_all_columns():
 		actual_df =source_df.cols.skewness('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'skewness': 1.4049}, 'rank': {'skewness': 0.3818}, 'age': {'skewness': nan}, 'weight(t)': {'skewness': 0.06521}})
+		expected_value =json_enconding({'height(ft)': 1.4049, 'rank': 0.3818, 'age': nan, 'weight(t)': 0.06521})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sort():
@@ -542,7 +542,7 @@ class Testdf_cols(object):
 	def test_cols_std_all_columns():
 		actual_df =source_df.cols.std('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'stddev': 132.66612}, 'rank': {'stddev': 1.36626}, 'age': {'stddev': 0.0}, 'weight(t)': {'stddev': 1.64712}})
+		expected_value =json_enconding({'height(ft)': 132.66612, 'rank': 1.36626, 'age': 0.0, 'weight(t)': 1.64712})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_sub():
@@ -564,7 +564,7 @@ class Testdf_cols(object):
 	def test_cols_sum_all_columns():
 		actual_df =source_df.cols.sum('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'sum': 328}, 'rank': {'sum': 50}, 'age': {'sum': 30000000}, 'weight(t)': {'sum': 17.8}})
+		expected_value =json_enconding({'height(ft)': 328, 'rank': 50, 'age': 30000000, 'weight(t)': 17.8})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_trim():
@@ -618,7 +618,7 @@ class Testdf_cols(object):
 	def test_cols_variance_all_columns():
 		actual_df =source_df.cols.variance('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'variance': 17600.3}, 'rank': {'variance': 1.86667}, 'age': {'variance': 0.0}, 'weight(t)': {'variance': 2.713}})
+		expected_value =json_enconding({'height(ft)': 17600.3, 'rank': 1.86667, 'age': 0.0, 'weight(t)': 2.713})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_z_score():
@@ -629,4 +629,9 @@ class Testdf_cols(object):
 	def test_cols_z_score_all_columns():
 		actual_df =source_df.cols.z_score('*')
 		expected_df = op.create.df([('names', StringType(), True),('height(ft)', DoubleType(), True),('function', StringType(), True),('rank', DoubleType(), True),('age', DoubleType(), True),('weight(t)', DoubleType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [("Optim'us", 0.7055305454022474, 'Leader', 1.2198776221217045, None, 0.4492691429494289, ['Inochi', 'Convoy'], '19.442735,-99.201111', '1980/04/10', '2016/09/10', [8.53439998626709, 4300.0], datetime.date(2016, 9, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Leader'), None), ('bumbl#ebéé  ', 0.366333167805013, 'Espionage', 0.9758977061467071, None, 0.9471076788576425, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None), ('ironhide&', 0.29849369228556616, 'Security', 0.9758977061467071, None, 0.2671329350624119, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None), ('Jazz', 0.39648404581365604, 'First Lieutenant', 0.24397259672390328, None, 1.0685317691994, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None), ('Megatron', None, 'None', 1.2198776221217045, None, 1.2992373410954494, ['Megatron'], None, '1980/04/10', '2012/05/10', [None, 5700.0], datetime.date(2012, 5, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'None'), None), ('Metroplex_)^$', 1.7668414513064827, 'Battle Station', 0.24397259672390328, None, None, ['Metroflex'], None, '1980/04/10', '2011/04/10', [91.44000244140625, None], datetime.date(2011, 4, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Battle Station'), None), (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)])
+		assert (expected_df.collect() == actual_df.collect())
+	@staticmethod
+	def test_outliers_iqr():
+		actual_df =source_df.outliers.iqr('height(ft)')
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('Tiemstamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [('bumbl#ebéé  ', 17, 'Espionage', 7, 5000000, 2.0, ['Bumble', 'Goldback'], '10.642707,-71.612534', '1980/04/10', '2015/08/10', [5.334000110626221, 2000.0], datetime.date(2015, 8, 10), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Espionage'), None), ('ironhide&', 26, 'Security', 7, 5000000, 4.0, ['Roadbuster'], '37.789563,-122.400356', '1980/04/10', '2014/07/10', [7.924799919128418, 4000.0], datetime.date(2014, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'Security'), None), ('Jazz', 13, 'First Lieutenant', 8, 5000000, 1.7999999523162842, ['Meister'], '33.670666,-117.841553', '1980/04/10', '2013/06/10', [3.962399959564209, 1800.0], datetime.date(2013, 6, 24), datetime.datetime(2014, 6, 24, 0, 0), True, bytearray(b'First Lieutenant'), None)])
 		assert (expected_df.collect() == actual_df.collect())

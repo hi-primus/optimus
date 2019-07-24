@@ -16,7 +16,7 @@
 #     name: python3
 # ---
 
-# # This notebook create the test in python code. All this cell must be run to executed the tests
+# # This notebook create the tests in python code. All this cells must be run to executed the tests
 
 # %load_ext autoreload
 # %autoreload 2
@@ -156,11 +156,13 @@ t.run()
 
 t.create(None, "cols.min", None, "json", numeric_col)
 
-t.create(None, "cols.min", "all_columns", "json", "*")
+t.create(None, "cols.min", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.max", None, "json", numeric_col)
 
-t.create(None, "cols.max", "all_columns", "json", "*")
+t.create(None, "cols.max", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.range", None, "json", numeric_col)
 
@@ -180,27 +182,34 @@ t.create(None, "cols.mad", "all_columns", "json", "*")
 
 t.create(None, "cols.std", None, "json", numeric_col)
 
-t.create(None, "cols.std", "all_columns", "json", "*")
+t.create(None, "cols.std", "all_columns", "json", None, "*")
+t.run()
 
-t.create(None, "cols.kurt", None, "json", numeric_col)
+t.create(None, "cols.kurt", None, "json", None, numeric_col)
+t.run()
 
-t.create(None, "cols.kurt", "all_columns", "json", "*")
+t.create(None, "cols.kurt", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.mean", None, "json", numeric_col)
 
-t.create(None, "cols.mean", "all_columns", "json", "*")
+t.create(None, "cols.mean", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.skewness", None, "json", numeric_col)
 
-t.create(None, "cols.skewness", "all_columns", "json", "*")
+t.create(None, "cols.skewness", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.sum", None, "json", numeric_col)
 
-t.create(None, "cols.sum", "all_columns", "json", "*")
+t.create(None, "cols.sum", "all_columns", "json", None,"*")
+t.run()
 
 t.create(None, "cols.variance", None, "json", numeric_col)
 
-t.create(None, "cols.variance", "all_columns", "json", "*")
+t.create(None, "cols.variance", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.abs", None, "df", numeric_col)
 
@@ -220,11 +229,14 @@ t.create(None, "cols.count_zeros", None, "json", numeric_col)
 
 t.create(None, "cols.count_zeros", "all_columns", "json", "*")
 
-t.create(None, "cols.count_uniques", None, "json", numeric_col)
+t.create(None, "cols.count_uniques", None, "json", None, numeric_col)
+t.run()
 
-t.create(None, "cols.count_uniques", "all_columns", "json", "*")
+t.create(None, "cols.count_uniques", "all_columns", "json",None, "*")
+t.run()
 
 t.create(None, "cols.unique", None, "json", numeric_col)
+t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", "*")
 
@@ -304,15 +316,20 @@ t.create(None, "cols.impute", None, "df", numeric_col_B)
 
 t.create(None, "cols.impute", "all_columns", "df", "names","categorical")
 
-t.create(None, "cols.hist", None, "json", numeric_col_B, 4)
+t.create(None, "cols.hist", None, "json", None, numeric_col_B, 4)
+t.run()
 
 # +
 # t.create(None,"cols.hist","all_columns","df","*",4)
 # -
 
-t.create(None, "cols.frequency", None, "json", numeric_col_B, 4)
+t.create(None, "cols.frequency", None, "json", None, numeric_col_B, 4)
+t.run()
 
-t.create(None, "cols.frequency", "all_columns", "json", "*", 4)
+t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
+t.run()
+
+source_df.cols.frequency("*", 4).table()
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -560,7 +577,7 @@ t = Test(op, df, "df_keycolision", imports=["from pyspark.ml.linalg import Vecto
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_keycoliision", final_path="..")
+                                        "from pyspark.sql import functions as F"], path = "df_keycolision", final_path="..")
 from optimus.ml import keycollision as keyCol
 
 # + {"outputHidden": false, "inputHidden": false}
