@@ -43,7 +43,7 @@ class Optimus:
                  queue_url=None,
                  queue_exchange=None,
                  queue_routing_key="optimus",
-                 load_avro=False
+                 load_avro=False,
                  ):
 
         """
@@ -72,9 +72,11 @@ class Optimus:
         :type jars: (list[str])
 
         """
+        self.preserve = False
+
         if session is None:
-            # print("Creating Spark Session...")
-            # If a Spark session in not passed by argument create it
+            # Creating Spark Session
+            # If a Spark session in not passed by argument create one
 
             self.master = master
             self.app_name = app_name
@@ -107,7 +109,7 @@ class Optimus:
             self._add_jars(absolute_path(jdbc_jars, "uri"))
             self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
 
-            self._start_session()
+            self._create_session()
 
             if path is None:
                 path = os.getcwd()
@@ -409,18 +411,23 @@ class Optimus:
         # straightforward way (since we always append to PYSPARK_SUBMIT_ARGS)
         return ' '.join('--conf "{}={}"'.format(*o) for o in sorted(options.items()))
 
-    def _start_session(self):
+    def _create_session(self):
         """
         Start a Spark session using jar, packages, repositories and options given
         :return:
         """
+
         ## Get python.exe fullpath
         os.environ['PYSPARK_PYTHON'] = sys.executable
+
+        # Remove duplicated strings
+        # print(self._setup_jars())
+        # print(os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace(self._setup_jars(), ''))
 
         submit_args = [
             # options that were already defined through PYSPARK_SUBMIT_ARGS
             # take precedence over SparklySession's
-            os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace('pyspark-shell', ''),
+
             self._setup_repositories(),
             self._setup_packages(),
             self._setup_jars(),
@@ -428,6 +435,9 @@ class Optimus:
             self._setup_options(self.additional_options),
             'pyspark-shell',
         ]
+
+        if self.preserve:
+            submit_args.insert(0, os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace('pyspark-shell', ''))
 
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
