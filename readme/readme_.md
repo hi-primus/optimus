@@ -6,7 +6,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.1'
-      jupytext_version: 1.1.5
+      jupytext_version: 1.1.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -366,7 +366,7 @@ op.profiler.to_image("images/profiler1.png")
 ### Profiler Speed
 
 
-With **relative_error** and **approx_count** params you can control how some operations al caculated so you can speedup the profiling in case is needed.
+With **relative_error** and **approx_count** params you can control how some operations are caculated so you can speedup the profiling in case is needed.
 
 relative_error: Relative Error for quantile discretizer calculation. 1 is Faster, 0 Slower
 
@@ -385,16 +385,19 @@ df = df.rows.drop_na(["age","fare"])
 ```
 
 ```python
-df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
-# df.plot.hist("fare")
+# df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
+df.plot.hist("fare")
 ```
 
 ```python
-df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
+# df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
+df.plot.frequency("age")
 ```
 
 ```python
-df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
+# df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
+df.plot.scatter(["fare", "age"], buckets=30)
+
 ```
 
 ```python
@@ -406,7 +409,7 @@ df.plot.correlation(["age","fare","survived"])
 ### Using other plotting libraries
 
 
-Optimus has a tiny API so you can use any plotting library. For example, you can use df.cols.scatter(), df.cols.frequency(), df.cols.boxplot() or df.cols.hist() to output a JSON that you can process to adapt the data to any plotting library.
+Optimus has a tiny API so you can use any plotting library. For example, you can use ```df.cols.scatter()```, ```df.cols.frequency()```, ```df.cols.boxplot()``` or ```df.cols.hist()``` to output a JSON that you can process to adapt the data to any plotting library.
 
 
 ## Outliers
@@ -454,6 +457,7 @@ op= Optimus(verbose=True)
 ```
 
 ```python
+# This import is only to hide the credentials
 from credentials import *
 
 # For others databases use in db_type accepts 'oracle','mysql','redshift','postgres'
@@ -640,7 +644,7 @@ including:
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.  
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.  
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features.  
-* Helping others in our optimus on [Discord](https://img.shields.io/discord/579030865468719104.svg)    
+* Helping others on [Discord](https://img.shields.io/discord/579030865468719104.svg)    
   
 ## Backers  
 [[Become a backer](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.  
@@ -668,12 +672,13 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
 
 
-# Post-process readme
+# Post-process readme. Always run this if you modify the notebook
 
 
 The bellow script process the ```readme_.md``` that is ouputed from this notebook and remove the header from jupytext, python comments and convert/add table to images and output ```readme.md```.
 
 To make ```table_image()``` function be sure to install imagekit ```pip install imgkit```
+Also install wkhtmltopdf https://wkhtmltopdf.org/downloads.html. This is responsible to generate the optimus tables as images
 
 ```python
 from shutil import copyfile

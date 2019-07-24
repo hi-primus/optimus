@@ -354,7 +354,7 @@ op.profiler.run(df, "year", infer=True)
 ### Profiler Speed
 
 
-With **relative_error** and **approx_count** params you can control how some operations al caculated so you can speedup the profiling in case is needed.
+With **relative_error** and **approx_count** params you can control how some operations are caculated so you can speedup the profiling in case is needed.
 
 relative_error: Relative Error for quantile discretizer calculation. 1 is Faster, 0 Slower
 
@@ -373,16 +373,19 @@ df = df.rows.drop_na(["age","fare"])
 ```
 
 ```python
-df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
-# df.plot.hist("fare")
+# df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
+df.plot.hist("fare")
 ```
 
 ```python
-df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
+# df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
+df.plot.frequency("age")
 ```
 
 ```python
-df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
+# df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
+df.plot.scatter(["fare", "age"], buckets=30)
+
 ```
 
 ```python
@@ -394,7 +397,7 @@ df.plot.correlation(["age","fare","survived"])
 ### Using other plotting libraries
 
 
-Optimus has a tiny API so you can use any plotting library. For example, you can use df.cols.scatter(), df.cols.frequency(), df.cols.boxplot() or df.cols.hist() to output a JSON that you can process to adapt the data to any plotting library.
+Optimus has a tiny API so you can use any plotting library. For example, you can use ```df.cols.scatter()```, ```df.cols.frequency()```, ```df.cols.boxplot()``` or ```df.cols.hist()``` to output a JSON that you can process to adapt the data to any plotting library.
 
 
 ## Outliers
@@ -440,6 +443,7 @@ op= Optimus(verbose=True)
 ```
 
 ```python
+# This import is only to hide the credentials
 from credentials import *
 
 # For others databases use in db_type accepts 'oracle','mysql','redshift','postgres'
@@ -510,6 +514,19 @@ df_result.table()
 ```
 ![](images/table7.png",limit="all)
 
+# Clustering Strings
+
+
+Optimus implements some funciton to cluster String. We get have heavy inspiration from OpenRefine
+
+Here a quote from its site:
+
+"In OpenRefine, clustering refers to the operation of "finding groups of different values that might be alternative representations of the same thing". For example, the two strings "New York" and "new york" are very likely to refer to the same concept and just have capitalization differences. Likewise, "Gödel" and "Godel" probably refer to the same person."
+
+For more informacion see this:
+https://github.com/OpenRefine/OpenRefine/wiki/Clustering-In-Depth
+
+
 ## Keycolision
 
 ```python
@@ -542,7 +559,7 @@ df_kc.table()
 keyCol.n_gram_fingerprint_cluster(df, "STATE" , 2).to_json()
 ```
 
-## Levenshtein
+## Nearest Neighbor Methods
 
 ```python
 from optimus.ml import distancecluster as dc
@@ -620,7 +637,7 @@ including:
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.  
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.  
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features.  
-* Helping others in our optimus on [Discord](https://img.shields.io/discord/579030865468719104.svg)    
+* Helping others on [Discord](https://img.shields.io/discord/579030865468719104.svg)    
   
 ## Backers  
 [[Become a backer](https://opencollective.com/optimus#backer)] and get your image on our README on Github with a link to your site.  
