@@ -146,7 +146,7 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
         plt.bar(center, hist, width=width)
         plt.title("Histogram '" + col_name + "' " + sub_title)
 
-        fig.tight_layout()
+        # fig.tight_layout()
 
         if output is "base64":
             return output_base64(fig)

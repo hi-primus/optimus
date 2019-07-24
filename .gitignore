@@ -43,3 +43,9 @@ tests/test.parquet/
 examples/new-api-optimus-jars\.ipynb
 
 readme/credentials\.py
+
+readme/data/foo\.json/
+
+readme/data/foo\.parquet/
+
+readme/data/foo\.csv/

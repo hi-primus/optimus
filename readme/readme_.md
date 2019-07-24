@@ -13,7 +13,7 @@ jupyter:
     name: python3
 ---
 
-[![Logo Optimus](../images/logoOptimus.png)](https://hioptimus.com) 
+[![Logo Optimus](https://raw.githubusercontent.com/ironmussa/Optimus/master/images/logoOptimus.png)](https://hioptimus.com) 
 
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
@@ -112,7 +112,7 @@ Also you can load data from oracle, redshit, mysql and postgres. See ***Database
 
 ```python
 #csv
-df.save.csv("data/foo_output.csv")
+df.save.csv("data/foo.csv")
 
 # json
 df.save.json("data/foo.json")
@@ -133,7 +133,7 @@ Also you can save data to oracle, redshit, mysql and postgres. See ***Database c
 With optimus is easy to loading jars, packages and repos. You can init optimus/spark like 
 
 ```python
-op= Optimus(repositories = "myrepo", packages="org.apache.spark:spark-avro_2.12:2.4.3", jars="my.jar", driver_class_path="esto_asdf_Asd.jar", verbose= True)
+op= Optimus(repositories = "myrepo", packages="org.apache.spark:spark-avro_2.12:2.4.3", jars="my.jar", driver_class_path="this_is_a_jar_class_path.jar", verbose= True)
 ```
 
 ## Create dataframes
@@ -348,7 +348,7 @@ op.profiler.run(df, "name", infer=False)
 ```
 
 ```python
-op.profiler.to_image("images/profiler.png")
+op.profiler.to_image(output_path="images/profiler.png")
 ```
 
 ### Processing Dates
@@ -360,7 +360,7 @@ op.profiler.run(df, "year", infer=True)
 ```
 
 ```python
-op.profiler.to_image("images/profiler1.png")
+op.profiler.to_image(output_path="images/profiler1.png")
 ```
 
 ### Profiler Speed
@@ -384,27 +384,30 @@ df = op.load.excel("../examples/data/titanic3.xls")
 df = df.rows.drop_na(["age","fare"])
 ```
 
+You can output to the notebook or as an image
+
 ```python
-# df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
-df.plot.hist("fare")
+# Output and image
+df.plot.hist("fare", output_format="image", output_path="images/hist.png")
 ```
 
 ```python
-# df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
 df.plot.frequency("age")
+df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
 ```
 
 ```python
-# df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
 df.plot.scatter(["fare", "age"], buckets=30)
-
+df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
 ```
 
 ```python
+df.plot.box("age")
 df.plot.box("age", output_format="image", output_path="images/box.png")
 ```
 ```python
-df.plot.correlation(["age","fare","survived"])
+df.plot.correlation("*")
+df.plot.correlation("*", output_format="image", output_path="images/correlation.png")
 ```
 ### Using other plotting libraries
 
@@ -446,9 +449,6 @@ df.outliers.mad("age", threshold = 2).drop()
 Optimus have handy tools to connect to databases and extract informacion. Optimus can handle **redshift**, **postgres**, **oracle** and **mysql**
 
 ```python
-%load_ext autoreload
-%autoreload 2
-
 import sys
 sys.path.append("..")
 
@@ -524,13 +524,13 @@ df_result.table("all")
 ```
 
 ```python
-df_result.table_image("images/table7.png",limit="all")
+df_result.table_image("images/table7.png")
 ```
 
 # Clustering Strings
 
 
-Optimus implements some funciton to cluster String. We get have heavy inspiration from OpenRefine
+Optimus implements some funciton to cluster Strings. We get graet inspiration from OpenRefine
 
 Here a quote from its site:
 
@@ -553,7 +553,7 @@ from optimus.ml import keycollision as keyCol
 ```python
 df_kc = keyCol.fingerprint_cluster(df, 'STATE')
 df_kc.table()
-df_kc.table_image("images/table8.png",limit="all")
+df_kc.table_image("images/table8.png")
 ```
 
 ```python
@@ -563,7 +563,7 @@ keyCol.fingerprint_cluster(df, "STATE").to_json()
 ```python
 df_kc = keyCol.n_gram_fingerprint_cluster(df, "STATE" , 2)
 df_kc.table()
-df_kc.table_image("images/table9.png",limit="all")
+df_kc.table_image("images/table9.png")
 ```
 
 ```python
@@ -575,20 +575,20 @@ keyCol.n_gram_fingerprint_cluster(df, "STATE" , 2).to_json()
 ```python
 from optimus.ml import distancecluster as dc
 df_dc = dc.levenshtein_matrix(df,"STATE")
-df_dc.table_image("images/table10.png",limit="all")
+df_dc.table_image("images/table10.png")
 
 ```
 
 ```python
 df_dc=dc.levenshtein_filter(df,"STATE")
 df_dc.table()
-df_dc.table_image("images/table11.png",limit="all")
+df_dc.table_image("images/table11.png")
 ```
 
 ```python
 df_dc = dc.levenshtein_cluster(df,"STATE")
 df_dc.table()
-df_dc.table_image("images/table12.png",limit="all")
+df_dc.table_image("images/table12.png")
 ```
 
 ```python
@@ -612,13 +612,14 @@ One of the best "tree" models for machine learning is Random Forest. What about 
 one line? With Optimus is really easy.
 
 ```python
-df_cancer =op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+df_cancer = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
 ```
 
 ```python
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
+
 df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
@@ -628,7 +629,7 @@ So lets see the prediction compared with the actual label:
 
 
 ```python
-df_predict.cols.select(["label","prediction"]).table_image("images/table8.png")
+df_predict.cols.select(["label","prediction"]).table_image("images/table13.png")
 ```
 
 The rf_model variable contains the Random Forest model for analysis.
@@ -672,7 +673,9 @@ Apache 2.0 © [Iron](https://github.com/ironmussa)
 <a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
 
 
-# Post-process readme. Always run this if you modify the notebook
+# Post-process readme script. Always run this if you modify the notebook. 
+
+This will recreate README.md
 
 
 The bellow script process the ```readme_.md``` that is ouputed from this notebook and remove the header from jupytext, python comments and convert/add table to images and output ```readme.md```.
@@ -725,17 +728,28 @@ for i, line in enumerate(fileinput.input(output_file, inplace=1)):
             # Replace .table_image(...) by table()
             chars_table=re.search(".table_image", line)
             chars_image=re.search(".to_image", line)
+            chars_plot = True if len(re.findall('(.plot.|output_path=)', line))==2 else False
             
+            
+            
+            path = "readme/"
             if chars_table:
                 print(line[0:int(chars_table.start())]+".table()")
 
                 m = re.search(r'table_image\("(.*?)"\)', line).group(1)
                 if m:
-                    buffer = "![]("+ m + ")"              
+                    buffer = "![]("+ path + m + ")"              
             elif chars_image:
-                m = re.search(r'to_image\(path="(.*?)"\)', line).group(1)
+                m = re.search(r'to_image\(output_path="(.*?)"\)', line).group(1)
                 if m:
-                    buffer = "![]("+ m + ")"  
+                    buffer = "![]("+ path + m + ")"  
+            elif chars_plot:
+
+                m = re.search('output_path="(.*?)"', line).group(1)
+
+                if m:
+                    buffer = "![]("+ path + m + ")"  
+            
             else:
                 sys.stdout.write(line)
                 
@@ -766,6 +780,12 @@ for i, line in enumerate(fileinput.input(output_file, inplace=1)):
                     
         
 fileinput.close()
+```
+
+```python
+line = 'op.profiler.to_image(output_path="images/profiler.png")")'
+m = re.search(r'to_image\(output_path="(.*?)"\)', line).group(1)
+print(m)
 ```
 
 ```python

@@ -1,5 +1,5 @@
 
-[![Logo Optimus](../images/logoOptimus.png)](https://hioptimus.com) 
+[![Logo Optimus](https://raw.githubusercontent.com/ironmussa/Optimus/master/images/logoOptimus.png)](https://hioptimus.com) 
 
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
@@ -90,7 +90,7 @@ Also you can load data from oracle, redshit, mysql and postgres. See ***Database
 
 ```python
 #csv
-df.save.csv("data/foo_output.csv")
+df.save.csv("data/foo.csv")
 
 # json
 df.save.json("data/foo.json")
@@ -111,7 +111,7 @@ Also you can save data to oracle, redshit, mysql and postgres. See ***Database c
 With optimus is easy to loading jars, packages and repos. You can init optimus/spark like 
 
 ```python
-op= Optimus(repositories = "myrepo", packages="org.apache.spark:spark-avro_2.12:2.4.3", jars="my.jar", driver_class_path="esto_asdf_Asd.jar", verbose= True)
+op= Optimus(repositories = "myrepo", packages="org.apache.spark:spark-avro_2.12:2.4.3", jars="my.jar", driver_class_path="this_is_a_jar_class_path.jar", verbose= True)
 ```
 
 ## Create dataframes
@@ -166,7 +166,7 @@ With .table() you hace a beautifull way to show your data. You have extra inform
 ```python
 df.table()
 ```
-![](images/table.png)
+![](readme/images/table.png)
 
 
 Also you can create a dataframe from a panda dataframe
@@ -182,7 +182,7 @@ pdf = pd.DataFrame({'A': {0: 'a', 1: 'b', 2: 'c',3:'d'},
 s_pdf = op.create.df(pdf=pdf)
 s_pdf.table()
 ```
-![](images/pandas.png)
+![](readme/images/pandas.png)
 
 ## Cleaning and Processing
   
@@ -218,14 +218,14 @@ You transform this
 ```python
 df.table()
 ```
-![](images/table1.png)
+![](readme/images/table1.png)
 
 Into this
 
 ```python
 new_df.table()
 ```
-![](images/table2.png)
+![](readme/images/table2.png)
 
 Note that you can use Optimus functions and Spark functions(`.WithColumn()`) and all the df function availables in a Spark Dataframe at the same time. To know about all the Optimus functionality please go to this [notebooks](examples/)
 
@@ -247,7 +247,7 @@ If a **string** is passed to **input_cols** and **output_cols** is not defined t
 output_df = df.cols.apply(input_cols="names", output_cols=None,func=func)
 output_df.table()
 ```
-![](images/column_output_1.png)
+![](readme/images/column_output_1.png)
 
 If a **string** is passed to **input_cols** and a **string** is passed to **output_cols** the output is going to be saved in the output column
 
@@ -255,7 +255,7 @@ If a **string** is passed to **input_cols** and a **string** is passed to **outp
 output_df = df.cols.apply(input_cols="names", output_cols="names_up",func=func)
 output_df.table()
 ```
-![](images/column_output_2.png)
+![](readme/images/column_output_2.png)
 
 If a **list** is passed to **input_cols** and a **string** is passed to **out_cols** Optimus will concatenate the list with every element in the list to create a new column name with the output
 
@@ -263,7 +263,7 @@ If a **list** is passed to **input_cols** and a **string** is passed to **out_co
 output_df = df.cols.apply(input_cols=["names","function"], output_cols="_up",func=func)
 output_df.table()
 ```
-![](images/column_output_3.png)
+![](readme/images/column_output_3.png)
 
 If a **list** is passed to **input_cols** and a **list** is passed in **out_cols** Optimus will output every input column in the respective output column
 
@@ -271,7 +271,7 @@ If a **list** is passed to **input_cols** and a **list** is passed in **out_cols
 output_df = df.cols.apply(input_cols=["names","function"], output_cols=["names_up","function_up"],func=func)
 output_df.table()
 ```
-![](images/column_output_4.png)
+![](readme/images/column_output_4.png)
 
 ### Custom functions
 Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
@@ -283,7 +283,7 @@ def func(value, args):
 
 df.cols.apply("height(ft)",func,"int", [1,2]).table()
 ```
-![](images/table3.png)
+![](readme/images/table3.png)
 
 If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
 
@@ -295,7 +295,7 @@ def func(col_name, args):
 
 df.cols.apply("height(ft)", func=func, args=20).table()
 ```
-![](images/table4.png)
+![](readme/images/table4.png)
 
 You can change the table output back to ascii if you which
 
@@ -327,17 +327,13 @@ df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/exa
 op.profiler.run(df, "mass (g)", infer=False)
 ```
 
-```python
-'NoneType' object has no attribute 'group'
-```
+![](readme/images/profiler_numeric.png)
 
 ```python
 op.profiler.run(df, "name", infer=False)
 ```
 
-```python
-'NoneType' object has no attribute 'group'
-```
+![](readme/images/profiler.png)
 
 ### Processing Dates
 
@@ -347,9 +343,7 @@ For dates data types Optimus can give you extra information
 op.profiler.run(df, "year", infer=True)
 ```
 
-```python
-'NoneType' object has no attribute 'group'
-```
+![](readme/images/profiler1.png)
 
 ### Profiler Speed
 
@@ -372,28 +366,31 @@ df = op.load.excel("../examples/data/titanic3.xls")
 df = df.rows.drop_na(["age","fare"])
 ```
 
-```python
-# df.plot.hist("fare", output_format="image", ouput_path="images/hist.png")
-df.plot.hist("fare")
-```
+You can output to the notebook or as an image
 
 ```python
-# df.plot.frequency("age", output_format="image", output_path="images/frequency.png")
+# Output and image
+```
+![](readme/images/hist.png)
+
+```python
 df.plot.frequency("age")
 ```
+![](readme/images/frequency.png)
 
 ```python
-# df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
 df.plot.scatter(["fare", "age"], buckets=30)
-
 ```
+![](readme/images/scatter.png)
 
 ```python
-df.plot.box("age", output_format="image", output_path="images/box.png")
+df.plot.box("age")
 ```
+![](readme/images/box.png)
 ```python
-df.plot.correlation(["age","fare","survived"])
+df.plot.correlation("*")
 ```
+![](readme/images/correlation.png)
 ### Using other plotting libraries
 
 
@@ -408,14 +405,14 @@ Optimus has a tiny API so you can use any plotting library. For example, you can
 ```python
 df.outliers.tukey("age").select().table()
 ```
-![](images/table5.png)
+![](readme/images/table5.png)
 
 ### Remove the outliers using tukey
 
 ```python
 df.outliers.tukey("age").drop().table()
 ```
-![](images/table6.png)
+![](readme/images/table6.png)
 
 ```python
 df.outliers.tukey("age").info()
@@ -436,7 +433,6 @@ df.outliers.mad("age", threshold = 2).drop()
 Optimus have handy tools to connect to databases and extract informacion. Optimus can handle **redshift**, **postgres**, **oracle** and **mysql**
 
 ```python
-
 
 from optimus import Optimus
 op= Optimus(verbose=True)
@@ -512,12 +508,12 @@ df_result.table("all")
 ```python
 df_result.table()
 ```
-![](images/table7.png",limit="all)
+![](readme/images/table7.png)
 
 # Clustering Strings
 
 
-Optimus implements some funciton to cluster String. We get have heavy inspiration from OpenRefine
+Optimus implements some funciton to cluster Strings. We get graet inspiration from OpenRefine
 
 Here a quote from its site:
 
@@ -542,7 +538,7 @@ df_kc = keyCol.fingerprint_cluster(df, 'STATE')
 df_kc.table()
 df_kc.table()
 ```
-![](images/table8.png",limit="all)
+![](readme/images/table8.png)
 
 ```python
 keyCol.fingerprint_cluster(df, "STATE").to_json()
@@ -553,7 +549,7 @@ df_kc = keyCol.n_gram_fingerprint_cluster(df, "STATE" , 2)
 df_kc.table()
 df_kc.table()
 ```
-![](images/table9.png",limit="all)
+![](readme/images/table9.png)
 
 ```python
 keyCol.n_gram_fingerprint_cluster(df, "STATE" , 2).to_json()
@@ -567,21 +563,21 @@ df_dc = dc.levenshtein_matrix(df,"STATE")
 df_dc.table()
 
 ```
-![](images/table10.png",limit="all)
+![](readme/images/table10.png)
 
 ```python
 df_dc=dc.levenshtein_filter(df,"STATE")
 df_dc.table()
 df_dc.table()
 ```
-![](images/table11.png",limit="all)
+![](readme/images/table11.png)
 
 ```python
 df_dc = dc.levenshtein_cluster(df,"STATE")
 df_dc.table()
 df_dc.table()
 ```
-![](images/table12.png",limit="all)
+![](readme/images/table12.png)
 
 ```python
 dc.to_json(df, "STATE")
@@ -604,13 +600,14 @@ One of the best "tree" models for machine learning is Random Forest. What about 
 one line? With Optimus is really easy.
 
 ```python
-df_cancer =op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+df_cancer = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
 ```
 
 ```python
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
            'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
            'fractal_dimension_mean']
+
 df_predict, rf_model = op.ml.random_forest(df_cancer, columns, "diagnosis")
 ```
 
@@ -622,7 +619,7 @@ So lets see the prediction compared with the actual label:
 ```python
 df_predict.cols.select(["label","prediction"]).table()
 ```
-![](images/table8.png)
+![](readme/images/table13.png)
 
 The rf_model variable contains the Random Forest model for analysis.
  
