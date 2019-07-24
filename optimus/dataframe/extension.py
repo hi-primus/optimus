@@ -25,6 +25,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
+
 @add_method(DataFrame)
 def roll_out():
     """
@@ -426,7 +427,7 @@ def correlation(self, input_cols, method="pearson", output="json"):
 
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
-    return result
+    return {"cols":input_cols, "data":result}
 
 
 @add_method(DataFrame)

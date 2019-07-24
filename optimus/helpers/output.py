@@ -10,14 +10,15 @@ from matplotlib import pyplot as plt
 from optimus.helpers.check import is_str
 
 
-def output_image(path):
+def output_image(fig, path):
     """
     Output a png file
+    :param fig:
     :param path: Matplotlib figure
     :return: Base64 encode image
     """
 
-    plt.savefig(path, format='png')
+    fig.savefig(path, format='png')
     plt.close()
 
 

@@ -1,20 +1,21 @@
 from pyspark.sql import DataFrame
 
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
-from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, plot_correlation
+from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
+    plot_correlation
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.columns import parse_columns, check_column_numbers
 
 
 def plot(self):
     @add_attr(plot)
-    def hist(columns=None, buckets=10, output_format="plot", ouput_path=None):
+    def hist(columns=None, buckets=10, output_format="plot", output_path=None):
         """
         Plot histogram
         :param columns: Columns to be printed
         :param buckets: Number of buckets
         :param output_format:
-        :param ouput_path:
+        :param output_path: path where the image is going to be saved
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
@@ -22,7 +23,7 @@ def plot(self):
 
         for col_name in columns:
             data = self.cols.hist(col_name, buckets)
-            plot_hist({col_name: data}, output=output_format, path=ouput_path)
+            plot_hist({col_name: data}, output=output_format, path=output_path)
 
     @add_attr(plot)
     def scatter(columns=None, buckets=30, output_format="plot", output_path=None):
@@ -31,7 +32,7 @@ def plot(self):
         :param columns: columns to be printed
         :param buckets: number of buckets
         :param output_format:
-        :param output_path:
+        :param output_path: path where the image is going to be saved
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
@@ -46,7 +47,7 @@ def plot(self):
         Plot boxplot
         :param columns: Columns to be printed
         :param output_format:
-        :param output_path:
+        :param output_path: path where the image is going to be saved
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
@@ -63,7 +64,7 @@ def plot(self):
         :param columns: Columns to be printed
         :param buckets: Number of buckets
         :param output_format:
-        :param output_path:
+        :param output_path: path where the image is going to be saved
         :return:
         """
         columns = parse_columns(self, columns)
@@ -85,8 +86,8 @@ def plot(self):
         :return: Heatmap plot of the corr matrix using seaborn.
         """
 
-        corr = self.correlation(col_name, method, output="array")
-        plot_correlation(corr)
+        cols_data = self.correlation(col_name, method, output="array")
+        plot_correlation(cols_data, output=output_format, path=output_path)
 
     return plot
 

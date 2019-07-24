@@ -24,7 +24,7 @@ def plot_scatterplot(column_data=None, output=None, path=None):
     if output is "base64":
         return output_base64(fig)
     elif output is "image":
-        output_image(path)
+        output_image(fig, path)
         print_html("<img src='" + path + "'>")
     elif output is "plot":
         # Tweak spacing to prevent clipping of tick-labels
@@ -40,6 +40,7 @@ def plot_boxplot(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
+
     for col_name, stats in column_data.items():
         fig, axes = plt.subplots(1, 1)
 
@@ -61,9 +62,8 @@ def plot_boxplot(column_data=None, output=None, path=None):
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
-            return output_image(path)
-        else:
-            plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+            output_image(fig, path)
+            print_html("<img src='" + path + "'>")
 
 
 def plot_frequency(column_data=None, output=None, path=None):
@@ -100,7 +100,7 @@ def plot_frequency(column_data=None, output=None, path=None):
         if output is "base64":
             return output_base64(fig)
         elif output is "image":
-            output_image(path)
+            output_image(plt, path)
             print_html("<img src='" + path + "'>")
         elif output is "plot":
             # Tweak spacing to prevent clipping of tick-labels
@@ -152,7 +152,7 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
             return output_base64(fig)
         elif output is "image":
             # Save image
-            output_image(path)
+            output_image(plt, path)
             print_html("<img src='" + path + "'>")
             # Print in jupyter notebook
 
@@ -160,14 +160,31 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
-def plot_correlation(column_data):
+def plot_correlation(cols_data, output=None, path=None):
     """
     Plot a correlation plot
-    :param column_data:
+    :param data:
+    :param output:
+    :param path:
     :return:
     """
-    return sns.heatmap(column_data, mask=np.zeros_like(column_data, dtype=np.bool),
-                       cmap=sns.diverging_palette(220, 10, as_cmap=True))
+    import pandas as pd
+    df = pd.DataFrame(data=cols_data["data"], columns=cols_data["cols"], index=cols_data["cols"])
+
+    sns_plot = sns.heatmap(df, mask=np.zeros_like(cols_data["data"], dtype=np.bool),
+                           cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
+
+    if output is "base64":
+        # fig = sns.get_figure()
+        fig = sns_plot.get_figure()
+        return output_base64(fig)
+    elif output is "image":
+        # Save image
+        fig = sns_plot.get_figure()
+        fig.savefig(path)
+        print_html("<img src='" + path + "'>")
+    # elif output is "plot":
+    #     plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
 def plot_missing_values(column_data=None, output=None, path=None):
@@ -203,6 +220,6 @@ def plot_missing_values(column_data=None, output=None, path=None):
     if output is "base64":
         return output_base64(fig)
     elif output is "image":
-        return output_image(path)
+        output_image(plt, path)
     elif output is "plot":
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
