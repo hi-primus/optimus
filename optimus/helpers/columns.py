@@ -261,7 +261,7 @@ def name_col(col_names: str, append: str) -> str:
     """
     col_names = val_to_list(col_names)
     if len(col_names) > 1:
-        output_col = ellipsis('_'.join(str(elem) for elem in col_names), 10)
+        output_col = ('_'.join(str(elem) for elem in col_names))[:10] + "***"
     else:
         output_col = one_list_to_val(col_names)
 
