@@ -12,7 +12,7 @@ import pyspark.sql.functions as F
 from pyspark.sql.types import ArrayType, LongType
 
 from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.dataframe.plots.functions import plot_freq, plot_missing_values, plot_hist
+from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import na_agg, zeros_agg
 from optimus.helpers.decorators import time_it
@@ -232,7 +232,7 @@ class Profiler:
                     hist_pic = {"hist_pic": hist}
 
             if "frequency" in col:
-                freq_pic = plot_freq({col_name: col["frequency"]}, output="base64")
+                freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
