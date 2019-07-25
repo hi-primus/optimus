@@ -1,66 +1,69 @@
 from pyspark.sql import functions as F
 
+from optimus.helpers.columns import name_col
 from optimus.ml import keycollision
+from optimus.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
+    LEVENSHTEIN_DISTANCE
 
 
-def levenshtein_matrix(df, col_name):
+def levenshtein_matrix(df, input_col):
     """
     Create a couple of column with all the string combination
     :param df:
-    :param col_name:
+    :param input_col:
     :return:
     """
-    df = keycollision.fingerprint(df, col_name)
+    df = keycollision.fingerprint(df, input_col)
 
-    col_fingerprint = col_name + "_FINGERPRINT"
-    col_distance = col_name + "_LEVENSHTEIN_DISTANCE"
+    fingerprint_col = name_col(input_col, FINGERPRINT_COL)
+    distance_col = name_col(input_col, LEVENSHTEIN_DISTANCE)
 
-    temp_col_1 = col_name + "_LEVENSHTEIN_1"
-    temp_col_2 = col_name + "_LEVENSHTEIN_2"
+    temp_col_1 = input_col + "_LEVENSHTEIN_1"
+    temp_col_2 = input_col + "_LEVENSHTEIN_2"
 
     # Prepare the columns to calculate the cross join
-    df = df.select(col_fingerprint).distinct().select(F.col(col_fingerprint).alias(temp_col_1),
-                                                      F.col(col_fingerprint).alias(temp_col_2))
+    df = df.select(fingerprint_col).distinct().select(F.col(fingerprint_col).alias(temp_col_1),
+                                                      F.col(fingerprint_col).alias(temp_col_2))
 
     #  Create all the combination between the string to calculate the levenshtein distance
     df = df.select(temp_col_1).crossJoin(df.select(temp_col_2)) \
-        .withColumn(col_distance, F.levenshtein(F.col(temp_col_1), F.col(temp_col_2)))
+        .withColumn(distance_col, F.levenshtein(F.col(temp_col_1), F.col(temp_col_2)))
 
     return df
 
 
-def levenshtein_filter(df, col_name):
+def levenshtein_filter(df, input_col):
     """
     Get the nearest string
     :param df:
-    :param col_name:
+    :param input_col:
     :return:
     """
     # TODO: must filter by and exprs
     func = F.min
 
-    col_distance = col_name + "_LEVENSHTEIN_DISTANCE"
-    col_distance_r = col_name + "_LEVENSHTEIN_DISTANCE_R"
+    distance_col = name_col(input_col, LEVENSHTEIN_DISTANCE)
+    distance_r_col = input_col + "_LEVENSHTEIN_DISTANCE_R"
 
-    temp_col_1 = col_name + "_LEVENSHTEIN_1"
-    temp_col_2 = col_name + "_LEVENSHTEIN_2"
+    temp_col_1 = input_col + "_LEVENSHTEIN_1"
+    temp_col_2 = input_col + "_LEVENSHTEIN_2"
     temp_r = "TEMP_R"
 
-    df = levenshtein_matrix(df, col_name)
+    df = levenshtein_matrix(df, input_col)
 
     # get the closest word
-    df_r = (df.rows.drop(F.col(col_distance) == 0)
+    df_r = (df.rows.drop(F.col(distance_col) == 0)
             .groupby(temp_col_1)
-            .agg(func(col_distance).alias(col_distance_r))
+            .agg(func(distance_col).alias(distance_r_col))
             .cols.rename(temp_col_1, temp_r))
 
-    df = df.join(df_r, ((df_r[temp_r] == df[temp_col_1]) & (df_r[col_distance_r] == df[col_distance]))).select(
+    df = df.join(df_r, ((df_r[temp_r] == df[temp_col_1]) & (df_r[distance_r_col] == df[distance_col]))).select(
         temp_col_1,
-        col_distance,
+        distance_col,
         temp_col_2)
 
     df = df \
-        .cols.rename([(temp_col_1, col_name + "_FROM"), (temp_col_2, col_name + "_TO")])
+        .cols.rename([(temp_col_1, input_col + "_FROM"), (temp_col_2, input_col + "_TO")])
 
     df.unpersist()
     df_r.unpersist()
@@ -68,29 +71,35 @@ def levenshtein_filter(df, col_name):
     return df
 
 
-def levenshtein_cluster(df, col_name):
+def levenshtein_cluster(df, input_col):
     """
     Return a dataframe with a string of cluster related to a string
     :param df:
-    :param col_name:
+    :param input_col:
     :return:
     """
     # Prepare a group so we don need to apply the fingerprint to the whole data set
-    df = df.select(col_name).groupby(col_name).agg(F.count(col_name).alias("count"))
-    df = keycollision.fingerprint(df, col_name)
+    df = df.select(input_col).groupby(input_col).agg(F.count(input_col).alias("count"))
+    df = keycollision.fingerprint(df, input_col)
 
-    df_t = df.groupby(col_name + "_FINGERPRINT").agg(F.collect_list(col_name).alias("cluster"),
-                                                     F.size(F.collect_list(col_name)).alias("cluster_size"),
-                                                     F.first(col_name).alias("recommended"),
-                                                     F.sum("count").alias("count")).repartition(1)
+    count_col = name_col(input_col, COUNT_COL)
+    cluster_col = name_col(input_col, CLUSTER_COL)
+    recommended_col = name_col(input_col, RECOMMENDED_COL)
+    cluster_size_col = name_col(input_col, CLUSTER_SIZE_COL)
+    fingerprint_col = name_col(input_col, FINGERPRINT_COL)
+
+    df_t = df.groupby(fingerprint_col).agg(F.collect_list(input_col).alias(cluster_col),
+                                           F.size(F.collect_list(input_col)).alias(cluster_size_col),
+                                           F.first(input_col).alias(recommended_col),
+                                           F.sum("count").alias(count_col)).repartition(1)
 
     # Filter nearest string
-    df_l = levenshtein_filter(df, col_name).repartition(1)
+    df_l = levenshtein_filter(df, input_col).repartition(1)
 
     # Create Cluster
-    df_l = df_l.join(df_t, (df_l[col_name + "_FROM"] == df_t[col_name + "_FINGERPRINT"]), how="left") \
-        .cols.drop(col_name + "_FINGERPRINT") \
-        .cols.drop([col_name + "_FROM", col_name + "_TO", col_name + "_LEVENSHTEIN_DISTANCE"])
+    df_l = df_l.join(df_t, (df_l[input_col + "_FROM"] == df_t[fingerprint_col]), how="left") \
+        .cols.drop(fingerprint_col) \
+        .cols.drop([input_col + "_FROM", input_col + "_TO", input_col + "_LEVENSHTEIN_DISTANCE"])
 
     return df_l
 

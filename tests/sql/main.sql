@@ -1,4 +1,6 @@
-create table main (
+DROP TABLE IF EXISTS main;
+
+CREATE table main (
 	id INT,
 	last_name VARCHAR(50),
 	email VARCHAR(50),

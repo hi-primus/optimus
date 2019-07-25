@@ -10,7 +10,7 @@ from pyspark.sql.functions import pandas_udf, PandasUDFType
 from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
-from optimus.helpers.checkit import is_function, is_, is_dataframe
+from optimus.helpers.check import is_function, is_, is_dataframe
 from optimus.helpers.logger import logger
 
 # Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
@@ -23,7 +23,8 @@ class Enricher:
     Enrich data from a Pandas or Spark dataframe
     """
 
-    def __init__(self, op=None, host="localhost", port=27017, db_name="jazz", collection_name="data",
+    def __init__(self, op=None, host="localhost", port=27017, username=None, password=None, db_name="jazz",
+                 collection_name="data",
                  *args, **kwargs):
         """
 
@@ -37,14 +38,24 @@ class Enricher:
         """
 
         self.host = host
-        self.port = port
+        self.port = int(port)
+        self.username = username
+        self.password = password
         self.db_name = db_name
         self.collection_name = collection_name
-        self.client = MongoClient(host, port, *args, **kwargs)
-        self.op = op
 
-        # print(self.client.db_name.command('ping'))
-        # {u'ok': 1.0}
+        credentials = ""
+        if username is not None or password is not None:
+            credentials = "{USERNAME}:{PASSWORD}@".format(USERNAME=username, PASSWORD=password)
+
+        self.url = "mongodb://{CREDENTIALS}{HOST}:{PORT}/{DATABASE}".format(HOST=host,
+                                                                            PORT=port,
+                                                                            CREDENTIALS=credentials,
+                                                                            DATABASE=db_name)
+
+        print(self.url)
+        self.client = MongoClient(self.url, *args, **kwargs)
+        self.op = op
 
     def load(self, df):
         """
@@ -129,15 +140,16 @@ class Enricher:
             logger.print("Appending collection info into the dataframe")
             # TODO: An elegant way to handle pickling?
             # take care to the pickling
-            host = self.host
-            port = self.port
+
             db_name = self.db_name
+            # collection_name = self.collection_name
+            url = self.url
 
             @pandas_udf('string', PandasUDFType.SCALAR)
             def func(value):
                 # More about pickling
                 from pymongo import MongoClient
-                _client = MongoClient(host, port)
+                _client = MongoClient(url)
                 _db = _client[db_name]
                 _collection = _db[collection_name]
 

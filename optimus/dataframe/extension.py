@@ -1,5 +1,4 @@
 import json
-import os
 
 import humanize
 import imgkit
@@ -13,12 +12,16 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.raiseit import RaiseIt
-from optimus.helpers.checkit import is_str, is_column_a
-from optimus.helpers.convert import val_to_list, one_list_to_val
+from optimus import val_to_list
+from optimus.helpers.check import is_str
+from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import *
-from optimus.helpers.functions import parse_columns, collect_as_dict, random_int, traverse, print_html, json_converter
+from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
+from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
@@ -293,9 +296,8 @@ def table_image(self, path, limit=10):
     :param path:
     :return:
     """
-    # imgkit.from_url('http://google.com', 'out.jpg')
-    path_css = os.path.dirname(os.path.abspath(__file__))
-    css = path_css + "//..//css//styles.css"
+
+    css = absolute_path("/css/styles.css")
 
     imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
     print_html("<img src='" + path + "'>")
@@ -316,11 +318,17 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
     columns = parse_columns(self, columns)
 
-    data = self.cols.select(columns).limit(limit).to_json()
+    if limit is None:
+        limit = 10
+
+    if limit == "all":
+
+        data = collect_as_dict(self.cols.select(columns))
+    else:
+        data = collect_as_dict(self.cols.select(columns).limit(limit))
 
     # Load the Jinja template
-    path = os.path.dirname(os.path.abspath(__file__))
-    template_loader = jinja2.FileSystemLoader(searchpath=path + "//../templates")
+    template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates"))
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
     template = template_env.get_template("table.html")
 
@@ -335,7 +343,9 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
                 final_columns.append(i)
 
     total_rows = self.count()
-    if total_rows < limit:
+    if limit == "all":
+        limit = total_rows
+    elif total_rows < limit:
         limit = total_rows
 
     total_rows = humanize.intword(total_rows)
@@ -351,12 +361,11 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=100, columns=None, title=None):
+def table(self, limit=None, columns=None, title=None):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
-
             result = self.table_html(title=title, limit=limit, columns=columns)
-            return print_html(result)
+            print_html(result)
         else:
             self.show()
     except NameError:
@@ -365,32 +374,34 @@ def table(self, limit=100, columns=None, title=None):
 
 
 @add_method(DataFrame)
-def correlation(self, columns, method="pearson", output="json"):
+def correlation(self, input_cols, method="pearson", output="json"):
     """
     Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
     missing values
     :param self:
-    :param columns: Columns to be processed
+    :param input_cols: Columns to be processed
     :param method: Method used to calculate the correlation
     :param output: array or json
     :return:
     """
-    columns = parse_columns(self, columns)
-    # try to parse the select column to float and create a vector
 
     df = self
-    if len(columns) == 1:
-        if is_column_a(df, columns, "vector"):
-            output_col = one_list_to_val(columns)
-    else:
-        output_col = "_correlation_features"
-        for col_name in columns:
+
+    # Values in columns can not be null. Warn user
+    input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+    # try to parse the select column to float and create a vector
+
+    # print(self.cols.count_na(input_cols))
+
+    # Input is not a vector transform to a vector
+    output_col = name_col(input_cols, "correlation")
+    if len(input_cols) > 1:
+        for col_name in input_cols:
             df = df.cols.cast(col_name, "float")
             logger.print("Casting {col_name} to float...".format(col_name=col_name))
 
-        df = df.cols.nest(columns, "vector", output_cols=output_col)
+        df = df.cols.nest(input_cols, "vector", output_cols=output_col)
 
-    # Create Vector necessary to calculate the correlation
     corr = Correlation.corr(df, output_col, method).head()[0].toArray()
 
     if output is "array":
@@ -400,8 +411,8 @@ def correlation(self, columns, method="pearson", output="json"):
 
         # Parse result to json
         col_pair = []
-        for col_name in columns:
-            for col_name_2 in columns:
+        for col_name in input_cols:
+            for col_name_2 in input_cols:
                 col_pair.append({"between": col_name, "an": col_name_2})
 
         # flat array
@@ -416,7 +427,7 @@ def correlation(self, columns, method="pearson", output="json"):
 
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
-    return result
+    return {"cols":input_cols, "data":result}
 
 
 @add_method(DataFrame)

@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Optimus'
-copyright = '2018, Favio Vazquez and Argenis León'
+copyright = '2019, Favio Vazquez and Argenis León'
 author = 'Favio Vázquez and Argenis León'
 
 # The version info for the project you're documenting, acts as replacement for

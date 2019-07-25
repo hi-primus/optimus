@@ -8,7 +8,7 @@ Optimus is the missing framework to profile, clean, process and do ML in a distr
 - Installation:
 
 In your terminal just type:
-
+do
 $ pip install optimuspyspark
 
 - Contributors:

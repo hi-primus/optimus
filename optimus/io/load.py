@@ -5,8 +5,8 @@ from urllib.request import Request, urlopen
 import pandas as pd
 from packaging import version
 
-from optimus.helpers.checkit import is_url
-from optimus.helpers.functions import replace_columns_special_characters
+from optimus.helpers.check import is_url
+from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
 

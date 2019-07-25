@@ -1,18 +1,20 @@
 import os
+import platform
 import sys
-from pathlib import Path
+from functools import reduce
 from shutil import rmtree
 
 from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 
+from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
-from optimus.functions import append, Create
-from optimus.helpers.checkit import is_list
 from optimus.helpers.constants import *
-from optimus.helpers.convert import val_to_list
-from optimus.helpers.functions import print_html, print_json
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html, print_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load
@@ -32,13 +34,14 @@ class Optimus:
                  server=False,
                  repositories=None,
                  packages=None,
-                 jars=None,
-                 driver_class_path=None,
+                 jars=[],
+                 driver_class_path=[],
                  options=None,
                  additional_options=None,
                  queue_url=None,
                  queue_exchange=None,
-                 queue_routing_key="optimus"
+                 queue_routing_key="optimus",
+                 load_avro=False,
                  ):
 
         """
@@ -67,9 +70,11 @@ class Optimus:
         :type jars: (list[str])
 
         """
+        self.preserve = False
+
         if session is None:
-            # print("Creating Spark Session...")
-            # If a Spark session in not passed by argument create it
+            # Creating Spark Session
+            # If a Spark session in not passed by argument create one
 
             self.master = master
             self.app_name = app_name
@@ -79,47 +84,30 @@ class Optimus:
 
             self.options = options
 
-            if packages is None:
-                packages = []
-            else:
-                packages = val_to_list(packages)
+            # Initialize as lists
+            self.packages = val_to_list(packages)
+            self.repositories = val_to_list(repositories)
+            self.jars = val_to_list(jars)
+            self.driver_class_path = val_to_list(driver_class_path)
 
-            self.packages = packages
-            self.repositories = repositories
-
-            # Jars
-            self.jars = jars
-            self._add_jars(jars)
-
-            # Class Drive Path
-            self.driver_class_path = driver_class_path
-            self._add_driver_class_path(driver_class_path)
-
-            # Additional Options
             self.additional_options = additional_options
 
             self.verbose(verbose)
 
-            # Load Avro.
-            # TODO:
-            #  if the Spark 2.4 version is going to be used this is not neccesesary.
-            #  Maybe we can check a priori which version fo Spark is going to be used
-            self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
+            # Because avro depends of a external package you can decide if should be loaded
+            if load_avro == "2.4":
+                self._add_spark_packages(["org.apache.spark:spark-avro_2.12:2.4.3"])
 
-            def c(files):
-                return [Path(path + file).as_posix() for file in files]
+            elif load_avro == "2.3":
+                self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            path = os.path.dirname(os.path.abspath(__file__))
+            jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar"]
 
-            # Add databases jars
-            self._add_jars(["../jars/RedshiftJDBC42-1.2.16.1027.jar", "../jars/mysql-connector-java-8.0.16.jar",
-                            "../jars/ojdbc7.jar", "../jars/postgresql-42.2.5.jar"])
+            self._add_jars(absolute_path(jdbc_jars, "uri"))
+            self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
 
-            self._add_driver_class_path(
-                c(["//jars//RedshiftJDBC42-1.2.16.1027.jar", "//jars//mysql-connector-java-8.0.16.jar",
-                   "//jars//ojdbc7.jar", "//jars//postgresql-42.2.5.jar"]))
-
-            self._start_session()
+            self._create_session()
 
             if path is None:
                 path = os.getcwd()
@@ -129,7 +117,7 @@ class Optimus:
 
         else:
             # If a session is passed by arguments just save the reference
-
+            # logger.print("Spark session")
             Spark.instance = Spark().load(session)
 
         # Initialize Spark
@@ -176,8 +164,7 @@ class Optimus:
         """
         try:
             if __IPYTHON__:
-                path = os.path.dirname(os.path.abspath(__file__))
-                url = path + "//css//styles.css"
+                url = absolute_path("/css/styles.css")
                 styles = open(url, "r", encoding="utf8").read()
                 s = '<style>%s</style>' % styles
                 print_html(s)
@@ -185,20 +172,29 @@ class Optimus:
             pass
 
     @staticmethod
-    def connect(db_type="redshift", url=None, database=None, user=None, password=None, port=None):
+    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
+                oracle_tns=None, oracle_service_name=None, oracle_sid=None):
         """
         Create the JDBC string connection
-        :return:
+        :return: JDBC object
         """
-        return JDBC(db_type, url, database, user, password, port)
 
-    def enrich(self, host="localhost", port=27017):
+        return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid)
+
+    def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
+               collection_name="data"):
         """
-        :param host:
-        :param port:
+        Create a enricher object
+        :param host: url to mongodb
+        :param port: port used my mongodb
+        :param username: database username
+        :param password: database password
+        :param db_name: db user by the enricher
+        :param collection_name: collection used by the enricher
         :return:
         """
-        return Enricher(op=self, host=host, port=port, )
+        return Enricher(op=self, host=host, port=port, username=username, password=password, db_name=db_name,
+                        collection_name=collection_name)
 
     @staticmethod
     def output(output):
@@ -311,14 +307,34 @@ class Optimus:
             RaiseIt.value_error(file_system, ["hadoop", "local"])
 
     @staticmethod
-    def append(dfs, like):
+    def append(dfs, like="columns"):
         """
         Concat multiple dataframes
         :param dfs: List of Dataframes
         :param like: concat as columns or rows
         :return:
         """
-        return append(dfs, like)
+
+        # FIX: Because monotonically_increasing_id can create different
+        # sequence for different dataframes the result could be wrong.
+
+        if like == "columns":
+            temp_dfs = []
+            col_temp_name = "id_" + random_int()
+            for df in dfs:
+                temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+            def _append(df1, df2):
+                return df1.join(df2, col_temp_name, "outer")
+
+            df_result = reduce(_append, temp_dfs).drop(col_temp_name)
+
+        elif like == "rows":
+            df_result = reduce(DataFrame.union, dfs)
+        else:
+            RaiseIt.value_error(like, ["columns", "rows"])
+
+        return df_result
 
     def _setup_repositories(self):
         if self.repositories:
@@ -345,31 +361,32 @@ class Optimus:
 
     # Jar
     def _add_jars(self, jar):
-        if self.jars is None:
-            self.jars = []
-
-        if is_list(jar):
-            for j in val_to_list(jar):
-                self.jars.append(j)
+        for j in val_to_list(jar):
+            self.jars.append(j)
 
     def _setup_jars(self):
         if self.jars:
-            return '--jars {}'.format(','.join(self.jars))
+            return '--jars "{}"'.format(','.join(self.jars))
         else:
             return ''
 
     # Driver class path
     def _add_driver_class_path(self, driver_class_path):
-        if self.driver_class_path is None:
-            self.driver_class_path = []
 
-        if is_list(driver_class_path):
-            for d in val_to_list(driver_class_path):
-                self.driver_class_path.append(d)
+        for d in val_to_list(driver_class_path):
+            self.driver_class_path.append(d)
 
     def _setup_driver_class_path(self):
+
+        p = platform.system()
+        logger.print("Operative System:" + p)
+        if p == "Linux":
+            separator = ":"
+        elif p == "Windows":
+            separator = ";"
+
         if self.driver_class_path:
-            return '--driver-class-path {}'.format(';'.join(self.driver_class_path))
+            return '--driver-class-path "{}"'.format(separator.join(self.driver_class_path))
         else:
             return ''
 
@@ -392,18 +409,23 @@ class Optimus:
         # straightforward way (since we always append to PYSPARK_SUBMIT_ARGS)
         return ' '.join('--conf "{}={}"'.format(*o) for o in sorted(options.items()))
 
-    def _start_session(self):
+    def _create_session(self):
         """
         Start a Spark session using jar, packages, repositories and options given
         :return:
         """
+
         ## Get python.exe fullpath
         os.environ['PYSPARK_PYTHON'] = sys.executable
+
+        # Remove duplicated strings
+        # print(self._setup_jars())
+        # print(os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace(self._setup_jars(), ''))
 
         submit_args = [
             # options that were already defined through PYSPARK_SUBMIT_ARGS
             # take precedence over SparklySession's
-            os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace('pyspark-shell', ''),
+
             self._setup_repositories(),
             self._setup_packages(),
             self._setup_jars(),
@@ -411,6 +433,9 @@ class Optimus:
             self._setup_options(self.additional_options),
             'pyspark-shell',
         ]
+
+        if self.preserve:
+            submit_args.insert(0, os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace('pyspark-shell', ''))
 
         env = ' '.join(filter(None, submit_args))
         os.environ['PYSPARK_SUBMIT_ARGS'] = env
