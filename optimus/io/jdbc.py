@@ -1,7 +1,6 @@
-from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
-
+from optimus.helpers.raiseit import RaiseIt
 from optimus.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
@@ -22,7 +21,6 @@ class JDBC:
         :return:
         """
 
-
         self.db_driver = driver
         self.oracle_sid = oracle_sid
 
@@ -38,7 +36,7 @@ class JDBC:
         elif self.db_driver == "mysql":
             if port is None: self.port = 3306
             # "com.mysql.jdbc.Driver"
-            
+
         elif self.db_driver == "sqlserver":
             if port is None: self.port = 1433
             # "com.microsoft.jdbc.sqlserver.SQLServerDriver"

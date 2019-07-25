@@ -508,7 +508,6 @@ def cols(self):
                 # if (func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                 #              F.count, zeros_agg]):
 
-                debug(func)
                 # A different function must be use to calculate null in integers or data column date types
                 if func is na_agg and (
                         is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES) or is_column_a(df, col_name, "date")):
