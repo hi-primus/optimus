@@ -6,6 +6,7 @@ import pyspark
 
 from optimus.helpers.check import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples, is_function
+from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
 
@@ -136,7 +137,7 @@ class Test:
             add_buffer(source_df)
         else:
             # TODO: op is not supposed to be hardcoded
-            source = "op"
+            source = get_var_name(obj)
             df_func = obj
 
         # Process simple arguments
@@ -146,6 +147,7 @@ class Test:
                 _args.append("'" + v + "'")
             elif is_numeric(v):
                 _args.append(str(v))
+
             elif is_list(v):
                 if is_list_of_strings(v):
                     lst = ["'" + x + "'" for x in v]
@@ -157,6 +159,10 @@ class Test:
                 _args.append('[' + ','.join(lst) + ']')
             elif is_function(v):
                 _args.append(v.__qualname__)
+
+            else:
+                _args.append(get_var_name(v))
+
             # else:
             #     import marshal
             #     code_string = marshal.dumps(v.__code__)
@@ -184,8 +190,12 @@ class Test:
         if method is None:
             add_buffer("\tactual_df = source_df\n")
         else:
+            am = ""
+            if additional_method:
+                am = "." + additional_method + "()"
+
             add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
-                _kwargs) + ")\n")
+                _kwargs) + ")" + am + "\n")
 
         # Apply function to the dataframe
         if method is None:
