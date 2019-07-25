@@ -584,6 +584,8 @@ threshold = 0.5
 
 t.create(None, "outliers.z_score", None, "df","select", numeric_col, threshold)
 
+source_df.outliers.z_score('height(ft)',0.5).select()
+
 t.create(None, "outliers.z_score", None, "df","drop", numeric_col, threshold)
 
 t.create(None, "outliers.z_score", None, "json", "count", numeric_col, threshold)
@@ -630,26 +632,31 @@ t.run()
 
 # ## Keycolision
 
-df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
 
-t = Test(op, df, "df_keycolision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+# +
+t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_keycoliision", final_path="..")
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.ml import keycollision as keyCol"], 
+         path = "df_keycollision", final_path="..")
+
 from optimus.ml import keycollision as keyCol
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint",  None, "df",None,df, "STATE")
+t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
+t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint_cluster", None, "df", None, df, "STATE")
+t.create(keyCol, "fingerprint_cluster", None, "df", None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint", None, "df", None, df, "STATE")
+t.create(keyCol, "n_gram_fingerprint", None, "df", None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, df, "STATE", 2)
+t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, source_df, "STATE", 2)
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
@@ -657,23 +664,35 @@ t.run()
 
 # ## Distance cluster
 
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(1000)
+
 # + {"outputHidden": false, "inputHidden": false}
-t = Test(op, df, "df_distance_cluster", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+t = Test(op, source_df, "df_distance_cluster", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.ml import distancecluster as dc"], path = "df_distance_cluster", final_path="..")
 
 from optimus.ml import distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_matrix", None, 'df', None, df, "STATE")
+t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_filter", None, 'df', None, df, "STATE")
+t.create(dc, "levenshtein_filter", None, 'df', None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
 # -
+df_cancer = op.spark.read.csv('../data_cancer.csv', sep=',', header=True, inferSchema=True)
+
+columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+
+df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
+
+df_model.table()
 
 
