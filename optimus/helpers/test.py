@@ -45,7 +45,7 @@ class Test:
         _imports = [
             "from pyspark.sql.types import *",
             "from optimus import Optimus",
-            "from optimus.helpers.functions import json_enconding "
+            "from optimus.helpers.json import json_enconding "
         ]
         if self.imports is not None:
             for i in self.imports:
