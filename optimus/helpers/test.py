@@ -4,8 +4,9 @@ from io import UnsupportedOperation
 
 import pyspark
 
-from optimus.helpers.checkit import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
+from optimus.helpers.check import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
     is_list_of_tuples, is_function
+from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
 
@@ -17,7 +18,7 @@ class Test:
         :param df: Spark Dataframe
         :param name: Name of the Test Class
         :param imports: Libraries to be added
-        :type path: folder where the tes will be written
+        :type path: folder where tests will be written individually. run() nneds to be runned to merge all the tests.
 
         """
         self.op = op
@@ -45,7 +46,7 @@ class Test:
         _imports = [
             "from pyspark.sql.types import *",
             "from optimus import Optimus",
-            "from optimus.helpers.functions import json_enconding "
+            "from optimus.helpers.json import json_enconding "
         ]
         if self.imports is not None:
             for i in self.imports:
@@ -84,15 +85,16 @@ class Test:
         test_file.close()
         print("Done")
 
-    def create(self, df, func, suffix=None, output="df", *args, **kwargs):
+    def create(self, obj, method, suffix=None, output="df", additional_method=None, *args, **kwargs):
         """
         This is a helper function that output python tests for Spark Dataframes.
-        :param df: Spark Dataframe
-        :param suffix: The create method will try to create a test function with the func param given.
-        If you want to test a function with different params you can use suffix.
-        :param func: Spark dataframe function to be tested
+        :param obj: Object to be tested
+        :param method: Method to be tested
+        :param suffix: The test name will be create using the method param. suffix will add a string in case you want
+        to customize the test name.
         :param output: can be a 'df' or a 'json'
-        :param args: Arguments to be used in the function
+        :param additional_method:
+        :param args: Arguments to be used in the method
         :param kwargs: Keyword arguments to be used in the functions
         :return:
         """
@@ -102,21 +104,22 @@ class Test:
         def add_buffer(value):
             buffer.append("\t" + value)
 
-        if suffix is None:
-            suffix = ""
-        else:
-            suffix = "_" + suffix
+        # Create name
+        name = []
 
-        # Create func test name. If is None we just test the create.df function a not transform the data frame in
-        # any way
-        if func is None:
-            func_test_name = "test_" + "create_df" + suffix + "()"
-            filename = "create_df" + suffix + ".test"
+        if method is not None:
+            name.append(method.replace(".", "_"))
 
-        else:
-            func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
+        if additional_method is not None:
+            name.append(additional_method)
 
-            filename = func.replace(".", "_") + suffix + ".test"
+        if suffix is not None:
+            name.append(suffix)
+
+        test_name = "_".join(name)
+
+        func_test_name = "test_" + test_name + "()"
+        filename = test_name + ".test"
 
         print("Creating {test} test function...".format(test=func_test_name))
         logger.print(func_test_name)
@@ -125,17 +128,17 @@ class Test:
         add_buffer("def " + func_test_name + ":\n")
 
         source = "source_df"
-        if df is None:
+        if obj is None:
             # Use the main df
             df_func = self.df
-        elif isinstance(df, pyspark.sql.dataframe.DataFrame):
-            source_df = "\tsource_df=op.create.df(" + df.export() + ")\n"
-            df_func = df
+        elif isinstance(obj, pyspark.sql.dataframe.DataFrame):
+            source_df = "\tsource_df=op.create.df(" + obj.export() + ")\n"
+            df_func = obj
             add_buffer(source_df)
         else:
             # TODO: op is not supposed to be hardcoded
-            source = "op"
-            df_func = df
+            source = get_var_name(obj)
+            df_func = obj
 
         # Process simple arguments
         _args = []
@@ -144,6 +147,7 @@ class Test:
                 _args.append("'" + v + "'")
             elif is_numeric(v):
                 _args.append(str(v))
+
             elif is_list(v):
                 if is_list_of_strings(v):
                     lst = ["'" + x + "'" for x in v]
@@ -155,6 +159,10 @@ class Test:
                 _args.append('[' + ','.join(lst) + ']')
             elif is_function(v):
                 _args.append(v.__qualname__)
+
+            else:
+                _args.append(get_var_name(v))
+
             # else:
             #     import marshal
             #     code_string = marshal.dumps(v.__code__)
@@ -179,26 +187,37 @@ class Test:
         if (not is_list_empty(args)) & (not is_list_empty(kwargs)):
             separator = ","
 
-        if func is None:
+        if method is None:
             add_buffer("\tactual_df = source_df\n")
         else:
-            add_buffer("\tactual_df =" + source + "." + func + "(" + _args + separator + ','.join(_kwargs) + ")\n")
+            am = ""
+            if additional_method:
+                am = "." + additional_method + "()"
+
+            add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
+                _kwargs) + ")" + am + "\n")
 
         # Apply function to the dataframe
-        if func is None:
+        if method is None:
             df_result = self.op.create.df(*args, **kwargs)
         else:
             # Here we construct the method to be applied to the source object
-            for f in func.split("."):
+            for f in method.split("."):
                 df_func = getattr(df_func, f)
 
             df_result = df_func(*args, **kwargs)
 
+        # Additional Methods
+        if additional_method is not None:
+            df_result = getattr(df_result, additional_method)()
+
         if output == "df":
+
             df_result.table()
             expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
         elif output == "json":
             print(df_result)
+
             if is_str(df_result):
                 df_result = "'" + df_result + "'"
             else:
@@ -211,6 +230,7 @@ class Test:
 
         add_buffer(expected)
 
+        # Output
         if output == "df":
             add_buffer("\tassert (expected_df.collect() == actual_df.collect())\n")
         elif output == "json":
@@ -224,7 +244,7 @@ class Test:
                 if exc.errno != errno.EEXIST:
                     raise
 
-        # write file
+        # Write file
         test_file = open(filename, 'w', encoding='utf-8')
 
         for b in buffer:
@@ -232,16 +252,12 @@ class Test:
 
         # return "".join(buffer)
 
-    def delete(self, df, func, suffix=None, output="df", *args, **kwargs):
+    def delete(self, func, suffix=None):
         """
-        This is a helper function that output python tests for Spark Dataframes.
-        :param df: Spark Dataframe
+        This is a helper function that delete python tests files used to construct the final Test file.
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
         :param func: Spark dataframe function to be tested
-        :param output: can be a 'df' or a 'json'
-        :param args: Arguments to be used in the function
-        :param kwargs: Keyword arguments to be used in the functions
         :return:
         """
 

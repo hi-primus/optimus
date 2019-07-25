@@ -1,8 +1,8 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 
-from optimus.helpers.checkit import is_dataframe, is_, is_str
-from optimus.helpers.functions import parse_columns
+from optimus.helpers.check import is_dataframe, is_, is_str
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -34,13 +34,14 @@ def string_to_index(df, input_cols, **kargs):
     numeric, we cast it to string and index the string values.
     :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
+    :param output_cols:
     :return: Dataframe with indexed columns.
     """
 
     input_cols = parse_columns(df, input_cols)
 
-    indexers = [StringIndexer(inputCol=column, outputCol=column + "_index", **kargs).fit(df) for column in
-                list(set(input_cols))]
+    indexers = [StringIndexer(inputCol=input_col, outputCol=name_col(input_col, "index"), **kargs).fit(df) for input_col
+                in list(set(input_cols))]
 
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
@@ -79,7 +80,7 @@ def one_hot_encoder(df, input_cols, **kargs):
 
     input_cols = parse_columns(df, input_cols)
 
-    encode = [OneHotEncoder(inputCol=column, outputCol=column + "_encoded", **kargs) for column in
+    encode = [OneHotEncoder(inputCol=column, outputCol=name_col(column, "_encoded"), **kargs) for column in
               list(set(input_cols))]
 
     pipeline = Pipeline(stages=encode)
@@ -129,7 +130,8 @@ def normalizer(df, input_cols, p=2.0):
 
     df = df.cols.cast(input_cols, "vector")
 
-    normal = [Normalizer(inputCol=column, outputCol=column + "_normalized", p=p) for column in
+    # TODO https://developer.ibm.com/code/2018/04/10/improve-performance-ml-pipelines-wide-dataframes-apache-spark-2-3/
+    normal = [Normalizer(inputCol=col_name, outputCol=name_col(col_name, "normalized"), p=p) for col_name in
               list(set(input_cols))]
 
     pipeline = Pipeline(stages=normal)

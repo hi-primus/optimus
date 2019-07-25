@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS secondary;
+
 create table secondary (
 	timezone VARCHAR(50),
 	lat VARCHAR(50),

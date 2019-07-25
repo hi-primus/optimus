@@ -8,30 +8,22 @@
 #       format_name: light
 #       format_version: '1.4'
 #       jupytext_version: 1.1.1
+#   kernel_info:
+#     name: python3
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
 #     name: python3
 # ---
 
-# ### All this cell must be run to executed the tests
+# # This notebook create the tests in python code. All this cells must be run to executed the tests
 
 # %load_ext autoreload
 # %autoreload 2
 
+# + {"outputHidden": false, "inputHidden": false}
 import sys
-
-# +
-# import pyspark as ps
-
-# +
-# ps.version.__version__ 
-# -
-
-
-
-# +
-# sys.path.append("../..")
+sys.path.append("../..")
 # -
 
 from optimus import Optimus
@@ -164,11 +156,13 @@ t.run()
 
 t.create(None, "cols.min", None, "json", numeric_col)
 
-t.create(None, "cols.min", "all_columns", "json", "*")
+t.create(None, "cols.min", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.max", None, "json", numeric_col)
 
-t.create(None, "cols.max", "all_columns", "json", "*")
+t.create(None, "cols.max", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.range", None, "json", numeric_col)
 
@@ -188,27 +182,34 @@ t.create(None, "cols.mad", "all_columns", "json", "*")
 
 t.create(None, "cols.std", None, "json", numeric_col)
 
-t.create(None, "cols.std", "all_columns", "json", "*")
+t.create(None, "cols.std", "all_columns", "json", None, "*")
+t.run()
 
-t.create(None, "cols.kurt", None, "json", numeric_col)
+t.create(None, "cols.kurt", None, "json", None, numeric_col)
+t.run()
 
-t.create(None, "cols.kurt", "all_columns", "json", "*")
+t.create(None, "cols.kurt", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.mean", None, "json", numeric_col)
 
-t.create(None, "cols.mean", "all_columns", "json", "*")
+t.create(None, "cols.mean", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.skewness", None, "json", numeric_col)
 
-t.create(None, "cols.skewness", "all_columns", "json", "*")
+t.create(None, "cols.skewness", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.sum", None, "json", numeric_col)
 
-t.create(None, "cols.sum", "all_columns", "json", "*")
+t.create(None, "cols.sum", "all_columns", "json", None,"*")
+t.run()
 
 t.create(None, "cols.variance", None, "json", numeric_col)
 
-t.create(None, "cols.variance", "all_columns", "json", "*")
+t.create(None, "cols.variance", "all_columns", "json", None, "*")
+t.run()
 
 t.create(None, "cols.abs", None, "df", numeric_col)
 
@@ -228,11 +229,14 @@ t.create(None, "cols.count_zeros", None, "json", numeric_col)
 
 t.create(None, "cols.count_zeros", "all_columns", "json", "*")
 
-t.create(None, "cols.count_uniques", None, "json", numeric_col)
+t.create(None, "cols.count_uniques", None, "json", None, numeric_col)
+t.run()
 
-t.create(None, "cols.count_uniques", "all_columns", "json", "*")
+t.create(None, "cols.count_uniques", "all_columns", "json",None, "*")
+t.run()
 
 t.create(None, "cols.unique", None, "json", numeric_col)
+t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", "*")
 
@@ -312,15 +316,20 @@ t.create(None, "cols.impute", None, "df", numeric_col_B)
 
 t.create(None, "cols.impute", "all_columns", "df", "names","categorical")
 
-t.create(None, "cols.hist", None, "json", numeric_col_B, 4)
+t.create(None, "cols.hist", None, "json", None, numeric_col_B, 4)
+t.run()
 
 # +
 # t.create(None,"cols.hist","all_columns","df","*",4)
 # -
 
-t.create(None, "cols.frequency", None, "json", numeric_col_B, 4)
+t.create(None, "cols.frequency", None, "json", None, numeric_col_B, 4)
+t.run()
 
-t.create(None, "cols.frequency", "all_columns", "json", "*", 4)
+t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
+t.run()
+
+source_df.cols.frequency("*", 4).table()
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -452,7 +461,7 @@ t.run()
 
 from pyspark.sql.types import *
 from optimus import Optimus
-from optimus.helpers.functions import json_enconding 
+from optimus.helpers.json import json_enconding
 from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
@@ -527,13 +536,14 @@ t.run()
 
 source_df.table()
 
-# ## Ouliers
+
+# # Ouliers
 
 t = Test(op, source_df, "df_outliers", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
+                                        "from pyspark.sql import functions as F"], path = "df_outliers", final_path="..")
 
 # +
 from pyspark.sql import functions as F
@@ -552,14 +562,137 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
-t.create(None, "outliers.iqr", None, "df", numeric_col)
+# ## Tukey
 
-t.create(None, "outliers.iqr", None, "df", numeric_col)
+t.create(None, "outliers.tukey", None, "df","select", numeric_col)
 
-df.outliers.z_score("age", threshold=2).drop()
+t.create(None, "outliers.tukey", None, "df","drop", numeric_col)
 
-df.outliers.modified_z_score("age", threshold = 2).drop()
+t.create(None, "outliers.tukey", None, "json", "whiskers", numeric_col)
 
-df.outliers.mad("age", threshold = 2).drop()
+t.create(None, "outliers.tukey", None, "json", "count", numeric_col)
+
+t.create(None, "outliers.tukey", None, "json", "non_outliers_count", numeric_col)
+
+t.create(None, "outliers.tukey", None, "json", "info", numeric_col)
+
+t.run()
+
+# ## Zscore
+
+threshold = 0.5
+
+t.create(None, "outliers.z_score", None, "df","select", numeric_col, threshold)
+
+source_df.outliers.z_score('height(ft)',0.5).select()
+
+t.create(None, "outliers.z_score", None, "df","drop", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "count", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "non_outliers_count", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "info", numeric_col, threshold)
+
+t.run()
+
+# ## Modified Zscore
+
+threshold = 0.5
+relative_error = 0
+
+t.create(None, "outliers.modified_z_score", None, "df","select", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "df","drop", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","non_outliers_count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","info", numeric_col, threshold, relative_error)
+
+t.run()
+
+# ## Mad
+
+threshold = 0.5
+relative_error = 0
+
+t.create(None, "outliers.mad", None, "df","select", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "df","drop", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","non_outliers_count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","info", numeric_col, threshold, relative_error)
+
+t.run()
+
+# ## Keycolision
+
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+
+# +
+t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.ml import keycollision as keyCol"], 
+         path = "df_keycollision", final_path="..")
+
+from optimus.ml import keycollision as keyCol
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
+t.run()
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "fingerprint_cluster", None, "df", None, source_df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "n_gram_fingerprint", None, "df", None, source_df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, source_df, "STATE", 2)
+
+# + {"outputHidden": false, "inputHidden": false}
+t.run()
+# -
+
+# ## Distance cluster
+
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(1000)
+
+# + {"outputHidden": false, "inputHidden": false}
+t = Test(op, source_df, "df_distance_cluster", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.ml import distancecluster as dc"], path = "df_distance_cluster", final_path="..")
+
+from optimus.ml import distancecluster as dc
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.create(dc, "levenshtein_filter", None, 'df', None, source_df, "STATE")
+
+# + {"outputHidden": false, "inputHidden": false}
+t.run()
+# -
+df_cancer = op.spark.read.csv('../data_cancer.csv', sep=',', header=True, inferSchema=True)
+
+columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
+           'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
+           'fractal_dimension_mean']
+
+df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
+
+df_model.table()
 
 

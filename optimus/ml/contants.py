@@ -1,0 +1,8 @@
+CLUSTER_COL = "cluster"
+COUNT_COL = "count"
+RECOMMENDED_COL = "recommended"
+CLUSTER_SIZE_COL = "cluster_size"
+NGRAM_COL = "ngram"
+FINGERPRINT_COL = "fingerprint"
+NGRAM_FINGERPRINT_COL = "ngram_fingerprint"
+LEVENSHTEIN_DISTANCE = "LEVENSHTEIN_DISTANCE"

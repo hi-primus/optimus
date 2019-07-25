@@ -4,7 +4,6 @@ from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, F
 
 from optimus.helpers.logger import logger
 
-
 # Python to PySpark reference
 #
 # type(None): NullType,
@@ -18,8 +17,6 @@ from optimus.helpers.logger import logger
 # datetime.datetime: TimestampType,
 # datetime.time: TimestampType,
 
-
-IMPUTE_SUFFIX = "_imputed"
 
 PYTHON_SHORT_TYPES = {"string": "string",
                       "str": "string",
