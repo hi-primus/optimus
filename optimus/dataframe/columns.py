@@ -501,9 +501,8 @@ def cols(self):
         expression = []
 
         for col_name in columns:
-
             for func in funcs:
-                print(col_name, func)
+
                 # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
                 # Std dev can not process date columns. So we do not calculated it
                 # if (func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
@@ -517,7 +516,6 @@ def cols(self):
 
                 expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
                 # print(df.agg(*expression).to_json())
-        print(*expression)
         full_result = parse_col_names_funcs_to_keys(df.agg(*expression).to_json())
 
         return format_dict(full_result)
