@@ -536,13 +536,14 @@ t.run()
 
 source_df.table()
 
-# ## Ouliers
+
+# # Ouliers
 
 t = Test(op, source_df, "df_outliers", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
+                                        "from pyspark.sql import functions as F"], path = "df_outliers", final_path="..")
 
 # +
 from pyspark.sql import functions as F
@@ -561,13 +562,71 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
-t.create(None, "outliers.iqr", None, "df", numeric_col)
+# ## Tukey
 
-df.outliers.z_score("age", threshold=2).drop()
+t.create(None, "outliers.tukey", None, "df","select", numeric_col)
 
-df.outliers.modified_z_score("age", threshold = 2).drop()
+t.create(None, "outliers.tukey", None, "df","drop", numeric_col)
 
-df.outliers.mad("age", threshold = 2).drop()
+t.create(None, "outliers.tukey", None, "json", "whiskers", numeric_col)
+
+t.create(None, "outliers.tukey", None, "json", "count", numeric_col)
+
+t.create(None, "outliers.tukey", None, "json", "non_outliers_count", numeric_col)
+
+t.create(None, "outliers.tukey", None, "json", "info", numeric_col)
+
+t.run()
+
+# ## Zscore
+
+threshold = 0.5
+
+t.create(None, "outliers.z_score", None, "df","select", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "df","drop", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "count", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "non_outliers_count", numeric_col, threshold)
+
+t.create(None, "outliers.z_score", None, "json", "info", numeric_col, threshold)
+
+t.run()
+
+# ## Modified Zscore
+
+threshold = 0.5
+relative_error = 0
+
+t.create(None, "outliers.modified_z_score", None, "df","select", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "df","drop", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","non_outliers_count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.modified_z_score", None, "json","info", numeric_col, threshold, relative_error)
+
+t.run()
+
+# ## Mad
+
+threshold = 0.5
+relative_error = 0
+
+t.create(None, "outliers.mad", None, "df","select", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "df","drop", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","non_outliers_count", numeric_col, threshold, relative_error)
+
+t.create(None, "outliers.mad", None, "json","info", numeric_col, threshold, relative_error)
+
+t.run()
 
 # ## Keycolision
 
@@ -577,20 +636,20 @@ t = Test(op, df, "df_keycolision", imports=["from pyspark.ml.linalg import Vecto
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_keycolision", final_path="..")
+                                        "from pyspark.sql import functions as F"], path = "df_keycoliision", final_path="..")
 from optimus.ml import keycollision as keyCol
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint", "df", None, df, "STATE")
+t.create(keyCol, "fingerprint",  None, "df",None,df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint_cluster", None, None, df, "STATE")
+t.create(keyCol, "fingerprint_cluster", None, "df", None, df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint", None, None, df, "STATE")
+t.create(keyCol, "n_gram_fingerprint", None, "df", None, df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint_cluster", None, None, df, "STATE", 2)
+t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, df, "STATE", 2)
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
@@ -608,10 +667,10 @@ t = Test(op, df, "df_distance_cluster", imports=["from pyspark.ml.linalg import 
 from optimus.ml import distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_matrix", None, None, df, "STATE")
+t.create(dc, "levenshtein_matrix", None, 'df', None, df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_filter", None, None, df, "STATE")
+t.create(dc, "levenshtein_filter", None, 'df', None, df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
