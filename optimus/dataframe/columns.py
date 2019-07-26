@@ -1024,7 +1024,8 @@ def cols(self):
             _replace = attr[1]
             return F.regexp_replace(_input_cols, _search, _replace)
 
-        return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols)
+        return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
+                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
 
     @add_attr(cols)
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
