@@ -1167,16 +1167,15 @@ def cols(self):
     @add_attr(cols)
     def count_zeros(columns):
         """
-        Return the NAN and Null count in a Column
+        Count zeros in a column
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
 
         df = self
-        return format_dict(df.select(
-            [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json())
+        return df.select(
+            [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json()
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
