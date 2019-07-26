@@ -975,13 +975,16 @@ def cols(self):
             return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
                                   output_cols=_output_col)
 
-        def func_words(_df, _col_name, _search, _replace_by):
+        def func_words(_df, _input_col, _output_col, _search, _replace_by):
             _search = val_to_list(search)
             # Convert the value to column data type
-            data_type = self.cols.dtypes(_col_name)
+            data_type = self.cols.dtypes(_input_col)
             _search = [PYTHON_TYPES[data_type](s) for s in _search]
 
-            return _df.replace(_search, _replace_by, _col_name)
+            if _input_col != output_col:
+                _df = _df.cols.copy(_input_col, _output_col)
+
+            return _df.replace(_search, _replace_by, _input_col)
 
         if search_by is "words":
             func = func_words
