@@ -1380,22 +1380,24 @@ def cols(self):
         else:
             input_cols = parse_columns(self, input_cols)
 
+        check_column_numbers(input_cols, ">1")
+
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
-            check_column_numbers(input_cols, "*")
+            check_column_numbers(input_cols, ">1")
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
-                outputCol=output_cols)
+                outputCol=output_col)
             df = vector_assembler.transform(df)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
-            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_cols)
+            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col)
 
         elif shape is "string":
-            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_cols)
+            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 

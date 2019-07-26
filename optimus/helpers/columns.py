@@ -188,12 +188,14 @@ def check_column_numbers(columns, number=0):
     """
     count = len(columns)
 
-    if number is "*":
+    if number == "*":
         if not len(columns) >= 1:
+            RaiseIt.value_error(len(columns), ["1 or greater"])
+    elif number == ">1":
+        if not len(columns) > 1:
             RaiseIt.value_error(len(columns), ["more than 1"])
-    elif not len(columns) == number:
-
-        RaiseIt.value_error(count, "Receive {} columns, {} needed".format(number, columns))
+    elif len(columns) == number:
+        RaiseIt.value_error(count, "{} columns, {} needed".format(number, columns))
 
 
 def validate_columns_names(df, col_names, index=0):
