@@ -1210,23 +1210,15 @@ def cols(self):
     @add_attr(cols)
     def unique(columns):
         """
-        Return unique values from a columns
+        Return uniques values from a columns
         :param columns:
         :return:
         """
         columns = parse_columns(self, columns)
-        check_column_numbers(columns, "*")
 
-        result = {}
-        for col_name in columns:
-            unique_results = self.select(col_name).distinct().to_json()
-            uniques = []
-            for unique_dict in unique_results:
-                for k, v in unique_dict.items():
-                    uniques.append(v)
-            result[col_name] = uniques
+        check_column_numbers(columns, "1")
 
-        return result
+        return self.select(columns).distinct()
 
     @add_attr(cols)
     def nunique(*args, **kwargs):
