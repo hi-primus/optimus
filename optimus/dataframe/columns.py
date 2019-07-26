@@ -1354,15 +1354,17 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, shape="string", separator="", output_cols=None):
+    def nest(input_cols, shape="string", separator="", output_col=None):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
         :param separator: char to be used as separator at the concat time
         :param shape: final data type, 'array', 'string' or 'vector'
-        :param output_cols:
+        :param output_col:
         :return: Spark DataFrame
         """
+
+        check_column_numbers(output_col, 1)
 
         df = self
 
