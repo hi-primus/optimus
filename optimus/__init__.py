@@ -1,5 +1,6 @@
 import os
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) # This is your Project Root
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # This is your Project Root
 
 # pyspark_pipes: build Spark ML pipelines easily
 from .ml.pipelines import patch
@@ -12,3 +13,8 @@ from optimus.dataframe import rows, columns, extension
 from optimus.dataframe.plots import plots
 from optimus.outliers import outliers
 from optimus.io import save
+
+# Handle encoding problem
+# https://stackoverflow.com/questions/39662384/pyspark-unicodeencodeerror-ascii-codec-cant-encode-character
+
+os.environ["PYTHONIOENCODING"] = "utf8"
