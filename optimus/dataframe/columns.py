@@ -191,7 +191,7 @@ def cols(self):
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None,
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               verbose=True):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
@@ -204,6 +204,8 @@ def cols(self):
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
         :param when: A expression to better control when the function is going to be apllied
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
+        :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
+        True or False
         :param verbose: Print additional information about
         :return: DataFrame
         """
@@ -213,7 +215,10 @@ def cols(self):
 
         check_column_numbers(input_cols, "*")
 
-        output_cols = get_output_cols(input_cols, output_cols)
+        if skip_output_cols_processing:
+            output_cols = val_to_list(output_cols)
+        else:
+            output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
 
@@ -1367,19 +1372,19 @@ def cols(self):
         check_column_numbers(output_col, 1)
 
         df = self
-
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
             input_cols = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
         else:
             input_cols = parse_columns(self, input_cols)
 
-        check_column_numbers(input_cols, ">1")
+        # check_column_numbers(input_cols, ">1")
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
             check_column_numbers(input_cols, ">1")
+
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)
@@ -1388,10 +1393,12 @@ def cols(self):
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
-            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col)
+            df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col,
+                               skip_output_cols_processing=True)
 
         elif shape is "string":
-            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col)
+            df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col,
+                               skip_output_cols_processing=True)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
