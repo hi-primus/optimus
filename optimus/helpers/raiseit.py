@@ -11,6 +11,7 @@ class RaiseIt:
         :param data_types: data types expected as strings
         :return:
         """
+
         from optimus.helpers.debug import get_var_name
         if len(data_types) == 1:
             divisor = ""
@@ -48,11 +49,15 @@ class RaiseIt:
         raise NotReady(message)
 
     @staticmethod
+    def not_ready_error(message):
+        raise NotReady(message)
+
+    @staticmethod
     def value_error(var=None, data_values=None):
         """
         Raise a ValueError exception
         :param var:
-        :type var:
+
 
         :param data_values: values accepted by the variable
         :type data_values: str/list
@@ -62,8 +67,6 @@ class RaiseIt:
 
         if not isinstance(data_values, list):
             data_values = [data_values]
-
-        # data_values = val_to_list(data_values)
 
         if len(data_values) == 1:
             divisor = ""
@@ -82,12 +85,23 @@ class RaiseIt:
     def type(cls, var):
         """
         Raise and exception of the type specified
+        :param cls: Exception Class to be Raised
         :param var:
         :return:
         """
 
         from optimus.helpers.debug import get_var_name
         raise cls("'{var_name}' error".format(var_name=get_var_name(var), var_type=var))
+
+    @staticmethod
+    def message(cls, message):
+        """
+        Raise and exception of the type specified with a message
+        :param cls: Exception Class to be Raised
+        :param message:
+        :return:
+        """
+        raise cls(message)
 
 
 # define Python user-defined exceptions
@@ -97,5 +111,4 @@ class Error(Exception):
 
 
 class NotReady(Error):
-    """Raised when the input value is too small"""
     pass
