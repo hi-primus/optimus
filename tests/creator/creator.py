@@ -428,6 +428,8 @@ t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", False)
 t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "function", "rank", "age"], "2")
 # -
 
+# ## Nest
+
 t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], separator=" ",output_cols=new_col)
 
 # +
@@ -436,10 +438,10 @@ t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], separator=
 # +
 df_na = source_df.cols.drop("NullType").rows.drop_na("*")
 
-t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], shape="vector", output_cols=new_col)
+t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], shape="vector", output_col=new_col)
 # -
 
-t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], shape="vector",output_cols=new_col)
+t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], shape="vector",output_col=new_col)
 
 t.delete(None, "cols.nest", "array_all_columns", "df", "*", shape="array", output_cols=new_col)
 
