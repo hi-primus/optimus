@@ -102,7 +102,3 @@ def levenshtein_cluster(df, input_col):
         .cols.drop([input_col + "_FROM", input_col + "_TO", input_col + "_LEVENSHTEIN_DISTANCE"])
 
     return df_l
-
-
-def to_json(df, column):
-    return levenshtein_cluster(df, column).to_json()
