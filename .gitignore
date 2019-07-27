@@ -49,3 +49,11 @@ readme/data/foo\.json/
 readme/data/foo\.parquet/
 
 readme/data/foo\.csv/
+
+examples/temp
+
+examples/test\.csv/
+
+examples/test\.json/
+
+examples/test\.parquet/
