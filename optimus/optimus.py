@@ -380,7 +380,7 @@ class Optimus:
 
         p = platform.system()
         logger.print("Operative System:" + p)
-        if p == "Linux":
+        if p == "Linux" or p == "Darwin":
             separator = ":"
         elif p == "Windows":
             separator = ";"
