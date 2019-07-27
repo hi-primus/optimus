@@ -261,7 +261,7 @@ df_new = op.create.df(
 
     ]).h_repartition(1)
 
-op.concat([df, df_new], "columns").table()
+op.append([df, df_new], "columns").table()
 
 # +
 df_new = op.create.df(
@@ -275,7 +275,7 @@ df_new = op.create.df(
         ("Grimlock", 22.9, "Dinobot Commander", 9),
     ]).h_repartition(1)
 
-op.concat([df, df_new], "rows").table()
+op.append([df, df_new], "rows").table()
 
 # + {"inputHidden": false, "outputHidden": false}
 # Operations like `join` and `group` are handle using Spark directly
@@ -310,11 +310,10 @@ df.table()
 # + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height", infer=True)
 # -
-df_csv = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
+df_csv = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
 df_csv.table()
 
-df_json = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json",
-                      "json").limit(5)
+df_json = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json").limit(5)
 df_json.table()
 
 df_csv.save.csv("test.csv")
@@ -323,6 +322,12 @@ df.table()
 
 # ## Enrichment
 
+df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+
+df.table()
+
+
+
 # +
 import requests
 
@@ -330,17 +335,20 @@ import requests
 def func_request(params):
     # You can use here whatever header or auth info you need to send. 
     # For more information see the requests library
-    url = "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
-
+    
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["id"])
     return requests.get(url)
-
 
 def func_response(response):
     # Here you can parse de response
     return response["title"]
 
 
-df_result = op.enrich(df, func_request=func_request, func_response=func_response)
+e = op.enrich(host="localhost", port=27017, db_name="jazz")
+e.flush()
+df_result = e.run(df, func_request, func_response, calls= 60, period = 60, max_tries = 8)
 # -
 
 df_result.table()
+
+

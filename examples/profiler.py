@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: light
 #       format_version: '1.4'
-#       jupytext_version: 1.1.5
+#       jupytext_version: 1.1.1
 #   kernel_info:
 #     name: python3
 #   kernelspec:
@@ -47,10 +47,35 @@ op.profiler.run(df, "reclat")
 
 # ### Plot histagram for multiple columns
 
-df.plots.hist(["id", "reclong"], 20)
+df.plot.hist(["id", "reclong"], 20)
 
-df.plots.frequency(["id", "reclong"], 10)
+df.plot.frequency(["id", "reclong"], 10)
 
-df.plot.correlation(["id","mass (g)", "reclat"])
+df.table()
 
-df.correlation(["id","mass (g)", "reclat"], output="array")
+df.cols.count_na("*")
+
+a = {'name': 0,
+ 'id': 0,
+ 'nametype': 0,
+ 'recclass': 0,
+ 'mass (g)': 131,
+ 'fall': 0,
+ 'year': 288,
+ 'reclat': 7315,
+ 'reclong': 7315,
+ 'GeoLocation': 7315}
+
+    df.cols.dtypes()
+
+# +
+cols = ["id","mass (g)","reclat"]
+# We drops nulls because correlation can not handle them
+df_not_nulls = df.rows.drop_na(cols)
+
+df_not_nulls.plot.correlation(cols)
+# -
+
+df_not_nulls.correlation(["id","mass (g)", "reclat"], output="array")
+
+
