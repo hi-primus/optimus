@@ -14,7 +14,7 @@ from pyspark.sql.types import *
 
 from optimus import val_to_list
 from optimus.helpers.check import is_str
-from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.columns import parse_columns, name_col, check_column_numbers
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
@@ -389,18 +389,24 @@ def correlation(self, input_cols, method="pearson", output="json"):
 
     # Values in columns can not be null. Warn user
     input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-    # try to parse the select column to float and create a vector
-
-    # print(self.cols.count_na(input_cols))
 
     # Input is not a vector transform to a vector
     output_col = name_col(input_cols, "correlation")
-    if len(input_cols) > 1:
-        for col_name in input_cols:
-            df = df.cols.cast(col_name, "float")
-            logger.print("Casting {col_name} to float...".format(col_name=col_name))
+    check_column_numbers(input_cols, ">1")
 
-        df = df.cols.nest(input_cols, "vector", output_cols=output_col)
+    for col_name in input_cols:
+        df = df.cols.cast(col_name, "float")
+        logger.print("Casting {col_name} to float...".format(col_name=col_name))
+
+    df = df.cols.nest(input_cols, "vector", output_col=output_col)
+
+    # Correlation can not handle null values. Check if exist ans warn the user.
+    cols = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
+
+    if cols:
+        message = "Correlation can not handle nulls. " + " and ".join(
+            {str(x) + " has " + str(y) + " null(s)" for x, y in cols.items()})
+        RaiseIt.message(ValueError, message)
 
     corr = Correlation.corr(df, output_col, method).head()[0].toArray()
 
@@ -408,7 +414,6 @@ def correlation(self, input_cols, method="pearson", output="json"):
         result = corr
 
     elif output is "json":
-
         # Parse result to json
         col_pair = []
         for col_name in input_cols:
@@ -427,7 +432,7 @@ def correlation(self, input_cols, method="pearson", output="json"):
 
         result = sorted(result, key=lambda k: k['value'], reverse=True)
 
-    return {"cols":input_cols, "data":result}
+    return {"cols": input_cols, "data": result}
 
 
 @add_method(DataFrame)
@@ -457,7 +462,7 @@ def create_id(self, column="id"):
     """
     Create a unique id for every row.
     :param self:
-    :param column:
+    :param column: Columns to be processed
     :return:
     """
 
