@@ -117,7 +117,7 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
               .cols.remove_special_chars(ngram_col)
               .cols.remove_accents(ngram_col)
               # For create n-grams we need an Array type column
-              .cols.nest(input_cols=ngram_col, output_cols=ngram_col, shape='array')
+              .cols.nest(input_cols=ngram_col, output_col=ngram_col, shape='array')
               .repartition(1)  # Needed for optimization in a single machine
               .cache()
               )
