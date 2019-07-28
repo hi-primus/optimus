@@ -6,7 +6,6 @@ import jinja2
 import math
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
-from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -14,16 +13,17 @@ from pyspark.sql.types import *
 
 from optimus import val_to_list
 from optimus.helpers.check import is_str
-from optimus.helpers.columns import parse_columns, name_col, check_column_numbers
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
-from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
+
+DataFrame._name = None
+DataFrame._updated_cols = []
 
 
 @add_method(DataFrame)
