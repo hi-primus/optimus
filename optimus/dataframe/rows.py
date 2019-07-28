@@ -6,12 +6,14 @@ from pyspark.sql import functions as F
 
 # Helpers
 import optimus as op
-from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples
-from optimus.helpers.converter import one_list_to_val
 from optimus import val_to_list
-from optimus.helpers.decorators import *
+from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
+from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.decorators import *
+from optimus.helpers.functions import append as append_df
+from optimus.helpers.raiseit import RaiseIt
 
 
 def rows(self):
@@ -23,12 +25,20 @@ def rows(self):
         :return: Spark DataFrame
         """
         df = self
-        columns = [str(i) for i in range(df.cols.count())]
-        if not is_list_of_tuples(row):
-            row = [tuple(row)]
+        if is_list_of_tuples(rows):
+            columns = [str(i) for i in range(df.cols.count())]
+            if not is_list_of_tuples(row):
+                row = [tuple(row)]
+            new_row = op.Create.df(columns, row)
+            df_result = df.union(new_row)
 
-        new_row = op.Create.df(columns, row)
-        return df.union(new_row)
+        elif is_list_of_dataframes(row) or is_dataframe(row):
+            row = val_to_list(row)
+            row.insert(0, df)
+            df_result = append_df(row, like="rows")
+        else:
+            RaiseIt.type_error(row, ["list of tuples", "list of dataframes"])
+        return df_result
 
     @add_attr(rows)
     def select_by_dtypes(input_cols, data_type=None):
