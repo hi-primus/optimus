@@ -375,6 +375,18 @@ t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B,numeric_co
 
 t.create(None, "cols.append", "number", "df", new_col, 1)
 
+df_col = op.create.df(
+    [
+        ("new_col", "str", True),
+       
+
+    ],[
+        ("q"),("w"), ("e"), ("r"),
+
+    ])
+
+t.create(None, "cols.append", "dataframes", "df", None, df_col)
+
 #t.create(None, "cols.append", "advance", "df", [("new_col_4", "test"),
     #                                                ("new_col_5", df[numeric_col_B] * 2),
     #                                                ("new_col_6", [1, 2, 3])
