@@ -1,18 +1,17 @@
 import os
 import platform
 import sys
-from functools import reduce
 from shutil import rmtree
 
 from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
 
 from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.converter import val_to_list
-from optimus.helpers.functions import random_int, absolute_path
+from optimus.helpers.functions import absolute_path
+from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html, print_json
 from optimus.helpers.raiseit import RaiseIt
@@ -309,32 +308,12 @@ class Optimus:
     @staticmethod
     def append(dfs, like="columns"):
         """
-        Concat multiple dataframes
-        :param dfs: List of Dataframes
-        :param like: concat as columns or rows
+        Append dataframes rows or columns wise
+        :param dfs: Dataframes
+        :param like: 'columns' or 'rows'
         :return:
         """
-
-        # FIX: Because monotonically_increasing_id can create different
-        # sequence for different dataframes the result could be wrong.
-
-        if like == "columns":
-            temp_dfs = []
-            col_temp_name = "id_" + random_int()
-            for df in dfs:
-                temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
-
-            def _append(df1, df2):
-                return df1.join(df2, col_temp_name, "outer")
-
-            df_result = reduce(_append, temp_dfs).drop(col_temp_name)
-
-        elif like == "rows":
-            df_result = reduce(DataFrame.union, dfs)
-        else:
-            RaiseIt.value_error(like, ["columns", "rows"])
-
-        return df_result
+        return append_df(dfs, like)
 
     def _setup_repositories(self):
         if self.repositories:
@@ -382,7 +361,7 @@ class Optimus:
         logger.print("Operative System:" + p)
         if p == "Linux" or p == "Darwin":
             separator = ":"
-        elif p == "Windows":
+        if p == "Windows":
             separator = ";"
 
         if self.driver_class_path:

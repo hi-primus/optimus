@@ -1604,6 +1604,66 @@ def cols(self):
 
         return result
 
+    @add_attr(DataFrame)
+    def correlation(input_cols, method="pearson", output="json"):
+        """
+        Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
+        missing values
+        :param input_cols: Columns to be processed
+        :param method: Method used to calculate the correlation
+        :param output: array or json
+        :return:
+        """
+
+        df = self
+
+        # Values in columns can not be null. Warn user
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        # Input is not a vector transform to a vector
+        output_col = name_col(input_cols, "correlation")
+        check_column_numbers(input_cols, ">1")
+
+        for col_name in input_cols:
+            df = df.cols.cast(col_name, "float")
+            logger.print("Casting {col_name} to float...".format(col_name=col_name))
+
+        df = df.cols.nest(input_cols, "vector", output_col=output_col)
+
+        # Correlation can not handle null values. Check if exist ans warn the user.
+        cols = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
+
+        if cols:
+            message = "Correlation can not handle nulls. " + " and ".join(
+                {str(x) + " has " + str(y) + " null(s)" for x, y in cols.items()})
+            RaiseIt.message(ValueError, message)
+
+        corr = Correlation.corr(df, output_col, method).head()[0].toArray()
+
+        if output is "array":
+            result = corr
+
+        elif output is "json":
+            # Parse result to json
+            col_pair = []
+            for col_name in input_cols:
+                for col_name_2 in input_cols:
+                    col_pair.append({"between": col_name, "an": col_name_2})
+
+            # flat array
+            values = corr.flatten('F').tolist()
+
+            result = []
+            for n, v in zip(col_pair, values):
+                # Remove correlation between the same column
+                if n["between"] is not n["an"]:
+                    n["value"] = v
+                    result.append(n)
+
+            result = sorted(result, key=lambda k: k['value'], reverse=True)
+
+        return {"cols": input_cols, "data": result}
+
     @add_attr(cols)
     def boxplot(columns):
         """
@@ -1705,6 +1765,39 @@ def cols(self):
         df = self
         for col_name in columns:
             df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
+        return df
+
+    @add_attr(cols)
+    def bucketizer(df, input_cols, splits, output_cols=None):
+        """
+        Bucketize multiples columns at the same time.
+        :param df:
+        :param input_cols:
+        :param splits: Number of splits
+        :param output_cols:
+        :return:
+        """
+
+        def _bucketizer(col_name, args):
+            """
+            Create a column expression that create buckets in a range of values
+            :param col_name: Column to be processed
+            :return:
+            """
+
+            buckets = args
+            expr = []
+
+            for i, b in enumerate(buckets):
+                if i == 0:
+                    expr = when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]), b["bucket"])
+                else:
+                    expr = expr.when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]),
+                                     b["bucket"])
+
+            return expr
+
+        df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
 
     return cols

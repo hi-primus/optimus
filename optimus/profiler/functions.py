@@ -1,11 +1,8 @@
 import json
 
 import math
-from pyspark.sql import functions as F
-from pyspark.sql.functions import when
 
 from optimus.helpers.constants import *
-from optimus.helpers.decorators import time_it
 from optimus.helpers.json import json_converter
 
 
@@ -92,60 +89,3 @@ def sample_size(population_size, confidence_level, confidence_interval):
     return int(math.ceil(n))  # sample size
 
 
-@time_it
-def bucketizer(df, input_cols, splits, output_cols=None):
-    """
-    Bucketize multiples columns at the same time.
-    :param df:
-    :param input_cols:
-    :param splits: Number of splits
-    :param output_cols:
-    :return:
-    """
-
-    def _bucketizer(col_name, args):
-        """
-        Create a column expression that create buckets in a range of values
-        :param col_name: Column to be processed
-        :return:
-        """
-
-        buckets = args
-        expr = []
-
-        for i, b in enumerate(buckets):
-            if i == 0:
-                expr = when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]), b["bucket"])
-            else:
-                expr = expr.when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]),
-                                 b["bucket"])
-
-        return expr
-
-    df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
-
-    return df
-
-
-def create_buckets(lower_bound, upper_bound, bins):
-    """
-    Create a dictionary with bins
-    :param lower_bound: low range
-    :param upper_bound: high range
-    :param bins: number of buckets
-    :return:
-    """
-    range_value = (upper_bound - lower_bound) / bins
-    low = lower_bound
-
-    buckets = []
-    for i in range(0, bins):
-        high = low + range_value
-        buckets.append({"lower": low, "upper": high, "bucket": i})
-        low = high
-
-    # ensure that the upper bound is exactly the higher value.
-    # Because floating point calculation it can miss the upper bound in the final sum
-
-    buckets[bins - 1]["upper"] = upper_bound
-    return buckets

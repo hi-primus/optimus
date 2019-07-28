@@ -1,19 +1,20 @@
 import collections
-import json
 import os
 import random
 import re
 import subprocess
+from functools import reduce
 from pathlib import Path
+from pyspark.sql import DataFrame
 
 from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
+from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
     is_date, is_binary
-
 from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
@@ -226,3 +227,59 @@ def ellipsis(data, length=20):
     """
     data = str(data)
     return (data[:length] + '..') if len(data) > length else data
+
+
+def create_buckets(lower_bound, upper_bound, bins):
+    """
+    Create a dictionary with bins
+    :param lower_bound: low range
+    :param upper_bound: high range
+    :param bins: number of buckets
+    :return:
+    """
+    range_value = (upper_bound - lower_bound) / bins
+    low = lower_bound
+
+    buckets = []
+    for i in range(0, bins):
+        high = low + range_value
+        buckets.append({"lower": low, "upper": high, "bucket": i})
+        low = high
+
+    # ensure that the upper bound is exactly the higher value.
+    # Because floating point calculation it can miss the upper bound in the final sum
+
+    buckets[bins - 1]["upper"] = upper_bound
+    return buckets
+
+
+def append(dfs, like="columns"):
+    """
+    Concat multiple dataframes columns or rows wise
+    :param dfs: List of Dataframes
+    :param like: concat as columns or rows
+    :return:
+    """
+
+    # FIX: Because monotonically_increasing_id can create different
+    # sequence for different dataframes the result could be wrong.
+
+    if like == "columns":
+        temp_dfs = []
+        col_temp_name = "id_" + random_int()
+
+        dfs = val_to_list(dfs)
+        for df in dfs:
+            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+        def _append(df1, df2):
+            return df1.join(df2, col_temp_name, "outer")
+
+        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
+
+    elif like == "rows":
+        df_result = reduce(DataFrame.union, dfs)
+    else:
+        RaiseIt.value_error(like, ["columns", "rows"])
+
+    return df_result
