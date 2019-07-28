@@ -405,3 +405,39 @@ def create_id(self, column="id"):
     """
 
     return self.withColumn(column, F.monotonically_increasing_id())
+
+
+@add_method(DataFrame)
+def track_cols(self, df, add=None, remove=None):
+    """
+    This track the columns that are updated by an Spark Operation. The function must be used at the end of the fucnion
+    after all the transformations
+    :param self:
+    :param df: dataframe with the old column data.
+    :param add: Columns to be added.
+    :param remove: Columns to be removed.
+    :return:
+    """
+    self._updated_cols = (list(set(df._updated_cols + val_to_list(add)-val_to_list(remove))))
+
+
+    return self
+
+
+@add_method(DataFrame)
+def send(self, name=None):
+    """
+
+    :param self:
+    :param name: Name identifier for the dataframe
+    :return:
+    """
+    self._name = name
+    # Execute the transformation
+
+    df = self.run()
+    df._updated_cols = (list(set(self._updated_cols)))
+    print(df._updated_cols)
+    # Profile and send to the queue
+
+    return df

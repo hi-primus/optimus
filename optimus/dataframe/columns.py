@@ -233,6 +233,9 @@ def cols(self):
 
         for input_col, output_col in zip(input_cols, output_cols):
             df = df.withColumn(output_col, expr(when))
+
+        df = df.track_cols(self, output_cols)
+
         return df
 
     @add_attr(cols)
@@ -484,9 +487,11 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        for col_name in columns:
-            df = df.drop(col_name)
-        return df
+        df._updated_cols = (list(set(self._updated_cols)))
+
+        df = df.track_cols(self, remove=columns)
+
+        return df.drop(*columns)
 
     @add_attr(cols, log_time=True)
     def agg_exprs(funcs, columns):
@@ -1475,6 +1480,8 @@ def cols(self):
                     return row + tuple(_list)
 
                 df = df.rdd.map(_unnest).toDF(df.columns)
+
+            df = df.track_cols(self, output_col)
 
         return df
 
