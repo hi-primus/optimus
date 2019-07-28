@@ -50,9 +50,11 @@ def add_attr(cls, log_time=False):
             _time = round(timeit.default_timer() - start_time, 2)
             if log_time:
                 logger.print("{name}() executed in {time} sec".format(name=func.__name__, time=_time))
+
             return f
 
         setattr(cls, func.__name__, wrapper)
+
         return func
 
     return decorator

@@ -238,13 +238,13 @@ class Profiler:
 
             html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
 
-        html = html + df.table_html(10)
+        # Save in case we want to output to a html file
+        self.html = html + df.table_html(10)
 
         # Display HTML
-        print_html(html)
+        print_html(self.html)
 
         # send to queue
-
         if self.queue_url is not None:
             self.to_queue(output)
 
@@ -254,9 +254,6 @@ class Profiler:
 
         # Save file in json format
         write_json(output, self.path)
-
-        # Save in case we want to output to a html file
-        self.html = html
 
     def to_image(self, output_path):
         """

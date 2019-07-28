@@ -86,7 +86,7 @@ def plot(self):
         :return: Heatmap plot of the corr matrix using seaborn.
         """
 
-        cols_data = self.correlation(col_name, method, output="array")
+        cols_data = self.cols.correlation(col_name, method, output="array")
         plot_correlation(cols_data, output=output_format, path=output_path)
 
     return plot
