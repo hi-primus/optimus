@@ -77,6 +77,22 @@ df.table()
 df = df.cols.append("new_col_1", 1)
 df.table()
 
+df.table()
+
+# ### Append 2 or multiples dataframes columns like
+
+df_col = op.create.df(
+    [
+        ("new_col", "str", True),
+       
+
+    ],[
+        ("q"),("w"), ("e"), ("r"),
+
+    ])
+
+df.cols.append(df_col).table()
+
 # ### Create multiple columns with a constant value
 
 # +

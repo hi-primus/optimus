@@ -76,6 +76,6 @@ df_not_nulls = df.rows.drop_na(cols)
 df_not_nulls.plot.correlation(cols)
 # -
 
-df_not_nulls.correlation(["id","mass (g)", "reclat"], output="array")
+df_not_nulls.cols.correlation(["id","mass (g)", "reclat"], output="array")
 
 
