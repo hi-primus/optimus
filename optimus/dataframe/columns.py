@@ -78,19 +78,21 @@ def cols(self):
         :type cols_values: List of tuples
         :return:
         """
-        df_result = None
-        # Append a dataframe
-        if is_list_of_dataframes(cols_values):
-            dfs = cols_values
-            dfs.insert(0, self)
-            df_result = _append(dfs, like="columns")
+        df = self
+        if is_list_of_tuples(cols_values):
 
-        elif is_list_of_tuples(cols_values):
-            df_result = self
             for c in cols_values:
                 col_name = c[0]
                 value = c[1]
-                df_result = df_result.cols.append(col_name, value)
+                df_result = df.cols.append(col_name, value)
+
+        elif is_list_of_dataframes(cols_values) or is_dataframe(cols_values):
+            cols_values = val_to_list(cols_values)
+            cols_values.insert(0, df)
+            df_result = append_df(cols_values, like="columns")
+
+        else:
+            RaiseIt.type_error(cols_values, ["list of tuples", "dataframes"])
 
         return df_result
 
