@@ -189,12 +189,11 @@ def cols(self):
         """
 
         return apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                     output_cols=output_cols, verbose=verbose)
+                     output_cols=output_cols)
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              verbose=True):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param input_cols: Columns in which the function is going to be applied
@@ -225,7 +224,7 @@ def cols(self):
         df = self
 
         def expr(_when):
-            main_query = audf(input_col, func, func_return_type, args, func_type, verbose=verbose)
+            main_query = audf(input_col, func, func_return_type, args, func_type)
             if when is not None:
                 # Use the data type to filter the query
                 main_query = F.when(_when, main_query).otherwise(F.col(input_col))
@@ -378,7 +377,7 @@ def cols(self):
             return_type, func, func_type = cast_factory(data_type)
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                               output_cols=output_col, verbose=False)
+                               output_cols=output_col)
 
         return df
 
