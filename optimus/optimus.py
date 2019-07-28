@@ -380,10 +380,10 @@ class Optimus:
 
         p = platform.system()
         logger.print("Operative System:" + p)
-        if p == "Linux" or p == "Darwin":
-            separator = ":"
-        elif p == "Windows":
+        if p == "Windows":
             separator = ";"
+        else:  # for p == "Linux" or p == "Darwin" or any other p == value
+            separator = ":"
 
         if self.driver_class_path:
             return '--driver-class-path "{}"'.format(separator.join(self.driver_class_path))

@@ -50,10 +50,10 @@ readme/data/foo\.parquet/
 
 readme/data/foo\.csv/
 
-examples/temp
+examples/test\.parquet/
 
 examples/test\.csv/
 
 examples/test\.json/
 
-examples/test\.parquet/
+examples/temp
