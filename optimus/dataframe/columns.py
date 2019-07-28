@@ -6,36 +6,37 @@ import unicodedata
 from functools import reduce
 
 import pandas as pd
+import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
+from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
+from optimus import logger
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
-from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
+from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, \
     na_agg_integer
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
-from optimus.helpers.debug import debug
 from optimus.helpers.decorators import add_attr
+from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
-    import filter_list, collect_as_list
+    import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
-# Profiler
-from optimus.profiler.functions import bucketizer
-from optimus.profiler.functions import create_buckets
 
 
 def cols(self):
@@ -70,7 +71,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    @dispatch(list)
+    @dispatch((list, pyspark.sql.dataframe.DataFrame))
     def append(cols_values=None):
         """
         Append a column or a Dataframe to a Dataframe
@@ -207,7 +208,6 @@ def cols(self):
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
-        :param verbose: Print additional information about
         :return: DataFrame
         """
 
@@ -940,7 +940,7 @@ def cols(self):
                 .alias(
                 col_name)
 
-        output_cols = get_output_cols(input_cols, output_cols)
+        # output_cols = get_output_cols(input_cols, output_cols)
 
         df = apply(input_cols, func=_years_between, args=[date_format],
                    filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)

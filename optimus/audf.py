@@ -10,7 +10,7 @@ from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.parser import parse_spark_class_dtypes, parse_python_dtypes
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
+def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     """
     Abstract User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
     :param col: Column to created or transformed
