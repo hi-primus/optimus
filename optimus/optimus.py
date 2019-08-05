@@ -150,27 +150,10 @@ class Optimus:
         )
         self.ml = ML()
 
-        #
-        self._load_css()
-
         # Set global output as html
         self.output("html")
 
-    @staticmethod
-    def _load_css():
-        """
-        Try to load the css for templates
-        :return:
-        """
-        try:
-            if __IPYTHON__:
-                url = absolute_path("/css/styles.css")
-                styles = open(url, "r", encoding="utf8").read()
-                s = '<style>%s</style>' % styles
-                print_html(s)
-        except NameError:
-            pass
-
+    
     @staticmethod
     def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None):
