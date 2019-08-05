@@ -52,9 +52,9 @@ fs.writeFile(
 	},
 );
 
-fs.writeFile("optimus/templates/build/table.html", inlineCssTable, function(
-	err,
-) {
+fs.writeFile("optimus/templates/build/table.html", 
+	inlineCssTable, 
+	function(err) {
 	if (err) throw err;
 	console.log(
 		"File is created successfully in \"optimus/templates/build/table.html\"",
