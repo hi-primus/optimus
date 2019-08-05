@@ -37,7 +37,7 @@ fs.writeFile(
 		if (err) { throw err; }
 		else {
 			console.log(
-				"File is created successfully in \"optimus/profiler/templates/build/one_column.html\"",
+				"File is created successfully in optimus/profiler/templates/build/one_column.html",
 			);
 		}
 	},
@@ -50,7 +50,7 @@ fs.writeFile(
 		if (err) { throw err; }
 		else {
 			console.log(
-				"File is created successfully in \'optimus/profiler/templates/build/general_info.html\'",
+				"File is created successfully in optimus/profiler/templates/build/general_info.html",
 			);
 		}
 	},
@@ -62,7 +62,7 @@ fs.writeFile("optimus/templates/build/table.html",
 		if (err) { throw err; }
 		else {
 			console.log(
-				"File is created successfully in \'optimus/templates/build/table.html\'",
+				"File is created successfully in optimus/templates/build/table.html",
 			);
 		}
 	});
