@@ -153,7 +153,6 @@ class Optimus:
         # Set global output as html
         self.output("html")
 
-    
     @staticmethod
     def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None):

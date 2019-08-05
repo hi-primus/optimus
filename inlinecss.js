@@ -34,10 +34,12 @@ fs.writeFile(
 	"optimus/profiler/templates/build/one_column.html",
 	inlineCssOneColumn,
 	function (err) {
-		if (err) throw err;
-		console.log(
-			"File is created successfully in \"optimus/profiler/templates/build/one_column.html\"",
-		);
+		if (err) { throw err; }
+		else {
+			console.log(
+				"File is created successfully in \"optimus/profiler/templates/build/one_column.html\"",
+			);
+		}
 	},
 );
 
@@ -45,18 +47,22 @@ fs.writeFile(
 	"optimus/profiler/templates/build/general_info.html",
 	inlineCssGeneralInfo,
 	function (err) {
-		if (err) throw err;
-		console.log(
-			"File is created successfully in \"optimus/profiler/templates/build/general_info.html\"",
-		);
+		if (err) { throw err; }
+		else {
+			console.log(
+				"File is created successfully in \"optimus/profiler/templates/build/general_info.html\"",
+			);
+		}
 	},
 );
 
 fs.writeFile("optimus/templates/build/table.html",
 	inlineCssTable,
 	function (err) {
-		if (err) throw err;
-		console.log(
-			"File is created successfully in \"optimus/templates/build/table.html\"",
-		);
+		if (err) { throw err; }
+		else {
+			console.log(
+				"File is created successfully in \"optimus/templates/build/table.html\"",
+			);
+		}
 	});
