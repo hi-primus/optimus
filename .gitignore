@@ -49,3 +49,7 @@ readme/data/foo\.json/
 readme/data/foo\.parquet/
 
 readme/data/foo\.csv/
+
+#nodeJS
+
+node_modules 
