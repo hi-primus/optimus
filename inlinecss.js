@@ -33,7 +33,7 @@ var inlineCssTable = juice("<style>" + sourceCss + "</style>" + table, {
 fs.writeFile(
 	"optimus/profiler/templates/build/one_column.html",
 	inlineCssOneColumn,
-	function(err) {
+	function (err) {
 		if (err) throw err;
 		console.log(
 			"File is created successfully in \"optimus/profiler/templates/build/one_column.html\"",
@@ -44,7 +44,7 @@ fs.writeFile(
 fs.writeFile(
 	"optimus/profiler/templates/build/general_info.html",
 	inlineCssGeneralInfo,
-	function(err) {
+	function (err) {
 		if (err) throw err;
 		console.log(
 			"File is created successfully in \"optimus/profiler/templates/build/general_info.html\"",
@@ -52,11 +52,11 @@ fs.writeFile(
 	},
 );
 
-fs.writeFile("optimus/templates/build/table.html", 
-	inlineCssTable, 
-	function(err) {
-	if (err) throw err;
-	console.log(
-		"File is created successfully in \"optimus/templates/build/table.html\"",
-	);
-});
+fs.writeFile("optimus/templates/build/table.html",
+	inlineCssTable,
+	function (err) {
+		if (err) throw err;
+		console.log(
+			"File is created successfully in \"optimus/templates/build/table.html\"",
+		);
+	});
