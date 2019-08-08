@@ -39,21 +39,17 @@ tests/test.json/
 tests/test.parquet/
 *.test
 
-
 examples/new-api-optimus-jars\.ipynb
-
 readme/credentials\.py
-
 readme/data/foo\.json/
-
 readme/data/foo\.parquet/
-
 readme/data/foo\.csv/
 
 examples/test\.parquet/
-
 examples/test\.csv/
-
 examples/test\.json/
-
 examples/temp
+
+
+node_modules
+

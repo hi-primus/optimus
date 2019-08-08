@@ -1,0 +1,22 @@
+{
+	"name": "inline-css-html",
+	"version": "0.1.0",
+	"description": "HTML with style tag to HTML with inline css",
+	"main": "inlinecss.js",
+	"dependencies": {
+		"juice": "^5.2.0",
+		"web-resource-inliner": "^4.3.3"
+	},
+	"devDependencies": {},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"HTML",
+		"CSS",
+		"INLINE",
+		"JUICE"
+	],
+	"author": "Jesus Arrioja",
+	"license": "ISC"
+}

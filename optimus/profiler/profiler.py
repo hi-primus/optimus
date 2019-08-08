@@ -201,8 +201,7 @@ class Profiler:
         output = Profiler.to_json(df, columns, buckets, infer, relative_error, approx_count)
 
         # Load jinja
-        path = os.path.dirname(os.path.abspath(__file__))
-        template_loader = jinja2.FileSystemLoader(searchpath=path + "//templates")
+        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/build"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
 
         # Render template

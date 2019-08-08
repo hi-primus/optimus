@@ -328,7 +328,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
         data = collect_as_dict(self.cols.select(columns).limit(limit))
 
     # Load the Jinja template
-    template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates"))
+    template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/build"))
     template_env = jinja2.Environment(loader=template_loader, autoescape=True)
     template = template_env.get_template("table.html")
 

@@ -314,7 +314,7 @@ op.output("html")
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
-Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](../examples/profiler.ipynb).
+Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](./examples/profiler.ipynb).
 
 Let's load a "big" dataset
 
