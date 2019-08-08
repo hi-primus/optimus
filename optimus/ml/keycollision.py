@@ -147,7 +147,7 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2):
               .count()
               .select('count', input_col)
               )
-        
+
         if Optimus.cache:
             df = df.cache()
         df = n_gram_fingerprint(df, input_col, n_size)
