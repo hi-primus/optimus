@@ -4,8 +4,8 @@ import re
 import string
 import unicodedata
 from functools import reduce
+from itertools import product
 
-import pandas as pd
 import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -26,8 +26,8 @@ from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list
     is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
-from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, \
-    na_agg_integer
+from optimus.helpers.columns_expression import match_nulls_strings, match_null, na_agg, \
+    na_agg_integer, zeros_agg, hist_agg, count_na_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
@@ -107,11 +107,13 @@ def cols(self):
 
         distinct_values = []
         exprs = []
+        columns = parse_columns(self, columns)
         for column in columns:
             distinct_values.append([x.get(column) for x in self.cols.unique(column).to_json()])
 
         product = list(itertools.product(*distinct_values))
 
+        # print(product)
         for arg in product:
             # Get columns names
             _cols = [F.lit(a) for a in arg]
@@ -130,21 +132,22 @@ def cols(self):
 
             exprs.append(expr.alias(reduce(lambda a, b: str(a) + str(b), arg)))
 
-        pdf0 = self.agg(*exprs).toPandas()
+        print(exprs)
+        # pdf0 = self.agg(*exprs).toPandas()
 
-        pdf = pdf0.transpose()
-
-        # Unnest array
-        pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
-
-        num_columns = len(pdf.columns) - 1
-
-        # Convert to int
-        pdf = pdf.astype({num_columns: int})
-
-        # Remove count 0
-        pdf = pdf[pdf[num_columns] != 0]
-        print(pdf)
+        # pdf = pdf0.transpose()
+        #
+        # # Unnest array
+        # pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
+        #
+        # num_columns = len(pdf.columns) - 1
+        #
+        # # Convert to int
+        # pdf = pdf.astype({num_columns: int})
+        #
+        # # Remove count 0
+        # pdf = pdf[pdf[num_columns] != 0]
+        # print(pdf)
 
     @add_attr(cols)
     def select(columns=None, regex=None, data_type=None):
@@ -239,6 +242,9 @@ def cols(self):
         else:
             output_cols = get_output_cols(input_cols, output_cols)
 
+        if output_cols is None:
+            output_cols = input_cols
+
         df = self
 
         def expr(_when):
@@ -251,8 +257,7 @@ def cols(self):
 
         for input_col, output_col in zip(input_cols, output_cols):
             df = df.withColumn(output_col, expr(when))
-
-        df = df.track_cols(self, output_cols)
+        # df = df.track_cols(self, output_cols)
 
         return df
 
@@ -342,6 +347,9 @@ def cols(self):
                 the transformation is made.
         :return: Spark DataFrame
         """
+
+        if dtype is None:
+            RaiseIt.value_error(dtype, "datatype")
 
         _dtype = []
         # Parse params
@@ -507,7 +515,7 @@ def cols(self):
 
         df = df.drop(*columns)
 
-        df = df.track_cols(self, remove=columns)
+        # df = df.track_cols(self, remove=columns)
         return df
 
     @add_attr(cols, log_time=True)
@@ -619,25 +627,29 @@ def cols(self):
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
 
-        # Get percentiles
-        percentile_results = []
+        result = None
+        if columns:
+            check_column_numbers(columns, "*")
 
-        for col_name in columns:
-            percentile_per_col = self \
-                .rows.drop_na(col_name) \
-                .cols.cast(col_name, "double") \
-                .approxQuantile(col_name, values, relative_error)
+            # Get percentiles
+            percentile_results = []
 
-            # Convert numeric keys to str keys
-            values_str = list(map(str, values))
+            for col_name in columns:
+                percentile_per_col = self \
+                    .rows.drop_na(col_name) \
+                    .cols.cast(col_name, "double") \
+                    .approxQuantile(col_name, values, relative_error)
 
-            percentile_results.append(dict(zip(values_str, percentile_per_col)))
+                # Convert numeric keys to str keys
+                values_str = list(map(str, values))
 
-        percentile_results = dict(zip(columns, percentile_results))
+                percentile_results.append(dict(zip(values_str, percentile_per_col)))
 
-        return format_dict(percentile_results)
+            percentile_results = dict(zip(columns, percentile_results))
+            result = format_dict(percentile_results)
+
+        return result
 
     # Descriptive Analytics
     @add_attr(cols)
@@ -1478,7 +1490,7 @@ def cols(self):
 
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
-            df = df.track_cols(self, output_col)
+            # df = df.track_cols(self, output_col)
 
         return df
 
@@ -1662,7 +1674,6 @@ def cols(self):
 
         columns = parse_columns(self, columns)
         data_types = tuple_to_dict(self.dtypes)
-
         return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
