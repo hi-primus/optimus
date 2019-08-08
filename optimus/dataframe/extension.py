@@ -374,6 +374,16 @@ def table(self, limit=None, columns=None, title=None):
 
 
 @add_method(DataFrame)
+def debug(self):
+    """
+
+    :param self:
+    :return:
+    """
+    print(self.rdd.toDebugString().decode("ascii"))
+
+
+@add_method(DataFrame)
 def load_schema(self, spreadsheet_id, range_name):
     """
     Retrieve sheet data using OAuth credentials and Google Python API.
