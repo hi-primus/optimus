@@ -176,7 +176,25 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, verbose=True):
+    def to_timestamp(input_cols, date_format=None, output_cols=None):
+        """
+        Convert a string to timestamp
+        :param input_cols:
+        :param output_cols:
+        :param date_format:
+        :return:
+        """
+
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        df = self
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, F.to_timestamp(input_col, date_format))
+        return df
+
+    @add_attr(cols)
+    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None):
         """
         Apply a expression to column.
         :param input_cols: Columns in which the function is going to be applied
