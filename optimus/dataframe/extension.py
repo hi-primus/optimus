@@ -109,11 +109,12 @@ def sample_n(self, n=10, random=False):
 
     rows_count = self.count()
     if n < rows_count:
-        fraction = n / rows_count
+        # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
+        fraction = (n / rows_count) * 1.1
     else:
         fraction = 1.0
 
-    return self.sample(False, fraction, seed=seed)
+    return self.sample(False, fraction, seed=seed).limit(n)
 
 
 @add_method(DataFrame)
