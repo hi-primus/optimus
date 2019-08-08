@@ -56,12 +56,7 @@ class Comm:
 
     """
 
-    def __init__(self, queue_name=None, queue_url=None, queue_exchange="", queue_routing_key=None):
-
-        # if queue_url is None:
-        #     self.queue_url = "amqp://eujwlcwg:QwZVFnWSqsJFodlF-8xWCWi7Rg6WPSwj@chimpanzee.rmq.cloudamqp.com/eujwlcwg"
-        # else:
-        #     self.queue_url = queue_url
+    def __init__(self, queue_name=None, username="mqtt-test", password="mqtt-test"):
 
         # If queue_name was not given try lo load from file if not generate one
         if queue_name is None:
@@ -75,9 +70,8 @@ class Comm:
             self.queue_name = queue_name
 
         # Queue config
-
-        client = mqtt.Client("phython1")
-        client.username_pw_set(username="mqtt-test", password="mqtt-test")
+        client = mqtt.Client("MQTT")
+        client.username_pw_set(username=username, password=password)
 
         # Callbacks
         client.connected_flag = False
