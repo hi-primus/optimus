@@ -6,6 +6,7 @@ from shutil import rmtree
 from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
+from optimus.bumblebee import Comm
 from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
@@ -23,9 +24,13 @@ from optimus.server.server import Server
 from optimus.spark import Spark
 
 Spark.instance = None
+Profiler.instance = None
+Comm.instance = None
+from optimus.version import __version__
 
 
 class Optimus:
+    __version__ = __version__
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
@@ -37,9 +42,7 @@ class Optimus:
                  driver_class_path=[],
                  options=None,
                  additional_options=None,
-                 queue_url=None,
-                 queue_exchange=None,
-                 queue_routing_key="optimus",
+                 comm=None,
                  load_avro=False,
                  ):
 
@@ -70,6 +73,11 @@ class Optimus:
 
         """
         self.preserve = False
+
+        if comm is None:
+            Comm.instance = Comm()
+        else:
+            Comm.instance = comm
 
         if session is None:
             # Creating Spark Session
@@ -142,11 +150,10 @@ class Optimus:
         self.create = Create()
         self.load = Load()
         self.read = self.spark.read
-        self.profiler = Profiler(
-            queue_url=queue_url,
-            queue_exchange=queue_exchange,
-            queue_routing_key=queue_routing_key
-        )
+
+        # Create singleton profiler
+        Profiler.instance = Profiler()
+        self.profiler = Profiler.instance
         self.ml = ML()
 
         #
