@@ -57,3 +57,5 @@ examples/test\.csv/
 examples/test\.json/
 
 examples/test\.parquet/
+
+examples/bumblebee\.ini
