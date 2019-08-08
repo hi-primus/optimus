@@ -50,7 +50,7 @@ cols = [
         "last date seen",
         ("attributes", ArrayType(FloatType())),
         ("Date Type", DateType()),
-        ("Tiemstamp", TimestampType()),
+        ("timestamp", TimestampType()),
         ("Cybertronian", BooleanType()),
         ("function(binary)", BinaryType()),
         ("NullType", NullType())
