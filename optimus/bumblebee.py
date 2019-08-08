@@ -106,9 +106,9 @@ class Comm:
 
         self.f = Fernet(self.key)
 
-        print(self.key)
-        print(self.queue_name)
-        return
+        # print(self.key)
+        # print(self.queue_name)
+        # return
 
     @staticmethod
     def _encode(val):
