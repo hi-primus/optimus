@@ -19,11 +19,12 @@ def parse_col_names_funcs_to_keys(data):
     :param data: json data
     :return: json
     """
-    functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count"]
+    functions_array = ["count_na_agg", "min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
+                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count", "hist_agg"
+                       ]
+
     _result = {}
     for k, v in data[0].items():
-
         for f in functions_array:
             temp_func_name = f + "_"
             if k.startswith(temp_func_name):
@@ -37,10 +38,9 @@ def parse_col_names_funcs_to_keys(data):
                             FUNCTION=f,
                             COL_NAME=_col_name))
                 elif is_numeric(v):
-
                     v = round(v, 5)
-
                 _result.setdefault(_col_name, {})[f] = v
+                break
 
     return _result
 
