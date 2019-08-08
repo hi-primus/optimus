@@ -12,6 +12,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus import val_to_list
+from optimus.bumblebee import Comm
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.decorators import *
@@ -19,11 +20,15 @@ from optimus.helpers.functions import collect_as_dict, random_int, traverse, abs
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 DataFrame._name = None
-DataFrame._updated_cols = []
+DataFrame._track_cols = []
+DataFrame._original_cols = None
+
+from optimus import Optimus
 
 
 @add_method(DataFrame)
@@ -229,7 +234,7 @@ def table_name(self, name=None):
     if not is_str(name):
         RaiseIt.type_error(name, ["string"])
 
-    if len(name) is 0:
+    if len(name) == 0:
         RaiseIt.value_error(name, ["> 0"])
 
     self.createOrReplaceTempView(name)
@@ -323,7 +328,6 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
         limit = 10
 
     if limit == "all":
-
         data = collect_as_dict(self.cols.select(columns))
     else:
         data = collect_as_dict(self.cols.select(columns).limit(limit))
@@ -429,26 +433,26 @@ def track_cols(self, df, add=None, remove=None):
     :param remove: Columns to be removed.
     :return:
     """
-    self._updated_cols = (list(set(df._updated_cols + val_to_list(add)-val_to_list(remove))))
+    if df._original_cols is None:
+        df._original_cols = df.cols.names()
 
+    if add is not None:
+        df._track_cols = (list(set(df._track_cols + val_to_list(add))))
+    if remove is not None:
+        df._track_cols = (list(set([item for item in df._track_cols if item not in val_to_list(remove)])))
+
+    self._track_cols = df._track_cols
 
     return self
 
 
 @add_method(DataFrame)
-def send(self, name=None):
+def send(self):
     """
-
+    Profile and send the data to the queue
     :param self:
-    :param name: Name identifier for the dataframe
     :return:
     """
-    self._name = name
-    # Execute the transformation
 
-    df = self.run()
-    df._updated_cols = (list(set(self._updated_cols)))
-    print(df._updated_cols)
-    # Profile and send to the queue
-
-    return df
+    result = Profiler.instance.to_json(self)
+    Comm.instance.send(result)
