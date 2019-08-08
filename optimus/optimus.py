@@ -22,15 +22,17 @@ from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
 from optimus.spark import Spark
+from optimus.version import __version__
 
+# Singletons
 Spark.instance = None
 Profiler.instance = None
 Comm.instance = None
-from optimus.version import __version__
 
 
 class Optimus:
     __version__ = __version__
+    cache = False
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
@@ -44,6 +46,7 @@ class Optimus:
                  additional_options=None,
                  comm=None,
                  load_avro=False,
+                 cache=True
                  ):
 
         """
@@ -73,6 +76,8 @@ class Optimus:
 
         """
         self.preserve = False
+
+        Optimus.cache = cache
 
         if comm is None:
             Comm.instance = Comm()
