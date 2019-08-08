@@ -25,7 +25,7 @@ sys.path.append("..")
 
 # Create optimus
 from optimus import Optimus
-op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True)
+op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True, verbose=True)
 
 df = op.load.csv("data/Meteorite_Landings.csv").h_repartition()
 
@@ -35,9 +35,9 @@ df.table(10)
 
 op.profiler.run(df, "name", infer=False, approx_count= True)
 
-# ### Profiler smart mode (Slower). It just try to infer the column data type and present extra data acordinly. From example datetype columns get extra histograms about minutes, day, week and month. Also can detect array types on data.
+# ### Profiler smart mode (Slower). It just try to infer the column data type and present extra data accordingly. From example datetype columns get extra histograms about minutes, day, week and month. Also can detect array types on data.
 
-op.profiler.run(df, "*",infer=True)
+op.profiler.run(df, "GeoLocation",infer=True)
 
 # ### Plot profile for a specific column
 
