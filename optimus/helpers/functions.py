@@ -3,12 +3,13 @@ import os
 import random
 import re
 import subprocess
+import sys
 from functools import reduce
 from pathlib import Path
-from pyspark.sql import DataFrame
 
 from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
+from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
@@ -77,12 +78,24 @@ def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
 
 
-def collect_as_dict(df):
+def collect_as_dict(df, limit=None):
     """
     Return a dict from a Collect result
     :param df:
     :return:
     """
+    # # Explore this approach seems faster
+    # use_unicode = True
+    # from pyspark.serializers import UTF8Deserializer
+    # from pyspark.rdd import RDD
+    # rdd = df._jdf.toJSON()
+    # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
+    # if limit is None:
+    #     r.collect()
+    # else:
+    #     r.take(limit)
+    # return r
+    #
     from optimus.helpers.columns import parse_columns
     dict_result = []
 
@@ -154,7 +167,40 @@ def format_path(path, format="posix"):
 def java_version():
     version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
     pattern = '\"(\d+\.\d+).*\"'
-    print(re.re.search(pattern, version).groups()[0])
+    print(re.search(pattern, version).groups()[0])
+
+
+def setup_google_colab():
+    """
+    Check if we are in Google Colab and setup it up
+    :return:
+    """
+    from optimus.helpers.constants import JAVA_PATH_COLAB, SPARK_PATH_COLAB, SPARK_URL, SPARK_FILE
+
+    IN_COLAB = 'google.colab' in sys.modules
+
+    if IN_COLAB:
+        if not os.path.isdir(JAVA_PATH_COLAB) or not os.path.isdir(SPARK_PATH_COLAB):
+            print("Installing Optimus, Java8 and Spark. It could take 3 min...")
+            commands = [
+                "apt-get install openjdk-8-jdk-headless -qq > /dev/null",
+                "wget -q {SPARK_URL}".format(SPARK_URL=SPARK_URL),
+                "tar xf {SPARK_FILE}".format(SPARK_FILE=SPARK_FILE)
+            ]
+
+            cmd = " && ".join(commands)
+
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+            p_stdout = p.stdout.read().decode("ascii")
+            p_stderr = p.stderr.read().decode("ascii")
+            print(p_stdout, p_stderr)
+
+        else:
+            print("Settings env vars")
+            # Always configure the env vars
+
+            os.environ["JAVA_HOME"] = JAVA_PATH_COLAB
+            os.environ["SPARK_HOME"] = SPARK_PATH_COLAB
 
 
 def is_pyarrow_installed():
