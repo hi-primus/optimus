@@ -487,18 +487,17 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        df._updated_cols = (list(set(self._updated_cols)))
+        df = df.drop(*columns)
 
         df = df.track_cols(self, remove=columns)
-
-        return df.drop(*columns)
+        return df
 
     @add_attr(cols, log_time=True)
-    def agg_exprs(funcs, columns):
+    def agg_exprs(funcs, columns=None):
         """
         Helper function to apply multiple columns expression to multiple columns
-        :param funcs: Aggregation functions from Apache Spark
-        :param columns: list or string of columns names or a .
+        :param funcs: Aggregation functions from Apache Spark or a tuple (function,(col_name. args)).
+        :param columns: list or string of columns names.
         :return:
         """
 
@@ -508,25 +507,30 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
 
-        # Create a Column Expression for every column
-        expression = []
+        if not is_list_of_tuples(funcs):
+            funcs = [(x, y) for x, y in product(funcs, columns)]
 
-        for col_name in columns:
-            for func in funcs:
+        def _agg_exprs(_funcs):
+            exprs = []
+            for f in _funcs:
 
-                # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
-                # Std dev can not process date columns. So we do not calculated it
-                # if (func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                #              F.count, zeros_agg]):
+                func = f[0]
+                args = f[1]
+                _col_name = args[0]
 
-                # A different function must be use to calculate null in integers or data column date types
-                if func is na_agg and (
-                        is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES) or is_column_a(df, col_name, "date")):
-                    func = na_agg_integer
+                # Std, kurtosis, mean, skewness and other aggs functions can not process date columns.
+                if not ((func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                  F.count, zeros_agg]) and (
+                                is_column_a(df, _col_name, "date"))):
+                    # A different function must be use to calculate null in integers or data column data types
+                    if func is na_agg and is_column_a(df, _col_name, PYSPARK_NUMERIC_TYPES):
+                        func = na_agg_integer
+                    agg = func(*args)
+                    exprs.append(agg.alias(func.__name__ + "_" + _col_name))
+            return exprs
 
-                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
-                # print(df.agg(*expression).to_json())
-        full_result = parse_col_names_funcs_to_keys(df.agg(*expression).to_json())
+        df = df.agg(*_agg_exprs(funcs))
+        full_result = parse_col_names_funcs_to_keys(df.to_json())
 
         return format_dict(full_result)
 
@@ -1144,36 +1148,11 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
+        :param output:
         :return:
         """
 
-        columns = parse_columns(self, columns)
-        check_column_numbers(columns, "*")
-
-        df = self
-        expr = []
-
-        for col_name in columns:
-
-            # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
-            if is_column_a(df, col_name, ["struct", "boolean"]):
-                df = df.cols.cast(col_name, "string")
-
-            # Select the nan/null rows depending of the columns data type
-            # If numeric
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                expr.append(F.count(F.when(match_nulls_integers(col_name), col_name)).alias(col_name))
-            # If string. Include 'nan' string
-            elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
-                expr.append(F.count(
-                    F.when(match_nulls_strings(col_name), col_name)).alias(
-                    col_name))
-                print("Including 'nan' as Null in processing '{}'".format(col_name))
-            else:
-                expr.append(F.count(F.when(match_null(col_name), col_name)).alias(col_name))
-
-        result = format_dict(df.select(*expr).to_json())
-        return result
+        return agg_exprs((count_na_agg, (columns, self)))
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -1531,68 +1510,17 @@ def cols(self):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     @add_attr(cols, log_time=True)
-    @dispatch((str, list), (float, int), (float, int), int)
-    def hist(columns, min_value, max_value, buckets=10):
-        """
-         Get the histogram column in json format
-        :param columns: Columns to be processed
-        :param min_value: Min value used to calculate the buckets
-        :param max_value: Max value used to calculate the buckets
-        :param buckets: Number of buckets
-        :return:
-        """
+    def hist(columns, buckets):
 
-        columns = parse_columns(self, columns)
-        for col_name in columns:
-            # Create splits
-            splits = create_buckets(min_value, max_value, buckets)
+        return agg_exprs(hist_agg, columns, self, buckets)
+        # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
+        # columns = parse_columns(self, columns)
+        # df = self
+        # for col_name in columns:
+        #     print(agg_exprs(hist_agg, col_name, self, buckets))
+        #     # print(df.agg(hist_agg(col_name, self, buckets)))
 
-            # Create buckets in the dataFrame
-            col_bucket = name_col(col_name, "bucketizer")
-            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=col_bucket)
-
-            counts = (df
-                      .h_repartition(col_name=col_bucket)
-                      .groupBy(col_bucket)
-                      .agg(F.count(col_bucket).alias("count"))
-                      .cols.rename(col_bucket, "value")
-                      .sort(F.asc("value")).to_json())
-
-            # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
-            new_array = []
-            for i in builtins.range(buckets):
-                flag = False
-                for c in counts:
-                    value = c["value"]
-                    count = c["count"]
-                    if value == i:
-                        new_array.append({"value": value, "count": count})
-                        flag = True
-                if flag is False:
-                    new_array.append({"value": i, "count": 0})
-
-            counts = new_array
-
-            hist_data = []
-            for i in list(itertools.zip_longest(counts, splits)):
-                if i[0] is None:
-                    count = 0
-                elif "count" in i[0]:
-                    count = i[0]["count"]
-
-                lower = i[1]["lower"]
-                upper = i[1]["upper"]
-
-                hist_data.append({"count": count, "lower": lower, "upper": upper})
-
-        return hist_data
-
-    @add_attr(cols, log_time=True)
-    @dispatch((str, list), int)
-    def hist(columns, buckets=10):
-
-        values = agg_exprs([F.min, F.max], columns)
-        return self.cols.hist(columns, fast_float(values["min"]), fast_float(values["max"]), buckets)
+    # return result
 
     @add_attr(cols)
     def frequency(columns, buckets=10):
