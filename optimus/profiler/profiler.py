@@ -1,7 +1,6 @@
 import configparser
 import json
 import os
-from collections import defaultdict
 
 import humanize
 import imgkit
@@ -12,7 +11,7 @@ from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import na_agg, zeros_agg, count_na_agg, hist_agg
+from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.logger import logger
@@ -56,8 +55,6 @@ class Profiler:
         :return:
         """
 
-        columns = parse_columns(df, df.columns)
-
         cols_count = self.cols_count
         rows_count = self.rows_count
         # missing_count = round(sum(df.cols.count_na(columns).values()), 2)
@@ -70,28 +67,25 @@ class Profiler:
              'size': humanize.naturalsize(df.size())}
         )
 
-    # TODO: This should check only the StringType Columns. The datatype from others columns can be taken from schema().
-    @staticmethod
-    @time_it
-    def count_data_types(df, columns, infer=False, stats=None):
+    def _count_data_types(self, df, columns, infer=False, stats=None):
         """
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
         :param columns: Columns to be processed
         :param infer: infer the column datatype
+        :param stats:
         :return: json
         """
 
-        df_count = df.count()
+        df_count = self.rows_count
 
-        @time_it
         def _count_data_types(col_name):
             """
             Function for determine if register value is float or int or string.
             :param col_name:
             :return:
             """
-            logger.print("Processing column count na'" + col_name + "'...")
+            logger.print("Processing column '" + col_name + "'...")
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
@@ -115,7 +109,7 @@ class Profiler:
                 count_empty_strings = df.where(F.col(col_name) == '').count()
 
             else:
-                nulls = stats[col_name]["count_na_agg"]
+                nulls = stats[col_name]["count_na"]
                 count_by_data_type[col_data_type] = int(df_count) - nulls
                 count_by_data_type["null"] = nulls
 
@@ -181,7 +175,7 @@ class Profiler:
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=40, infer=False, relative_error=1, approx_count=True):
+    def run(self, df, columns="*", buckets=10, infer=False, relative_error=10000, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -195,8 +189,9 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        output = self.to_json(df, columns, buckets, infer, relative_error, approx_count)
+        output = self.to_json(df, columns, buckets, infer, relative_error, approx_count, dump=False)
 
+        # print("output", output)
         # Load jinja
         path = os.path.dirname(os.path.abspath(__file__))
         template_loader = jinja2.FileSystemLoader(searchpath=path + "//templates")
@@ -206,6 +201,7 @@ class Profiler:
         # Create the profiler info header
         html = ""
         general_template = template_env.get_template("general_info.html")
+
         html = html + general_template.render(data=output)
 
         template = template_env.get_template("one_column.html")
@@ -214,20 +210,20 @@ class Profiler:
         for col_name in columns:
             hist_pic = None
             col = output["columns"][col_name]
+            hist_dict = col["stats"]["hist"]
 
-            if "hist_agg" in col:
+            if "hist" in col["stats"]:
                 if col["column_dtype"] == "date":
-                    hist_year = plot_hist({col_name: col["hist_agg"]["years"]}, "base64", "years")
-                    hist_month = plot_hist({col_name: col["hist_agg"]["months"]}, "base64", "months")
-                    hist_weekday = plot_hist({col_name: col["hist_agg"]["weekdays"]}, "base64", "weekdays")
-                    hist_hour = plot_hist({col_name: col["hist_agg"]["hours"]}, "base64", "hours")
-                    hist_minute = plot_hist({col_name: col["hist_agg"]["minutes"]}, "base64", "minutes")
+                    hist_year = plot_hist({col_name: ["years"]}, "base64", "years")
+                    hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
+                    hist_weekday = plot_hist({col_name: hist_dict["weekdays"]}, "base64", "weekdays")
+                    hist_hour = plot_hist({col_name: hist_dict["hours"]}, "base64", "hours")
+                    hist_minute = plot_hist({col_name: hist_dict["minutes"]}, "base64", "minutes")
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
                 else:
-                    hist = plot_hist({col_name: col["stats"]["hist_agg"]}, output="base64")
+                    hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_pic": hist}
-
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
             else:
@@ -288,7 +284,8 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
-    def to_json(self, df, columns="*", buckets=40, infer=False, relative_error=1, approx_count=True, sample=10):
+    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=10000, approx_count=True, sample=None,
+                dump=True):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -298,9 +295,10 @@ class Profiler:
         :param relative_error:
         :param approx_count:
         :param sample:
+        :param dump: return a json or a Python Object
+
         :return: json file
         """
-        df = df.sample_n(sample)
 
         # Get the stats for all the columns
         output = self.columns(df, columns, buckets, infer, relative_error, approx_count)
@@ -308,14 +306,13 @@ class Profiler:
         # Add the data summary to the output
         output["summary"] = self.dataset_info(df)
 
-        # Get a data sample and transform it to friendly json format
+        output["sample"] = {"columns": [{"title": cols} for cols in df.columns], "value": df.sample_n(10).to_json()}
 
-        data = json.dumps(df.rdd.flatMap(lambda x: [x]).collect())
-        output["sample"] = {"columns": [{"title":cols} for cols in df.columns], "value": data}
+        if dump is True:
+            output = json.dumps(output)
+        return output
 
-        return json.dumps(output)
-
-    def columns(self, df, columns, buckets=40, infer=False, relative_error=1, approx_count=True):
+    def columns(self, df, columns, buckets=10, infer=False, relative_error=10000, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -329,11 +326,6 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        # Get just a sample to infer the column data type
-        # sample_size_number = sample_size(rows_count, 95.0, 2.0)
-        # fraction = sample_size_number / rows_count
-        # sample = df.sample(False, fraction, seed=1)
-
         self.rows_count = df.count()
         self.cols_count = len(df.columns)
 
@@ -342,8 +334,8 @@ class Profiler:
         columns_info['columns'] = {}
 
         columns_info['rows_count'] = humanize.intword(self.rows_count)
-        stats = Profiler.general_stats(df, columns, approx_count)
-        count_dtypes = Profiler.count_data_types(df, columns, infer, stats)
+        stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
+        count_dtypes = self._count_data_types(df, columns, infer, stats)
 
         columns_info["count_types"] = count_dtypes["count_types"]
 
@@ -353,26 +345,25 @@ class Profiler:
         df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
-
         for col_name in columns:
             col_info = {}
             logger.print("------------------------------")
             logger.print("Processing column '" + col_name + "'...")
 
-            columns_info['columns'][col_name] = {}
-
-            col_info["stats"] = stats[col_name]
             col_info.update(Profiler.frequency(df, col_name, buckets))
 
-            col_info.update(Profiler.stats_by_column(col_name, stats, count_dtypes, self.rows_count))
+            col_info["stats"] = stats[col_name]
+            col_info["stats"].update(Profiler.stats_by_column(col_name, stats, count_dtypes, self.rows_count))
 
+            col_info["stats"].update(Profiler.extra_numeric_stats(df, col_name, stats))
+
+            col_info['name'] = col_name
             col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
             col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
+            col_info['column_type'] = count_dtypes["columns"][col_name]['type']
 
-            col_info["stats"].update(Profiler.extra_numeric_stats(df, col_name, stats, relative_error))
-
+            columns_info['columns'][col_name] = {}
             columns_info['columns'][col_name] = col_info
-
         return columns_info
 
     @staticmethod
@@ -405,60 +396,54 @@ class Profiler:
 
     @staticmethod
     @time_it
-    def general_stats(df, columns, approx_count=True):
+    def general_stats(df, columns, buckets=10, relative_error=10000, approx_count=True):
         """
         Return General stats for a column
         :param df:
         :param columns:
+        :param buckets:
+        :param relative_error:
         :param approx_count: Use  approx_count
         :return:
         """
 
         columns = parse_columns(df, columns)
-        funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, na_agg, zeros_agg]
 
         exprs = []
+
         for col_name in columns:
-            for func in funcs:
-                exprs.append((func, (col_name,)))
-                # if approx_count is True:
-                #     funcs.append(F.approx_count_distinct)
-                # else:
-                #     funcs.append(F.countDistinct)
+            if approx_count is True:
+                exprs.append((F.approx_count_distinct, (col_name,)))
+            else:
+                exprs.append((F.countDistinct, (col_name,)))
+
+        funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
+        exprs = df.cols.create_exprs(columns, funcs)
 
         funcs = [count_na_agg]
-        for col_name in columns:
-            for func in funcs:
-                exprs.append((func, (col_name, df)))
+        exprs = exprs + df.cols.create_exprs(columns, funcs, df)
 
         funcs = [hist_agg]
-        # Histograms
-        for col_name in columns:
-            for func in funcs:
-                exprs.append((func, (col_name, df, 40)))
+        exprs = exprs + df.cols.create_exprs(columns, funcs, df, buckets)
 
-        result = df.cols.agg_exprs(exprs)
+        funcs = [percentile_agg]
+        exprs = exprs + df.cols.create_exprs(columns, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
+                                             relative_error)
 
+        result = df.cols.exec_agg(exprs, tidy=False)
         return result
 
     @staticmethod
-    @time_it
-    def extra_numeric_stats(df, col_name, stats, relative_error):
+    def extra_numeric_stats(df, col_name, stats):
         """
         Specific Stats for numeric columns
         :param df:
         :param col_name:
         :param stats:
-        :param relative_error:
         :return:
         """
 
-        col_info = defaultdict()
-        col_info['stats'] = {}
-        # Percentile can not be used a normal sql.functions. approxQuantile in this case need and extra pass
-        # https://stackoverflow.com/questions/45287832/pyspark-approxquantile-function
-        quantile = df.cols.percentile(col_name, [0.05, 0.25, 0.5, 0.75, 0.95],
-                                      relative_error)
+        col_info = {}
 
         max_value = stats[col_name]["max"]
         min_value = stats[col_name]["min"]
@@ -466,13 +451,13 @@ class Profiler:
         mean = stats[col_name]['mean']
 
         if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            quantile = stats[col_name]["percentile"]
             col_info['range'] = max_value - min_value
             col_info['median'] = quantile["0.5"]
             col_info['interquartile_range'] = quantile["0.75"] - quantile["0.25"]
 
             col_info['coef_variation'] = round((stddev / mean), 5)
             col_info['mad'] = round(df.cols.mad(col_name), 5)
-            col_info['quantile'] = quantile
 
         return col_info
 
@@ -507,34 +492,28 @@ class Profiler:
         """
 
         col_info = {}
-        col_info["stats"] = {}
-
-        column_type = count_dtypes["columns"][col_name]['type']
-        col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
 
         if "na" in stats[col_name]:
             na = stats[col_name]["na"]
         else:
             na = 0
 
-        col_info['name'] = col_name
-        col_info['column_type'] = column_type
+        # column_type = count_dtypes["columns"][col_name]['type']
 
         # Numeric Column
-        if column_type == "numeric" or column_type == "date":
-            # Merge
-            col_info["stats"] = stats[col_name]
+        # if column_type == "numeric" or column_type == "date":
+        #     # Merge
+        #     col_info["stats"] = stats[col_name]
 
         # Missing
-        col_info['stats']['missing_count'] = round(na, 2)
-        col_info['stats']['p_missing'] = round(na / rows_count * 100, 2)
-        col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
+        col_info['missing_count'] = round(na, 2)
+        col_info['p_missing'] = round(na / rows_count * 100, 2)
 
         # Uniques
         def u(key):
             uniques = stats[col_name].pop(key)
-            col_info['stats'][key] = uniques
-            col_info['stats']["p_uniques"] = round((uniques / rows_count) * 100, 3)
+            col_info["uniques_count"] = uniques
+            col_info["p_uniques"] = round((uniques / rows_count) * 100, 3)
 
         if "approx_count_distinct" in stats[col_name]:
             u("approx_count_distinct")
