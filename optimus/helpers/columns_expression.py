@@ -1,6 +1,6 @@
 import datetime
+import itertools
 
-from fastnumbers import fast_float
 from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_column_a, is_numeric
@@ -148,8 +148,6 @@ def count_na_agg(col_name, df):
         expr = F.count(
             F.when(match_nulls_strings(col_name), col_name))
         print("Including 'nan' as Null in processing string type column'{}'".format(col_name))
-        # or
-        # print(sys.exc_info()[0])
     else:
         expr = F.count(F.when(match_null(col_name), col_name))
 
@@ -160,30 +158,32 @@ def percentile_agg(col_name, df, values, relative_error):
     """
     Return the percentile of a dataframe
     :param col_name:  '*', list of columns names or a single column name.
+    :param df:
     :param values: list of percentiles to be calculated
     :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
     :return: percentiles per columns
     """
 
-    values = val_to_list(values)
-
+    # col_name = escape_columns(col_name)
     # Make sure values are double
-    values = list(map(fast_float, values))
+
     if values is None:
         values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
+    values = val_to_list(values)
+    values = list(map(str, values))
+
     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
         # Get percentiles
-        percentile_results = []
 
-        percentile_per_col = df \
-            .rows.drop_na(col_name) \
-            .cols.cast(col_name, "double") \
-            .approxQuantile(col_name, values, relative_error)
+        p = F.expr("percentile_approx(`{COLUMN}`, array({VALUES}), {ERROR})".format(COLUMN=col_name,
+                                                                                    VALUES=" , ".join(values),
+                                                                                    ERROR=relative_error))
 
-        # Convert numeric keys to str keys
-        values_str = list(map(str, values))
+        # Zip the arrays
+        expr = [[F.lit(v), p.getItem(i)] for i, v in enumerate(values)]
+        expr = F.create_map(*list(itertools.chain(*expr)))
 
-        percentile_results.append(dict(zip(values_str, percentile_per_col)))
-
-    return percentile_results
+    else:
+        expr = None
+    return expr
