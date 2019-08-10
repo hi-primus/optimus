@@ -164,7 +164,7 @@ df.table()
 df.table(10)
 
 # ## About Spark
-# Spark and Optimus works in a different way that pandas or R. If you are not familiar with Spark we recommend to take the time to take a look on the links bellow.
+# Spark and Optimus work differently than pandas or R. If you are not familiar with Spark, we recommend taking the time to take a look at the links below.
 #
 # ### Partitions
 # Partition are the way Spark divide the data in your local computer or cluster to better optimize how it will be processed.It can greatly impact the Spark performance.
