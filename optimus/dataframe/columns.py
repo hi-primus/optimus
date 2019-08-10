@@ -538,9 +538,9 @@ def cols(self):
         filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                             F.count, zeros_agg]}
 
-        def _filter(col_name, func):
+        def _filter(_col_name, _func):
             for data_type_filter, func_filter in filters.items():
-                if (func in func_filter) and (is_column_a(df, col_name, data_type_filter)):
+                if (_func in func_filter) and (is_column_a(df, _col_name, data_type_filter)):
                     return True
                 else:
                     return False
@@ -548,15 +548,15 @@ def cols(self):
         beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
                             "count_na_agg": "count_na"}
 
-        def _beautify_col_names(func):
-            if func.__name__ in beauty_col_names:
-                func_name = beauty_col_names[func.__name__]
+        def _beautify_col_names(_func):
+            if _func.__name__ in beauty_col_names:
+                func_name = beauty_col_names[_func.__name__]
             else:
-                func_name = func.__name__
+                func_name = _func.__name__
             return func_name
 
         def _agg_exprs(_funcs):
-            exprs = []
+            _exprs = []
             for f in _funcs:
                 func = f[0]
                 args = f[1]
@@ -566,8 +566,8 @@ def cols(self):
                     agg = func(*args)
                     if agg is not None:
                         func_name = _beautify_col_names(func)
-                        exprs.append(agg.alias(func_name + "_" + _col_name))
-            return exprs
+                        _exprs.append(agg.alias(func_name + "_" + _col_name))
+            return _exprs
         return _agg_exprs(exprs)
 
     @add_attr(cols)
