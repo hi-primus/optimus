@@ -28,8 +28,6 @@ DataFrame._name = None
 DataFrame._track_cols = []
 DataFrame._original_cols = None
 
-from optimus import Optimus
-
 
 @add_method(DataFrame)
 def roll_out():
