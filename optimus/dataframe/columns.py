@@ -1,5 +1,4 @@
 import builtins
-import itertools
 import re
 import string
 import unicodedata

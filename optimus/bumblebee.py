@@ -89,7 +89,6 @@ class Comm:
 
         def on_publish(client, userdata, result):  # create function for callback
             print("Data sent \n")
-            pass
 
         client.on_publish = on_publish
         client.on_disconnect = on_disconnect
@@ -171,7 +170,7 @@ class Comm:
 
         try:
             client.connect("165.22.149.93")
-        except:
+        except Exception:
             print("Connection failed. Please try again")
             exit(1)  # Should quit or raise flag to quit or retry
 

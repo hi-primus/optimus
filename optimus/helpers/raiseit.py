@@ -49,10 +49,6 @@ class RaiseIt:
         raise NotReady(message)
 
     @staticmethod
-    def not_ready_error(message):
-        raise NotReady(message)
-
-    @staticmethod
     def value_error(var=None, data_values=None):
         """
         Raise a ValueError exception

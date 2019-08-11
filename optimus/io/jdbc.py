@@ -1,7 +1,6 @@
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.spark import Spark, PYSPARK_NOT_ARRAY_TYPES
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value

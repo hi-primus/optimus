@@ -14,7 +14,7 @@ from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger
-from optimus.helpers.output import print_html, print_json
+from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.io.jdbc import JDBC
 from optimus.io.load import Load

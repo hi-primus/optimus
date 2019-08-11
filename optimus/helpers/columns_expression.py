@@ -43,7 +43,6 @@ def zeros_agg(col_name):
 
 
 def hist_agg(col_name, df, buckets):
-    from optimus import PYSPARK_NUMERIC_TYPES
 
     """
     Create a columns expression to calculate a column histogram
@@ -121,7 +120,7 @@ def hist_agg(col_name, df, buckets):
         # Min
         buckets = create_buckets(0, 60, 60)
         func = F.minute
-        min = process(col_name, buckets, func)
+        minutes = process(col_name, buckets, func)
 
         # Second
         buckets = create_buckets(0, 60, 60)
@@ -129,7 +128,7 @@ def hist_agg(col_name, df, buckets):
         second = process(col_name, buckets, func)
 
         exprs = F.create_map(F.lit("year"), year, F.lit("month"), month, F.lit("day"), day,
-                             F.lit("hour"), hour, F.lit("minute"), min, F.lit("second"), second)
+                             F.lit("hour"), hour, F.lit("minute"), minutes, F.lit("second"), second)
 
     return exprs
 
