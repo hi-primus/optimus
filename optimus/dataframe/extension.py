@@ -222,21 +222,31 @@ def query(self, sql_expression):
 
 
 @add_method(DataFrame)
-def table_name(self, name=None):
+def set_name(self, value=None):
     """
-    Create a temp view for a data frame
+    Create a temp view for a data frame also used in the json output profiling
     :param self:
-    :param name:
+    :param value:
     :return:
     """
-    if not is_str(name):
-        RaiseIt.type_error(name, ["string"])
+    self._name = value
+    if not is_str(value):
+        RaiseIt.type_error(value, ["string"])
 
-    if len(name) == 0:
-        RaiseIt.value_error(name, ["> 0"])
+    if len(value) == 0:
+        RaiseIt.value_error(value, ["> 0"])
 
-    self.createOrReplaceTempView(name)
-    return self
+    self.createOrReplaceTempView(value)
+
+
+@add_method(DataFrame)
+def get_name(self):
+    """
+    Get dataframe name
+    :param self:
+    :return:
+    """
+    return self._name
 
 
 @add_attr(DataFrame)
