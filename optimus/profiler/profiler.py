@@ -332,6 +332,7 @@ class Profiler:
         # Initialize Objects
         columns_info = {}
         columns_info['columns'] = {}
+        columns_info['name'] = df._name
 
         columns_info['rows_count'] = humanize.intword(self.rows_count)
         stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
