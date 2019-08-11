@@ -207,10 +207,10 @@ class Profiler:
         # Render template
         # Create the profiler info header
         html = ""
-        general_template = template_env.get_template("general_info.html")
+        general_template = template_env.get_template("/build/general_info.html")
         html = html + general_template.render(data=output)
 
-        template = template_env.get_template("one_column.html")
+        template = template_env.get_template("/build/one_column.html")
 
         # Create every column stats
         for col_name in columns:
