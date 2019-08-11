@@ -8,10 +8,8 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPE
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
 
-"""
-These function can return and Column Expression or a list of columns expression
 
-"""
+# These function can return and Column Expression or a list of columns expression
 
 
 def match_nulls_strings(col_name):
@@ -43,7 +41,6 @@ def zeros_agg(col_name):
 
 
 def hist_agg(col_name, df, buckets):
-
     """
     Create a columns expression to calculate a column histogram
     :param col_name:
