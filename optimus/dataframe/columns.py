@@ -97,57 +97,6 @@ def cols(self):
         return df_result
 
     @add_attr(cols)
-    def stratify(columns):
-        """
-        Like Spark groupby but using filter. This is more effective because not use shuffling
-        :param columns:
-        :return:
-        """
-
-        distinct_values = []
-        exprs = []
-        columns = parse_columns(self, columns)
-        for column in columns:
-            distinct_values.append([x.get(column) for x in self.cols.unique(column).to_json()])
-
-        product = list(itertools.product(*distinct_values))
-
-        for arg in product:
-            # Get columns names
-            _cols = [F.lit(a) for a in arg]
-
-            # Construct every column conditional
-            _filter = [F.col(c) == v for c, v in zip(columns, arg)]
-
-            # Merge column conditional using and operator
-            r = F.when(reduce(lambda a, b: a & b, _filter), True)
-
-            # Apply the aggregation function
-            agg_func = F.count(r)
-
-            # Assemble the whole expresion
-            expr = F.array(*_cols, agg_func)
-
-            exprs.append(expr.alias(reduce(lambda a, b: str(a) + str(b), arg)))
-
-
-        # pdf0 = self.agg(*exprs).toPandas()
-
-        # pdf = pdf0.transpose()
-        #
-        # # Unnest array
-        # pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
-        #
-        # num_columns = len(pdf.columns) - 1
-        #
-        # # Convert to int
-        # pdf = pdf.astype({num_columns: int})
-        #
-        # # Remove count 0
-        # pdf = pdf[pdf[num_columns] != 0]
-        # print(pdf)
-
-    @add_attr(cols)
     def select(columns=None, regex=None, data_type=None):
         """
         Select columns using index, column name, regex to data type
@@ -568,6 +517,7 @@ def cols(self):
                         func_name = _beautify_col_names(func)
                         _exprs.append(agg.alias(func_name + "_" + _col_name))
             return _exprs
+
         return _agg_exprs(exprs)
 
     @add_attr(cols)
@@ -1190,7 +1140,7 @@ def cols(self):
         :return:
         """
 
-        return agg_exprs(columns,count_na_agg, self)
+        return agg_exprs(columns, count_na_agg, self)
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -1550,7 +1500,7 @@ def cols(self):
     @add_attr(cols, log_time=True)
     def hist(columns, buckets):
 
-        return agg_exprs(columns,hist_agg, self, buckets)
+        return agg_exprs(columns, hist_agg, self, buckets)
         # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
         # columns = parse_columns(self, columns)
         # df = self
