@@ -50,7 +50,7 @@ cols = [
         "last date seen",
         ("attributes", ArrayType(FloatType())),
         ("Date Type", DateType()),
-        ("Tiemstamp", TimestampType()),
+        ("timestamp", TimestampType()),
         ("Cybertronian", BooleanType()),
         ("function(binary)", BinaryType()),
         ("NullType", NullType())
@@ -374,6 +374,18 @@ t.delete(None, "cols.apply_expr", None, "df", numeric_col_B, func)
 t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B,numeric_col_C], func)
 
 t.create(None, "cols.append", "number", "df", new_col, 1)
+
+df_col = op.create.df(
+    [
+        ("new_col", "str", True),
+       
+
+    ],[
+        ("q"),("w"), ("e"), ("r"),
+
+    ])
+
+t.create(None, "cols.append", "dataframes", "df", None, df_col)
 
 #t.create(None, "cols.append", "advance", "df", [("new_col_4", "test"),
     #                                                ("new_col_5", df[numeric_col_B] * 2),

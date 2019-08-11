@@ -6,24 +6,27 @@ import jinja2
 import math
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
-from pyspark.ml.stat import Correlation
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus import val_to_list
+from optimus.bumblebee import Comm
 from optimus.helpers.check import is_str
-from optimus.helpers.columns import parse_columns, name_col, check_column_numbers
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
-from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
+
+DataFrame._name = None
+DataFrame._track_cols = []
+DataFrame._original_cols = None
 
 
 @add_method(DataFrame)
@@ -109,11 +112,12 @@ def sample_n(self, n=10, random=False):
 
     rows_count = self.count()
     if n < rows_count:
-        fraction = n / rows_count
+        # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
+        fraction = (n / rows_count) * 1.1
     else:
         fraction = 1.0
 
-    return self.sample(False, fraction, seed=seed)
+    return self.sample(False, fraction, seed=seed).limit(n)
 
 
 @add_method(DataFrame)
@@ -218,21 +222,31 @@ def query(self, sql_expression):
 
 
 @add_method(DataFrame)
-def table_name(self, name=None):
+def set_name(self, value=None):
     """
-    Create a temp view for a data frame
+    Create a temp view for a data frame also used in the json output profiling
     :param self:
-    :param name:
+    :param value:
     :return:
     """
-    if not is_str(name):
-        RaiseIt.type_error(name, ["string"])
+    self._name = value
+    if not is_str(value):
+        RaiseIt.type_error(value, ["string"])
 
-    if len(name) is 0:
-        RaiseIt.value_error(name, ["> 0"])
+    if len(value) == 0:
+        RaiseIt.value_error(value, ["> 0"])
 
-    self.createOrReplaceTempView(name)
-    return self
+    self.createOrReplaceTempView(value)
+
+
+@add_method(DataFrame)
+def get_name(self):
+    """
+    Get dataframe name
+    :param self:
+    :return:
+    """
+    return self._name
 
 
 @add_attr(DataFrame)
@@ -322,7 +336,6 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
         limit = 10
 
     if limit == "all":
-
         data = collect_as_dict(self.cols.select(columns))
     else:
         data = collect_as_dict(self.cols.select(columns).limit(limit))
@@ -374,65 +387,13 @@ def table(self, limit=None, columns=None, title=None):
 
 
 @add_method(DataFrame)
-def correlation(self, input_cols, method="pearson", output="json"):
+def debug(self):
     """
-    Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
-    missing values
+
     :param self:
-    :param input_cols: Columns to be processed
-    :param method: Method used to calculate the correlation
-    :param output: array or json
     :return:
     """
-
-    df = self
-
-    # Values in columns can not be null. Warn user
-    input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
-    # Input is not a vector transform to a vector
-    output_col = name_col(input_cols, "correlation")
-    check_column_numbers(input_cols, ">1")
-
-    for col_name in input_cols:
-        df = df.cols.cast(col_name, "float")
-        logger.print("Casting {col_name} to float...".format(col_name=col_name))
-
-    df = df.cols.nest(input_cols, "vector", output_col=output_col)
-
-    # Correlation can not handle null values. Check if exist ans warn the user.
-    cols = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
-
-    if cols:
-        message = "Correlation can not handle nulls. " + " and ".join(
-            {str(x) + " has " + str(y) + " null(s)" for x, y in cols.items()})
-        RaiseIt.message(ValueError, message)
-
-    corr = Correlation.corr(df, output_col, method).head()[0].toArray()
-
-    if output is "array":
-        result = corr
-
-    elif output is "json":
-        # Parse result to json
-        col_pair = []
-        for col_name in input_cols:
-            for col_name_2 in input_cols:
-                col_pair.append({"between": col_name, "an": col_name_2})
-
-        # flat array
-        values = corr.flatten('F').tolist()
-
-        result = []
-        for n, v in zip(col_pair, values):
-            # Remove correlation between the same column
-            if n["between"] is not n["an"]:
-                n["value"] = v
-                result.append(n)
-
-        result = sorted(result, key=lambda k: k['value'], reverse=True)
-
-    return {"cols": input_cols, "data": result}
+    print(self.rdd.toDebugString().decode("ascii"))
 
 
 @add_method(DataFrame)
@@ -467,3 +428,39 @@ def create_id(self, column="id"):
     """
 
     return self.withColumn(column, F.monotonically_increasing_id())
+
+
+@add_method(DataFrame)
+def track_cols(self, df, add=None, remove=None):
+    """
+    This track the columns that are updated by an Spark Operation. The function must be used at the end of the fucnion
+    after all the transformations
+    :param self:
+    :param df: dataframe with the old column data.
+    :param add: Columns to be added.
+    :param remove: Columns to be removed.
+    :return:
+    """
+    if df._original_cols is None:
+        df._original_cols = df.cols.names()
+
+    if add is not None:
+        df._track_cols = (list(set(df._track_cols + val_to_list(add))))
+    if remove is not None:
+        df._track_cols = (list(set([item for item in df._track_cols if item not in val_to_list(remove)])))
+
+    self._track_cols = df._track_cols
+
+    return self
+
+
+@add_method(DataFrame)
+def send(self):
+    """
+    Profile and send the data to the queue
+    :param self:
+    :return:
+    """
+
+    result = Profiler.instance.to_json(self)
+    Comm.instance.send(result)

@@ -5,7 +5,7 @@
     <div class="info">
 
         {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
-        data.column_type=="bool"%}
+        data.column_type=="bool" or data.column_type=="array"%}
 
         <div class="panel_profiler">
             <div>
@@ -169,23 +169,23 @@
                 </tr>
                 <tr>
                     <td>5-th percentile</td>
-                    <td>{{data.stats.quantile[0.05]}}</td>
+                    <td>{{data.stats.percentile["0.05"]}}</td>
                 </tr>
                 <tr>
                     <td>Q1</td>
-                    <td>{{data.stats.quantile[0.25]}}</td>
+                    <td>{{data.stats.percentile["0.25"]}}</td>
                 </tr>
                 <tr>
                     <td>Median</td>
-                    <td>{{data.stats.quantile[0.5]}}</td>
+                    <td>{{data.stats.percentile["0.5"]}}</td>
                 </tr>
                 <tr>
                     <td>Q3</td>
-                    <td>{{data.stats.quantile[0.75]}}</td>
+                    <td>{{data.stats.percentile["0.75"]}}</td>
                 </tr>
                 <tr>
                     <td>95-th percentile</td>
-                    <td>{{data.stats.quantile[0.95]}}</td>
+                    <td>{{data.stats.percentile["0.95"]}}</td>
                 </tr>
                 <tr>
                     <td>Maximum</td>
@@ -228,7 +228,7 @@
                 </tr>
                 <tr>
                     <td>Skewness</td>
-                    <td>{{data.stats.zeros}}</td>
+                    <td>{{data.stats.skewness}}</td>
                 </tr>
                 <tr>
                     <td>Sum</td>

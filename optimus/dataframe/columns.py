@@ -5,37 +5,37 @@ import string
 import unicodedata
 from functools import reduce
 
-import pandas as pd
+import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
+from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
+from optimus import logger
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
-from optimus.helpers.columns_expression import match_nulls_integers, match_nulls_strings, match_null, na_agg, zeros_agg, \
-    na_agg_integer
+from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
+    percentile_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
-from optimus.helpers.debug import debug
 from optimus.helpers.decorators import add_attr
+from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
-    import filter_list, collect_as_list
+    import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
-# Profiler
-from optimus.profiler.functions import bucketizer
-from optimus.profiler.functions import create_buckets
 
 
 def cols(self):
@@ -70,7 +70,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    @dispatch(list)
+    @dispatch((list, pyspark.sql.dataframe.DataFrame))
     def append(cols_values=None):
         """
         Append a column or a Dataframe to a Dataframe
@@ -78,70 +78,23 @@ def cols(self):
         :type cols_values: List of tuples
         :return:
         """
-        df_result = None
-        # Append a dataframe
-        if is_list_of_dataframes(cols_values):
-            dfs = cols_values
-            dfs.insert(0, self)
-            df_result = _append(dfs, like="columns")
+        df = self
+        if is_list_of_tuples(cols_values):
 
-        elif is_list_of_tuples(cols_values):
-            df_result = self
             for c in cols_values:
                 col_name = c[0]
                 value = c[1]
-                df_result = df_result.cols.append(col_name, value)
+                df_result = df.cols.append(col_name, value)
+
+        elif is_list_of_dataframes(cols_values) or is_dataframe(cols_values):
+            cols_values = val_to_list(cols_values)
+            cols_values.insert(0, df)
+            df_result = append_df(cols_values, like="columns")
+
+        else:
+            RaiseIt.type_error(cols_values, ["list of tuples", "dataframes"])
 
         return df_result
-
-    @add_attr(cols)
-    def stratify(columns):
-        """
-        Like Spark groupby but using filter. This is more effective because not use shuffling
-        :param columns:
-        :return:
-        """
-
-        distinct_values = []
-        exprs = []
-        for column in columns:
-            distinct_values.append([x.get(column) for x in self.cols.unique(column).to_json()])
-
-        product = list(itertools.product(*distinct_values))
-
-        for arg in product:
-            # Get columns names
-            _cols = [F.lit(a) for a in arg]
-
-            # Construct every column conditional
-            _filter = [F.col(c) == v for c, v in zip(columns, arg)]
-
-            # Merge column conditional using and operator
-            r = F.when(reduce(lambda a, b: a & b, _filter), True)
-
-            # Apply the aggregation function
-            agg_func = F.count(r)
-
-            # Assemble the whole expresion
-            expr = F.array(*_cols, agg_func)
-
-            exprs.append(expr.alias(reduce(lambda a, b: str(a) + str(b), arg)))
-
-        pdf0 = self.agg(*exprs).toPandas()
-
-        pdf = pdf0.transpose()
-
-        # Unnest array
-        pdf = pd.DataFrame(pdf[0].values.tolist(), index=pdf.index)
-
-        num_columns = len(pdf.columns) - 1
-
-        # Convert to int
-        pdf = pdf.astype({num_columns: int})
-
-        # Remove count 0
-        pdf = pdf[pdf[num_columns] != 0]
-        print(pdf)
 
     @add_attr(cols)
     def select(columns=None, regex=None, data_type=None):
@@ -173,7 +126,25 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, verbose=True):
+    def to_timestamp(input_cols, date_format=None, output_cols=None):
+        """
+        Convert a string to timestamp
+        :param input_cols:
+        :param output_cols:
+        :param date_format:
+        :return:
+        """
+
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        df = self
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.withColumn(output_col, F.to_timestamp(input_col, date_format))
+        return df
+
+    @add_attr(cols)
+    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None):
         """
         Apply a expression to column.
         :param input_cols: Columns in which the function is going to be applied
@@ -182,17 +153,15 @@ def cols(self):
         :param args: Argument passed to the function
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param output_cols: Columns in which the transformed data will saved
-        :param verbose: Print additional information about
         :return: Dataframe
         """
 
         return apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                     output_cols=output_cols, verbose=verbose)
+                     output_cols=output_cols)
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              verbose=True):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param input_cols: Columns in which the function is going to be applied
@@ -206,7 +175,6 @@ def cols(self):
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
-        :param verbose: Print additional information about
         :return: DataFrame
         """
 
@@ -220,10 +188,13 @@ def cols(self):
         else:
             output_cols = get_output_cols(input_cols, output_cols)
 
+        if output_cols is None:
+            output_cols = input_cols
+
         df = self
 
         def expr(_when):
-            main_query = audf(input_col, func, func_return_type, args, func_type, verbose=verbose)
+            main_query = audf(input_col, func, func_return_type, args, func_type)
             if when is not None:
                 # Use the data type to filter the query
                 main_query = F.when(_when, main_query).otherwise(F.col(input_col))
@@ -232,6 +203,8 @@ def cols(self):
 
         for input_col, output_col in zip(input_cols, output_cols):
             df = df.withColumn(output_col, expr(when))
+        # df = df.track_cols(self, output_cols)
+
         return df
 
     @add_attr(cols)
@@ -321,6 +294,9 @@ def cols(self):
         :return: Spark DataFrame
         """
 
+        if dtype is None:
+            RaiseIt.value_error(dtype, "datatype")
+
         _dtype = []
         # Parse params
         if columns is None:
@@ -376,7 +352,7 @@ def cols(self):
             return_type, func, func_type = cast_factory(data_type)
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                               output_cols=output_col, verbose=False)
+                               output_cols=output_col)
 
         return df
 
@@ -483,46 +459,95 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        for col_name in columns:
-            df = df.drop(col_name)
+        df = df.drop(*columns)
+
+        # df = df.track_cols(self, remove=columns)
         return df
 
-    @add_attr(cols, log_time=True)
-    def agg_exprs(funcs, columns):
+    @add_attr(cols)
+    def create_exprs(columns, funcs, *args):
         """
         Helper function to apply multiple columns expression to multiple columns
-        :param funcs: Aggregation functions from Apache Spark
-        :param columns: list or string of columns names or a .
+        :param columns:
+        :param funcs:
+        :param args:
         :return:
         """
-
-        # Ensure that is a list
-        funcs = val_to_list(funcs)
-
         columns = parse_columns(self, columns)
-        df = self
-
-        # Create a Column Expression for every column
-        expression = []
+        funcs = val_to_list(funcs)
+        exprs = []
 
         for col_name in columns:
             for func in funcs:
+                exprs.append((func, (col_name, *args)))
 
-                # print(col_name, is_column_a(df, col_name, "date"), func is F.stddev)
-                # Std dev can not process date columns. So we do not calculated it
-                # if (func in [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                #              F.count, zeros_agg]):
+        df = self
 
-                # A different function must be use to calculate null in integers or data column date types
-                if func is na_agg and (
-                        is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES) or is_column_a(df, col_name, "date")):
-                    func = na_agg_integer
+        # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+        filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                            F.count, zeros_agg]}
 
-                expression.append(func(col_name).alias(func.__name__ + "_" + col_name))
-                # print(df.agg(*expression).to_json())
-        full_result = parse_col_names_funcs_to_keys(df.agg(*expression).to_json())
+        def _filter(_col_name, _func):
+            for data_type_filter, func_filter in filters.items():
+                if (_func in func_filter) and (is_column_a(df, _col_name, data_type_filter)):
+                    return True
+                else:
+                    return False
 
-        return format_dict(full_result)
+        beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
+                            "count_na_agg": "count_na"}
+
+        def _beautify_col_names(_func):
+            if _func.__name__ in beauty_col_names:
+                func_name = beauty_col_names[_func.__name__]
+            else:
+                func_name = _func.__name__
+            return func_name
+
+        def _agg_exprs(_funcs):
+            _exprs = []
+            for f in _funcs:
+                func = f[0]
+                args = f[1]
+                _col_name = args[0]
+
+                if not _filter(_col_name, func):
+                    agg = func(*args)
+                    if agg is not None:
+                        func_name = _beautify_col_names(func)
+                        _exprs.append(agg.alias(func_name + "_" + _col_name))
+            return _exprs
+
+        return _agg_exprs(exprs)
+
+    @add_attr(cols)
+    def agg_exprs(columns, funcs, *args, tidy=True):
+        """
+        Create and run aggregation
+        :param columns:
+        :param funcs:
+        :param args:
+        :param tidy:
+        :return:
+        """
+        return exec_agg(create_exprs(columns, funcs, *args), tidy)
+
+    @add_attr(cols)
+    def exec_agg(exprs, tidy=True):
+        """
+        Execute and aggregation
+        :param exprs:
+        :param tidy:
+        :return:
+        """
+        exprs = val_to_list(exprs)
+        df = self.agg(*exprs)
+
+        result = parse_col_names_funcs_to_keys(df.to_json())
+        if tidy is True:
+            result = format_dict(result)
+
+        return result
 
     # Quantile statistics
     @add_attr(cols)
@@ -532,7 +557,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(F.min, columns)
+        return agg_exprs(columns, F.min)
 
     @add_attr(cols)
     def max(columns):
@@ -541,7 +566,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(F.max, columns)
+        return agg_exprs(columns, F.max)
 
     @add_attr(cols)
     def range(columns):
@@ -574,42 +599,16 @@ def cols(self):
         return percentile(columns, [0.5], relative_error)
 
     @add_attr(cols, log_time=True)
-    def percentile(columns, values=None, relative_error=1):
+    def percentile(columns, values=None, relative_error=10000):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
         :param values: list of percentiles to be calculated
-        :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
+        :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
         :return: percentiles per columns
         """
 
-        values = val_to_list(values)
-
-        # Make sure values are double
-        values = list(map(fast_float, values))
-        if values is None:
-            values = [0.05, 0.25, 0.5, 0.75, 0.95]
-
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        # Get percentiles
-        percentile_results = []
-
-        for col_name in columns:
-            percentile_per_col = self \
-                .rows.drop_na(col_name) \
-                .cols.cast(col_name, "double") \
-                .approxQuantile(col_name, values, relative_error)
-
-            # Convert numeric keys to str keys
-            values_str = list(map(str, values))
-
-            percentile_results.append(dict(zip(values_str, percentile_per_col)))
-
-        percentile_results = dict(zip(columns, percentile_results))
-
-        return format_dict(percentile_results)
+        return agg_exprs(columns, percentile_agg, self, values, relative_error)
 
     # Descriptive Analytics
     @add_attr(cols)
@@ -653,7 +652,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.stddev, columns)
+        return agg_exprs(columns, F.stddev)
 
     @add_attr(cols)
     def kurt(columns):
@@ -665,7 +664,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.kurtosis, columns)
+        return agg_exprs(columns, F.kurtosis)
 
     @add_attr(cols)
     def mean(columns):
@@ -677,7 +676,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.mean, columns)
+        return agg_exprs(columns, F.mean)
 
     @add_attr(cols)
     def skewness(columns):
@@ -689,7 +688,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.skewness, columns)
+        return agg_exprs(columns, F.skewness)
 
     @add_attr(cols)
     def sum(columns):
@@ -701,7 +700,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.sum, columns)
+        return agg_exprs(columns, F.sum)
 
     @add_attr(cols)
     def variance(columns):
@@ -713,7 +712,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(F.variance, columns)
+        return agg_exprs(columns, F.variance)
 
     @add_attr(cols)
     def abs(columns):
@@ -934,7 +933,7 @@ def cols(self):
                 .alias(
                 col_name)
 
-        output_cols = get_output_cols(input_cols, output_cols)
+        # output_cols = get_output_cols(input_cols, output_cols)
 
         df = apply(input_cols, func=_years_between, args=[date_format],
                    filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
@@ -1091,7 +1090,6 @@ def cols(self):
                 new_value = fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
             elif is_column_a(self, input_col, PYSPARK_STRING_TYPES):
-                # print(col_name)
                 new_value = str(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
             elif is_column_a(self, input_col, PYSPARK_ARRAY_TYPES):
@@ -1138,36 +1136,11 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
+        :param output:
         :return:
         """
 
-        columns = parse_columns(self, columns)
-        check_column_numbers(columns, "*")
-
-        df = self
-        expr = []
-
-        for col_name in columns:
-
-            # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
-            if is_column_a(df, col_name, ["struct", "boolean"]):
-                df = df.cols.cast(col_name, "string")
-
-            # Select the nan/null rows depending of the columns data type
-            # If numeric
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                expr.append(F.count(F.when(match_nulls_integers(col_name), col_name)).alias(col_name))
-            # If string. Include 'nan' string
-            elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
-                expr.append(F.count(
-                    F.when(match_nulls_strings(col_name), col_name)).alias(
-                    col_name))
-                print("Including 'nan' as Null in processing '{}'".format(col_name))
-            else:
-                expr.append(F.count(F.when(match_null(col_name), col_name)).alias(col_name))
-
-        result = format_dict(df.select(*expr).to_json())
-        return result
+        return agg_exprs(columns, count_na_agg, self)
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -1194,10 +1167,10 @@ def cols(self):
         columns = parse_columns(self, columns)
 
         if estimate is True:
-            result = agg_exprs(F.approx_count_distinct, columns)
+            result = agg_exprs(columns, F.approx_count_distinct)
         else:
-            df = self
-            result = {col_name: df.select(col_name).distinct().count() for col_name in columns}
+            result = agg_exprs(columns, F.countDistinct)
+
         return format_dict(result)
 
     @add_attr(cols)
@@ -1475,6 +1448,8 @@ def cols(self):
 
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
+            # df = df.track_cols(self, output_col)
+
         return df
 
     @add_attr(cols)
@@ -1523,68 +1498,17 @@ def cols(self):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     @add_attr(cols, log_time=True)
-    @dispatch((str, list), (float, int), (float, int), int)
-    def hist(columns, min_value, max_value, buckets=10):
-        """
-         Get the histogram column in json format
-        :param columns: Columns to be processed
-        :param min_value: Min value used to calculate the buckets
-        :param max_value: Max value used to calculate the buckets
-        :param buckets: Number of buckets
-        :return:
-        """
+    def hist(columns, buckets):
 
-        columns = parse_columns(self, columns)
-        for col_name in columns:
-            # Create splits
-            splits = create_buckets(min_value, max_value, buckets)
+        return agg_exprs(columns, hist_agg, self, buckets)
+        # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
+        # columns = parse_columns(self, columns)
+        # df = self
+        # for col_name in columns:
+        #     print(agg_exprs(hist_agg, col_name, self, buckets))
+        #     # print(df.agg(hist_agg(col_name, self, buckets)))
 
-            # Create buckets in the dataFrame
-            col_bucket = name_col(col_name, "bucketizer")
-            df = bucketizer(self, input_cols=col_name, splits=splits, output_cols=col_bucket)
-
-            counts = (df
-                      .h_repartition(col_name=col_bucket)
-                      .groupBy(col_bucket)
-                      .agg(F.count(col_bucket).alias("count"))
-                      .cols.rename(col_bucket, "value")
-                      .sort(F.asc("value")).to_json())
-
-            # Fill the gaps in dict values. For example if we have  1,5,7,8,9 it get 1,2,3,4,5,6,7,8,9
-            new_array = []
-            for i in builtins.range(buckets):
-                flag = False
-                for c in counts:
-                    value = c["value"]
-                    count = c["count"]
-                    if value == i:
-                        new_array.append({"value": value, "count": count})
-                        flag = True
-                if flag is False:
-                    new_array.append({"value": i, "count": 0})
-
-            counts = new_array
-
-            hist_data = []
-            for i in list(itertools.zip_longest(counts, splits)):
-                if i[0] is None:
-                    count = 0
-                elif "count" in i[0]:
-                    count = i[0]["count"]
-
-                lower = i[1]["lower"]
-                upper = i[1]["upper"]
-
-                hist_data.append({"count": count, "lower": lower, "upper": upper})
-
-        return hist_data
-
-    @add_attr(cols, log_time=True)
-    @dispatch((str, list), int)
-    def hist(columns, buckets=10):
-
-        values = agg_exprs([F.min, F.max], columns)
-        return self.cols.hist(columns, fast_float(values["min"]), fast_float(values["max"]), buckets)
+    # return result
 
     @add_attr(cols)
     def frequency(columns, buckets=10):
@@ -1603,6 +1527,66 @@ def cols(self):
                 buckets).cols.rename(col_name, "value").to_json()
 
         return result
+
+    @add_attr(DataFrame)
+    def correlation(input_cols, method="pearson", output="json"):
+        """
+        Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
+        missing values
+        :param input_cols: Columns to be processed
+        :param method: Method used to calculate the correlation
+        :param output: array or json
+        :return:
+        """
+
+        df = self
+
+        # Values in columns can not be null. Warn user
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        # Input is not a vector transform to a vector
+        output_col = name_col(input_cols, "correlation")
+        check_column_numbers(input_cols, ">1")
+
+        for col_name in input_cols:
+            df = df.cols.cast(col_name, "float")
+            logger.print("Casting {col_name} to float...".format(col_name=col_name))
+
+        df = df.cols.nest(input_cols, "vector", output_col=output_col)
+
+        # Correlation can not handle null values. Check if exist ans warn the user.
+        cols = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
+
+        if cols:
+            message = "Correlation can not handle nulls. " + " and ".join(
+                {str(x) + " has " + str(y) + " null(s)" for x, y in cols.items()})
+            RaiseIt.message(ValueError, message)
+
+        corr = Correlation.corr(df, output_col, method).head()[0].toArray()
+
+        if output is "array":
+            result = corr
+
+        elif output is "json":
+            # Parse result to json
+            col_pair = []
+            for col_name in input_cols:
+                for col_name_2 in input_cols:
+                    col_pair.append({"between": col_name, "an": col_name_2})
+
+            # flat array
+            values = corr.flatten('F').tolist()
+
+            result = []
+            for n, v in zip(col_pair, values):
+                # Remove correlation between the same column
+                if n["between"] is not n["an"]:
+                    n["value"] = v
+                    result.append(n)
+
+            result = sorted(result, key=lambda k: k['value'], reverse=True)
+
+        return {"cols": input_cols, "data": result}
 
     @add_attr(cols)
     def boxplot(columns):
@@ -1648,7 +1632,6 @@ def cols(self):
 
         columns = parse_columns(self, columns)
         data_types = tuple_to_dict(self.dtypes)
-
         return format_dict({col_name: data_types[col_name] for col_name in columns})
 
     @add_attr(cols)
@@ -1705,6 +1688,39 @@ def cols(self):
         df = self
         for col_name in columns:
             df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
+        return df
+
+    @add_attr(cols)
+    def bucketizer(df, input_cols, splits, output_cols=None):
+        """
+        Bucketize multiples columns at the same time.
+        :param df:
+        :param input_cols:
+        :param splits: Number of splits
+        :param output_cols:
+        :return:
+        """
+
+        def _bucketizer(col_name, args):
+            """
+            Create a column expression that create buckets in a range of values
+            :param col_name: Column to be processed
+            :return:
+            """
+
+            buckets = args
+            expr = []
+
+            for i, b in enumerate(buckets):
+                if i == 0:
+                    expr = when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]), b["bucket"])
+                else:
+                    expr = expr.when((F.col(col_name) >= b["lower"]) & (F.col(col_name) <= b["upper"]),
+                                     b["bucket"])
+
+            return expr
+
+        df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
 
     return cols
