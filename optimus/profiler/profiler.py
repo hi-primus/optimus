@@ -10,7 +10,7 @@ from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg
+from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.logger import logger
@@ -408,13 +408,8 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        exprs = []
-        funcs = []
-        for col_name in columns:
-            if approx_count is True:
-                funcs.append(F.approx_count_distinct)
-            else:
-                funcs.append(F.countDistinct)
+        funcs = [count_uniques_agg]
+        exprs = df.cols.create_exprs(columns, funcs, approx_count)
 
         funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
         exprs.extend(df.cols.create_exprs(columns, funcs))

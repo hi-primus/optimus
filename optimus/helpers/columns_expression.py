@@ -42,6 +42,18 @@ def zeros_agg(col_name):
     return F.count(F.when(F.col(col_name) == 0, col_name))
 
 
+def count_uniques_agg(col_name, estimate=True):
+    if estimate is True:
+        result = F.approx_count_distinct(col_name)
+    else:
+        result = F.countDistinct(col_name)
+    return result
+
+
+def range_agg(col_name):
+    return F.min(col_name), F.max(col_name)
+
+
 def hist_agg(col_name, df, buckets):
 
     """
@@ -54,10 +66,10 @@ def hist_agg(col_name, df, buckets):
 
     exprs = []
 
-    def count_exprs(_exprs):
-        return F.sum(F.when(_exprs, 1).otherwise(0))
+    def create_exprs(_input_col, _buckets, _func):
+        def count_exprs(_exprs):
+            return F.sum(F.when(_exprs, 1).otherwise(0))
 
-    def process(_input_col, _buckets, _func):
         _exprs = []
         for i, b in enumerate(_buckets):
             lower = b["lower"]
@@ -84,12 +96,12 @@ def hist_agg(col_name, df, buckets):
         min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_json()[0]
         buckets = create_buckets(min_max["min"], min_max["max"], buckets)
         func = F.col
-        exprs = process(col_name, buckets, func)
+        exprs = create_exprs(col_name, buckets, func)
 
     elif is_column_a(df, col_name, "str"):
         buckets = create_buckets(0, 50, buckets)
         func = F.length
-        exprs = process(col_name, buckets, func)
+        exprs = create_exprs(col_name, buckets, func)
 
     elif is_column_a(df, col_name, "date"):
 
@@ -100,32 +112,32 @@ def hist_agg(col_name, df, buckets):
         # Year
         buckets = create_buckets(oldest_year, current_year, current_year - oldest_year)
         func = F.year
-        year = process(col_name, buckets, func)
+        year = create_exprs(col_name, buckets, func)
 
         # Month
         buckets = create_buckets(1, 12, 11)
         func = F.month
-        month = process(col_name, buckets, func)
+        month = create_exprs(col_name, buckets, func)
 
         # Day
         buckets = create_buckets(1, 31, 31)
         func = F.dayofmonth
-        day = process(col_name, buckets, func)
+        day = create_exprs(col_name, buckets, func)
 
         # Hour
         buckets = create_buckets(0, 23, 23)
         func = F.hour
-        hour = process(col_name, buckets, func)
+        hour = create_exprs(col_name, buckets, func)
 
         # Min
         buckets = create_buckets(0, 60, 60)
         func = F.minute
-        minutes = process(col_name, buckets, func)
+        minutes = create_exprs(col_name, buckets, func)
 
         # Second
         buckets = create_buckets(0, 60, 60)
         func = F.second
-        second = process(col_name, buckets, func)
+        second = create_exprs(col_name, buckets, func)
 
         exprs = F.create_map(F.lit("year"), year, F.lit("month"), month, F.lit("day"), day,
                              F.lit("hour"), hour, F.lit("minute"), minutes, F.lit("second"), second)
@@ -163,7 +175,6 @@ def percentile_agg(col_name, df, values, relative_error):
     :return: percentiles per columns
     """
 
-    # col_name = escape_columns(col_name)
     # Make sure values are double
 
     if values is None:
