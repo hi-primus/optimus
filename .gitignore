@@ -14,7 +14,6 @@ spark-warehouse
 projectFilesBackup/tests.py
 
 # Distribution / packaging
-build/
 dist/
 .eggs/
 *.egg-info/
