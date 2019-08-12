@@ -578,15 +578,7 @@ def cols(self):
         :return:
         """
 
-        columns = parse_columns(self, columns)
-
-        range_result = {}
-        for col_name in columns:
-            max_val = self.cols.max(col_name)
-            min_val = self.cols.min(col_name)
-            range_result[col_name] = {'min': min_val, 'max': max_val}
-
-        return range_result
+        return agg_exprs(columns, [F.min, F.max])
 
     @add_attr(cols)
     def median(columns, relative_error=1):
