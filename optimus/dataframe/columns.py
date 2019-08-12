@@ -8,6 +8,7 @@ from operator import add as oadd
 import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
+from pypika import MySQLQuery
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
@@ -17,6 +18,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
+from optimus.agg import Agg as OF
 # Functions
 from optimus import logger
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
@@ -36,6 +38,8 @@ from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
+
+ENGINE = "spark"
 
 
 def cols(self):
@@ -546,7 +550,14 @@ def cols(self):
 
         exprs = val_to_list(exprs)
 
-        df = self.agg(*exprs)
+        if ENGINE == "sql":
+            def clean(c):
+                return c.get_sql().replace("'", "`")
+
+            exprs = clean(MySQLQuery.from_("df").select(*exprs))
+            df = self.query(exprs)
+        elif ENGINE == "spark":
+            df = self.agg(*exprs)
 
         result = parse_col_names_funcs_to_keys(df.to_json())
         if tidy is True:
@@ -562,7 +573,8 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(columns, F.min)
+
+        return agg_exprs(columns, OF.min())
 
     @add_attr(cols)
     def max(columns):
@@ -571,7 +583,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(columns, F.max)
+        return agg_exprs(columns, OF.max())
 
     @add_attr(cols)
     def range(columns):

@@ -160,7 +160,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     else:
         final_columns = cols
 
-    # Return cols or cols an params
     cols_params = []
 
     if invert:
@@ -178,6 +177,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
                      "column(s) was not processed because is/are not",
                      ",".join(filter_by_column_dtypes))
 
+    # if because of filtering we got 0 columns return None
     if len(cols_params) == 0:
         cols_params = None
     return cols_params
