@@ -26,7 +26,7 @@ from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
-    percentile_agg
+    percentile_agg, count_uniques_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
@@ -507,15 +507,18 @@ def cols(self):
         def _agg_exprs(_funcs):
             _exprs = []
             for f in _funcs:
-                func = f[0]
-                args = f[1]
-                _col_name = args[0]
+                _func = f[0]
+                _args = f[1]
+                _col_name = _args[0]
 
-                if not _filter(_col_name, func):
-                    agg = func(*args)
+                if not _filter(_col_name, _func):
+                    agg = _func(*_args)
                     if agg is not None:
-                        func_name = _beautify_col_names(func)
-                        _exprs.append(agg.alias(func_name + "_" + _col_name))
+                        func_name = _beautify_col_names(_func)
+                        if ENGINE == "spark":
+                            _exprs.append(agg.alias(func_name + "_" + _col_name))
+                        elif ENGINE == "sql":
+                            _exprs.append(agg.as_(func_name + "_" + _col_name))
             return _exprs
 
         return _agg_exprs(exprs)
@@ -1144,10 +1147,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
-        df = self
-        return df.select(
-            [F.count(F.when(F.col(col_name) == 0, col_name)).alias(col_name) for col_name in columns]).to_json()
+        return agg_exprs(columns, zeros_agg)
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
@@ -1160,12 +1160,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        if estimate is True:
-            result = agg_exprs(columns, F.approx_count_distinct)
-        else:
-            result = agg_exprs(columns, F.countDistinct)
-
-        return format_dict(result)
+        return agg_exprs(columns, count_uniques_agg, estimate)
 
     @add_attr(cols)
     def value_counts(columns):
@@ -1501,8 +1496,7 @@ def cols(self):
         # for col_name in columns:
         #     print(agg_exprs(hist_agg, col_name, self, buckets))
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
-
-    # return result
+        # return result
 
     @add_attr(cols)
     def frequency(columns, n=10):
