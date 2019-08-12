@@ -1,3 +1,4 @@
+import json
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -70,6 +71,16 @@ def rows(self):
         :return: Spark DataFrame
         """
         return self.filter(*args, **kwargs)
+
+    @add_attr(rows)
+    def to_list(input_cols):
+        """
+        Output rows as list
+        :param input_cols:
+        :return:
+        """
+        input_cols = parse_columns(self, input_cols)
+        return self.select(input_cols).rdd.flatMap(lambda x: x).collect()
 
     @add_attr(rows)
     @dispatch(str)

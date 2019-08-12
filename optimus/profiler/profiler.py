@@ -303,7 +303,9 @@ class Profiler:
         # Add the data summary to the output
         output["summary"] = self.dataset_info(df)
 
-        output["sample"] = {"columns": [{"title": cols} for cols in df.columns], "value": df.sample_n(10).to_json()}
+        output["sample"] = {"columns": [{"title": cols} for cols in df.cols.names()],
+                            "value": df.sample_n(10).rows.to_list(columns)}
+        output["full"] = {"columns": [{"title": cols} for cols in df.cols.names()], "value": df.rows.to_list(columns)}
 
         if dump is True:
             output = json.dumps(output)
