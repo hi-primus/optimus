@@ -31,7 +31,7 @@ var inlineCssTable = juice("<style>" + sourceCss + "</style>" + table, {
 
 /** CREATE A INLINE-CSS HTML FILE */
 fs.writeFile(
-	"optimus/profiler/templates/build/one_column.html",
+	"optimus/profiler/templates/out/one_column.html",
 	inlineCssOneColumn,
 	function (err) {
 		if (err) { throw err; }
@@ -40,7 +40,7 @@ fs.writeFile(
 );
 
 fs.writeFile(
-	"optimus/profiler/templates/build/general_info.html",
+	"optimus/profiler/templates/out/general_info.html",
 	inlineCssGeneralInfo,
 	function (err) {
 		if (err) { throw err; }
@@ -48,7 +48,7 @@ fs.writeFile(
 	},
 );
 
-fs.writeFile("optimus/templates/build/table.html",
+fs.writeFile("optimus/templates/out/table.html",
 	inlineCssTable,
 	function (err) {
 		if (err) { throw err; }

@@ -192,16 +192,16 @@ class Profiler:
 
         # print("output", output)
         # Load jinja
-        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/build"))
+        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
 
         # Render template
         # Create the profiler info header
         html = ""
-        general_template = template_env.get_template("/build/general_info.html")
+        general_template = template_env.get_template("/out/general_info.html")
         html = html + general_template.render(data=output)
 
-        template = template_env.get_template("/build/one_column.html")
+        template = template_env.get_template("/out/one_column.html")
 
         # Create every column stats
         for col_name in columns:

@@ -1,0 +1,326 @@
+<link rel="stylesheet" type="text/css" href="optimus/styles/styles.css">
+
+
+<div class="main" style="width: 100%; overflow: auto; border-bottom: 1px solid #eeeeee; padding: 10px 0;">
+    <div class="info" style="overflow: auto;">
+
+        {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
+        data.column_type=="bool"%}
+
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+            <div>
+                <h2>{{data.name}}</h2>
+                <span>{{data.column_type}}</span>
+            </div>
+            <table>
+                <tbody style="font-family: monospace;">
+                <tr>
+                    <td style="padding: 0.2em;">Unique</td>
+                    <td style="padding: 0.2em;"> {{data.stats.uniques_count}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Unique (%)</td>
+                    <td style="padding: 0.2em;"> {{data.stats.p_uniques}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Missing</td>
+                    <td style="padding: 0.2em;">{{data.stats.p_missing}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Missing (%)</td>
+                    <td style="padding: 0.2em;">{{data.stats.missing_count}}</td>
+                </tr>
+                </tbody>
+            </table>
+            <div>
+                <h3>
+                    Datatypes
+                </h3>
+            </div>
+            <table>
+                <tbody style="font-family: monospace;">
+                <tr>
+                    <td style="padding: 0.2em;">
+                        String
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.string}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Integer
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.int}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Float
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.float}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Bool
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.bool}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Date
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.date}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Missing
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.missing}}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">
+                        Null
+                    </td>
+                    <td style="padding: 0.2em;">
+                        {{data.dtypes_stats.null}}
+                    </td>
+
+                </tr>
+                </tbody>
+            </table>
+            {% if data.column_type=="numeric" %}
+            <div>
+                <h3>
+                    Basic Stats
+                </h3>
+
+            </div>
+            <table>
+                <tbody style="font-family: monospace;">
+                <tr>
+                    <td style="padding: 0.2em;">Mean</td>
+                    <td style="padding: 0.2em;">{{data.stats.mean}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Minimum</td>
+                    <td style="padding: 0.2em;">{{data.stats.min}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Maximum</td>
+                    <td style="padding: 0.2em;">{{data.stats.max}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Zeros(%)</td>
+                    <td style="padding: 0.2em;">{{data.stats.zeros}}</td>
+                </tr>
+
+                </tbody>
+            </table>
+            {% endif %}
+
+        </div>
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+            <h3>Frequency</h3>
+            <table>
+
+                <tr>
+                    <th>Value</th>
+                    <th>Count</th>
+                    <th>Frecuency (%)</th>
+                </tr>
+                {% for vi in data.frequency[:10] %}
+                <tr>
+                    <td style="padding: 0.2em;">{{vi.value}}</td>
+                    <td style="padding: 0.2em;">{{vi.count}}</td>
+                    <td style="padding: 0.2em;">{{vi.percentage}}%</td>
+                </tr>
+
+                {% endfor %}
+                <tr>
+                    <td style="padding: 0.2em;">"Missing"</td>
+                    <td style="padding: 0.2em;">{{data.stats.missing_count}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.p_missing}}%</td>
+                </tr>
+
+            </table>
+        </div>
+        {% endif %}
+
+        {% if data.column_type=="numeric" %}
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+
+
+            <h3>Quantile statistics</h3>
+            <table>
+                <tbody style="font-family: monospace;">
+                <tr>
+                    <td style="padding: 0.2em;">Minimum</td>
+                    <td style="padding: 0.2em;">{{data.stats.min}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">5-th percentile</td>
+                    <td style="padding: 0.2em;">{{data.stats.quantile[0.05]}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Q1</td>
+                    <td style="padding: 0.2em;">{{data.stats.quantile[0.25]}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Median</td>
+                    <td style="padding: 0.2em;">{{data.stats.quantile[0.5]}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Q3</td>
+                    <td style="padding: 0.2em;">{{data.stats.quantile[0.75]}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">95-th percentile</td>
+                    <td style="padding: 0.2em;">{{data.stats.quantile[0.95]}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Maximum</td>
+                    <td style="padding: 0.2em;">{{data.stats.max}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Range</td>
+                    <td style="padding: 0.2em;">{{data.stats.range}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Interquartile range</td>
+                    <td style="padding: 0.2em;">{{data.stats.interquartile_range}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+            <h3>Descriptive statistics</h3>
+            <table>
+                <tbody style="font-family: monospace;">
+                <tr>
+                    <td style="padding: 0.2em;">Standard deviation</td>
+                    <td style="padding: 0.2em;">{{data.stats.stddev}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Coef of variation</td>
+                    <td style="padding: 0.2em;">{{data.stats.coef_variation}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Kurtosis</td>
+                    <td style="padding: 0.2em;">{{data.stats.kurtosis}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Mean</td>
+                    <td style="padding: 0.2em;">{{data.stats.mean}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">MAD</td>
+                    <td style="padding: 0.2em;">{{data.stats.mad}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Skewness</td>
+                    <td style="padding: 0.2em;">{{data.stats.zeros}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Sum</td>
+                    <td style="padding: 0.2em;">{{data.stats.sum}}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.2em;">Variance</td>
+                    <td style="padding: 0.2em;">{{data.stats.variance}}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    <table>
+        {% if hist_pic is defined %}
+        <tr>
+
+            <td style="padding: 0em;">
+
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_pic | safe }}">
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if freq_pic is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ freq_pic | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_years is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_years | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_months is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_months | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_weekdays is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_weekdays | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_hours is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_hours | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+        {% if hist_minutes is defined %}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_minutes | safe }}">
+                </div>
+
+            </td>
+
+        </tr>
+        {% endif %}
+
+    </table>
+</div>
