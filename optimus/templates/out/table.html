@@ -35,7 +35,7 @@
             {%for k,v in r.items(): %}
             <td style="border: 0px;">
                 <div class="{% if v is none or v is not defined %}none{% endif %} {% if v is sameas true %}true{% endif %}"
-                    title='{{v|string|replace(" ", "&#8901;")|safe}}' style="color: #0000ff;">
+                    title='{{v|string|replace(" ", "&#8901;")|safe}}'>
                     {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
                 </div>
             </td>
