@@ -80,7 +80,7 @@ def rows(self):
         :return:
         """
         input_cols = parse_columns(self, input_cols)
-        return self.select(input_cols).rdd.flatMap(lambda x: x).collect()
+        return self.select(input_cols).rdd.map(lambda x: [v for v in x.asDict().values()]).collect()
 
     @add_attr(rows)
     @dispatch(str)
