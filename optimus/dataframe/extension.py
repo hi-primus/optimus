@@ -455,12 +455,16 @@ def track_cols(self, df, add=None, remove=None):
 
 
 @add_method(DataFrame)
-def send(self):
+def send(self, name=None):
     """
     Profile and send the data to the queue
     :param self:
+    :param name: Specified a name for the view/dataframe
     :return:
     """
 
     result = Profiler.instance.to_json(self)
+    if name is not None:
+        result["name"] = name
+
     Comm.instance.send(result)
