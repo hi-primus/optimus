@@ -190,7 +190,6 @@ class Profiler:
 
         output = self.to_json(df, columns, buckets, infer, relative_error, approx_count, dump=False)
 
-        # print("output", output)
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -198,10 +197,10 @@ class Profiler:
         # Render template
         # Create the profiler info header
         html = ""
-        general_template = template_env.get_template("/out/general_info.html")
+        general_template = template_env.get_template("general_info.html")
         html = html + general_template.render(data=output)
 
-        template = template_env.get_template("/out/one_column.html")
+        template = template_env.get_template("one_column.html")
 
         # Create every column stats
         for col_name in columns:
@@ -225,7 +224,7 @@ class Profiler:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
-            # print(col, freq_pic, hist_pic)
+
             html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
 
         # Save in case we want to output to a html file
@@ -305,7 +304,7 @@ class Profiler:
 
         output["sample"] = {"columns": [{"title": cols} for cols in df.cols.names()],
                             "value": df.sample_n(10).rows.to_list(columns)}
-        output["full"] = {"columns": [{"title": cols} for cols in df.cols.names()], "value": df.rows.to_list(columns)}
+        # output["full"] = {"columns": [{"title": cols} for cols in df.cols.names()], "value": df.rows.to_list(columns)}
 
         if dump is True:
             output = json.dumps(output)
@@ -410,27 +409,28 @@ class Profiler:
         columns = parse_columns(df, columns)
 
         exprs = []
-
+        funcs = []
         for col_name in columns:
             if approx_count is True:
-                exprs.append((F.approx_count_distinct, (col_name,)))
+                funcs.append(F.approx_count_distinct)
             else:
-                exprs.append((F.countDistinct, (col_name,)))
+                funcs.append(F.countDistinct)
 
         funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
-        exprs = df.cols.create_exprs(columns, funcs)
+        exprs.extend(df.cols.create_exprs(columns, funcs))
 
         funcs = [count_na_agg]
-        exprs = exprs + df.cols.create_exprs(columns, funcs, df)
+        exprs.extend(df.cols.create_exprs(columns, funcs, df))
 
         funcs = [hist_agg]
-        exprs = exprs + df.cols.create_exprs(columns, funcs, df, buckets)
+        exprs.extend(df.cols.create_exprs(columns, funcs, df, buckets))
 
         funcs = [percentile_agg]
-        exprs = exprs + df.cols.create_exprs(columns, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
-                                             relative_error)
+        exprs.extend(df.cols.create_exprs(columns, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
+                                          relative_error))
 
         result = df.cols.exec_agg(exprs, tidy=False)
+
         return result
 
     @staticmethod
