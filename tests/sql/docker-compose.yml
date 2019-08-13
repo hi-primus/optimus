@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  mysql:
+    image: mysql/mysql-server
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_USER=SA
+      - MYSQL_PASSWORD=SA123
+      - MYSQL_DATABASE=optimus
+
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=SA
+      - POSTGRES_PASSWORD=SA123
+      - POSTGRES_DB=optimus
+
+  mssql:
+    image: microsoft/mssql-server-linux:2017-latest
+    ports:
+      - 1433:1433
+    environment:
+      - SA_PASSWORD=SA123
+      - ACCEPT_EULA=Y
+
+  redshift:
+    image: guildeducation/docker-amazon-redshift
+    ports:
+      - 5439:5439
+    environment:
+      - POSTGRES_USER=SA
+      - POSTGRES_PASSWORD=SA123
+      - POSTGRES_DB=optimus
