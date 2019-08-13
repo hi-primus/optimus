@@ -3,7 +3,8 @@ import re
 import string
 import unicodedata
 from functools import reduce
-
+from heapq import nlargest
+from operator import add as oadd
 import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -539,7 +540,9 @@ def cols(self):
         :param tidy:
         :return:
         """
+
         exprs = val_to_list(exprs)
+
         df = self.agg(*exprs)
 
         result = parse_col_names_funcs_to_keys(df.to_json())
@@ -1510,20 +1513,28 @@ def cols(self):
     # return result
 
     @add_attr(cols)
-    def frequency(columns, buckets=10):
+    def frequency(columns, n=10):
         """
         Output values frequency in json format
         :param columns: Columns to be processed
-        :param buckets: Number of buckets
+        :param n: n top elements
         :return:
         """
         columns = parse_columns(self, columns)
         df = self
 
+        freq = df.rdd \
+            .flatMap(lambda x: x.asDict().items()) \
+            .map(lambda x: (x, 1)) \
+            .reduceByKey(oadd) \
+            .groupBy(lambda x: x[0][0]) \
+            .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1])) \
+            .map(lambda x: (x[0][0], (x[0][1], x[1]))) \
+            .groupByKey().map(lambda x: (x[0], list(x[1])))
+
         result = {}
-        for col_name in columns:
-            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc"), (col_name, "desc")]).limit(
-                buckets).cols.rename(col_name, "value").to_json()
+        for f in freq.collect():
+            result[f[0]] = [{"value": kv[0], "count": kv[1]} for kv in f[1]]
 
         return result
 
