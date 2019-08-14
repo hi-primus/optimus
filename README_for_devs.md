@@ -52,13 +52,11 @@ wintools.exe ls c:\tmp\hive
 wintools.exe chmod 777 c:\tmp\hive
 
 ## Processing CSS
+To recreate the templates you need to inline the CSS.  
 
-To add and external CSS file to the templates html as inline CSS
+First go to https://nodejs.org and download and install nodejs
 
-- Install NodeJS
-
-Go to https://nodejs.org and download and install Node JS
+From the optimus repo in the terminal:
 
 - Run `npm install`
-
 - Run `node inlinecss.js`
