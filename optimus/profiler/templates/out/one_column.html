@@ -1,16 +1,17 @@
+
 <div class="main" style="width: 100%; overflow: auto; border-bottom: 1px solid #eeeeee; padding: 10px 0;">
     <div class="info" style="overflow: auto;">
 
         {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
-        data.column_type=="bool"%}
+        data.column_type=="bool" or data.column_type=="array"%}
 
-        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
             <div>
                 <h2>{{data.name}}</h2>
                 <span>{{data.column_type}}</span>
             </div>
             <table>
-                <tbody style="font-family: monospace;">
+                <tbody>
                 <tr>
                     <td style="padding: 0.2em;">Unique</td>
                     <td style="padding: 0.2em;"> {{data.stats.uniques_count}}</td>
@@ -35,7 +36,7 @@
                 </h3>
             </div>
             <table>
-                <tbody style="font-family: monospace;">
+                <tbody>
                 <tr>
                     <td style="padding: 0.2em;">
                         String
@@ -103,7 +104,7 @@
 
             </div>
             <table>
-                <tbody style="font-family: monospace;">
+                <tbody>
                 <tr>
                     <td style="padding: 0.2em;">Mean</td>
                     <td style="padding: 0.2em;">{{data.stats.mean}}</td>
@@ -126,7 +127,7 @@
             {% endif %}
 
         </div>
-        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
             <h3>Frequency</h3>
             <table>
 
@@ -154,35 +155,35 @@
         {% endif %}
 
         {% if data.column_type=="numeric" %}
-        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
 
 
             <h3>Quantile statistics</h3>
             <table>
-                <tbody style="font-family: monospace;">
+                <tbody>
                 <tr>
                     <td style="padding: 0.2em;">Minimum</td>
                     <td style="padding: 0.2em;">{{data.stats.min}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">5-th percentile</td>
-                    <td style="padding: 0.2em;">{{data.stats.quantile[0.05]}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.percentile["0.05"]}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Q1</td>
-                    <td style="padding: 0.2em;">{{data.stats.quantile[0.25]}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.percentile["0.25"]}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Median</td>
-                    <td style="padding: 0.2em;">{{data.stats.quantile[0.5]}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.percentile["0.5"]}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Q3</td>
-                    <td style="padding: 0.2em;">{{data.stats.quantile[0.75]}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.percentile["0.75"]}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">95-th percentile</td>
-                    <td style="padding: 0.2em;">{{data.stats.quantile[0.95]}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.percentile["0.95"]}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Maximum</td>
@@ -199,10 +200,10 @@
                 </tbody>
             </table>
         </div>
-        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%;">
+        <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
             <h3>Descriptive statistics</h3>
             <table>
-                <tbody style="font-family: monospace;">
+                <tbody>
                 <tr>
                     <td style="padding: 0.2em;">Standard deviation</td>
                     <td style="padding: 0.2em;">{{data.stats.stddev}}</td>
@@ -225,7 +226,7 @@
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Skewness</td>
-                    <td style="padding: 0.2em;">{{data.stats.zeros}}</td>
+                    <td style="padding: 0.2em;">{{data.stats.skewness}}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.2em;">Sum</td>
@@ -241,7 +242,7 @@
         {% endif %}
     </div>
     <table>
-        {% if hist_pic is defined %}
+        {% if hist_pic is not none%}
         <tr>
 
             <td style="padding: 0em;">
@@ -252,7 +253,7 @@
             </td>
         </tr>
         {% endif %}
-        {% if freq_pic is defined %}
+        {% if freq_pic is not none %}
         <tr>
             <td style="padding: 0em;">
                 <div>
