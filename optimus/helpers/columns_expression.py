@@ -10,7 +10,7 @@ from optimus.helpers.functions import create_buckets
 
 """
 These function can return and Column Expression or a list of columns expression
-
+Must return None if the datatype can not be handle  
 """
 
 
@@ -51,11 +51,10 @@ def count_uniques_agg(col_name, estimate=True):
 
 
 def range_agg(col_name):
-    return F.min(col_name), F.max(col_name)
+    return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
 
 
 def hist_agg(col_name, df, buckets):
-
     """
     Create a columns expression to calculate a column histogram
     :param col_name:
@@ -63,8 +62,6 @@ def hist_agg(col_name, df, buckets):
     :param buckets:
     :return:
     """
-
-    exprs = []
 
     def create_exprs(_input_col, _buckets, _func):
         def count_exprs(_exprs):
@@ -141,14 +138,16 @@ def hist_agg(col_name, df, buckets):
 
         exprs = F.create_map(F.lit("year"), year, F.lit("month"), month, F.lit("day"), day,
                              F.lit("hour"), hour, F.lit("minute"), minutes, F.lit("second"), second)
+    else:
+        exprs = None
 
     return exprs
 
 
 def count_na_agg(col_name, df):
     # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
-    if is_column_a(df, col_name, ["struct", "boolean"]):
-        df = df.cols.cast(col_name, "string")
+    # if is_column_a(df, col_name, ["struct", "boolean"]):
+    #     df = df.cols.cast(col_name, "string")
 
     # Select the nan/null rows depending of the columns data type
     # If numeric
@@ -158,7 +157,7 @@ def count_na_agg(col_name, df):
     elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
         expr = F.count(
             F.when(match_nulls_strings(col_name), col_name))
-        print("Including 'nan' as Null in processing string type column'{}'".format(col_name))
+        print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
     else:
         expr = F.count(F.when(match_null(col_name), col_name))
 

@@ -19,8 +19,9 @@ def parse_col_names_funcs_to_keys(data):
     :param data: json data
     :return: json
     """
-    functions_array = ["count_uniques_agg","count_na", "min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count", "hist"                       ]
+    functions_array = ["range", "count_uniques_agg", "count_na", "min", "max", "stddev", "kurtosis", "mean", "skewness",
+                       "sum", "variance",
+                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count", "hist"]
 
     _result = {}
     for k, v in data[0].items():
@@ -55,7 +56,6 @@ def parse_spark_dtypes(value):
 
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
-
     except KeyError:
         data_type = value
 

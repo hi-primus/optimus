@@ -28,7 +28,7 @@ from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
-    percentile_agg, count_uniques_agg
+    percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
@@ -593,7 +593,7 @@ def cols(self):
         :return:
         """
 
-        return agg_exprs(columns, [F.min, F.max])
+        return agg_exprs(columns, range_agg)
 
     @add_attr(cols)
     def median(columns, relative_error=1):
