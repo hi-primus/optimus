@@ -19,7 +19,7 @@ def parse_col_names_funcs_to_keys(data):
     :param data: json data
     :return: json
     """
-    functions_array = ["range", "count_uniques_agg", "count_na", "min", "max", "stddev", "kurtosis", "mean", "skewness",
+    functions_array = ["range", "count_uniques", "count_na", "min", "max", "stddev", "kurtosis", "mean", "skewness",
                        "sum", "variance",
                        "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count", "hist"]
 
