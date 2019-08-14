@@ -55,7 +55,8 @@ SPARK_SHORT_DTYPES = {"string": "string",
                       "short": "short",
                       "binary": "binary",
                       "null": "null",
-                      "vector": "vector"
+                      "vector": "vector",
+                      "timestamp": "datetime"
                       }
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
