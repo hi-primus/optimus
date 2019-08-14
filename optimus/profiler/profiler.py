@@ -84,7 +84,7 @@ class Profiler:
             :param col_name:
             :return:
             """
-            logger.print("Processing column '" + col_name + "'...")
+
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
@@ -95,7 +95,7 @@ class Profiler:
             count_empty_strings = 0
 
             if infer is True and col_data_type == "string":
-
+                logger.print("Processing column '" + col_name + "'...")
                 types = (df
                          .h_repartition(col_name=col_name)
                          .withColumn(temp, fbdt(col_name, get_type=True))
@@ -108,9 +108,11 @@ class Profiler:
                 count_empty_strings = df.where(F.col(col_name) == '').count()
 
             else:
-                nulls = stats[col_name]["count_na"]
-                count_by_data_type[col_data_type] = int(df_count) - nulls
-                count_by_data_type["null"] = nulls
+                # if boolean not support count na
+                if "count_na" in stats[col_name]:
+                    nulls = stats[col_name]["count_na"]
+                    count_by_data_type[col_data_type] = int(df_count) - nulls
+                    count_by_data_type["null"] = nulls
 
             count_by_data_type = fill_missing_var_types(count_by_data_type)
 
@@ -174,7 +176,7 @@ class Profiler:
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=10, infer=False, relative_error=10000, approx_count=True):
+    def run(self, df, columns="*", buckets=20, infer=False, relative_error=10000, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -206,9 +208,10 @@ class Profiler:
         for col_name in columns:
             hist_pic = None
             col = output["columns"][col_name]
-            hist_dict = col["stats"]["hist"]
 
             if "hist" in col["stats"]:
+                hist_dict = col["stats"]["hist"]
+
                 if col["column_dtype"] == "date":
                     hist_year = plot_hist({col_name: ["years"]}, "base64", "years")
                     hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
@@ -217,15 +220,20 @@ class Profiler:
                     hist_minute = plot_hist({col_name: hist_dict["minutes"]}, "base64", "minutes")
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
-                else:
+
+                elif col["column_dtype"] == "int" or col["column_dtype"] == "str":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
-                    hist_pic = {"hist_pic": hist}
+                    hist_pic = hist
+
+                else:
+                    hist_pic = None
+
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
             else:
                 freq_pic = None
 
-            html = html + template.render(data=col, freq_pic=freq_pic, **hist_pic)
+            html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
         self.html = html + df.table_html(10)
@@ -333,6 +341,7 @@ class Profiler:
         columns_info['name'] = df._name
 
         columns_info['rows_count'] = humanize.intword(self.rows_count)
+        logger.print("Procesing General Stats...")
         stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
         count_dtypes = self._count_data_types(df, columns, infer, stats)
 
@@ -344,15 +353,15 @@ class Profiler:
         df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
+        logger.print("Processing Frequency ...")
+        freq = df.cols.frequency(columns, buckets)
+        # print(freq)
         for col_name in columns:
             col_info = {}
-            logger.print("------------------------------")
-            logger.print("Processing column '" + col_name + "'...")
-
-            col_info.update(Profiler.frequency(df, col_name, buckets))
 
             col_info["stats"] = stats[col_name]
             col_info["stats"].update(Profiler.stats_by_column(col_name, stats, count_dtypes, self.rows_count))
+            col_info["frequency"] = freq[col_name]
 
             col_info["stats"].update(Profiler.extra_numeric_stats(df, col_name, stats))
 
@@ -442,10 +451,11 @@ class Profiler:
 
         max_value = stats[col_name]["max"]
         min_value = stats[col_name]["min"]
-        stddev = stats[col_name]['stddev']
-        mean = stats[col_name]['mean']
 
         if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            stddev = stats[col_name]['stddev']
+            mean = stats[col_name]['mean']
+
             quantile = stats[col_name]["percentile"]
             col_info['range'] = max_value - min_value
             col_info['median'] = quantile["0.5"]
