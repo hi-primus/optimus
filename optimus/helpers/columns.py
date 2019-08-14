@@ -2,7 +2,8 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_dataframe
+from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_dataframe, \
+    is_list_of_list
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
@@ -141,8 +142,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         check_for_missing_columns(df, cols)
 
     # Filter by column data type
-    if filter_by_column_dtypes is not None:
-        filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    if is_list_of_list(filter_by_column_dtypes):
+        filter_by_column_dtypes = [item for sublist in filter_by_column_dtypes for item in sublist]
 
     columns_residual = None
 
