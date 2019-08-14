@@ -1521,7 +1521,7 @@ def cols(self):
         columns = parse_columns(self, columns)
         df = self
 
-        freq = df.rdd \
+        freq = df.select(columns).rdd \
             .flatMap(lambda x: x.asDict().items()) \
             .map(lambda x: (x, 1)) \
             .reduceByKey(oadd) \
