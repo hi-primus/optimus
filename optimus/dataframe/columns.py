@@ -5,6 +5,7 @@ import unicodedata
 from functools import reduce
 from heapq import nlargest
 from operator import add as oadd
+
 import pyspark
 from fastnumbers import fast_float
 from multipledispatch import dispatch
@@ -18,7 +19,6 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
-from optimus.agg import Agg as OF
 # Functions
 from optimus import logger
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
@@ -560,8 +560,6 @@ def cols(self):
         :return:
         """
 
-        exprs = val_to_list(exprs)
-
         if ENGINE == "sql":
             def clean(c):
                 return c.get_sql().replace("'", "`")
@@ -586,7 +584,8 @@ def cols(self):
         :return:
         """
 
-        return agg_exprs(columns, OF.min())
+        return agg_exprs(columns, F.min)
+        # agg_exprs(columns, OF.min())
 
     @add_attr(cols)
     def max(columns):
@@ -595,7 +594,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(columns, OF.max())
+        return agg_exprs(columns, F.max)
 
     @add_attr(cols)
     def range(columns):
