@@ -193,6 +193,9 @@ def check_column_numbers(columns, number=0):
     :param number: Number of columns to check
     :return:
     """
+    if columns is None:
+        RaiseIt.value_error(columns, "not None")
+
     count = len(columns)
 
     if number == "*":
