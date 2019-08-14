@@ -489,17 +489,29 @@ def cols(self):
 
         # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
         filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                            F.count, zeros_agg]}
+                            F.count, zeros_agg],
+                   "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                             F.count, zeros_agg],
+                   "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                 F.count, zeros_agg],
+                   "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                            F.count, zeros_agg],
+                   "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                            F.count, zeros_agg, count_na_agg],
+                   "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                               F.count, zeros_agg, count_na_agg]
+                   }
 
         def _filter(_col_name, _func):
-            for data_type_filter, func_filter in filters.items():
-                if (_func in func_filter) and (is_column_a(df, _col_name, data_type_filter)):
-                    return True
-                else:
-                    return False
+            for data_type, func_filter in filters.items():
+                for f in func_filter:
+                    # print(data_type)
+                    if (_func == f) and (is_column_a(df, _col_name, data_type)):
+                        return True
+            return False
 
         beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
-                            "count_na_agg": "count_na"}
+                            "count_na_agg": "count_na", "range_agg": "range"}
 
         def _beautify_col_names(_func):
             if _func.__name__ in beauty_col_names:
