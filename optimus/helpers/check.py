@@ -253,6 +253,15 @@ def is_list_of_numeric(value):
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, float)) for elem in value)
 
 
+def is_list_of_list(value):
+    """
+    Check if all elements in a list are tuples
+    :param value:
+    :return:
+    """
+
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, list) for elem in value)
+
 def is_list_of_tuples(value):
     """
     Check if all elements in a list are tuples
