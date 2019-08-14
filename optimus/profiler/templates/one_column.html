@@ -1,3 +1,4 @@
+
 <div class="main">
     <div class="info">
 
@@ -241,7 +242,7 @@
         {% endif %}
     </div>
     <table>
-        {% if hist_pic is defined %}
+        {% if hist_pic is not none%}
         <tr>
 
             <td>
@@ -252,7 +253,7 @@
             </td>
         </tr>
         {% endif %}
-        {% if freq_pic is defined %}
+        {% if freq_pic is not none %}
         <tr>
             <td>
                 <div>
