@@ -125,6 +125,8 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 
     for col_name, data in column_data.items():
         bins = []
+        # print(data)
+        # print("**********")
         for d in data:
             bins.append(d['lower'])
 
@@ -163,7 +165,7 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 def plot_correlation(cols_data, output=None, path=None):
     """
     Plot a correlation plot
-    :param data:
+    :param cols_data:
     :param output:
     :param path:
     :return:
@@ -183,8 +185,6 @@ def plot_correlation(cols_data, output=None, path=None):
         fig = sns_plot.get_figure()
         fig.savefig(path)
         print_html("<img src='" + path + "'>")
-    # elif output is "plot":
-    #     plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
 def plot_missing_values(column_data=None, output=None, path=None):
@@ -192,6 +192,7 @@ def plot_missing_values(column_data=None, output=None, path=None):
     Plot missing values
     :param column_data:
     :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    :param path:
     image to the notebook
     :return:
     """
