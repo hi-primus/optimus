@@ -52,7 +52,6 @@ def format_dict(val, format="tidy"):
     from optimus.helpers.check import is_dict, is_list_of_one_element, is_dict_of_one_element, is_list
 
     if format == "tidy":
-
         def _format_dict(_val):
             if not is_dict(_val):
                 return _val
@@ -61,6 +60,7 @@ def format_dict(val, format="tidy"):
                 if is_dict(v):
                     if len(v) == 1:
                         _val[k] = next(iter(v.values()))
+
                 else:
                     if len(_val) == 1:
                         _val = v
@@ -73,11 +73,11 @@ def format_dict(val, format="tidy"):
 
         # Some aggregation like min or max return a string column
 
-        def repeat(f, n, x):
+        def repeat(f, n, _val):
             if n == 1:  # note 1, not 0
-                return f(x)
+                return f(_val)
             else:
-                return f(repeat(f, n - 1, x))  # call f with returned value
+                return f(repeat(f, n - 1, _val))  # call f with returned value
 
         # TODO: Maybe this can be done in a recursive way
         # We apply two passes to the dict so we can process internals dicts and the superiors ones

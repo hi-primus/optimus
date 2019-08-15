@@ -620,7 +620,7 @@ def cols(self):
         return percentile(columns, [0.5], relative_error)
 
     @add_attr(cols, log_time=True)
-    def percentile(columns, values=None, relative_error=10000):
+    def percentile(columns, values=None, relative_error=10000, tidy=True):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
@@ -629,7 +629,7 @@ def cols(self):
         :return: percentiles per columns
         """
 
-        return agg_exprs(columns, percentile_agg, self, values, relative_error)
+        return agg_exprs(columns, percentile_agg, self, values, relative_error, tidy=tidy)
 
     # Descriptive Analytics
     @add_attr(cols)
@@ -1329,12 +1329,12 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
+        quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)
         for col_name in columns:
 
-            q1 = quartile[col_name]["0.25"]
-            q2 = quartile[col_name]["0.5"]
-            q3 = quartile[col_name]["0.75"]
+            q1 = quartile[col_name]["percentile"]["0.25"]
+            q2 = quartile[col_name]["percentile"]["0.5"]
+            q3 = quartile[col_name]["percentile"]["0.75"]
 
             iqr_value = q3 - q1
             if more:
@@ -1343,7 +1343,6 @@ def cols(self):
                 result = iqr_value
             iqr_result[col_name] = result
 
-        print(iqr_result)
         return format_dict(iqr_result)
 
     @add_attr(cols)
@@ -1517,7 +1516,6 @@ def cols(self):
     def hist(columns, buckets=20, tidy=True):
 
         return agg_exprs(columns, hist_agg, self, buckets, tidy=tidy)
-
 
         # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
         # columns = parse_columns(self, columns)
