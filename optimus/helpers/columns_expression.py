@@ -83,11 +83,13 @@ def hist_agg(col_name, df, buckets):
             else:
                 count = count_exprs(
                     (_func(_input_col) >= lower) & (_func(_input_col) < upper))
-            info = F.create_map(F.lit("count"), count.cast(IntegerType()), F.lit("lower"), F.lit(lower), F.lit("upper"),
+            info = F.create_map(F.lit("count"), count.cast("int"), F.lit("lower"), F.lit(lower), F.lit("upper"),
                                 F.lit(upper)).alias(
                 "hist_agg" + "_" + _input_col + "_" + str(b["bucket"]))
             _exprs.append(info)
-        return F.array(*_exprs).alias("hist" + _input_col)
+        _exprs = F.array(*_exprs).alias("hist" + _input_col)
+        # print(_exprs)
+        return _exprs
 
     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
         min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_json()[0]
@@ -195,4 +197,5 @@ def percentile_agg(col_name, df, values, relative_error):
 
     else:
         expr = None
+
     return expr
