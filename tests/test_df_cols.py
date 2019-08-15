@@ -185,13 +185,13 @@ class Testdf_cols(object):
 	def test_cols_iqr():
 		actual_df =source_df.cols.iqr('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(13.0)
+		expected_value =json_enconding(13)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_iqr_all_columns():
 		actual_df =source_df.cols.iqr('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': 13.0, 'rank': 3.0, 'age': 0.0, 'weight(t)': 2.3000001907348633})
+		expected_value =json_enconding({'height(ft)': 13, 'rank': 3, 'age': 0, 'weight(t)': 2.3000001907348633})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_is_na():
@@ -234,13 +234,13 @@ class Testdf_cols(object):
 	def test_cols_mad():
 		actual_df =source_df.cols.mad('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(0.0)
+		expected_value =json_enconding(0)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad_all_columns():
 		actual_df =source_df.cols.mad('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': 0.0, 'rank': 0.0, 'age': 0.0, 'weight(t)': 0.0})
+		expected_value =json_enconding({'height(ft)': 0, 'rank': 0, 'age': 0, 'weight(t)': 0.0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max():
@@ -270,13 +270,13 @@ class Testdf_cols(object):
 	def test_cols_median():
 		actual_df =source_df.cols.median('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(-28.0)
+		expected_value =json_enconding(-28)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median_all_columns():
 		actual_df =source_df.cols.median('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': -28.0, 'rank': 7.0, 'age': 5000000.0, 'weight(t)': 1.7999999523162842})
+		expected_value =json_enconding({'height(ft)': -28, 'rank': 7, 'age': 5000000, 'weight(t)': 1.7999999523162842}
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_min():
