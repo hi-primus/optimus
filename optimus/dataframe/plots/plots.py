@@ -89,6 +89,25 @@ def plot(self):
         cols_data = self.cols.correlation(col_name, method, output="array")
         plot_correlation(cols_data, output=output_format, path=output_path)
 
+    @add_attr(plot)
+    def qqplot(columns, n=100, output_format="plot", output_path=None):
+        """
+
+        :param columns:
+        :param n: Sample size
+        :param output_format: Output format
+        :param output_path: Path to the output file
+        :return:
+        """
+        df = self
+
+        columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        if columns is not None:
+            sample_data = df.sample_n(n=n, random=True)
+            for col_name in columns:
+                plot_qqplot(col_name, sample_data, output=output_format, path=output_path)
+
     return plot
 
 
