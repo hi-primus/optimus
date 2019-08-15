@@ -507,7 +507,6 @@ def cols(self):
         def _filter(_col_name, _func):
             for data_type, func_filter in filters.items():
                 for f in func_filter:
-                    # print(data_type)
                     if (_func == f) and (is_column_a(df, _col_name, data_type)):
                         return True
             return False
@@ -1318,22 +1317,24 @@ def cols(self):
         return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
 
     @add_attr(cols)
-    def iqr(columns, more=None):
+    def iqr(columns, more=None, relative_error=10000):
         """
         Return the column data type
         :param columns:
         :param more: Return info about q1 and q3
+        :param relative_error:
         :return:
         """
         iqr_result = {}
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
+        quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
         for col_name in columns:
-            quartile = self.cols.percentile(col_name, [0.25, 0.5, 0.75], relative_error=0)
-            q1 = quartile["0.25"]
-            q2 = quartile["0.5"]
-            q3 = quartile["0.75"]
+
+            q1 = quartile[col_name]["0.25"]
+            q2 = quartile[col_name]["0.5"]
+            q3 = quartile[col_name]["0.75"]
 
             iqr_value = q3 - q1
             if more:
@@ -1342,6 +1343,7 @@ def cols(self):
                 result = iqr_value
             iqr_result[col_name] = result
 
+        print(iqr_result)
         return format_dict(iqr_result)
 
     @add_attr(cols)
@@ -1515,6 +1517,8 @@ def cols(self):
     def hist(columns, buckets=20, tidy=True):
 
         return agg_exprs(columns, hist_agg, self, buckets, tidy=tidy)
+
+
         # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
         # columns = parse_columns(self, columns)
         # df = self
@@ -1538,8 +1542,8 @@ def cols(self):
 
         result = {}
         for col_name in columns:
-            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(
-                n).cols.rename(col_name, "value").to_json()
+            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).rows.sort(
+                [("value", "desc")]).cols.rename(col_name, "value").to_json()
             if percentage:
                 if total_rows is None:
                     RaiseIt.type_error(total_rows, "int")
