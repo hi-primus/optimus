@@ -40,54 +40,55 @@ def tuple_to_dict(value):
     return dict((x, y) for x, y in value)
 
 
-def format_dict(val, format="tidy"):
+def format_dict(_dict, format="tidy"):
     """
     This function format a dict. If the main dict or a deep dict has only on element
      {"col_name":{0.5: 200}} we get 200
-    :param val: dict to be formatted
+    :param _dict: dict to be formatted
     :param format:
     :return:
     """
 
     from optimus.helpers.check import is_dict, is_list_of_one_element, is_dict_of_one_element, is_list
-
     if format == "tidy":
-        def _format_dict(_val):
-            if not is_dict(_val):
-                return _val
+        def _format_dict(_dict):
 
-            for k, v in _val.items():
+            if not is_dict(_dict):
+                return _dict
+            for k, v in _dict.items():
+                # If the value is a dict
                 if is_dict(v):
+                    # and only have one value
                     if len(v) == 1:
-                        _val[k] = next(iter(v.values()))
-
+                        _dict[k] = next(iter(v.values()))
                 else:
-                    if len(_val) == 1:
-                        _val = v
-            return _val
+                    if len(_dict) == 1:
+                        _dict = v
+            return _dict
 
-        if is_list_of_one_element(val):
-            val = val[0]
-        elif is_dict_of_one_element(val):
-            val = next(iter(val.values()))
+        if is_list_of_one_element(_dict):
+            _dict = _dict[0]
+        elif is_dict_of_one_element(_dict):
+            # if dict_depth(_dict) >4:
+            _dict = next(iter(_dict.values()))
 
         # Some aggregation like min or max return a string column
 
-        def repeat(f, n, _val):
+        def repeat(f, n, _dict):
             if n == 1:  # note 1, not 0
-                return f(_val)
+                return f(_dict)
             else:
-                return f(repeat(f, n - 1, _val))  # call f with returned value
+                return f(repeat(f, n - 1, _dict))  # call f with returned value
 
         # TODO: Maybe this can be done in a recursive way
         # We apply two passes to the dict so we can process internals dicts and the superiors ones
-        return repeat(_format_dict, 2, val)
+        return repeat(_format_dict, 2, _dict)
     elif format == "normal":
         # Return the dict from a list
-        if is_list(val):
-            return val[0]
+        if is_list(_dict):
+            return _dict[0]
         else:
-            return val
+            return _dict
 
 
 def str_to_boolean(value):
