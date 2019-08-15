@@ -463,8 +463,12 @@ def send(self, name=None):
     :return:
     """
 
-    result = Profiler.instance.to_json(self)
     if name is not None:
-        result["name"] = name
+        self._name = name
+
+    result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=10000,
+                                       approx_count=True,
+                                       sample=10000)
+    print(result)
 
     Comm.instance.send(result)
