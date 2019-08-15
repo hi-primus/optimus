@@ -1020,7 +1020,7 @@ def cols(self):
             RaiseIt.value_error(search_by, ["words", "chars"])
 
         input_cols = parse_columns(self, input_cols,
-                                   filter_by_column_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
+                                   filter_by_column_dtypes=[PYSPARK_STRING_TYPES, PYSPARK_NUMERIC_TYPES])
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
 
