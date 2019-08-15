@@ -1,5 +1,5 @@
-imgkit==1.0.1
-packaging==19.0
+cryptography==2.7
+imgkit==1.0.1pckaging==19.0
 requests==2.21.0
 tqdm==4.28.1
 pymongo==3.8.0

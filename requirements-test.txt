@@ -39,3 +39,4 @@ ordered-set==3.1.1
 deepdiff==4.0.6
 papermill==1.0.1
 paho-mqtt==0.4.90
+cryptography==2.7
