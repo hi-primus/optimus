@@ -82,6 +82,8 @@ source_df.table()
 # -
 
 
+source_df.cols.count_uniques("*")
+
 # ### End Init Section
 
 # # Test
@@ -221,9 +223,11 @@ t.create(None, "cols.mode", "all_columns", "json", "*")
 
 t.create(None, "cols.count", None, "json")
 
-t.create(None, "cols.count_na", None, "json", numeric_col)
+t.create(None, "cols.count_na", None, "json", None, numeric_col)
 
-t.create(None, "cols.count_na", "all_columns", "json", "*")
+t.create(None, "cols.count_na", "all_columns", "json",None, "*")
+
+t.run()
 
 t.create(None, "cols.count_zeros", None, "json", numeric_col)
 
