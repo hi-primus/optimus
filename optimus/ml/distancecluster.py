@@ -1,5 +1,6 @@
 from pyspark.sql import functions as F
 
+from optimus import Optimus
 from optimus.helpers.columns import name_col
 from optimus.ml import keycollision
 from optimus.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
@@ -24,6 +25,9 @@ def levenshtein_matrix(df, input_col):
     # Prepare the columns to calculate the cross join
     df = df.select(fingerprint_col).distinct().select(F.col(fingerprint_col).alias(temp_col_1),
                                                       F.col(fingerprint_col).alias(temp_col_2))
+
+    if Optimus.cache:
+        df = df.cache()
 
     #  Create all the combination between the string to calculate the levenshtein distance
     df = df.select(temp_col_1).crossJoin(df.select(temp_col_2)) \
@@ -57,16 +61,19 @@ def levenshtein_filter(df, input_col):
             .agg(func(distance_col).alias(distance_r_col))
             .cols.rename(temp_col_1, temp_r))
 
+    if Optimus.cache:
+        df_r = df_r.cache()
+
     df = df.join(df_r, ((df_r[temp_r] == df[temp_col_1]) & (df_r[distance_r_col] == df[distance_col]))).select(
         temp_col_1,
         distance_col,
         temp_col_2)
 
+    if Optimus.cache:
+        df = df.cache()
+
     df = df \
         .cols.rename([(temp_col_1, input_col + "_FROM"), (temp_col_2, input_col + "_TO")])
-
-    df.unpersist()
-    df_r.unpersist()
 
     return df
 
@@ -92,9 +99,14 @@ def levenshtein_cluster(df, input_col):
                                            F.size(F.collect_list(input_col)).alias(cluster_size_col),
                                            F.first(input_col).alias(recommended_col),
                                            F.sum("count").alias(count_col)).repartition(1)
+    if Optimus.cache:
+        df_t = df_t.cache()
 
     # Filter nearest string
     df_l = levenshtein_filter(df, input_col).repartition(1)
+
+    if Optimus.cache:
+        df_l = df_l.cache()
 
     # Create Cluster
     df_l = df_l.join(df_t, (df_l[input_col + "_FROM"] == df_t[fingerprint_col]), how="left") \
