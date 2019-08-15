@@ -1,6 +1,6 @@
 import datetime
 import itertools
-
+from pyspark.sql.types import IntegerType
 from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_column_a, is_numeric
@@ -82,7 +82,7 @@ def hist_agg(col_name, df, buckets):
             else:
                 count = count_exprs(
                     (_func(_input_col) >= lower) & (_func(_input_col) < upper))
-            info = F.create_map(F.lit("count"), count, F.lit("lower"), F.lit(lower), F.lit("upper"),
+            info = F.create_map(F.lit("count"), count.cast(IntegerType()), F.lit("lower"), F.lit(lower), F.lit("upper"),
                                 F.lit(upper)).alias(
                 "hist_agg" + "_" + _input_col + "_" + str(b["bucket"]))
             _exprs.append(info)
