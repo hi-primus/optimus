@@ -1546,8 +1546,8 @@ def cols(self):
 
         result = {}
         for col_name in columns:
-            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).rows.sort(
-                [("value", "desc")]).cols.rename(col_name, "value").to_json()
+            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).cols.rename(
+                col_name, "value").rows.sort([("value", "desc")]).to_json()
             if percentage:
                 if total_rows is None:
                     RaiseIt.type_error(total_rows, "int")
