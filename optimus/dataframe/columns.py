@@ -1512,9 +1512,9 @@ def cols(self):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     @add_attr(cols, log_time=True)
-    def hist(columns, buckets):
+    def hist(columns, buckets=20, tidy=True):
 
-        return agg_exprs(columns, hist_agg, self, buckets)
+        return agg_exprs(columns, hist_agg, self, buckets, tidy=tidy)
         # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
         # columns = parse_columns(self, columns)
         # df = self
