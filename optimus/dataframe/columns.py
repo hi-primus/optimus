@@ -489,17 +489,17 @@ def cols(self):
 
         # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
         filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                            F.count, zeros_agg],
+                            zeros_agg],
                    "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                             F.count, zeros_agg],
+                             zeros_agg],
                    "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                 F.count, zeros_agg],
+                                 zeros_agg],
                    "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                            F.count, zeros_agg],
+                            zeros_agg],
                    "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                            F.count, zeros_agg, count_na_agg],
+                               zeros_agg, count_na_agg],
                    "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                               F.count, zeros_agg, count_na_agg]
+                              zeros_agg, count_na_agg]
                    }
 
         def _filter(_col_name, _func):
