@@ -1,10 +1,13 @@
+import statsmodels.api as sm
 from pyspark.sql import DataFrame
+from matplotlib import pyplot as plt
 
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
     plot_correlation
+from optimus.helpers.columns import check_column_numbers
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import add_attr
-from optimus.helpers.columns import parse_columns, check_column_numbers
 
 
 def plot(self):
@@ -18,12 +21,12 @@ def plot(self):
         :param output_path: path where the image is going to be saved
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        columns = parse_columns(self, columns)
 
-        for col_name in columns:
-            data = self.cols.hist(col_name, buckets)
-            plot_hist({col_name: data}, output=output_format, path=output_path)
+        data = self.cols.hist(columns, buckets, tidy=False)
+        # print(data)
+        for col_name in data.keys():
+            plot_hist({col_name: data[col_name]["hist"]}, output=output_format, path=output_path)
 
     @add_attr(plot)
     def scatter(columns=None, buckets=30, output_format="plot", output_path=None):
@@ -67,11 +70,10 @@ def plot(self):
         :param output_path: path where the image is going to be saved
         :return:
         """
-        columns = parse_columns(self, columns)
 
+        data = self.cols.frequency(columns, buckets)
         for col_name in columns:
-            data = self.cols.frequency(col_name, buckets)
-            plot_frequency(data, output=output_format, path=output_path)
+            plot_frequency(data[col_name], output=output_format, path=output_path)
 
     @add_attr(plot)
     def correlation(col_name, method="pearson", output_format="plot", output_path=None):
