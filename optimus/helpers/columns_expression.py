@@ -118,7 +118,7 @@ def hist_agg(col_name, df, buckets):
 
         # Day
         buckets = create_buckets(1, 31, 31)
-        func = F.dayofmonth
+        func = F.dayofweek
         day = create_exprs(col_name, buckets, func)
 
         # Hour
@@ -136,8 +136,8 @@ def hist_agg(col_name, df, buckets):
         func = F.second
         second = create_exprs(col_name, buckets, func)
 
-        exprs = F.create_map(F.lit("year"), year, F.lit("month"), month, F.lit("day"), day,
-                             F.lit("hour"), hour, F.lit("minute"), minutes, F.lit("second"), second)
+        exprs = F.create_map(F.lit("years"), year, F.lit("months"), month, F.lit("weekdays"), day,
+                             F.lit("hours"), hour, F.lit("minutes"), minutes, F.lit("seconds"), second)
     else:
         exprs = None
 
