@@ -499,9 +499,9 @@ def cols(self):
                    "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                             zeros_agg],
                    "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                               zeros_agg, count_na_agg],
+                               zeros_agg],
                    "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                              zeros_agg, count_na_agg]
+                              zeros_agg]
                    }
 
         def _filter(_col_name, _func):
