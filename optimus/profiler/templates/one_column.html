@@ -14,19 +14,19 @@
                 <tbody>
                 <tr>
                     <td>Unique</td>
-                    <td> {{data.stats.uniques_count}}</td>
+                    <td> {{data.stats.count_uniques}}</td>
                 </tr>
                 <tr>
                     <td>Unique (%)</td>
-                    <td> {{data.stats.p_uniques}}</td>
+                    <td> {{data.stats.p_count_uniques}}</td>
                 </tr>
                 <tr>
                     <td>Missing</td>
-                    <td>{{data.stats.p_missing}}</td>
+                    <td>{{data.stats.count_na}}</td>
                 </tr>
                 <tr>
                     <td>Missing (%)</td>
-                    <td>{{data.stats.missing_count}}</td>
+                    <td>{{data.stats.p_count_na}}</td>
                 </tr>
                 </tbody>
             </table>
@@ -146,8 +146,8 @@
                 {% endfor %}
                 <tr>
                     <td>"Missing"</td>
-                    <td>{{data.stats.missing_count}}</td>
-                    <td>{{data.stats.p_missing}}%</td>
+                    <td>{{data.stats.count_na}}</td>
+                    <td>{{data.stats.p_count_na}}%</td>
                 </tr>
 
             </table>
@@ -242,17 +242,6 @@
         {% endif %}
     </div>
     <table>
-        {% if hist_pic is not none%}
-        <tr>
-
-            <td>
-
-                <div>
-                    <img src="data:image/jpeg;base64,{{ hist_pic | safe }}">
-                </div>
-            </td>
-        </tr>
-        {% endif %}
         {% if freq_pic is not none %}
         <tr>
             <td>
@@ -264,55 +253,60 @@
 
         </tr>
         {% endif %}
-        {% if hist_years is defined %}
+        {% if hist_pic.hist_numeric_string is defined%}
+        <tr>
+            <td style="padding: 0em;">
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_numeric_string | safe }}">
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if hist_pic.hist_years is defined %}
         <tr>
             <td>
                 <div>
-                    <img src="data:image/jpeg;base64,{{ hist_years | safe }}">
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_years | safe }}">
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if hist_pic.hist_months is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_months | safe }}">
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if hist_pic.hist_weekdays is defined %}
+        <tr>
+            <td>
+                <div>
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_weekdays | safe }}">
                 </div>
 
             </td>
 
         </tr>
         {% endif %}
-        {% if hist_months is defined %}
+        {% if hist_pic.hist_hours is defined %}
         <tr>
             <td>
                 <div>
-                    <img src="data:image/jpeg;base64,{{ hist_months | safe }}">
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_hours | safe }}">
                 </div>
 
             </td>
 
         </tr>
         {% endif %}
-        {% if hist_weekdays is defined %}
+        {% if hist_pic.hist_minutes is defined %}
         <tr>
             <td>
                 <div>
-                    <img src="data:image/jpeg;base64,{{ hist_weekdays | safe }}">
-                </div>
-
-            </td>
-
-        </tr>
-        {% endif %}
-        {% if hist_hours is defined %}
-        <tr>
-            <td>
-                <div>
-                    <img src="data:image/jpeg;base64,{{ hist_hours | safe }}">
-                </div>
-
-            </td>
-
-        </tr>
-        {% endif %}
-        {% if hist_minutes is defined %}
-        <tr>
-            <td>
-                <div>
-                    <img src="data:image/jpeg;base64,{{ hist_minutes | safe }}">
+                    <img src="data:image/jpeg;base64,{{ hist_pic.hist_minutes | safe }}">
                 </div>
 
             </td>
