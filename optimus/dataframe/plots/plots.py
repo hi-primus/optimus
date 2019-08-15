@@ -1,9 +1,7 @@
-import statsmodels.api as sm
 from pyspark.sql import DataFrame
-from matplotlib import pyplot as plt
 
 from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
-    plot_correlation
+    plot_correlation, plot_qqplot
 from optimus.helpers.columns import check_column_numbers
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
