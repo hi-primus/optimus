@@ -1522,7 +1522,33 @@ def cols(self):
         # return result
 
     @add_attr(cols)
-    def frequency(columns, n=10):
+    def frequency(columns, n=10, percentage=False, total_rows=None):
+        """
+        Output values frequency in json format
+        :param columns: Columns to be processed
+        :param n: Number of buckets
+        :param percentage:
+        :param total_rows:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+        df = self
+
+        result = {}
+        for col_name in columns:
+            result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(
+                n).cols.rename(col_name, "value").to_json()
+            if percentage:
+                if total_rows is None:
+                    RaiseIt.type_error(total_rows, "int")
+
+                for c in result[col_name]:
+                    c["percentage"] = round((c["count"] * 100 / total_rows), 4)
+
+        return result
+
+    @add_attr(cols)
+    def frequency_rdd(columns, n=10):
         """
         Output values frequency in json format
         :param columns: Columns to be processed
@@ -1530,22 +1556,24 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        df = self
 
-        freq = df.select(columns).rdd \
-            .flatMap(lambda x: x.asDict().items()) \
-            .map(lambda x: (x, 1)) \
-            .reduceByKey(oadd) \
-            .groupBy(lambda x: x[0][0]) \
-            .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1])) \
-            .map(lambda x: (x[0][0], (x[0][1], x[1]))) \
-            .groupByKey().map(lambda x: (x[0], list(x[1])))
+        if columns is not None:
+            df = self
 
-        result = {}
-        for f in freq.collect():
-            result[f[0]] = [{"value": kv[0], "count": kv[1]} for kv in f[1]]
+            freq = (df.rdd
+                    .flatMap(lambda x: x.asDict().items())
+                    .map(lambda x: (x, 1))
+                    .reduceByKey(oadd)
+                    .groupBy(lambda x: x[0][0])
+                    .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
+                    .map(lambda x: (x[0][0], (x[0][1], x[1])))
+                    .groupByKey().map(lambda x: (x[0], list(x[1]))))
 
-        return result
+            result = {}
+            for f in freq.collect():
+                result[f[0]] = [{"value": kv[0], "count": kv[1]} for kv in f[1]]
+
+            return result
 
     @add_attr(DataFrame)
     def correlation(input_cols, method="pearson", output="json"):
