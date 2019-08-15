@@ -30,15 +30,20 @@ def parse_col_names_funcs_to_keys(data):
             temp_func_name = f + "_"
             if k.startswith(temp_func_name):
                 _col_name = k[len(temp_func_name):]
-                # If the value is numeric only get 5 decimals
                 if is_nan(v):
                     print(
                         "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that '{COL_NAME}' has 'nan' values".format(
                             FUNCTION=f,
                             COL_NAME=_col_name))
+                # If the value is numeric only get 5 decimals
                 elif is_numeric(v):
                     v = round(v, 5)
-                _result.setdefault(_col_name, {})[f] = v
+                # some functions return a dict result. Strip out the funtion name
+                if f in ["percentile", "range"]:
+                    _result.setdefault(_col_name, v)
+                else:
+                    _result.setdefault(_col_name, {})[f] = v
+
                 break
 
     return _result

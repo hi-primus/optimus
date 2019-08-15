@@ -479,7 +479,6 @@ def cols(self):
         """
 
         columns = parse_columns(self, columns)
-
         funcs = val_to_list(funcs)
         exprs = []
 
@@ -560,7 +559,7 @@ def cols(self):
         :param tidy:
         :return:
         """
-
+        df = self
         if ENGINE == "sql":
             def clean(c):
                 return c.get_sql().replace("'", "`")
@@ -571,6 +570,7 @@ def cols(self):
             df = self.agg(*exprs)
 
         result = parse_col_names_funcs_to_keys(df.to_json())
+
         if tidy is True:
             result = format_dict(result)
 
@@ -1332,9 +1332,9 @@ def cols(self):
         quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)
         for col_name in columns:
 
-            q1 = quartile[col_name]["percentile"]["0.25"]
-            q2 = quartile[col_name]["percentile"]["0.5"]
-            q3 = quartile[col_name]["percentile"]["0.75"]
+            q1 = quartile[col_name]["0.25"]
+            q2 = quartile[col_name]["0.5"]
+            q3 = quartile[col_name]["0.75"]
 
             iqr_value = q3 - q1
             if more:
