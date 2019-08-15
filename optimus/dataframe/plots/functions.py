@@ -1,5 +1,6 @@
 import numpy as np
 import seaborn as sns
+import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 

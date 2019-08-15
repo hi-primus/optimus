@@ -8,10 +8,9 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPE
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
 
-"""
-These function can return and Column Expression or a list of columns expression
-Must return None if the datatype can not be handle  
-"""
+
+# These function can return and Column Expression or a list of columns expression
+# Must return None if the data type can not be handle
 
 
 def match_nulls_strings(col_name):

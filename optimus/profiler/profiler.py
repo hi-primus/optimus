@@ -353,7 +353,6 @@ class Profiler:
         columns_info["summary"]['missing_count'] = total_count_na
         columns_info["summary"]['p_missing'] = round(total_count_na / self.rows_count * 100, 2)
 
-
         # Calculate percentage
         for col_name in columns:
             col_info = {}
