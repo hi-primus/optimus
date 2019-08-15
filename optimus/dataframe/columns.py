@@ -477,7 +477,9 @@ def cols(self):
         :param args:
         :return:
         """
+
         columns = parse_columns(self, columns)
+
         funcs = val_to_list(funcs)
         exprs = []
 
@@ -511,7 +513,7 @@ def cols(self):
             return False
 
         beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
-                            "count_na_agg": "count_na", "range_agg": "range"}
+                            "count_na_agg": "count_na", "range_agg": "range", "count_uniques_agg": "count_uniques"}
 
         def _beautify_col_names(_func):
             if _func.__name__ in beauty_col_names:
