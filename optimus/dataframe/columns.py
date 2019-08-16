@@ -436,15 +436,18 @@ def cols(self):
         :param order: 'asc' or 'desc' accepted
         :return: Spark DataFrame
         """
-
+        _reverse = None
         if order == "asc":
-            sorted_col_names = sorted(self.columns)
+            _reverse = False
         elif order == "desc":
-            sorted_col_names = sorted(self.columns, reverse=True)
+            _reverse = True
         else:
             RaiseIt.value_error(order, ["asc", "desc"])
 
-        return self.select(sorted_col_names)
+        columns = self.cols.names()
+        columns.sort(key=lambda v: v.upper(), reverse=_reverse)
+
+        return self.select(columns)
 
     @add_attr(cols)
     def drop(columns=None, regex=None, data_type=None):
