@@ -1159,7 +1159,7 @@ def cols(self):
         :return:
         """
 
-        return agg_exprs(columns, count_na_agg, self)
+        return format_dict(agg_exprs(columns, count_na_agg, self))
 
     @add_attr(cols)
     def count_zeros(columns):
@@ -1169,7 +1169,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        return agg_exprs(columns, zeros_agg)
+        return format_dict(agg_exprs(columns, zeros_agg))
 
     @add_attr(cols)
     def count_uniques(columns, estimate=True):
