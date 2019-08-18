@@ -588,7 +588,7 @@ def cols(self):
         :return:
         """
 
-        return agg_exprs(columns, F.min)
+        return format_dict(agg_exprs(columns, F.min))
         # agg_exprs(columns, OF.min())
 
     @add_attr(cols)
@@ -598,7 +598,7 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        return agg_exprs(columns, F.max)
+        return format_dict(agg_exprs(columns, F.max))
 
     @add_attr(cols)
     def range(columns):
@@ -676,7 +676,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.stddev)
+        return format_dict(agg_exprs(columns, F.stddev))
 
     @add_attr(cols)
     def kurt(columns):
@@ -688,7 +688,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.kurtosis)
+        return format_dict(agg_exprs(columns, F.kurtosis))
 
     @add_attr(cols)
     def mean(columns):
@@ -700,7 +700,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.mean)
+        return format_dict(agg_exprs(columns, F.mean))
 
     @add_attr(cols)
     def skewness(columns):
@@ -712,7 +712,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.skewness)
+        return format_dict(agg_exprs(columns, F.skewness))
 
     @add_attr(cols)
     def sum(columns):
@@ -724,7 +724,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.sum)
+        return format_dict(agg_exprs(columns, F.sum))
 
     @add_attr(cols)
     def variance(columns):
@@ -736,7 +736,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return agg_exprs(columns, F.variance)
+        return format_dict(agg_exprs(columns, F.variance))
 
     @add_attr(cols)
     def abs(columns):
@@ -748,10 +748,7 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        df = self
-        for col_name in columns:
-            df = df.withColumn(col_name, F.abs(F.col(col_name)))
-        return df
+        return format_dict(agg_exprs(columns, F.abs))
 
     @add_attr(cols)
     def mode(columns):
@@ -1187,7 +1184,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        return agg_exprs(columns, count_uniques_agg, estimate)
+        return format_dict(agg_exprs(columns, count_uniques_agg, estimate))
 
     @add_attr(cols)
     def value_counts(columns):
