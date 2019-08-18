@@ -1531,7 +1531,7 @@ def cols(self):
         # return result
 
     @add_attr(cols)
-    def frequency(columns, n=10, percentage=False, total_rows=None):
+    def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
         """
         Output values frequency in json format
         :param columns: Columns to be processed
@@ -1557,11 +1557,13 @@ def cols(self):
         return result
 
     @add_attr(cols)
-    def frequency_rdd(columns, n=10):
+    def frequency(columns, n=10, percentage=False, total_rows=None):
         """
         Output values frequency in json format
         :param columns: Columns to be processed
         :param n: n top elements
+        :param percentage: Get
+        :param total_rows: Total rows to calculate the percentage. If not provided is calculated
         :return:
         """
         columns = parse_columns(self, columns)
@@ -1569,18 +1571,27 @@ def cols(self):
         if columns is not None:
             df = self
 
-            freq = (df.rdd
+            freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: (x, 1))
                     .reduceByKey(oadd)
                     .groupBy(lambda x: x[0][0])
                     .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
+                    .repartition(1)  # Because here we have small data move all to 1 partition
                     .map(lambda x: (x[0][0], (x[0][1], x[1])))
                     .groupByKey().map(lambda x: (x[0], list(x[1]))))
 
             result = {}
             for f in freq.collect():
                 result[f[0]] = [{"value": kv[0], "count": kv[1]} for kv in f[1]]
+
+            if percentage:
+                if total_rows is None:
+                    total_rows = df.count()
+                    RaiseIt.type_error(total_rows, "int")
+                for col_name in columns:
+                    for c in result[col_name]:
+                        c["percentage"] = round((c["count"] * 100 / total_rows), 4)
 
             return result
 
