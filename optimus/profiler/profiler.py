@@ -388,24 +388,32 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
+        n = 20
+        list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
+        # we have problems sending +100 columns at the same time. Process in batch
 
-        funcs = [count_uniques_agg]
-        exprs = df.cols.create_exprs(columns, funcs, approx_count)
+        result = {}
+        for i, cols in enumerate(list_columns):
+            logger.print("Batch {BATCH_NUMBER}. Processing columns{COLUMNS}:".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-        funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
-        exprs.extend(df.cols.create_exprs(columns, funcs))
+            funcs = [count_uniques_agg]
+            exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
-        funcs = [count_na_agg]
-        exprs.extend(df.cols.create_exprs(columns, funcs, df))
+            funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs))
 
-        funcs = [hist_agg]
-        exprs.extend(df.cols.create_exprs(columns, funcs, df, buckets))
+            funcs = [count_na_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs, df))
 
-        funcs = [percentile_agg]
-        exprs.extend(df.cols.create_exprs(columns, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
-                                          relative_error))
+            funcs = [hist_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets))
 
-        result = df.cols.exec_agg(exprs, tidy=False)
+            funcs = [percentile_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
+                                              relative_error))
+
+            # print("Aggregating {BATCH_NUMBER}".format(BATCH_NUMBER=i))
+            result.update(df.cols.exec_agg(exprs, tidy=False))
 
         return result
 
