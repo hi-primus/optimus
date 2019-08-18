@@ -286,11 +286,14 @@ def h_repartition(self, partitions_number=None, col_name=None):
     a column if you need more control.
     See
     https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
+    https://medium.com/@adrianchang/apache-spark-partitioning-e9faab369d14
+    https://umbertogriffo.gitbooks.io/apache-spark-best-practices-and-tuning/content/sparksqlshufflepartitions_draft.html
     :param self: Spark Dataframe
     :param partitions_number: Number of partitions
     :param col_name: Column to be used to apply the repartition id necessary
     :return:
     """
+
     if partitions_number is None:
         partitions_number = Spark.instance.parallelism * 4
 
@@ -469,6 +472,5 @@ def send(self, name=None):
     result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=10000,
                                        approx_count=True,
                                        sample=10000)
-    print(result)
 
     Comm.instance.send(result)

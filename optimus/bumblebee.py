@@ -51,6 +51,9 @@ def val_to_byte(value):
     return value
 
 
+IP_QUEUE = "165.22.149.93"
+
+
 class Comm:
     """
 
@@ -163,13 +166,13 @@ class Comm:
 
 
         """
-        print(message)
+
         client = self.queue
         client.connected_flag = False
         client.disconnect()
 
         try:
-            client.connect("165.22.149.93")
+            client.connect(IP_QUEUE)
         except Exception:
             print("Connection failed. Please try again")
             exit(1)  # Should quit or raise flag to quit or retry

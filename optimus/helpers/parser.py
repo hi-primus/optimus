@@ -53,11 +53,7 @@ def parse_col_names_funcs_to_keys(data):
                 # If the value is numeric only get 5 decimals
                 elif is_numeric(v):
                     v = round(v, 5)
-                # some functions return a dict result. Strip out the funtion name
-                if f in ["percentile", "range"]:
-                    _result.setdefault(_col_name, v)
-                else:
-                    _result.setdefault(_col_name, {})[f] = v
+                _result.setdefault(_col_name, {})[f] = v
 
                 break
 

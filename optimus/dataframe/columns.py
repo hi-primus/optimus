@@ -653,7 +653,6 @@ def cols(self):
 
             _mad = {}
             median_value = self.cols.median(col_name, relative_error)
-
             mad_value = self.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
                 .cols.median(col_name, relative_error)
 
@@ -1553,6 +1552,7 @@ def cols(self):
         for col_name in columns:
             result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).cols.rename(
                 col_name, "value").rows.sort([("value", "desc")]).to_json()
+            logger.print(col_name)
             if percentage:
                 if total_rows is None:
                     RaiseIt.type_error(total_rows, "int")
