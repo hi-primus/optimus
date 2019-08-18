@@ -20,7 +20,7 @@ from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
-from optimus import logger
+from optimus import logger, Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -764,7 +764,8 @@ def cols(self):
             mode_df = count.join(
                 count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
             )
-
+            if Optimus.cache:
+                mode_df = mode_df.cache()
             # if none of the values are repeated we not have mode
             mode_list = (mode_df
                          .rows.select(mode_df["count"] > 1)
