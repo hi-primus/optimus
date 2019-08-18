@@ -40,17 +40,17 @@ def tuple_to_dict(value):
     return dict((x, y) for x, y in value)
 
 
-def format_dict(_dict, format="tidy"):
+def format_dict(_dict, tidy=True):
     """
     This function format a dict. If the main dict or a deep dict has only on element
      {"col_name":{0.5: 200}} we get 200
     :param _dict: dict to be formatted
-    :param format:
+    :param tidy:
     :return:
     """
 
     from optimus.helpers.check import is_dict, is_list_of_one_element, is_dict_of_one_element, is_list
-    if format == "tidy":
+    if tidy is True:
         def _format_dict(_dict):
 
             if not is_dict(_dict):
@@ -83,7 +83,7 @@ def format_dict(_dict, format="tidy"):
         # TODO: Maybe this can be done in a recursive way
         # We apply two passes to the dict so we can process internals dicts and the superiors ones
         return repeat(_format_dict, 2, _dict)
-    elif format == "normal":
+    else:
         # Return the dict from a list
         if is_list(_dict):
             return _dict[0]

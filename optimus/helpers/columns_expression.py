@@ -159,7 +159,7 @@ def count_na_agg(col_name, df):
     elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
         expr = F.count(
             F.when(match_nulls_strings(col_name), col_name))
-        print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
+        # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
     else:
         expr = F.count(F.when(match_null(col_name), col_name))
 
@@ -197,5 +197,5 @@ def percentile_agg(col_name, df, values, relative_error):
 
     else:
         expr = None
-
+    # print(expr)
     return expr

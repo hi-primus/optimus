@@ -36,7 +36,8 @@ from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
-from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys
+from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
+    compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
 
 ENGINE = "spark"
@@ -552,10 +553,10 @@ def cols(self):
         :param tidy:
         :return:
         """
-        return exec_agg(create_exprs(columns, funcs, *args), tidy)
+        return exec_agg(create_exprs(columns, funcs, *args))
 
     @add_attr(cols)
-    def exec_agg(exprs, tidy=True):
+    def exec_agg(exprs):
         """
         Execute and aggregation
         :param exprs:
@@ -573,9 +574,6 @@ def cols(self):
             df = self.agg(*exprs)
 
         result = parse_col_names_funcs_to_keys(df.to_json())
-
-        if tidy is True:
-            result = format_dict(result)
 
         return result
 
@@ -611,19 +609,20 @@ def cols(self):
         return agg_exprs(columns, range_agg)
 
     @add_attr(cols)
-    def median(columns, relative_error=1):
+    def median(columns, relative_error=1, tidy=True):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
+        :param tidy:
         :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
         # columns = parse_columns(self, columns)
 
-        return percentile(columns, [0.5], relative_error)
+        return format_dict(percentile(columns, [0.5], relative_error))
 
     @add_attr(cols, log_time=True)
-    def percentile(columns, values=None, relative_error=10000, tidy=True):
+    def percentile(columns, values=None, relative_error=10000):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
@@ -631,8 +630,8 @@ def cols(self):
         :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
         :return: percentiles per columns
         """
-
-        return agg_exprs(columns, percentile_agg, self, values, relative_error, tidy=tidy)
+        values = [str(v) for v in values]
+        return agg_exprs(columns, percentile_agg, self, values, relative_error)
 
     # Descriptive Analytics
     @add_attr(cols)
