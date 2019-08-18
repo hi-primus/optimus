@@ -469,7 +469,7 @@ def send(self, name=None):
     if name is not None:
         self._name = name
 
-    result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=10000,
+    result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
                                        sample=10000)
 

@@ -105,3 +105,4 @@ SPARK_URL = "https://archive.apache.org/dist/spark/spark-{SPARK_VERSION}//{SPARK
 SPARK_PATH_COLAB = "/content/spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}".format(SPARK_VERSION=SPARK_VERSION,
                                                                                       HADOOP_VERSION=HADOOP_VERSION)
 JAVA_PATH_COLAB = "/usr/lib/jvm/java-8-openjdk-amd64"
+RELATIVE_ERROR = 10000

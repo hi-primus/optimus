@@ -11,6 +11,7 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.logger import logger
@@ -156,7 +157,7 @@ class Profiler:
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=20, infer=False, relative_error=10000, approx_count=True):
+    def run(self, df, columns="*", buckets=20, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -268,7 +269,7 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
-    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=10000, approx_count=True,
+    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000,
                 dump=True):
         """
@@ -308,7 +309,7 @@ class Profiler:
             output = json.dumps(output)
         return output
 
-    def columns(self, df, columns, buckets=10, infer=False, relative_error=10000, approx_count=True):
+    def columns(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -376,7 +377,7 @@ class Profiler:
 
     @staticmethod
     @time_it
-    def general_stats(df, columns, buckets=10, relative_error=10000, approx_count=True):
+    def general_stats(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return General stats for a column
         :param df:

@@ -20,7 +20,7 @@ from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType
 
 # Functions
-from optimus import logger, Optimus
+from optimus import logger, Optimus, RELATIVE_ERROR
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -539,6 +539,7 @@ def cols(self):
                             _exprs.append(agg.alias(func_name + "_" + _col_name))
                         elif ENGINE == "sql":
                             _exprs.append(agg.as_(func_name + "_" + _col_name))
+
             return _exprs
 
         return _agg_exprs(exprs)
@@ -609,7 +610,7 @@ def cols(self):
         return agg_exprs(columns, range_agg)
 
     @add_attr(cols)
-    def median(columns, relative_error=1, tidy=True):
+    def median(columns, relative_error=RELATIVE_ERROR, tidy=True):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
@@ -622,7 +623,7 @@ def cols(self):
         return format_dict(percentile(columns, [0.5], relative_error))
 
     @add_attr(cols, log_time=True)
-    def percentile(columns, values=None, relative_error=10000):
+    def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
         """
         Return the percentile of a dataframe
         :param columns:  '*', list of columns names or a single column name.
@@ -636,7 +637,7 @@ def cols(self):
     # Descriptive Analytics
     @add_attr(cols)
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(columns, relative_error=1, more=None):
+    def mad(columns, relative_error=RELATIVE_ERROR, more=None):
         """
         Return the Median Absolute Deviation
         :param columns: Column to be processed
@@ -744,9 +745,10 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        print(columns)
         check_column_numbers(columns, "*")
 
-        return format_dict(agg_exprs(columns, F.abs))
+        return agg_exprs(columns, F.abs)
 
     @add_attr(cols)
     def mode(columns):
@@ -1197,7 +1199,7 @@ def cols(self):
 
         result = {}
         for col_name in columns:
-            result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').to_json(),col_name,))
+            result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').to_json(), col_name))
         return result
 
     @add_attr(cols)
@@ -1322,7 +1324,7 @@ def cols(self):
         return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
 
     @add_attr(cols)
-    def iqr(columns, more=None, relative_error=10000):
+    def iqr(columns, more=None, relative_error=RELATIVE_ERROR):
         """
         Return the column data type
         :param columns:
@@ -1334,12 +1336,12 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)
+        quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
         for col_name in columns:
 
-            q1 = quartile[col_name]["0.25"]
-            q2 = quartile[col_name]["0.5"]
-            q3 = quartile[col_name]["0.75"]
+            q1 = quartile[col_name]["percentile"]["0.25"]
+            q2 = quartile[col_name]["percentile"]["0.5"]
+            q3 = quartile[col_name]["percentile"]["0.75"]
 
             iqr_value = q3 - q1
             if more:
@@ -1375,8 +1377,8 @@ def cols(self):
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
-            check_column_numbers(input_cols, ">1")
+            print(input_cols)
+            # check_column_numbers(input_cols, ">1")
 
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
@@ -1576,6 +1578,10 @@ def cols(self):
 
         if columns is not None:
             df = self
+
+            # Convert non compatible columns(different from str, int or float) to string
+            non_compatible_columns = df.cols.names("*", ["str", "int", "float"], True)
+            df = df.cols.cast(non_compatible_columns, "str")
 
             freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
