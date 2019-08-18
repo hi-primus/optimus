@@ -2,6 +2,21 @@ from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYT
     SPARK_DTYPES_DICT_OBJECTS
 
 
+def compress_dict(lst, col_name):
+    _result = {}
+    for l in lst:
+        _result.setdefault(col_name, []).append({"value": l[col_name], "count": l["count"]})
+    return _result
+
+
+def compress_list(lst):
+    _result = {}
+    for l in lst:
+        for k, v in l.items():
+            _result.setdefault(k, []).append(v)
+    return _result
+
+
 def parse_col_names_funcs_to_keys(data):
     from optimus.helpers.check import is_numeric, is_nan
 

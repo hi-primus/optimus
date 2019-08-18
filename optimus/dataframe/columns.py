@@ -1196,7 +1196,10 @@ def cols(self):
         columns = parse_columns(self, columns)
         # check_column_numbers(columns, 1)
 
-        return self.groupBy(columns).count().orderBy('count')
+        result = {}
+        for col_name in columns:
+            result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').to_json(),col_name,))
+        return result
 
     @add_attr(cols)
     def unique(columns):
@@ -1209,7 +1212,10 @@ def cols(self):
 
         check_column_numbers(columns, "1")
 
-        return self.select(columns).distinct()
+        result = {}
+        for col_name in columns:
+            result.update(compress_list(self.select(col_name).distinct().to_json()))
+        return result
 
     @add_attr(cols)
     def nunique(*args, **kwargs):
