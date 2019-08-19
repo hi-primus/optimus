@@ -27,6 +27,6 @@ class Test_example_notebooks(object):
 
         for notebook in notebooks:
             pm.execute_notebook(
-                "examples/" + notebook,
+                "/home/travis/build/ironmussa/Optimus/examples/" + notebook,
                 output
             )
