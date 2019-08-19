@@ -13,7 +13,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import absolute_path
+from optimus.helpers.functions import absolute_path, collect_as_dict
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -77,11 +77,11 @@ class Profiler:
 
             if infer is True and col_data_type == "string":
                 logger.print("Processing column '" + col_name + "'...")
-                types = (df
+                types = collect_as_dict(df
                          .h_repartition(col_name=col_name)
                          .withColumn(temp, fbdt(col_name, get_type=True))
                          .groupBy(temp).count()
-                         .to_json())
+                         )
 
                 for row in types:
                     count_by_data_type[row[temp]] = row["count"]
@@ -299,9 +299,6 @@ class Profiler:
 
         output["summary"].update(dataset_info)
 
-        # output["limit_10"] = {"columns": [{"title": cols} for cols in df.cols.names()],
-        #                       "value": df.limit(10).rows.to_list(columns)}
-
         output["sample"] = {"columns": [{"title": cols} for cols in df.cols.names()],
                             "value": df.sample_n(sample).rows.to_list(columns)}
 
@@ -332,7 +329,7 @@ class Profiler:
         columns_info['name'] = df._name
 
         columns_info['rows_count'] = humanize.intword(self.rows_count)
-        logger.print("Procesing General Stats...")
+        logger.print("Processing General Stats...")
         stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
         count_dtypes = self._count_data_types(df, columns, infer, stats)
 

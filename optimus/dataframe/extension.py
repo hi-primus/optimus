@@ -45,7 +45,7 @@ def to_json(self):
     :param self:
     :return:
     """
-    return json.loads(json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter))
+    return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
 
 
 @add_method(DataFrame)
