@@ -21,8 +21,7 @@ def plot(self):
         """
         columns = parse_columns(self, columns)
 
-        data = self.cols.hist(columns, buckets, tidy=False)
-        # print(data)
+        data = self.cols.hist(columns, buckets)
         for col_name in data.keys():
             plot_hist({col_name: data[col_name]["hist"]}, output=output_format, path=output_path)
 
@@ -86,7 +85,6 @@ def plot(self):
         :param output_path: Output path
         :return: Heatmap plot of the corr matrix using seaborn.
         """
-
         cols_data = self.cols.correlation(col_name, method, output="array")
         plot_correlation(cols_data, output=output_format, path=output_path)
 
