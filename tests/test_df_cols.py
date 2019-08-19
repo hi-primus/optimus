@@ -240,13 +240,13 @@ class Testdf_cols(object):
 	def test_cols_mad():
 		actual_df =source_df.cols.mad('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(0)
+		expected_value =json_enconding(9)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_mad_all_columns():
 		actual_df =source_df.cols.mad('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': 0, 'rank': 0, 'age': 0, 'weight(t)': 0.0})
+		expected_value =json_enconding({'height(ft)': 9, 'rank': 1, 'age': 0, 'weight(t)': 1.6999998092651367})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_max():
