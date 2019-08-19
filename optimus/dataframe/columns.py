@@ -1494,11 +1494,12 @@ def cols(self):
 
         columns = parse_columns(self, columns)
         df = self
-        for col_name in columns:
-            values = agg_exprs([F.min, F.max], columns)
 
+        values = df.cols.range(columns)
+
+        for col_name in columns:
             # Create splits
-            splits = create_buckets(values[col_name]["min"], values[col_name]["max"], buckets)
+            splits = create_buckets(values[col_name]["range"]["min"], values[col_name]["range"]["max"], buckets)
 
             # Create buckets in the dataFrame
             df = bucketizer(df, col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
