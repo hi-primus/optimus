@@ -46,7 +46,7 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = RandomForestClassifier(**kwargs)
         df.table()
@@ -79,7 +79,7 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = DecisionTreeClassifier(**kwargs)
 
@@ -112,7 +112,7 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = GBTClassifier(**kwargs)
 
