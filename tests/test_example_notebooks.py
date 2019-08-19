@@ -27,6 +27,6 @@ class Test_example_notebooks(object):
 
         for notebook in notebooks:
             pm.execute_notebook(
-                "/examples/" + notebook,
+                "examples/" + notebook,
                 output
             )
