@@ -133,7 +133,7 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           labelCol=label + "_index",
+                           labelCol=name_col(label, "index_to_string"),
                            **kwargs)
 
         model = automl.fit(df_va)
