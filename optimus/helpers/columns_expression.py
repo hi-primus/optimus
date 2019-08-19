@@ -92,9 +92,12 @@ def hist_agg(col_name, df, buckets):
 
     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
         min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
-        buckets = create_buckets(min_max["min"], min_max["max"], buckets)
-        func = F.col
-        exprs = create_exprs(col_name, buckets, func)
+        if min_max["min"] is not None and min_max["max"] is not None:
+            buckets = create_buckets(min_max["min"], min_max["max"], buckets)
+            func = F.col
+            exprs = create_exprs(col_name, buckets, func)
+        else:
+            exprs = None
 
     elif is_column_a(df, col_name, "str"):
         buckets = create_buckets(0, 50, buckets)
