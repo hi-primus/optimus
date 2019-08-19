@@ -744,9 +744,8 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         check_column_numbers(columns, "*")
         # Abs not accepts column's string names. Convert to Spark Column
-        columns = [F.col(c) for c in columns]
 
-        print(columns)
+        # print(columns)
         return agg_exprs(columns, F.abs)
 
     @add_attr(cols)
@@ -1376,7 +1375,6 @@ def cols(self):
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            print(input_cols)
             # check_column_numbers(input_cols, ">1")
 
             vector_assembler = VectorAssembler(

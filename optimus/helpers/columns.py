@@ -106,7 +106,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     :return: A list of columns string names
     """
-
+    print(cols_args)
     if not is_dataframe(df):
         RaiseIt.type_error(df, "Dataframe")
     attrs = None
