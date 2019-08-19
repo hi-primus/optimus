@@ -82,7 +82,9 @@ source_df.table()
 # -
 
 
-source_df.cols.count_uniques("*")
+source_df.cols.names("*", ["array", "vector", "byte","date"])
+
+source_df.cols.frequency("*")
 
 # ### End Init Section
 
@@ -148,7 +150,7 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
-t.create(None, "cols.remove", None, "df", string_col, "i")
+t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
 t.create(None, "cols.remove", "list", "df", string_col, ["a","i","Es"])
 
@@ -166,21 +168,31 @@ t.create(None, "cols.max", None, "json", numeric_col)
 t.create(None, "cols.max", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.range", None, "json", numeric_col)
+t.create(None, "cols.range", None, "json",None, numeric_col)
 
-t.create(None, "cols.range", "all_columns", "json", "*")
+t.create(None, "cols.range", "all_columns", "json",None, "*")
 
-t.create(None, "cols.median", None, "json", numeric_col)
+t.run()
 
-t.create(None, "cols.median", "all_columns", "json", "*")
+source_df.table()
 
-t.create(None, "cols.percentile", None, "json", numeric_col, [0.05, 0.25], 1)
+t.create(None, "cols.median", None, "json", None,numeric_col)
 
-t.create(None, "cols.percentile", "all_columns", "json", "*", [0.05, 0.25], 1)
+t.create(None, "cols.median", "all_columns", "json", None, "*")
 
-t.create(None, "cols.mad", None, "json", numeric_col)
+t.run()
 
-t.create(None, "cols.mad", "all_columns", "json", "*")
+t.create(None, "cols.percentile", None, "json", None, numeric_col, [0.05, 0.25], 1)
+
+t.create(None, "cols.percentile", "all_columns", "json", None, "*", [0.05, 0.25], 1)
+
+# ## MAD
+
+t.create(None, "cols.mad", None, "json", None, numeric_col)
+
+t.create(None, "cols.mad", "all_columns", "json", None, "*")
+
+t.run()
 
 t.create(None, "cols.std", None, "json", numeric_col)
 
@@ -213,9 +225,22 @@ t.create(None, "cols.variance", None, "json", numeric_col)
 t.create(None, "cols.variance", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.abs", None, "df", numeric_col)
+source_df.table()
 
-t.create(None, "cols.abs", "all_columns", "df", "*")
+from pyspark.sql import functions as F
+source_df.select(F.abs(F.col("age")))
+
+t.create(None, "cols.abs", None, "df", None,"weight(t)")
+
+t.create(None, "cols.abs", "all_columns", "json", None, "*")
+
+source_df.table()
+
+# +
+from pyspark.sql import functions as F
+
+source_df.select(F.abs("weight(t)"))
+# -
 
 t.create(None, "cols.mode", None, "json", numeric_col)
 
@@ -229,20 +254,33 @@ t.create(None, "cols.count_na", "all_columns", "json",None, "*")
 
 t.run()
 
+source_df.cols.names("rank",["str","int","float"],True)
+
 t.create(None, "cols.count_zeros", None, "json", numeric_col)
 
-t.create(None, "cols.count_zeros", "all_columns", "json", "*")
+t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
+t.run()
+
+# ## Value counts
+
+t.create(None, "cols.value_counts", None, "json", None, numeric_col)
+t.run()
+
+t.create(None, "cols.value_counts", "all_columns", "json", None,  "*")
+t.run()
 
 t.create(None, "cols.count_uniques", None, "json", None, numeric_col)
 t.run()
 
+
 t.create(None, "cols.count_uniques", "all_columns", "json",None, "*")
 t.run()
 
-t.create(None, "cols.unique", None, "json", numeric_col)
+t.create(None, "cols.unique", None, "json", None,numeric_col)
 t.run()
 
-t.create(None, "cols.unique", "all_columns", "json", "*")
+t.create(None, "cols.unique", "all_columns", "json", None,"*")
+t.run()
 
 t.create(None, "cols.add", None, "df", [numeric_col, numeric_col_B])
 
@@ -264,9 +302,11 @@ t.create(None, "cols.z_score", None, "df", numeric_col)
 
 t.create(None, "cols.z_score", "all_columns", "df", "*")
 
-t.create(None, "cols.iqr", None, "json", numeric_col)
+t.create(None, "cols.iqr", None, "json", None, numeric_col)
 
-t.create(None, "cols.iqr", "all_columns", "json", "*")
+t.create(None, "cols.iqr", "all_columns", "json",None, "*")
+
+t.run()
 
 t.create(None, "cols.lower", None, "df", string_col)
 
@@ -320,20 +360,20 @@ t.create(None, "cols.impute", None, "df", numeric_col_B)
 
 t.create(None, "cols.impute", "all_columns", "df", "names","categorical")
 
-t.create(None, "cols.hist", None, "json", None, numeric_col_B, 4)
+# ## Hist
+
+t.create(None, "cols.hist", None, "json", None, ["height(ft)",numeric_col_B], 4)
 t.run()
 
-# +
-# t.create(None,"cols.hist","all_columns","df","*",4)
-# -
+t.create(None,"cols.hist","all_columns","json",None, "Date Type",4)
+
+t.run()
 
 t.create(None, "cols.frequency", None, "json", None, numeric_col_B, 4)
 t.run()
 
 t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
 t.run()
-
-source_df.cols.frequency("*", 4).table()
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -429,10 +469,13 @@ t.create(None, "cols.select", None, "df", 0, numeric_col)
 t.create(None, "cols.select", "regex", "df", "n.*", regex=True),
 
 t.create(None, "cols.sort", None, "df")
+t.run()
 
-t.create(None, "cols.sort", "desc", "df", "desc")
+t.create(None, "cols.sort", "desc", "df", None,"desc")
 
-t.create(None, "cols.sort", "asc", "df", "asc")
+t.create(None, "cols.sort", "asc", "df", None, "asc")
+
+t.run()
 
 t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
 
@@ -446,7 +489,7 @@ t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "func
 
 # ## Nest
 
-t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], separator=" ",output_cols=new_col)
+t.create(None, "cols.nest", None, "df", None, [numeric_col, numeric_col_B], separator=" ",output_col=new_col)
 
 # +
 # t.create(None, "cols.nest", "mix", "df", [F.col(numeric_col_C), F.col(numeric_col_B)], "E", separator="--")
@@ -454,14 +497,12 @@ t.create(None, "cols.nest", None, "df", [numeric_col, numeric_col_B], separator=
 # +
 df_na = source_df.cols.drop("NullType").rows.drop_na("*")
 
-t.create(df_na, "cols.nest", "vector_all_columns", "df", [numeric_col_C, numeric_col_B], shape="vector", output_col=new_col)
+t.create(df_na, "cols.nest", "vector_all_columns", "df", None,[numeric_col_C, numeric_col_B], shape="vector", output_col=new_col)
 # -
 
-t.create(df_na, "cols.nest", "vector", "df", [numeric_col_C, numeric_col_B], shape="vector",output_col=new_col)
+t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B], shape="vector",output_col=new_col)
 
-t.delete(None, "cols.nest", "array_all_columns", "df", "*", shape="array", output_cols=new_col)
-
-t.create(None, "cols.nest", "array", "df", [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_cols=new_col)
+t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_col=new_col)
 
 t.run()
 
@@ -617,7 +658,7 @@ t.run()
 # ## Modified Zscore
 
 threshold = 0.5
-relative_error = 0
+relative_error = 10000
 
 t.create(None, "outliers.modified_z_score", None, "df","select", numeric_col, threshold, relative_error)
 
@@ -634,7 +675,7 @@ t.run()
 # ## Mad
 
 threshold = 0.5
-relative_error = 0
+relative_error = 10000
 
 t.create(None, "outliers.mad", None, "df","select", numeric_col, threshold, relative_error)
 
@@ -712,5 +753,62 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
 df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
 df_model.table()
+
+source_df = op.create.df([
+    ("words", "str", True),
+    ("num", "int", True),
+    ("animals", "str", True),
+    ("thing", StringType(), True),
+    ("second", "int", True),
+    ("filter", StringType(), True)
+],
+    [
+        ("  I like     fish  ", 1, "dog dog", "housé", 5, "a"),
+        ("    zombies", 2, "cat", "tv", 6, "b"),
+        ("simpsons   cat lady", 2, "frog", "table", 7, "1"),
+        (None, 3, "eagle", "glass", 8, "c"),
+    ])
+
+source_df.show()
+
+actual_df = source_df.rows.append([("this is a word", 2, "this is an animal",
+                                           "this is a thing", 64, "this is a filter",)])
+
+# +
+value = [("this is a word", 2, "this is an animal",
+                                           "this is a thing", 64, "this is a filter",)]
+
+bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
+
+# +
+columns = ["a","b","c"]
+
+columns = [F.col(c) for c in columns]
+# -
+
+from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector, SparseVector
+df1=op.create.df([('id', LongType(), True),('hour', LongType(), True),('mobile', DoubleType(), True),('user_features', VectorUDT(), True),('clicked', DoubleType(), True)], [(0, 18, 1.0, DenseVector([0.0, 10.0, 0.5]), 1.0)])
+
+df1.table()
+
+from optimus.ml import feature as fe
+actual_df =fe.normalizer(df1,input_cols=['user_features'],p=2.0)
+
+
+
+df1.plot.scatter(["id", "hour"])
+
+source_df.cols.frequency("age")
+
+# +
+from optimus.helpers.json import json_enconding 
+
+actual_df =source_df.cols.frequency('rank',4)
+actual_df =json_enconding(actual_df)
+expected_value =json_enconding({'rank': [{'value': '10', 'count': 2}, {'value': '7', 'count': 2}, {'value': '8', 'count': 2}, {'value': None, 'count': 1}]})
+assert (expected_value == actual_df)
+# -
+
+print(actual_df)
 
 
