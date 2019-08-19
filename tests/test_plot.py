@@ -140,7 +140,7 @@ class TestDataFrameCols(object):
     def test_qqplot():
 
         try:
-            source_df.qqplot.frequency("age")
+            source_df.plot.qqplot("age")
 
         except RuntimeError:
             logging.exception('Error creating the json output.')
