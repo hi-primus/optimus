@@ -1578,7 +1578,7 @@ def cols(self):
             df = self
 
             # Convert non compatible columns(different from str, int or float) to string
-            non_compatible_columns = df.cols.names("*", ["str", "int", "float"], True)
+            non_compatible_columns = df.cols.names(columns, ["str", "int", "float","double"], True)
             df = df.cols.cast(non_compatible_columns, "str")
 
             freq = (df.select(columns).rdd
