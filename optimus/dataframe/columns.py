@@ -33,7 +33,7 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPA
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
-from optimus.helpers.functions import append as append_df
+from optimus.helpers.functions import append as append_df, collect_as_dict
 from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
@@ -84,6 +84,7 @@ def cols(self):
         :return:
         """
         df = self
+        df_result = None
         if is_list_of_tuples(cols_values):
 
             for c in cols_values:
@@ -572,7 +573,7 @@ def cols(self):
         elif ENGINE == "spark":
             df = self.agg(*exprs)
 
-        result = parse_col_names_funcs_to_keys(df.to_json())
+        result = parse_col_names_funcs_to_keys(collect_as_dict(df))
 
         return result
 
@@ -615,7 +616,6 @@ def cols(self):
         :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
-        # columns = parse_columns(self, columns)
 
         return format_dict(percentile(columns, [0.5], relative_error))
 
