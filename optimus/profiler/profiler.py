@@ -414,7 +414,7 @@ class Profiler:
                                               relative_error))
 
             # print("Aggregating {BATCH_NUMBER}".format(BATCH_NUMBER=i))
-            result.update(df.cols.exec_agg(exprs, tidy=False))
+            result.update(df.cols.exec_agg(exprs))
 
         return result
 

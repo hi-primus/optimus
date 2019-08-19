@@ -545,13 +545,12 @@ def cols(self):
         return _agg_exprs(exprs)
 
     @add_attr(cols)
-    def agg_exprs(columns, funcs, *args, tidy=True):
+    def agg_exprs(columns, funcs, *args):
         """
         Create and run aggregation
         :param columns:
         :param funcs:
         :param args:
-        :param tidy:
         :return:
         """
         return exec_agg(create_exprs(columns, funcs, *args))
@@ -561,7 +560,6 @@ def cols(self):
         """
         Execute and aggregation
         :param exprs:
-        :param tidy:
         :return:
         """
         df = self
@@ -610,11 +608,10 @@ def cols(self):
         return agg_exprs(columns, range_agg)
 
     @add_attr(cols)
-    def median(columns, relative_error=RELATIVE_ERROR, tidy=True):
+    def median(columns, relative_error=RELATIVE_ERROR):
         """
         Return the median of a column dataframe
         :param columns: '*', list of columns names or a single column name.
-        :param tidy:
         :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
         :return:
         """
@@ -1520,9 +1517,9 @@ def cols(self):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     @add_attr(cols, log_time=True)
-    def hist(columns, buckets=20, tidy=True):
+    def hist(columns, buckets=20):
 
-        result = agg_exprs(columns, hist_agg, self, buckets, tidy=tidy)
+        result = agg_exprs(columns, hist_agg, self, buckets)
         # TODO: for some reason casting to int in the exprss do not work. Casting Here. A Spark bug?
         # Example
         # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT), lower, 7, upper, 7.75) AS `hist_agg_rank_0`, map(count, CAST(sum(CASE WHEN ((rank >= 7.75) AND (rank < 8.5)) THEN 1 ELSE 0 END) AS INT), lower, 7.75, upper, 8.5) AS `hist_agg_rank_1`, map(count, CAST(sum(CASE WHEN ((rank >= 8.5) AND (rank < 9.25)) THEN 1 ELSE 0 END) AS INT), lower, 8.5, upper, 9.25) AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10)) THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
