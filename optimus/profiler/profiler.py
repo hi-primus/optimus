@@ -438,7 +438,11 @@ class Profiler:
             col_info['median'] = quantile["0.5"]
             col_info['interquartile_range'] = quantile["0.75"] - quantile["0.25"]
 
-            col_info['coef_variation'] = round((stddev / mean), 5)
+            if mean != 0:
+                col_info['coef_variation'] = round((stddev / mean), 5)
+            else:
+                col_info['coef_variation'] = 0
+
             col_info['mad'] = round(df.cols.mad(col_name), 5)
 
         col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
