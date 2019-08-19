@@ -1366,7 +1366,7 @@ def cols(self):
         check_column_numbers(output_col, 1)
 
         df = self
-        if has_(input_cols, F.col):
+        if has_(input_cols, F.Column):
             # Transform non Column data to lit
             input_cols = [F.lit(col) if not is_(col, F.col) else col for col in input_cols]
         else:
