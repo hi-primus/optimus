@@ -135,3 +135,13 @@ class TestDataFrameCols(object):
         except RuntimeError:
             logging.exception('Error creating the json output.')
             sys.exit(1)
+
+    @staticmethod
+    def test_qqplot():
+
+        try:
+            source_df.qqplot.frequency("age")
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
