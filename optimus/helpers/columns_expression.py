@@ -2,7 +2,6 @@ import datetime
 import itertools
 
 from pyspark.sql import functions as F
-from pyspark.sql.types import IntegerType
 
 from optimus.helpers.check import is_column_a, is_numeric
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPES

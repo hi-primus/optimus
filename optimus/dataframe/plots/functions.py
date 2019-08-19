@@ -76,6 +76,7 @@ def plot_frequency(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
+
     for col_name, data in column_data.items():
 
         # Transform Optimus' format to matplotlib's format
