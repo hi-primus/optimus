@@ -69,7 +69,7 @@ def cols(self):
         elif is_tuple(value):
             value = lit_array(list(value))
 
-        if is_(value, F.col):
+        if is_(value, F.Column):
             df = df.withColumn(col_name, value)
 
         return df
