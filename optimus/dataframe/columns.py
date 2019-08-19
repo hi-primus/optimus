@@ -69,7 +69,7 @@ def cols(self):
         elif is_tuple(value):
             value = lit_array(list(value))
 
-        if is_(value, F.Column):
+        if is_(value, F.col):
             df = df.withColumn(col_name, value)
 
         return df
@@ -225,10 +225,10 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-
+        df = self
         for col_name in columns:
-            df = self.cols.apply(col_name, func=func, func_return_type=func_return_type, args=args, func_type=func_type,
-                                 when=fbdt(col_name, data_type))
+            df = df.cols.apply(col_name, func=func, func_return_type=func_return_type, args=args, func_type=func_type,
+                               when=fbdt(col_name, data_type))
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -742,9 +742,11 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-        print(columns)
         check_column_numbers(columns, "*")
+        # Abs not accepts column's string names. Convert to Spark Column
+        columns = [F.col(c) for c in columns]
 
+        print(columns)
         return agg_exprs(columns, F.abs)
 
     @add_attr(cols)
@@ -1105,6 +1107,7 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
+            func = None
             if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
                 new_value = fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
@@ -1155,7 +1158,6 @@ def cols(self):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
-        :param output:
         :return:
         """
 
@@ -1257,8 +1259,8 @@ def cols(self):
         if len(columns) < 2:
             raise Exception("Error: 2 or more columns needed")
 
-        cols = list(map(lambda x: F.col(x), columns))
-        expr = reduce(operator, cols)
+        columns = list(map(lambda x: F.col(x), columns))
+        expr = reduce(operator, columns)
 
         return df.withColumn(new_column, expr)
 
@@ -1364,9 +1366,9 @@ def cols(self):
         check_column_numbers(output_col, 1)
 
         df = self
-        if has_(input_cols, F.Column):
+        if has_(input_cols, F.col):
             # Transform non Column data to lit
-            input_cols = [F.lit(col) if not is_(col, F.Column) else col for col in input_cols]
+            input_cols = [F.lit(col) if not is_(col, F.col) else col for col in input_cols]
         else:
             input_cols = parse_columns(self, input_cols)
 
@@ -1639,7 +1641,7 @@ def cols(self):
             RaiseIt.message(ValueError, message)
 
         corr = Correlation.corr(df, output_col, method).head()[0].toArray()
-
+        result = None
         if output is "array":
             result = corr
 
@@ -1679,11 +1681,11 @@ def cols(self):
             lb = iqr["q1"] - (iqr["iqr"] * 1.5)
             ub = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-            mean = df.cols.mean(columns)
+            _mean = df.cols.mean(columns)
 
             query = ((F.col(col_name) < lb) | (F.col(col_name) > ub))
             fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
-            stats = [{'mean': mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
+            stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
                       'fliers': fliers, 'label': one_list_to_val(col_name)}]
 
             return stats
