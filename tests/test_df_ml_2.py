@@ -1,7 +1,7 @@
 from pyspark.sql.types import *
 from optimus import Optimus
 from optimus.helpers.json import json_enconding 
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector. SparseVector
+from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector, SparseVector
 import numpy as np
 nan = np.nan
 import datetime
