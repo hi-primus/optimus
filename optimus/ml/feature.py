@@ -28,7 +28,7 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols, output_col, **kargs):
+def string_to_index(df, input_cols, output_col=None, **kargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
