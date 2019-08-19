@@ -262,6 +262,7 @@ def is_list_of_list(value):
 
     return bool(value) and isinstance(value, list) and all(isinstance(elem, list) for elem in value)
 
+
 def is_list_of_tuples(value):
     """
     Check if all elements in a list are tuples

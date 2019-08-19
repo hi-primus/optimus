@@ -18,26 +18,27 @@ from optimus.helpers.raiseit import RaiseIt
 
 def rows(self):
     @add_attr(rows)
-    def append(row):
+    def append(rows):
         """
         Append a row at the end of a dataframe
-        :param row: List of values or tuples to be appended
+        :param rows: List of values or tuples to be appended
         :return: Spark DataFrame
         """
         df = self
+        print(is_list_of_tuples(rows))
         if is_list_of_tuples(rows):
             columns = [str(i) for i in range(df.cols.count())]
-            if not is_list_of_tuples(row):
-                row = [tuple(row)]
-            new_row = op.Create.df(columns, row)
+            if not is_list_of_tuples(rows):
+                rows = [tuple(rows)]
+            new_row = op.Create.df(columns, rows)
             df_result = df.union(new_row)
 
-        elif is_list_of_dataframes(row) or is_dataframe(row):
-            row = val_to_list(row)
+        elif is_list_of_dataframes(rows) or is_dataframe(rows):
+            row = val_to_list(rows)
             row.insert(0, df)
             df_result = append_df(row, like="rows")
         else:
-            RaiseIt.type_error(row, ["list of tuples", "list of dataframes"])
+            RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
         return df_result
 
     @add_attr(rows)
