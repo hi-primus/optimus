@@ -745,8 +745,12 @@ def cols(self):
         check_column_numbers(columns, "*")
         # Abs not accepts column's string names. Convert to Spark Column
 
-        # print(columns)
-        return agg_exprs(columns, F.abs)
+        # TODO: make this in one pass.
+        df = self
+        for col_name in columns:
+            df = df.withColumn(col_name, F.abs(F.col(col_name)))
+        return df
+        # return agg_exprs(columns, abs_agg)
 
     @add_attr(cols)
     def mode(columns):
