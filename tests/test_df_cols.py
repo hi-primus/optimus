@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pyspark.sql.types import *
 from optimus import Optimus
 from optimus.helpers.json import json_enconding 
@@ -95,7 +94,7 @@ class Testdf_cols(object):
 	def test_cols_count_zeros_all_columns():
 		actual_df =source_df.cols.count_zeros('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': {'zeros': 0}, 'rank': {'zeros': 0}, 'age': {'zeros': 0}, 'weight(t)': {'zeros': 0}})
+		expected_value =json_enconding({'height(ft)': 0, 'rank': 0, 'age': 0, 'weight(t)': 0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_date_transform():
