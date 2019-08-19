@@ -1582,8 +1582,10 @@ def cols(self):
             df = self
 
             # Convert non compatible columns(different from str, int or float) to string
-            non_compatible_columns = df.cols.names(columns, ["str", "int", "float","double"], True)
-            df = df.cols.cast(non_compatible_columns, "str")
+            non_compatible_columns = df.cols.names(columns, ["array", "vector", "byte", "date", "binary"])
+
+            if non_compatible_columns is not None:
+                df = df.cols.cast(non_compatible_columns, "str")
 
             freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
