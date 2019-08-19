@@ -68,10 +68,11 @@ def plot(self):
         :param output_path: path where the image is going to be saved
         :return:
         """
-
+        columns = parse_columns(self, columns)
         data = self.cols.frequency(columns, buckets)
-        for col_name in columns:
-            plot_frequency(data[col_name], output=output_format, path=output_path)
+
+        for k, v in data.items():
+            plot_frequency({k: v}, output=output_format, path=output_path)
 
     @add_attr(plot)
     def correlation(col_name, method="pearson", output_format="plot", output_path=None):
