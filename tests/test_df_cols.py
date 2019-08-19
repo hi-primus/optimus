@@ -276,13 +276,13 @@ class Testdf_cols(object):
 	def test_cols_median():
 		actual_df =source_df.cols.median('height(ft)')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(-28)
+		expected_value =json_enconding(17)
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_median_all_columns():
 		actual_df =source_df.cols.median('*')
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'height(ft)': -28, 'rank': 7, 'age': 5000000, 'weight(t)': 1.7999999523162842})
+		expected_value =json_enconding({'height(ft)': 17, 'rank': 8, 'age': 5000000, 'weight(t)': 4.0})
 		assert (expected_value == actual_df)
 	@staticmethod
 	def test_cols_min():
