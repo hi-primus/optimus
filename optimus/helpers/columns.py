@@ -106,7 +106,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     :return: A list of columns string names
     """
-    print(cols_args)
+
     if not is_dataframe(df):
         RaiseIt.type_error(df, "Dataframe")
     attrs = None
@@ -165,7 +165,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     cols_params = []
 
     if invert:
-        final_columns = list(OrderedSet(cols) - OrderedSet(final_columns))
+        final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
 
     if get_args is True:
         cols_params = final_columns, attrs
@@ -183,6 +183,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     if len(cols_params) == 0:
         cols_params = None
         print("Outputting 0 columns after filtering. Is this expected?")
+
+    # print("final",cols_params)
     return cols_params
 
 
