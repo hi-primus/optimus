@@ -33,7 +33,7 @@ from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPA
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
-from optimus.helpers.functions import append as append_df, collect_as_dict
+from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
@@ -573,7 +573,7 @@ def cols(self):
         elif ENGINE == "spark":
             df = self.agg(*exprs)
 
-        result = parse_col_names_funcs_to_keys(collect_as_dict(df))
+        result = parse_col_names_funcs_to_keys(df.to_dict())
 
         return result
 
@@ -1201,7 +1201,7 @@ def cols(self):
 
         result = {}
         for col_name in columns:
-            result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').to_json(), col_name))
+            result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').to_dict(), col_name))
         return result
 
     @add_attr(cols)
@@ -1217,7 +1217,7 @@ def cols(self):
 
         result = {}
         for col_name in columns:
-            result.update(compress_list(self.select(col_name).distinct().to_json()))
+            result.update(compress_list(self.select(col_name).distinct().to_dict()))
         return result
 
     @add_attr(cols)
@@ -1429,7 +1429,7 @@ def cols(self):
                 expr = F.col(input_col)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(input_col))).to_json())
+                    splits = format_dict(self.agg(F.max(F.size(input_col))).to_dict())
 
                 for i in builtins.range(splits):
                     df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
@@ -1441,7 +1441,7 @@ def cols(self):
 
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_json())
+                    splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
 
                 if is_int(index):
                     r = builtins.range(index, index + 1)
@@ -1555,7 +1555,7 @@ def cols(self):
         result = {}
         for col_name in columns:
             result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).cols.rename(
-                col_name, "value").rows.sort([("value", "desc")]).to_json()
+                col_name, "value").rows.sort([("value", "desc")]).to_dict()
             logger.print(col_name)
             if percentage:
                 if total_rows is None:
