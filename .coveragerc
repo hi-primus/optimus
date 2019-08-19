@@ -2,7 +2,7 @@
 omit =
     optimus/*
     setup.py
-    test/creator/*
+    tests/creator/creator.py
 [report]
 exclude_lines =
     pragma: no cover
