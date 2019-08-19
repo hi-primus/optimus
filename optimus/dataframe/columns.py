@@ -1606,7 +1606,7 @@ def cols(self):
 
             return result
 
-    @add_attr(DataFrame)
+    @add_attr(cols)
     def correlation(input_cols, method="pearson", output="json"):
         """
         Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
