@@ -91,7 +91,7 @@ def hist_agg(col_name, df, buckets):
         return _exprs
 
     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-        min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_json()[0]
+        min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
         buckets = create_buckets(min_max["min"], min_max["max"], buckets)
         func = F.col
         exprs = create_exprs(col_name, buckets, func)

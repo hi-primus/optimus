@@ -49,6 +49,16 @@ def to_json(self):
 
 
 @add_method(DataFrame)
+def to_dict(self):
+    """
+    Return a Python object from a Spark Dataframe
+    :param self:
+    :return:
+    """
+    return collect_as_dict(self)
+
+
+@add_method(DataFrame)
 def export(self):
     """
     Helper function to export all the dataframe in text format. Aimed to be used in test functions
