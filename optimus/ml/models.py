@@ -30,7 +30,7 @@ class ML:
         return df_model, ml_model
 
     @staticmethod
-    def random_forest(df, columns, input_col, **kargs):
+    def random_forest(df, columns, input_col, **kwargs):
         """
         Runs a random forest classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -46,17 +46,18 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
-        model = RandomForestClassifier(**kargs)
-        df = df.cols.rename(name_col(input_col, "index"), "label")
+        model = RandomForestClassifier(**kwargs)
+        df.table()
+        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
         return df_model, rf_model
 
     @staticmethod
-    def decision_tree(df, columns, input_col, **kargs):
+    def decision_tree(df, columns, input_col, **kwargs):
         """
         Runs a decision tree classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -78,18 +79,18 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
-        model = DecisionTreeClassifier(**kargs)
+        model = DecisionTreeClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index"), "label")
+        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
         return df_model, dt_model
 
     @staticmethod
-    def gbt(df, columns, input_col, **kargs):
+    def gbt(df, columns, input_col, **kwargs):
         """
         Runs a gradient boosting tree classifier for input DataFrame.
         :param df: Pyspark dataframe to analyze.
@@ -111,18 +112,18 @@ class ML:
         feats.remove(input_col)
 
         df = string_to_index(df, input_cols=input_col)
-        df = vector_assembler(df, input_cols=feats)
+        df = vector_assembler(df, input_cols=feats, output_col="features")
 
-        model = GBTClassifier(**kargs)
+        model = GBTClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index"), "label")
+        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
 
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
         return df_model, gbt_model
 
     @staticmethod
-    def h2o_automl(df, label, columns, **kargs):
+    def h2o_automl(df, label, columns, **kwargs):
 
         H2OContext.getOrCreate(Spark.instance.spark)
 
@@ -132,8 +133,8 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           labelCol=label + "_index",
-                           **kargs)
+                           labelCol=name_col(label, "index_to_string"),
+                           **kwargs)
 
         model = automl.fit(df_va)
         df_raw = model.transform(df_va)
@@ -143,7 +144,7 @@ class ML:
         return df_pred, model
 
     @staticmethod
-    def h2o_deeplearning(df, label, columns, **kargs):
+    def h2o_deeplearning(df, label, columns, **kwargs):
 
         H2OContext.getOrCreate(Spark.instance.spark)
 
@@ -156,7 +157,7 @@ class ML:
                                            hidden=[200, 200],
                                            featuresCols=columns,
                                            labelCol=label,
-                                           **kargs)
+                                           **kwargs)
         model = h2o_deeplearning.fit(df_va)
         df_raw = model.transform(df_va)
 
@@ -165,7 +166,7 @@ class ML:
         return df_pred, model
 
     @staticmethod
-    def h2o_xgboost(df, label, columns, **kargs):
+    def h2o_xgboost(df, label, columns, **kwargs):
 
         H2OContext.getOrCreate(Spark.instance.spark)
 
@@ -174,7 +175,7 @@ class ML:
         h2o_xgboost = H2OXGBoost(convertUnknownCategoricalLevelsToNa=True,
                                  featuresCols=columns,
                                  labelCol=label,
-                                 **kargs)
+                                 **kwargs)
         model = h2o_xgboost.fit(df_va)
         df_raw = model.transform(df_va)
 
@@ -183,7 +184,7 @@ class ML:
         return df_pred, model
 
     @staticmethod
-    def h2o_gbm(df, label, columns, **kargs):
+    def h2o_gbm(df, label, columns, **kwargs):
 
         H2OContext.getOrCreate(Spark.instance.spark)
 
@@ -193,7 +194,7 @@ class ML:
                          seed=1,
                          featuresCols=columns,
                          labelCol=label,
-                         **kargs)
+                         **kwargs)
         model = h2o_gbm.fit(df_va)
         df_raw = model.transform(df_va)
 

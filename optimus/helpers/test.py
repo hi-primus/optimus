@@ -136,7 +136,6 @@ class Test:
             df_func = obj
             add_buffer(source_df)
         else:
-            # TODO: op is not supposed to be hardcoded
             source = get_var_name(obj)
             df_func = obj
 

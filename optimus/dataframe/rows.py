@@ -6,29 +6,40 @@ from pyspark.sql import functions as F
 
 # Helpers
 import optimus as op
-from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples
-from optimus.helpers.converter import one_list_to_val
 from optimus import val_to_list
-from optimus.helpers.decorators import *
+from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
+from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.decorators import *
+from optimus.helpers.functions import append as append_df
+from optimus.helpers.raiseit import RaiseIt
 
 
 def rows(self):
     @add_attr(rows)
-    def append(row):
+    def append(rows):
         """
         Append a row at the end of a dataframe
-        :param row: List of values or tuples to be appended
+        :param rows: List of values or tuples to be appended
         :return: Spark DataFrame
         """
         df = self
-        columns = [str(i) for i in range(df.cols.count())]
-        if not is_list_of_tuples(row):
-            row = [tuple(row)]
+        print(is_list_of_tuples(rows))
+        if is_list_of_tuples(rows):
+            columns = [str(i) for i in range(df.cols.count())]
+            if not is_list_of_tuples(rows):
+                rows = [tuple(rows)]
+            new_row = op.Create.df(columns, rows)
+            df_result = df.union(new_row)
 
-        new_row = op.Create.df(columns, row)
-        return df.union(new_row)
+        elif is_list_of_dataframes(rows) or is_dataframe(rows):
+            row = val_to_list(rows)
+            row.insert(0, df)
+            df_result = append_df(row, like="rows")
+        else:
+            RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
+        return df_result
 
     @add_attr(rows)
     def select_by_dtypes(input_cols, data_type=None):
@@ -60,6 +71,16 @@ def rows(self):
         :return: Spark DataFrame
         """
         return self.filter(*args, **kwargs)
+
+    @add_attr(rows)
+    def to_list(input_cols):
+        """
+        Output rows as list
+        :param input_cols:
+        :return:
+        """
+        input_cols = parse_columns(self, input_cols)
+        return self.select(input_cols).rdd.map(lambda x: [v for v in x.asDict().values()]).collect()
 
     @add_attr(rows)
     @dispatch(str)

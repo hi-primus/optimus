@@ -238,6 +238,10 @@ class JDBC:
         :param mode
         :return:
         """
+        # Parse array and vector to string. JDBC can not handle this data types
+        columns = df.cols.names("*", filter_by_column_dtypes=["array", "vector"])
+        df = df.cols.cast(columns, "str")
+
         conf = df.write \
             .format("jdbc") \
             .mode(mode) \
@@ -248,7 +252,7 @@ class JDBC:
 
         if self.db_driver == "oracle":
             conf.option("driver", self.driver_option)
-
+        print(table, self.url)
         conf.save()
 
     @staticmethod

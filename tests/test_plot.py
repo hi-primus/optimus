@@ -15,7 +15,7 @@ source_df = op.create.df(
      ('japanese name', ArrayType(StringType(), True), True), ('last position seen', StringType(), True),
      ('date arrival', StringType(), True), ('last date seen', StringType(), True),
      ('attributes', ArrayType(FloatType(), True), True), ('DateType', DateType(), True),
-     ('Tiemstamp', TimestampType(), True), ('Cybertronian', BooleanType(), True),
+     ('timestamp', TimestampType(), True), ('Cybertronian', BooleanType(), True),
      ('function(binary)', BinaryType(), True), ('NullType', NullType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000,
                                                                                   4.300000190734863,
                                                                                   ['Inochi', 'Convoy'],
@@ -131,6 +131,16 @@ class TestDataFrameCols(object):
 
         try:
             source_df.plot.frequency("age")
+
+        except RuntimeError:
+            logging.exception('Error creating the json output.')
+            sys.exit(1)
+
+    @staticmethod
+    def test_qqplot():
+
+        try:
+            source_df.plot.qqplot("age")
 
         except RuntimeError:
             logging.exception('Error creating the json output.')

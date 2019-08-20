@@ -77,6 +77,22 @@ df.table()
 df = df.cols.append("new_col_1", 1)
 df.table()
 
+df.table()
+
+# ### Append 2 or multiples dataframes columns like
+
+df_col = op.create.df(
+    [
+        ("new_col", "str", True),
+       
+
+    ],[
+        ("q"),("w"), ("e"), ("r"),
+
+    ])
+
+df.cols.append(df_col).table()
+
 # ### Create multiple columns with a constant value
 
 # +
@@ -90,14 +106,11 @@ df.cols.append([
 
 # ### Create multiple columns with a constant string, a new column with existing columns value and an array
 
-# +
-
 df.cols.append([
     ("new_col_4", "test"),
     ("new_col_5", df['num'] * 2),
     ("new_col_6", [1, 2, 3])
 ]).table()
-# -
 
 # ## Select columns
 # ### Spark
@@ -161,7 +174,7 @@ df.cols.rename(str.upper).table()
 # with astype()
 # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.astype.html
 
-df.cols.cast([("num", "string"), ("num 2", "integer")]).dtypes
+df.cols.cast(columns=[("num", "string"), ("num 2", "integer")]).dtypes
 
 # ### Cast a column to string
 
@@ -295,19 +308,21 @@ df \
 # ### Unnest a Vector
 
 # +
-from pyspark.ml.linalg import Vectors
+# from pyspark.ml.linalg import Vectors
 
-df1 = op.sc.parallelize([
-    ("assert", Vectors.dense([1, 2, 3])),
-    ("require", Vectors.sparse(3, {1: 2}))
-]).toDF()
+# df1 = op.sc.parallelize([
+#     ("assert", Vectors.dense([1, 2, 3])),
+#     ("require", Vectors.sparse(3, {1: 2}))
+# ]).toDF()
+
+# +
+# df1 \
+#     .cols.unnest(["vector"]) \
+#     .table()
+
+# +
+# df = df.cols.append("new_col_1", 1)
 # -
-
-df1 \
-    .cols.unnest(["vector"]) \
-    .table()
-
-df = df.cols.append("new_col_1", 1)
 
 # ## Impute
 
@@ -390,15 +405,13 @@ df.cols.apply(["num", "new_col_1"], func, "int", 10).table()
 
 # ### Select row where column "filter" is "integer"
 
-# +
-
+from optimus.audf import filter_row_by_data_type as fbdt
 df.rows.select(fbdt("filter", "integer")).table()
-# -
 
 # ### Create an abstract dataframe to filter a rows where the value of column "num"> 1
 
 # +
-from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
+from optimus.audf import abstract_udf as audf
 
 
 def func(val, attr):
@@ -426,7 +439,7 @@ df.withColumn("num_sum", audf("num", func, "int", [10, 20])).table()
 # ### Apply a column expression to when the value of "num" or "num 2" is grater than 2
 
 # +
-
+from pyspark.sql import functions as F
 
 def func(col_name, attr):
     return F.when(F.col(col_name) > 2, 10).otherwise(1)
@@ -438,7 +451,7 @@ df.cols.apply_expr(["num", "num 2"], func).table()
 # ### Convert to uppercase
 
 # +
-from pyspark.sql import functions as F
+
 
 
 def func(col_name, attr):
@@ -516,7 +529,6 @@ df_distinct.cols.unique("num").table()
 # ## Count Zeros
 
 df_zeros = df_distinct
-df_zeros.table()
 df_zeros.cols.count_zeros("*")
 
 # ## Column Data Types
@@ -559,6 +571,10 @@ df.cols.replace('num', [("3", 6), (2, 12)]).table()
 
 df.cols.replace("animals", "dog", "animal", search_by="words").table()
 
+df.cols.replace("animals", "dog", "animal", search_by="words", output_cols="friends").table()
+
+df.cols.replace("*", "1", "11", search_by="chars", output_cols="new").table()
+
 df.cols.replace("animals", [("dog", "dog_1"), ("cat", "cat_1")], "words").table()
 
 df.cols.replace("animals", ["dog", "cat"], "animals", "words").table()
@@ -572,7 +588,8 @@ df.cols.replace_regex('*', '.*[Cc]at.*', 'cat_1').table()
 # ### Merge two columns in a column vector
 # #### Match the string as a word not as a substring
 
-df.cols.nest(["num", "new_col_1"], output_col="col_nested", shape="vector").table()
+df = df.cols.copy("num", "num_1")
+df.cols.nest(["num", "num_1"], output_col="col_nested", shape="vector").table()
 
 # ### Merge two columns in a string columns
 
@@ -580,11 +597,11 @@ df.cols.nest(["animals", "two strings"], output_col="col_nested", shape="string"
 
 # ### Merge three columns in an array
 
-df.cols.nest(["animals", "two strings", "num 2"], "col_nested", shape="array").table()
+df.cols.nest(["animals", "two strings", "num 2"], output_col="col_nested", shape="array").table()
 
 # ## Histograms
 
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
 df.table()
 
@@ -687,3 +704,5 @@ df_abs = op.create.df(
 df_abs.cols.abs(["num", "num 2"]).table()
 
 df.cols.qcut("billingId", 5).table()
+
+

@@ -1,19 +1,21 @@
 import collections
-import json
 import os
 import random
 import re
 import subprocess
+import sys
+from functools import reduce
 from pathlib import Path
 
 from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
     is_date, is_binary
-
 from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
@@ -76,12 +78,24 @@ def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
 
 
-def collect_as_dict(df):
+def collect_as_dict(df, limit=None):
     """
     Return a dict from a Collect result
     :param df:
     :return:
     """
+    # # Explore this approach seems faster
+    # use_unicode = True
+    # from pyspark.serializers import UTF8Deserializer
+    # from pyspark.rdd import RDD
+    # rdd = df._jdf.toJSON()
+    # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
+    # if limit is None:
+    #     r.collect()
+    # else:
+    #     r.take(limit)
+    # return r
+    #
     from optimus.helpers.columns import parse_columns
     dict_result = []
 
@@ -153,7 +167,40 @@ def format_path(path, format="posix"):
 def java_version():
     version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
     pattern = '\"(\d+\.\d+).*\"'
-    print(re.re.search(pattern, version).groups()[0])
+    print(re.search(pattern, version).groups()[0])
+
+
+def setup_google_colab():
+    """
+    Check if we are in Google Colab and setup it up
+    :return:
+    """
+    from optimus.helpers.constants import JAVA_PATH_COLAB, SPARK_PATH_COLAB, SPARK_URL, SPARK_FILE
+
+    IN_COLAB = 'google.colab' in sys.modules
+
+    if IN_COLAB:
+        if not os.path.isdir(JAVA_PATH_COLAB) or not os.path.isdir(SPARK_PATH_COLAB):
+            print("Installing Optimus, Java8 and Spark. It could take 3 min...")
+            commands = [
+                "apt-get install openjdk-8-jdk-headless -qq > /dev/null",
+                "wget -q {SPARK_URL}".format(SPARK_URL=SPARK_URL),
+                "tar xf {SPARK_FILE}".format(SPARK_FILE=SPARK_FILE)
+            ]
+
+            cmd = " && ".join(commands)
+
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+            p_stdout = p.stdout.read().decode("ascii")
+            p_stderr = p.stderr.read().decode("ascii")
+            print(p_stdout, p_stderr)
+
+        else:
+            print("Settings env vars")
+            # Always configure the env vars
+
+            os.environ["JAVA_HOME"] = JAVA_PATH_COLAB
+            os.environ["SPARK_HOME"] = SPARK_PATH_COLAB
 
 
 def is_pyarrow_installed():
@@ -226,3 +273,59 @@ def ellipsis(data, length=20):
     """
     data = str(data)
     return (data[:length] + '..') if len(data) > length else data
+
+
+def create_buckets(lower_bound, upper_bound, bins):
+    """
+    Create a dictionary with bins
+    :param lower_bound: low range
+    :param upper_bound: high range
+    :param bins: number of buckets
+    :return:
+    """
+    range_value = (upper_bound - lower_bound) / bins
+    low = lower_bound
+
+    buckets = []
+    for i in range(0, bins):
+        high = low + range_value
+        buckets.append({"lower": low, "upper": high, "bucket": i})
+        low = high
+
+    # ensure that the upper bound is exactly the higher value.
+    # Because floating point calculation it can miss the upper bound in the final sum
+
+    buckets[bins - 1]["upper"] = upper_bound
+    return buckets
+
+
+def append(dfs, like="columns"):
+    """
+    Concat multiple dataframes columns or rows wise
+    :param dfs: List of Dataframes
+    :param like: concat as columns or rows
+    :return:
+    """
+
+    # FIX: Because monotonically_increasing_id can create different
+    # sequence for different dataframes the result could be wrong.
+
+    if like == "columns":
+        temp_dfs = []
+        col_temp_name = "id_" + random_int()
+
+        dfs = val_to_list(dfs)
+        for df in dfs:
+            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
+
+        def _append(df1, df2):
+            return df1.join(df2, col_temp_name, "outer")
+
+        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
+
+    elif like == "rows":
+        df_result = reduce(DataFrame.union, dfs)
+    else:
+        RaiseIt.value_error(like, ["columns", "rows"])
+
+    return df_result

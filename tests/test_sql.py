@@ -14,7 +14,7 @@ source_df = op.create.df(
      ('japanese name', ArrayType(StringType(), True), True), ('last position seen', StringType(), True),
      ('date arrival', StringType(), True), ('last date seen', StringType(), True),
      ('attributes', ArrayType(FloatType(), True), True), ('DateType', DateType(), True),
-     ('Tiemstamp', TimestampType(), True), ('Cybertronian', BooleanType(), True),
+     ('timestamp', TimestampType(), True), ('Cybertronian', BooleanType(), True),
      ('function(binary)', BinaryType(), True), ('NullType', NullType(), True)], [("Optim'us", 28, 'Leader', 10, 5000000,
                                                                                   4.300000190734863,
                                                                                   ['Inochi', 'Convoy'],
@@ -85,7 +85,7 @@ source_df = op.create.df(
 class Testdf_sql(object):
     @staticmethod
     def test_query():
-        source_df.table_name('temp_name')
+        source_df.set_name('temp_name')
         actual_df = source_df.query('SELECT * FROM temp_name')
         expected_value = source_df
         assert (expected_value.collect() == actual_df.collect())

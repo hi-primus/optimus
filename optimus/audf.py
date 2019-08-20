@@ -2,15 +2,15 @@ import dateutil.parser
 from fastnumbers import isint, isfloat
 from pyspark.sql import functions as F
 
-from optimus.helpers.raiseit import RaiseIt
-from optimus.helpers.logger import logger
 from optimus.helpers.check import is_column
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.functions import is_pyarrow_installed
+from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes, parse_python_dtypes
+from optimus.helpers.raiseit import RaiseIt
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, verbose=False):
+def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
     """
     Abstract User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
     :param col: Column to created or transformed
@@ -18,7 +18,6 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
     :param attrs: If required attributes to be passed to the function
     :param func_return_type: Required by UDF and Pandas UDF.
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
-    :param verbose: print additional info
     :return: A function, UDF or Pandas UDF
     """
 
@@ -45,8 +44,8 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None, v
         "Using '{func_type}' to process column '{column}' with function {func_name}".format(func_type=func_type,
                                                                                             column=col,
                                                                                             func_name=_func.__name__))
-    df_func = func_factory(func_type, func_return_type)
 
+    df_func = func_factory(func_type, func_return_type)
     return df_func(attrs, _func)(col)
 
 
@@ -58,7 +57,6 @@ def func_factory(func_type=None, func_return_type=None):
     :return:
     """
 
-    # if func_return_type is not None:
     func_return_type = parse_spark_class_dtypes(func_return_type)
 
     def pandas_udf_func(attr=None, func=None):

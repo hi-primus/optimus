@@ -41,7 +41,7 @@ class Spark:
         logger.print("Spark Version:" + self._sc.version)
 
         return self
-        # print(self._sc._conf.getAll())
+
 
     def load(self, session):
         self._spark = session

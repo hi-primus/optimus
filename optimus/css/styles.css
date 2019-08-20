@@ -18,13 +18,6 @@
         border: 0px;
     }
 
-    .optimus_table tr:nth-child(even) {
-        background-color: #f2f2f2 !important;
-    }
-
-    .optimus_table tr:nth-child(odd) {
-        background-color: #ffffff !important;
-    }
 
     .optimus_table thead {
         border-bottom: 1px solid black;
@@ -50,7 +43,7 @@
         float:left;
         padding-bottom:2%;
     }
-    .panel_profiler tbody{
+    .panel_profiler {
         font-family:monospace;
     }
     .title_profiler{
@@ -65,9 +58,6 @@
     }
     .panel_profiler td {
         padding:0.2em
-    }
-    .none, .true{
-        color:#0000ff
     }
     .optimus_table th {
         font-family:sans-serif;

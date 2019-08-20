@@ -1,6 +1,7 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
+from optimus import Optimus
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
     NGRAM_FINGERPRINT_COL
@@ -17,9 +18,6 @@ def fingerprint(df, input_cols):
     def _split_sort_remove_join(value, args):
         """
         Helper function to split, remove duplicates, sort and join back together
-        :param value:
-        :param args:
-        :return:
         """
         # Split into whitespace-separated token
         split_key = value.split()
@@ -40,9 +38,9 @@ def fingerprint(df, input_cols):
               .cols.remove_special_chars(output_col)
               .cols.remove_accents(output_col)
               .cols.apply(output_col, _split_sort_remove_join, "string")
-              .repartition(1)
-              .cache()
               )
+        if Optimus.cache:
+            df = df.cache()
     return df
 
 
@@ -63,10 +61,12 @@ def fingerprint_cluster(df, input_cols):
               .groupBy(input_col)
               .count()
               .select('count', input_col)
-              .repartition(1)  # Needed for optimization in a single machine
-              .cache()
               )
-        # Calculate the fingeprint
+
+        if Optimus.cache:
+            df = df.cache()
+
+        # Calculate the fingerprint
         df = fingerprint(df, input_col)
 
         count_col = name_col(input_col, COUNT_COL)
@@ -117,10 +117,11 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
               .cols.remove_special_chars(ngram_col)
               .cols.remove_accents(ngram_col)
               # For create n-grams we need an Array type column
-              .cols.nest(input_cols=ngram_col, output_cols=ngram_col, shape='array')
-              .repartition(1)  # Needed for optimization in a single machine
-              .cache()
+              .cols.nest(input_cols=ngram_col, output_col=ngram_col, shape='array')
               )
+        if Optimus.cache:
+            df = df.cache()
+
         n_gram = NGram(n=n_size, inputCol=ngram_col, outputCol=ngram_fingerprint_col)
         df = n_gram.transform(df)
         df = df.cols.apply(ngram_fingerprint_col, remote_white_spaces_remove_sort_join, "string")
@@ -145,9 +146,10 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2):
               .groupBy(input_col)
               .count()
               .select('count', input_col)
-              .repartition(1)  # Needed for optimization in a single machine
-              .cache())
+              )
 
+        if Optimus.cache:
+            df = df.cache()
         df = n_gram_fingerprint(df, input_col, n_size)
 
         count_col = name_col(input_col, COUNT_COL)

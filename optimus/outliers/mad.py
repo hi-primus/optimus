@@ -1,14 +1,14 @@
 from pyspark.sql import functions as F
 
 from optimus.helpers.filters import dict_filter
-
+from optimus.helpers.constants import RELATIVE_ERROR
 
 class MAD:
     """
     Handle outliers using mad
     """
 
-    def __init__(self, df, col_name, threshold, relative_error=1):
+    def __init__(self, df, col_name, threshold, relative_error=RELATIVE_ERROR):
         """
 
         :param df:

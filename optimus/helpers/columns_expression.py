@@ -1,4 +1,16 @@
+import datetime
+import itertools
+
 from pyspark.sql import functions as F
+
+from optimus.helpers.check import is_column_a, is_numeric
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPES
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.functions import create_buckets
+
+
+# These function can return and Column Expression or a list of columns expression
+# Must return None if the data type can not be handle
 
 
 def match_nulls_strings(col_name):
@@ -27,3 +39,167 @@ def na_agg(col_name):
 
 def zeros_agg(col_name):
     return F.count(F.when(F.col(col_name) == 0, col_name))
+
+
+def count_uniques_agg(col_name, estimate=True):
+    if estimate is True:
+        result = F.approx_count_distinct(col_name)
+    else:
+        result = F.countDistinct(col_name)
+    return result
+
+
+def range_agg(col_name):
+    return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
+
+
+def hist_agg(col_name, df, buckets, min_max=None):
+    """
+    Create a columns expression to calculate a column histogram
+    :param col_name:
+    :param df:
+    :param buckets:
+    :return:
+    """
+
+    def create_exprs(_input_col, _buckets, _func):
+        def count_exprs(_exprs):
+            return F.sum(F.when(_exprs, 1).otherwise(0))
+
+        _exprs = []
+        for i, b in enumerate(_buckets):
+            lower = b["lower"]
+            upper = b["upper"]
+
+            if is_numeric(lower):
+                lower = round(lower, 2)
+            if is_numeric(upper):
+                upper = round(upper, 2)
+
+            if i == len(_buckets):
+                count = count_exprs(
+                    (_func(_input_col) > lower) & (_func(_input_col) <= upper))
+            else:
+                count = count_exprs(
+                    (_func(_input_col) >= lower) & (_func(_input_col) < upper))
+            info = F.create_map(F.lit("count"), count.cast("int"), F.lit("lower"), F.lit(lower), F.lit("upper"),
+                                F.lit(upper)).alias(
+                "hist_agg" + "_" + _input_col + "_" + str(b["bucket"]))
+            _exprs.append(info)
+        _exprs = F.array(*_exprs).alias("hist" + _input_col)
+        # print(_exprs)
+        return _exprs
+
+    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+        if min_max is None:
+            min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+
+        if min_max["min"] is not None and min_max["max"] is not None:
+            buckets = create_buckets(min_max["min"], min_max["max"], buckets)
+            func = F.col
+            exprs = create_exprs(col_name, buckets, func)
+        else:
+            exprs = None
+
+    elif is_column_a(df, col_name, "str"):
+        buckets = create_buckets(0, 50, buckets)
+        func = F.length
+        exprs = create_exprs(col_name, buckets, func)
+
+    elif is_column_a(df, col_name, "date"):
+
+        now = datetime.datetime.now()
+        current_year = now.year
+        oldest_year = 1950
+
+        # Year
+        buckets = create_buckets(oldest_year, current_year, current_year - oldest_year)
+        func = F.year
+        year = create_exprs(col_name, buckets, func)
+
+        # Month
+        buckets = create_buckets(1, 12, 11)
+        func = F.month
+        month = create_exprs(col_name, buckets, func)
+
+        # Day
+        buckets = create_buckets(1, 31, 31)
+        func = F.dayofweek
+        day = create_exprs(col_name, buckets, func)
+
+        # Hour
+        buckets = create_buckets(0, 23, 23)
+        func = F.hour
+        hour = create_exprs(col_name, buckets, func)
+
+        # Min
+        buckets = create_buckets(0, 60, 60)
+        func = F.minute
+        minutes = create_exprs(col_name, buckets, func)
+
+        # Second
+        buckets = create_buckets(0, 60, 60)
+        func = F.second
+        second = create_exprs(col_name, buckets, func)
+
+        exprs = F.create_map(F.lit("years"), year, F.lit("months"), month, F.lit("weekdays"), day,
+                             F.lit("hours"), hour, F.lit("minutes"), minutes, F.lit("seconds"), second)
+    else:
+        exprs = None
+
+    return exprs
+
+
+def count_na_agg(col_name, df):
+    # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
+    # if is_column_a(df, col_name, ["struct", "boolean"]):
+    #     df = df.cols.cast(col_name, "string")
+
+    # Select the nan/null rows depending of the columns data type
+    # If numeric
+    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+        expr = F.count(F.when(match_nulls_integers(col_name), col_name))
+    # If string. Include 'nan' string
+    elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
+        expr = F.count(
+            F.when(match_nulls_strings(col_name), col_name))
+        # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
+    else:
+        expr = F.count(F.when(match_null(col_name), col_name))
+
+    return expr
+
+
+def percentile_agg(col_name, df, values, relative_error):
+    """
+    Return the percentile of a dataframe
+    :param col_name:  '*', list of columns names or a single column name.
+    :param df:
+    :param values: list of percentiles to be calculated
+    :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive. 0 to 1 accepted
+    :return: percentiles per columns
+    """
+
+    # Make sure values are double
+
+    if values is None:
+        values = [0.05, 0.25, 0.5, 0.75, 0.95]
+
+    values = val_to_list(values)
+    values = list(map(str, values))
+
+    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+        # Get percentiles
+
+        p = F.expr("percentile_approx(`{COLUMN}`, array({VALUES}), {ERROR})".format(COLUMN=col_name,
+                                                                                    VALUES=" , ".join(values),
+                                                                                    ERROR=relative_error))
+
+        # Zip the arrays
+        expr = [[F.lit(v), p.getItem(i)] for i, v in enumerate(values)]
+        expr = F.create_map(*list(itertools.chain(*expr)))
+
+    else:
+        expr = None
+    # print(expr)
+    return expr
