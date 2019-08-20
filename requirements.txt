@@ -31,6 +31,6 @@ kombu==4.6.1
 pandas==0.24.2
 ordered-set==3.1.1
 deepdiff==4.0.6
-paho-mqtt==0.4.90
+paho-mqtt==1.4.0
 pypika==0.32.0
 statsmodels==0.10.1
