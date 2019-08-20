@@ -9,6 +9,8 @@ import zlib
 import paho.mqtt.client as mqtt
 from cryptography.fernet import Fernet
 
+from optimus.helpers.logger import logger
+
 
 def save_config_key(file_name, section="DEFAULT", key=None, value=None):
     """
@@ -126,6 +128,7 @@ class Comm:
         :param message:
         :return:
         """
+        print(message)
         self.token = self._encrypt(self._compress(message)).decode()
         self.to_queue(self.token)
 
@@ -166,7 +169,7 @@ class Comm:
 
 
         """
-
+        logger.print(message)
         client = self.queue
         client.connected_flag = False
         client.disconnect()
@@ -181,7 +184,6 @@ class Comm:
 
         # print(message)
         while not client.connected_flag:  # wait in loop
-            # print(".")
             time.sleep(1)
 
         client.publish(self.queue_name, payload=message)

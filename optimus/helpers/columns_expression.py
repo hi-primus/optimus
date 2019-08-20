@@ -53,7 +53,7 @@ def range_agg(col_name):
     return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
 
 
-def hist_agg(col_name, df, buckets):
+def hist_agg(col_name, df, buckets, min_max=None):
     """
     Create a columns expression to calculate a column histogram
     :param col_name:
@@ -91,7 +91,9 @@ def hist_agg(col_name, df, buckets):
         return _exprs
 
     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-        min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+        if min_max is None:
+            min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+
         if min_max["min"] is not None and min_max["max"] is not None:
             buckets = create_buckets(min_max["min"], min_max["max"], buckets)
             func = F.col
