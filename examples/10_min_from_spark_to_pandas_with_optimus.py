@@ -16,12 +16,42 @@
 #     name: python3
 # ---
 
-# %load_ext autoreload
-# %autoreload 2
+# # Hi, Are you in Google Colab?
+# In Google colab you can easily run Optimus. If you not you may want to go here
+# https://colab.research.google.com/github/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb
+
+# Install Optimus all the dependencies.
 
 import sys
+if 'google.colab' in sys.modules:
+  !apt-get install openjdk-8-jdk-headless -qq > /dev/null
+  !wget -q https://archive.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-hadoop2.7.tgz
+  !tar xf spark-2.4.1-bin-hadoop2.7.tgz
+  !pip install optimuspyspark
 
-sys.path.append("..")
+# ## Restart Runtime
+# Before you continue, please go to the 'Runtime' Menu above, and select 'Restart Runtime (Ctrl + M + .)'.
+
+if 'google.colab' in sys.modules:
+    import os
+    os.environ["JAVA_HOME"] = "/usr/lib/jvm/java-8-openjdk-amd64"
+    os.environ["SPARK_HOME"] = "/content/spark-2.4.1-bin-hadoop2.7"
+
+# ## You are done. Enjoy Optimus!
+
+# # Hacking Optimus!
+
+# To hacking Optimus we recommend to clone the repo and change ```repo_path``` relative to this notebook.
+
+# +
+repo_path=".."
+
+# This will reload the change you make to Optimus in real time
+# %load_ext autoreload
+# %autoreload 2
+import sys
+sys.path.append(repo_path)
+# -
 
 # ## Install Optimus 
 #
@@ -33,7 +63,7 @@ sys.path.append("..")
 #
 # `!pip install optimuspyspark`
 
-# ## Import optimus and start it
+# ## Import Optimus and start it
 
 from optimus import Optimus
 
@@ -133,22 +163,27 @@ df.table()
 
 df.table(10)
 
-# ## Partitions
+# ## About Spark
+# Spark and Optimus work differently than pandas or R. If you are not familiar with Spark, we recommend taking the time to take a look at the links below.
+#
+# ### Partitions
 # Partition are the way Spark divide the data in your local computer or cluster to better optimize how it will be processed.It can greatly impact the Spark performance.
 #
 # Take 5 minutes to read this article:
 # https://www.dezyre.com/article/how-data-partitioning-in-spark-helps-achieve-more-parallelism/297
 #
-# ## Lazy operations
-# Lorem ipsum 
+# ### Lazy operations
+# Lazy evaluation in Spark means that the execution will not start until an action is triggered.
 #
 # https://stackoverflow.com/questions/38027877/spark-transformation-why-its-lazy-and-what-is-the-advantage
 #
-# ## Inmutability
-# Lorem ipsum
+# ### Inmutability
+# Immutability rules out a big set of potential problems due to updates from multiple threads at once. Immutable data is definitely safe to share across processes.
 #
-# ## Spark Architecture
-# Lorem ipsum
+# https://www.quora.com/Why-is-RDD-immutable-in-Spark
+#
+# ### Spark Architecture
+# https://jaceklaskowski.gitbooks.io/mastering-apache-spark/spark-architecture.html
 
 # ## Columns and Rows
 #
@@ -261,7 +296,7 @@ df_new = op.create.df(
 
     ]).h_repartition(1)
 
-op.concat([df, df_new], "columns").table()
+op.append([df, df_new], "columns").table()
 
 # +
 df_new = op.create.df(
@@ -275,7 +310,7 @@ df_new = op.create.df(
         ("Grimlock", 22.9, "Dinobot Commander", 9),
     ]).h_repartition(1)
 
-op.concat([df, df_new], "rows").table()
+op.append([df, df_new], "rows").table()
 
 # + {"inputHidden": false, "outputHidden": false}
 # Operations like `join` and `group` are handle using Spark directly
@@ -310,11 +345,10 @@ df.table()
 # + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height", infer=True)
 # -
-df_csv = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
+df_csv = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
 df_csv.table()
 
-df_json = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json",
-                      "json").limit(5)
+df_json = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json").limit(5)
 df_json.table()
 
 df_csv.save.csv("test.csv")
@@ -323,6 +357,12 @@ df.table()
 
 # ## Enrichment
 
+df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+
+df.table()
+
+
+
 # +
 import requests
 
@@ -330,17 +370,20 @@ import requests
 def func_request(params):
     # You can use here whatever header or auth info you need to send. 
     # For more information see the requests library
-    url = "https://jsonplaceholder.typicode.com/todos/" + str(params["rank"])
-
+    
+    url= "https://jsonplaceholder.typicode.com/todos/" + str(params["id"])
     return requests.get(url)
-
 
 def func_response(response):
     # Here you can parse de response
     return response["title"]
 
 
-df_result = op.enrich(df, func_request=func_request, func_response=func_response)
+e = op.enrich(host="localhost", port=27017, db_name="jazz")
+e.flush()
+df_result = e.run(df, func_request, func_response, calls= 60, period = 60, max_tries = 8)
 # -
 
 df_result.table()
+
+

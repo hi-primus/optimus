@@ -2,7 +2,8 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list
+from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_dataframe, \
+    is_list_of_list
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
@@ -106,6 +107,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     :return: A list of columns string names
     """
 
+    if not is_dataframe(df):
+        RaiseIt.type_error(df, "Dataframe")
     attrs = None
 
     # if columns value is * get all dataframes columns
@@ -139,8 +142,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         check_for_missing_columns(df, cols)
 
     # Filter by column data type
-    if filter_by_column_dtypes is not None:
-        filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
+    if is_list_of_list(filter_by_column_dtypes):
+        filter_by_column_dtypes = [item for sublist in filter_by_column_dtypes for item in sublist]
 
     columns_residual = None
 
@@ -158,11 +162,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     else:
         final_columns = cols
 
-    # Return cols or cols an params
     cols_params = []
 
     if invert:
-        final_columns = list(OrderedSet(cols) - OrderedSet(final_columns))
+        final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
 
     if get_args is True:
         cols_params = final_columns, attrs
@@ -176,6 +179,12 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
                      "column(s) was not processed because is/are not",
                      ",".join(filter_by_column_dtypes))
 
+    # if because of filtering we got 0 columns return None
+    if len(cols_params) == 0:
+        cols_params = None
+        print("Outputting 0 columns after filtering. Is this expected?")
+
+    # print("final",cols_params)
     return cols_params
 
 
@@ -186,14 +195,19 @@ def check_column_numbers(columns, number=0):
     :param number: Number of columns to check
     :return:
     """
+    if columns is None:
+        RaiseIt.value_error(columns, "not None")
+
     count = len(columns)
 
-    if number is "*":
+    if number == "*":
         if not len(columns) >= 1:
+            RaiseIt.value_error(len(columns), ["1 or greater"])
+    elif number == ">1":
+        if not len(columns) > 1:
             RaiseIt.value_error(len(columns), ["more than 1"])
-    elif not len(columns) == number:
-
-        RaiseIt.value_error(count, "Receive {} columns, {} needed".format(number, columns))
+    elif len(columns) == number:
+        RaiseIt.value_error(count, "{} columns, {} needed".format(number, columns))
 
 
 def validate_columns_names(df, col_names, index=0):
@@ -258,10 +272,12 @@ def name_col(col_names: str, append: str) -> str:
     :param append: string to be appended
     :return:
     """
+    separator = "***"
+    append = str(append)
     col_names = val_to_list(col_names)
     if len(col_names) > 1:
-        output_col = ('_'.join(str(elem) for elem in col_names))[:10] + "***"
+        output_col = ('_'.join(str(elem) for elem in col_names))[:10] + separator
     else:
         output_col = one_list_to_val(col_names)
 
-    return output_col + "_" + append.upper()
+    return output_col + separator + append.upper()

@@ -253,6 +253,16 @@ def is_list_of_numeric(value):
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (int, float)) for elem in value)
 
 
+def is_list_of_list(value):
+    """
+    Check if all elements in a list are tuples
+    :param value:
+    :return:
+    """
+
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, list) for elem in value)
+
+
 def is_list_of_tuples(value):
     """
     Check if all elements in a list are tuples
@@ -340,7 +350,7 @@ def is_int(value):
 
 def is_url(value):
     regex = re.compile(
-        r'^(?:http|ftp)s?://'  # http:// or https://
+        r'^(?:http|ftp|hdfs)s?://'  # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
         r'localhost|'  # localhost...
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip

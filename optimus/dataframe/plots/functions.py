@@ -1,5 +1,6 @@
 import numpy as np
 import seaborn as sns
+import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
@@ -75,6 +76,7 @@ def plot_frequency(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
+
     for col_name, data in column_data.items():
 
         # Transform Optimus' format to matplotlib's format
@@ -96,6 +98,7 @@ def plot_frequency(column_data=None, output=None, path=None):
         plt.title("Frequency '" + col_name + "'")
 
         plt.xticks(rotation=45, ha="right")
+        plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
         if output is "base64":
             return output_base64(fig)
@@ -125,6 +128,8 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 
     for col_name, data in column_data.items():
         bins = []
+        # print(data)
+        # print("**********")
         for d in data:
             bins.append(d['lower'])
 
@@ -163,7 +168,7 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 def plot_correlation(cols_data, output=None, path=None):
     """
     Plot a correlation plot
-    :param data:
+    :param cols_data:
     :param output:
     :param path:
     :return:
@@ -183,8 +188,6 @@ def plot_correlation(cols_data, output=None, path=None):
         fig = sns_plot.get_figure()
         fig.savefig(path)
         print_html("<img src='" + path + "'>")
-    # elif output is "plot":
-    #     plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
 def plot_missing_values(column_data=None, output=None, path=None):
@@ -192,6 +195,7 @@ def plot_missing_values(column_data=None, output=None, path=None):
     Plot missing values
     :param column_data:
     :param output: image, base64 or plot. Image output a file, base64 output a base64 encoded image and plot output the
+    :param path:
     image to the notebook
     :return:
     """
@@ -223,3 +227,24 @@ def plot_missing_values(column_data=None, output=None, path=None):
         output_image(plt, path)
     elif output is "plot":
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
+
+
+def plot_qqplot(col_name, sample_data, output="plot", path=None):
+    """
+    Plot a qqplot
+    :param col_name:
+    :param sample_data:
+    :param output:
+    :param path:
+    :return:
+    """
+    fig = plt.figure(figsize=(12, 5))
+
+    sm.qqplot(sample_data.toPandas()[col_name], line='q', color='C0', alpha=0.3)
+
+    plt.title("qqplot '" + col_name + "' ")
+
+    if output is "base64":
+        return output_base64(fig)
+    elif output is "image":
+        output_image(plt, path)

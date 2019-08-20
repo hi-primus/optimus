@@ -2,6 +2,21 @@ from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYT
     SPARK_DTYPES_DICT_OBJECTS
 
 
+def compress_dict(lst, col_name):
+    _result = {}
+    for l in lst:
+        _result.setdefault(col_name, []).append({"value": l[col_name], "count": l["count"]})
+    return _result
+
+
+def compress_list(lst):
+    _result = {}
+    for l in lst:
+        for k, v in l.items():
+            _result.setdefault(k, []).append(v)
+    return _result
+
+
 def parse_col_names_funcs_to_keys(data):
     from optimus.helpers.check import is_numeric, is_nan
 
@@ -19,28 +34,28 @@ def parse_col_names_funcs_to_keys(data):
     :param data: json data
     :return: json
     """
-    functions_array = ["min", "max", "stddev", "kurtosis", "mean", "skewness", "sum", "variance",
-                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count"]
+    functions_array = ["range", "count_uniques", "count_na", "min", "max", "stddev", "kurtosis", "mean", "skewness",
+                       "sum", "variance",
+                       "approx_count_distinct", "countDistinct", "na", "zeros", "percentile", "count", "hist"]
+
     _result = {}
     for k, v in data[0].items():
-
         for f in functions_array:
+
             temp_func_name = f + "_"
             if k.startswith(temp_func_name):
-
                 _col_name = k[len(temp_func_name):]
-
-                # If the value is numeric only get 5 decimals
                 if is_nan(v):
                     print(
                         "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that '{COL_NAME}' has 'nan' values".format(
                             FUNCTION=f,
                             COL_NAME=_col_name))
+                # If the value is numeric only get 5 decimals
                 elif is_numeric(v):
-
                     v = round(v, 5)
-
                 _result.setdefault(_col_name, {})[f] = v
+
+                break
 
     return _result
 
@@ -57,7 +72,6 @@ def parse_spark_dtypes(value):
 
     try:
         data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
-
     except KeyError:
         data_type = value
 
