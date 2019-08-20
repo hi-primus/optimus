@@ -1,19 +1,20 @@
 import configparser
-import simplejson as json
 
 import humanize
 import imgkit
 import jinja2
 import pyspark.sql.functions as F
+import simplejson as json
 
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, PYSPARK_STRING_TYPES
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, collect_as_dict
+from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -303,7 +304,7 @@ class Profiler:
                             "value": df.sample_n(sample).rows.to_list(columns)}
 
         if dump is True:
-            output = json.dumps(output, ignore_nan=True)
+            output = json.dumps(output, ignore_nan=True, default=json_converter)
         return output
 
     def columns(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
@@ -393,13 +394,13 @@ class Profiler:
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
             result.update(df.cols.exec_agg(exprs))
 
-
         n = 60
         # 40 2:46 seg
         # 50 2:12
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
-            logger.print("Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
+            logger.print(
+                "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             funcs = [hist_agg]
             min_max = {}
