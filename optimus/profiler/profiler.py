@@ -1,5 +1,5 @@
 import configparser
-import json
+import simplejson as json
 
 import humanize
 import imgkit
@@ -11,7 +11,7 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, PYSPARK_STRING_TYPES
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, collect_as_dict
 from optimus.helpers.logger import logger
@@ -78,10 +78,10 @@ class Profiler:
             if infer is True and col_data_type == "string":
                 logger.print("Processing column '" + col_name + "'...")
                 types = collect_as_dict(df
-                         .h_repartition(col_name=col_name)
-                         .withColumn(temp, fbdt(col_name, get_type=True))
-                         .groupBy(temp).count()
-                         )
+                                        .h_repartition(col_name=col_name)
+                                        .withColumn(temp, fbdt(col_name, get_type=True))
+                                        .groupBy(temp).count()
+                                        )
 
                 for row in types:
                     count_by_data_type[row[temp]] = row["count"]
@@ -303,7 +303,7 @@ class Profiler:
                             "value": df.sample_n(sample).rows.to_list(columns)}
 
         if dump is True:
-            output = json.dumps(output)
+            output = json.dumps(output, ignore_nan=True)
         return output
 
     def columns(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
@@ -371,6 +371,46 @@ class Profiler:
             columns_info['columns'][col_name] = col_info
 
         return columns_info
+
+    @staticmethod
+    def minimal_stats(df, columns, buckets=10, approx_count=True):
+        columns = parse_columns(df, columns)
+        n = 60
+        list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
+        # we have problems sending +100 columns at the same time. Process in batch
+
+        result = {}
+        for i, cols in enumerate(list_columns):
+            logger.print("Batch {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
+
+            funcs = [count_uniques_agg]
+            exprs = df.cols.create_exprs(cols, funcs, approx_count)
+
+            funcs = [F.min, F.max]
+            exprs.extend(df.cols.create_exprs(cols, funcs))
+
+            funcs = [count_na_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs, df))
+            result.update(df.cols.exec_agg(exprs))
+
+
+        n = 60
+        # 40 2:46 seg
+        # 50 2:12
+        list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
+        for i, cols in enumerate(list_columns):
+            logger.print("Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
+
+            funcs = [hist_agg]
+            min_max = {}
+
+            for col_name in cols:
+                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                    min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
+
+            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
+            result.update(df.cols.exec_agg(exprs))
+        return result
 
     @staticmethod
     @time_it
