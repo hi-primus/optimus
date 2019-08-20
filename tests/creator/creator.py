@@ -82,10 +82,6 @@ source_df.table()
 # -
 
 
-source_df.cols.names("*", ["array", "vector", "byte","date"])
-
-source_df.cols.frequency("*")
-
 # ### End Init Section
 
 # # Test
@@ -248,6 +244,8 @@ t.create(None, "cols.mode", "all_columns", "json", "*")
 
 t.create(None, "cols.count", None, "json")
 
+# ## Count na
+
 t.create(None, "cols.count_na", None, "json", None, numeric_col)
 
 t.create(None, "cols.count_na", "all_columns", "json",None, "*")
@@ -374,6 +372,8 @@ t.run()
 
 t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
 t.run()
+
+
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -773,42 +773,5 @@ source_df.show()
 
 actual_df = source_df.rows.append([("this is a word", 2, "this is an animal",
                                            "this is a thing", 64, "this is a filter",)])
-
-# +
-value = [("this is a word", 2, "this is an animal",
-                                           "this is a thing", 64, "this is a filter",)]
-
-bool(value) and isinstance(value, list) and all(isinstance(elem, tuple) for elem in value)
-
-# +
-columns = ["a","b","c"]
-
-columns = [F.col(c) for c in columns]
-# -
-
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector, SparseVector
-df1=op.create.df([('id', LongType(), True),('hour', LongType(), True),('mobile', DoubleType(), True),('user_features', VectorUDT(), True),('clicked', DoubleType(), True)], [(0, 18, 1.0, DenseVector([0.0, 10.0, 0.5]), 1.0)])
-
-df1.table()
-
-from optimus.ml import feature as fe
-actual_df =fe.normalizer(df1,input_cols=['user_features'],p=2.0)
-
-
-
-df1.plot.scatter(["id", "hour"])
-
-source_df.cols.frequency("age")
-
-# +
-from optimus.helpers.json import json_enconding 
-
-actual_df =source_df.cols.frequency('rank',4)
-actual_df =json_enconding(actual_df)
-expected_value =json_enconding({'rank': [{'value': '10', 'count': 2}, {'value': '7', 'count': 2}, {'value': '8', 'count': 2}, {'value': None, 'count': 1}]})
-assert (expected_value == actual_df)
-# -
-
-print(actual_df)
 
 
