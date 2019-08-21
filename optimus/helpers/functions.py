@@ -139,6 +139,7 @@ def absolute_path(files, format="posix"):
     :return:
     """
     files = val_to_list(files)
+    result = None
     if format == "uri":
         result = [Path(ROOT_DIR + file).as_uri() for file in files]
     elif format == "posix":

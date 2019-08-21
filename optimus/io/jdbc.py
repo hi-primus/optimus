@@ -152,7 +152,6 @@ class JDBC:
             query = "SELECT table_name as 'table_name' FROM user_tables"
 
         df = self.execute(query, "all")
-        print(df.to_json())
         return [i['table_name'] for i in df.to_json()]
 
     @property
@@ -252,7 +251,6 @@ class JDBC:
 
         if self.db_driver == "oracle":
             conf.option("driver", self.driver_option)
-        print(table, self.url)
         conf.save()
 
     @staticmethod

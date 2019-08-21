@@ -128,7 +128,7 @@ class Comm:
         :param message:
         :return:
         """
-        print(message)
+        logger.print(message)
         self.token = self._encrypt(self._compress(message)).decode()
         self.to_queue(self.token)
 
