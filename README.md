@@ -4,7 +4,11 @@
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ironmussa/Optimus&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)  ![Discord](https://img.shields.io/discord/579030865468719104.svg)    
+[![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)![Discord](https://img.shields.io/discord/579030865468719104.svg)
+
+[![Downloads](https://pepy.tech/badge/optimuspyspark)](https://pepy.tech/project/optimuspyspark)
+[![Downloads](https://pepy.tech/badge/optimuspyspark/month)](https://pepy.tech/project/optimuspyspark/month)
+[![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
 
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
@@ -274,7 +278,7 @@ output_df.table()
 ![](readme/images/column_output_4.png)
 
 ### Custom functions
-Spark has multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we created the `apply()` and `apply_expr` which handles all the implementation complexity.
+Spark has multiple ways to transform your data like rdd, Column Expression, udf and pandas udf. In Optimus we created the `apply()` and `apply_expr` which handles all the implementation complexity.
 
 Here you apply a function to the "billingid" column. Sum 1 and 2 to the current column value. All powered by Pandas UDF
 ```python
@@ -310,7 +314,6 @@ op.output("html")
 ```
 
 ## Data profiling
-
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
@@ -589,7 +592,7 @@ dc.to_json(df, "STATE")
 Machine Learning is one of the last steps, and the goal for most Data Science WorkFlows.
 
 Apache Spark created a library called MLlib where they coded great algorithms for Machine Learning. Now
-with the ML library we can take advantage of the Dataframe API and its optimization to easily create Machine Learning Pipelines.
+with the ML library we can take advantage of the Dataframe API and its optimization to create Machine Learning Pipelines easily.
 
 Even though this task is not extremely hard, it is not easy. The way most Machine Learning models work on Spark
 are not straightforward, and they need lots of feature engineering to work. That's why we created the feature engineering
@@ -627,7 +630,7 @@ The rf_model variable contains the Random Forest model for analysis.
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
 including:  
   
-* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or bugfixes.  
+* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or   bugfixes.  
 * Spelling or grammar fixes.  
 * README.md corrections or redesigns.  
 * Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests)   
