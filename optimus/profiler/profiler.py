@@ -11,7 +11,7 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_TYPES
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
@@ -81,8 +81,6 @@ class Profiler:
             elif col_data_type.find("array") >= 0:
                 col_data_type = "array"
 
-            print(col_name, col_data_type)
-
             count_by_data_type = {}
             count_empty_strings = 0
 
@@ -103,29 +101,17 @@ class Profiler:
                 # if boolean not support count na
                 if "count_na" in stats[col_name]:
                     nulls = stats[col_name]["count_na"]
-                    print(nulls)
                     count_by_data_type[col_data_type] = int(df_count) - nulls
                     count_by_data_type["null"] = nulls
 
             count_by_data_type = fill_missing_var_types(count_by_data_type)
-            print(count_by_data_type)
-
-            data_types_count = {"string": count_by_data_type['string'],
-                                "boolean": count_by_data_type['boolean'],
-                                "int": count_by_data_type['int'],
-                                "decimal": count_by_data_type['decimal'],
-                                "date": count_by_data_type['date'],
-                                "array": count_by_data_type['array'],
-                                "binary": count_by_data_type['binary'],
-                                "null": count_by_data_type['null']
-                                }
 
             # Subtract white spaces to the total string count
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
             # Get the greatest count by column data type
-            greatest_data_type_count = max(data_types_count, key=data_types_count.get)
+            greatest_data_type_count = max(count_by_data_type, key=count_by_data_type.get)
 
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
@@ -145,7 +131,7 @@ class Profiler:
             col = {}
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
-            col['details'] = {**data_types_count, **null_missed_count}
+            col['details'] = {**count_by_data_type, **null_missed_count}
 
             return col
 
@@ -169,7 +155,6 @@ class Profiler:
 
         results["count_types"] = count_types
         results["columns"] = type_details
-
         return results
 
     @time_it
