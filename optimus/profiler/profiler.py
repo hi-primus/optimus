@@ -73,6 +73,16 @@ class Profiler:
             temp = col_name + "_type"
             col_data_type = df.cols.dtypes(col_name)
 
+            # Parse dtype
+            if col_data_type == "smallint" or col_data_type == "tinyint":
+                col_data_type = "int"
+            elif col_data_type == "float" or col_data_type == "double":
+                col_data_type = "decimal"
+            elif col_data_type.find("array") >= 0:
+                col_data_type = "array"
+
+            print(col_name, col_data_type)
+
             count_by_data_type = {}
             count_empty_strings = 0
 
@@ -93,39 +103,44 @@ class Profiler:
                 # if boolean not support count na
                 if "count_na" in stats[col_name]:
                     nulls = stats[col_name]["count_na"]
+                    print(nulls)
                     count_by_data_type[col_data_type] = int(df_count) - nulls
                     count_by_data_type["null"] = nulls
 
             count_by_data_type = fill_missing_var_types(count_by_data_type)
+            print(count_by_data_type)
 
-            # Subtract white spaces to the total string count
             data_types_count = {"string": count_by_data_type['string'],
-                                "bool": count_by_data_type['bool'],
+                                "boolean": count_by_data_type['boolean'],
                                 "int": count_by_data_type['int'],
-                                "float": count_by_data_type['float'],
-                                "double": count_by_data_type['double'],
+                                "decimal": count_by_data_type['decimal'],
                                 "date": count_by_data_type['date'],
-                                "array": count_by_data_type['array']
+                                "array": count_by_data_type['array'],
+                                "binary": count_by_data_type['binary'],
+                                "null": count_by_data_type['null']
                                 }
 
+            # Subtract white spaces to the total string count
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
             # Get the greatest count by column data type
             greatest_data_type_count = max(data_types_count, key=data_types_count.get)
 
-            if greatest_data_type_count is "string":
+            if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
-            elif greatest_data_type_count is "int" or greatest_data_type_count is "float" or greatest_data_type_count is "double":
+            elif greatest_data_type_count == "int" or greatest_data_type_count == "decimal":
                 cat = "numeric"
-            elif greatest_data_type_count is "date":
+            elif greatest_data_type_count == "date":
                 cat = "date"
-            elif greatest_data_type_count is "bool":
-                cat = "bool"
-            elif greatest_data_type_count is "array":
+            elif greatest_data_type_count == "array":
                 cat = "array"
-            else:
+            elif greatest_data_type_count == "binary":
+                cat = "binary"
+            elif greatest_data_type_count == "null":
                 cat = "null"
+            else:
+                cat = None
 
             col = {}
             col['dtype'] = greatest_data_type_count
@@ -338,7 +353,7 @@ class Profiler:
         columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
-        df = Profiler.cast_columns(df, columns, count_dtypes).cache()
+        # df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
         logger.print("Processing Frequency ...")
@@ -505,7 +520,7 @@ class Profiler:
         for col_name in columns:
             dtype = count_dtypes["columns"][col_name]['dtype']
             # Not force date type conversion, we can not trust that is going to be representative
-            if dtype in ["string", "float", "int", "bool"]:
+            if dtype in ["string", "float", "int", "boolean"]:
                 df = df.cols.cast(col_name, dtype)
         return df
 
