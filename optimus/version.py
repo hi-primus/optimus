@@ -5,5 +5,5 @@ def _safe_int(string):
         return string
 
 
-__version__ = '2.2.11'
+__version__ = '2.2.12'
 VERSION = tuple(_safe_int(x) for x in __version__.split('.'))
