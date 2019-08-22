@@ -88,11 +88,16 @@ source_df.table()
 
 from pyspark.ml.linalg import Vectors
 
+
+
+
 t = Test(op, source_df, "df_profiler", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
-                                        "from pyspark.sql import functions as F"], path = "df_profiler", final_path="..")
+                                        "from pyspark.sql import functions as F",
+                                        "from optimus.profiler.profiler import Profiler",
+                                        "p= Profiler()"], path = "df_profiler", final_path="..")
 
 # +
 from pyspark.sql import functions as F
