@@ -182,9 +182,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     # if because of filtering we got 0 columns return None
     if len(cols_params) == 0:
         cols_params = None
-        print("Outputting 0 columns after filtering. Is this expected?")
+        logger.print("Outputting 0 columns after filtering. Is this expected?")
 
-    # print("final",cols_params)
     return cols_params
 
 

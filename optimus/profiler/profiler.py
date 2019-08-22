@@ -1,19 +1,20 @@
 import configparser
-import simplejson as json
 
 import humanize
 import imgkit
 import jinja2
 import pyspark.sql.functions as F
+import simplejson as json
 
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, PYSPARK_STRING_TYPES
+from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_TYPES
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, collect_as_dict
+from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -72,6 +73,14 @@ class Profiler:
             temp = col_name + "_type"
             col_data_type = df.cols.dtypes(col_name)
 
+            # Parse dtype
+            if col_data_type == "smallint" or col_data_type == "tinyint":
+                col_data_type = "int"
+            elif col_data_type == "float" or col_data_type == "double":
+                col_data_type = "decimal"
+            elif col_data_type.find("array") >= 0:
+                col_data_type = "array"
+
             count_by_data_type = {}
             count_empty_strings = 0
 
@@ -98,38 +107,31 @@ class Profiler:
             count_by_data_type = fill_missing_var_types(count_by_data_type)
 
             # Subtract white spaces to the total string count
-            data_types_count = {"string": count_by_data_type['string'],
-                                "bool": count_by_data_type['bool'],
-                                "int": count_by_data_type['int'],
-                                "float": count_by_data_type['float'],
-                                "double": count_by_data_type['double'],
-                                "date": count_by_data_type['date'],
-                                "array": count_by_data_type['array']
-                                }
-
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
             # Get the greatest count by column data type
-            greatest_data_type_count = max(data_types_count, key=data_types_count.get)
+            greatest_data_type_count = max(count_by_data_type, key=count_by_data_type.get)
 
-            if greatest_data_type_count is "string":
+            if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
-            elif greatest_data_type_count is "int" or greatest_data_type_count is "float" or greatest_data_type_count is "double":
+            elif greatest_data_type_count == "int" or greatest_data_type_count == "decimal":
                 cat = "numeric"
-            elif greatest_data_type_count is "date":
+            elif greatest_data_type_count == "date":
                 cat = "date"
-            elif greatest_data_type_count is "bool":
-                cat = "bool"
-            elif greatest_data_type_count is "array":
+            elif greatest_data_type_count == "array":
                 cat = "array"
-            else:
+            elif greatest_data_type_count == "binary":
+                cat = "binary"
+            elif greatest_data_type_count == "null":
                 cat = "null"
+            else:
+                cat = None
 
             col = {}
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
-            col['details'] = {**data_types_count, **null_missed_count}
+            col['details'] = {**count_by_data_type, **null_missed_count}
 
             return col
 
@@ -153,7 +155,6 @@ class Profiler:
 
         results["count_types"] = count_types
         results["columns"] = type_details
-
         return results
 
     @time_it
@@ -303,7 +304,7 @@ class Profiler:
                             "value": df.sample_n(sample).rows.to_list(columns)}
 
         if dump is True:
-            output = json.dumps(output, ignore_nan=True)
+            output = json.dumps(output, ignore_nan=True, default=json_converter)
         return output
 
     def columns(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
@@ -337,7 +338,7 @@ class Profiler:
         columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
-        df = Profiler.cast_columns(df, columns, count_dtypes).cache()
+        # df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
         # Calculate stats
         logger.print("Processing Frequency ...")
@@ -393,13 +394,13 @@ class Profiler:
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
             result.update(df.cols.exec_agg(exprs))
 
-
         n = 60
         # 40 2:46 seg
         # 50 2:12
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
-            logger.print("Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
+            logger.print(
+                "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             funcs = [hist_agg]
             min_max = {}
@@ -504,7 +505,7 @@ class Profiler:
         for col_name in columns:
             dtype = count_dtypes["columns"][col_name]['dtype']
             # Not force date type conversion, we can not trust that is going to be representative
-            if dtype in ["string", "float", "int", "bool"]:
+            if dtype in ["string", "float", "int", "boolean"]:
                 df = df.cols.cast(col_name, dtype)
         return df
 

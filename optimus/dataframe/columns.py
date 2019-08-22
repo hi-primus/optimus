@@ -1607,7 +1607,7 @@ def cols(self):
                     RaiseIt.type_error(total_rows, "int")
                 for col_name in columns:
                     for c in result[col_name]:
-                        c["percentage"] = round((c["count"] * 100 / total_rows), 4)
+                        c["percentage"] = round((c["count"] * 100 / total_rows), 2)
 
             return result
 

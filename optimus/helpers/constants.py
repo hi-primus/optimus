@@ -73,9 +73,9 @@ SPARK_DTYPES_DICT_OBJECTS = \
      }
 
 # Profiler
-PROFILER_TYPES = {"int", "float", "string", "bool", "date", "null", "array", "double"}
+PROFILER_TYPES = {"int", "decimal", "string", "boolean", "date", "null", "array", "binary"}
 PROFILER_LEGEND_TYPES = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
-PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "bool", "null", "array"}
+PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 
 # Strings and Function Messages
 JUST_CHECKING = "Just check that Spark and all necessary environments vars are present..."

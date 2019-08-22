@@ -18,7 +18,11 @@ jupyter:
 
 [![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ironmussa/Optimus&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)  ![Discord](https://img.shields.io/discord/579030865468719104.svg)    
+[![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)![Discord](https://img.shields.io/discord/579030865468719104.svg)
+
+[![Downloads](https://pepy.tech/badge/optimuspyspark)](https://pepy.tech/project/optimuspyspark)
+[![Downloads](https://pepy.tech/badge/optimuspyspark/month)](https://pepy.tech/project/optimuspyspark/month)
+[![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
 
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
@@ -182,7 +186,7 @@ df = op.create.df(
     ], infer_schema = True).h_repartition(1)
 ```
 
-With .table() you hace a beautifull way to show your data. You have extra informacion like column number, column data type and marked white spaces 
+With .table() you have a beautifull way to show your data. You have extra information like column number, column data type and marked white spaces 
 
 
 ```python
@@ -207,7 +211,7 @@ s_pdf.table_image("images/pandas.png")
 ## Cleaning and Processing
   
 Optimus V2 was created to make data cleaning a breeze. The API was designed to be super easy to newcomers and very familiar for people that comes from Pandas.
-Optimus expand the Spark DataFrame functionality adding .rows and .cols attributes.
+Optimus expands the Spark DataFrame functionality adding .rows and .cols attributes.
 
 For example you can load data from a url, transform and apply some predefined cleaning functions:
 
@@ -288,7 +292,7 @@ output_df.table_image("images/column_output_4.png")
 ```
 
 ### Custom functions
-Spark have multiple ways to transform your data like rdd, Column Expression ,udf and pandas udf. In Optimus we create the `apply()` and `apply_expr` which handle all the implementation complexity.
+Spark has multiple ways to transform your data like rdd, Column Expression, udf and pandas udf. In Optimus we created the `apply()` and `apply_expr` which handles all the implementation complexity.
 
 Here you apply a function to the "billingid" column. Sum 1 and 2 to the current column value. All powered by Pandas UDF
 ```python
@@ -298,7 +302,7 @@ def func(value, args):
 df.cols.apply("height(ft)",func,"int", [1,2]).table_image("images/table3.png")
 ```
 
-If you want to apply a Column Expression use `apply_expr()` like this. In this case we pasa an argument 10 to divide the actual column value
+If you want to apply a Column Expression use `apply_expr()` like this. In this case we pass an argument 10 to divide the actual column value
 
 ```python
 from pyspark.sql import functions as F
@@ -309,7 +313,7 @@ def func(col_name, args):
 df.cols.apply("height(ft)", func=func, args=20).table_image("images/table4.png")
 ```
 
-You can change the table output back to ascii if you which
+You can change the table output back to ascii if you wish
 
 ```python
 op.output("ascii")
@@ -325,7 +329,7 @@ op.output("html")
 
 Optimus comes with a powerful and unique data profiler. Besides basic and advance stats like min, max, kurtosis, mad etc, 
 it also let you know what type of data has every column. For example if a string column have string, integer, float, bool, date Optimus can give you an unique overview about your data. 
-Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](../examples/profiler.ipynb).
+Just run `df.profile("*")` to profile all the columns. For more info about the profiler please go to this [notebook](./examples/profiler.ipynb).
 
 Let's load a "big" dataset
 
@@ -377,7 +381,7 @@ op.profiler.run(df, "mass (g)", infer=False, relative_error =1, approx_count=Tru
 ```
 
 ## Plots
-Besides histograms, frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
+Besides histograms and frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
 
 ```python
 df = op.load.excel("../examples/data/titanic3.xls")
@@ -491,7 +495,7 @@ db.df_to_table(df, "new_table")
 
 ## Data enrichment
 
-You can connect to any external API to enrich your data using Optimus. Optimus use MongoDB to download the data and then merge it with the Spark Dataframe. You need to install MongoDB
+You can connect to any external API to enrich your data using Optimus. Optimus uses MongoDB to download the data and then merge it with the Spark Dataframe. You need to install MongoDB
 
 Let's load a tiny dataset we can enrich
 
@@ -600,11 +604,10 @@ dc.to_json(df, "STATE")
 Machine Learning is one of the last steps, and the goal for most Data Science WorkFlows.
 
 Apache Spark created a library called MLlib where they coded great algorithms for Machine Learning. Now
-with the ML library we can take advantage of the Dataframe API and its optimization to create easily
-Machine Learning Pipelines.
+with the ML library we can take advantage of the Dataframe API and its optimization to create Machine Learning Pipelines easily.
 
-Even though this task is not extremely hard, is not easy. The way most Machine Learning models work on Spark
-are not straightforward, and they need lots feature engineering to work. That's why we created the feature engineering
+Even though this task is not extremely hard, it is not easy. The way most Machine Learning models work on Spark
+are not straightforward, and they need lots of feature engineering to work. That's why we created the feature engineering
 section inside Optimus.
 
 
