@@ -1,4 +1,4 @@
-include optimus/templates/*
-include optimus/profiler/templates/*
+include optimus/templates/out/*
+include optimus/profiler/templates/out/*
 include optimus/css/*
 include optimus/jars/*
