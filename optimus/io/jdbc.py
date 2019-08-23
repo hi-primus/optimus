@@ -15,7 +15,7 @@ class JDBC:
     """
 
     def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
-                 oracle_service_name=None, oracle_sid=None):
+                 oracle_service_name=None, oracle_sid=None, presto_catalog=None):
         """
         Create the JDBC connection object
         :return:
@@ -49,6 +49,10 @@ class JDBC:
         elif self.db_driver == "oracle":
             if port is None: self.port = 1521
             self.driver_option = "oracle.jdbc.OracleDriver"
+
+        elif self.db_driver == 'presto':
+            if port is None: self.port = 8080
+            self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
 
         # TODO: add mongo?
         else:
@@ -88,6 +92,14 @@ class JDBC:
             elif oracle_tns:
                 url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
 
+        elif self.db_driver == "presto":
+            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{CATALOG}/{DATABASE}".format(
+                DB_DRIVER=self.db_driver,
+                HOST=host,
+                PORT=port,
+                CATALOG=presto_catalog,
+                DATABASE=database
+            )
         logger.print(url)
 
         self.url = url
@@ -117,6 +129,9 @@ class JDBC:
 
         elif self.db_driver == "mysql":
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
+
+        elif self.db_driver == "presto":
+            query = "SELECT table_name, 0 as table_rows FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '" + database + "'"
 
         elif self.db_driver == "sqlite":
             query = ""
@@ -214,6 +229,8 @@ class JDBC:
         # play defensive with a select clause
         if self.db_driver == "oracle":
             alias = " t"
+        elif self.db_driver == "presto":
+            alias = ""
         else:
             alias = " AS t"
 
@@ -226,10 +243,12 @@ class JDBC:
             .format("jdbc") \
             .option("url", self.url) \
             .option("dbtable", query) \
-            .option("user", self.user) \
-            .option("password", self.password)
+            .option("user", self.user)
 
-        if self.db_driver == "oracle" or self.db_driver == 'postgresql':
+        if self.db_driver != "presto" and self.password is not None:
+            conf.option("password", self.password)
+
+        if self.db_driver == "oracle" or self.db_driver == 'postgresql' or self.db_driver == 'presto':
             conf.option("driver", self.driver_option)
 
         return conf.load()
