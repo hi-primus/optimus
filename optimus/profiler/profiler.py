@@ -374,7 +374,7 @@ class Profiler:
         return columns_info
 
     @staticmethod
-    def minimal_stats(df, columns, buckets=10, approx_count=True):
+    def basic_stats(df, columns, buckets=10, approx_count=True):
         columns = parse_columns(df, columns)
         n = 60
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
