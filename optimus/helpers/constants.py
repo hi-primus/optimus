@@ -73,7 +73,7 @@ SPARK_DTYPES_DICT_OBJECTS = \
      }
 
 # Profiler
-PROFILER_TYPES = {"int", "decimal", "string", "boolean", "date", "null", "array", "binary"}
+PROFILER_TYPES = {"int", "decimal", "string", "boolean", "date", "null", "array", "binary", "missing"}
 PROFILER_LEGEND_TYPES = {"string": "ABC", "int": "#", "integer": "#", "float": "##.#", "double": "##.#", "bigint": "#"}
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 
