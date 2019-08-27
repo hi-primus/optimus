@@ -12,13 +12,13 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import absolute_path, collect_as_dict
+from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.parser import parse_to_profiler_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
+from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
 
@@ -59,7 +59,7 @@ class Profiler:
         :return: json
         """
 
-        df_count = self.rows_count
+        df.cols.count_by_dtypes(columns)
 
         def _count_data_types(col_name):
             """
@@ -70,34 +70,6 @@ class Profiler:
 
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
             # We do not need to analyze the data if the column data type is integer or boolean.etc
-
-            temp = col_name + "_type"
-            col_data_type = parse_to_profiler_dtypes(df, col_name)
-
-            count_by_data_type = {}
-            count_empty_strings = 0
-
-            if infer is True and col_data_type == "string":
-                logger.print("Processing column '" + col_name + "'...")
-                types = collect_as_dict(df
-                                        .withColumn(temp, filter_row_by_data_type(col_name, get_type=True))
-                                        .groupBy(temp).count()
-                                        )
-
-                for row in types:
-                    count_by_data_type[row[temp]] = row["count"]
-
-                count_empty_strings = df.where(F.col(col_name) == '').count()
-
-            else:
-                count_by_data_type[col_data_type] = int(df_count)
-
-            count_by_data_type = fill_missing_var_types(count_by_data_type)
-
-            # Subtract white spaces to the total string count
-            null_missed_count = {"null": count_by_data_type['null'],
-                                 "missing": count_empty_strings,
-                                 }
 
             # Get the greatest count by column data type
             greatest_data_type_count = max(count_by_data_type, key=count_by_data_type.get)
