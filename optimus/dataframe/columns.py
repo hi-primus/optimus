@@ -38,6 +38,7 @@ from optimus.helpers.functions \
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
+from optimus.profiler.functions import fill_missing_var_types
 
 ENGINE = "spark"
 
@@ -1562,6 +1563,123 @@ def cols(self):
 
                 for c in result[col_name]:
                     c["percentage"] = round((c["count"] * 100 / total_rows), 4)
+
+        return result
+
+    import dateutil.parser
+    from fastnumbers import isint, isfloat
+    from ast import literal_eval
+
+    @add_attr(cols)
+    def count_by_dtypes(columns, infer=False):
+        """
+        Use rdd to count the infered datatype in a row
+        :param columns: Columns to be processed
+        :param infer:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        def str_to_boolean(value):
+            """
+            Check if a str can be converted to boolean
+            :param value:
+            :return:
+            """
+            value = value.lower()
+            if value == "true" or value == "false":
+                return True
+
+        def str_to_date(value):
+            try:
+                dateutil.parser.parse(value)
+                return True
+            except (ValueError, OverflowError):
+                pass
+
+        def str_to_array(value):
+            """
+            Check if value can be parsed to a tuple or and array.
+            Because Spark can handle tuples we will try to transform tuples to arrays
+            :param value:
+            :return:
+            """
+            try:
+                if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+                    return True
+            except (ValueError, SyntaxError):
+                pass
+
+        _dtypes = self.cols.dtypes()
+
+        def parse(value):
+
+            """
+            Check if a value can be casted to a specific
+            :param value: value to be checked
+            :return:
+            """
+            col_name, value = value
+
+            def count_null(_value):
+                if _value is None:
+                    _data_type = "null"
+                else:
+                    _data_type = parse_to_profiler_dtypes(_dtypes[col_name])
+                return _data_type
+
+            if infer is True:
+                if _dtypes[col_name] == "string":
+
+                    if isinstance(value, bool):
+                        _data_type = "bool"
+                    elif isint(value):  # Check if value is integer
+                        _data_type = "int"
+                    elif isfloat(value):
+                        _data_type = "decimal"
+                    elif isinstance(value, str):
+                        if str_to_boolean(value):
+                            _data_type = "bool"
+                        elif str_to_date(value):
+                            _data_type = "date"
+                        elif str_to_array(value):
+                            _data_type = "array"
+                        elif value == "":
+                            _data_type = "missing"
+                        else:
+                            _data_type = "string"
+
+                    else:
+                        _data_type = "null"
+                else:
+                    # if not string. Calculate nulls
+                    _data_type = count_null(value)
+
+                return (col_name, _data_type), 1
+            else:
+                _data_type = count_null(value)
+                return (col_name, _data_type), 1
+
+        df = self
+
+        if infer is True:
+            _func = parse
+        else:
+            _func = parse
+
+        _count = (df.select(columns).rdd
+                  .flatMap(lambda x: x.asDict().items())
+                  .map(lambda x: parse(x))
+                  .reduceByKey(lambda a, b: a + b)
+                  )
+
+        result = {}
+
+        for c in _count.collect():
+            result.setdefault(c[0][0], {})[c[0][1]] = c[1]
+
+        for k in result.keys():
+            result[k] = fill_missing_var_types(result[k])
 
         return result
 
