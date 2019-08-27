@@ -53,12 +53,15 @@ def range_agg(col_name):
     return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
 
 
-def hist_agg(col_name, df, buckets, min_max=None):
+def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
     """
     Create a columns expression to calculate a column histogram
     :param col_name:
     :param df:
     :param buckets:
+    :param min_max: Min and max vaule neccesary to calculate the buckets
+    :param dtype: Column datatype to calculate the related histogram. Int, String and Dates return differents histograms
+
     :return:
     """
 
@@ -90,62 +93,84 @@ def hist_agg(col_name, df, buckets, min_max=None):
         # print(_exprs)
         return _exprs
 
-    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-        if min_max is None:
-            min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+    def hist_numeric(_min_max, _buckets):
+        if _min_max is None:
+            _min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
 
-        if min_max["min"] is not None and min_max["max"] is not None:
-            buckets = create_buckets(min_max["min"], min_max["max"], buckets)
-            func = F.col
-            exprs = create_exprs(col_name, buckets, func)
+        if _min_max["min"] is not None and _min_max["max"] is not None:
+            _buckets = create_buckets(_min_max["min"], _min_max["max"], _buckets)
+            _exprs = create_exprs(col_name, _buckets, F.col)
         else:
-            exprs = None
+            _exprs = None
 
-    elif is_column_a(df, col_name, "str"):
-        buckets = create_buckets(0, 50, buckets)
+        return _exprs
+
+    def hist_string(_buckets):
+        _buckets = create_buckets(0, 50, _buckets)
         func = F.length
-        exprs = create_exprs(col_name, buckets, func)
+        return create_exprs(col_name, _buckets, func)
 
-    elif is_column_a(df, col_name, "date"):
-
+    def hist_date():
         now = datetime.datetime.now()
         current_year = now.year
         oldest_year = 1950
 
         # Year
-        buckets = create_buckets(oldest_year, current_year, current_year - oldest_year)
+        _buckets = create_buckets(oldest_year, current_year, current_year - oldest_year)
         func = F.year
-        year = create_exprs(col_name, buckets, func)
+        year = create_exprs(col_name, _buckets, func)
 
         # Month
-        buckets = create_buckets(1, 12, 11)
+        _buckets = create_buckets(1, 12, 11)
         func = F.month
-        month = create_exprs(col_name, buckets, func)
+        month = create_exprs(col_name, _buckets, func)
 
         # Day
-        buckets = create_buckets(1, 31, 31)
+        _buckets = create_buckets(1, 31, 31)
         func = F.dayofweek
-        day = create_exprs(col_name, buckets, func)
+        day = create_exprs(col_name, _buckets, func)
 
         # Hour
-        buckets = create_buckets(0, 23, 23)
+        _buckets = create_buckets(0, 23, 23)
         func = F.hour
-        hour = create_exprs(col_name, buckets, func)
+        hour = create_exprs(col_name, _buckets, func)
 
         # Min
-        buckets = create_buckets(0, 60, 60)
+        _buckets = create_buckets(0, 60, 60)
         func = F.minute
-        minutes = create_exprs(col_name, buckets, func)
+        minutes = create_exprs(col_name, _buckets, func)
 
         # Second
-        buckets = create_buckets(0, 60, 60)
+        _buckets = create_buckets(0, 60, 60)
         func = F.second
-        second = create_exprs(col_name, buckets, func)
+        second = create_exprs(col_name, _buckets, func)
 
         exprs = F.create_map(F.lit("years"), year, F.lit("months"), month, F.lit("weekdays"), day,
                              F.lit("hours"), hour, F.lit("minutes"), minutes, F.lit("seconds"), second)
+
+        return exprs
+
+    if dtype is not None:
+        col_dtype = dtype[col_name]["dtype"]
+        if col_dtype == "int" or col_dtype == "decimal":
+            exprs = hist_numeric(min_max, buckets)
+        elif col_dtype == "string":
+            exprs = hist_string(buckets)
+        elif col_dtype == "date":
+            exprs = hist_date()
+        else:
+            exprs = None
     else:
-        exprs = None
+        if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            exprs = hist_numeric(min_max, buckets)
+
+        elif is_column_a(df, col_name, "str"):
+            exprs = hist_string(buckets)
+
+        elif is_column_a(df, col_name, "date"):
+            exprs = hist_date()
+        else:
+            exprs = None
 
     return exprs
 
