@@ -4,7 +4,6 @@ import string
 import unicodedata
 from functools import reduce
 from heapq import nlargest
-from operator import add as oadd
 
 import pyspark
 from fastnumbers import fast_float
@@ -1581,7 +1580,7 @@ def cols(self):
         if columns is not None:
             df = self
 
-            # Convert non compatible columns(different from str, int or float) to string
+            # Convert non compatible columns(non str, int or float) to string
             non_compatible_columns = df.cols.names(columns, ["array", "vector", "byte", "date", "binary"])
 
             if non_compatible_columns is not None:
@@ -1590,7 +1589,7 @@ def cols(self):
             freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: (x, 1))
-                    .reduceByKey(oadd)
+                    .reduceByKey(lambda a, b: a + b)
                     .groupBy(lambda x: x[0][0])
                     .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
                     .repartition(1)  # Because here we have small data move all to 1 partition
