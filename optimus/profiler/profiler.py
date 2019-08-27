@@ -3,20 +3,20 @@ import configparser
 import humanize
 import imgkit
 import jinja2
-import pyspark.sql.functions as F
 import simplejson as json
 
-from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_TYPES
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
+from optimus.helpers.parser import parse_to_profiler_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
@@ -47,8 +47,9 @@ class Profiler:
         self.path = output_path
         self.rows_count = None
         self.cols_count = None
+        self.columns_dtypes = None
 
-    def _count_data_types(self, df, columns, infer=False, stats=None):
+    def _count_data_types(self, df, columns, infer=False):
         """
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
@@ -71,15 +72,7 @@ class Profiler:
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
             temp = col_name + "_type"
-            col_data_type = df.cols.dtypes(col_name)
-
-            # Parse dtype
-            if col_data_type == "smallint" or col_data_type == "tinyint":
-                col_data_type = "int"
-            elif col_data_type == "float" or col_data_type == "double":
-                col_data_type = "decimal"
-            elif col_data_type.find("array") >= 0:
-                col_data_type = "array"
+            col_data_type = parse_to_profiler_dtypes(df, col_name)
 
             count_by_data_type = {}
             count_empty_strings = 0
@@ -87,8 +80,7 @@ class Profiler:
             if infer is True and col_data_type == "string":
                 logger.print("Processing column '" + col_name + "'...")
                 types = collect_as_dict(df
-                                        .h_repartition(col_name=col_name)
-                                        .withColumn(temp, fbdt(col_name, get_type=True))
+                                        .withColumn(temp, filter_row_by_data_type(col_name, get_type=True))
                                         .groupBy(temp).count()
                                         )
 
@@ -98,11 +90,7 @@ class Profiler:
                 count_empty_strings = df.where(F.col(col_name) == '').count()
 
             else:
-                # if boolean not support count na
-                if "count_na" in stats[col_name]:
-                    nulls = stats[col_name]["count_na"]
-                    count_by_data_type[col_data_type] = int(df_count) - nulls
-                    count_by_data_type["null"] = nulls
+                count_by_data_type[col_data_type] = int(df_count)
 
             count_by_data_type = fill_missing_var_types(count_by_data_type)
 
@@ -110,9 +98,9 @@ class Profiler:
             null_missed_count = {"null": count_by_data_type['null'],
                                  "missing": count_empty_strings,
                                  }
+
             # Get the greatest count by column data type
             greatest_data_type_count = max(count_by_data_type, key=count_by_data_type.get)
-
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
             elif greatest_data_type_count == "int" or greatest_data_type_count == "decimal":
@@ -331,8 +319,20 @@ class Profiler:
 
         columns_info['rows_count'] = humanize.intword(self.rows_count)
         logger.print("Processing General Stats...")
-        stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
-        count_dtypes = self._count_data_types(df, columns, infer, stats)
+
+        # Get columns data types. This is necessary to make the pertinent histogram calculations.
+        count_dtypes = self._count_data_types(df, columns, infer)
+        self.columns_dtypes = count_dtypes
+
+        stats = self.general_stats(df, columns, buckets, relative_error, approx_count)
+
+        if infer is False:
+            for col_name in columns:
+                col_data_type = parse_to_profiler_dtypes(df, col_name)
+                if "count_na" in stats[col_name]:
+                    nulls = stats[col_name]["count_na"]
+                    count_dtypes["columns"][col_name]["details"][col_data_type] = int(self.rows_count) - nulls
+                    count_dtypes["columns"][col_name]["details"]["null"] = nulls
 
         columns_info["count_types"] = count_dtypes["count_types"]
         columns_info['size'] = humanize.naturalsize(df.size())
@@ -395,8 +395,6 @@ class Profiler:
             result.update(df.cols.exec_agg(exprs))
 
         n = 60
-        # 40 2:46 seg
-        # 50 2:12
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
             logger.print(
@@ -413,9 +411,8 @@ class Profiler:
             result.update(df.cols.exec_agg(exprs))
         return result
 
-    @staticmethod
     @time_it
-    def general_stats(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
+    def general_stats(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return General stats for a column
         :param df:
@@ -445,7 +442,7 @@ class Profiler:
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
 
             funcs = [hist_agg]
-            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets))
+            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, None, self.columns_dtypes["columns"]))
 
             funcs = [percentile_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
