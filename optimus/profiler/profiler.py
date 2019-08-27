@@ -475,16 +475,31 @@ class Profiler:
             mean = stats[col_name]['mean']
 
             quantile = stats[col_name]["percentile"]
-            col_info['range'] = max_value - min_value
-            col_info['median'] = quantile["0.5"]
-            col_info['interquartile_range'] = quantile["0.75"] - quantile["0.25"]
+            if max_value is not None and min_value is not None:
+                col_info['range'] = max_value - min_value
+            else:
+                col_info['range'] = None
 
-            if mean != 0:
+            col_info['median'] = quantile["0.5"]
+
+            q1 = quantile["0.25"]
+            q3 = quantile["0.75"]
+
+            if q1 is not None and q3 is not None:
+                col_info['interquartile_range'] = q3 - q1
+            else:
+                col_info['interquartile_range'] = None
+
+            if mean != 0 and mean is not None:
                 col_info['coef_variation'] = round((stddev / mean), 5)
             else:
-                col_info['coef_variation'] = 0
+                col_info['coef_variation'] = None
 
-            col_info['mad'] = round(df.cols.mad(col_name), 5)
+            mad = df.cols.mad(col_name)
+            if mad is not None:
+                col_info['mad'] = round(df.cols.mad(col_name), 5)
+            else:
+                col_info['mad'] = None
 
         col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
         col_info['p_count_uniques'] = round((stats[col_name]['count_uniques'] * 100) / self.rows_count, 2)
