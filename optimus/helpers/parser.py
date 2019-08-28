@@ -115,20 +115,4 @@ def parse_spark_class_dtypes(value):
     return result
 
 
-def parse_to_profiler_dtypes(df, col_name):
-    """
-    Parse a spark datatype to a profiler datatype
-    :param df:
-    :param col_name:
-    :return:
-    """
-    col_data_type = df.cols.dtypes(col_name)
 
-    if col_data_type == "smallint" or col_data_type == "tinyint" or col_data_type == "bigint":
-        col_data_type = "int"
-    elif col_data_type == "float" or col_data_type == "double":
-        col_data_type = "decimal"
-    elif col_data_type.find("array") >= 0:
-        col_data_type = "array"
-
-    return col_data_type
