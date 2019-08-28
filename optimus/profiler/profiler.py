@@ -155,11 +155,12 @@ class Profiler:
         # Create every column stats
         for col_name in columns:
             hist_pic = None
+            freq_pic = None
+
             col = output["columns"][col_name]
 
             if "hist" in col["stats"]:
                 hist_dict = col["stats"]["hist"]
-
                 if col["column_dtype"] == "date":
                     hist_year = plot_hist({col_name: hist_dict["years"]}, "base64", "years")
                     hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
@@ -169,18 +170,12 @@ class Profiler:
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
-                elif col["column_dtype"] == "int" or col["column_dtype"] == "str":
+                elif col["column_dtype"] == "int" or col["column_dtype"] == "string":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
 
-                else:
-                    hist_pic = None
-
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
-            else:
-                freq_pic = None
-
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
