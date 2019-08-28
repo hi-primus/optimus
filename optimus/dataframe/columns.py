@@ -4,7 +4,6 @@ import string
 import unicodedata
 from functools import reduce
 from heapq import nlargest
-from operator import add as oadd
 
 import pyspark
 from fastnumbers import fast_float
@@ -38,7 +37,9 @@ from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
+# from optimus.helpers.pickle import Parse
 from optimus.helpers.raiseit import RaiseIt
+from optimus.profiler.functions import fill_missing_var_types
 
 ENGINE = "spark"
 
@@ -1567,6 +1568,129 @@ def cols(self):
         return result
 
     @add_attr(cols)
+    def count_by_dtypes(columns, infer=False):
+        """
+        Use rdd to count the inferred datatype in a row
+        :param columns: Columns to be processed
+        :param infer:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        df = self
+        dtypes = df.cols.dtypes()
+
+        def parse(value, _infer, _dtypes):
+            from ast import literal_eval
+            import dateutil.parser
+            from fastnumbers import isint, isfloat
+
+            col_name, value = value
+
+            def parse_to_profiler_dtypes(col_data_type):
+                """
+                   Parse a spark datatype to a profiler datatype
+                   :return:
+                   """
+
+                if col_data_type == "smallint" or col_data_type == "tinyint" or col_data_type == "bigint":
+                    col_data_type = "int"
+                elif col_data_type == "float" or col_data_type == "double":
+                    col_data_type = "decimal"
+                elif col_data_type.find("array") >= 0:
+                    col_data_type = "array"
+
+                return col_data_type
+
+            def str_to_boolean(_value):
+                """
+                Check if a str can be converted to boolean
+                :param _value:
+                :return:
+                """
+                _value = _value.lower()
+                if _value == "true" or _value == "false":
+                    return True
+
+            def str_to_date(_value):
+                try:
+                    dateutil.parser.parse(_value)
+                    return True
+                except (ValueError, OverflowError):
+                    pass
+
+            def str_to_array(_value):
+                """
+                Check if value can be parsed to a tuple or and array.
+                Because Spark can handle tuples we will try to transform tuples to arrays
+                :param _value:
+                :return:
+                """
+                try:
+                    if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+                        return True
+                except (ValueError, SyntaxError):
+                    pass
+
+            def count_null(_value, _dtypes):
+                if _value is None:
+                    _data_type = "null"
+                else:
+                    _data_type = parse_to_profiler_dtypes(_dtypes[col_name])
+                return _data_type
+
+            if _infer is True:
+                if _dtypes[col_name] == "string":
+
+                    if isinstance(value, bool):
+                        _data_type = "bool"
+                    elif isint(value):  # Check if value is integer
+                        _data_type = "int"
+                    elif isfloat(value):
+                        _data_type = "decimal"
+                    elif isinstance(value, str):
+                        if str_to_boolean(value):
+                            _data_type = "bool"
+                        elif str_to_date(value):
+                            _data_type = "date"
+                        elif str_to_array(value):
+                            _data_type = "array"
+                        elif value == "":
+                            _data_type = "missing"
+                        else:
+                            _data_type = "string"
+
+                    else:
+                        _data_type = "null"
+                else:
+                    # if not string. Calculate nulls
+                    _data_type = count_null(value, _dtypes)
+
+                return (col_name, _data_type), 1
+            else:
+                # return value
+                _data_type = count_null(value, _dtypes)
+                return (col_name, _data_type), 1
+
+        # p = Parse()
+        # def test(x, _infer, _dtypes):
+        #     return (x, infer)
+        _count = (df.select(columns).rdd
+                  .flatMap(lambda x: x.asDict().items())
+                  .map(lambda x: parse(x, infer,dtypes))
+                  .reduceByKey(lambda a, b: a + b)
+                  )
+
+        result = {}
+        for c in _count.collect():
+            result.setdefault(c[0][0], {})[c[0][1]] = c[1]
+
+        for k in result.keys():
+            result[k] = fill_missing_var_types(result[k])
+
+        return result
+
+    @add_attr(cols)
     def frequency(columns, n=10, percentage=False, total_rows=None):
         """
         Output values frequency in json format
@@ -1581,7 +1705,7 @@ def cols(self):
         if columns is not None:
             df = self
 
-            # Convert non compatible columns(different from str, int or float) to string
+            # Convert non compatible columns(non str, int or float) to string
             non_compatible_columns = df.cols.names(columns, ["array", "vector", "byte", "date", "binary"])
 
             if non_compatible_columns is not None:
@@ -1590,7 +1714,7 @@ def cols(self):
             freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: (x, 1))
-                    .reduceByKey(oadd)
+                    .reduceByKey(lambda a, b: a + b)
                     .groupBy(lambda x: x[0][0])
                     .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
                     .repartition(1)  # Because here we have small data move all to 1 partition

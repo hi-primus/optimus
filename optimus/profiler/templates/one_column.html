@@ -136,6 +136,7 @@
                     <th>Count</th>
                     <th>Frecuency (%)</th>
                 </tr>
+                {% if data.frequency is not none %}
                 {% for vi in data.frequency[:10] %}
                 <tr>
                     <td>{{vi.value}}</td>
@@ -156,7 +157,6 @@
 
         {% if data.column_type=="numeric" %}
         <div class="panel_profiler">
-
 
             <h3>Quantile statistics</h3>
             <table>
