@@ -16,11 +16,12 @@ from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
-from optimus.helpers.parser import parse_to_profiler_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
+
+HISTOGRAM_FREQUENCY_CHART_THRESHOLD = 30
 
 
 class Profiler:
@@ -55,11 +56,11 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: Columns to be processed
         :param infer: infer the column datatype
-        :param stats:
+
         :return: json
         """
 
-        df.cols.count_by_dtypes(columns)
+        count_by_data_type = df.cols.count_by_dtypes(columns, infer)
 
         def _count_data_types(col_name):
             """
@@ -69,10 +70,15 @@ class Profiler:
             """
 
             # If String, process the data to try to infer which data type is inside. This a kind of optimization.
+
             # We do not need to analyze the data if the column data type is integer or boolean.etc
 
             # Get the greatest count by column data type
-            greatest_data_type_count = max(count_by_data_type, key=count_by_data_type.get)
+            null_missed_count = {"null": count_by_data_type[col_name]['null'],
+                                 "missing": count_by_data_type[col_name]['missing'],
+                                 }
+
+            greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
             elif greatest_data_type_count == "int" or greatest_data_type_count == "decimal":
@@ -91,7 +97,7 @@ class Profiler:
             col = {}
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
-            col['details'] = {**count_by_data_type, **null_missed_count}
+            col['details'] = {**count_by_data_type[col_name], **null_missed_count}
 
             return col
 
@@ -298,23 +304,20 @@ class Profiler:
 
         stats = self.general_stats(df, columns, buckets, relative_error, approx_count)
 
-        if infer is False:
-            for col_name in columns:
-                col_data_type = parse_to_profiler_dtypes(df, col_name)
-                if "count_na" in stats[col_name]:
-                    nulls = stats[col_name]["count_na"]
-                    count_dtypes["columns"][col_name]["details"][col_data_type] = int(self.rows_count) - nulls
-                    count_dtypes["columns"][col_name]["details"]["null"] = nulls
-
         columns_info["count_types"] = count_dtypes["count_types"]
         columns_info['size'] = humanize.naturalsize(df.size())
 
         # Cast columns to the data type infer by count_data_types()
         # df = Profiler.cast_columns(df, columns, count_dtypes).cache()
 
+        frequency_cols = []
+        for col_name in columns:
+            if stats[col_name]["count_uniques"] < HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
+                frequency_cols.append(col_name)
+
         # Calculate stats
         logger.print("Processing Frequency ...")
-        freq = df.cols.frequency(columns, buckets, True, self.rows_count)
+        freq = df.cols.frequency(frequency_cols, buckets, True, self.rows_count)
 
         # Missing
         total_count_na = 0
@@ -330,7 +333,7 @@ class Profiler:
 
             col_info["stats"] = stats[col_name]
 
-            if freq is not None:
+            if col_name in freq:
                 col_info["frequency"] = freq[col_name]
 
             col_info["stats"].update(self.extra_stats(df, col_name, stats))
@@ -345,10 +348,9 @@ class Profiler:
 
         return columns_info
 
-    @staticmethod
-    def basic_stats(df, columns, buckets=10, approx_count=True):
+    def general_stats(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
-        n = 60
+        n = 30
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         # we have problems sending +100 columns at the same time. Process in batch
 
@@ -359,14 +361,20 @@ class Profiler:
             funcs = [count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
-            funcs = [F.min, F.max]
+            # TODO: in basic calculations funcs = [F.min, F.max]
+            funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs))
+
+            # TODO: None in basic calculation
+            funcs = [percentile_agg]
+            exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
+                                              relative_error))
 
             funcs = [count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
             result.update(df.cols.exec_agg(exprs))
 
-        n = 60
+        n = 30
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
             logger.print(
@@ -376,53 +384,13 @@ class Profiler:
             min_max = {}
 
             for col_name in cols:
-                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                    min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
+                if result[col_name]["count_uniques"] > HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
+                    print("Calculate histograms for", col_name)
+                    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                        min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
 
-            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
+                    exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
             result.update(df.cols.exec_agg(exprs))
-        return result
-
-    @time_it
-    def general_stats(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
-        """
-        Return General stats for a column
-        :param df:
-        :param columns:
-        :param buckets:
-        :param relative_error:
-        :param approx_count: Use  approx_count
-        :return:
-        """
-
-        columns = parse_columns(df, columns)
-        n = 20
-        list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
-        # we have problems sending +100 columns at the same time. Process in batch
-
-        result = {}
-        for i, cols in enumerate(list_columns):
-            logger.print("Batch {BATCH_NUMBER}. Processing columns{COLUMNS}:".format(BATCH_NUMBER=i, COLUMNS=cols))
-
-            funcs = [count_uniques_agg]
-            exprs = df.cols.create_exprs(cols, funcs, approx_count)
-
-            funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
-            exprs.extend(df.cols.create_exprs(cols, funcs))
-
-            funcs = [count_na_agg]
-            exprs.extend(df.cols.create_exprs(cols, funcs, df))
-
-            funcs = [hist_agg]
-            exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, None, self.columns_dtypes["columns"]))
-
-            funcs = [percentile_agg]
-            exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
-                                              relative_error))
-
-            # print("Aggregating {BATCH_NUMBER}".format(BATCH_NUMBER=i))
-            result.update(df.cols.exec_agg(exprs))
-
         return result
 
     def extra_stats(self, df, col_name, stats):
