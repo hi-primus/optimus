@@ -376,15 +376,15 @@ class Profiler:
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             funcs = [hist_agg]
-            min_max = {}
+            min_max = None
 
             for col_name in cols:
                 if result[col_name]["count_uniques"] > HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
-                    print("Calculate histograms for", col_name)
                     if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                         min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
 
-                    exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
+                exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
+
             result.update(df.cols.exec_agg(exprs))
         return result
 
