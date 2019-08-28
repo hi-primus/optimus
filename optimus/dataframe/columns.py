@@ -6,6 +6,7 @@ from functools import reduce
 from heapq import nlargest
 
 import pyspark
+import simplejson as json
 from fastnumbers import fast_float
 from multipledispatch import dispatch
 from pypika import MySQLQuery
@@ -1677,7 +1678,7 @@ def cols(self):
         #     return (x, infer)
         _count = (df.select(columns).rdd
                   .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: parse(x, infer,dtypes))
+                  .map(lambda x: parse(x, infer, dtypes))
                   .reduceByKey(lambda a, b: a + b)
                   )
 
@@ -1929,6 +1930,33 @@ def cols(self):
 
         df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
+
+    @add_attr(cols)
+    def set_meta(col_name, value):
+        """
+        Sel meta data in a column
+        :param col_name:
+        :param value:
+        :return:
+        """
+
+        return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=value))
+
+    @add_attr(cols)
+    def get_meta(col_name):
+        """
+        Get meta data from a specific column
+        :param col_name:
+        :return:
+        """
+
+        result = ""
+        meta_json = self._jdf.schema().json()
+        dict = json.loads(meta_json)["fields"]
+        for col_info in dict:
+            if col_info["name"] == col_name:
+                result = col_info["metadata"]
+        return result
 
     return cols
 
