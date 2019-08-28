@@ -307,7 +307,8 @@ class Profiler:
 
         frequency_cols = []
         for col_name in columns:
-            if stats[col_name]["count_uniques"] < HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
+
+            if stats[col_name]["count_uniques"] <= HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
                 frequency_cols.append(col_name)
 
         # Calculate stats
