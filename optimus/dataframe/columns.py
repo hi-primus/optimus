@@ -37,6 +37,7 @@ from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
+# from optimus.helpers.pickle import Parse
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -1566,69 +1567,79 @@ def cols(self):
 
         return result
 
-    import dateutil.parser
-    from fastnumbers import isint, isfloat
-    from ast import literal_eval
-
     @add_attr(cols)
     def count_by_dtypes(columns, infer=False):
         """
-        Use rdd to count the infered datatype in a row
+        Use rdd to count the inferred datatype in a row
         :param columns: Columns to be processed
         :param infer:
         :return:
         """
         columns = parse_columns(self, columns)
 
-        def str_to_boolean(value):
-            """
-            Check if a str can be converted to boolean
-            :param value:
-            :return:
-            """
-            value = value.lower()
-            if value == "true" or value == "false":
-                return True
+        df = self
+        dtypes = df.cols.dtypes()
 
-        def str_to_date(value):
-            try:
-                dateutil.parser.parse(value)
-                return True
-            except (ValueError, OverflowError):
-                pass
+        def parse(value, _infer, _dtypes):
+            from ast import literal_eval
+            import dateutil.parser
+            from fastnumbers import isint, isfloat
 
-        def str_to_array(value):
-            """
-            Check if value can be parsed to a tuple or and array.
-            Because Spark can handle tuples we will try to transform tuples to arrays
-            :param value:
-            :return:
-            """
-            try:
-                if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
-                    return True
-            except (ValueError, SyntaxError):
-                pass
-
-        _dtypes = self.cols.dtypes()
-
-        def parse(value):
-
-            """
-            Check if a value can be casted to a specific
-            :param value: value to be checked
-            :return:
-            """
             col_name, value = value
 
-            def count_null(_value):
+            def parse_to_profiler_dtypes(col_data_type):
+                """
+                   Parse a spark datatype to a profiler datatype
+                   :return:
+                   """
+
+                if col_data_type == "smallint" or col_data_type == "tinyint" or col_data_type == "bigint":
+                    col_data_type = "int"
+                elif col_data_type == "float" or col_data_type == "double":
+                    col_data_type = "decimal"
+                elif col_data_type.find("array") >= 0:
+                    col_data_type = "array"
+
+                return col_data_type
+
+            def str_to_boolean(_value):
+                """
+                Check if a str can be converted to boolean
+                :param _value:
+                :return:
+                """
+                _value = _value.lower()
+                if _value == "true" or _value == "false":
+                    return True
+
+            def str_to_date(_value):
+                try:
+                    dateutil.parser.parse(_value)
+                    return True
+                except (ValueError, OverflowError):
+                    pass
+
+            def str_to_array(_value):
+                """
+                Check if value can be parsed to a tuple or and array.
+                Because Spark can handle tuples we will try to transform tuples to arrays
+                :param _value:
+                :return:
+                """
+                try:
+                    if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+                        return True
+                except (ValueError, SyntaxError):
+                    pass
+
+            def count_null(_value, _dtypes):
                 if _value is None:
                     _data_type = "null"
                 else:
                     _data_type = parse_to_profiler_dtypes(_dtypes[col_name])
                 return _data_type
 
-            if infer is True:
+            if _infer is True:
                 if _dtypes[col_name] == "string":
 
                     if isinstance(value, bool):
@@ -1653,28 +1664,24 @@ def cols(self):
                         _data_type = "null"
                 else:
                     # if not string. Calculate nulls
-                    _data_type = count_null(value)
+                    _data_type = count_null(value, _dtypes)
 
                 return (col_name, _data_type), 1
             else:
-                _data_type = count_null(value)
+                # return value
+                _data_type = count_null(value, _dtypes)
                 return (col_name, _data_type), 1
 
-        df = self
-
-        if infer is True:
-            _func = parse
-        else:
-            _func = parse
-
+        # p = Parse()
+        # def test(x, _infer, _dtypes):
+        #     return (x, infer)
         _count = (df.select(columns).rdd
                   .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: parse(x))
+                  .map(lambda x: parse(x, infer,dtypes))
                   .reduceByKey(lambda a, b: a + b)
                   )
 
         result = {}
-
         for c in _count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
