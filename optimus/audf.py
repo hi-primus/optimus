@@ -1,8 +1,6 @@
 import dateutil.parser
 from fastnumbers import isint, isfloat
 from pyspark.sql import functions as F
-from pyspark.sql import udf
-from pyspark.sql.types import DataType
 
 from optimus.helpers.check import is_column
 from optimus.helpers.converter import one_list_to_val

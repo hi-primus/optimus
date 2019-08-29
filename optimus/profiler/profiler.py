@@ -95,6 +95,7 @@ class Profiler:
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
             col['details'] = {**count_by_data_type[col_name], **null_missed_count}
+            col['extra_dtype_info'] = count_by_extra_types[col_name]
 
             return col
 
