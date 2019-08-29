@@ -69,10 +69,6 @@ class Profiler:
             :return:
             """
 
-            # If String, process the data to try to infer which data type is inside. This a kind of optimization.
-
-            # We do not need to analyze the data if the column data type is integer or boolean.etc
-
             # Get the greatest count by column data type
             null_missed_count = {"null": count_by_data_type[col_name]['null'],
                                  "missing": count_by_data_type[col_name]['missing'],
@@ -158,9 +154,9 @@ class Profiler:
             freq_pic = None
 
             col = output["columns"][col_name]
-
             if "hist" in col["stats"]:
                 hist_dict = col["stats"]["hist"]
+
                 if col["column_dtype"] == "date":
                     hist_year = plot_hist({col_name: hist_dict["years"]}, "base64", "years")
                     hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
@@ -170,12 +166,13 @@ class Profiler:
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
-                elif col["column_dtype"] == "int" or col["column_dtype"] == "string":
+                elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col["column_dtype"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
 
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
+
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
@@ -307,7 +304,6 @@ class Profiler:
 
         frequency_cols = []
         for col_name in columns:
-
             if stats[col_name]["count_uniques"] <= HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
                 frequency_cols.append(col_name)
 
@@ -329,8 +325,9 @@ class Profiler:
 
             col_info["stats"] = stats[col_name]
 
-            if col_name in freq:
-                col_info["frequency"] = freq[col_name]
+            if freq is not None:
+                if col_name in freq:
+                    col_info["frequency"] = freq[col_name]
 
             col_info["stats"].update(self.extra_stats(df, col_name, stats))
 
@@ -370,7 +367,9 @@ class Profiler:
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
             result.update(df.cols.exec_agg(exprs))
 
+        exprs = []
         n = 30
+        result_hist = {}
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
             logger.print(
@@ -380,13 +379,21 @@ class Profiler:
             min_max = None
 
             for col_name in cols:
+
+                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                    min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
+
                 if result[col_name]["count_uniques"] > HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
-                    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                        min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
+                    exprs.extend(df.cols.create_exprs(col_name, funcs, df, buckets, min_max))
 
-                exprs.extend(df.cols.create_exprs(cols, funcs, df, buckets, min_max))
+            agg_result = df.cols.exec_agg(exprs)
+            if agg_result is not None:
+                result_hist.update(agg_result)
 
-            result.update(df.cols.exec_agg(exprs))
+        # Merge results
+        for col_name in result:
+            if col_name in result_hist:
+                result[col_name].update(result_hist[col_name])
         return result
 
     def extra_stats(self, df, col_name, stats):

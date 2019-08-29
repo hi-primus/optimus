@@ -2,11 +2,14 @@ import builtins
 import re
 import string
 import unicodedata
+from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
+import dateutil.parser
 import pyspark
 from fastnumbers import fast_float
+from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 from pypika import MySQLQuery
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
@@ -500,7 +503,7 @@ def cols(self):
                    "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                              zeros_agg],
                    "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                 zeros_agg],
+                                 zeros_agg, percentile_agg],
                    "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                             zeros_agg],
                    "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
@@ -543,8 +546,9 @@ def cols(self):
                             _exprs.append(agg.as_(func_name + "_" + _col_name))
 
             return _exprs
+        r = _agg_exprs(exprs)
 
-        return _agg_exprs(exprs)
+        return r
 
     @add_attr(cols)
     def agg_exprs(columns, funcs, *args):
@@ -564,17 +568,21 @@ def cols(self):
         :param exprs:
         :return:
         """
-        df = self
-        if ENGINE == "sql":
-            def clean(c):
-                return c.get_sql().replace("'", "`")
 
-            exprs = clean(MySQLQuery.from_("df").select(*exprs))
-            df = self.query(exprs)
-        elif ENGINE == "spark":
-            df = self.agg(*exprs)
+        if len(exprs) > 0:
+            df = self
+            if ENGINE == "sql":
+                def clean(c):
+                    return c.get_sql().replace("'", "`")
 
-        result = parse_col_names_funcs_to_keys(df.to_dict())
+                exprs = clean(MySQLQuery.from_("df").select(*exprs))
+                df = self.query(exprs)
+            elif ENGINE == "spark":
+                df = self.agg(*exprs)
+
+            result = parse_col_names_funcs_to_keys(df.to_dict())
+        else:
+            result = None
 
         return result
 
@@ -1581,9 +1589,6 @@ def cols(self):
         dtypes = df.cols.dtypes()
 
         def parse(value, _infer, _dtypes):
-            from ast import literal_eval
-            import dateutil.parser
-            from fastnumbers import isint, isfloat
 
             col_name, value = value
 
@@ -1599,7 +1604,8 @@ def cols(self):
                     col_data_type = "decimal"
                 elif col_data_type.find("array") >= 0:
                     col_data_type = "array"
-
+                elif col_data_type == "date" or col_data_type == "timestamp":
+                    col_data_type = "date"
                 return col_data_type
 
             def str_to_boolean(_value):
@@ -1677,7 +1683,7 @@ def cols(self):
         #     return (x, infer)
         _count = (df.select(columns).rdd
                   .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: parse(x, infer,dtypes))
+                  .map(lambda x: parse(x, infer, dtypes))
                   .reduceByKey(lambda a, b: a + b)
                   )
 

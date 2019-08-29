@@ -60,7 +60,7 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
     :param df:
     :param buckets:
     :param min_max: Min and max vaule neccesary to calculate the buckets
-    :param dtype: Column datatype to calculate the related histogram. Int, String and Dates return differents histograms
+    :param dtype: Column datatype to calculate the related histogram. Int, String and Dates return different histograms
 
     :return:
     """
@@ -90,7 +90,6 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
                 "hist_agg" + "_" + _input_col + "_" + str(b["bucket"]))
             _exprs.append(info)
         _exprs = F.array(*_exprs).alias("hist" + _input_col)
-        # print(_exprs)
         return _exprs
 
     def hist_numeric(_min_max, _buckets):
@@ -167,7 +166,7 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         elif is_column_a(df, col_name, "str"):
             exprs = hist_string(buckets)
 
-        elif is_column_a(df, col_name, "date"):
+        elif is_column_a(df, col_name, "date") or is_column_a(df, col_name, "timestamp"):
             exprs = hist_date()
         else:
             exprs = None
