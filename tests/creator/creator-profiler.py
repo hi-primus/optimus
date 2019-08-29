@@ -88,9 +88,6 @@ source_df.table()
 
 from pyspark.ml.linalg import Vectors
 
-
-
-
 t = Test(op, source_df, "df_profiler", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
@@ -118,9 +115,6 @@ array_col = "attributes"
 
 from optimus.profiler.profiler import Profiler
 p= Profiler()
-
-from optimus.ml import feature as fe
-t.create(p, "minimal_stats", None, 'json', None, source_df,"*")
 
 t.create(p, "to_json", None, 'json', None, source_df,"*")
 
