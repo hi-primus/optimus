@@ -294,7 +294,7 @@ class Profiler:
         count_dtypes = self._count_data_types(df, columns, infer)
         self.columns_dtypes = count_dtypes
 
-        stats = self.general_stats(df, columns, buckets, relative_error, approx_count)
+        stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
 
         columns_info["count_types"] = count_dtypes["count_types"]
         columns_info['size'] = humanize.naturalsize(df.size())
@@ -341,7 +341,8 @@ class Profiler:
 
         return columns_info
 
-    def general_stats(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
+    @staticmethod
+    def general_stats(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
         n = 30
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]

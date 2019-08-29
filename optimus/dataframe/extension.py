@@ -485,3 +485,27 @@ def send(self, name=None):
                                        sample=10000)
 
     Comm.instance.send(result)
+
+
+@add_method(DataFrame)
+def set_meta(self, value):
+    """
+    Set metadata in a dataframe columns
+    :param self:
+    :param value:
+    :return:
+    """
+    df = self
+    df.schema[-1].metadata = value
+    return df
+
+
+@add_method(DataFrame)
+def get_meta(self):
+    """
+    Get metadata from a dataframe column
+    :param self:
+    :return:
+    """
+
+    return self.schema[-1].metadata
