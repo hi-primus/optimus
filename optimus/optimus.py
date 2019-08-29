@@ -144,6 +144,9 @@ class Optimus:
 
         logger.print(STARTING_OPTIMUS)
 
+        # Pickling
+        # Spark.instance.sc.addPyFile(absolute_path("/helpers/pickle.py"))
+
         if server:
             logger.print("Starting Optimus Server...")
             s = Server()

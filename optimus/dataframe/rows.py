@@ -25,7 +25,7 @@ def rows(self):
         :return: Spark DataFrame
         """
         df = self
-        print(is_list_of_tuples(rows))
+
         if is_list_of_tuples(rows):
             columns = [str(i) for i in range(df.cols.count())]
             if not is_list_of_tuples(rows):

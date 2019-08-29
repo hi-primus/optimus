@@ -2,8 +2,8 @@
 <div class="main" style="width: 100%; overflow: auto; border-bottom: 1px solid #eeeeee; padding: 10px 0;">
     <div class="info" style="overflow: auto;">
 
-        {% if data.column_type=="categorical" or data.column_type=="numeric" or data.column_type=="date" or
-        data.column_type=="bool" or data.column_type=="array"%}
+        {% if data.column_type=="categorical" or data.column_type=="decimal" or data.column_type=="numeric" or data.column_type=="date" or
+        data.column_type=="bool" or data.column_type=="array" or data.column_type=="null" or data.column_type=="timestamp"%}
 
         <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
             <div>
@@ -128,6 +128,7 @@
 
         </div>
         <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
+            {% if data.frequency is defined%}
             <h3>Frequency</h3>
             <table>
 
@@ -136,6 +137,7 @@
                     <th>Count</th>
                     <th>Frecuency (%)</th>
                 </tr>
+
                 {% for vi in data.frequency[:10] %}
                 <tr>
                     <td style="padding: 0.2em;">{{vi.value}}</td>
@@ -151,12 +153,12 @@
                 </tr>
 
             </table>
+            {% endif %}
         </div>
         {% endif %}
 
         {% if data.column_type=="numeric" %}
         <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
-
 
             <h3>Quantile statistics</h3>
             <table>

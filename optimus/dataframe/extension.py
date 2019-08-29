@@ -11,11 +11,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus.helpers.constants import RELATIVE_ERROR
 from optimus import val_to_list
 from optimus.bumblebee import Comm
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
