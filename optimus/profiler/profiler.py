@@ -61,6 +61,7 @@ class Profiler:
         """
 
         count_by_data_type = df.cols.count_by_dtypes(columns, infer)
+        count_by_extra_types = df.cols.count_by_extra_types(columns, infer)
 
         def _count_data_types(col_name):
             """

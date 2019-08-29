@@ -154,40 +154,12 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             except (ValueError, SyntaxError):
                 pass
 
-        def str_to_url(value):
-            import re
-            regex = re.compile(
-                r'^https?://'  # http:// or https://
-                r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-                r'localhost|'  # localhost...
-                r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-                r'(?::\d+)?'  # optional port
-                r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-            if regex.match(value):
-                return True
-
-            return False
-
-        def str_to_ip(value):
-            import re
-            regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
-            if regex.match(value):
-                return True
-            return False
-
-        def str_to_phone_number(value):
-            import phonenumbers
-            if phonenumbers.is_valid_number(z):
-                return True
-            return False
-
         def func(value):
             """
             Check if a value can be casted to a specific
             :param value: value to be checked
             :return:
             """
-            extra_info = "uri"
             if isinstance(value, bool):
                 _data_type = "bool"
             elif isint(value):  # Check if value is integer
@@ -202,10 +174,6 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
                     _data_type = "date"
                 elif str_to_array(value):
                     _data_type = "array"
-                elif str_to_url(value):
-                    _data_type = "url"
-                elif str_to_ip(value):
-                    _data_type = "ip"
                 else:
                     _data_type = "string"
             else:
