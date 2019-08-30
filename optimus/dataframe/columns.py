@@ -1856,7 +1856,7 @@ def cols(self):
 
         columns = parse_columns(self, columns)
         data_types = tuple_to_dict(self.dtypes)
-        return format_dict({col_name: data_types[col_name] for col_name in columns})
+        return {col_name: data_types[col_name] for col_name in columns}
 
     @add_attr(cols)
     def names(col_names="*", filter_by_column_dtypes=None, invert=False):
