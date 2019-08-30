@@ -274,6 +274,7 @@ def cols(self):
                 elif is_int(old_col_name):
                     df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
 
+        df.cols.append_meta("transformation", "rename")
         return df
 
     @add_attr(cols)
@@ -484,7 +485,7 @@ def cols(self):
 
         df = df.drop(*columns)
 
-        # df = df.track_cols(self, remove=columns)
+        df.cols.append_meta("transformation", "drop")
         return df
 
     @add_attr(cols)
@@ -556,6 +557,7 @@ def cols(self):
                             _exprs.append(agg.as_(func_name + "_" + _col_name))
 
             return _exprs
+
         r = _agg_exprs(exprs)
 
         return r
@@ -1200,7 +1202,7 @@ def cols(self):
         """
         Return how many unique items exist in a columns
         :param columns: '*', list of columns names or a single column name.
-        :param estimate: If true use hyperloglog to estimate distinct count. If False use full distinct
+        :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
         :type estimate: bool
         :return:
         """
@@ -1688,9 +1690,6 @@ def cols(self):
                 _data_type = count_null(value, _dtypes)
                 return (col_name, _data_type), 1
 
-        # p = Parse()
-        # def test(x, _infer, _dtypes):
-        #     return (x, infer)
         _count = (df.select(columns).rdd
                   .flatMap(lambda x: x.asDict().items())
                   .map(lambda x: parse(x, infer, dtypes))
@@ -1698,6 +1697,7 @@ def cols(self):
                   )
 
         result = {}
+
         for c in _count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
@@ -1744,7 +1744,8 @@ def cols(self):
             if percentage:
                 if total_rows is None:
                     total_rows = df.count()
-                    RaiseIt.type_error(total_rows, "int")
+
+                    RaiseIt.type_error(total_rows, ["int"])
                 for col_name in columns:
                     for c in result[col_name]:
                         c["percentage"] = round((c["count"] * 100 / total_rows), 2)
@@ -1945,6 +1946,15 @@ def cols(self):
 
         df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
+
+    # @add_attr(cols)
+    # def append_meta(col_name, value):
+    #     target = self.get_meta()
+    #     data = glom(target, (path, T.append(value)))
+    #
+    #     df = self
+    #     df.schema[-1].metadata = data
+    #     return df
 
     @add_attr(cols)
     def set_meta(col_name, value):
