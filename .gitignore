@@ -60,3 +60,5 @@ examples/many-columns\.csv
 examples/many=columns\.parquet/
 
 examples/many-columns.parquet/
+
+examples/sandbox.ipynb
