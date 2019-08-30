@@ -41,5 +41,5 @@ deepdiff==4.0.6
 papermill==1.0.1
 paho-mqtt==0.4.90
 cryptography==2.7
-pypika==0.32.0
+pypika==0.35.1
 statsmodels==0.10.1
