@@ -4,6 +4,7 @@ import humanize
 import imgkit
 import jinja2
 import math
+from glom import glom, assign
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -26,8 +27,6 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 DataFrame._name = None
-DataFrame._track_cols = []
-DataFrame._original_cols = None
 
 
 @add_method(DataFrame)
@@ -280,14 +279,14 @@ def partitioner(self):
     return self.rdd.partitioner
 
 
-@add_attr(DataFrame)
-def glom(self):
-    """
-
-    :param self: Spark Dataframe
-    :return:
-    """
-    return collect_as_dict(self.rdd.glom().collect()[0])
+# @add_attr(DataFrame)
+# def glom(self):
+#     """
+#
+#     :param self: Spark Dataframe
+#     :return:
+#     """
+#     return collect_as_dict(self.rdd.glom().collect()[0])
 
 
 @add_method(DataFrame)
@@ -445,67 +444,66 @@ def create_id(self, column="id"):
 
 
 @add_method(DataFrame)
-def track_cols(self, df, add=None, remove=None):
-    """
-    This track the columns that are updated by an Spark Operation. The function must be used at the end of the fucnion
-    after all the transformations
-    :param self:
-    :param df: dataframe with the old column data.
-    :param add: Columns to be added.
-    :param remove: Columns to be removed.
-    :return:
-    """
-    if df._original_cols is None:
-        df._original_cols = df.cols.names()
-
-    if add is not None:
-        df._track_cols = (list(set(df._track_cols + val_to_list(add))))
-    if remove is not None:
-        df._track_cols = (list(set([item for item in df._track_cols if item not in val_to_list(remove)])))
-
-    self._track_cols = df._track_cols
-
-    return self
-
-
-@add_method(DataFrame)
-def send(self, name=None):
+def send(self, name=None, stats=True):
     """
     Profile and send the data to the queue
     :param self:
     :param name: Specified a name for the view/dataframe
+    :param stats:
     :return:
     """
-
+    df = self
     if name is not None:
-        self._name = name
+        df.set_name(name)
 
-    result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=RELATIVE_ERROR,
+    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
-                                       sample=10000)
+                                       sample=10000,
+                                       stats=stats)
 
     Comm.instance.send(result)
 
 
 @add_method(DataFrame)
-def set_meta(self, value):
-    """
-    Set metadata in a dataframe columns
-    :param self:
-    :param value:
-    :return:
-    """
+def append_meta(self, path, value):
+    target = self.get_meta()
+    data = glom(target, (path, T.append(value)))
+
     df = self
-    df.schema[-1].metadata = value
+    df.schema[-1].metadata = data
     return df
 
 
 @add_method(DataFrame)
-def get_meta(self):
+def set_meta(self, path=None, value=None, missing=dict):
+    """
+    Set metadata in a dataframe columns
+    :param self:
+    :param path:
+    :param value:
+    :param missing:
+    :return:
+    """
+    if path is not None:
+        target = self.get_meta()
+        data = assign(target, path, value, missing=missing)
+    else:
+        data = value
+
+    df = self
+    df.schema[-1].metadata = data
+    return df
+
+
+@add_method(DataFrame)
+def get_meta(self, spec=None):
     """
     Get metadata from a dataframe column
     :param self:
+    :param spec:
     :return:
     """
-
-    return self.schema[-1].metadata
+    data = self.schema[-1].metadata
+    if spec is not None:
+        data = glom(data, spec)
+    return data

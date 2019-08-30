@@ -4,7 +4,7 @@ from urllib.request import Request, urlopen
 
 import pandas as pd
 from packaging import version
-
+import ntpath
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
@@ -96,6 +96,7 @@ class Load:
                   .options(delimiter=sep)
                   .options(inferSchema=infer_schema)
                   .csv(path, *args, **kwargs))
+            df.set_meta("file_name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
@@ -115,6 +116,8 @@ class Load:
 
         try:
             df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
+            df.set_meta("file_name", ntpath.basename(path))
+
         except IOError as error:
             logger.print(error)
             raise
@@ -139,7 +142,7 @@ class Load:
             else:
                 avro_version = "avro "
             df = Spark.instance.spark.read.format(avro_version).load(path, *args, **kwargs)
-
+            df.set_meta("file_name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
@@ -175,6 +178,7 @@ class Load:
 
             # Create spark data frame
             df = Spark.instance.spark.createDataFrame(pdf)
+            df.set_meta("file_name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise

@@ -108,17 +108,26 @@ def cols(self):
         return df_result
 
     @add_attr(cols)
-    def select(columns=None, regex=None, data_type=None):
+    def select(columns="*", regex=None, data_type=None, invert=False):
         """
         Select columns using index, column name, regex to data type
         :param columns:
-        :param regex:
-        :param data_type:
+        :param regex: Regular expression to filter the columns
+        :param data_type: Data type to be filtered for
+        :param invert: Invert the selection
         :return:
         """
-        columns = parse_columns(self, columns, is_regex=regex, filter_by_column_dtypes=data_type)
+        df = self
+        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
+        if columns is not None:
+            df = df.select(columns)
+            # Metadata get lost when using select(). So we copy here again.
+            df.set_meta(value=self.get_meta())
+            result = df
+        else:
+            result = None
 
-        return self.select(columns)
+        return result
 
     @add_attr(cols)
     def copy(input_cols, output_cols):
