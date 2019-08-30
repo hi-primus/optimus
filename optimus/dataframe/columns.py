@@ -1194,7 +1194,8 @@ def cols(self):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+        columns = parse_columns(self, columns)
+
         return format_dict(agg_exprs(columns, zeros_agg))
 
     @add_attr(cols)
