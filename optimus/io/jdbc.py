@@ -15,7 +15,7 @@ class JDBC:
     """
 
     def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
-                 oracle_service_name=None, oracle_sid=None):
+                 oracle_service_name=None, oracle_sid=None, presto_catalog=None):
         """
         Create the JDBC connection object
         :return:
@@ -29,9 +29,14 @@ class JDBC:
             if port is None: self.port = 5439
             # "com.databricks.spark.redshift"
 
-        elif self.db_driver == "postgres":
+        elif self.db_driver == "postgresql":
             if port is None: self.port = 5432
-            # "org.postgresql.Driver"
+            self.driver_option = "org.postgresql.Driver"
+
+        elif self.db_driver == "postgres": # backward compat
+            if port is None: self.port = 5432
+            self.driver_option = "org.postgresql.Driver"
+            self.db_driver = "postgresql"
 
         elif self.db_driver == "mysql":
             if port is None: self.port = 3306
@@ -45,6 +50,10 @@ class JDBC:
             if port is None: self.port = 1521
             self.driver_option = "oracle.jdbc.OracleDriver"
 
+        elif self.db_driver == 'presto':
+            if port is None: self.port = 8080
+            self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
+
         # TODO: add mongo?
         else:
             # print("Driver not supported")
@@ -56,9 +65,9 @@ class JDBC:
         # Create string connection
         if self.db_driver == "sqlite":
             url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
-        elif self.db_driver == "postgres" or self.db_driver == "redshift" or self.db_driver == "mysql":
+        elif self.db_driver == "postgresql" or self.db_driver == "redshift" or self.db_driver == "mysql":
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
-            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=driver,
+            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=self.db_driver,
                                                                                               HOST=host,
                                                                                               PORT=port,
                                                                                               DATABASE=database,
@@ -83,6 +92,14 @@ class JDBC:
             elif oracle_tns:
                 url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
 
+        elif self.db_driver == "presto":
+            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{CATALOG}/{DATABASE}".format(
+                DB_DRIVER=self.db_driver,
+                HOST=host,
+                PORT=port,
+                CATALOG=presto_catalog,
+                DATABASE=database
+            )
         logger.print(url)
 
         self.url = url
@@ -104,7 +121,7 @@ class JDBC:
             schema = self.schema
 
         query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgres"):
+        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
             query = """
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
@@ -112,6 +129,9 @@ class JDBC:
 
         elif self.db_driver == "mysql":
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
+
+        elif self.db_driver == "presto":
+            query = "SELECT table_name, 0 as table_rows FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '" + database + "'"
 
         elif self.db_driver == "sqlite":
             query = ""
@@ -135,7 +155,7 @@ class JDBC:
             schema = self.schema
 
         query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgres"):
+        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
             query = """
                         SELECT relname as table_name 
                         FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
@@ -209,6 +229,8 @@ class JDBC:
         # play defensive with a select clause
         if self.db_driver == "oracle":
             alias = " t"
+        elif self.db_driver == "presto":
+            alias = ""
         else:
             alias = " AS t"
 
@@ -221,10 +243,12 @@ class JDBC:
             .format("jdbc") \
             .option("url", self.url) \
             .option("dbtable", query) \
-            .option("user", self.user) \
-            .option("password", self.password)
+            .option("user", self.user)
 
-        if self.db_driver == "oracle":
+        if self.db_driver != "presto" and self.password is not None:
+            conf.option("password", self.password)
+
+        if self.db_driver == "oracle" or self.db_driver == 'postgresql' or self.db_driver == 'presto':
             conf.option("driver", self.driver_option)
 
         return conf.load()

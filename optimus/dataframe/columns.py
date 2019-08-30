@@ -6,7 +6,7 @@ from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
-import dateutil.parser
+from dateutil.parser import parse as dparse
 import pyspark
 import simplejson as json
 from fastnumbers import fast_float
@@ -1621,7 +1621,7 @@ def cols(self):
 
             def str_to_date(_value):
                 try:
-                    dateutil.parser.parse(_value)
+                    dparse(_value)
                     return True
                 except (ValueError, OverflowError):
                     pass
@@ -1694,6 +1694,99 @@ def cols(self):
 
         for k in result.keys():
             result[k] = fill_missing_var_types(result[k])
+
+        return result
+
+
+    @add_attr(cols)
+    def count_by_extra_types(columns, infer=False):
+        """
+        Use rdd to count the inferred datatype in a row
+        :param columns: Columns to be processed
+        :param infer:
+        :return:
+        """
+        columns = parse_columns(self, columns)
+
+        df = self
+        dtypes = df.cols.dtypes()
+
+        def parse(value, _infer, _dtypes):
+
+            col_name, value = value
+
+            def str_to_url(value):
+                import re
+                regex = re.compile(
+                    r'^https?://'  # http:// or https://
+                    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+                    r'localhost|'  # localhost...
+                    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+                    r'(?::\d+)?'  # optional port
+                    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+                if regex.match(value):
+                    return True
+
+                return False
+
+            def str_to_ip(value):
+                import re
+                regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
+                if regex.match(value):
+                    return True
+                return False
+
+            def str_to_email(value):
+                import re
+                regex = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+                if regex.match(value):
+                    return True
+                return False
+
+            def str_to_credit_card(value):
+                import re
+                regex = re.compile('r^([456][0-9]{3})-?([0-9]{4})-?([0-9]{4})-?([0-9]{4})$')
+                if regex.match(value):
+                    return True
+                return False
+
+            def str_to_zip_code(value):
+                import re
+                regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
+                if regex.match(value):
+                    return True
+                return False
+
+            if isinstance(value, str):
+
+                if str_to_ip(value):
+                    _data_type = "ip"
+                elif str_to_url(value):
+                    _data_type = "url"
+                elif str_to_email(value):
+                    _data_type = "email"
+                elif str_to_credit_card(value):
+                    _data_type = "credit_card_number"
+                elif str_to_zip_code(value):
+                    _data_type = "zip_code"
+                else:
+                    _data_type = "null"
+
+            else:
+                _data_type = "null"
+
+            return (col_name, _data_type), 1
+
+        _count = (df.select(columns).rdd
+                  .flatMap(lambda x: x.asDict().items())
+                  .map(lambda x: parse(x, infer, dtypes))
+                  .reduceByKey(lambda a, b: a + b)
+                  )
+        collected = _count.collect()
+        result = {}
+        for c in collected:
+            result[c[0][0]] = result.get(c[0][0]) or {}
+            result[c[0][0]][c[0][1]] = c[1]
 
         return result
 
