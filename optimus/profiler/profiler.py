@@ -4,6 +4,7 @@ import humanize
 import imgkit
 import jinja2
 import simplejson as json
+from glom import assign
 
 from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
@@ -20,8 +21,6 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
-
-HISTOGRAM_FREQUENCY_CHART_THRESHOLD = 30
 
 
 class Profiler:
@@ -49,6 +48,9 @@ class Profiler:
         self.rows_count = None
         self.cols_count = None
         self.columns_dtypes = None
+
+        self.output_columns = {}
+        self.already_run = False
 
     def _count_data_types(self, df, columns, infer=False):
         """
@@ -122,7 +124,7 @@ class Profiler:
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=20, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def run(self, df, columns="*", buckets=40, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -136,7 +138,11 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        output = self.to_json(df, columns, buckets, infer, relative_error, approx_count, dump=False)
+        # for col_name in columns:
+        #     df.cols.set_meta({"name": col_name})
+        # df.set_meta({"initialized": True})
+
+        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict")
 
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
@@ -168,7 +174,8 @@ class Profiler:
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
-                elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col["column_dtype"] == "decimal":
+                elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col[
+                    "column_dtype"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
 
@@ -230,9 +237,8 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
-    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-                sample=10000,
-                dump=True):
+    def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+                sample=10000, stats=True, format="json"):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -242,32 +248,52 @@ class Profiler:
         :param relative_error:
         :param approx_count:
         :param sample: numbers of rows to retrieve with random sampling
-        :param dump: return a json or a Python Object
-
+        :param stats: calculate stats it not only data table returned
+        :param format: dict or json
         :return: json file
         """
 
+        # Filter which columns needs to be processed
+        # trans = []
+        # for col_name in columns:
+        #     trans.append(df.cols.get_meta(col_name, "transformation"))
+
+        output_columns = self.output_columns
+
+        self.rows_count = rows_count = df.count()
+        self.cols_count = cols_count = len(df.columns)
+
         # Get the stats for all the columns
-        output = self.columns(df, columns, buckets, infer, relative_error, approx_count)
+        # if ["drop", "rename"] not in trans and self.already_run is False:
+        if stats is True:
+            output_columns = self.stats(df, columns, buckets, infer, relative_error, approx_count)
+
+        assign(output_columns, "name", df.get_name(), dict)
+        assign(output_columns, "file_name", df.get_meta("file_name"), dict)
 
         # Add the General data summary to the output
-        cols_count = self.cols_count
-        rows_count = self.rows_count
+        data_set_info = {'cols_count': humanize.intword(cols_count),
+                         'rows_count': humanize.intword(rows_count),
+                         'size': humanize.naturalsize(df.size())}
 
-        dataset_info = {'cols_count': cols_count,
-                        'rows_count': rows_count,
-                        'size': humanize.naturalsize(df.size())}
+        assign(output_columns, "summary", data_set_info, dict)
 
-        output["summary"].update(dataset_info)
+        sample = {"columns": [{"title": cols} for cols in df.cols.names()],
+                  "value": df.sample_n(sample).rows.to_list(columns)}
 
-        output["sample"] = {"columns": [{"title": cols} for cols in df.cols.names()],
-                            "value": df.sample_n(sample).rows.to_list(columns)}
+        assign(output_columns, "sample", sample, dict)
 
-        if dump is True:
-            output = json.dumps(output, ignore_nan=True, default=json_converter)
+        if format == "json":
+            output = json.dumps(output_columns, ignore_nan=True, default=json_converter)
+        else:
+            output = output_columns
+
+        self.output_columns = output_columns
+        self.already_run = True
+
         return output
 
-    def columns(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -281,70 +307,54 @@ class Profiler:
 
         columns = parse_columns(df, columns)
 
-        self.rows_count = df.count()
-        self.cols_count = len(df.columns)
-
         # Initialize Objects
-        columns_info = {}
-        columns_info['columns'] = {}
-        columns_info['name'] = df._name
 
-        columns_info['rows_count'] = humanize.intword(self.rows_count)
-        logger.print("Processing General Stats...")
+        logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
         count_dtypes = self._count_data_types(df, columns, infer)
         self.columns_dtypes = count_dtypes
 
-        stats = Profiler.general_stats(df, columns, buckets, relative_error, approx_count)
+        stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
 
-        columns_info["count_types"] = count_dtypes["count_types"]
-        columns_info['size'] = humanize.naturalsize(df.size())
-
-        # Cast columns to the data type infer by count_data_types()
-        # df = Profiler.cast_columns(df, columns, count_dtypes).cache()
-
-        frequency_cols = []
-        for col_name in columns:
-            if stats[col_name]["count_uniques"] <= HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
-                frequency_cols.append(col_name)
+        columns_info = {}
+        assign(columns_info, "count_types", count_dtypes["count_types"], dict)
 
         # Calculate stats
         logger.print("Processing Frequency ...")
-        freq = df.cols.frequency(frequency_cols, buckets, True, self.rows_count)
+        freq = (df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+                .cols.frequency("*", buckets, True, self.rows_count))
 
         # Missing
         total_count_na = 0
         for col_name in columns:
             total_count_na = total_count_na + stats[col_name]["count_na"]
-        columns_info["summary"] = {}
-        columns_info["summary"]['missing_count'] = total_count_na
-        columns_info["summary"]['p_missing'] = round(total_count_na / self.rows_count * 100, 2)
+
+        assign(columns_info, "summary.missing_count", total_count_na, dict)
+        assign(columns_info, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
         # Calculate percentage
+
         for col_name in columns:
             col_info = {}
-
-            col_info["stats"] = stats[col_name]
+            assign(col_info, "stats", stats[col_name], dict)
 
             if freq is not None:
                 if col_name in freq:
-                    col_info["frequency"] = freq[col_name]
+                    assign(col_info, "frequency", freq[col_name])
 
-            col_info["stats"].update(self.extra_stats(df, col_name, stats))
+            col_info["stats"].update(self.extra_columns_stats(df, col_name, stats))
 
-            col_info['name'] = col_name
-            col_info['column_dtype'] = count_dtypes["columns"][col_name]['dtype']
-            col_info["dtypes_stats"] = count_dtypes["columns"][col_name]['details']
-            col_info['column_type'] = count_dtypes["columns"][col_name]['type']
-
-            columns_info['columns'][col_name] = {}
-            columns_info['columns'][col_name] = col_info
+            assign(col_info, "name", col_name)
+            assign(col_info, "column_dtype", count_dtypes["columns"][col_name]['dtype'])
+            assign(col_info, "dtypes_stats", count_dtypes["columns"][col_name]['details'])
+            assign(col_info, "column_type", count_dtypes["columns"][col_name]['type'])
+            assign(columns_info, "columns." + col_name, col_info, dict)
 
         return columns_info
 
     @staticmethod
-    def general_stats(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_agg(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
         n = 30
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
@@ -352,7 +362,7 @@ class Profiler:
 
         result = {}
         for i, cols in enumerate(list_columns):
-            logger.print("Batch {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
+            logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             funcs = [count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
@@ -379,19 +389,17 @@ class Profiler:
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             funcs = [hist_agg]
-            min_max = None
+            # min_max = None
 
             for col_name in cols:
-
                 if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
 
-                if result[col_name]["count_uniques"] > HISTOGRAM_FREQUENCY_CHART_THRESHOLD:
                     exprs.extend(df.cols.create_exprs(col_name, funcs, df, buckets, min_max))
 
-            agg_result = df.cols.exec_agg(exprs)
-            if agg_result is not None:
-                result_hist.update(agg_result)
+                    agg_result = df.cols.exec_agg(exprs)
+                    if agg_result is not None:
+                        result_hist.update(agg_result)
 
         # Merge results
         for col_name in result:
@@ -399,7 +407,7 @@ class Profiler:
                 result[col_name].update(result_hist[col_name])
         return result
 
-    def extra_stats(self, df, col_name, stats):
+    def extra_columns_stats(self, df, col_name, stats):
         """
         Specific Stats for numeric columns
         :param df:
@@ -447,25 +455,6 @@ class Profiler:
         col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
         col_info['p_count_uniques'] = round((stats[col_name]['count_uniques'] * 100) / self.rows_count, 2)
         return col_info
-
-    @staticmethod
-    @time_it
-    def cast_columns(df, columns, count_dtypes):
-        """
-        Cast column depending of inferred data type.
-        :param df: Dataframe to be analyzed
-        :param columns: Dataframe columns to be analyzed
-        :param count_dtypes: String with columns and data types
-        :return: Dataframe with casted columns
-        """
-        # Cast every column to a specific type to ensure the correct profiling
-        # For example if we calculate the min or max of a string column with numeric values the result will be incorrect
-        for col_name in columns:
-            dtype = count_dtypes["columns"][col_name]['dtype']
-            # Not force date type conversion, we can not trust that is going to be representative
-            if dtype in ["string", "float", "int", "boolean"]:
-                df = df.cols.cast(col_name, dtype)
-        return df
 
     @staticmethod
     def missing_values(df, columns):
