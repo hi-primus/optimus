@@ -106,7 +106,6 @@ class Profiler:
         # Info from all the columns
         type_details = {c: _count_data_types(c) for c in columns}
 
-        results = {}
         count_types = {}
 
         # Count the categorical, numerical, boolean and date columns
@@ -119,6 +118,7 @@ class Profiler:
 
         count_types = fill_missing_col_types(count_types)
 
+        results = {}
         results["count_types"] = count_types
         results["columns"] = type_details
         return results

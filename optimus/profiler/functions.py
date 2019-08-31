@@ -24,9 +24,9 @@ def fill_missing_var_types(var_types):
     :param var_types:
     :return:
     """
-    for label in PROFILER_TYPES:
-        if label not in var_types:
-            var_types[label] = 0
+    for label in ProfilerDataTypes:
+        if label.value not in var_types:
+            var_types[label.value] = 0
     return var_types
 
 
@@ -87,5 +87,3 @@ def sample_size(population_size, confidence_level, confidence_interval):
     n = n_0 / (1 + ((n_0 - 1) / float(n)))
 
     return int(math.ceil(n))  # sample size
-
-
