@@ -21,8 +21,8 @@ sudo docker start mysql
 sudo docker run --name postgres --e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus -p 5432:5432 -d postgres
 ```
 
-### Redshit
-This is just postgres with some confgiruation options to looks like redshit
+### Redshift
+This is just postgres with some configuration options to looks like Redshift
 ```
 sudo docker run --name=redshift -d -p 5439:5439 -e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus guildeducation/docker-amazon-redshift
 ```
