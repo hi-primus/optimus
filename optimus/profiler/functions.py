@@ -6,7 +6,7 @@ from optimus.helpers.constants import *
 from optimus.helpers.json import json_converter
 
 
-def parse_to_profiler_dtypes_no_inference(col_data_type):
+def parse_profiler_dtypes(col_data_type):
     """
        Parse a spark data type to a profiler data type
        :return:
