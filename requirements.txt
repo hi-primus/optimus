@@ -32,5 +32,5 @@ pandas==0.24.2
 ordered-set==3.1.1
 deepdiff==4.0.6
 paho-mqtt==0.4.90
-pypika==0.32.0
+pypika==0.35.3
 statsmodels==0.10.1
