@@ -33,7 +33,7 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, ProfilerDataTypes
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
@@ -42,7 +42,7 @@ from optimus.helpers.functions \
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
-
+from optimus.profiler.functions import fill_missing_var_types
 
 ENGINE = "spark"
 
@@ -1600,25 +1600,7 @@ def cols(self):
 
         def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
 
-            import re
-
             col_name, value = value
-
-            def parse_to_profiler_dtypes(col_data_type):
-                """
-                   Parse a spark data type to a profiler data type
-                   :return:
-                   """
-
-                if col_data_type == "smallint" or col_data_type == "tinyint" or col_data_type == "bigint":
-                    col_data_type = "int"
-                elif col_data_type == "float" or col_data_type == "double":
-                    col_data_type = "decimal"
-                elif col_data_type.find("array") >= 0:
-                    col_data_type = "array"
-                elif col_data_type == "date" or col_data_type == "timestamp":
-                    col_data_type = "date"
-                return col_data_type
 
             def str_to_boolean(_value):
                 _value = _value.lower()
@@ -1635,6 +1617,10 @@ def cols(self):
             def str_to_null(_value):
                 _value = _value.lower()
                 if _value == "null":
+                    return True
+
+            def is_null(_value):
+                if _value is None:
                     return True
 
             def str_to_gender(_value):
@@ -1719,17 +1705,18 @@ def cols(self):
 
                 if isinstance(value, bool):
                     _data_type = "boolean"
+
                 elif isint(value):  # Check if value is integer
                     _data_type = "int"
                     for func in _int_funcs:
                         if func[0](value) is True:
                             _data_type = func[1]
                             break
+
                 elif isfloat(value):
                     _data_type = "decimal"
 
                 elif isinstance(value, str):
-
                     _data_type = "string"
                     for func in _str_funcs:
                         if func[0](value) is True:
@@ -1738,9 +1725,10 @@ def cols(self):
                 else:
                     _data_type = "null"
             else:
-                _data_type = parse_to_profiler_dtypes(_dtypes[col_name])
-            # elif value is None:
-            #     _data_type = "null"
+                if is_null(value) is True:
+                    _data_type = "null"
+                else:
+                    _data_type = _dtypes[col_name]
 
             return (col_name, _data_type), 1
 
@@ -1760,10 +1748,12 @@ def cols(self):
         for c in _count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
+        if infer is True:
+            for k in result.keys():
+                result[k] = fill_missing_var_types(result[k])
+        else:
+            result = parse_profiler_dtypes(result)
 
-
-        for k in result.keys():
-            result[k] = fill_missing_var_types(result[k])
         return result
 
     @add_attr(cols)

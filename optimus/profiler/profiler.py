@@ -312,6 +312,7 @@ class Profiler:
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
+
         count_dtypes = self._count_data_types(df, columns, infer)
         self.columns_dtypes = count_dtypes
 
