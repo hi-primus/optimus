@@ -32,7 +32,12 @@
     <tr>
         {%for k,v in r.items(): %}
         <td style="border: 0px;">
-            <div style="min-height: 14px;" title="{{v|string|replace(" ", "&#8901;")|safe}}">{{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
+            <div style="min-height: 14px;" title="{{v|string|replace(" ", "&#8901;")|safe}}">
+                {% if truncate == true %}
+                {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
+                 {% else %}
+                {{v|string|replace(" ",  "&#8901;")|safe}}
+                {% endif %}
             </div>
         </td>
         {% endfor %}

@@ -331,7 +331,7 @@ def table_image(self, path, limit=10):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=10, columns=None, title=None, full=False):
+def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -379,7 +379,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     total_partitions = self.partitions()
 
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
-                             partitions=total_partitions, title=title)
+                             partitions=total_partitions, title=title, truncate=truncate)
 
     if full is True:
         output = HEADER + output + FOOTER
@@ -387,10 +387,10 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=None, columns=None, title=None):
+def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
-            result = self.table_html(title=title, limit=limit, columns=columns)
+            result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:
             self.show()
