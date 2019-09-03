@@ -1444,8 +1444,13 @@ def cols(self):
         df = self
 
         for input_col, output_col in zip(input_cols, output_cols):
-            # Array
-            if is_column_a(df, input_col, ArrayType):
+            # Struct
+
+            if is_column_a(df, input_col, StructType):
+                # Unnest a data Struct
+                df = df.select(output_col + ".*")
+
+            elif is_column_a(df, input_col, ArrayType):
 
                 expr = F.col(input_col)
                 # Try to infer the array length using the first row
