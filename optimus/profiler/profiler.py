@@ -63,7 +63,7 @@ class Profiler:
         """
 
         count_by_data_type = df.cols.count_by_dtypes(columns, infer)
-        count_by_extra_types = df.cols.count_by_extra_types(columns, infer)
+        null_missed_count = {}
 
         def _count_data_types(col_name):
             """
@@ -73,9 +73,10 @@ class Profiler:
             """
 
             # Get the greatest count by column data type
-            null_missed_count = {"null": count_by_data_type[col_name]['null'],
-                                 "missing": count_by_data_type[col_name]['missing'],
-                                 }
+            assign(null_missed_count, "null", count_by_data_type[col_name]['null'])
+            assign(null_missed_count, "missing", count_by_data_type[col_name]['missing'])
+
+            print(null_missed_count)
 
             greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
@@ -97,7 +98,6 @@ class Profiler:
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
             col['details'] = {**count_by_data_type[col_name], **null_missed_count}
-            col['extra_dtype_info'] = count_by_extra_types[col_name]
 
             return col
 
