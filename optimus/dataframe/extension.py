@@ -339,6 +339,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     :param limit: How many rows will be printed
     :param title: Table title
     :param full: Include html header and footer
+    :param truncate: Truncate the row information
 
     :return:
     """
@@ -359,7 +360,16 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type info need it
-    dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+    dtypes = []
+    for i, j in zip(self.dtypes, self.schema):
+        if i[1].startswith("array<struct"):
+            dtype = "array<struct>"
+        elif i[1].startswith("struct"):
+            dtype = "struct"
+        else:
+            dtype = i[1]
+
+        dtypes.append((i[0], dtype, j.nullable))
 
     # Remove not selected columns
     final_columns = []
