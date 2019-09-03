@@ -368,13 +368,15 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
             if i[0] == j:
                 final_columns.append(i)
 
-    total_rows = self.count()
+    total_rows = self.rows.approx_count()
+
     if limit == "all":
         limit = total_rows
     elif total_rows < limit:
         limit = total_rows
 
     total_rows = humanize.intword(total_rows)
+
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
