@@ -20,7 +20,7 @@ from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
-from pyspark.sql.types import StringType, ArrayType
+from pyspark.sql.types import StringType, ArrayType, StructType
 
 # Functions
 from optimus import logger, Optimus, RELATIVE_ERROR
@@ -273,7 +273,7 @@ def cols(self):
                 elif is_int(old_col_name):
                     df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
 
-        df.cols.append_meta("transformation", "rename")
+        # df.cols.append_meta("transformation", "rename")
         return df
 
     @add_attr(cols)
@@ -484,7 +484,7 @@ def cols(self):
 
         df = df.drop(*columns)
 
-        df.cols.append_meta("transformation", "drop")
+        # df.cols.append_meta("transformation", "drop")
         return df
 
     @add_attr(cols)
@@ -1498,6 +1498,8 @@ def cols(self):
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
             # df = df.track_cols(self, output_col)
+            else:
+                RaiseIt.type_error(input_cols, ["tting", "struct", "array", "vector"])
 
         return df
 
@@ -1597,8 +1599,8 @@ def cols(self):
         """
         Use rdd to count the inferred data type in a row
         :param columns: Columns to be processed
-        :param str_funcs: list of tuples for create custom string parsers
-        :param int_funcs: list of tuples for create custom int parsers
+        :param str_funcs: list of tuples for create a custom string parsers
+        :param int_funcs: list of tuples for create a custom int parsers
         :param infer: Infer data type
         :return:
         """
@@ -1732,6 +1734,8 @@ def cols(self):
             else:
                 if is_null(value) is True:
                     _data_type = "null"
+                elif str_to_missing(value) is True:
+                    _data_type = "missing"
                 else:
                     _data_type = _dtypes[col_name]
 
@@ -1758,8 +1762,8 @@ def cols(self):
                 result[k] = fill_missing_var_types(result[k])
         else:
             result = parse_profiler_dtypes(result)
-
         return result
+
 
     @add_attr(cols)
     def frequency(columns, n=10, percentage=False, total_rows=None):
