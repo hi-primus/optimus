@@ -53,7 +53,7 @@ def val_to_byte(value):
     return value
 
 
-IP_QUEUE = "165.22.149.93"
+DOMAIN_QUEUE = "http://app.hi-bumblebee.com/"
 
 
 class Comm:
@@ -175,7 +175,7 @@ class Comm:
         client.disconnect()
 
         try:
-            client.connect(IP_QUEUE)
+            client.connect(DOMAIN_QUEUE)
         except Exception:
             print("Connection failed. Please try again")
             exit(1)  # Should quit or raise flag to quit or retry
