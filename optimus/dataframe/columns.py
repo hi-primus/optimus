@@ -272,6 +272,7 @@ def cols(self):
                     df = df.withColumnRenamed(old_col_name, col_name[1])
                 elif is_int(old_col_name):
                     df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
+        df.set_meta(value=self.get_meta())
 
         # df.cols.append_meta("transformation", "rename")
         return df
