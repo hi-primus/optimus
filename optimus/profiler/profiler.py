@@ -290,6 +290,17 @@ class Profiler:
 
         assign(output_columns, "summary", data_set_info, dict)
 
+        # Nulls
+        total_count_na = 0
+        # print(output_columns["columns"])
+        for k, v in output_columns["columns"].items():
+            total_count_na = total_count_na + v["stats"]["count_na"]
+
+        assign(output_columns, "summary.missing_count", total_count_na, dict)
+        assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
+
+        # assign(output_columns, "missing_count", 1000, dict)
+
         sample = {"columns": [{"title": cols} for cols in df.cols.names()],
                   "value": df.sample_n(sample).rows.to_list(columns)}
 
