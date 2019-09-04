@@ -288,15 +288,19 @@ def create_buckets(lower_bound, upper_bound, bins):
     low = lower_bound
 
     buckets = []
-    for i in range(0, bins):
-        high = low + range_value
-        buckets.append({"lower": low, "upper": high, "bucket": i})
-        low = high
+
+    if bins == 1:
+        buckets.append({"lower": low, "upper": low + 1, "bucket": 0})
+    else:
+        for i in range(0, bins):
+            high = low + range_value
+            buckets.append({"lower": low, "upper": high, "bucket": i})
+            low = high
 
     # ensure that the upper bound is exactly the higher value.
     # Because floating point calculation it can miss the upper bound in the final sum
 
-    buckets[bins - 1]["upper"] = upper_bound
+        buckets[bins - 1]["upper"] = upper_bound
     return buckets
 
 

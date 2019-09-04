@@ -76,15 +76,21 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
 
             if is_numeric(lower):
                 lower = round(lower, 2)
+
             if is_numeric(upper):
                 upper = round(upper, 2)
 
-            if i == len(_buckets):
+            if len(_buckets) == 1:
                 count = count_exprs(
-                    (_func(_input_col) > lower) & (_func(_input_col) <= upper))
+                    (_func(_input_col) == lower))
             else:
-                count = count_exprs(
-                    (_func(_input_col) >= lower) & (_func(_input_col) < upper))
+                if i == len(_buckets):
+                    count = count_exprs(
+                        (_func(_input_col) > lower) & (_func(_input_col) <= upper))
+                else:
+                    count = count_exprs(
+                        (_func(_input_col) >= lower) & (_func(_input_col) < upper))
+
             info = F.create_map(F.lit("count"), count.cast("int"), F.lit("lower"), F.lit(lower), F.lit("upper"),
                                 F.lit(upper)).alias(
                 "hist_agg" + "_" + _input_col + "_" + str(b["bucket"]))
