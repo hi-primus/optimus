@@ -22,6 +22,9 @@ from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
 
+MAX_BUCKETS = 33
+BATCH_SIZE = 20
+
 
 class Profiler:
 
@@ -75,8 +78,6 @@ class Profiler:
             # Get the greatest count by column data type
             assign(null_missed_count, "null", count_by_data_type[col_name]['null'])
             assign(null_missed_count, "missing", count_by_data_type[col_name]['missing'])
-
-            print(null_missed_count)
 
             greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
@@ -272,7 +273,8 @@ class Profiler:
 
         output_columns = self.output_columns
 
-        self.rows_count = rows_count = df.count()
+        rows_count = df.count()
+        self.rows_count = rows_count
         self.cols_count = cols_count = len(df.columns)
 
         # Get the stats for all the columns
@@ -342,20 +344,13 @@ class Profiler:
         stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
 
         columns_info = {}
-        assign(columns_info, "count_types", count_dtypes["count_types"], dict)
+        columns_info = count_dtypes
+        # assign(columns_info, "count_types", count_dtypes, dict)
 
         # Calculate stats
         logger.print("Processing Frequency ...")
         freq = (df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
                 .cols.frequency("*", buckets, True, self.rows_count))
-
-        # Missing
-        total_count_na = 0
-        for col_name in columns:
-            total_count_na = total_count_na + stats[col_name]["count_na"]
-
-        assign(columns_info, "summary.missing_count", total_count_na, dict)
-        assign(columns_info, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
         # Calculate percentage
 
@@ -380,7 +375,7 @@ class Profiler:
     @staticmethod
     def columns_agg(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
-        n = 30
+        n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         # we have problems sending +100 columns at the same time. Process in batch
 
@@ -416,14 +411,19 @@ class Profiler:
             # min_max = None
 
             for col_name in cols:
+                # Only process histogram id numeric. For toher data types using frequency
                 if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
-
+                    buckets = result[col_name]["count_uniques"] - 1
+                    if buckets > MAX_BUCKETS:
+                        buckets = MAX_BUCKETS
+                    elif buckets == 0:
+                        buckets = 1
                     exprs.extend(df.cols.create_exprs(col_name, funcs, df, buckets, min_max))
 
-                    agg_result = df.cols.exec_agg(exprs)
-                    if agg_result is not None:
-                        result_hist.update(agg_result)
+            agg_result = df.cols.exec_agg(exprs)
+            if agg_result is not None:
+                result_hist.update(agg_result)
 
         # Merge results
         for col_name in result:
