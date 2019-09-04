@@ -116,15 +116,27 @@ class Profiler:
             else:
                 count_types[name] = 1
 
-        count_types = fill_missing_col_types(count_types)
+        total = 0
+        for count in count_types.values():
+            if count > 0:
+                total = total + 1
 
+        dtypes = []
+        for k, v in count_types.items():
+            if v > 0:
+                dtypes.append(k)
+
+        count_types = fill_missing_col_types(count_types)
         results = {}
         results["count_types"] = count_types
+        results["total_count_dtypes"] = total
+        results["dtypes_list"] = dtypes
         results["columns"] = type_details
+
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=40, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
