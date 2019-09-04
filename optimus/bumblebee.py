@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 from cryptography.fernet import Fernet
 
 from optimus.helpers.logger import logger
+from optimus.helpers.output import print_html
 
 
 def save_config_key(file_name, section="DEFAULT", key=None, value=None):
@@ -53,7 +54,7 @@ def val_to_byte(value):
     return value
 
 
-IP_QUEUE = "165.22.149.93"
+DOMAIN_QUEUE = "http://app.hi-bumblebee.com/"
 
 
 class Comm:
@@ -73,6 +74,17 @@ class Comm:
 
         else:
             self.queue_name = queue_name
+
+        keys_link = "<a href ='https://hi-bumblebee.com/'> here</a>. ".format(
+            SESSION=self.queue_name, KEY=self.key)
+        direct_link = "<a target='_blank' href ='https://hi-bumblebee.com/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
+            SESSION=self.queue_name, KEY=self.key)
+
+        print_html(
+            "Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +
+            "If you are testing just " + direct_link
+
+        )
 
         # Queue config
         client = mqtt.Client("MQTT")
@@ -175,7 +187,7 @@ class Comm:
         client.disconnect()
 
         try:
-            client.connect(IP_QUEUE)
+            client.connect(DOMAIN_QUEUE)
         except Exception:
             print("Connection failed. Please try again")
             exit(1)  # Should quit or raise flag to quit or retry

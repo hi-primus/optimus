@@ -331,7 +331,7 @@ def table_image(self, path, limit=10):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=10, columns=None, title=None, full=False):
+def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -339,6 +339,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     :param limit: How many rows will be printed
     :param title: Table title
     :param full: Include html header and footer
+    :param truncate: Truncate the row information
 
     :return:
     """
@@ -359,7 +360,16 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type info need it
-    dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+    dtypes = []
+    for i, j in zip(self.dtypes, self.schema):
+        if i[1].startswith("array<struct"):
+            dtype = "array<struct>"
+        elif i[1].startswith("struct"):
+            dtype = "struct"
+        else:
+            dtype = i[1]
+
+        dtypes.append((i[0], dtype, j.nullable))
 
     # Remove not selected columns
     final_columns = []
@@ -368,18 +378,21 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
             if i[0] == j:
                 final_columns.append(i)
 
-    total_rows = self.count()
+    total_rows = self.rows.approx_count()
+
     if limit == "all":
         limit = total_rows
     elif total_rows < limit:
         limit = total_rows
 
     total_rows = humanize.intword(total_rows)
+
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
+
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
-                             partitions=total_partitions, title=title)
+                             partitions=total_partitions, title=title, truncate=truncate)
 
     if full is True:
         output = HEADER + output + FOOTER
@@ -387,10 +400,10 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=None, columns=None, title=None):
+def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
-            result = self.table_html(title=title, limit=limit, columns=columns)
+            result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:
             self.show()
@@ -505,5 +518,5 @@ def get_meta(self, spec=None):
     """
     data = self.schema[-1].metadata
     if spec is not None:
-        data = glom(data, spec)
+        data = glom(data, spec, skip_exc=KeyError)
     return data

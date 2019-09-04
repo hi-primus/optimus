@@ -22,6 +22,9 @@ from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
 
+MAX_BUCKETS = 33
+BATCH_SIZE = 20
+
 
 class Profiler:
 
@@ -63,7 +66,7 @@ class Profiler:
         """
 
         count_by_data_type = df.cols.count_by_dtypes(columns, infer)
-        count_by_extra_types = df.cols.count_by_extra_types(columns, infer)
+        null_missed_count = {}
 
         def _count_data_types(col_name):
             """
@@ -73,9 +76,8 @@ class Profiler:
             """
 
             # Get the greatest count by column data type
-            null_missed_count = {"null": count_by_data_type[col_name]['null'],
-                                 "missing": count_by_data_type[col_name]['missing'],
-                                 }
+            assign(null_missed_count, "null", count_by_data_type[col_name]['null'])
+            assign(null_missed_count, "missing", count_by_data_type[col_name]['missing'])
 
             greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
@@ -97,7 +99,6 @@ class Profiler:
             col['dtype'] = greatest_data_type_count
             col['type'] = cat
             col['details'] = {**count_by_data_type[col_name], **null_missed_count}
-            col['extra_dtype_info'] = count_by_extra_types[col_name]
 
             return col
 
@@ -106,7 +107,6 @@ class Profiler:
         # Info from all the columns
         type_details = {c: _count_data_types(c) for c in columns}
 
-        results = {}
         count_types = {}
 
         # Count the categorical, numerical, boolean and date columns
@@ -117,14 +117,27 @@ class Profiler:
             else:
                 count_types[name] = 1
 
-        count_types = fill_missing_col_types(count_types)
+        total = 0
+        for count in count_types.values():
+            if count > 0:
+                total = total + 1
 
+        dtypes = []
+        for k, v in count_types.items():
+            if v > 0:
+                dtypes.append(k)
+
+        count_types = fill_missing_col_types(count_types)
+        results = {}
         results["count_types"] = count_types
+        results["total_count_dtypes"] = total
+        results["dtypes_list"] = dtypes
         results["columns"] = type_details
+
         return results
 
     @time_it
-    def run(self, df, columns="*", buckets=40, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -260,7 +273,8 @@ class Profiler:
 
         output_columns = self.output_columns
 
-        self.rows_count = rows_count = df.count()
+        rows_count = df.count()
+        self.rows_count = rows_count
         self.cols_count = cols_count = len(df.columns)
 
         # Get the stats for all the columns
@@ -277,6 +291,17 @@ class Profiler:
                          'size': humanize.naturalsize(df.size())}
 
         assign(output_columns, "summary", data_set_info, dict)
+
+        # Nulls
+        total_count_na = 0
+        # print(output_columns["columns"])
+        for k, v in output_columns["columns"].items():
+            total_count_na = total_count_na + v["stats"]["count_na"]
+
+        assign(output_columns, "summary.missing_count", total_count_na, dict)
+        assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
+
+        # assign(output_columns, "missing_count", 1000, dict)
 
         sample = {"columns": [{"title": cols} for cols in df.cols.names()],
                   "value": df.sample_n(sample).rows.to_list(columns)}
@@ -312,26 +337,20 @@ class Profiler:
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
+
         count_dtypes = self._count_data_types(df, columns, infer)
         self.columns_dtypes = count_dtypes
 
         stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
 
         columns_info = {}
-        assign(columns_info, "count_types", count_dtypes["count_types"], dict)
+        columns_info = count_dtypes
+        # assign(columns_info, "count_types", count_dtypes, dict)
 
         # Calculate stats
         logger.print("Processing Frequency ...")
         freq = (df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
                 .cols.frequency("*", buckets, True, self.rows_count))
-
-        # Missing
-        total_count_na = 0
-        for col_name in columns:
-            total_count_na = total_count_na + stats[col_name]["count_na"]
-
-        assign(columns_info, "summary.missing_count", total_count_na, dict)
-        assign(columns_info, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
         # Calculate percentage
 
@@ -356,7 +375,7 @@ class Profiler:
     @staticmethod
     def columns_agg(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
-        n = 30
+        n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         # we have problems sending +100 columns at the same time. Process in batch
 
@@ -392,14 +411,19 @@ class Profiler:
             # min_max = None
 
             for col_name in cols:
+                # Only process histogram id numeric. For toher data types using frequency
                 if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
-
+                    buckets = result[col_name]["count_uniques"] - 1
+                    if buckets > MAX_BUCKETS:
+                        buckets = MAX_BUCKETS
+                    elif buckets == 0:
+                        buckets = 1
                     exprs.extend(df.cols.create_exprs(col_name, funcs, df, buckets, min_max))
 
-                    agg_result = df.cols.exec_agg(exprs)
-                    if agg_result is not None:
-                        result_hist.update(agg_result)
+            agg_result = df.cols.exec_agg(exprs)
+            if agg_result is not None:
+                result_hist.update(agg_result)
 
         # Merge results
         for col_name in result:

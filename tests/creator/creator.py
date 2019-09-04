@@ -504,6 +504,42 @@ t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B
 
 t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_col=new_col)
 
+# +
+
+dtypes_df = op.create.df(
+    [
+        ("col 1", "str", True),
+        ("col 2", "str", True),
+        ("col 3", "int", True),
+    
+    ],
+    [
+        ("male","male",1),
+        ("optimus","bumblebee",1),
+        ("3","4.1",1),
+        ("true","False",1),
+        ("[1,2,3,4]","(1,2,3,4)",1),
+        ("{1,2,3,4}","{'key1' :1 , 'key2':2}",1),
+        ("1.1.1.1","123.123.123.123",1),
+        ("http://hi-optimuse.com","https://hi-bumblebee.com",1),
+        ("optimus@cybertron.com","bumblebee@cybertron.com",1),
+        ("5123456789123456","373655783158306",1),
+        ("11529","30345",1),
+        ("04/10/1980","04/10/1980",1),
+        ("null","Null",1),
+        ("","",1),
+        (None,None,1) 
+       
+    ], infer_schema=True)
+
+# -
+
+t.create(None, "cols.count_by_dtypes", None, "json", None, "*", infer=True)
+
+t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=True)
+
+t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
+
 t.run()
 
 t.create(None, "cols.unnest", "array_all_columns", "df", array_col, "-", index=1)
