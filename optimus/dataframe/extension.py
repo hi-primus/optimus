@@ -390,6 +390,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
+
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title, truncate=truncate)
 
@@ -517,5 +518,5 @@ def get_meta(self, spec=None):
     """
     data = self.schema[-1].metadata
     if spec is not None:
-        data = glom(data, spec)
+        data = glom(data, spec, skip_exc=KeyError)
     return data
