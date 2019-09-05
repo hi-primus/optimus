@@ -50,7 +50,6 @@ class Profiler:
         self.path = output_path
         self.rows_count = None
         self.cols_count = None
-        self.columns_dtypes = None
 
         self.output_columns = {}
         self.already_run = False
@@ -65,10 +64,14 @@ class Profiler:
         :return: json
         """
 
+        columns = parse_columns(df, columns)
         count_by_data_type = df.cols.count_by_dtypes(columns, infer)
-        null_missed_count = {}
+        # null_missed_count = {}
+        # Info from all the columns
+        type_details = {}
 
-        def _count_data_types(col_name):
+        for col_name in columns:
+
             """
             Function for determine if register value is float or int or string.
             :param col_name:
@@ -76,9 +79,6 @@ class Profiler:
             """
 
             # Get the greatest count by column data type
-            assign(null_missed_count, "null", count_by_data_type[col_name]['null'])
-            assign(null_missed_count, "missing", count_by_data_type[col_name]['missing'])
-
             greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
@@ -95,46 +95,11 @@ class Profiler:
             else:
                 cat = None
 
-            col = {}
-            col['dtype'] = greatest_data_type_count
-            col['type'] = cat
-            col['details'] = {**count_by_data_type[col_name], **null_missed_count}
+            assign(type_details, col_name + ".dtype", greatest_data_type_count, dict)
+            assign(type_details, col_name + ".type", cat, dict)
+            assign(type_details, col_name + ".stats", count_by_data_type[col_name], dict)
 
-            return col
-
-        columns = parse_columns(df, columns)
-
-        # Info from all the columns
-        type_details = {c: _count_data_types(c) for c in columns}
-
-        count_types = {}
-
-        # Count the categorical, numerical, boolean and date columns
-        for v in type_details.values():
-            name = v["type"]
-            if name in count_types:
-                count_types[name] += 1
-            else:
-                count_types[name] = 1
-
-        total = 0
-        for count in count_types.values():
-            if count > 0:
-                total = total + 1
-
-        dtypes = []
-        for k, v in count_types.items():
-            if v > 0:
-                dtypes.append(k)
-
-        count_types = fill_missing_col_types(count_types)
-        results = {}
-        results["count_types"] = count_types
-        results["total_count_dtypes"] = total
-        results["dtypes_list"] = dtypes
-        results["columns"] = type_details
-
-        return results
+        return type_details
 
     @time_it
     def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
@@ -280,7 +245,7 @@ class Profiler:
         # Get the stats for all the columns
         # if ["drop", "rename"] not in trans and self.already_run is False:
         if stats is True:
-            output_columns = self.stats(df, columns, buckets, infer, relative_error, approx_count)
+            output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count)
 
         assign(output_columns, "name", df.get_name(), dict)
         assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -318,7 +283,7 @@ class Profiler:
 
         return output
 
-    def stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -333,27 +298,48 @@ class Profiler:
         columns = parse_columns(df, columns)
 
         # Initialize Objects
-
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
+        type_details = self._count_data_types(df, columns, infer)
 
-        count_dtypes = self._count_data_types(df, columns, infer)
-        self.columns_dtypes = count_dtypes
+        # Count the categorical, numerical, boolean and date columns
+        count_types = {}
+        for value in type_details.values():
+            name = value["dtype"]
+            if name in count_types:
+                count_types[name] += 1
+            else:
+                count_types[name] = 1
 
-        stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
+        # List the data types this data set have
+
+        total = 0
+        dtypes = []
+        for key, value in count_types.items():
+            if value > 0:
+                dtypes.append(key)
+                total = total + 1
+
+        count_types = fill_missing_col_types(count_types)
 
         columns_info = {}
-        columns_info = count_dtypes
-        # assign(columns_info, "count_types", count_dtypes, dict)
+        columns_info["count_types"] = count_types
+        columns_info["total_count_dtypes"] = total
+        columns_info["dtypes_list"] = dtypes
+        columns_info["columns"] = type_details
 
-        # Calculate stats
+        # Aggregation
+        stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
+
+        # Calculate Frequency
         logger.print("Processing Frequency ...")
-        freq = (df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
-                .cols.frequency("*", buckets, True, self.rows_count))
+        df_freq = df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        freq = None
+        if df_freq is not None:
+            freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
 
         # Calculate percentage
-
         for col_name in columns:
             col_info = {}
             assign(col_info, "stats", stats[col_name], dict)
@@ -365,9 +351,9 @@ class Profiler:
             col_info["stats"].update(self.extra_columns_stats(df, col_name, stats))
 
             assign(col_info, "name", col_name)
-            assign(col_info, "column_dtype", count_dtypes["columns"][col_name]['dtype'])
-            assign(col_info, "dtypes_stats", count_dtypes["columns"][col_name]['details'])
-            assign(col_info, "column_type", count_dtypes["columns"][col_name]['type'])
+            assign(col_info, "column_dtype", columns_info["columns"][col_name]['dtype'])
+            assign(col_info, "dtypes_stats", columns_info["columns"][col_name]['stats'])
+            assign(col_info, "column_type", columns_info["columns"][col_name]['type'])
             assign(columns_info, "columns." + col_name, col_info, dict)
 
         return columns_info
@@ -400,7 +386,7 @@ class Profiler:
             result.update(df.cols.exec_agg(exprs))
 
         exprs = []
-        n = 30
+        n = BATCH_SIZE
         result_hist = {}
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
         for i, cols in enumerate(list_columns):
