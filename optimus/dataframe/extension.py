@@ -27,7 +27,7 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 DataFrame._name = None
-
+DataFrame.output = "html"
 
 @add_method(DataFrame)
 def roll_out():
@@ -389,7 +389,6 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
 
     total_cols = self.cols.count()
     total_partitions = self.partitions()
-
 
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
                              partitions=total_partitions, title=title, truncate=truncate)
