@@ -1,10 +1,11 @@
+import ntpath
 import os
 import tempfile
 from urllib.request import Request, urlopen
 
 import pandas as pd
 from packaging import version
-import ntpath
+
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
@@ -14,29 +15,6 @@ from optimus.spark import Spark
 class Load:
 
     @staticmethod
-    def _data_loader(path, file_format=None):
-        """
-        Select the correct method to download the file depending of the format
-        :param path: string url
-        :param file_format: format data type
-        :return:
-        """
-
-        # try to infer the file format using the file extension
-        if file_format is None:
-            filename, file_format = os.path.splitext(path)
-            file_format = file_format.replace('.', '')
-
-        i = path.rfind('/')
-        data_name = path[(i + 1):]
-        data_def = {
-            "displayName": data_name,
-            "url": path
-        }
-
-        return Downloader(data_def).download(file_format)
-
-    @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
         Return a dataframe from a json file.
@@ -44,15 +22,16 @@ class Load:
         :param multiline:
         :return:
         """
-        if is_url(path):
-            path = Load._data_loader(path, "json")
+        file, file_name = prepare_path(path, "json")
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read \
                 .option("multiLine", multiline) \
                 .option("mode", "PERMISSIVE") \
-                .json(path, *args, **kwargs)
+                .json(file, *args, **kwargs)
+
+            df.set_meta("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -70,6 +49,7 @@ class Load:
 
         :return:
         """
+
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
@@ -86,8 +66,7 @@ class Load:
 
         :return dataFrame
         """
-        if is_url(path):
-            path = Load._data_loader(path, "csv")
+        file, file_name = prepare_path(path, "csv")
 
         try:
             df = (Spark.instance.spark.read
@@ -95,8 +74,9 @@ class Load:
                   .options(mode="DROPMALFORMED")
                   .options(delimiter=sep)
                   .options(inferSchema=infer_schema)
-                  .csv(path, *args, **kwargs))
-            df.set_meta("file_name", ntpath.basename(path))
+                  .csv(file, *args, **kwargs))
+
+            df.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -111,12 +91,12 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-        if is_url(path):
-            path = Load._data_loader(path, "parquet")
+
+        file, file_name = prepare_path(path, "parquet")
 
         try:
-            df = Spark.instance.spark.read.parquet(path, *args, **kwargs)
-            df.set_meta("file_name", ntpath.basename(path))
+            df = Spark.instance.spark.read.parquet(file, *args, **kwargs)
+            df.set_meta("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -133,16 +113,16 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         :return: Spark Dataframe
         """
-        if is_url(path):
-            path = Load._data_loader(path, "avro")
+        file, file_name = prepare_path(path, "avro")
 
         try:
             if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
                 avro_version = "com.databricks.spark.avro"
             else:
                 avro_version = "avro "
-            df = Spark.instance.spark.read.format(avro_version).load(path, *args, **kwargs)
-            df.set_meta("file_name", ntpath.basename(path))
+            df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
+
+            df.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -159,11 +139,10 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: Spark Dataframe
         """
-        if is_url(path):
-            path = Load._data_loader(path, "xls")
+        file, file_name = prepare_path(path, "xls")
 
         try:
-            pdf = pd.read_excel(path, sheet_name=sheet_name, *args, **kwargs)
+            pdf = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
 
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
             # exception when Spark try to infer the column data type
@@ -178,7 +157,7 @@ class Load:
 
             # Create spark data frame
             df = Spark.instance.spark.createDataFrame(pdf)
-            df.set_meta("file_name", ntpath.basename(path))
+            df.set_meta("file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise
@@ -186,42 +165,26 @@ class Load:
         return replace_columns_special_characters(df)
 
 
-class Downloader(object):
+def prepare_path(path, format):
+    """
+    Helper to return the file to be loaded and the file name
+    :param path: Path to the file to be loaded
+    :param format: format file
+    :return:
+    """
+    file_name = ntpath.basename(path)
+    if is_url(path):
+        file = downloader(path, format)
+    else:
+        file = path
+    return file, file_name
+
+
+def downloader(url, file_format):
     """
     Send the request to download a file
     """
 
-    def __init__(self, data_def):
-        self.data_def = data_def
-        self.headers = {"User-Agent": "Optimus Data Downloader/1.0"}
-
-    def download(self, file_format):
-        display_name = self.data_def["displayName"]
-        bytes_downloaded = 0
-        if "path" in self.data_def:
-            path = self.data_def["path"]
-        else:
-            url = self.data_def["url"]
-            req = Request(url, None, self.headers)
-
-            logger.print("Downloading %s from %s", display_name, url)
-
-            # It seems that avro need a .avro extension file
-            with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
-                bytes_downloaded = self.write(urlopen(req), f)
-                path = f.name
-                self.data_def["path"] = path = f.name
-
-        if path:
-            try:
-                if bytes_downloaded > 0:
-                    logger.print("Downloaded %s bytes", bytes_downloaded)
-                logger.print("Creating DataFrame for %s. Please wait...", display_name)
-                return path
-            finally:
-                logger.print("Successfully created DataFrame for '%s'", display_name)
-
-    @staticmethod
     def write(response, file, chunk_size=8192):
         """
         Load the data from the http request and save it to disk
@@ -243,3 +206,29 @@ class Downloader(object):
             total_size = bytes_so_far if bytes_so_far > total_size else total_size
 
         return bytes_so_far
+
+    # try to infer the file format using the file extension
+    if file_format is None:
+        filename, file_format = os.path.splitext(url)
+        file_format = file_format.replace('.', '')
+
+    i = url.rfind('/')
+    data_name = url[(i + 1):]
+
+    headers = {"User-Agent": "Optimus Data Downloader/1.0"}
+
+    req = Request(url, None, headers)
+
+    logger.print("Downloading %s from %s", data_name, url)
+
+    # It seems that avro need a .avro extension file
+    with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
+        bytes_downloaded = write(urlopen(req), f)
+        path = f.name
+
+    if bytes_downloaded > 0:
+        logger.print("Downloaded %s bytes", bytes_downloaded)
+
+    logger.print("Creating DataFrame for %s. Please wait...", data_name)
+
+    return path
