@@ -47,6 +47,7 @@ class Test:
             "from pyspark.sql.types import *",
             "from optimus import Optimus",
             "from optimus.helpers.json import json_enconding",
+            "from optimus.helpers.functions import deep_sort",
             "import unittest"
         ]
         if self.imports is not None:
@@ -252,7 +253,7 @@ class Test:
         elif output == "json":
             add_buffer("\tassert(expected_value == actual_df)\n")
         elif output == "dict":
-            add_buffer("\tself.assertDictEqual(expected_value,  actual_df)\n")
+            add_buffer("\tself.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))\n")
 
         filename = self.path + "//" + filename
         if not os.path.exists(os.path.dirname(filename)):
@@ -303,3 +304,5 @@ class Test:
             os.remove(filename)
         except FileNotFoundError:
             print("File NOT found")
+
+

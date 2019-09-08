@@ -334,3 +334,24 @@ def append(dfs, like="columns"):
         RaiseIt.value_error(like, ["columns", "rows"])
 
     return df_result
+
+def deep_sort(obj):
+    """
+    Recursively sort list or dict nested lists
+    """
+
+    if isinstance(obj, dict):
+        _sorted = {}
+        for key in sorted(obj):
+            _sorted[key] = deep_sort(obj[key])
+
+    elif isinstance(obj, list):
+        new_list = []
+        for val in obj:
+            new_list.append(deep_sort(val))
+        _sorted = sorted(new_list)
+
+    else:
+        _sorted = obj
+
+    return _sorted
