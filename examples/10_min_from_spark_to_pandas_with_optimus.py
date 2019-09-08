@@ -178,7 +178,7 @@ df.table(10)
 # https://stackoverflow.com/questions/38027877/spark-transformation-why-its-lazy-and-what-is-the-advantage
 #
 # ### Inmutability
-# Immutability rules out a big set of potential problems due to updates from multiple threads at once. Immutable data is definitely safe to share across processes.
+# Immutability rules output a big set of potential problems due to updates from multiple threads at once. Immutable data is definitely safe to share across processes.
 #
 # https://www.quora.com/Why-is-RDD-immutable-in-Spark
 #

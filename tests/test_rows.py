@@ -1,6 +1,6 @@
 from optimus import Optimus
 from pyspark.sql.types import *
-from optimus.audf import abstract_udf as audf
+from optimus.spark.audf import abstract_udf as audf
 
 op = Optimus()
 

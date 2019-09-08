@@ -2,8 +2,8 @@ import json
 
 import math
 
-from optimus.helpers.constants import *
-from optimus.helpers.json import json_converter
+from optimus.spark.helpers.constants import *
+from optimus.spark.helpers import json_converter
 
 
 def parse_profiler_dtypes(col_data_type):
@@ -72,7 +72,7 @@ def write_html(data, path):
     :param path:
     :return:
     """
-
+    print("html")
     try:
         with open(path, 'w', encoding='utf-8') as outfile:
             outfile.write(data)

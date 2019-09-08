@@ -5,13 +5,13 @@ import pandas as pd
 import requests
 from backoff import on_exception, expo
 from pymongo import MongoClient
-from pyspark.sql.functions import DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
-from optimus.helpers.check import is_function, is_, is_dataframe
-from optimus.helpers.logger import logger
+from optimus.spark.helpers.check import is_function, is_, is_dataframe
+from optimus.spark.helpers.logger import logger
 
 # Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
 COL_ID = "jazz_id"
@@ -31,7 +31,7 @@ class Enricher:
         :param host: Mongo server host
         :param port: Mongo server port
         :param db_name: Mongo server database
-        :param collection_name: Mongo serverg collection
+        :param collection_name: Mongo server collection
         :param op: optimus instance
         :param args:
         :param kwargs:
@@ -234,7 +234,7 @@ class Enricher:
         # if data exist in the collection drop it
 
         pipeline = [{"$match": {}},
-                    {"$out": dest_name},
+                    {"$output": dest_name},
                     ]
         logger.print("Copying {source_name} collection to {dest_name} collection ...".format(source_name=source_name,
                                                                                              dest_name=dest_name))

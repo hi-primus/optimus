@@ -27,12 +27,11 @@ sys.path.append("../..")
 # -
 
 from optimus import Optimus
-from optimus.helpers.test import Test
+from optimus.spark.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)
 
 # +
-import pandas as pd
 from pyspark.sql.types import *
 from datetime import date, datetime
 
@@ -85,8 +84,6 @@ source_df.table()
 # ### End Init Section
 
 # ## Profiler
-
-from pyspark.ml.linalg import Vectors
 
 t = Test(op, source_df, "df_profiler", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",

@@ -1,0 +1,48 @@
+{% if title is not none %}
+<h1>{{title}}</h1>
+{%endif%}
+{% macro header_footer(limit, total_rows, total_cols, partitions) %}
+
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">{{partitions}} partition(s)</div>
+{% endmacro %}
+
+{{header_footer(limit, total_rows, total_cols, partitions)}}
+<table class="optimus_table" style="font-size: 12px;">
+    <thead style="border-bottom: 1px solid black;">
+    <tr>
+        {%for col in cols: %}
+        <th style="font-family: sans-serif;">
+            <div class="column_name" style="font-size: 1.2em;">{{col[0]}}</div>
+            <div class="data_type" style="font-size: 0.8em; font-weight: normal;">{{loop.index}} ({{col[1]}})</div>
+            <div class="data_type" style="font-size: 0.8em; font-weight: normal;">
+                {% if col[2] == true %}
+                nullable
+                {% else %}
+                not nullable
+                {% endif %}
+            </div>
+        </th>
+        {% endfor %}
+    </tr>
+
+    </thead>
+    <tbody style="font-family: monospace; border-bottom: 1px solid #cccccc;">
+    {%for r in data:%}
+    <tr>
+        {%for k,v in r.items(): %}
+        <td style="border: 0px;">
+            <div style="min-height: 14px;" title="{{v|string|replace(" ", "&#8901;")|safe}}">
+                {% if truncate == true %}
+                {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
+                 {% else %}
+                {{v|string|replace(" ",  "&#8901;")|safe}}
+                {% endif %}
+            </div>
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{{header_footer(limit, total_rows, total_cols,partitions)}}

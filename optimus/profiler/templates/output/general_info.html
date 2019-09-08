@@ -1,0 +1,64 @@
+
+<div class="title_profiler" style="padding: 20px; background-color: #eeeeee;">
+    <h1>Overview</h1>
+</div>
+<div class="main" style="width: 100%; overflow: auto; border-bottom: 1px solid #eeeeee; padding: 10px 0;">
+    <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
+        <h2>Dataset info</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td style="padding: 0.2em;">Number of columns</td>
+                <td style="padding: 0.2em;">{{data.summary.cols_count}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Number of rows</td>
+                <td style="padding: 0.2em;">{{data.summary.rows_count}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Total Missing (%)</td>
+                <td style="padding: 0.2em;">{{data.summary.missing_count}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Total size in memory</td>
+                <td style="padding: 0.2em;">{{data.summary.size}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="panel_profiler" style="margin-right: 2%; float: left; padding-bottom: 2%; font-family: monospace;">
+        <h2>Column types</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td style="padding: 0.2em;">Categorical</td>
+                <td style="padding: 0.2em;">{{data.count_types.categorical}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Numeric</td>
+                <td style="padding: 0.2em;">{{data.count_types.numeric}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Date</td>
+                <td style="padding: 0.2em;">{{data.count_types.date}}</td>
+
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Array</td>
+                <td style="padding: 0.2em;">{{data.count_types.array}}</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.2em;">Not available</td>
+                <td style="padding: 0.2em;">{{data.count_types.null}}</td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

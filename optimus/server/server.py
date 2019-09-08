@@ -4,7 +4,7 @@ import signal
 from psutil import NoSuchProcess
 
 from optimus.server.process import Process
-from optimus.helpers.logger import logger
+from optimus.spark.helpers.logger import logger
 
 class Server:
     def __init__(self, path=None):

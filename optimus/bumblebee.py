@@ -9,8 +9,8 @@ import zlib
 import paho.mqtt.client as mqtt
 from cryptography.fernet import Fernet
 
-from optimus.helpers.logger import logger
-from optimus.helpers.output import print_html
+from optimus.spark.helpers.logger import logger
+from optimus.spark.helpers.output import print_html
 
 IP_QUEUE = "165.22.149.93"
 DOMAIN_QUEUE = "app.hi-bumblebee.com"
@@ -38,8 +38,8 @@ class Comm:
         keys_link = "<a href ='{FULL_DOMAIN}'> here</a>. ".format(FULL_DOMAIN=FULL_DOMAIN,
                                                                   SESSION=self.queue_name, KEY=self.key)
 
-        direct_link = "<a target='_blank' href ='https://{DOMAIN_QUEUE}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
-            DOMAIN_QUEUE=DOMAIN_QUEUE, SESSION=self.queue_name, KEY=self.key)
+        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
+            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
             "Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +

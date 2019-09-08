@@ -1,11 +1,9 @@
 from pyspark.sql.types import *
 from optimus import Optimus
-from optimus.helpers.json import json_enconding 
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
+from optimus.spark.helpers import json_enconding
 import numpy as np
 nan = np.nan
 import datetime
-from pyspark.sql import functions as F
 from optimus.profiler.profiler import Profiler
 p= Profiler()
 op = Optimus(master='local')

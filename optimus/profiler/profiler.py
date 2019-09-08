@@ -6,21 +6,21 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.audf import *
-from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import absolute_path
-from optimus.helpers.json import json_converter
-from optimus.helpers.logger import logger
-from optimus.helpers.output import print_html
-from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
+from optimus.spark.audf import *
+from optimus.spark.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
+from optimus.spark.helpers.functions import absolute_path
+from optimus.spark.helpers.json import json_converter
+from optimus.spark.helpers.check import is_column_a
+from optimus.spark.helpers.columns import parse_columns
+from optimus.spark.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, \
+    count_uniques_agg
+from optimus.spark.helpers.constants import RELATIVE_ERROR
+from optimus.spark.helpers.logger import logger
+from optimus.spark.helpers.output import print_html
+from optimus.spark.helpers.raiseit import RaiseIt
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
@@ -54,19 +54,19 @@ class Profiler:
         self.output_columns = {}
         self.already_run = False
 
-    def _count_data_types(self, df, columns, infer=False):
+    @staticmethod
+    def _count_data_types(df, columns, infer=False):
         """
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
         :param columns: Columns to be processed
-        :param infer: infer the column datatype
-
+        :param infer: infer the column data type
         :return: json
         """
 
         columns = parse_columns(df, columns)
         count_by_data_type = df.cols.count_by_dtypes(columns, infer)
-        # null_missed_count = {}
+
         # Info from all the columns
         type_details = {}
 
@@ -101,8 +101,7 @@ class Profiler:
 
         return type_details
 
-    @time_it
-    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def run(self, df, columns="*", buckets=None, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -123,7 +122,7 @@ class Profiler:
         output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict")
 
         # Load jinja
-        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
+        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/output"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
 
         # Render template
@@ -175,6 +174,8 @@ class Profiler:
         # Save file in json format
         write_json(output, self.path)
 
+        return self
+
     def to_image(self, output_path):
         """
         Save the profiler result as image
@@ -215,7 +216,7 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
-    def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+    def dataset(self, df, columns="*", buckets=None, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000, stats=True, format="json"):
         """
         Return the profiling data in json format
@@ -259,7 +260,6 @@ class Profiler:
 
         # Nulls
         total_count_na = 0
-        # print(output_columns["columns"])
         for k, v in output_columns["columns"].items():
             total_count_na = total_count_na + v["stats"]["count_na"]
 
@@ -283,13 +283,13 @@ class Profiler:
 
         return output
 
-    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_stats(self, df, columns, buckets=None, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
         :param buckets: Create buckets divided by range. Each bin is equal.
-        :param infer: try to infer the column datatype
+        :param infer: try to infer the column data type
         :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :return: json object
@@ -323,11 +323,11 @@ class Profiler:
 
         count_types = fill_missing_col_types(count_types)
 
-        columns_info = {}
-        columns_info["count_types"] = count_types
-        columns_info["total_count_dtypes"] = total
-        columns_info["dtypes_list"] = dtypes
-        columns_info["columns"] = type_details
+        dataset_info = {}
+        assign(dataset_info, "count_types", count_types)
+        assign(dataset_info, "total_count_dtypes", total)
+        assign(dataset_info, "dtypes_list", dtypes)
+        assign(dataset_info, "columns", type_details)
 
         # Aggregation
         stats = Profiler.columns_agg(df, columns, buckets, relative_error, approx_count)
@@ -351,15 +351,15 @@ class Profiler:
             col_info["stats"].update(self.extra_columns_stats(df, col_name, stats))
 
             assign(col_info, "name", col_name)
-            assign(col_info, "column_dtype", columns_info["columns"][col_name]['dtype'])
-            assign(col_info, "dtypes_stats", columns_info["columns"][col_name]['stats'])
-            assign(col_info, "column_type", columns_info["columns"][col_name]['type'])
-            assign(columns_info, "columns." + col_name, col_info, dict)
+            assign(col_info, "column_dtype", dataset_info["columns"][col_name]['dtype'])
+            assign(col_info, "dtypes_stats", dataset_info["columns"][col_name]['stats'])
+            assign(col_info, "column_type", dataset_info["columns"][col_name]['type'])
+            assign(dataset_info, "columns." + col_name, col_info, dict)
 
-        return columns_info
+        return dataset_info
 
     @staticmethod
-    def columns_agg(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_agg(df, columns, buckets=None, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
         n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
@@ -400,11 +400,12 @@ class Profiler:
                 # Only process histogram id numeric. For toher data types using frequency
                 if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
-                    buckets = result[col_name]["count_uniques"] - 1
-                    if buckets > MAX_BUCKETS:
-                        buckets = MAX_BUCKETS
-                    elif buckets == 0:
-                        buckets = 1
+                    if buckets is None:
+                        buckets = result[col_name]["count_uniques"] - 1
+                        if buckets > MAX_BUCKETS:
+                            buckets = MAX_BUCKETS
+                        elif buckets == 0:
+                            buckets = 1
                     exprs.extend(df.cols.create_exprs(col_name, funcs, df, buckets, min_max))
 
             agg_result = df.cols.exec_agg(exprs)

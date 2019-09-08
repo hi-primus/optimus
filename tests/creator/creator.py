@@ -27,12 +27,11 @@ sys.path.append("../..")
 # -
 
 from optimus import Optimus
-from optimus.helpers.test import Test
+from optimus.spark.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)
 
 # +
-import pandas as pd
 from pyspark.sql.types import *
 from datetime import date, datetime
 
@@ -88,8 +87,6 @@ source_df.table()
 
 # ## Optimus Test
 
-from pyspark.ml.linalg import Vectors
-
 t = Test(op, None, "create_df", imports=["import datetime",
                                 "from pyspark.sql import functions as F"], path = "..", final_path="..")
 
@@ -130,7 +127,6 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
 # +
-from pyspark.sql import functions as F
 
 
 def func(col_name, attrs):
@@ -555,9 +551,6 @@ t.create(None, "cols.is_na", None, "df", numeric_col)
 t.run()
 
 from pyspark.sql.types import *
-from optimus import Optimus
-from optimus.helpers.json import json_enconding
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
 import datetime
