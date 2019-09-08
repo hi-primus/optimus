@@ -60,7 +60,7 @@ class Test:
 
         # Global Dataframe
         if self.df is not None:
-            source_df = "source_df=op.create.df(" + self.df.to_json() + ")\n"
+            source_df = "source_df=op.create.df(" + self.df.export() + ")\n"
             test_file.write(source_df)
 
         # Class name
@@ -132,7 +132,8 @@ class Test:
             # Use the main df
             df_func = self.df
         elif isinstance(obj, pyspark.sql.dataframe.DataFrame):
-            source_df = "\tsource_df=op.create.df(" + obj.to_json() + ")\n"
+
+            source_df = "\tsource_df=op.create.df(" + obj.export() + ")\n"
             df_func = obj
             add_buffer(source_df)
         else:
@@ -213,7 +214,7 @@ class Test:
         if output == "df":
 
             df_result.table()
-            expected = "\texpected_df = op.create.df(" + df_result.to_json() + ")\n"
+            expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
         elif output == "json":
             print(df_result)
 
