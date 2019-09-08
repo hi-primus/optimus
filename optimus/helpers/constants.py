@@ -75,6 +75,10 @@ SPARK_DTYPES_DICT_OBJECTS = \
 # Profiler
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 
+SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
+                            "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
+                            "array": "array", "object": "object", "null": "null", "missing": "missing"}
+
 from enum import Enum
 
 
@@ -94,6 +98,7 @@ class ProfilerDataTypes(Enum):
     ZIP_CODE = "zip_code"
     NULL = "null"
     MISSING = "missing"
+
 
 # Strings and Function Messages
 JUST_CHECKING = "Just check that Spark and all necessary environments vars are present..."
