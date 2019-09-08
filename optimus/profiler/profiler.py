@@ -175,6 +175,8 @@ class Profiler:
         # Save file in json format
         write_json(output, self.path)
 
+        return self
+
     def to_image(self, output_path):
         """
         Save the profiler result as image
