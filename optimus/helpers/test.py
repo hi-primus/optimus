@@ -225,6 +225,15 @@ class Test:
             add_buffer("\tactual_df =json_enconding(actual_df)\n")
 
             expected = "\texpected_value =json_enconding(" + df_result + ")\n"
+        elif output == "dict":
+            print(df_result)
+
+            if is_str(df_result):
+                df_result = "'" + df_result + "'"
+            else:
+                df_result = str(df_result)
+
+            expected = "\texpected_value =" + df_result + "\n"
         else:
             expected = "\t\n"
 
@@ -234,7 +243,9 @@ class Test:
         if output == "df":
             add_buffer("\tassert (expected_df.collect() == actual_df.collect())\n")
         elif output == "json":
-            add_buffer("\tassert (expected_value == actual_df)\n")
+            add_buffer("\tassert(expected_value == actual_df)\n")
+        elif output == "dict":
+            add_buffer("\tself.assertDictEqual(expected_value == actual_df)\n")
 
         filename = self.path + "//" + filename
         if not os.path.exists(os.path.dirname(filename)):
