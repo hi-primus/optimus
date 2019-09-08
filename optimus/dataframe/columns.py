@@ -1734,12 +1734,16 @@ def cols(self):
                 else:
                     _data_type = "null"
             else:
+                _data_type = _dtypes[col_name]
                 if is_null(value) is True:
                     _data_type = "null"
                 elif str_to_missing(value) is True:
                     _data_type = "missing"
                 else:
-                    _data_type = _dtypes[col_name]
+                    if _dtypes[col_name].startswith("array"):
+                        _data_type = "array"
+                    else:
+                        _data_type = _dtypes[col_name]
 
             return (col_name, _data_type), 1
 

@@ -13,12 +13,12 @@ def parse_profiler_dtypes(col_data_type):
        """
 
     lst = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
-           "date": {"date", "timestamp"}, "string": "string", "null": "null"}
+           "date": {"date", "timestamp"}, "string": "string", "null": "null", "array": "array", "object": "object"}
 
     columns = {}
     for k, v in col_data_type.items():
-        result_default = {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 0,
-                          "missing": 0}
+        result_default = {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "object": 0,
+                          "null": 0, "missing": 0}
         for k1, v1 in v.items():
             for k2, v2 in lst.items():
                 if k1 in lst[k2]:
