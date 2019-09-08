@@ -1146,13 +1146,12 @@ def cols(self):
                     new_value = F.array(*[F.lit(v) for v in value])
                 func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
             else:
+                if df.cols.dtypes(input_col)[input_col] == parse_python_dtypes(type(value).__name__):
 
-                if df.cols.dtypes(input_col) == parse_python_dtypes(type(value).__name__):
                     new_value = value
                     func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
-
             df = df.cols.apply(input_col, func=func, output_cols=output_col)
         return df
 
