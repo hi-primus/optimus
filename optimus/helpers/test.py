@@ -46,7 +46,8 @@ class Test:
         _imports = [
             "from pyspark.sql.types import *",
             "from optimus import Optimus",
-            "from optimus.helpers.json import json_enconding "
+            "from optimus.helpers.json import json_enconding",
+            "import unittest"
         ]
         if self.imports is not None:
             for i in self.imports:
@@ -64,7 +65,7 @@ class Test:
             test_file.write(source_df)
 
         # Class name
-        cls = "class Test" + self.name + "(object):\n"
+        cls = "class Test_" + self.name + "(unittest.TestCase):\n"
 
         test_file.write(cls)
 
@@ -119,12 +120,18 @@ class Test:
         test_name = "_".join(name)
 
         func_test_name = "test_" + test_name + "()"
-        filename = test_name + ".test"
 
         print("Creating {test} test function...".format(test=func_test_name))
         logger.print(func_test_name)
 
-        add_buffer("@staticmethod\n")
+        if not output == "dict":
+            add_buffer("@staticmethod\n")
+            func_test_name = "test_" + test_name + "()"
+        else:
+            func_test_name = "test_" + test_name + "(self)"
+
+        filename = test_name + ".test"
+
         add_buffer("def " + func_test_name + ":\n")
 
         source = "source_df"
@@ -245,7 +252,7 @@ class Test:
         elif output == "json":
             add_buffer("\tassert(expected_value == actual_df)\n")
         elif output == "dict":
-            add_buffer("\tself.assertDictEqual(expected_value == actual_df)\n")
+            add_buffer("\tself.assertDictEqual(expected_value,  actual_df)\n")
 
         filename = self.path + "//" + filename
         if not os.path.exists(os.path.dirname(filename)):
