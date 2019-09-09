@@ -148,6 +148,8 @@ array_col = "attributes"
 
 t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
+t.run()
+
 t.create(None, "cols.remove", "list", "df", string_col, ["a","i","Es"])
 
 t.create(None, "cols.remove", "list_output", "df", string_col, ["a","i","Es"], output_cols=string_col+"_new")
@@ -258,6 +260,10 @@ t.create(None, "cols.count_zeros", None, "json", numeric_col)
 
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
 t.run()
+
+t.run()
+
+source_df.cols.names()
 
 # ## Value counts
 
@@ -382,7 +388,9 @@ t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 # t.delete(None, "cols.schema_dtype", "all_columns", "json", "*")
 t.run()
 
-t.create(None, "cols.dtypes", None, "json", numeric_col_B)
+t.create(None, "cols.dtypes", None, "json", None, numeric_col_B)
+
+t.run()
 
 t.create(None, "cols.dtypes", "all_columns", "json", "*")
 
@@ -479,9 +487,13 @@ t.run()
 
 t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
 
-t.create(None, "cols.fill_na", "array", "df", "japanese name", ["1","2"])
+t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1","2"])
 
-t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", False)
+t.run()
+
+t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", None, False)
+
+t.run()
 
 # + {"jupyter": {"outputs_hidden": true}}
 t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "function", "rank", "age"], "2")
@@ -503,6 +515,10 @@ t.create(df_na, "cols.nest", "vector_all_columns", "df", None,[numeric_col_C, nu
 t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B], shape="vector",output_col=new_col)
 
 t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_col=new_col)
+
+t.create(None, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
+
+t.run()
 
 # +
 
@@ -534,9 +550,9 @@ dtypes_df = op.create.df(
 
 # -
 
-t.create(None, "cols.count_by_dtypes", None, "json", None, "*", infer=True)
+t.create(dtypes_df, "cols.count_by_dtypes", "infer", "json", None, "*", infer=True)
 
-t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=True)
+t.run()
 
 t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
 

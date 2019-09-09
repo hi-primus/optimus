@@ -116,11 +116,13 @@ array_col = "attributes"
 from optimus.profiler.profiler import Profiler
 p= Profiler()
 
+p.run(source_df, "*")
+
 t.create(p, "to_json", None, 'json', None, source_df,"*")
 
 t.create(p, "columns", None, 'json', None, source_df,"*")
 
-t.create(p, "general_stats", None, 'json', None, source_df,"*")
+t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
 t.run()
 
