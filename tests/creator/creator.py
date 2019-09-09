@@ -373,13 +373,11 @@ t.create(None,"cols.hist","all_columns","json",None, "Date Type",4)
 
 t.run()
 
-t.create(None, "cols.frequency", None, "json", None, numeric_col_B, 4)
+t.create(None, "cols.frequency", None, "dict", None, numeric_col_B, 4)
 t.run()
 
-t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
+t.create(None, "cols.frequency", "all_columns", "dict", None, "*", 4)
 t.run()
-
-
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -491,7 +489,7 @@ t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1","2"])
 
 t.run()
 
-t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", None, False)
+t.create(None, "cols.fill_na", "bool", "df", None, "Cybertronian", False)
 
 t.run()
 
@@ -516,7 +514,7 @@ t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B
 
 t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_col=new_col)
 
-t.create(None, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
+t.create(None, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
 
 t.run()
 
@@ -550,7 +548,7 @@ dtypes_df = op.create.df(
 
 # -
 
-t.create(dtypes_df, "cols.count_by_dtypes", "infer", "json", None, "*", infer=True)
+t.create(dtypes_df, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
 
 t.run()
 
@@ -634,6 +632,15 @@ t.create(op, "load.csv", "remote_csv", "df", "https://raw.githubusercontent.com/
 t.create(op, "load.json", "remote_json", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
 t.create(op, "load.parquet", "remote_parquet", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
+
+
+
+# +
+from optimus.profiler.profiler import Profiler
+p = Profiler()
+
+print(p.run(source_df1, "japanese name"))
+# -
 
 # df_string = source_df.cols.cast("*","str")
 t.create(source_df, "save.csv", None, None, "test.csv")
