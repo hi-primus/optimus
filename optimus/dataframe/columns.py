@@ -11,6 +11,7 @@ import simplejson as json
 from dateutil.parser import parse as dparse
 from fastnumbers import fast_float
 from fastnumbers import isint, isfloat
+from glom import glom, assign
 from multipledispatch import dispatch
 from pypika import MySQLQuery
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
@@ -1765,7 +1766,6 @@ def cols(self):
             result = parse_profiler_dtypes(result)
         return result
 
-
     @add_attr(cols)
     def frequency(columns, n=10, percentage=False, total_rows=None):
         """
@@ -2017,31 +2017,42 @@ def cols(self):
     #     return df
 
     @add_attr(cols)
-    def set_meta(col_name, value):
+    def set_meta(col_name, spec=None, value=None, missing=dict):
         """
         Sel meta data in a column
-        :param col_name:
-        :param value:
+        :param col_name: Column from where to get the value
+        :param spec: Path to the key to be modified
+        :param value: dict value
+        :param missing:
         :return:
         """
+        if spec is not None:
+            target = self.get_meta()
+            data = assign(target, spec, value, missing=missing)
+        else:
+            data = value
 
-        return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=value))
+        return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
 
     @add_attr(cols)
-    def get_meta(col_name):
+    def get_meta(col_name, spec=None):
         """
         Get meta data from a specific column
-        :param col_name:
+        :param col_name: Column in which to set the value
+        :param spec: Path to the key to be modified
         :return:
         """
 
-        result = ""
+        data = ""
         meta_json = self._jdf.schema().json()
         fields = json.loads(meta_json)["fields"]
         for col_info in fields:
             if col_info["name"] == col_name:
-                result = col_info["metadata"]
-        return result
+                data = col_info["metadata"]
+        if spec is not None:
+            data = glom(data, spec, skip_exc=KeyError)
+
+        return data
 
     return cols
 
