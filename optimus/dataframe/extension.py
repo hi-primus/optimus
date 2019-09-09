@@ -487,18 +487,18 @@ def append_meta(self, path, value):
 
 
 @add_method(DataFrame)
-def set_meta(self, path=None, value=None, missing=dict):
+def set_meta(self, spec=None, value=None, missing=dict):
     """
     Set metadata in a dataframe columns
     :param self:
-    :param path:
-    :param value:
+    :param spec: path to the key to be modified
+    :param value: dict value
     :param missing:
     :return:
     """
-    if path is not None:
+    if spec is not None:
         target = self.get_meta()
-        data = assign(target, path, value, missing=missing)
+        data = assign(target, spec, value, missing=missing)
     else:
         data = value
 
@@ -512,7 +512,7 @@ def get_meta(self, spec=None):
     """
     Get metadata from a dataframe column
     :param self:
-    :param spec:
+    :param spec: path to the key to be modified
     :return:
     """
     data = self.schema[-1].metadata
