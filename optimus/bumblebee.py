@@ -38,8 +38,8 @@ class Comm:
         keys_link = "<a href ='{FULL_DOMAIN}'> here</a>. ".format(FULL_DOMAIN=FULL_DOMAIN,
                                                                   SESSION=self.queue_name, KEY=self.key)
 
-        direct_link = "<a target='_blank' href ='https://{DOMAIN_QUEUE}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
-            DOMAIN_QUEUE=DOMAIN_QUEUE, SESSION=self.queue_name, KEY=self.key)
+        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
+            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
             "Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +
@@ -199,4 +199,3 @@ def val_to_byte(value):
     if not isinstance(value, (bytes, bytearray)):
         value = str(value).encode()
     return value
-
