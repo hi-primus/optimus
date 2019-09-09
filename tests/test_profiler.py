@@ -67,8 +67,7 @@ class TestProfiler(object):
 
 def test_save_to_html():
     try:
-        op.profiler.run(source_df, "*")
-        op.profiler.to_file("output.html", "html")
+        op.profiler.run(source_df, "*").to_file("output.html", "html")
 
     except RuntimeError:
         logging.exception('Error creating the html output.')
@@ -77,8 +76,7 @@ def test_save_to_html():
 
 def test_save_to_json():
     try:
-        op.profiler.run(source_df, "*")
-        op.profiler.to_file("output.json", "json")
+        op.profiler.run(source_df, "*").to_file("output.json", "json")
 
     except RuntimeError:
         logging.exception('Error creating the json output.')

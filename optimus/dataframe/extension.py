@@ -4,6 +4,7 @@ import humanize
 import imgkit
 import jinja2
 import math
+from glom import glom, assign
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -26,9 +27,7 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark import Spark
 
 DataFrame._name = None
-DataFrame._track_cols = []
-DataFrame._original_cols = None
-
+DataFrame.output = "html"
 
 @add_method(DataFrame)
 def roll_out():
@@ -280,14 +279,14 @@ def partitioner(self):
     return self.rdd.partitioner
 
 
-@add_attr(DataFrame)
-def glom(self):
-    """
-
-    :param self: Spark Dataframe
-    :return:
-    """
-    return collect_as_dict(self.rdd.glom().collect()[0])
+# @add_attr(DataFrame)
+# def glom(self):
+#     """
+#
+#     :param self: Spark Dataframe
+#     :return:
+#     """
+#     return collect_as_dict(self.rdd.glom().collect()[0])
 
 
 @add_method(DataFrame)
@@ -332,7 +331,7 @@ def table_image(self, path, limit=10):
 
 
 @add_method(DataFrame)
-def table_html(self, limit=10, columns=None, title=None, full=False):
+def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True):
     """
     Return a HTML table with the dataframe cols, data types and values
     :param self:
@@ -340,6 +339,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     :param limit: How many rows will be printed
     :param title: Table title
     :param full: Include html header and footer
+    :param truncate: Truncate the row information
 
     :return:
     """
@@ -360,7 +360,16 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
     template = template_env.get_template("table.html")
 
     # Filter only the columns and data type info need it
-    dtypes = [(i[0], i[1], j.nullable,) for i, j in zip(self.dtypes, self.schema)]
+    dtypes = []
+    for i, j in zip(self.dtypes, self.schema):
+        if i[1].startswith("array<struct"):
+            dtype = "array<struct>"
+        elif i[1].startswith("struct"):
+            dtype = "struct"
+        else:
+            dtype = i[1]
+
+        dtypes.append((i[0], dtype, j.nullable))
 
     # Remove not selected columns
     final_columns = []
@@ -369,18 +378,20 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
             if i[0] == j:
                 final_columns.append(i)
 
-    total_rows = self.count()
+    total_rows = self.rows.approx_count()
+
     if limit == "all":
         limit = total_rows
     elif total_rows < limit:
         limit = total_rows
 
     total_rows = humanize.intword(total_rows)
+
     total_cols = self.cols.count()
     total_partitions = self.partitions()
 
     output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows, total_cols=total_cols,
-                             partitions=total_partitions, title=title)
+                             partitions=total_partitions, title=title, truncate=truncate)
 
     if full is True:
         output = HEADER + output + FOOTER
@@ -388,10 +399,10 @@ def table_html(self, limit=10, columns=None, title=None, full=False):
 
 
 @add_method(DataFrame)
-def table(self, limit=None, columns=None, title=None):
+def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
         if __IPYTHON__ and DataFrame.output is "html":
-            result = self.table_html(title=title, limit=limit, columns=columns)
+            result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:
             self.show()
@@ -445,43 +456,66 @@ def create_id(self, column="id"):
 
 
 @add_method(DataFrame)
-def track_cols(self, df, add=None, remove=None):
-    """
-    This track the columns that are updated by an Spark Operation. The function must be used at the end of the fucnion
-    after all the transformations
-    :param self:
-    :param df: dataframe with the old column data.
-    :param add: Columns to be added.
-    :param remove: Columns to be removed.
-    :return:
-    """
-    if df._original_cols is None:
-        df._original_cols = df.cols.names()
-
-    if add is not None:
-        df._track_cols = (list(set(df._track_cols + val_to_list(add))))
-    if remove is not None:
-        df._track_cols = (list(set([item for item in df._track_cols if item not in val_to_list(remove)])))
-
-    self._track_cols = df._track_cols
-
-    return self
-
-
-@add_method(DataFrame)
-def send(self, name=None):
+def send(self, name=None, stats=True):
     """
     Profile and send the data to the queue
     :param self:
     :param name: Specified a name for the view/dataframe
+    :param stats:
     :return:
     """
-
+    df = self
     if name is not None:
-        self._name = name
+        df.set_name(name)
 
-    result = Profiler.instance.to_json(self, columns="*", buckets=20, infer=False, relative_error=RELATIVE_ERROR,
+    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
-                                       sample=10000)
+                                       sample=10000,
+                                       stats=stats)
 
     Comm.instance.send(result)
+
+
+@add_method(DataFrame)
+def append_meta(self, path, value):
+    target = self.get_meta()
+    data = glom(target, (path, T.append(value)))
+
+    df = self
+    df.schema[-1].metadata = data
+    return df
+
+
+@add_method(DataFrame)
+def set_meta(self, spec=None, value=None, missing=dict):
+    """
+    Set metadata in a dataframe columns
+    :param self:
+    :param spec: path to the key to be modified
+    :param value: dict value
+    :param missing:
+    :return:
+    """
+    if spec is not None:
+        target = self.get_meta()
+        data = assign(target, spec, value, missing=missing)
+    else:
+        data = value
+
+    df = self
+    df.schema[-1].metadata = data
+    return df
+
+
+@add_method(DataFrame)
+def get_meta(self, spec=None):
+    """
+    Get metadata from a dataframe column
+    :param self:
+    :param spec: path to the key to be modified
+    :return:
+    """
+    data = self.schema[-1].metadata
+    if spec is not None:
+        data = glom(data, spec, skip_exc=KeyError)
+    return data

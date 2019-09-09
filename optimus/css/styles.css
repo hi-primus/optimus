@@ -31,6 +31,10 @@
         border-bottom: 1px solid #cccccc;
     }
 
+    .optimus_table tbody div{
+        min-height:14px
+    }
+
     /* Profiler */
         .main{
         width:100%;

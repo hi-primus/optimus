@@ -10,55 +10,16 @@ import paho.mqtt.client as mqtt
 from cryptography.fernet import Fernet
 
 from optimus.helpers.logger import logger
-
-
-def save_config_key(file_name, section="DEFAULT", key=None, value=None):
-    """
-    Save a key value to a section in a config file
-    :param file_name: Name of hte config file
-    :param section: Section
-    :param key: Key
-    :param value: Value
-    :return:
-    """
-
-    config = configparser.ConfigParser()
-
-    exists = os.path.isfile(file_name)
-    if exists:
-        # Try to load the config file
-        config.read(file_name)
-
-        if config.has_option(section, key):
-            result = config[section][key]
-        else:
-
-            config.set(section, key, value)
-            with open(file_name, 'w') as configfile:
-                config.write(configfile)
-            result = value
-
-    else:
-
-        config.set(section, key, value)
-        with open(file_name, 'w') as configfile:
-            config.write(configfile)
-        result = value
-    return result
-
-
-def val_to_byte(value):
-    if not isinstance(value, (bytes, bytearray)):
-        value = str(value).encode()
-    return value
-
+from optimus.helpers.output import print_html
 
 IP_QUEUE = "165.22.149.93"
+DOMAIN_QUEUE = "app.hi-bumblebee.com"
+FULL_DOMAIN = "http://" + DOMAIN_QUEUE
 
 
 class Comm:
     """
-
+    Connect to a MQTT/Rabbit Queue
     """
 
     def __init__(self, queue_name=None, username="mqtt-test", password="mqtt-test"):
@@ -73,6 +34,18 @@ class Comm:
 
         else:
             self.queue_name = queue_name
+
+        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>. ".format(FULL_DOMAIN=FULL_DOMAIN,
+                                                                  SESSION=self.queue_name, KEY=self.key)
+
+        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
+            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
+
+        print_html(
+            "Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +
+            "If you are testing just " + direct_link
+
+        )
 
         # Queue config
         client = mqtt.Client("MQTT")
@@ -103,10 +76,6 @@ class Comm:
         self.token = None
 
         self.f = Fernet(self.key)
-
-        # print(self.key)
-        # print(self.queue_name)
-        # return
 
     @staticmethod
     def _encode(val):
@@ -189,3 +158,44 @@ class Comm:
         client.publish(self.queue_name, payload=message)
 
         client.loop_stop()
+
+
+def save_config_key(file_name, section="DEFAULT", key=None, value=None):
+    """
+    Save a key value to a section in a config file
+    :param file_name: Name of hte config file
+    :param section: Section
+    :param key: Key
+    :param value: Value
+    :return:
+    """
+
+    config = configparser.ConfigParser()
+
+    exists = os.path.isfile(file_name)
+    if exists:
+        # Try to load the config file
+        config.read(file_name)
+
+        if config.has_option(section, key):
+            result = config[section][key]
+        else:
+
+            config.set(section, key, value)
+            with open(file_name, 'w') as configfile:
+                config.write(configfile)
+            result = value
+
+    else:
+
+        config.set(section, key, value)
+        with open(file_name, 'w') as configfile:
+            config.write(configfile)
+        result = value
+    return result
+
+
+def val_to_byte(value):
+    if not isinstance(value, (bytes, bytearray)):
+        value = str(value).encode()
+    return value

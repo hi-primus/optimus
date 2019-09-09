@@ -148,6 +148,8 @@ array_col = "attributes"
 
 t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
+t.run()
+
 t.create(None, "cols.remove", "list", "df", string_col, ["a","i","Es"])
 
 t.create(None, "cols.remove", "list_output", "df", string_col, ["a","i","Es"], output_cols=string_col+"_new")
@@ -259,6 +261,10 @@ t.create(None, "cols.count_zeros", None, "json", numeric_col)
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
 t.run()
 
+t.run()
+
+source_df.cols.names()
+
 # ## Value counts
 
 t.create(None, "cols.value_counts", None, "json", None, numeric_col)
@@ -367,13 +373,11 @@ t.create(None,"cols.hist","all_columns","json",None, "Date Type",4)
 
 t.run()
 
-t.create(None, "cols.frequency", None, "json", None, numeric_col_B, 4)
+t.create(None, "cols.frequency", None, "dict", None, numeric_col_B, 4)
 t.run()
 
-t.create(None, "cols.frequency", "all_columns", "json", None, "*", 4)
+t.create(None, "cols.frequency", "all_columns", "dict", None, "*", 4)
 t.run()
-
-
 
 t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 
@@ -382,7 +386,9 @@ t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
 # t.delete(None, "cols.schema_dtype", "all_columns", "json", "*")
 t.run()
 
-t.create(None, "cols.dtypes", None, "json", numeric_col_B)
+t.create(None, "cols.dtypes", None, "json", None, numeric_col_B)
+
+t.run()
 
 t.create(None, "cols.dtypes", "all_columns", "json", "*")
 
@@ -479,9 +485,13 @@ t.run()
 
 t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
 
-t.create(None, "cols.fill_na", "array", "df", "japanese name", ["1","2"])
+t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1","2"])
 
-t.create(None, "cols.fill_na", "bool", "df", "Cybertronian", False)
+t.run()
+
+t.create(None, "cols.fill_na", "bool", "df", None, "Cybertronian", False)
+
+t.run()
 
 # + {"jupyter": {"outputs_hidden": true}}
 t.create(None, "cols.fill_na", "all_columns", "df", ["names","height(ft)", "function", "rank", "age"], "2")
@@ -503,6 +513,46 @@ t.create(df_na, "cols.nest", "vector_all_columns", "df", None,[numeric_col_C, nu
 t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B], shape="vector",output_col=new_col)
 
 t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,numeric_col_C], shape="array", output_col=new_col)
+
+t.create(None, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
+
+t.run()
+
+# +
+
+dtypes_df = op.create.df(
+    [
+        ("col 1", "str", True),
+        ("col 2", "str", True),
+        ("col 3", "int", True),
+    
+    ],
+    [
+        ("male","male",1),
+        ("optimus","bumblebee",1),
+        ("3","4.1",1),
+        ("true","False",1),
+        ("[1,2,3,4]","(1,2,3,4)",1),
+        ("{1,2,3,4}","{'key1' :1 , 'key2':2}",1),
+        ("1.1.1.1","123.123.123.123",1),
+        ("http://hi-optimuse.com","https://hi-bumblebee.com",1),
+        ("optimus@cybertron.com","bumblebee@cybertron.com",1),
+        ("5123456789123456","373655783158306",1),
+        ("11529","30345",1),
+        ("04/10/1980","04/10/1980",1),
+        ("null","Null",1),
+        ("","",1),
+        (None,None,1) 
+       
+    ], infer_schema=True)
+
+# -
+
+t.create(dtypes_df, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
+
+t.run()
+
+t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
 
 t.run()
 
@@ -582,6 +632,15 @@ t.create(op, "load.csv", "remote_csv", "df", "https://raw.githubusercontent.com/
 t.create(op, "load.json", "remote_json", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
 t.create(op, "load.parquet", "remote_parquet", "df", "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
+
+
+
+# +
+from optimus.profiler.profiler import Profiler
+p = Profiler()
+
+print(p.run(source_df1, "japanese name"))
+# -
 
 # df_string = source_df.cols.cast("*","str")
 t.create(source_df, "save.csv", None, None, "test.csv")

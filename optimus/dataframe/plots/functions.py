@@ -4,6 +4,7 @@ import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
+from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.functions import ellipsis
 from optimus.helpers.output import output_image, output_base64, print_html
 
@@ -142,9 +143,11 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
             if d is not None:
                 hist.append(d["count"])
 
-        bins = array(bins)
-        center = (bins[:-1] + bins[1:]) / 2
-        width = 0.9 * (bins[1] - bins[0])
+        array_bins = array(bins)
+        center = (array_bins[:-1] + array_bins[1:]) / 2
+        width = 0.9 * (array_bins[1] - array_bins[0])
+
+        hist = one_list_to_val(hist)
 
         # Plot
         fig = plt.figure(figsize=(12, 5))
