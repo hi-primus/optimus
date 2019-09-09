@@ -31,7 +31,7 @@ class Load:
                 .option("mode", "PERMISSIVE") \
                 .json(file, *args, **kwargs)
 
-            df.set_meta("file_name", file_name)
+            df.ext.set_meta("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -76,7 +76,7 @@ class Load:
                   .options(inferSchema=infer_schema)
                   .csv(file, *args, **kwargs))
 
-            df.set_meta("file_name", file_name)
+            df.ext.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -96,7 +96,7 @@ class Load:
 
         try:
             df = Spark.instance.spark.read.parquet(file, *args, **kwargs)
-            df.set_meta("file_name", file_name)
+            df.ext.set_meta("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -122,7 +122,7 @@ class Load:
                 avro_version = "avro "
             df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
 
-            df.set_meta("file_name", file_name)
+            df.ext.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -157,7 +157,7 @@ class Load:
 
             # Create spark data frame
             df = Spark.instance.spark.createDataFrame(pdf)
-            df.set_meta("file_name", ntpath.basename(file_name))
+            df.ext.set_meta("file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise

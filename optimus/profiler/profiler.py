@@ -117,8 +117,8 @@ class Profiler:
         columns = parse_columns(df, columns)
 
         # for col_name in columns:
-        #     df.cols.set_meta({"name": col_name})
-        # df.set_meta({"initialized": True})
+        #     df.cols.meta({"name": col_name})
+        # df.ext.set_meta({"initialized": True})
 
         output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict")
 
@@ -250,7 +250,7 @@ class Profiler:
             output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count)
 
         assign(output_columns, "name", df.get_name(), dict)
-        assign(output_columns, "file_name", df.get_meta("file_name"), dict)
+        assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
 
         # Add the General data summary to the output
         data_set_info = {'cols_count': humanize.intword(cols_count),
