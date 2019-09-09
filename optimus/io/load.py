@@ -165,16 +165,16 @@ class Load:
         return replace_columns_special_characters(df)
 
 
-def prepare_path(path, format):
+def prepare_path(path, file_format):
     """
     Helper to return the file to be loaded and the file name
     :param path: Path to the file to be loaded
-    :param format: format file
+    :param file_format: format file
     :return:
     """
     file_name = ntpath.basename(path)
     if is_url(path):
-        file = downloader(path, format)
+        file = downloader(path, file_format)
     else:
         file = path
     return file, file_name
@@ -185,7 +185,7 @@ def downloader(url, file_format):
     Send the request to download a file
     """
 
-    def write(response, file, chunk_size=8192):
+    def write_file(response, file, chunk_size=8192):
         """
         Load the data from the http request and save it to disk
         :param response: data returned from the server
@@ -223,7 +223,7 @@ def downloader(url, file_format):
 
     # It seems that avro need a .avro extension file
     with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
-        bytes_downloaded = write(urlopen(req), f)
+        bytes_downloaded = write_file(urlopen(req), f)
         path = f.name
 
     if bytes_downloaded > 0:

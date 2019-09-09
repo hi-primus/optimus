@@ -2037,8 +2037,8 @@ def cols(self):
 
         result = ""
         meta_json = self._jdf.schema().json()
-        dict = json.loads(meta_json)["fields"]
-        for col_info in dict:
+        fields = json.loads(meta_json)["fields"]
+        for col_info in fields:
             if col_info["name"] == col_name:
                 result = col_info["metadata"]
         return result
