@@ -66,7 +66,7 @@ class Enricher:
         """
 
         if is_(df, pd.DataFrame):
-            self.get_collection(self.collection_name).insert_many(df.to_dict("records"))
+            self.get_collection(self.collection_name).insert_many(df.ext.to_dict("records"))
         elif is_(df, DataFrame):
             df.save.mongo(self.host, self.port, self.db_name, self.collection_name)
         else:

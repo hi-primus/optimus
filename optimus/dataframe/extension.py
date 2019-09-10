@@ -352,7 +352,10 @@ def ext(self):
                     if i[0] == j:
                         final_columns.append(i)
 
-            total_rows = self.rows.approx_count()
+            if count is True:
+                total_rows = self.rows.approx_count()
+            else:
+                count = None
 
             if limit == "all":
                 limit = total_rows
@@ -362,7 +365,7 @@ def ext(self):
             total_rows = humanize.intword(total_rows)
 
             total_cols = self.cols.count()
-            total_partitions = self.partitions()
+            total_partitions = Ext.partitions()
 
             output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                      total_cols=total_cols,
@@ -380,7 +383,7 @@ def ext(self):
         def table(limit=None, columns=None, title=None, truncate=True):
             try:
                 if __IPYTHON__ and DataFrame.output is "html":
-                    result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                    result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                     print_html(result)
                 else:
                     self.show()
@@ -426,9 +429,9 @@ def ext(self):
             Comm.instance.send(result)
 
         @staticmethod
-        def append_meta(path, value):
+        def append_meta(spec, value):
             target = self.get_meta()
-            data = glom(target, (path, T.append(value)))
+            data = glom(target, (spec, T.append(value)))
 
             df = self
             df.schema[-1].metadata = data
