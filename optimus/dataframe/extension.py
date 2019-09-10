@@ -4,13 +4,13 @@ import humanize
 import imgkit
 import jinja2
 import math
-from glom import glom, assign
+from glom import glom, assign, T
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import *
+from pyspark.sql.types import ArrayType
 
 from optimus import val_to_list
 from optimus.bumblebee import Comm
@@ -30,6 +30,17 @@ DataFrame.output = "html"
 
 def ext(self):
     class Ext:
+        @staticmethod
+        def init():
+            df = self
+            if Ext.get_meta("optimus.init") is None:
+                # Save columns as the data set original name
+                for col_name in df.cols.names():
+                    df = df.cols.set_meta(col_name, "optimus.name", col_name)
+                    df = df.cols.set_meta(col_name, "optimus.transformations", [])
+            return df
+
+
         @staticmethod
         def roll_out():
             """
@@ -305,7 +316,7 @@ def ext(self):
             print_html("<img src='" + path + "'>")
 
         @staticmethod
-        def table_html(limit=10, columns=None, title=None, full=False, truncate=True):
+        def table_html(limit=10, columns=None, title=None, full=False, truncate=True, count=True):
             """
             Return a HTML table with the dataframe cols, data types and values
             :param columns: Columns to be printed
@@ -313,6 +324,7 @@ def ext(self):
             :param title: Table title
             :param full: Include html header and footer
             :param truncate: Truncate the row information
+            :param count:
 
             :return:
             """
