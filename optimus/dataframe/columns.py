@@ -11,7 +11,7 @@ import simplejson as json
 from dateutil.parser import parse as dparse
 from fastnumbers import fast_float
 from fastnumbers import isint, isfloat
-from glom import glom, assign
+from glom import glom, assign, T
 from multipledispatch import dispatch
 from pypika import MySQLQuery
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
@@ -28,7 +28,7 @@ from optimus import logger, Optimus, RELATIVE_ERROR
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
+    is_one_element, is_type, is_int, has_, is_column_a, is_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
@@ -122,7 +122,7 @@ def cols(self):
             if columns is not None:
                 df = df.select(columns)
                 # Metadata get lost when using select(). So we copy here again.
-                df.ext.set_meta(value=self.get_meta())
+                df.ext.meta = self.ext.meta
                 result = df
             else:
                 result = None
@@ -274,7 +274,6 @@ def cols(self):
                     df = df.withColumnRenamed(old_col_name, col_name[1])
 
             df.ext.meta = self.ext.meta
-
 
             return df
 
@@ -2013,27 +2012,26 @@ def cols(self):
             df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
             return df
 
-        # 
-        # def append_meta(col_name, value):
-        #     target = self.get_meta()
-        #     data = glom(target, (path, T.append(value)))
-        #
-        #     df = self
-        #     df.schema[-1].metadata = data
-        #     return df
         @staticmethod
-        def set_meta(col_name, spec=None, value=None, missing=dict):
+        def set_meta(col_name, spec=None, value=None, missing=dict, append=None):
             """
             Sel meta data in a column
             :param col_name: Column from where to get the value
             :param spec: Path to the key to be modified
             :param value: dict value
             :param missing:
+            :param append:
             :return:
             """
             if spec is not None:
-                target = self.get_meta()
-                data = assign(target, spec, value, missing=missing)
+                target = Cols.get_meta(col_name)
+
+                if append is True:
+                    data = glom(target, (spec, T.append(value)))
+                    print(data)
+                else:
+                    data = assign(target, spec, value, missing=missing)
+
             else:
                 data = value
 
