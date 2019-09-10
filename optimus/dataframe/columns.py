@@ -260,23 +260,22 @@ def cols(self):
             df = self
 
             # Apply a transformation function
-            if is_function(func):
-                exprs = [F.col(c).alias(func(c)) for c in df.columns]
-                df = df.select(exprs)
-
-            elif is_list_of_tuples(columns_old_new):
-                # Check that the 1st element in the tuple is a valid set of columns
-
+            if is_list_of_tuples(columns_old_new):
                 validate_columns_names(self, columns_old_new)
                 for col_name in columns_old_new:
+
                     old_col_name = col_name[0]
-                    if is_str(old_col_name):
-                        df = df.withColumnRenamed(old_col_name, col_name[1])
-                    elif is_int(old_col_name):
-                        df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
+                    if is_int(old_col_name):
+                        old_col_name = self.schema.names[old_col_name]
+                    if func:
+                        old_col_name = func(old_col_name)
+
+                    # Cols.set_meta(col_name, "optimus.transformations", "rename", append=True)
+                    df = df.withColumnRenamed(old_col_name, col_name[1])
+
             df.ext.meta = self.ext.meta
 
-            # df.cols.append_meta("transformation", "rename")
+
             return df
 
         @staticmethod
