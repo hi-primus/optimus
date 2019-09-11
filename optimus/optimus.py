@@ -1,3 +1,4 @@
+from optimus.engines.pandas import PandasEngine
 from optimus.engines.spark import SparkEngine
 
 
@@ -7,6 +8,6 @@ class Optimus:
         if engine == "spark":
             return SparkEngine(*args, **kwargs)
         elif engine == "pandas":
-            print("not implemented yet")
+            return PandasEngine(*args, **kwargs)
         elif engine == "rapids":
             print("not implemented yet")
