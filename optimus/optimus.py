@@ -6,6 +6,6 @@ def optimus(engine, *args, **kwargs):
     if engine == "spark":
         return SparkEngine(*args, **kwargs)
     elif engine == "pandas":
-        print("not implemented yet")
+        return PandasEngine(*args, **kwargs)
     elif engine == "rapids":
         print("not implemented yet")
