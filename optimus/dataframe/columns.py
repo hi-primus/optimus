@@ -6,6 +6,7 @@ from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
+
 import pyspark
 import simplejson as json
 from dateutil.parser import parse as dparse
@@ -24,9 +25,10 @@ from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
 # Functions
-from optimus import logger, Optimus, RELATIVE_ERROR
+
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
+from optimus.engines.spark import SparkEngine
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
     is_one_element, is_type, is_int, has_, is_column_a, is_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
@@ -34,11 +36,12 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
+from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
@@ -789,7 +792,7 @@ def cols(self):
                 mode_df = count.join(
                     count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
                 )
-                if Optimus.cache:
+                if SparkEngine.cache:
                     mode_df = mode_df.cache()
                 # if none of the values are repeated we not have mode
                 mode_list = (mode_df
