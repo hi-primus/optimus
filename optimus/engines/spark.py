@@ -76,6 +76,7 @@ class SparkEngine:
 
         """
         self.preserve = False
+        self.engine = 'spark'
 
         SparkEngine.cache = cache
 

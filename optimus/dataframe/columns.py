@@ -51,7 +51,12 @@ ENGINE = "spark"
 
 
 def cols(self):
-    class Cols:
+    class PandasCols:
+        @staticmethod
+        def date_transform():
+            raise NotImplementedError('Look at me I am pandas now')
+
+    class SparkCols:
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -2060,7 +2065,16 @@ def cols(self):
 
             return data
 
-    return Cols()
+    import pandas
+    if isinstance(self, pandas.DataFrame):
+        return PandasCols()
+    elif isinstance(self, pyspark.sql.dataframe.DataFrame):
+        return SparkCols()
+    else:
+        raise NotImplementedError
 
 
+DataFrame.cols = property(cols)
+
+from pandas import DataFrame
 DataFrame.cols = property(cols)
