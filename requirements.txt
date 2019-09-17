@@ -17,7 +17,7 @@ setuptools==41.1.0
 pyarrow==0.13.0
 Jinja2==2.10.1
 tensorflow==1.13.1
-keras==2.2.4
+keras==2.3.0
 pygments>=2.2.0
 flask==1.0.2
 ipython==7.5.0
