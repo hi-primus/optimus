@@ -12,14 +12,14 @@ from requests import HTTPError
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 
-
 PROTOCOL = "http://"
 DOMAIN_API = "api.hi-bumblebee.com"
 FULL_DOMAIN_API = PROTOCOL + DOMAIN_API
-END_POINT = PROTOCOL + DOMAIN_API + "/dataset"
+END_POINT = FULL_DOMAIN_API + "/dataset"
 
+PROTOCOL_SSL = "https://"
 DOMAIN_APP = "app.hi-bumblebee.com"
-FULL_DOMAIN = PROTOCOL + DOMAIN_APP
+FULL_DOMAIN = PROTOCOL_SSL + DOMAIN_APP
 
 
 class Comm:
