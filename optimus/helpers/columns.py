@@ -2,7 +2,8 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_list_of_list
+from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_list_of_list, \
+    is_spark_dataframe, is_pandas_dataframe
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
@@ -87,6 +88,14 @@ def get_output_cols(input_cols, output_cols):
     return output_cols
 
 
+def colums_names(df):
+    if is_spark_dataframe(df):
+        columns_names = df.columns
+    elif is_pandas_dataframe(df):
+        columns_names = list(df.columns)
+    return columns_names
+
+
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False, invert=False):
     """
@@ -109,12 +118,15 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     attrs = None
 
     # if columns value is * get all dataframes columns
+
+    df_columns = colums_names(df)
+
     if is_regex is True:
         r = re.compile(cols_args[0])
-        cols = list(filter(r.match, df.columns))
+        cols = list(filter(r.match, df_columns))
 
     elif cols_args == "*" or cols_args is None:
-        cols = df.cols.names()
+        cols = df_columns
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -132,7 +144,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         # if not a list convert to list
         cols = val_to_list(cols_args)
         # Get col name from index
-        cols = [c if is_str(c) else df.col.names()[c] for c in cols]
+        cols = [c if is_str(c) else df_columns[c] for c in cols]
 
     # Check for missing columns
     if accepts_missing_cols is False:
@@ -162,7 +174,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     cols_params = []
 
     if invert:
-        final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
+        final_columns = list(OrderedSet(df_columns) - OrderedSet(final_columns))
 
     if get_args is True:
         cols_params = final_columns, attrs
@@ -236,7 +248,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.cols.names()))
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(colums_names(df)))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)

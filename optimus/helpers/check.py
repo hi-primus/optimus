@@ -6,7 +6,8 @@ import os
 import re
 
 import math
-from pyspark.sql import DataFrame
+import pandas as pd
+from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.converter import one_list_to_val, val_to_list
@@ -200,7 +201,7 @@ def is_list_of_dataframes(value):
     :param value:
     :return:
     """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, DataFrame) for elem in value)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, SparkDataFrame) for elem in value)
 
 
 def is_filepath(file_path):
@@ -369,14 +370,22 @@ def is_float(value):
     return isinstance(value, float)
 
 
-# TODO: can be confused with is_type
 def is_spark_dataframe(value):
     """
     Check if an object is a Spark DataFrame
     :param value:
     :return:
     """
-    return isinstance(value, DataFrame)
+    return isinstance(value, SparkDataFrame)
+
+
+def is_pandas_dataframe(value):
+    """
+    Check if an object is a Pandas DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, pd.DataFrame)
 
 
 def is_bool(value):

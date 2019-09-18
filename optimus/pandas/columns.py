@@ -1,3 +1,14 @@
+import re
+from ast import literal_eval
+
+from dateutil.parser import parse as dparse
+from fastnumbers import isint, isfloat
+
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.converter import tuple_to_dict
+from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+
+
 def cols(self):
     class Cols:
         @staticmethod
@@ -7,6 +18,182 @@ def cols(self):
         @staticmethod
         def names():
             return list(self.columns)
+
+        @staticmethod
+        def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+            def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
+
+                col_name, value = value
+
+                def str_to_boolean(_value):
+                    _value = _value.lower()
+                    if _value == "true" or _value == "false":
+                        return True
+
+                def str_to_date(_value):
+                    try:
+                        dparse(_value)
+                        return True
+                    except (ValueError, OverflowError):
+                        pass
+
+                def str_to_null(_value):
+                    _value = _value.lower()
+                    if _value == "null":
+                        return True
+
+                def is_null(_value):
+                    if _value is None:
+                        return True
+
+                def str_to_gender(_value):
+                    _value = _value.lower()
+                    if _value == "male" or _value == "female":
+                        return True
+
+                def str_to_array(_value):
+                    return str_to_data_type(_value, (list, tuple))
+
+                def str_to_object(_value):
+                    return str_to_data_type(_value, (dict, set))
+
+                def str_to_data_type(_value, _dtypes):
+                    """
+                    Check if value can be parsed to a tuple or and list.
+                    Because Spark can handle tuples we will try to transform tuples to arrays
+                    :param _value:
+                    :return:
+                    """
+                    try:
+
+                        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
+                            return True
+                    except (ValueError, SyntaxError):
+                        pass
+
+                def str_to_url(_value):
+                    regex = re.compile(
+                        r'^https?://'  # http:// or https://
+                        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
+                        r'localhost|'  # localhost...
+                        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+                        r'(?::\d+)?'  # optional port
+                        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+                    if regex.match(_value):
+                        return True
+
+                def str_to_ip(_value):
+                    regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
+                    if regex.match(_value):
+                        return True
+
+                def str_to_email(_value):
+                    regex = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+                    if regex.match(_value):
+                        return True
+
+                def str_to_credit_card(_value):
+                    # Reference https://www.regular-expressions.info/creditcard.html
+                    # https://codereview.stackexchange.com/questions/74797/credit-card-checking
+                    regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
+                                       r'|5[1-5]\d{14}'  # Mastercard
+                                       r'|6011\d{12}'  # Discover (incomplete?)
+                                       r'|7\d{15}'  # What's this?
+                                       r'|3[47]\d{13}'  # American Express
+                                       r')$')
+                    return bool(regex.match(_value))
+
+                def str_to_zip_code(_value):
+                    regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
+                    if regex.match(_value):
+                        return True
+                    return False
+
+                def str_to_missing(_value):
+                    if value == "":
+                        return True
+
+                # Try to order the functions from less to more computational expensive
+                if _int_funcs is None:
+                    _int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
+
+                if _str_funcs is None:
+                    _str_funcs = [
+                        (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
+                        (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"), (str_to_url, "url"),
+                        (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
+                    ]
+
+                if _dtypes[col_name] == "string" and infer is True:
+
+                    if isinstance(value, bool):
+                        _data_type = "boolean"
+
+                    elif isint(value):  # Check if value is integer
+                        _data_type = "int"
+                        for func in _int_funcs:
+                            if func[0](value) is True:
+                                _data_type = func[1]
+                                break
+
+                    elif isfloat(value):
+                        _data_type = "decimal"
+
+                    elif isinstance(value, str):
+                        _data_type = "string"
+                        for func in _str_funcs:
+                            if func[0](value) is True:
+                                _data_type = func[1]
+                                break
+                    else:
+                        _data_type = "null"
+                else:
+                    _data_type = _dtypes[col_name]
+                    if is_null(value) is True:
+                        _data_type = "null"
+                    elif str_to_missing(value) is True:
+                        _data_type = "missing"
+                    else:
+                        if _dtypes[col_name].startswith("array"):
+                            _data_type = "array"
+                        else:
+                            _data_type = _dtypes[col_name]
+
+                return (col_name, _data_type), 1
+
+            columns = parse_columns(self, columns)
+            df = self
+            dtypes = df.cols.dtypes()
+
+            _count = (df.select(columns).rdd
+                      .flatMap(lambda x: x.asDict().items())
+                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
+                      .reduceByKey(lambda a, b: a + b)
+                      )
+
+            result = {}
+
+            for c in _count.collect():
+                result.setdefault(c[0][0], {})[c[0][1]] = c[1]
+
+            if infer is True:
+                for k in result.keys():
+                    result[k] = fill_missing_var_types(result[k])
+            else:
+                result = parse_profiler_dtypes(result)
+            return result
+
+        @staticmethod
+        def dtypes(columns="*"):
+            """
+            Return the column(s) data type as string
+            :param columns: Columns to be processed
+            :return:
+            """
+
+            columns = parse_columns(self, columns)
+            data_types = ({k: str(v) for k, v in dict(self.dtypes).items()})
+            return {col_name: data_types[col_name] for col_name in columns}
 
     return Cols()
 
