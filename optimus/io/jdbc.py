@@ -26,32 +26,32 @@ class JDBC:
 
         # Handle the default port
         if self.db_driver == "redshift":
-            if port is None: self.port = 5439
+            if port is None: port = 5439
             # "com.databricks.spark.redshift"
 
         elif self.db_driver == "postgresql":
-            if port is None: self.port = 5432
+            if port is None: port = 5432
             self.driver_option = "org.postgresql.Driver"
 
-        elif self.db_driver == "postgres": # backward compat
-            if port is None: self.port = 5432
+        elif self.db_driver == "postgres":  # backward compat
+            if port is None: port = 5432
             self.driver_option = "org.postgresql.Driver"
             self.db_driver = "postgresql"
 
         elif self.db_driver == "mysql":
-            if port is None: self.port = 3306
+            if port is None: port = 3306
             # "com.mysql.jdbc.Driver"
 
         elif self.db_driver == "sqlserver":
-            if port is None: self.port = 1433
+            if port is None: port = 1433
             # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
 
         elif self.db_driver == "oracle":
-            if port is None: self.port = 1521
+            if port is None: port = 1521
             self.driver_option = "oracle.jdbc.OracleDriver"
 
         elif self.db_driver == 'presto':
-            if port is None: self.port = 8080
+            if port is None: port = 8080
             self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
 
         # TODO: add mongo?
@@ -62,6 +62,7 @@ class JDBC:
         if database is None:
             database = ""
 
+        self.port = port
         # Create string connection
         if self.db_driver == "sqlite":
             url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
