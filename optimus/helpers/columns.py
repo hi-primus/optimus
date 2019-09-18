@@ -117,7 +117,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         cols = list(filter(r.match, df.columns))
 
     elif cols_args == "*" or cols_args is None:
-        cols = df.columns
+        cols = df.cols.names()
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -135,7 +135,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         # if not a list convert to list
         cols = val_to_list(cols_args)
         # Get col name from index
-        cols = [c if is_str(c) else df.columns[c] for c in cols]
+        cols = [c if is_str(c) else df.col.names()[c] for c in cols]
 
     # Check for missing columns
     if accepts_missing_cols is False:
@@ -239,7 +239,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.schema.names))
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.cols.names()))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
