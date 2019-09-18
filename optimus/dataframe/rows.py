@@ -8,7 +8,7 @@ from pyspark.sql import functions as F
 import optimus as op
 
 from optimus.audf import filter_row_by_data_type as fbdt
-from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
+from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_spark_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.functions import append as append_df
@@ -33,7 +33,7 @@ def rows(self):
                 new_row = op.Create.df(columns, rows)
                 df_result = df.union(new_row)
 
-            elif is_list_of_dataframes(rows) or is_dataframe(rows):
+            elif is_list_of_dataframes(rows) or is_spark_dataframe(rows):
                 row = val_to_list(rows)
                 row.insert(0, df)
                 df_result = append_df(row, like="rows")

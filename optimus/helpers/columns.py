@@ -2,8 +2,7 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_dataframe, \
-    is_list_of_list
+from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_list_of_list
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
@@ -107,8 +106,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     :return: A list of columns string names
     """
 
-    if not is_dataframe(df):
-        RaiseIt.type_error(df, "Dataframe")
     attrs = None
 
     # if columns value is * get all dataframes columns

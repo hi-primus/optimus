@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_dataframe, is_numeric
+from optimus.helpers.check import is_spark_dataframe, is_numeric
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.columns import parse_columns, name_col
 
@@ -17,7 +17,7 @@ class ZScore:
         :param col_name:
         """
 
-        if not is_dataframe(df):
+        if not is_spark_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
         self.df = df

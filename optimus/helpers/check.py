@@ -370,7 +370,7 @@ def is_float(value):
 
 
 # TODO: can be confused with is_type
-def is_dataframe(value):
+def is_spark_dataframe(value):
     """
     Check if an object is a Spark DataFrame
     :param value:
