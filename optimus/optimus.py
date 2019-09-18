@@ -8,4 +8,4 @@ def optimus(engine, *args, **kwargs):
     elif engine == "pandas":
         return PandasEngine(*args, **kwargs)
     elif engine == "rapids":
-        print("not implemented yet")
+        raise NotImplementedError('rapids')
