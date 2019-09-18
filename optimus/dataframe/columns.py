@@ -44,16 +44,13 @@ from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
+# Functions
+
 ENGINE = "spark"
 
 
 def cols(self):
-    class PandasCols:
-        @staticmethod
-        def date_transform():
-            raise NotImplementedError('Look at me I am pandas now')
-
-    class SparkCols:
+    class Cols:
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -102,7 +99,7 @@ def cols(self):
                     value = c[1]
                     df_result = df.cols.append(col_name, value)
 
-            elif is_list_of_dataframes(cols_values) or is_dataframe(cols_values):
+            elif is_list_of_dataframes(cols_values) or is_spark_dataframe(cols_values):
                 cols_values = val_to_list(cols_values)
                 cols_values.insert(0, df)
                 df_result = append_df(cols_values, like="columns")
@@ -2062,16 +2059,7 @@ def cols(self):
 
             return data
 
-    import pandas
-    if isinstance(self, pandas.DataFrame):
-        return PandasCols()
-    elif isinstance(self, pyspark.sql.dataframe.DataFrame):
-        return SparkCols()
-    else:
-        raise NotImplementedError
+    return Cols()
 
 
-DataFrame.cols = property(cols)
-
-from pandas import DataFrame
 DataFrame.cols = property(cols)
