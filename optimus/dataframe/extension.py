@@ -13,7 +13,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus import val_to_list
-from optimus.bumblebee import Comm
+from optimus import Comm
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -473,7 +473,10 @@ def send(self, name=None, stats=True):
                                        sample=10000,
                                        stats=stats)
 
-    Comm.instance.send(result)
+    if Comm:
+        Comm.instance.send(result)
+    else:
+        raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
 
 @add_method(DataFrame)

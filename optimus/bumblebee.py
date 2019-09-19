@@ -2,27 +2,33 @@ import base64
 import configparser
 import json
 import os
-import time
 import uuid
 import zlib
 
-import paho.mqtt.client as mqtt
+import requests
 from cryptography.fernet import Fernet
+from requests import HTTPError
 
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 
-IP_QUEUE = "165.22.149.93"
-DOMAIN_QUEUE = "app.hi-bumblebee.com"
-FULL_DOMAIN = "http://" + DOMAIN_QUEUE
+PROTOCOL = "http://"
+PROTOCOL_SSL = "https://"
+
+DOMAIN_API = "api.hi-bumblebee.com"
+FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
+END_POINT = FULL_DOMAIN_API + "/dataset"
+
+DOMAIN_APP = "app.hi-bumblebee.com"
+FULL_DOMAIN = PROTOCOL_SSL + DOMAIN_APP
 
 
 class Comm:
     """
-    Connect to a MQTT/Rabbit Queue
+    Send encrypted message to the Bumblebee
     """
 
-    def __init__(self, queue_name=None, username="mqtt-test", password="mqtt-test"):
+    def __init__(self, queue_name=None):
 
         # If queue_name was not given try lo load from file if not generate one
         if queue_name is None:
@@ -47,32 +53,6 @@ class Comm:
 
         )
 
-        # Queue config
-        client = mqtt.Client("MQTT")
-        client.username_pw_set(username=username, password=password)
-
-        # Callbacks
-        client.connected_flag = False
-
-        def on_connect(client, userdata, flags, rc):
-            if rc == 0:
-                client.connected_flag = True  # set flag
-                # print("connected...")
-            else:
-                print("Bad connection Returned code=", rc)
-
-        def on_disconnect(client, userdata, rc):
-            # print("disconnected")
-            client.connected_flag = False
-
-        def on_publish(client, userdata, result):  # create function for callback
-            print("Data sent \n")
-
-        client.on_publish = on_publish
-        client.on_disconnect = on_disconnect
-        client.on_connect = on_connect
-
-        self.queue = client
         self.token = None
 
         self.f = Fernet(self.key)
@@ -99,7 +79,22 @@ class Comm:
         """
         logger.print(message)
         self.token = self._encrypt(self._compress(message)).decode()
-        self.to_queue(self.token)
+
+        logger.print(message)
+        try:
+            headers = {'content-type': 'application/json'}
+
+            data = json.dumps({"username": self.queue_name, "data": self.token})
+            response = requests.post(END_POINT, data=data, headers=headers)
+
+            # If the response was successful, no Exception will be raised
+            response.raise_for_status()
+        except HTTPError as http_err:
+            print(f'HTTP error occurred: {http_err}')
+        except Exception as err:
+            print(f'Other error occurred: {err}')
+        else:
+            print('Send!')
 
     def _decrypt(self, token):
         return self.f.decrypt(token)
@@ -130,34 +125,6 @@ class Comm:
             raise RuntimeError("Could interpret the unzipped contents")
 
         return content
-
-    def to_queue(self, message):
-        """
-        Send the profiler information to a queue. By default it use a public encrypted queue.
-        :return:
-
-
-        """
-        logger.print(message)
-        client = self.queue
-        client.connected_flag = False
-        client.disconnect()
-
-        try:
-            client.connect(IP_QUEUE)
-        except Exception:
-            print("Connection failed. Please try again")
-            exit(1)  # Should quit or raise flag to quit or retry
-
-        client.loop_start()  # start the loop
-
-        # print(message)
-        while not client.connected_flag:  # wait in loop
-            time.sleep(1)
-
-        client.publish(self.queue_name, payload=message)
-
-        client.loop_stop()
 
 
 def save_config_key(file_name, section="DEFAULT", key=None, value=None):
