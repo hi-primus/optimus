@@ -195,10 +195,10 @@ class JDBC:
         if limit == "all":
             if self.db_driver == "oracle":
                 query = "SELECT COUNT(*) COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["COUNT"]
+                count = self.execute(query, "all").to_dict()[0]["COUNT"]
             else:
                 query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["count"]
+                count = self.execute(query, "all").to_dict()[0]["COUNT"]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
 
