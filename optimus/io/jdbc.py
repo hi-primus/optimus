@@ -26,32 +26,32 @@ class JDBC:
 
         # Handle the default port
         if self.db_driver == "redshift":
-            if port is None: self.port = 5439
+            if port is None: port = 5439
             # "com.databricks.spark.redshift"
 
         elif self.db_driver == "postgresql":
-            if port is None: self.port = 5432
+            if port is None: port = 5432
             self.driver_option = "org.postgresql.Driver"
 
-        elif self.db_driver == "postgres": # backward compat
-            if port is None: self.port = 5432
+        elif self.db_driver == "postgres":  # backward compat
+            if port is None: port = 5432
             self.driver_option = "org.postgresql.Driver"
             self.db_driver = "postgresql"
 
         elif self.db_driver == "mysql":
-            if port is None: self.port = 3306
+            if port is None: port = 3306
             # "com.mysql.jdbc.Driver"
 
         elif self.db_driver == "sqlserver":
-            if port is None: self.port = 1433
+            if port is None: port = 1433
             # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
 
         elif self.db_driver == "oracle":
-            if port is None: self.port = 1521
+            if port is None: port = 1521
             self.driver_option = "oracle.jdbc.OracleDriver"
 
         elif self.db_driver == 'presto':
-            if port is None: self.port = 8080
+            if port is None: port = 8080
             self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
 
         # TODO: add mongo?
@@ -62,6 +62,7 @@ class JDBC:
         if database is None:
             database = ""
 
+        self.port = port
         # Create string connection
         if self.db_driver == "sqlite":
             url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
@@ -194,10 +195,10 @@ class JDBC:
         if limit == "all":
             if self.db_driver == "oracle":
                 query = "SELECT COUNT(*) COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["COUNT"]
+                count = self.execute(query, "all").to_dict()[0]["COUNT"]
             else:
                 query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["count"]
+                count = self.execute(query, "all").to_dict()[0]["COUNT"]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
 

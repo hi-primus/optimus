@@ -24,7 +24,7 @@ from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
 # Functions
-from optimus import logger, Optimus, RELATIVE_ERROR
+from optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
@@ -34,12 +34,13 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
     import filter_list, collect_as_list, create_buckets
+from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt

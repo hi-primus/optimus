@@ -1,5 +1,6 @@
 from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYTHON_SHORT_TYPES, \
     SPARK_DTYPES_DICT_OBJECTS
+from optimus.helpers.logger import logger
 
 
 def compress_dict(lst, col_name):
@@ -46,7 +47,7 @@ def parse_col_names_funcs_to_keys(data):
             if k.startswith(temp_func_name):
                 _col_name = k[len(temp_func_name):]
                 if is_nan(v):
-                    print(
+                    logger.print(
                         "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that '{COL_NAME}' has 'nan' values".format(
                             FUNCTION=f,
                             COL_NAME=_col_name))
@@ -113,6 +114,3 @@ def parse_spark_class_dtypes(value):
         result = data_type
 
     return result
-
-
-
