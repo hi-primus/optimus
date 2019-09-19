@@ -473,7 +473,10 @@ def send(self, name=None, stats=True):
                                        sample=10000,
                                        stats=stats)
 
-    Comm.instance.send(result)
+    if Comm:
+        Comm.instance.send(result)
+    else:
+        raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
 
 @add_method(DataFrame)
