@@ -13,11 +13,12 @@ from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 
 PROTOCOL = "http://"
+PROTOCOL_SSL = "https://"
+
 DOMAIN_API = "api.hi-bumblebee.com"
-FULL_DOMAIN_API = PROTOCOL + DOMAIN_API
+FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
 END_POINT = FULL_DOMAIN_API + "/dataset"
 
-PROTOCOL_SSL = "https://"
 DOMAIN_APP = "app.hi-bumblebee.com"
 FULL_DOMAIN = PROTOCOL_SSL + DOMAIN_APP
 
