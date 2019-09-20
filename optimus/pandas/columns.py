@@ -3,10 +3,15 @@ from ast import literal_eval
 
 from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
+from pyspark.sql import functions as F
 
+from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import tuple_to_dict
+from optimus.dataframe.functions import zeros_agg, percentile_agg
+from optimus.helpers.converter import val_to_list
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+
+ENGINE = "spark"
 
 
 def cols(self):
@@ -21,9 +26,7 @@ def cols(self):
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
-            def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
-
-                col_name, value = value
+            def parse(value, col_name, _infer, _dtypes, _str_funcs, _int_funcs):
 
                 def str_to_boolean(_value):
                     _value = _value.lower()
@@ -110,7 +113,8 @@ def cols(self):
                     return False
 
                 def str_to_missing(_value):
-                    if value == "":
+                    # print(_value)
+                    if _value == "":
                         return True
 
                 # Try to order the functions from less to more computational expensive
@@ -123,7 +127,7 @@ def cols(self):
                         (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"), (str_to_url, "url"),
                         (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
                     ]
-
+                # print(_dtypes)
                 if _dtypes[col_name] == "string" and infer is True:
 
                     if isinstance(value, bool):
@@ -159,22 +163,16 @@ def cols(self):
                         else:
                             _data_type = _dtypes[col_name]
 
-                return (col_name, _data_type), 1
+                return _data_type
 
             columns = parse_columns(self, columns)
             df = self
             dtypes = df.cols.dtypes()
 
-            _count = (df.select(columns).rdd
-                      .flatMap(lambda x: x.asDict().items())
-                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
-                      .reduceByKey(lambda a, b: a + b)
-                      )
-
             result = {}
-
-            for c in _count.collect():
-                result.setdefault(c[0][0], {})[c[0][1]] = c[1]
+            for col_name in columns:
+                df[col_name] = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs))
+                result[col_name] = dict(df[col_name].value_counts())
 
             if infer is True:
                 for k in result.keys():
@@ -182,6 +180,81 @@ def cols(self):
             else:
                 result = parse_profiler_dtypes(result)
             return result
+
+        @staticmethod
+        def create_exprs(columns, funcs, *args):
+            """
+            Helper function to apply multiple columns expression to multiple columns
+            :param columns:
+            :param funcs:
+            :param args:
+            :return:
+            """
+
+            columns = parse_columns(self, columns)
+            funcs = val_to_list(funcs)
+            exprs = []
+
+            for col_name in columns:
+                for func in funcs:
+                    exprs.append((func, (col_name, *args)))
+
+            df = self
+
+            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+            filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                zeros_agg],
+                       "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                 zeros_agg],
+                       "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance,
+                                     F.approx_count_distinct,
+                                     zeros_agg, percentile_agg],
+                       "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                zeros_agg],
+                       "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                   zeros_agg],
+                       "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
+                                  zeros_agg]
+                       }
+
+            def _filter(_col_name, _func):
+                for data_type, func_filter in filters.items():
+                    for f in func_filter:
+                        if (_func == f) and (is_column_a(df, _col_name, data_type)):
+                            return True
+                return False
+
+            beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
+                                "count_na_agg": "count_na", "range_agg": "range", "count_uniques_agg": "count_uniques"}
+
+            def _beautify_col_names(_func):
+                if _func.__name__ in beauty_col_names:
+                    func_name = beauty_col_names[_func.__name__]
+                else:
+                    func_name = _func.__name__
+                return func_name
+
+            def _agg_exprs(_funcs):
+                _exprs = []
+                for f in _funcs:
+                    _func = f[0]
+                    _args = f[1]
+                    _col_name = _args[0]
+
+                    if not _filter(_col_name, _func):
+                        agg = _func(*_args)
+                        if agg is not None:
+                            func_name = _beautify_col_names(_func)
+                            if ENGINE == "spark":
+                                _exprs.append(agg.alias(func_name + "_" + _col_name))
+                            elif ENGINE == "sql":
+                                _exprs.append(agg.as_(func_name + "_" + _col_name))
+
+                return _exprs
+            print(exprs)
+            r = _agg_exprs(exprs)
+
+            return r
 
         @staticmethod
         def dtypes(columns="*"):
