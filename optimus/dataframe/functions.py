@@ -65,11 +65,11 @@ def functions(self):
 
         @staticmethod
         def na_agg_integer(col_name):
-            return F.count(F.when(Funtions.match_nulls_integers(col_name), col_name))
+            return F.count(F.when(Functions.match_nulls_integers(col_name), col_name))
 
         @staticmethod
         def na_agg(col_name):
-            return F.count(F.when(Funtions.match_null(col_name), col_name))
+            return F.count(F.when(Functions.match_null(col_name), col_name))
 
         @staticmethod
         def zeros_agg(col_name):
@@ -223,14 +223,14 @@ def functions(self):
             # Select the nan/null rows depending of the columns data type
             # If numeric
             if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
-                expr = F.count(F.when(Funtions.match_nulls_integers(col_name), col_name))
+                expr = F.count(F.when(Functions.match_nulls_integers(col_name), col_name))
             # If string. Include 'nan' string
             elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
                 expr = F.count(
-                    F.when(Funtions.match_nulls_strings(col_name), col_name))
+                    F.when(Functions.match_nulls_strings(col_name), col_name))
                 # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
             else:
-                expr = F.count(F.when(Funtions.match_null(col_name), col_name))
+                expr = F.count(F.when(Functions.match_null(col_name), col_name))
 
             return expr
 

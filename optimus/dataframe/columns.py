@@ -30,8 +30,6 @@ from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list
     is_one_element, is_type, is_int, has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
-from optimus.dataframe.functions import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
-    percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
@@ -511,18 +509,18 @@ def cols(self):
 
             # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
             filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                zeros_agg],
+                                self.functions.zeros_agg],
                        "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                 zeros_agg],
+                                 self.functions.zeros_agg],
                        "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance,
                                      F.approx_count_distinct,
-                                     zeros_agg, percentile_agg],
+                                     self.functions.zeros_agg, self.functions.percentile_agg],
                        "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                zeros_agg],
+                                self.functions.zeros_agg],
                        "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                   zeros_agg],
+                                   self.functions.zeros_agg],
                        "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                  zeros_agg]
+                                  self.functions.zeros_agg]
                        }
 
             def _filter(_col_name, _func):
@@ -629,7 +627,7 @@ def cols(self):
             :return:
             """
 
-            return Cols.agg_exprs(columns, range_agg)
+            return Cols.agg_exprs(columns, self.functions.range_agg)
 
         @staticmethod
         def median(columns, relative_error=RELATIVE_ERROR):
@@ -652,7 +650,7 @@ def cols(self):
             :return: percentiles per columns
             """
             values = [str(v) for v in values]
-            return Cols.agg_exprs(columns, percentile_agg, self, values, relative_error)
+            return Cols.agg_exprs(columns, self.functions.percentile_agg, self, values, relative_error)
 
         # Descriptive Analytics
         # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
@@ -1136,21 +1134,21 @@ def cols(self):
                 func = None
                 if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
                     new_value = fast_float(value)
-                    func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+                    func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
                 elif is_column_a(self, input_col, PYSPARK_STRING_TYPES):
                     new_value = str(value)
-                    func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+                    func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
                 elif is_column_a(self, input_col, PYSPARK_ARRAY_TYPES):
                     if is_one_element(value):
                         new_value = F.array(F.lit(value))
                     else:
                         new_value = F.array(*[F.lit(v) for v in value])
-                    func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
+                    func = F.when(self.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
                     if df.cols.dtypes(input_col)[input_col] == parse_python_dtypes(type(value).__name__):
 
                         new_value = value
-                        func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
+                        func = F.when(self.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
                     else:
                         RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
                 df = df.cols.apply(input_col, func=func, output_cols=output_col)
@@ -1186,7 +1184,7 @@ def cols(self):
             :return:
             """
 
-            return format_dict(Cols.agg_exprs(columns, count_na_agg, self))
+            return format_dict(Cols.agg_exprs(columns, self.functions.count_na_agg, self))
 
         @staticmethod
         def count_zeros(columns):
@@ -1197,7 +1195,7 @@ def cols(self):
             """
             columns = parse_columns(self, columns)
 
-            return format_dict(Cols.agg_exprs(columns, zeros_agg))
+            return format_dict(Cols.agg_exprs(columns, self.functions.zeros_agg))
 
         @staticmethod
         def count_uniques(columns, estimate=True):
@@ -1210,7 +1208,7 @@ def cols(self):
             """
             columns = parse_columns(self, columns)
 
-            return format_dict(Cols.agg_exprs(columns, count_uniques_agg, estimate))
+            return format_dict(Cols.agg_exprs(columns, self.functions.count_uniques_agg, estimate))
 
         @staticmethod
         def value_counts(columns):
@@ -1557,7 +1555,7 @@ def cols(self):
         @staticmethod
         def hist(columns, buckets=20):
 
-            result = Cols.agg_exprs(columns, hist_agg, self, buckets)
+            result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets)
             # TODO: for some reason casting to int in the exprss do not work. Casting Here. A Spark bug?
             # Example
             # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT), lower, 7, upper, 7.75) AS `hist_agg_rank_0`, map(count, CAST(sum(CASE WHEN ((rank >= 7.75) AND (rank < 8.5)) THEN 1 ELSE 0 END) AS INT), lower, 7.75, upper, 8.5) AS `hist_agg_rank_1`, map(count, CAST(sum(CASE WHEN ((rank >= 8.5) AND (rank < 9.25)) THEN 1 ELSE 0 END) AS INT), lower, 8.5, upper, 9.25) AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10)) THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
