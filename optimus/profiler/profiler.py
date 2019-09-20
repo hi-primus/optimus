@@ -6,11 +6,9 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
@@ -371,19 +369,20 @@ class Profiler:
         for i, cols in enumerate(list_columns):
             logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-            funcs = [count_uniques_agg]
+            funcs = [df.functions.count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
-            # TODO: in basic calculations funcs = [F.min, F.max]
-            funcs = [F.min, F.max, F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
+            # TODO: in basic calculations only funcs = [F.min, F.max]
+            funcs = [df.functions.min, df.functions.max, df.functions.stddev, df.functions.kurtosis, df.functions.mean,
+                     df.functions.skewness, df.functions.sum, df.functions.variance, df.functions.zeros_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs))
 
             # TODO: None in basic calculation
-            funcs = [percentile_agg]
+            funcs = [df.functions.percentile_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
                                               relative_error))
 
-            funcs = [count_na_agg]
+            funcs = [df.functions.count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
             result.update(df.cols.exec_agg(exprs))
 
@@ -395,7 +394,7 @@ class Profiler:
             logger.print(
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-            funcs = [hist_agg]
+            funcs = [SF.hist_agg]
             # min_max = None
 
             for col_name in cols:
