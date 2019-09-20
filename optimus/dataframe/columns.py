@@ -30,7 +30,7 @@ from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list
     is_one_element, is_type, is_int, has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
-from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
+from optimus.dataframe.functions import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
@@ -1699,7 +1699,7 @@ def cols(self):
                     return False
 
                 def str_to_missing(_value):
-                    if value == "":
+                    if _value == "":
                         return True
 
                 # Try to order the functions from less to more computational expensive
