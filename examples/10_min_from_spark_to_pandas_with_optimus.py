@@ -334,7 +334,7 @@ df.plot.frequency("*", 10)
 df.cols.names()
 
 # + {"inputHidden": false, "outputHidden": false}
-df.export()
+df.to_json()
 
 # + {"inputHidden": false, "outputHidden": false}
 df.schema

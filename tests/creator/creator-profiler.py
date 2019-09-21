@@ -79,8 +79,14 @@ rows = [
     ]
 source_df = op.create.df(cols ,rows)
 source_df.table()
-# -
 
+
+# +
+a= {"names": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "height(ft)": {"int": 5, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "function": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "rank": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "age": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "weight(t)": {"int": 0, "decimal": 5, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "japanese name": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last position seen": {"int": 0, "decimal": 0, "string": 4, "date": 0, "boolean": 0, "array": 0, "null": 3, "missing": 0}, "date arrival": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last date seen": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "attributes": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Date Type": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "timestamp": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Cybertronian": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "function(binary)": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "NullType": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 7, "missing": 0}}
+b ={"function": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "japanese name": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "date arrival": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Date Type": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "timestamp": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Cybertronian": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "function(binary)": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "NullType": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 7, "missing": 0}, "height(ft)": {"int": 5, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "last position seen": {"int": 0, "decimal": 0, "string": 4, "date": 0, "boolean": 0, "array": 0, "null": 3, "missing": 0}, "weight(t)": {"int": 0, "decimal": 5, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "names": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last date seen": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "attributes": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "rank": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "age": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}}
+
+assert(sorted(a)==sorted(b))
+# -
 
 # ### End Init Section
 
@@ -116,11 +122,13 @@ array_col = "attributes"
 from optimus.profiler.profiler import Profiler
 p= Profiler()
 
+p.run(source_df, "*")
+
 t.create(p, "to_json", None, 'json', None, source_df,"*")
 
 t.create(p, "columns", None, 'json', None, source_df,"*")
 
-t.create(p, "general_stats", None, 'json', None, source_df,"*")
+t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
 t.run()
 

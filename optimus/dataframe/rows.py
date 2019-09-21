@@ -211,6 +211,27 @@ def rows(self):
 
         return self.rows.select(expr)
 
+    @add_attr(rows)
+    def unnest(input_cols):
+        """
+        Convert a list in a rows to multiple rows with the list values
+        :param input_cols:
+        :return:
+        """
+        input_cols = parse_columns(self, input_cols)[0]
+        df = self
+        return df.withColumn(input_cols, F.explode(input_cols))
+
+    @add_attr(rows)
+    def approx_count(timeout=1000, confidence=0.90):
+        """
+        Return aprox rows count
+        :param timeout:
+        :param confidence:
+        :return:
+        """
+        return self.rdd.countApprox(timeout, confidence)
+
     return rows
 
 
