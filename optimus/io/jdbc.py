@@ -259,7 +259,7 @@ class JDBC:
         logger.print(self.url)
 
         conf = Spark.instance.spark.read \
-            .format("jdbc" if not DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
+            .format("jdbc" if not self.db_driver == DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
             .option("url", self.url) \
             .option("user", self.user) \
             .option("dbtable", query)
