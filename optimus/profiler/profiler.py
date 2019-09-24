@@ -199,13 +199,13 @@ class Profiler:
             RaiseIt.value_error(path, "str")
 
         # We need to append a some extra html tags to display it correctly in the browser.
-        if output is "html":
+        if output == "html":
             if self.html is None:
                 RaiseIt.not_ready_error(
                     "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
 
             write_html(HEADER + self.html + FOOTER, path)
-        elif output is "json":
+        elif output == "json":
             if self.json is None:
                 RaiseIt.not_ready_error(
                     "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
@@ -259,14 +259,12 @@ class Profiler:
 
         # Nulls
         total_count_na = 0
-        # print(output_columns["columns"])
+
         for k, v in output_columns["columns"].items():
             total_count_na = total_count_na + v["stats"]["count_na"]
 
         assign(output_columns, "summary.missing_count", total_count_na, dict)
         assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
-
-        # assign(output_columns, "missing_count", 1000, dict)
 
         sample = {"columns": [{"title": cols} for cols in df.cols.names()],
                   "value": df.sample_n(sample).rows.to_list(columns)}
@@ -275,8 +273,10 @@ class Profiler:
 
         if format == "json":
             output = json.dumps(output_columns, ignore_nan=True, default=json_converter)
-        else:
+        elif format == "dict":
             output = output_columns
+        else:
+            RaiseIt.value_error(format, ["json", "dict"])
 
         self.output_columns = output_columns
         self.already_run = True
