@@ -45,14 +45,17 @@ def fill_missing_var_types(var_types, dtypes):
     :param var_types:
     :return:
     """
-    for k in var_types.keys():
+    result = {}
+    for k, v in var_types.items():
         if dtypes[k] == "string":
             for label in ProfilerDataTypes:
-                if label.value not in k:
-                    var_types[label.value] = 0
+                if label.value not in v:
+                    result[label.value] = 0
+                else:
+                    result[k] = v
         else:
-            var_types = var_types
-    return var_types
+            result = var_types
+    return result
 
 
 def write_json(data, path):

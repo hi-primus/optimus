@@ -1765,7 +1765,6 @@ def cols(self):
         if infer is True:
             result = fill_missing_var_types(result, dtypes)
         else:
-
             result = parse_profiler_dtypes(result, dtypes)
         return result
 
