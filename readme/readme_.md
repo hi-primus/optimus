@@ -109,7 +109,7 @@ df = op.load.parquet("../examples/data/foo.parquet")
 df = op.load.excel("../examples/data/titanic3.xls")
 ```
 
-Also you can load data from oracle, redshit, mysql and postgres. See ***Database connection***
+Also you can load data from oracle, redshift, mysql and postgres. See ***Database connection***
 
 
 ## Saving Data
@@ -128,7 +128,7 @@ df.save.parquet("data/foo.parquet")
 #df.save.avro("examples/data/foo.avro")
 ```
 
-Also you can save data to oracle, redshit, mysql and postgres. See ***Database connection***
+Also you can save data to oracle, redshift, mysql and postgres. See ***Database connection***
 
 
 ## Handling Spark jars, packages and repositories
