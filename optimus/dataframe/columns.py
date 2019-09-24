@@ -1764,10 +1764,9 @@ def cols(self):
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
         if infer is True:
-            for k in result.keys():
-                result[k] = fill_missing_var_types(result[k])
+            result = fill_missing_var_types(result, dtypes)
         else:
-            result = parse_profiler_dtypes(result)
+            result = parse_profiler_dtypes(result, dtypes)
         return result
 
     @add_attr(cols)
