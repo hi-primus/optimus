@@ -1605,25 +1605,11 @@ def cols(self):
         :param infer: Infer data type
         :return:
         """
+        import fastnumbers
 
         def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
 
             col_name, value = value
-
-            # import fastnumbers
-            def isfloat(value):
-                try:
-                    float(value)
-                    return True
-                except ValueError:
-                    return False
-
-            def isint(value):
-                try:
-                    float(value)
-                    return True
-                except ValueError:
-                    return False
 
             def str_to_boolean(_value):
                 _value = _value.lower()
@@ -1729,14 +1715,15 @@ def cols(self):
                 if isinstance(value, bool):
                     _data_type = "boolean"
 
-                elif isint(value):  # Check if value is integer
+                elif fastnumbers.isint(value):  # Check if value is integer
+                elif fastnumbers.isint(value):  # Check if value is integer
                     _data_type = "int"
                     for func in _int_funcs:
                         if func[0](value) is True:
                             _data_type = func[1]
                             break
 
-                elif isfloat(value):
+                elif fastnumbers.isfloat(value):
                     _data_type = "decimal"
 
                 elif isinstance(value, str):
