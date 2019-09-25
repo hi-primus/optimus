@@ -16,7 +16,7 @@ PROTOCOL = "http://"
 PROTOCOL_SSL = "https://"
 
 DOMAIN_API = "api.hi-bumblebee.com"
-FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
+FULL_DOMAIN_API = PROTOCOL + DOMAIN_API
 END_POINT = FULL_DOMAIN_API + "/dataset"
 
 DOMAIN_APP = "app.hi-bumblebee.com"

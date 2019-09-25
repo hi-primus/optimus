@@ -29,6 +29,7 @@ from optimus.spark import Spark
 DataFrame._name = None
 DataFrame.output = "html"
 
+
 @add_method(DataFrame)
 def roll_out():
     """
@@ -378,7 +379,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
             if i[0] == j:
                 final_columns.append(i)
 
-    total_rows = self.rows.approx_count()
+    total_rows = self.count()
 
     if limit == "all":
         limit = total_rows

@@ -253,9 +253,10 @@ class Profiler:
         assign(output_columns, "file_name", df.get_meta("file_name"), dict)
 
         # Add the General data summary to the output
-        data_set_info = {'cols_count': humanize.intword(cols_count),
-                         'rows_count': humanize.intword(rows_count),
-                         'size': humanize.naturalsize(df.size())}
+        data_set_info = {'cols_count': cols_count,
+                         'rows_count': rows_count,
+                         'size': humanize.naturalsize(df.size()),
+                         'sample_size': sample}
 
         assign(output_columns, "summary", data_set_info, dict)
 

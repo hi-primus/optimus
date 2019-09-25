@@ -1,5 +1,5 @@
 import dateutil.parser
-from fastnumbers import isint, isfloat
+import fastnumbers
 from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_column
@@ -160,9 +160,9 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
             """
             if isinstance(value, bool):
                 _data_type = "bool"
-            elif isint(value):  # Check if value is integer
+            elif fastnumbers.isint(value):  # Check if value is integer
                 _data_type = "int"
-            elif isfloat(value):
+            elif fastnumbers.isfloat(value):
                 _data_type = "float"
             # if string we try to parse it to int, float or bool
             elif isinstance(value, str):

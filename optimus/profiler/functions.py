@@ -6,21 +6,39 @@ from optimus.helpers.constants import *
 from optimus.helpers.json import json_converter
 
 
-def parse_profiler_dtypes(col_data_type):
+def parse_profiler_dtypes(col_data_type, dtypes):
     """
        Parse a spark data type to a profiler data type
        :return:
        """
 
     columns = {}
-    for k, v in col_data_type.items():
-        result_default = {data_type: 0 for data_type in SPARK_DTYPES_TO_PROFILER.keys()}
-        for k1, v1 in v.items():
-            for k2, v2 in SPARK_DTYPES_TO_PROFILER.items():
-                if k1 in SPARK_DTYPES_TO_PROFILER[k2]:
-                    result_default[k2] = result_default[k2] + v1
-        columns[k] = result_default
+    for col_name, data_type_count in col_data_type.items():
+        columns[col_name] = {data_type: 0 for data_type in ["null", "missing"]}
+        for data_type, count in data_type_count.items():
+            for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
+                if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
+                    columns[col_name][profiler_data_type] = count
     return columns
+
+
+def fill_missing_var_types(var_types, dtypes):
+    """
+    Fill missing data types with 0
+    :param var_types:
+    :param dtypes:
+    :return:
+    """
+    for k, v in var_types.items():
+        if dtypes[k] == "string":
+            for label in ProfilerDataTypes:
+                if label.value not in v:
+                    var_types[k][label.value] = 0
+                else:
+                    var_types[k] = v
+        else:
+            var_types[k] = v
+    return var_types
 
 
 def fill_missing_col_types(col_types):
@@ -33,18 +51,6 @@ def fill_missing_col_types(col_types):
         if label not in col_types:
             col_types[label] = 0
     return col_types
-
-
-def fill_missing_var_types(var_types):
-    """
-    Fill missing data types with 0
-    :param var_types:
-    :return:
-    """
-    for label in ProfilerDataTypes:
-        if label.value not in var_types:
-            var_types[label.value] = 0
-    return var_types
 
 
 def write_json(data, path):
