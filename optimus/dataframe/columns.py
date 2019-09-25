@@ -6,10 +6,10 @@ from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
+import fastnumbers
 import pyspark
 import simplejson as json
 from dateutil.parser import parse as dparse
-import fastnumbers
 from glom import glom, assign
 from multipledispatch import dispatch
 from pypika import MySQLQuery
@@ -1610,6 +1610,21 @@ def cols(self):
 
             col_name, value = value
 
+            # import fastnumbers
+            def isfloat(value):
+                try:
+                    float(value)
+                    return True
+                except ValueError:
+                    return False
+
+            def isint(value):
+                try:
+                    float(value)
+                    return True
+                except ValueError:
+                    return False
+
             def str_to_boolean(_value):
                 _value = _value.lower()
                 if _value == "true" or _value == "false":
@@ -1714,14 +1729,14 @@ def cols(self):
                 if isinstance(value, bool):
                     _data_type = "boolean"
 
-                elif fastnumbers.isint(value):  # Check if value is integer
+                elif isint(value):  # Check if value is integer
                     _data_type = "int"
                     for func in _int_funcs:
                         if func[0](value) is True:
                             _data_type = func[1]
                             break
 
-                elif fastnumbers.isfloat(value):
+                elif isfloat(value):
                     _data_type = "decimal"
 
                 elif isinstance(value, str):
