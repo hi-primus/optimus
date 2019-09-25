@@ -13,36 +13,20 @@ def parse_profiler_dtypes(col_data_type, dtypes):
        """
 
     columns = {}
-    for k, v in col_data_type.items():
-        # Only is necessary to fill this is the column type is string
-        if dtypes[k] == "string":
-            result_default = {data_type: 0 for data_type in SPARK_DTYPES_TO_PROFILER.keys()}
-            for k1, v1 in v.items():
-                for k2, v2 in SPARK_DTYPES_TO_PROFILER.items():
-                    if k1 in SPARK_DTYPES_TO_PROFILER[k2]:
-                        result_default[k2] = result_default[k2] + v1
-            columns[k] = result_default
-        else:
-            columns = col_data_type
+    for col_name, data_type_count in col_data_type.items():
+        columns[col_name] = {data_type: 0 for data_type in ["null", "missing"]}
+        for data_type, count in data_type_count.items():
+            for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
+                if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
+                    columns[col_name][profiler_data_type] = count
     return columns
-
-
-def fill_missing_col_types(col_types):
-    """
-    Fill missing col types with 0
-    :param col_types:
-    :return:
-    """
-    for label in PROFILER_COLUMN_TYPES:
-        if label not in col_types:
-            col_types[label] = 0
-    return col_types
 
 
 def fill_missing_var_types(var_types, dtypes):
     """
     Fill missing data types with 0
     :param var_types:
+    :param dtypes:
     :return:
     """
     for k, v in var_types.items():
@@ -55,6 +39,18 @@ def fill_missing_var_types(var_types, dtypes):
         else:
             var_types[k] = v
     return var_types
+
+
+def fill_missing_col_types(col_types):
+    """
+    Fill missing col types with 0
+    :param col_types:
+    :return:
+    """
+    for label in PROFILER_COLUMN_TYPES:
+        if label not in col_types:
+            col_types[label] = 0
+    return col_types
 
 
 def write_json(data, path):
