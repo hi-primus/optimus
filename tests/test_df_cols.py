@@ -70,7 +70,7 @@ class Test_df_cols(unittest.TestCase):
 	def test_cols_count_by_dtypes_infer(self):
 		source_df=op.create.df([('col 1', StringType(), True),('col 2', StringType(), True),('col 3', IntegerType(), True)], [('male', 'male', 1), ('optimus', 'bumblebee', 1), ('3', '4.1', 1), ('true', 'False', 1), ('[1,2,3,4]', '(1,2,3,4)', 1), ('{1,2,3,4}', "{'key1' :1 , 'key2':2}", 1), ('1.1.1.1', '123.123.123.123', 1), ('http://hi-optimuse.com', 'https://hi-bumblebee.com', 1), ('optimus@cybertron.com', 'bumblebee@cybertron.com', 1), ('5123456789123456', '373655783158306', 1), ('11529', '30345', 1), ('04/10/1980', '04/10/1980', 1), ('null', 'Null', 1), ('', '', 1), (None, None, 1)])
 		actual_df =source_df.cols.count_by_dtypes('*',infer=True)
-		expected_value ={'col 1': {'gender': 1, 'string': 1, 'int': 1, 'boolean': 1, 'array': 1, 'object': 1, 'ip': 1, 'url': 1, 'email': 1, 'credit_card_number': 1, 'zip_code': 1, 'date': 1, 'null': 2, 'missing': 1}, 'col 2': {'gender': 1, 'string': 1, 'decimal': 1, 'boolean': 1, 'array': 1, 'object': 1, 'ip': 1, 'url': 1, 'email': 1, 'credit_card_number': 1, 'zip_code': 1, 'date': 1, 'null': 2, 'missing': 1}, 'col 3': {'int': 15}}
+		expected_value ={'col 1': {'gender': 1, 'string': 1, 'int': 1, 'boolean': 1, 'array': 1, 'object': 1, 'ip': 1, 'url': 1, 'email': 1, 'credit_card_number': 1, 'zip_code': 1, 'date': 1, 'null': 2, 'missing': 1, 'decimal': 0}, 'col 2': {'gender': 1, 'string': 1, 'decimal': 1, 'boolean': 1, 'array': 1, 'object': 1, 'ip': 1, 'url': 1, 'email': 1, 'credit_card_number': 1, 'zip_code': 1, 'date': 1, 'null': 2, 'missing': 1, 'int': 0}, 'col 3': {'int': 15}}
 		self.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))
 	@staticmethod
 	def test_cols_count_na():
