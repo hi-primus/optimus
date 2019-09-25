@@ -16,7 +16,7 @@ PROTOCOL = "http://"
 PROTOCOL_SSL = "https://"
 
 DOMAIN_API = "api.hi-bumblebee.com"
-FULL_DOMAIN_API = PROTOCOL + DOMAIN_API
+FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
 END_POINT = FULL_DOMAIN_API + "/dataset"
 
 DOMAIN_APP = "app.hi-bumblebee.com"
@@ -85,6 +85,7 @@ class Comm:
             headers = {'content-type': 'application/json'}
 
             data = json.dumps({"username": self.queue_name, "data": self.token})
+            print(END_POINT)
             response = requests.post(END_POINT, data=data, headers=headers)
 
             # If the response was successful, no Exception will be raised

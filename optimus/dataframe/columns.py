@@ -6,10 +6,10 @@ from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
+import fastnumbers
 import pyspark
 import simplejson as json
 from dateutil.parser import parse as dparse
-import fastnumbers
 from glom import glom, assign
 from multipledispatch import dispatch
 from pypika import MySQLQuery
@@ -1605,6 +1605,7 @@ def cols(self):
         :param infer: Infer data type
         :return:
         """
+        import fastnumbers
 
         def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
 
