@@ -552,7 +552,7 @@ t.create(dtypes_df, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=Tr
 
 t.run()
 
-t.create(dtypes_df, "cols.count_by_dtypes", None, "json", None, "*", infer=False)
+t.create(source_df, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
 
 t.run()
 
