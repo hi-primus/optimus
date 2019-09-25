@@ -1,6 +1,9 @@
-import sys
-from setuptools import setup, find_packages
 import re
+import sys
+
+from setuptools import setup, find_packages
+
+
 # from optimus.version import __version__
 
 # Get version without importing, which avoids dependency issues
@@ -41,7 +44,7 @@ setup(
     author='Favio Vazquez and Argenis Leon',
     author_email='argenisleon@gmail.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.2.18.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/2.2.19.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),
