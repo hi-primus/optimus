@@ -1,6 +1,9 @@
-import sys
-from setuptools import setup, find_packages
 import re
+import sys
+
+from setuptools import setup, find_packages
+
+
 # from optimus.version import __version__
 
 # Get version without importing, which avoids dependency issues

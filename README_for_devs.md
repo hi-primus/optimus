@@ -60,3 +60,24 @@ From the optimus repo in the terminal:
 
 - Run `npm install`
 - Run `node inlinecss.js`
+
+## Testing packages
+
+Sometimes we need to test and modify some files a make test in some environments for example Google DataProc or Databricks.
+For that we could upload pip package to test.pypi.org so we could test it in the remote environment faster without touching the main repo.
+
+First create the pip package. A `dist` folder should be create
+
+`python setup.py sdist bdist_wheel`
+
+Then upload to test.pypi.org
+
+`pip install twine`
+
+`python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
+
+This will prompt your test.pypi.org credentials
+
+Now for install from test.pypi.org
+
+`!pip install --index-url https://test.pypi.org/simple optimuspyspark`
