@@ -1,6 +1,6 @@
 # Hacking Optimus
 
-##Windows
+## Windows
 
 If you want to contribute, hack or play with Optimus you are in the raight place. This is a little guide to
 
@@ -70,14 +70,14 @@ First create the pip package. A `dist` folder should be create
 
 `python setup.py sdist bdist_wheel`
 
-Then upload to test.pypi.org
+Then upload to test.pypi.org. Be sure to create and account 
 
 `pip install twine`
 
-`python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
-
 This will prompt your test.pypi.org credentials
 
-Now for install from test.pypi.org
+`python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
+
+Now install from test.pypi.org
 
 `!pip install --index-url https://test.pypi.org/simple optimuspyspark`
