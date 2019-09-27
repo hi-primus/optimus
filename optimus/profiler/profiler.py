@@ -54,7 +54,7 @@ class Profiler:
         self.output_columns = {}
         self.already_run = False
 
-    def _count_data_types(self, df, columns, infer=False):
+    def _count_data_types(self, df, columns, infer=False, mismatch=None):
         """
         Count the number of int, float, string, date and booleans and output the count in json format
         :param df: Dataframe to be processed
@@ -65,7 +65,7 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        count_by_data_type = df.cols.count_by_dtypes(columns, infer)
+        count_by_data_type = df.cols.count_by_dtypes(columns, infer, mismatch)
         # null_missed_count = {}
         # Info from all the columns
         type_details = {}
@@ -102,7 +102,7 @@ class Profiler:
         return type_details
 
     @time_it
-    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True, mismatch= None):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -120,7 +120,7 @@ class Profiler:
         #     df.cols.set_meta({"name": col_name})
         # df.set_meta({"initialized": True})
 
-        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict")
+        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict", mismatch=None)
 
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
@@ -218,7 +218,7 @@ class Profiler:
             RaiseIt.type_error(output, ["html", "json"])
 
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-                sample=10000, stats=True, format="json"):
+                sample=10000, stats=True, format="json", mismatch=None ):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -228,7 +228,7 @@ class Profiler:
         :param relative_error:
         :param approx_count:
         :param sample: numbers of rows to retrieve with random sampling
-        :param stats: calculate stats it not only data table returned
+        :param stats: calculate stats, if not only data table returned
         :param format: dict or json
         :return: json file
         """
@@ -247,7 +247,7 @@ class Profiler:
         # Get the stats for all the columns
         # if ["drop", "rename"] not in trans and self.already_run is False:
         if stats is True:
-            output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count)
+            output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
 
         assign(output_columns, "name", df.get_name(), dict)
         assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -286,7 +286,7 @@ class Profiler:
 
         return output
 
-    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True, mismatch=None):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -295,6 +295,7 @@ class Profiler:
         :param infer: try to infer the column datatype
         :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
+        :param mismatch:
         :return: json object
         """
 
@@ -304,7 +305,7 @@ class Profiler:
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
-        type_details = self._count_data_types(df, columns, infer)
+        type_details = self._count_data_types(df, columns, infer, mismatch)
 
         # Count the categorical, numerical, boolean and date columns
         count_types = {}
