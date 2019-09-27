@@ -118,12 +118,18 @@ p= Profiler()
 
 p.run(source_df, "*")
 
-t.create(p, "dataset", None, 'json', None, source_df,"*")
+t.create(p, "dataset", None, 'dict', None, source_df,"*")
+
+t.run()
 
 mismatch = {"names":"dd/mm/yyyy","height(ft)":r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',"function":"yyyy-mm-dd"}
-t.create(p, "dataset", "mismatch", 'json', None, source_df,"*", mismatch=mismatch)
+t.create(p, "dataset", "mismatch", 'dict', None, source_df,"*", mismatch=mismatch)
+
+t.run()
 
 t.create(p, "columns_stats", None, 'json', None, source_df,"*")
+
+t.run()
 
 t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
