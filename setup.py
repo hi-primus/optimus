@@ -14,8 +14,17 @@ def get_version():
 
 
 # Requirements
+try:
+  import google.colab
+  IN_COLAB = True
+except:
+  IN_COLAB = False
+
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
     with open('requirements-databricks.txt') as f:
+        required = f.read().splitlines()
+elif IN_COLAB:
+    with open('requirements-google-colab.txt') as f:
         required = f.read().splitlines()
 else:
     with open('requirements.txt') as f:
