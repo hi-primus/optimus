@@ -1,6 +1,6 @@
 import re
 import sys
-
+import os
 from setuptools import setup, find_packages
 
 
@@ -14,8 +14,12 @@ def get_version():
 
 
 # Requirements
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
+if "DATABRICKS_RUNTIME_VERSION" in os.environ:
+    with open('requirements-databricks.txt') as f:
+        required = f.read().splitlines()
+else:
+    with open('requirements.txt') as f:
+        required = f.read().splitlines()
 
 if sys.version_info < (3, 6):
     raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
