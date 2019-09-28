@@ -118,7 +118,7 @@ p= Profiler()
 
 p.run(source_df, "*")
 
-t.create(p, "dataset", None, 'dict', None, source_df,"*")
+t.create(p, "dataset", None, 'json', None, source_df,"*")
 
 t.run()
 
@@ -134,5 +134,3 @@ t.run()
 t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
 t.run()
-
-
