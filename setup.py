@@ -1,6 +1,7 @@
+import os
 import re
 import sys
-import os
+
 from setuptools import setup, find_packages
 
 
@@ -15,10 +16,11 @@ def get_version():
 
 # Requirements
 try:
-  import google.colab
-  IN_COLAB = True
-except:
-  IN_COLAB = False
+    import google.colab
+
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
 
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
     with open('requirements-databricks.txt') as f:
