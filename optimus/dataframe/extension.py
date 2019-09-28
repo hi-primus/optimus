@@ -457,22 +457,25 @@ def create_id(self, column="id"):
 
 
 @add_method(DataFrame)
-def send(self, name=None, stats=True):
+def send(self, name=None, infer=True, mismatch=None, stats=True):
     """
     Profile and send the data to the queue
     :param self:
+    :param infer: infer datatypes
+    :param mismatch: a dict with the column name or regular expresion to identify correct values.
     :param name: Specified a name for the view/dataframe
-    :param stats:
+    :param stats: calculate stats or only vales
     :return:
     """
     df = self
     if name is not None:
         df.set_name(name)
 
-    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
+    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
                                        sample=10000,
-                                       stats=stats)
+                                       stats=stats,
+                                       mismatch=mismatch)
 
     if Comm:
         Comm.instance.send(result)

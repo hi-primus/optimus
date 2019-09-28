@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 
@@ -14,8 +15,22 @@ def get_version():
 
 
 # Requirements
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
+try:
+    import google.colab
+
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+if "DATABRICKS_RUNTIME_VERSION" in os.environ:
+    with open('requirements-databricks.txt') as f:
+        required = f.read().splitlines()
+elif IN_COLAB:
+    with open('requirements-google-colab.txt') as f:
+        required = f.read().splitlines()
+else:
+    with open('requirements.txt') as f:
+        required = f.read().splitlines()
 
 if sys.version_info < (3, 6):
     raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
@@ -44,7 +59,7 @@ setup(
     author='Favio Vazquez and Argenis Leon',
     author_email='argenisleon@gmail.com',
     url='https://github.com/ironmussa/Optimus/',
-    download_url='https://github.com/ironmussa/Optimus/archive/2.2.19.tar.gz',
+    download_url='https://github.com/ironmussa/Optimus/archive/2.2.20.tar.gz',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion with '
                  'pyspark.'),
     long_description=readme(),

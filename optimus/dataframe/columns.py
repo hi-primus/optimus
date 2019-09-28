@@ -1596,13 +1596,14 @@ def cols(self):
         return result
 
     @add_attr(cols)
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         """
         Use rdd to count the inferred data type in a row
         :param columns: Columns to be processed
         :param str_funcs: list of tuples for create a custom string parsers
         :param int_funcs: list of tuples for create a custom int parsers
         :param infer: Infer data type
+        :param mismatch: a dict with column names and pattern to check. Pattern can be a predefined or a regex
         :return:
         """
         import fastnumbers
@@ -1710,6 +1711,23 @@ def cols(self):
                     (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
                 ]
 
+            mismatch_count = 1
+            if _dtypes[col_name] == "string" and mismatch is not None:
+                # Here we can create a list of predefined functions
+                regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
+                              "yyyy-mm-dd": '([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
+                              }
+
+                if col_name in mismatch:
+                    predefined = mismatch[col_name]
+                    if predefined in regex_list:
+                        expr = regex_list[predefined]
+                    else:
+                        expr = mismatch[col_name]
+                    regex = re.compile(expr)
+                    if regex.match(value):
+                        mismatch_count = 0
+
             if _dtypes[col_name] == "string" and infer is True:
 
                 if isinstance(value, bool):
@@ -1733,6 +1751,7 @@ def cols(self):
                             break
                 else:
                     _data_type = "null"
+
             else:
                 _data_type = _dtypes[col_name]
                 if is_null(value) is True:
@@ -1745,24 +1764,45 @@ def cols(self):
                     else:
                         _data_type = _dtypes[col_name]
 
-            return (col_name, _data_type), 1
+            if mismatch:
+                result = (col_name, _data_type), (1, mismatch_count)
+            else:
+                result = (col_name, _data_type), 1
+
+            return result
 
         columns = parse_columns(self, columns)
 
         df = self
         dtypes = df.cols.dtypes()
 
-        _count = (df.select(columns).rdd
-                  .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
-                  .reduceByKey(lambda a, b: a + b)
-                  )
+        if mismatch:
+            _count = (df.select(columns).rdd
+                      .flatMap(lambda x: x.asDict().items())
+                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
+                      .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))
+                      )
+        else:
+            _count = (df.select(columns).rdd
+                      .flatMap(lambda x: x.asDict().items())
+                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
+                      .reduceByKey(lambda a, b: a + b))
 
         result = {}
 
         for c in _count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
+        # Process mismatch
+        if mismatch is not None:
+            for col_name, result_dtypes in result.items():
+                result[col_name]["mismatch"] = 0
+                for dtype, count in result_dtypes.items():
+                    if is_tuple(count):
+                        result[col_name]["mismatch"] = result[col_name]["mismatch"] + count[1]
+                        result[col_name][dtype] = count[0]
+
+        print(result)
         if infer is True:
             result = fill_missing_var_types(result, dtypes)
         else:

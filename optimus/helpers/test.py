@@ -237,11 +237,6 @@ class Test:
         elif output == "dict":
             print(df_result)
 
-            if is_str(df_result):
-                df_result = "'" + df_result + "'"
-            else:
-                df_result = str(df_result)
-
             expected = "\texpected_value =" + df_result + "\n"
         else:
             expected = "\t\n"

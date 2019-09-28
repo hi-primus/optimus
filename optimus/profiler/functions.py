@@ -19,6 +19,8 @@ def parse_profiler_dtypes(col_data_type, dtypes):
             for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
                 if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
                     columns[col_name][profiler_data_type] = count
+                if data_type == "mismatch":
+                    columns[col_name][data_type] = count
     return columns
 
 
