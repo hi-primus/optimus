@@ -64,3 +64,5 @@ examples/many-columns.parquet/
 examples/sandbox.ipynb
 
 examples/data/200.csv
+
+examples/dask-worker-space/

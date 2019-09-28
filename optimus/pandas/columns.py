@@ -7,7 +7,6 @@ from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.dataframe.functions import zeros_agg, percentile_agg
 from optimus.helpers.converter import val_to_list
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
@@ -171,8 +170,8 @@ def cols(self):
 
             result = {}
             for col_name in columns:
-                df[col_name] = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs))
-                result[col_name] = dict(df[col_name].value_counts())
+                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs))
+                result[col_name] = dict(df_result.value_counts())
 
             if infer is True:
                 for k in result.keys():
@@ -203,18 +202,18 @@ def cols(self):
 
             # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
             filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                zeros_agg],
+                                self.functions.zeros_agg],
                        "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                 zeros_agg],
+                                 self.functions.zeros_agg],
                        "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance,
                                      F.approx_count_distinct,
-                                     zeros_agg, percentile_agg],
+                                     self.functions.zeros_agg, self.functions.percentile_agg],
                        "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                zeros_agg],
+                                self.functions.zeros_agg],
                        "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                   zeros_agg],
+                                   self.functions.zeros_agg],
                        "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                  zeros_agg]
+                                  self.functions.zeros_agg]
                        }
 
             def _filter(_col_name, _func):

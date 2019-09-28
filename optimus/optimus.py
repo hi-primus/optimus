@@ -5,6 +5,8 @@ from optimus.engines.spark import SparkEngine
 def optimus(engine, *args, **kwargs):
     if engine == "spark":
         return SparkEngine(*args, **kwargs)
+    elif engine == "dask":
+        return DaskEngine(*args, **kwargs)
     elif engine == "pandas":
         return PandasEngine(*args, **kwargs)
     elif engine == "rapids":

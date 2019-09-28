@@ -272,4 +272,4 @@ def functions(self):
     return Functions()
 
 
-DataFrame.cols = property(functions)
+DataFrame.functions = property(functions)

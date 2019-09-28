@@ -359,7 +359,7 @@ class Profiler:
         return columns_info
 
     @staticmethod
-    def columns_agg(df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
+    def columns_agg(df, columns="*", buckets=10, relative_error=RELATIVE_ERROR, approx_count=True):
         columns = parse_columns(df, columns)
         n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
@@ -368,7 +368,7 @@ class Profiler:
         result = {}
         for i, cols in enumerate(list_columns):
             logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
-
+            print(df.functions)
             funcs = [df.functions.count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
@@ -394,7 +394,7 @@ class Profiler:
             logger.print(
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-            funcs = [SF.hist_agg]
+            funcs = [df.functions.hist_agg]
             # min_max = None
 
             for col_name in cols:
