@@ -88,12 +88,20 @@ source_df.table()
 
 from pyspark.ml.linalg import Vectors
 
+import re
+a="a\'a"
+re.escape(a)
+
+print(a)
+
 t = Test(op, source_df, "df_profiler", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
                                         "from pyspark.sql import functions as F",
                                         "from optimus.profiler.profiler import Profiler",
+                                        "null = None",
+                                        "true = True",
                                         "p= Profiler()"], path = "df_profiler", final_path="..")
 
 # +
@@ -118,7 +126,7 @@ p= Profiler()
 
 p.run(source_df, "*")
 
-t.create(p, "dataset", None, 'json', None, source_df,"*")
+t.create(p, "dataset", None, 'dict', None, source_df,"*")
 
 t.run()
 
