@@ -65,8 +65,9 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-        count_by_data_type = df.cols.count_by_dtypes(columns, infer, mismatch)
-        # null_missed_count = {}
+
+        count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer, mismatch=mismatch)
+
         # Info from all the columns
         type_details = {}
 
@@ -359,7 +360,6 @@ class Profiler:
                     assign(col_info, "frequency", freq[col_name])
 
             col_info["stats"].update(self.extra_columns_stats(df, col_name, stats))
-
             assign(col_info, "name", col_name)
             assign(col_info, "column_dtype", columns_info["columns"][col_name]['dtype'])
             assign(col_info, "dtypes_stats", columns_info["columns"][col_name]['stats'])
