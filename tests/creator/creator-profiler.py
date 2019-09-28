@@ -58,7 +58,7 @@ cols = [
     ]
 
 rows = [
-        ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+        ("Optimus", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
          "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
          None),
         ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
@@ -126,12 +126,12 @@ p= Profiler()
 
 p.run(source_df, "*")
 
-t.create(p, "dataset", None, 'dict', None, source_df,"*")
+t.create(p, "dataset", None, 'json', None, source_df,"*")
 
 t.run()
 
 mismatch = {"names":"dd/mm/yyyy","height(ft)":r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',"function":"yyyy-mm-dd"}
-t.create(p, "dataset", "mismatch", 'dict', None, source_df,"*", mismatch=mismatch)
+t.create(p, "dataset", "mismatch", 'json', None, source_df,"*", mismatch=mismatch)
 
 t.run()
 
@@ -142,3 +142,13 @@ t.run()
 t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
 t.run()
+
+a = "{'name'=a'a}"
+
+
+print(a)
+
+import json
+json.dumps("{'name'=a'a}")
+
+
