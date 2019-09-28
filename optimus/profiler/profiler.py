@@ -102,7 +102,8 @@ class Profiler:
         return type_details
 
     @time_it
-    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True, mismatch= None):
+    def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+            mismatch=None):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
@@ -218,7 +219,7 @@ class Profiler:
             RaiseIt.type_error(output, ["html", "json"])
 
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-                sample=10000, stats=True, format="json", mismatch=None ):
+                sample=10000, stats=True, format="json", mismatch=None):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -230,6 +231,7 @@ class Profiler:
         :param sample: numbers of rows to retrieve with random sampling
         :param stats: calculate stats, if not only data table returned
         :param format: dict or json
+        :param mismatch:
         :return: json file
         """
 
@@ -286,7 +288,8 @@ class Profiler:
 
         return output
 
-    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True, mismatch=None):
+    def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+                      mismatch=None):
         """
         Return statistical information about a specific column in json format
         :param df: Dataframe to be processed
@@ -298,7 +301,8 @@ class Profiler:
         :param mismatch:
         :return: json object
         """
-
+        if self.rows_count is None:
+            self.rows_count = df.count()
         columns = parse_columns(df, columns)
 
         # Initialize Objects
