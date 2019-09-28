@@ -112,6 +112,7 @@ class Profiler:
         :param infer: infer data type
         :param relative_error: Relative Error for quantile discretizer calculation
         :param approx_count: Use approx_count_distinct or countDistinct
+        :param mismatch:
         :return:
         """
 
@@ -121,7 +122,8 @@ class Profiler:
         #     df.cols.set_meta({"name": col_name})
         # df.set_meta({"initialized": True})
 
-        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict", mismatch=None)
+        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
+                              mismatch=mismatch)
 
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
