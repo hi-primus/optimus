@@ -71,7 +71,7 @@ op = Optimus(master="local")
 
 # ## Dataframe creation
 #
-# Create a dataframe to passing a list of values for columns and rows. Unlike pandas you need to specify the column names.
+# Create a spark to passing a list of values for columns and rows. Unlike pandas you need to specify the column names.
 #
 
 df = op.create.df(
@@ -97,7 +97,7 @@ df = op.create.df(
     ]).h_repartition(1)
 df.table()
 
-# Creating a dataframe by passing a list of tuples specifyng the column data type. You can specify as data type an string or a Spark Datatypes. https://spark.apache.org/docs/2.3.1/api/java/org/apache/spark/sql/types/package-summary.html
+# Creating a spark by passing a list of tuples specifyng the column data type. You can specify as data type an string or a Spark Datatypes. https://spark.apache.org/docs/2.3.1/api/java/org/apache/spark/sql/types/package-summary.html
 #
 # Also you can use some Optimus predefined types:
 # * "str" = StringType() 
@@ -122,7 +122,7 @@ df = op.create.df(
     ])
 df.table()
 
-# Creating a dataframe and specify if the column accepts null values
+# Creating a spark and specify if the column accepts null values
 
 df = op.create.df(
     [
@@ -141,7 +141,7 @@ df = op.create.df(
     ])
 df.table()
 
-# Creating a Daframe using a pandas dataframe
+# Creating a Daframe using a pandas spark
 
 # +
 import pandas as pd
@@ -151,7 +151,7 @@ data = [("bumbl#ebéé  ", 17.5, "Espionage", 7),
         ("ironhide&", 26.0, "Security", 7)]
 labels = ["names", "height", "function", "rank"]
 
-# Create pandas dataframe
+# Create pandas spark
 pdf = pd.DataFrame.from_records(data, columns=labels)
 
 df = op.create.df(pdf=pdf)
@@ -159,7 +159,7 @@ df.table()
 # -
 
 # ## Viewing data
-# Here is how to View the first 10 elements in a dataframe.
+# Here is how to View the first 10 elements in a spark.
 
 df.table(10)
 

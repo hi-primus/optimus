@@ -6,8 +6,8 @@ from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 from optimus.helpers.check import is_spark_dataframe, is_str
 from optimus.helpers.columns import parse_columns, name_col
-from optimus.ml.feature import string_to_index, vector_assembler
-from optimus.spark import Spark
+from optimus.spark.ml.feature import string_to_index, vector_assembler
+from optimus.spark.spark import Spark
 
 
 class ML:
@@ -15,13 +15,13 @@ class ML:
     def logistic_regression_text(df, input_col):
         """
         Runs a logistic regression for input (text) DataFrame.
-        :param df: Pyspark dataframe to analyze
+        :param df: Pyspark spark to analyze
         :param input_col: Column to predict
         :return: DataFrame with logistic regression and prediction run.
         """
 
         if not is_spark_dataframe(df):
-            raise TypeError("Spark dataframe expected")
+            raise TypeError("Spark spark expected")
 
         pl = feature.Tokenizer().setInputCol(input_col) | feature.CountVectorizer()
         ml = pl | classification.LogisticRegression()
@@ -33,7 +33,7 @@ class ML:
     def random_forest(df, columns, input_col, **kwargs):
         """
         Runs a random forest classifier for input DataFrame.
-        :param df: Pyspark dataframe to analyze.
+        :param df: Pyspark spark to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with random forest and prediction run.
@@ -60,14 +60,14 @@ class ML:
     def decision_tree(df, columns, input_col, **kwargs):
         """
         Runs a decision tree classifier for input DataFrame.
-        :param df: Pyspark dataframe to analyze.
+        :param df: Pyspark spark to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with decision tree and prediction run.
         """
 
         if not is_spark_dataframe(df):
-            raise TypeError("Spark dataframe expected")
+            raise TypeError("Spark spark expected")
 
         columns = parse_columns(df, columns)
 
@@ -93,14 +93,14 @@ class ML:
     def gbt(df, columns, input_col, **kwargs):
         """
         Runs a gradient boosting tree classifier for input DataFrame.
-        :param df: Pyspark dataframe to analyze.
+        :param df: Pyspark spark to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with gradient boosting tree and prediction run.
         """
 
         if not is_spark_dataframe(df):
-            raise TypeError("Spark dataframe expected")
+            raise TypeError("Spark spark expected")
 
         columns = parse_columns(df, columns)
 

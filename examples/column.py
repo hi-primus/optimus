@@ -34,7 +34,7 @@ from optimus import Optimus
 # Create optimus
 op = Optimus()
 
-# ## Create dataframe
+# ## Create spark
 
 # +
 from pyspark.sql.types import StringType, IntegerType, ArrayType
@@ -408,7 +408,7 @@ df.cols.apply(["num", "new_col_1"], func, "int", 10).table()
 from optimus.audf import filter_row_by_data_type as fbdt
 df.rows.select(fbdt("filter", "integer")).table()
 
-# ### Create an abstract dataframe to filter a rows where the value of column "num"> 1
+# ### Create an abstract spark to filter a rows where the value of column "num"> 1
 
 # +
 from optimus.audf import abstract_udf as audf
@@ -421,7 +421,7 @@ def func(val, attr):
 df.rows.select(audf("num", func, "boolean")).table()
 # -
 
-# ### Create an abstract dataframe (Pandas UDF) to pass two arguments to a function a apply a sum operation
+# ### Create an abstract spark (Pandas UDF) to pass two arguments to a function a apply a sum operation
 
 # +
 from optimus.audf import abstract_udf as audf

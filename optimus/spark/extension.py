@@ -24,7 +24,7 @@ from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 DataFrame.output = "html"
 
@@ -45,7 +45,7 @@ def ext(self):
         @staticmethod
         def roll_out():
             """
-            Just a function to check if the Spark dataframe has been Monkey Patched
+            Just a function to check if the Spark spark has been Monkey Patched
             :return:
             """
             print(self)
@@ -71,7 +71,7 @@ def ext(self):
         @staticmethod
         def export():
             """
-            Helper function to export all the dataframe in text format. Aimed to be used in test functions
+            Helper function to export all the spark in text format. Aimed to be used in test functions
             :return:
             """
             df = self
@@ -178,7 +178,7 @@ def ext(self):
         @staticmethod
         def size():
             """
-            Get the size of a dataframe in bytes
+            Get the size of a spark in bytes
             :return:
             """
 
@@ -195,7 +195,7 @@ def ext(self):
                 java_obj = _to_java_object_rdd(self.rdd)
                 n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
             else:
-                # TODO: Find a way to calculate the dataframe size in spark 2.4
+                # TODO: Find a way to calculate the spark size in spark 2.4
                 n_bytes = -1
 
             return n_bytes
@@ -222,7 +222,7 @@ def ext(self):
             """
             Implements the transformations which are defined by SQL statement. Currently we only support
             SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
-            underlying table of the input dataframe.
+            underlying table of the input spark.
             :param sql_expression: SQL expression.
             :return: Dataframe with columns changed by SQL statement.
             """
@@ -248,7 +248,7 @@ def ext(self):
         @staticmethod
         def get_name():
             """
-            Get dataframe name
+            Get spark name
             :return:
             """
             return Ext.get_meta("name")
@@ -256,7 +256,7 @@ def ext(self):
         @staticmethod
         def partitions():
             """
-            Return the dataframe partitions number
+            Return the spark partitions number
             :return: Number of partitions
             """
             return self.rdd.getNumPartitions()
@@ -264,7 +264,7 @@ def ext(self):
         @staticmethod
         def partitioner():
             """
-            Return the algorithm used to partition the dataframe
+            Return the algorithm used to partition the spark
 
             :return:
             """
@@ -319,7 +319,7 @@ def ext(self):
         @staticmethod
         def table_html(limit=10, columns=None, title=None, full=False, truncate=True, count=True):
             """
-            Return a HTML table with the dataframe cols, data types and values
+            Return a HTML table with the spark cols, data types and values
             :param columns: Columns to be printed
             :param limit: How many rows will be printed
             :param title: Table title
@@ -426,7 +426,7 @@ def ext(self):
         def send(name: str = None, stats: bool = True):
             """
             Profile and send the data to the queue
-            :param name: Specified a name for the view/dataframe
+            :param name: Specified a name for the view/spark
             :param stats:
             :return:
             """
@@ -453,7 +453,7 @@ def ext(self):
         @staticmethod
         def set_meta(spec=None, value=None, missing=dict):
             """
-            Set metadata in a dataframe columns
+            Set metadata in a spark columns
             :param spec: path to the key to be modified
             :param value: dict value
             :param missing:
@@ -472,7 +472,7 @@ def ext(self):
         @staticmethod
         def get_meta(spec=None):
             """
-            Get metadata from a dataframe column
+            Get metadata from a spark column
             :param spec: path to the key to be modified
             :return:
             """

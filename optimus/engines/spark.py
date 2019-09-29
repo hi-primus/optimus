@@ -7,7 +7,6 @@ from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 from optimus.bumblebee import Comm
-from optimus.dataframe.create import Create
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.converter import val_to_list
@@ -16,12 +15,13 @@ from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.io.jdbc import JDBC
-from optimus.io.load import Load
-from optimus.ml.models import ML
 from optimus.profiler.profiler import Profiler
 from optimus.server.server import Server
-from optimus.spark import Spark
+from optimus.spark.create import Create
+from optimus.spark.io.jdbc import JDBC
+from optimus.spark.io.load import Load
+from optimus.spark.ml.models import ML
+from optimus.spark.spark import Spark
 from optimus.version import __version__
 
 # Singletons

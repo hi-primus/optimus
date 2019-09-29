@@ -9,7 +9,7 @@ from optimus.helpers.raiseit import RaiseIt
 def n_gram(df, input_col, n=2):
     """
     Converts the input array of strings inside of a Spark DF into an array of n-grams.
-    :param df: Pyspark dataframe to analyze
+    :param df: Pyspark spark to analyze
     :param input_col: Column to analyzer.
     :param n: number of elements per n-gram >=1.
     :return: Spark DataFrame with n-grams calculated.

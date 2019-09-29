@@ -237,7 +237,7 @@ def functions(self):
         @staticmethod
         def percentile_agg(col_name, df, values, relative_error):
             """
-            Return the percentile of a dataframe
+            Return the percentile of a spark
             :param col_name:  '*', list of columns names or a single column name.
             :param df:
             :param values: list of percentiles to be calculated

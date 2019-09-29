@@ -31,7 +31,7 @@ df = op.load.csv("data/Meteorite_Landings.csv").h_repartition()
 
 df.table(10)
 
-# ### Profiler dump mode (Faster). It just handle the column data type as present in the dataframe
+# ### Profiler dump mode (Faster). It just handle the column data type as present in the spark
 
 op.profiler.run(df, "name", infer=False, approx_count= True)
 

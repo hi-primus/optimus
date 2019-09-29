@@ -20,7 +20,7 @@ def rows(self):
         @staticmethod
         def append(rows):
             """
-            Append a row at the end of a dataframe
+            Append a row at the end of a spark
             :param rows: List of values or tuples to be appended
             :return: Spark DataFrame
             """
@@ -133,7 +133,7 @@ def rows(self):
         @staticmethod
         def drop(where=None):
             """
-            Drop a row depending on a dataframe expression
+            Drop a row depending on a spark expression
             :param where: Expression used to drop the row
             :return: Spark DataFrame
             """
@@ -169,7 +169,7 @@ def rows(self):
         @staticmethod
         def drop_duplicates(input_cols=None):
             """
-            Drop duplicates values in a dataframe
+            Drop duplicates values in a spark
             :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
             for dropping duplicates. The default behavior will only drop the whole identical rows.
             :return: Return a new DataFrame with duplicate rows removed
@@ -180,7 +180,7 @@ def rows(self):
         @staticmethod
         def drop_first():
             """
-            Remove first row in a dataframe
+            Remove first row in a spark
             :return: Spark DataFrame
             """
             return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])

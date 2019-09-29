@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 
 from optimus import Optimus
 from optimus.helpers.columns import parse_columns, name_col
-from optimus.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
+from optimus.spark.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
     NGRAM_FINGERPRINT_COL
 
 
@@ -46,7 +46,7 @@ def fingerprint(df, input_cols):
 
 def fingerprint_cluster(df, input_cols):
     """
-    Cluster a dataframe column based on the Fingerprint algorithm
+    Cluster a spark column based on the Fingerprint algorithm
     :param df: Dataframe to be processed
     :param input_cols: Columns to be processed
     :return:

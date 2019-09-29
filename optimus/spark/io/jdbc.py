@@ -1,7 +1,7 @@
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -184,7 +184,7 @@ class JDBC:
 
     def table_to_df(self, table_name, columns="*", limit=None):
         """
-        Return cols as Spark dataframe from a specific table
+        Return cols as Spark spark from a specific table
         :type table_name: object
         :param columns:
         :param limit: how many rows will be retrieved
@@ -255,7 +255,7 @@ class JDBC:
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
-        Send a dataframe to the database
+        Send a spark to the database
         :param df:
         :param table:
         :param mode

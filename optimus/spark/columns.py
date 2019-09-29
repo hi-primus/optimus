@@ -400,7 +400,7 @@ def cols(self):
             column = parse_columns(self, column)
             ref_col = parse_columns(self, ref_col)
 
-            # Get dataframe columns
+            # Get spark columns
             columns = self.columns
 
             # Get source and reference column index position
@@ -602,7 +602,7 @@ def cols(self):
         @staticmethod
         def min(columns):
             """
-            Return the min value from a column dataframe
+            Return the min value from a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -613,7 +613,7 @@ def cols(self):
         @staticmethod
         def max(columns):
             """
-            Return the max value from a column dataframe
+            Return the max value from a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -632,7 +632,7 @@ def cols(self):
         @staticmethod
         def median(columns, relative_error=RELATIVE_ERROR):
             """
-            Return the median of a column dataframe
+            Return the median of a column spark
             :param columns: '*', list of columns names or a single column name.
             :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
             :return:
@@ -643,7 +643,7 @@ def cols(self):
         @staticmethod
         def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
             """
-            Return the percentile of a dataframe
+            Return the percentile of a spark
             :param columns:  '*', list of columns names or a single column name.
             :param values: list of percentiles to be calculated
             :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
@@ -686,7 +686,7 @@ def cols(self):
         @staticmethod
         def std(columns):
             """
-            Return the standard deviation of a column dataframe
+            Return the standard deviation of a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -698,7 +698,7 @@ def cols(self):
         @staticmethod
         def kurt(columns):
             """
-            Return the kurtosis of a column dataframe
+            Return the kurtosis of a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -710,7 +710,7 @@ def cols(self):
         @staticmethod
         def mean(columns):
             """
-            Return the mean of a column dataframe
+            Return the mean of a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -722,7 +722,7 @@ def cols(self):
         @staticmethod
         def skewness(columns):
             """
-            Return the skewness of a column dataframe
+            Return the skewness of a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -734,7 +734,7 @@ def cols(self):
         @staticmethod
         def sum(columns):
             """
-            Return the sum of a column dataframe
+            Return the sum of a column spark
             :param columns: '*', list of columns names or a single column name.
             :return:
             """

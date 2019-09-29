@@ -13,14 +13,14 @@ from tqdm import tqdm_notebook
 from optimus.helpers.check import is_function, is_, is_spark_dataframe
 from optimus.helpers.logger import logger
 
-# Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.
+# Temporal col used to create a temporal ID to join the enriched data in mongo with the spark.
 COL_ID = "jazz_id"
 COL_RESULTS = "jazz_results"
 
 
 class Enricher:
     """
-    Enrich data from a Pandas or Spark dataframe
+    Enrich data from a Pandas or Spark spark
     """
 
     def __init__(self, op=None, host="localhost", port=27017, username=None, password=None, db_name="jazz",
@@ -60,8 +60,8 @@ class Enricher:
     def load(self, df):
         """
 
-        Load the dataframe to the mongo collection
-        :param df: dataframe to be send to the enricher
+        Load the spark to the mongo collection
+        :param df: spark to be send to the enricher
         :return:
         """
 
@@ -89,7 +89,7 @@ class Enricher:
         if is_spark_dataframe(df):
             df = df.create_id(COL_ID)
 
-        # Load the dataframe data in the enricher
+        # Load the spark data in the enricher
         self.load(df)
 
         collection_name = self.collection_name
@@ -135,9 +135,9 @@ class Enricher:
                     # The response key will remain blank so we can filter it to try in future request
                     logger.print(response.status_code)
 
-            # Append the data in enrichment to the dataframe
+            # Append the data in enrichment to the spark
 
-            logger.print("Appending collection info into the dataframe")
+            logger.print("Appending collection info into the spark")
             # TODO: An elegant way to handle pickling?
             # take care to the pickling
 

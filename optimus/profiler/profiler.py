@@ -6,7 +6,7 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
+from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -102,7 +102,7 @@ class Profiler:
     @time_it
     def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True):
         """
-        Return dataframe statistical information in HTML Format
+        Return spark statistical information in HTML Format
         :param df: Dataframe to be analyzed
         :param columns: Columns to be analyzed
         :param buckets: Number of buckets calculated to print the histogram

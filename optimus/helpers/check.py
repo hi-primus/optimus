@@ -7,6 +7,7 @@ import re
 
 import math
 import pandas as pd
+from dask.dataframe.core import DataFrame as DaskDataFrame
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import functions as F
 
@@ -133,7 +134,7 @@ def is_column(value):
 def is_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
-    :param df: dataframe
+    :param df: spark
     :param column: column to be compared with
     :param dtypes: types to be checked
     :return:
@@ -386,6 +387,15 @@ def is_pandas_dataframe(value):
     :return:
     """
     return isinstance(value, pd.DataFrame)
+
+
+def is_dask_dataframe(value):
+    """
+    Check if an object is a Dask DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, DaskDataFrame)
 
 
 def is_bool(value):

@@ -2,8 +2,8 @@ from pyspark.sql import functions as F
 
 from optimus import Optimus
 from optimus.helpers.columns import name_col
-from optimus.ml import keycollision
-from optimus.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
+from optimus.spark.ml import keycollision
+from optimus.spark.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
     LEVENSHTEIN_DISTANCE
 
 
@@ -80,7 +80,7 @@ def levenshtein_filter(df, input_col):
 
 def levenshtein_cluster(df, input_col):
     """
-    Return a dataframe with a string of cluster related to a string
+    Return a spark with a string of cluster related to a string
     :param df:
     :param input_col:
     :return:

@@ -3,7 +3,7 @@ import re
 from ordered_set import OrderedSet
 
 from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_list_of_list, \
-    is_spark_dataframe, is_pandas_dataframe
+    is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_dtypes
@@ -93,23 +93,25 @@ def colums_names(df):
         columns_names = df.columns
     elif is_pandas_dataframe(df):
         columns_names = list(df.columns)
+    elif is_dask_dataframe(df):
+        columns_names = list(df.columns)
     return columns_names
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False, invert=False):
     """
-    Return a list of columns and check that columns exists in the dataframe
-    Accept '*' as parameter in which case return a list of all columns in the dataframe.
+    Return a list of columns and check that columns exists in the spark
+    Accept '*' as parameter in which case return a list of all columns in the spark.
     Also accept a regex.
     If a list of tuples return to list. The first element is the columns name the others element are params.
     This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
-    :param cols_args: Accepts * as param to return all the string columns in the dataframe
+    :param cols_args: Accepts * as param to return all the string columns in the spark
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
     :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
-    :param accepts_missing_cols: if true not check if column exist in the dataframe
+    :param accepts_missing_cols: if true not check if column exist in the spark
     :param invert: Invert the final selection. For example if you want to select not integers
 
     :return: A list of columns string names
@@ -163,7 +165,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
-        # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
+        # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 
         # This columns match filtered data type
@@ -220,7 +222,7 @@ def check_column_numbers(columns, number=0):
 
 def validate_columns_names(df, col_names, index=0):
     """
-    Check if a string or list of string are valid dataframe columns
+    Check if a string or list of string are valid spark columns
     :param df: Data frame to be analyzed
     :param col_names: columns names to be checked
     :param index:
@@ -243,7 +245,7 @@ def validate_columns_names(df, col_names, index=0):
 
 def check_for_missing_columns(df, col_names):
     """
-    Check if the columns you want to select exits in the dataframe
+    Check if the columns you want to select exits in the spark
     :param df: Dataframe to be checked
     :param col_names: cols names to
     :return:

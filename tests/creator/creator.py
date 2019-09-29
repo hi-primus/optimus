@@ -32,7 +32,6 @@ from optimus.helpers.test import Test
 op = Optimus(master='local', verbose=True)
 
 # +
-import pandas as pd
 from pyspark.sql.types import *
 from datetime import date, datetime
 
@@ -88,8 +87,6 @@ source_df.table()
 
 # ## Optimus Test
 
-from pyspark.ml.linalg import Vectors
-
 t = Test(op, None, "create_df", imports=["import datetime",
                                 "from pyspark.sql import functions as F"], path = "..", final_path="..")
 
@@ -130,7 +127,6 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
 # +
-from pyspark.sql import functions as F
 
 
 def func(col_name, attrs):
@@ -569,9 +565,6 @@ t.create(None, "cols.is_na", None, "df", numeric_col)
 t.run()
 
 from pyspark.sql.types import *
-from optimus import Optimus
-from optimus.helpers.json import json_enconding
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
 import datetime
@@ -761,7 +754,7 @@ t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vect
                                         "from optimus.ml import keycollision as keyCol"], 
          path = "df_keycollision", final_path="..")
 
-from optimus.ml import keycollision as keyCol
+from optimus.spark.ml import keycollision as keyCol, distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
@@ -791,8 +784,6 @@ t = Test(op, source_df, "df_distance_cluster", imports=["from pyspark.ml.linalg 
                                         "import datetime",
                                         "from pyspark.sql import functions as F",
                                         "from optimus.ml import distancecluster as dc"], path = "df_distance_cluster", final_path="..")
-
-from optimus.ml import distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")

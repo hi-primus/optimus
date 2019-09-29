@@ -205,7 +205,7 @@ class Test:
             add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
                 _kwargs) + ")" + am + "\n")
 
-        # Apply function to the dataframe
+        # Apply function to the spark
         if method is None:
             df_result = self.op.create.df(*args, **kwargs)
         else:
@@ -276,7 +276,7 @@ class Test:
         This is a helper function that delete python tests files used to construct the final Test file.
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
-        :param func: Spark dataframe function to be tested
+        :param func: Spark spark function to be tested
         :return:
         """
 

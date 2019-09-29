@@ -9,7 +9,7 @@ from packaging import version
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 
 class Load:
@@ -17,7 +17,7 @@ class Load:
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
-        Return a dataframe from a json file.
+        Return a spark from a json file.
         :param path: path or location of the file.
         :param multiline:
         :return:
@@ -41,7 +41,7 @@ class Load:
     @staticmethod
     def tsv(path, header='true', infer_schema='true', *args, **kwargs):
         """
-        Return a dataframe from a tsv file.
+        Return a spark from a tsv file.
         :param path: path or location of the file.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
@@ -85,7 +85,7 @@ class Load:
     @staticmethod
     def parquet(path, *args, **kwargs):
         """
-        Return a dataframe from a parquet file.
+        Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
@@ -107,7 +107,7 @@ class Load:
     @staticmethod
     def avro(path, *args, **kwargs):
         """
-        Return a dataframe from a avro file.
+        Return a spark from a avro file.
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
@@ -132,7 +132,7 @@ class Load:
     @staticmethod
     def excel(path, sheet_name=0, *args, **kwargs):
         """
-        Return a dataframe from a excel file.
+        Return a spark from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
         :param args: custom argument to be passed to the excel function
