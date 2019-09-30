@@ -18,7 +18,7 @@ setuptools==41.1.0
 pyarrow==0.13.0
 tabulate==0.8.2
 Jinja2==2.10.1
-tensorflow==1.13.1
+tensorflow==2.0.0
 keras==2.2.4
 pillow==6.0.0
 pygments>=2.2.0
