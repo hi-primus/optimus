@@ -19,7 +19,10 @@ os.environ["PYTHONIOENCODING"] = "utf8"
 
 # PANDAS MONKEY PATCH
 from .pandas import columns
+from .pandas import functions
 
 
 # DASK MONKEY PATCH
 from .dask import columns
+from .dask import functions
+

@@ -71,7 +71,6 @@ class Load:
         try:
 
             df = dd.read_csv(path, sep=sep, encoding="ISO-8859–1", *args, **kwargs)
-            print(df)
             # df.ext.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)

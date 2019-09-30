@@ -65,6 +65,8 @@ def functions(self):
         def zeros_agg(col_name):
             return (col_name.values == 0).sum()
 
+
+
         @staticmethod
         def count_uniques_agg(col_name: pd.DataFrame, estimate=True):
             """
@@ -73,6 +75,7 @@ def functions(self):
             :param estimate:
             :return:
             """
+
             return col_name.value_counts().to_dict()
 
         # @staticmethod

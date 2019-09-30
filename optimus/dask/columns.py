@@ -1,13 +1,15 @@
 import re
 from ast import literal_eval
 
+import dask.dataframe as dd
+import pandas
 from dask.dataframe.core import DataFrame
 from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_column_a, is_list_of_tuples, is_int
+from optimus.helpers.check import is_column_a, is_list_of_tuples, is_int, is_function
 from optimus.helpers.columns import parse_columns, validate_columns_names
 from optimus.helpers.converter import val_to_list
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
@@ -44,8 +46,8 @@ def cols(self):
                     # Cols.set_meta(col_name, "optimus.transformations", "rename", append=True)
                     # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
                     print(old_col_name, col_name[1])
-                    if old_col_name!=col_name:
-                        df = df.rename({old_col_name:col_name[1]})
+                    if old_col_name != col_name:
+                        df = df.rename({old_col_name: col_name[1]})
 
             df.ext.meta = self.ext.meta
 
@@ -237,7 +239,42 @@ def cols(self):
             return result
 
         @staticmethod
+        def exec_agg(exprs):
+            """
+            Execute and aggregation
+            :param exprs:
+            :return:
+            """
+            exprs = dd.compute(exprs)[0]
+            if len(exprs) > 0:
+                result = {}
+                for i, agg in enumerate(exprs):
+                    for agg_name, col_value in agg.items():
+                        result[agg_name] = {}
+                        if isinstance(col_value, pandas.core.series.Series):
+                            for col, value in col_value.items():
+                                result[agg_name][col] = value
+                        else:
+                            result[agg_name][col] = col_value
+
+                # print(r)
+            else:
+                result = None
+            return result
+
+        @staticmethod
         def create_exprs(columns, funcs, *args):
+            exprs = []
+            for func in funcs:
+                if is_function(func):
+                    name = func.__name__
+                    exprs.append({func: getattr(self[columns].functions, name)()})
+                else:
+                    exprs.append({func: getattr(self[columns], func)()})
+            return exprs
+
+        @staticmethod
+        def create_exprs1(columns, funcs, *args):
             """
             Helper function to apply multiple columns expression to multiple columns
             :param columns:
