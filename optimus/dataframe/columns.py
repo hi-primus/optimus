@@ -1802,7 +1802,6 @@ def cols(self):
                         result[col_name]["mismatch"] = result[col_name]["mismatch"] + count[1]
                         result[col_name][dtype] = count[0]
 
-        print(result)
         if infer is True:
             result = fill_missing_var_types(result, dtypes)
         else:
