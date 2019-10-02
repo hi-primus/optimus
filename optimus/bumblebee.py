@@ -80,7 +80,7 @@ class Comm:
         logger.print(message)
         self.token = self._encrypt(self._compress(message)).decode()
 
-        logger.print(message)
+        logger.print(self.token)
         try:
             headers = {'content-type': 'application/json'}
 

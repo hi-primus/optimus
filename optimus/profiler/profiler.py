@@ -1,4 +1,5 @@
 import configparser
+import copy
 
 import humanize
 import imgkit
@@ -67,7 +68,7 @@ class Profiler:
         columns = parse_columns(df, columns)
 
         count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer, mismatch=mismatch)
-
+        count_by_data_type_no_mismatch = copy.deepcopy(count_by_data_type)
         # Info from all the columns
         type_details = {}
 
@@ -78,9 +79,13 @@ class Profiler:
             :param col_name:
             :return:
             """
+            # Not count mismatch
+            if "mismatch" in count_by_data_type_no_mismatch[col_name]:
+                count_by_data_type_no_mismatch[col_name].pop("mismatch")
 
             # Get the greatest count by column data type
-            greatest_data_type_count = max(count_by_data_type[col_name], key=count_by_data_type[col_name].get)
+            greatest_data_type_count = max(count_by_data_type_no_mismatch[col_name],
+                                           key=count_by_data_type_no_mismatch[col_name].get)
             if greatest_data_type_count == "string" or greatest_data_type_count == "boolean":
                 cat = "categorical"
             elif greatest_data_type_count == "int" or greatest_data_type_count == "decimal":
@@ -99,7 +104,7 @@ class Profiler:
             assign(type_details, col_name + ".dtype", greatest_data_type_count, dict)
             assign(type_details, col_name + ".type", cat, dict)
             assign(type_details, col_name + ".stats", count_by_data_type[col_name], dict)
-
+        # print(type_details)
         return type_details
 
     @time_it
