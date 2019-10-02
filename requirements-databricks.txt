@@ -2,7 +2,7 @@ simplejson==3.8.2
 cryptography==1.5
 imgkit==1.0.1
 packaging==19.1
-requests~=2.20.0
+requests==2.22.0
 tqdm==4.28.1
 pymongo==3.9.0
 fastnumbers==2.2.1
