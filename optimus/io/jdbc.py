@@ -211,12 +211,9 @@ class JDBC:
             if self.db_driver == DriverResolver.ORACLE.__str__():
                 query = "SELECT COUNT(*) COUNT FROM " + db_table
                 count = self.execute(query, "all").to_json()[0]["COUNT"]
-            elif self.db_driver == DriverResolver.CASSANDRA.__str__():
-                query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").first()[0]
             else:
                 query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["count"]
+                count = self.execute(query, "all").first()[0]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
 
