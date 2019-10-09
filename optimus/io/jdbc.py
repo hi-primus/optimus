@@ -142,6 +142,8 @@ class JDBC:
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
             WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
+        elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
+            query = "SELECT * FROM INFORMATION_SCHEMA.TABLES"
 
         elif self.db_driver == DriverResolver.MY_SQL.__str__():
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
