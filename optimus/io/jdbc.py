@@ -69,6 +69,7 @@ class JDBC:
             # print("Driver not supported")
             RaiseIt.value_error(driver, [database["name"] for database in DriverResolver.list()])
 
+        port = self.port
         if database is None:
             database = ""
 
