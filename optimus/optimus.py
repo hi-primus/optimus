@@ -169,7 +169,7 @@ class Optimus:
         self.output("html")
 
     @staticmethod
-    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
+    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
                 cassandra_keyspace=None, cassandra_table=None):
         """
@@ -177,7 +177,7 @@ class Optimus:
         :return: JDBC object
         """
 
-        return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid,
+        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                     presto_catalog, cassandra_keyspace, cassandra_table)
 
     def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
