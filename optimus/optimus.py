@@ -114,7 +114,8 @@ class Optimus:
                 self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
             jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar"]
+                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
+                         "/jars/spark-cassandra-connector_2.11-2.4.1.jar"]
 
             self._add_jars(absolute_path(jdbc_jars, "uri"))
             self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
@@ -169,14 +170,15 @@ class Optimus:
 
     @staticmethod
     def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
-                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None):
+                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
+                cassandra_keyspace=None, cassandra_table=None):
         """
         Create the JDBC string connection
         :return: JDBC object
         """
 
         return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog)
+                    presto_catalog, cassandra_keyspace, cassandra_table)
 
     def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
                collection_name="data"):
