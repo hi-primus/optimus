@@ -24,7 +24,7 @@ services:
     ports:
       - 1433:1433
     environment:
-      - SA_PASSWORD=SA123
+      - SA_PASSWORD=SA123456
       - ACCEPT_EULA=Y
 
   redshift:
@@ -35,3 +35,24 @@ services:
       - POSTGRES_USER=SA
       - POSTGRES_PASSWORD=SA123
       - POSTGRES_DB=optimus
+
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    ports:
+      - 9042:9042
+    environment:
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    restart: always
+    volumes:
+      - ./out/cassandra_data:/var/lib/cassandra
+
+  cassandra-load-keyspace:
+    container_name: cassandra-load-keyspace
+    image: cassandra:latest
+    depends_on:
+      - cassandra
+    volumes:
+      - ./cassandra_main.cql:/main.cql
+    command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra -f /main.cql"

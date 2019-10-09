@@ -1,6 +1,9 @@
+from pyspark.sql import DataFrame
+
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
+from optimus.io.driver import DriverResolver
 from optimus.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
@@ -15,7 +18,8 @@ class JDBC:
     """
 
     def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
-                 oracle_service_name=None, oracle_sid=None, presto_catalog=None):
+                 oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
+                 cassandra_table=None):
         """
         Create the JDBC connection object
         :return:
@@ -23,50 +27,58 @@ class JDBC:
 
         self.db_driver = driver
         self.oracle_sid = oracle_sid
+        self.cassandra_keyspace = cassandra_keyspace
+        self.cassandra_table = cassandra_table
 
         # Handle the default port
-        if self.db_driver == "redshift":
-            if port is None: port = 5439
+        if self.db_driver == DriverResolver.REDSHIFT.__str__():
+            if port is None: self.port = DriverResolver.REDSHIFT.port()
             # "com.databricks.spark.redshift"
 
-        elif self.db_driver == "postgresql":
-            if port is None: port = 5432
-            self.driver_option = "org.postgresql.Driver"
+        elif self.db_driver == DriverResolver.POSTGRES_SQL.__str__():
+            if port is None: self.port = DriverResolver.POSTGRES_SQL.port()
+            self.driver_option = DriverResolver.POSTGRES_SQL.java_class()
 
-        elif self.db_driver == "postgres":  # backward compat
-            if port is None: port = 5432
-            self.driver_option = "org.postgresql.Driver"
-            self.db_driver = "postgresql"
+        elif self.db_driver == DriverResolver.POSTGRES.__str__():  # backward compat
+            if port is None: self.port = DriverResolver.POSTGRES.port()
+            self.driver_option = DriverResolver.POSTGRES.java_class()
+            self.db_driver = DriverResolver.POSTGRES_SQL.__str__()
 
-        elif self.db_driver == "mysql":
-            if port is None: port = 3306
+        elif self.db_driver == DriverResolver.MY_SQL.__str__():
+            if port is None: self.port = DriverResolver.MY_SQL.port()
             # "com.mysql.jdbc.Driver"
 
-        elif self.db_driver == "sqlserver":
-            if port is None: port = 1433
+        elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
+            if port is None: self.port = DriverResolver.SQL_SERVER.port()
             # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
 
-        elif self.db_driver == "oracle":
-            if port is None: port = 1521
-            self.driver_option = "oracle.jdbc.OracleDriver"
+        elif self.db_driver == DriverResolver.ORACLE.__str__():
+            if port is None: self.port = DriverResolver.ORACLE.port()
+            self.driver_option = DriverResolver.ORACLE.java_class()
 
-        elif self.db_driver == 'presto':
-            if port is None: port = 8080
-            self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
+        elif self.db_driver == DriverResolver.PRESTO.__str__():
+            if port is None: self.port = DriverResolver.PRESTO.port()
+            self.driver_option = DriverResolver.PRESTO.java_class()
+
+        elif database == DriverResolver.CASSANDRA.__str__():
+            # When using Cassandra there is no jdbc url since we are going to use the spark cassandra connector
+            pass
 
         # TODO: add mongo?
         else:
             # print("Driver not supported")
-            RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
+            RaiseIt.value_error(driver, [database["name"] for database in DriverResolver.list()])
 
         if database is None:
             database = ""
 
-        self.port = port
         # Create string connection
-        if self.db_driver == "sqlite":
+        url = ""
+        if self.db_driver == DriverResolver.SQL_LITE.__str__():
             url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
-        elif self.db_driver == "postgresql" or self.db_driver == "redshift" or self.db_driver == "mysql":
+        elif self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
+                or self.db_driver == DriverResolver.REDSHIFT.__str__() \
+                or self.db_driver == DriverResolver.MY_SQL.__str__():
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
             url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=self.db_driver,
                                                                                               HOST=host,
@@ -74,7 +86,7 @@ class JDBC:
                                                                                               DATABASE=database,
                                                                                               SCHEMA=schema)
 
-        elif self.db_driver == "oracle":
+        elif self.db_driver == DriverResolver.ORACLE.__str__():
             if oracle_sid:
                 url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(
                     DB_DRIVER=driver,
@@ -93,7 +105,7 @@ class JDBC:
             elif oracle_tns:
                 url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
 
-        elif self.db_driver == "presto":
+        elif self.db_driver == DriverResolver.PRESTO.__str__():
             url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{CATALOG}/{DATABASE}".format(
                 DB_DRIVER=self.db_driver,
                 HOST=host,
@@ -101,6 +113,7 @@ class JDBC:
                 CATALOG=presto_catalog,
                 DATABASE=database
             )
+
         logger.print(url)
 
         self.url = url
@@ -122,22 +135,23 @@ class JDBC:
             schema = self.schema
 
         query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
+        if (self.db_driver == DriverResolver.REDSHIFT.__str__()) or (
+                self.db_driver == DriverResolver.POSTGRES_SQL.__str__()):
             query = """
             SELECT relname as table_name,cast (reltuples as integer) AS count 
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
             WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_driver == "mysql":
+        elif self.db_driver == DriverResolver.MY_SQL.__str__():
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
 
-        elif self.db_driver == "presto":
+        elif self.db_driver == DriverResolver.PRESTO.__str__():
             query = "SELECT table_name, 0 as table_rows FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '" + database + "'"
 
-        elif self.db_driver == "sqlite":
+        elif self.db_driver == DriverResolver.SQL_LITE.__str__():
             query = ""
 
-        elif self.db_driver == "oracle":
+        elif self.db_driver == DriverResolver.ORACLE.__str__():
             query = """SELECT table_name, 
                 extractvalue(xmltype( dbms_xmlgen.getxml('select count(*) c from '||table_name)) ,'/ROWSET/ROW/C') count 
                     FROM user_tables ORDER BY table_name"""
@@ -156,20 +170,21 @@ class JDBC:
             schema = self.schema
 
         query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
+        if (self.db_driver == DriverResolver.REDSHIFT.__str__()) or (
+                self.db_driver == DriverResolver.POSTGRES_SQL):
             query = """
                         SELECT relname as table_name 
                         FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
                         WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
-        elif self.db_driver == "mysql":
+        elif self.db_driver == DriverResolver.MY_SQL.__str__():
             query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
                     + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
 
-        elif self.db_driver == "sqlite":
+        elif self.db_driver == DriverResolver.SQL_LITE.__str__():
             query = ""
 
-        elif self.db_driver == "oracle":
+        elif self.db_driver == DriverResolver.ORACLE.__str__():
             query = "SELECT table_name as 'table_name' FROM user_tables"
 
         df = self.execute(query, "all")
@@ -193,12 +208,12 @@ class JDBC:
 
         db_table = table_name
         if limit == "all":
-            if self.db_driver == "oracle":
+            if self.db_driver == DriverResolver.ORACLE.__str__():
                 query = "SELECT COUNT(*) COUNT FROM " + db_table
-                count = self.execute(query, "all").to_dict()[0]["COUNT"]
+                count = self.execute(query, "all").to_json()[0]["COUNT"]
             else:
                 query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").to_dict()[0]["COUNT"]
+                count = self.execute(query, "all").first()[0]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
 
@@ -228,31 +243,36 @@ class JDBC:
         """
 
         # play defensive with a select clause
-        if self.db_driver == "oracle":
-            alias = " t"
-        elif self.db_driver == "presto":
-            alias = ""
+        if self.db_driver == DriverResolver.ORACLE.__str__():
+            query = "(" + query + ") t"
+        elif self.db_driver == DriverResolver.PRESTO.__str__():
+            query = "(" + query + ")"
+        elif self.db_driver == DriverResolver.CASSANDRA.__str__():
+            query = query
         else:
-            alias = " AS t"
-
-        query = "(" + query + self._limit(limit) + ")" + alias
+            query = "(" + query + ") AS t"
 
         logger.print(query)
         logger.print(self.url)
 
         conf = Spark.instance.spark.read \
-            .format("jdbc") \
+            .format("jdbc" if not self.db_driver == DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
             .option("url", self.url) \
-            .option("dbtable", query) \
-            .option("user", self.user)
+            .option("user", self.user) \
+            .option("dbtable", query)
 
-        if self.db_driver != "presto" and self.password is not None:
+        if self.db_driver != DriverResolver.PRESTO.__str__() and self.password is not None:
             conf.option("password", self.password)
 
-        if self.db_driver == "oracle" or self.db_driver == 'postgresql' or self.db_driver == 'presto':
+        if self.db_driver == DriverResolver.ORACLE.__str__() \
+                or self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
+                or self.db_driver == DriverResolver.PRESTO.__str__():
             conf.option("driver", self.driver_option)
 
-        return conf.load()
+        if self.db_driver == DriverResolver.CASSANDRA.__str__():
+            conf.options(table=self.cassandra_table, keyspace=self.cassandra_keyspace)
+
+        return self._limit(conf.load(), limit)
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
@@ -267,7 +287,7 @@ class JDBC:
         df = df.cols.cast(columns, "str")
 
         conf = df.write \
-            .format("jdbc") \
+            .format("jdbc" if not DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
             .mode(mode) \
             .option("url", self.url) \
             .option("dbtable", table) \
@@ -279,20 +299,20 @@ class JDBC:
         conf.save()
 
     @staticmethod
-    def _limit(limit=None):
+    def _limit(df: DataFrame, limit=None):
         """
         Handle limit defensive so we do not retrieve the whole at we explicit want
         :param limit:
-        :return:
+        :param df:
+        :return a limited DataFrame if specified
         """
         # we use a default limit here in case the query will return a huge chunk of data
         if limit is None:
-            limit_query = " LIMIT " + str(LIMIT_TABLE)
+            return df.limit(LIMIT_TABLE)
         elif limit == "all":
-            limit_query = ""
+            return df
         else:
-            limit_query = " LIMIT " + str(limit)
-        return limit_query
+            return df.limit(int(limit))
 
 
 class Table:
