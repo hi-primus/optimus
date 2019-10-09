@@ -11,7 +11,7 @@ class DriverResolver(Enum):
     POSTGRES = {"name": "postgres", "port": 5432, "class": "org.postgresql.Driver"}
     POSTGRES_SQL = {"name": "postgresql", "port": 5432, "class": "org.postgresql.Driver"}
     SQL_SERVER = {"name": "sqlserver", "port": 1433}
-    SQL_LITE = {"name": "sqlite", "port": 0}
+    SQL_LITE = {"name": "sqlite", "port": 0, "class": "org.sqlite.JDBC"}
     PRESTO = {"name": "presto", "port": 8080, "class": "com.facebook.presto.jdbc.PrestoDriver"}
     REDSHIFT = {"name": "redshift", "port": 5439}
 
