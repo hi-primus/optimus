@@ -192,25 +192,35 @@ class JDBC:
             schema = self.schema
 
         query = None
+
         if (self.db_driver == DriverResolver.REDSHIFT.__str__()) or (
-                self.db_driver == DriverResolver.POSTGRES_SQL):
+                self.db_driver == DriverResolver.POSTGRES_SQL.__str__()):
             query = """
                         SELECT relname as table_name 
                         FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
                         WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
+            table_name = "table_name"
+
+        elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
+            query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
+            table_name = "TABLE_NAME"
 
         elif self.db_driver == DriverResolver.MY_SQL.__str__():
             query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
-                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
+                    + self.database + "' GROUP BY TABLE_NAME"
+            table_name = "table_name"
 
         elif self.db_driver == DriverResolver.SQL_LITE.__str__():
-            query = ""
+            query = "SELECT name FROM sqlite_master WHERE type='table'"
+            table_name = "name"
 
         elif self.db_driver == DriverResolver.ORACLE.__str__():
             query = "SELECT table_name as 'table_name' FROM user_tables"
+            table_name = "table_name"
 
         df = self.execute(query, "all")
-        return [i['table_name'] for i in df.to_json()]
+
+        return [i[table_name] for i in df.to_dict()]
 
     @property
     def table(self):
