@@ -82,17 +82,16 @@ class JDBC:
         if database is None:
             database = ""
 
-        print(self.db_driver)
         # Create string connection
+
         url = ""
-        # Reference https://mitzen.blogspot.com/2017/06/pyspark-working-with-jdbc-sqlite.html
+        # Reference SQLite https://mitzen.blogspot.com/2017/06/pyspark-working-with-jdbc-sqlite.html
         if self.db_driver == DriverResolver.SQL_LITE.__str__():
             url = "jdbc:{DB_DRIVER}:{HOST}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
 
         elif self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
                 or self.db_driver == DriverResolver.REDSHIFT.__str__() \
-                or self.db_driver == DriverResolver.MY_SQL.__str__() \
-                or self.db_driver == DriverResolver.SQL_SERVER.__str__():
+                or self.db_driver == DriverResolver.MY_SQL.__str__():
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
             url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=self.db_driver,
                                                                                               HOST=host,
@@ -100,6 +99,12 @@ class JDBC:
                                                                                               DATABASE=database,
                                                                                               SCHEMA=schema)
 
+        elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
+            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT};databaseName={DATABASE}".format(DB_DRIVER=self.db_driver,
+                                                                                    HOST=host,
+                                                                                    PORT=port,
+                                                                                    DATABASE=database,
+                                                                                    SCHEMA=schema)
         elif self.db_driver == DriverResolver.ORACLE.__str__():
             if oracle_sid:
                 url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(

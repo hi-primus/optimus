@@ -115,7 +115,8 @@ class Optimus:
 
             jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
                          "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
-                         "/jars/spark-cassandra-connector_2.11-2.4.1.jar","/jars/sqlite-jdbc-3.27.2.1.jar"]
+                         "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
+                         "/jars/mssql-jdbc-7.4.1.jre8.jar"]
 
             self._add_jars(absolute_path(jdbc_jars, "uri"))
             self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
