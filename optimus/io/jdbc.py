@@ -17,7 +17,7 @@ class JDBC:
     Helper for JDBC connections and queries
     """
 
-    def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
+    def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
                  cassandra_table=None):
         """
@@ -30,6 +30,7 @@ class JDBC:
         self.cassandra_keyspace = cassandra_keyspace
         self.cassandra_table = cassandra_table
 
+        # TODO: add mongo?
         # Handle the default port
         if self.db_driver == DriverResolver.REDSHIFT.__str__():
             if port is None: self.port = DriverResolver.REDSHIFT.port()
@@ -45,7 +46,9 @@ class JDBC:
             self.db_driver = DriverResolver.POSTGRES_SQL.__str__()
 
         elif self.db_driver == DriverResolver.MY_SQL.__str__():
-            if port is None: self.port = DriverResolver.MY_SQL.port()
+
+            if port is None:
+                self.port = DriverResolver.MY_SQL.port()
             # "com.mysql.jdbc.Driver"
 
         elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
@@ -60,22 +63,28 @@ class JDBC:
             if port is None: self.port = DriverResolver.PRESTO.port()
             self.driver_option = DriverResolver.PRESTO.java_class()
 
+        elif self.db_driver == DriverResolver.SQL_LITE.__str__():
+            if port is None: self.port = DriverResolver.SQL_LITE.port()
+            pass
+
         elif database == DriverResolver.CASSANDRA.__str__():
             # When using Cassandra there is no jdbc url since we are going to use the spark cassandra connector
             pass
 
-        # TODO: add mongo?
         else:
             # print("Driver not supported")
             RaiseIt.value_error(driver, [database["name"] for database in DriverResolver.list()])
 
+        port = self.port
         if database is None:
             database = ""
 
         # Create string connection
         url = ""
+        # Reference https://mitzen.blogspot.com/2017/06/pyspark-working-with-jdbc-sqlite.html
         if self.db_driver == DriverResolver.SQL_LITE.__str__():
-            url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
+            url = "jdbc:{DB_DRIVER}:{HOST}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
+
         elif self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
                 or self.db_driver == DriverResolver.REDSHIFT.__str__() \
                 or self.db_driver == DriverResolver.MY_SQL.__str__():
@@ -142,6 +151,9 @@ class JDBC:
             FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
             WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
 
+        elif self.db_driver == DriverResolver.SQL_SERVER.__str__():
+            query = "SELECT * FROM INFORMATION_SCHEMA.TABLES"
+
         elif self.db_driver == DriverResolver.MY_SQL.__str__():
             query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
 
@@ -149,7 +161,7 @@ class JDBC:
             query = "SELECT table_name, 0 as table_rows FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '" + database + "'"
 
         elif self.db_driver == DriverResolver.SQL_LITE.__str__():
-            query = ""
+            query = "SELECT name FROM sqlite_master WHERE type='table'"
 
         elif self.db_driver == DriverResolver.ORACLE.__str__():
             query = """SELECT table_name, 
@@ -217,7 +229,7 @@ class JDBC:
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
 
-            print(str(count) + " rows")
+            print(str(int(count)) + " rows")
 
         if columns == "*":
             columns_sql = "*"
@@ -226,6 +238,7 @@ class JDBC:
             columns_sql = ",".join(columns)
 
         query = "SELECT " + columns_sql + " FROM " + db_table
+
         logger.print(query)
         df = self.execute(query, limit)
 
@@ -256,14 +269,17 @@ class JDBC:
         logger.print(self.url)
 
         conf = Spark.instance.spark.read \
-            .format("jdbc" if not self.db_driver == DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
+            .format(
+            "jdbc" if not self.db_driver == DriverResolver.CASSANDRA.__str__() else "org.apache.spark.sql.cassandra") \
             .option("url", self.url) \
             .option("user", self.user) \
             .option("dbtable", query)
 
+        # Password
         if self.db_driver != DriverResolver.PRESTO.__str__() and self.password is not None:
             conf.option("password", self.password)
 
+        # Driver
         if self.db_driver == DriverResolver.ORACLE.__str__() \
                 or self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
                 or self.db_driver == DriverResolver.PRESTO.__str__():
