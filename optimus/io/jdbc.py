@@ -65,7 +65,7 @@ class JDBC:
             self.driver_option = DriverResolver.PRESTO.java_class()
 
         elif self.db_driver == DriverResolver.SQL_LITE.__str__():
-            if port is None: self.port = DriverResolver.SQL_LITE.port()
+            # SQlite do not need port
             pass
 
         elif database == DriverResolver.CASSANDRA.__str__():
@@ -76,10 +76,13 @@ class JDBC:
             # print("Driver not supported")
             RaiseIt.value_error(driver, [database["name"] for database in DriverResolver.list()])
 
-        port = self.port
+        if self.port is not None:
+            port = self.port
+
         if database is None:
             database = ""
 
+        print(self.db_driver)
         # Create string connection
         url = ""
         # Reference https://mitzen.blogspot.com/2017/06/pyspark-working-with-jdbc-sqlite.html
@@ -88,7 +91,8 @@ class JDBC:
 
         elif self.db_driver == DriverResolver.POSTGRES_SQL.__str__() \
                 or self.db_driver == DriverResolver.REDSHIFT.__str__() \
-                or self.db_driver == DriverResolver.MY_SQL.__str__():
+                or self.db_driver == DriverResolver.MY_SQL.__str__() \
+                or self.db_driver == DriverResolver.SQL_SERVER.__str__():
             # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
             url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=self.db_driver,
                                                                                               HOST=host,
