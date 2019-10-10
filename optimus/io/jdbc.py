@@ -24,6 +24,7 @@ class JDBC:
         Create the JDBC connection object
         :return:
         """
+        self.port = None
 
         self.db_driver = driver
         self.oracle_sid = oracle_sid
