@@ -41,15 +41,16 @@ class Comm:
         else:
             self.queue_name = queue_name
 
-        keys_link = "<div><a href ='{FULL_DOMAIN}'> here</a></div>".format(FULL_DOMAIN=FULL_DOMAIN,
+        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=FULL_DOMAIN,
                                                                   SESSION=self.queue_name, KEY=self.key)
 
-        direct_link = "<div><a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a></div>".format(
+        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
             FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
-            "You can now use Bumblebee. Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +
-            "Remote URL: " + direct_link
+            "Open Bumblebee: " + direct_link +
+            "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
+
 
         )
 
