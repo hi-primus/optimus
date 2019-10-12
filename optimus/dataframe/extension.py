@@ -402,7 +402,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
 @add_method(DataFrame)
 def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
-        if __IPYTHON__ and DataFrame.output is "html":
+        if __IPYTHON__ and DataFrame.output == "html":
             result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:

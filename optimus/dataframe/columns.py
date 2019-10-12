@@ -1711,7 +1711,7 @@ def cols(self):
                     (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
                 ]
 
-            mismatch_count = 1
+            mismatch_count = 0
             if _dtypes[col_name] == "string" and mismatch is not None:
                 # Here we can create a list of predefined functions
                 regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
@@ -1727,6 +1727,8 @@ def cols(self):
                     regex = re.compile(expr)
                     if regex.match(value):
                         mismatch_count = 0
+                    else:
+                        mismatch_count = 1
 
             if _dtypes[col_name] == "string" and infer is True:
 
