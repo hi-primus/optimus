@@ -12,8 +12,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import val_to_list
 from optimus import Comm
+from optimus import val_to_list
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -28,6 +28,7 @@ from optimus.spark import Spark
 
 DataFrame._name = None
 DataFrame.output = "html"
+
 
 @add_method(DataFrame)
 def roll_out():
@@ -378,7 +379,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
             if i[0] == j:
                 final_columns.append(i)
 
-    total_rows = self.rows.approx_count()
+    total_rows = self.count()
 
     if limit == "all":
         limit = total_rows
@@ -456,22 +457,25 @@ def create_id(self, column="id"):
 
 
 @add_method(DataFrame)
-def send(self, name=None, stats=True):
+def send(self, name=None, infer=True, mismatch=None, stats=True):
     """
     Profile and send the data to the queue
     :param self:
+    :param infer: infer datatypes
+    :param mismatch: a dict with the column name or regular expresion to identify correct values.
     :param name: Specified a name for the view/dataframe
-    :param stats:
+    :param stats: calculate stats or only vales
     :return:
     """
     df = self
     if name is not None:
         df.set_name(name)
 
-    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
+    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
                                        sample=10000,
-                                       stats=stats)
+                                       stats=stats,
+                                       mismatch=mismatch)
 
     if Comm:
         Comm.instance.send(result)

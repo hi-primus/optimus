@@ -7,7 +7,7 @@ import sys
 from functools import reduce
 from pathlib import Path
 
-from fastnumbers import isint, isfloat
+import fastnumbers
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -35,10 +35,10 @@ def infer(value):
     elif is_bool(value):
         result = "bool"
 
-    elif isint(value):
+    elif fastnumbers.isint(value):
         result = "int"
 
-    elif isfloat(value):
+    elif fastnumbers.isfloat(value):
         result = "float"
 
     elif is_list(value):

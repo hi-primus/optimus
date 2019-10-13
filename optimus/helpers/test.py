@@ -69,6 +69,7 @@ class Test:
         cls = "class Test_" + self.name + "(unittest.TestCase):\n"
 
         test_file.write(cls)
+        test_file.write("\tmaxDiff = None\n")
 
         for root, dirs, files in os.walk(self.path):
             for file in files:
@@ -236,11 +237,6 @@ class Test:
         elif output == "dict":
             print(df_result)
 
-            if is_str(df_result):
-                df_result = "'" + df_result + "'"
-            else:
-                df_result = str(df_result)
-
             expected = "\texpected_value =" + df_result + "\n"
         else:
             expected = "\t\n"
@@ -304,5 +300,3 @@ class Test:
             os.remove(filename)
         except FileNotFoundError:
             print("File NOT found")
-
-

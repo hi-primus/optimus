@@ -58,7 +58,7 @@ cols = [
     ]
 
 rows = [
-        ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+        ("Optimus", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
          "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
          None),
         ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
@@ -79,14 +79,8 @@ rows = [
     ]
 source_df = op.create.df(cols ,rows)
 source_df.table()
-
-
-# +
-a= {"names": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "height(ft)": {"int": 5, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "function": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "rank": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "age": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "weight(t)": {"int": 0, "decimal": 5, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "japanese name": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last position seen": {"int": 0, "decimal": 0, "string": 4, "date": 0, "boolean": 0, "array": 0, "null": 3, "missing": 0}, "date arrival": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last date seen": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "attributes": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Date Type": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "timestamp": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Cybertronian": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "function(binary)": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "NullType": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 7, "missing": 0}}
-b ={"function": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "japanese name": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "date arrival": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Date Type": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "timestamp": {"int": 0, "decimal": 0, "string": 0, "date": 6, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "Cybertronian": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "function(binary)": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "NullType": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 7, "missing": 0}, "height(ft)": {"int": 5, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "last position seen": {"int": 0, "decimal": 0, "string": 4, "date": 0, "boolean": 0, "array": 0, "null": 3, "missing": 0}, "weight(t)": {"int": 0, "decimal": 5, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 2, "missing": 0}, "names": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "last date seen": {"int": 0, "decimal": 0, "string": 6, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "attributes": {"int": 0, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "rank": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}, "age": {"int": 6, "decimal": 0, "string": 0, "date": 0, "boolean": 0, "array": 0, "null": 1, "missing": 0}}
-
-assert(sorted(a)==sorted(b))
 # -
+
 
 # ### End Init Section
 
@@ -94,12 +88,20 @@ assert(sorted(a)==sorted(b))
 
 from pyspark.ml.linalg import Vectors
 
+import re
+a="a\'a"
+re.escape(a)
+
+print(a)
+
 t = Test(op, source_df, "df_profiler", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
                                         "from pyspark.sql import functions as F",
                                         "from optimus.profiler.profiler import Profiler",
+                                        "null = None",
+                                        "true = True",
                                         "p= Profiler()"], path = "df_profiler", final_path="..")
 
 # +
@@ -124,14 +126,29 @@ p= Profiler()
 
 p.run(source_df, "*")
 
-t.create(p, "to_json", None, 'json', None, source_df,"*")
+t.create(p, "dataset", None, 'json', None, source_df,"*")
 
-t.create(p, "columns", None, 'json', None, source_df,"*")
+t.run()
+
+mismatch = {"names":"dd/mm/yyyy","height(ft)":r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',"function":"yyyy-mm-dd"}
+t.create(p, "dataset", "mismatch", 'json', None, source_df,"*", mismatch=mismatch)
+
+t.run()
+
+t.create(p, "columns_stats", None, 'json', None, source_df,"*")
+
+t.run()
 
 t.create(p, "columns_agg", None, 'json', None, source_df,"*")
 
 t.run()
 
-source_df.sample()
+a = "{'name'=a'a}"
+
+
+print(a)
+
+import json
+json.dumps("{'name'=a'a}")
 
 
