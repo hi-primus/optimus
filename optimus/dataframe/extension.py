@@ -386,7 +386,7 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     elif total_rows < limit:
         limit = total_rows
 
-    total_rows = humanize.intword(total_rows)
+    total_rows = humanize.intcomma(total_rows)
 
     total_cols = self.cols.count()
     total_partitions = self.partitions()
