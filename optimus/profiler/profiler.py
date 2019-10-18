@@ -6,7 +6,6 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -19,6 +18,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html, PYSPARK_NUMERIC_TYPES
 from optimus.profiler.templates.html import FOOTER, HEADER
+from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
@@ -368,7 +368,6 @@ class Profiler:
         result = {}
         for i, cols in enumerate(list_columns):
             logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
-            print(df.functions)
             funcs = [df.functions.count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
@@ -398,7 +397,7 @@ class Profiler:
             # min_max = None
 
             for col_name in cols:
-                # Only process histogram id numeric. For toher data types using frequency
+                # Only process histogram id numeric. For others data types use frequency
                 if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
                     buckets = result[col_name]["count_uniques"] - 1

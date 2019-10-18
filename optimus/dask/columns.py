@@ -1,20 +1,18 @@
 import re
 from ast import literal_eval
 
+import dask
 import dask.dataframe as dd
+import numpy as np
 import pandas
 from dask.dataframe.core import DataFrame
 from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
-from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_column_a, is_list_of_tuples, is_int, is_function
+from optimus.helpers.check import is_list_of_tuples, is_int, is_function, is_str, is_dict
 from optimus.helpers.columns import parse_columns, validate_columns_names
-from optimus.helpers.converter import val_to_list
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
-
-ENGINE = "spark"
 
 
 def cols(self):
@@ -239,115 +237,134 @@ def cols(self):
             return result
 
         @staticmethod
+        def is_numeric(col_name):
+            # TODO: Check if this is the best way to check the data type
+            if np.dtype(self[col_name]).type in [np.int64, np.int32, np.float64]:
+                return True
+
+        @staticmethod
         def exec_agg(exprs):
             """
             Execute and aggregation
             :param exprs:
             :return:
             """
-            exprs = dd.compute(exprs)[0]
-            if len(exprs) > 0:
-                result = {}
-                for i, agg in enumerate(exprs):
-                    for agg_name, col_value in agg.items():
-                        result[agg_name] = {}
-                        if isinstance(col_value, pandas.core.series.Series):
-                            for col, value in col_value.items():
-                                result[agg_name][col] = value
-                        else:
-                            result[agg_name][col] = col_value
+            agg = dd.compute(exprs)[0]
+            print("agg", agg)
 
-                # print(r)
+            if len(agg) > 0:
+                result = {}
+                for a in agg:
+                    agg_name = a[0]
+                    col_value = a[1]
+                    result[agg_name] = {}
+                    if isinstance(col_value, pandas.core.series.Series):
+                        for col, value in col_value.items():
+                            result[agg_name][col] = value
+                    elif isinstance(col_value, dask.dataframe.core.Series):
+                        for col, value in col_value.items():
+                            result[agg_name][col] = value
+                    elif is_dict(col_value):
+                        result[agg_name] = col_value
             else:
                 result = None
             return result
 
         @staticmethod
         def create_exprs(columns, funcs, *args):
-            exprs = []
-            for func in funcs:
-                if is_function(func):
-                    name = func.__name__
-                    exprs.append({func: getattr(self[columns].functions, name)()})
-                else:
-                    exprs.append({func: getattr(self[columns], func)()})
-            return exprs
 
-        @staticmethod
-        def create_exprs1(columns, funcs, *args):
-            """
-            Helper function to apply multiple columns expression to multiple columns
-            :param columns:
-            :param funcs:
-            :param args:
-            :return:
-            """
+            exprs = {}
 
-            columns = parse_columns(self, columns)
-            funcs = val_to_list(funcs)
-            exprs = []
+            # for col_name in columns:
+            #     for func in funcs:
+            # print(col_name)
+            # print(func)
+            # print(args)
+            # # print(list(func.values())[0])
+            # # exprs[col_name] = list(func.values())
+            # # print(func==self.functions.count_uniques_agg)
+            # # if func == self.functions.count_uniques_agg:
+            # #     print('111')
+            #
+            # # if is_dict(func):
+            # #     print(col_name)
+            # #     print(list(func.keys())[0])
 
+            # exprs[func] = getattr(self[col_name].functions, name)()
+            # print(func)
+            # for f in func.items():
+            #     print(f)
+            #     print(func)
+            #     if func == "percentile_agg":
+            #         print("aaa",func)
+
+            # if is_function(func):
+            #     name = func.__name__
+            #     exprs[func] = getattr(self[col_name].functions, name)()
+            #
+            # elif is_str(func):
+            #     exprs[func] = getattr(self[col_name], func)()
+            # else:
+            #     exprs[list(func.keys())[0]] = list(func.values())[0]
+
+            # Some operations support rows
             for col_name in columns:
                 for func in funcs:
-                    exprs.append((func, (col_name, *args)))
+                    # print("func", func)
+                    if is_function(func):
+                        # print(self)
+                        if col_name in exprs:
+                            exprs[col_name].update(func(col_name, args)(self))
+                        else:
+                            exprs[col_name] = func(col_name, args)(self)
+                        # name = func.__name__
+                        # exprs[col_name] = getattr(self[columns].functions, name)()
 
-            df = self
-
-            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-            filters = {"date": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                self.functions.zeros_agg],
-                       "array": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                 self.functions.zeros_agg],
-                       "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance,
-                                     F.approx_count_distinct,
-                                     self.functions.zeros_agg, self.functions.percentile_agg],
-                       "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                self.functions.zeros_agg],
-                       "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                   self.functions.zeros_agg],
-                       "binary": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
-                                  self.functions.zeros_agg]
-                       }
-
-            def _filter(_col_name, _func):
-                for data_type, func_filter in filters.items():
-                    for f in func_filter:
-                        if (_func == f) and (is_column_a(df, _col_name, data_type)):
-                            return True
-                return False
-
-            beauty_col_names = {"hist_agg": "hist", "percentile_agg": "percentile", "zeros_agg": "zeros",
-                                "count_na_agg": "count_na", "range_agg": "range", "count_uniques_agg": "count_uniques"}
-
-            def _beautify_col_names(_func):
-                if _func.__name__ in beauty_col_names:
-                    func_name = beauty_col_names[_func.__name__]
-                else:
-                    func_name = _func.__name__
-                return func_name
-
-            def _agg_exprs(_funcs):
-                _exprs = []
-                for f in _funcs:
-                    _func = f[0]
-                    _args = f[1]
-                    _col_name = _args[0]
-
-                    if not _filter(_col_name, _func):
-                        agg = _func(*_args)
-                        if agg is not None:
-                            func_name = _beautify_col_names(_func)
-                            if ENGINE == "spark":
-                                _exprs.append(agg.alias(func_name + "_" + _col_name))
-                            elif ENGINE == "sql":
-                                _exprs.append(agg.as_(func_name + "_" + _col_name))
-
-                return _exprs
+                    elif is_str(func):
+                        print(2)
+                        exprs[func] = getattr(self[columns], func)()
+                    else:
+                        print(3)
+                        exprs[list(func.keys())[0]] = list(func.values())[0]
 
             print(exprs)
-            r = _agg_exprs(exprs)
+            result = {}
+            agg_funcs = ["min", "max", "std", "mean"]
 
-            return r
+            for k, v in exprs.items():
+                if k in agg_funcs:
+                    for k1, v1 in v.items():
+                        if k1 in result:
+                            if k1 not in k:
+                                result[k1][k] = {}
+                                result[k1][k] = v1
+                        else:
+
+                            result[k1] = {}
+                            result[k1][k] = v1
+                else:
+                    if k in result:
+                        result[k].update(v)
+                    else:
+                        result[k] = {}
+                        result[k] = v
+
+            # Convert to list
+            result = [r for r in result.items()]
+
+            # Some operations only support series
+            # for col_name in columns:
+            #     for func in funcs:
+            #         if is_function(func):
+            #             name = func.__name__
+            #             exprs[func] = getattr(self[col_name].functions, name)()
+            #
+            #         elif is_str(func):
+            #             exprs[func] = getattr(self[col_name], func)()
+            #         else:
+            #             exprs[list(func.keys())[0]] = list(func.values())[0]
+
+            return result
 
         @staticmethod
         def dtypes(columns="*"):
