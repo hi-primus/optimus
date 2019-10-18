@@ -6,7 +6,6 @@ from pyspark.sql import functions as F
 
 # Helpers
 import optimus as op
-
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_spark_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
@@ -61,6 +60,13 @@ def rows(self):
             input_cols = parse_columns(self, input_cols)
 
             return self.where(fbdt(input_cols, data_type))
+
+        @staticmethod
+        def count() -> int:
+            """
+            Count dataframe rows
+            """
+            return self.count()
 
         @staticmethod
         def select(*args, **kwargs):
