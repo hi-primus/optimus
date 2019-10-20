@@ -1,18 +1,17 @@
 import re
 from ast import literal_eval
 
-import dask
 import dask.dataframe as dd
 import numpy as np
-import pandas
 from dask.dataframe.core import DataFrame
 from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
-from optimus.helpers.check import is_list_of_tuples, is_int, is_function, is_str, is_dict
-from optimus.helpers.columns import parse_columns, validate_columns_names
-from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+from optimus.helpers.check import is_list_of_tuples, is_int
+from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers
+from optimus.helpers.converter import format_dict, val_to_list
+from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 
 def cols(self):
@@ -226,21 +225,125 @@ def cols(self):
 
             result = {}
             for col_name in columns:
-                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs))
+                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs),
+                                               meta=str).compute()
+
                 result[col_name] = dict(df_result.value_counts())
 
             if infer is True:
                 for k in result.keys():
                     result[k] = fill_missing_var_types(result[k])
             else:
-                result = parse_profiler_dtypes(result)
+                result = Cols.parse_profiler_dtypes(result)
             return result
 
         @staticmethod
+        def parse_profiler_dtypes(col_data_type):
+            """
+               Parse a spark data type to a profiler data type
+               :return:
+               """
+
+            columns = {}
+            for k, v in col_data_type.items():
+                result_default = {data_type: 0 for data_type in self.constants.DTYPES_TO_PROFILER.keys()}
+                for k1, v1 in v.items():
+                    for k2, v2 in self.constants.DTYPES_TO_PROFILER.items():
+                        if k1 in self.constants.DTYPES_TO_PROFILER[k2]:
+                            result_default[k2] = result_default[k2] + v1
+                columns[k] = result_default
+            return columns
+
+        @staticmethod
         def is_numeric(col_name):
+            """
+            Check if a column is numeric
+            :param col_name:
+            :return:
+            """
             # TODO: Check if this is the best way to check the data type
             if np.dtype(self[col_name]).type in [np.int64, np.int32, np.float64]:
-                return True
+                result = True
+            else:
+                result = False
+            return result
+
+        @staticmethod
+        def frequency(columns, n=10, percentage=False, total_rows=None):
+            columns = parse_columns(self, columns)
+            df = self
+            q = []
+            for col_name in columns:
+                q.append({col_name: [{"value": k, "count": v} for k, v in
+                                     self[col_name].value_counts().nlargest(n).iteritems()]})
+
+            result = dd.compute(*q)[0]
+
+            if percentage is True:
+                if total_rows is None:
+                    total_rows = df.rows.count()
+                    for c in result:
+                        c["percentage"] = round((c["count"] * 100 / total_rows), 2)
+
+            return result
+
+        @staticmethod
+        def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
+            """
+            Return the percentile of a spark
+            :param columns:  '*', list of columns names or a single column name.
+            :param values: list of percentiles to be calculated
+            :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
+            :return: percentiles per columns
+            """
+            values = [v for v in values]
+            return Cols.agg_exprs(columns, self.functions.percentile_agg, self, values, relative_error)
+
+        @staticmethod
+        def median(columns, relative_error=RELATIVE_ERROR):
+            """
+            Return the median of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
+            :return:
+            """
+
+            return format_dict(Cols.percentile(columns, [0.5], relative_error))
+
+        @staticmethod
+        def agg_exprs(columns, funcs, *args):
+            """
+            Create and run aggregation
+            :param columns:
+            :param funcs:
+            :param args:
+            :return:
+            """
+            # print(args)
+            return Cols.exec_agg(Cols.create_exprs(columns, funcs, *args))
+
+        @staticmethod
+        def mad(columns, relative_error=RELATIVE_ERROR, more=None):
+            """
+            Return the Median Absolute Deviation
+            :param columns: Column to be processed
+            :param more: Return some extra computed values (Median).
+            :param relative_error: Relative error calculating the media
+            :return:
+            """
+
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            df = self
+
+            result = {}
+            for col_name in columns:
+                funcs = [df.functions.mad_agg]
+
+                result[col_name] = Cols.agg_exprs(columns, funcs, more)
+
+            return format_dict(result)
 
         @staticmethod
         def exec_agg(exprs):
@@ -250,121 +353,60 @@ def cols(self):
             :return:
             """
             agg = dd.compute(exprs)[0]
-            print("agg", agg)
 
             if len(agg) > 0:
                 result = {}
-                for a in agg:
-                    agg_name = a[0]
-                    col_value = a[1]
-                    result[agg_name] = {}
-                    if isinstance(col_value, pandas.core.series.Series):
-                        for col, value in col_value.items():
-                            result[agg_name][col] = value
-                    elif isinstance(col_value, dask.dataframe.core.Series):
-                        for col, value in col_value.items():
-                            result[agg_name][col] = value
-                    elif is_dict(col_value):
-                        result[agg_name] = col_value
+                for agg_value in agg:
+                    col_name = agg_value[0]
+                    agg_result = agg_value[1]
+                    if col_name not in result:
+                        result[col_name] = {}
+
+                    result[col_name].update(agg_result)
             else:
                 result = None
             return result
 
         @staticmethod
         def create_exprs(columns, funcs, *args):
-
+            columns = parse_columns(self, columns)
+            funcs = val_to_list(funcs)
             exprs = {}
-
-            # for col_name in columns:
-            #     for func in funcs:
-            # print(col_name)
-            # print(func)
-            # print(args)
-            # # print(list(func.values())[0])
-            # # exprs[col_name] = list(func.values())
-            # # print(func==self.functions.count_uniques_agg)
-            # # if func == self.functions.count_uniques_agg:
-            # #     print('111')
-            #
-            # # if is_dict(func):
-            # #     print(col_name)
-            # #     print(list(func.keys())[0])
-
-            # exprs[func] = getattr(self[col_name].functions, name)()
-            # print(func)
-            # for f in func.items():
-            #     print(f)
-            #     print(func)
-            #     if func == "percentile_agg":
-            #         print("aaa",func)
-
-            # if is_function(func):
-            #     name = func.__name__
-            #     exprs[func] = getattr(self[col_name].functions, name)()
-            #
-            # elif is_str(func):
-            #     exprs[func] = getattr(self[col_name], func)()
-            # else:
-            #     exprs[list(func.keys())[0]] = list(func.values())[0]
 
             # Some operations support rows
             for col_name in columns:
                 for func in funcs:
-                    # print("func", func)
-                    if is_function(func):
-                        # print(self)
-                        if col_name in exprs:
-                            exprs[col_name].update(func(col_name, args)(self))
-                        else:
-                            exprs[col_name] = func(col_name, args)(self)
-                        # name = func.__name__
-                        # exprs[col_name] = getattr(self[columns].functions, name)()
-
-                    elif is_str(func):
-                        print(2)
-                        exprs[func] = getattr(self[columns], func)()
+                    if col_name in exprs:
+                        exprs[col_name].update(func(col_name, args)(self))
                     else:
-                        print(3)
-                        exprs[list(func.keys())[0]] = list(func.values())[0]
+                        exprs[col_name] = func(col_name, args)(self)
 
-            print(exprs)
             result = {}
-            agg_funcs = ["min", "max", "std", "mean"]
 
             for k, v in exprs.items():
-                if k in agg_funcs:
-                    for k1, v1 in v.items():
-                        if k1 in result:
-                            if k1 not in k:
-                                result[k1][k] = {}
-                                result[k1][k] = v1
-                        else:
-
-                            result[k1] = {}
-                            result[k1][k] = v1
+                if k in result:
+                    result[k].update(v)
                 else:
-                    if k in result:
-                        result[k].update(v)
-                    else:
-                        result[k] = {}
-                        result[k] = v
+                    result[k] = {}
+                    result[k] = v
 
             # Convert to list
             result = [r for r in result.items()]
-
-            # Some operations only support series
-            # for col_name in columns:
-            #     for func in funcs:
-            #         if is_function(func):
-            #             name = func.__name__
-            #             exprs[func] = getattr(self[col_name].functions, name)()
-            #
-            #         elif is_str(func):
-            #             exprs[func] = getattr(self[col_name], func)()
-            #         else:
-            #             exprs[list(func.keys())[0]] = list(func.values())[0]
-
             return result
+
+        @staticmethod
+        def schema_dtype(columns="*"):
+            """
+            Return the column(s) data type as Type
+            :param columns: Columns to be processed
+            :return:
+            """
+
+            # if np.dtype(self[col_name]).type in [np.int64, np.int32, np.float64]:
+            #     result = True
+            #
+            columns = parse_columns(self, columns)
+            return format_dict([np.dtype(self[col_name]).type for col_name in columns])
 
         @staticmethod
         def dtypes(columns="*"):
@@ -377,6 +419,28 @@ def cols(self):
             columns = parse_columns(self, columns)
             data_types = ({k: str(v) for k, v in dict(self.dtypes).items()})
             return {col_name: data_types[col_name] for col_name in columns}
+
+        @staticmethod
+        def select(columns="*", regex=None, data_type=None, invert=False):
+            """
+            Select columns using index, column name, regex to data type
+            :param columns:
+            :param regex: Regular expression to filter the columns
+            :param data_type: Data type to be filtered for
+            :param invert: Invert the selection
+            :return:
+            """
+            df = self
+            columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
+            if columns is not None:
+                df = df[columns]
+                # Metadata get lost when using select(). So we copy here again.
+                # df.ext.meta = self.ext.meta
+                result = df
+            else:
+                result = None
+
+            return result
 
     return Cols()
 
