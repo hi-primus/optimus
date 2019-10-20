@@ -8,61 +8,57 @@ from dask.dataframe.core import DataFrame
 
 def functions(self):
     class Functions:
-        @staticmethod
-        def run():
-            print("run")
 
         @staticmethod
-        def min(col_name, *args):
-            def min_(x):
-                return {"min": x[col_name].min()}
+        def min(col_name, args):
+            def min_(serie):
+                return {"min": serie[col_name].min()}
 
             return min_
 
         @staticmethod
-        def max(col_name, *args):
-            def max_(x):
-                return {"max": x[col_name].max()}
+        def max(col_name, args):
+            def max_(serie):
+                return {"max": serie[col_name].max()}
 
             return max_
 
         @staticmethod
-        def stddev(col_name, *args):
-            def std_(x):
-                return {"stddev": x[col_name].max()}
+        def stddev(col_name, args):
+            def std_(serie):
+                return {"stddev": serie[col_name].max()}
 
             return std_
 
         @staticmethod
-        def sum(col_name, *args):
-            def std_(x):
-                return {"sum": x[col_name].sum()}
+        def sum(col_name, args):
+            def std_(serie):
+                return {"sum": serie[col_name].sum()}
 
             return std_
 
         @staticmethod
-        def variance(col_name, *args):
-            def var_(x):
-                return {"variance": x[col_name].var()}
+        def variance(col_name, args):
+            def var_(serie):
+                return {"variance": serie[col_name].var()}
 
             return var_
 
         @staticmethod
-        def zeros_agg(col_name, *args):
-            estimate = args[0]
+        def zeros_agg(col_name, args):
 
-            def zeros_(x):
-                result = {"zeros": (x[col_name].values == 0).sum()}
+            def zeros_(serie):
+                result = {"zeros": (serie[col_name].values == 0).sum()}
                 return result
 
             return zeros_
 
         @staticmethod
-        def count_na_agg(col_name, *args):
+        def count_na_agg(col_name, args):
             # estimate = args[0]
 
-            def count_na_(x):
-                result = {"count_na": x[col_name].isnull().sum()}
+            def count_na_(serie):
+                result = {"count_na": serie[col_name].isnull().sum()}
                 return result
 
             return count_na_
@@ -73,33 +69,31 @@ def functions(self):
             bins = args[1]
             range = args[2]
 
-            def hist_agg_(x):
-                # return {"hist_agg": da.histogram(x[col_name], bins=bins)}
-                return {"hist_agg": da.histogram(x[col_name], bins=bins, range=range)}
+            def hist_agg_(serie):
+                return {
+                    "hist_agg": list(da.histogram(serie[col_name], bins=bins, range=[range["min"], range["max"]])[0])}
 
             return hist_agg_
 
-
         @staticmethod
-        def kurtosis(col_name, *args):
-            def _kurtoris(x):
-                result = {"kurtosis": float(stats.kurtosis(x[col_name]))}
+        def kurtosis(col_name, args):
+            def _kurtoris(serie):
+                result = {"kurtosis": float(stats.kurtosis(serie[col_name]))}
                 return result
 
             return _kurtoris
 
         @staticmethod
-        def mean(col_name, *args):
-            def _mean(x):
-                return {"percentile_agg": x[col_name].mean()}
-                return result
+        def mean(col_name, args):
+            def _mean(serie):
+                return {"mean": serie[col_name].mean()}
 
             return _mean
 
         @staticmethod
-        def skewness(col_name, *args):
-            def _skewness(x):
-                result = {"skewness": float(stats.skew(x[col_name]))}
+        def skewness(col_name, args):
+            def _skewness(serie):
+                result = {"skewness": float(stats.skew(serie[col_name]))}
                 return result
 
             return _skewness
@@ -107,10 +101,10 @@ def functions(self):
         @staticmethod
         def percentile_agg(col_name, args):
             values = args[1]
-            print(values)
 
-            def _percentile(x):
-                return {"percentile_agg": x[col_name].quantile(values)}
+            def _percentile(serie):
+                print(col_name, values)
+                return {"percentile": {str(i): j for i, j in serie[col_name].quantile(values).iteritems()}}
 
             return _percentile
 
@@ -118,17 +112,34 @@ def functions(self):
         def count_uniques_agg(col_name, args):
             estimate = args[0]
 
-            def _count_uniques_agg(x):
+            def _count_uniques_agg(serie):
                 if estimate is True:
-                    result = {"count_uniques_agg": x[col_name].nunique_approx()}
+                    result = {"count_uniques": serie[col_name].nunique_approx()}
                 else:
-                    result = {"count_uniques_agg": x[col_name].nunique()}
+                    result = {"count_uniques": serie[col_name].nunique()}
                 return result
 
             return _count_uniques_agg
+
+        @staticmethod
+        def mad_agg(col_name, args):
+            more = args[0]
+
+            def _mad_agg(serie):
+                median_value = serie[col_name].quantile(0.5)
+                mad_value = (serie[col_name] - median_value).abs().quantile(0.5)
+
+                _mad = {}
+                if more:
+                    result = {"mad": mad_value, "median": median_value}
+                else:
+                    result = {"mad": mad_value}
+
+                return result
+
+            return _mad_agg
 
     return Functions()
 
 
 DataFrame.functions = property(functions)
-# print(DataFrame.functions)
