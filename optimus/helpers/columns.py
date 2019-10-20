@@ -6,7 +6,7 @@ from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_o
     is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -88,16 +88,6 @@ def get_output_cols(input_cols, output_cols):
     return output_cols
 
 
-def colums_names(df):
-    if is_spark_dataframe(df):
-        columns_names = df.columns
-    elif is_pandas_dataframe(df):
-        columns_names = list(df.columns)
-    elif is_dask_dataframe(df):
-        columns_names = list(df.columns)
-    return columns_names
-
-
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False, invert=False):
     """
@@ -160,9 +150,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     columns_residual = None
 
     # If necessary filter the columns by data type
+
     if filter_by_column_dtypes:
         # Get columns for every data type
-
+        # print("filter", filter_by_column_dtypes)
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
@@ -258,6 +249,16 @@ def check_for_missing_columns(df, col_names):
     return False
 
 
+def colums_names(df):
+    if is_spark_dataframe(df):
+        columns_names = df.columns
+    elif is_pandas_dataframe(df):
+        columns_names = list(df.columns)
+    elif is_dask_dataframe(df):
+        columns_names = list(df.columns)
+    return columns_names
+
+
 def filter_col_name_by_dtypes(df, data_type):
     """
     Return column names filtered by the column data type
@@ -266,13 +267,20 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
-    data_type = parse_spark_dtypes(data_type)
 
-    # isinstace require a tuple
+    data_type = parse_dtypes(df, data_type)
+
+    # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
 
     # Filter columns by data type
-    return [c for c in df.columns if isinstance(df.schema[c].dataType, data_type)]
+    result = []
+    for col_name in df.cols.names():
+        for dt in data_type:
+            if df.cols.schema_dtype(col_name) is dt:
+                result.append(col_name)
+
+    return result
 
 
 def name_col(col_names: str, append: str) -> str:

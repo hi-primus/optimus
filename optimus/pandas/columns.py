@@ -8,7 +8,7 @@ from pyspark.sql import functions as F
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import val_to_list
-from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+from optimus.profiler.functions import fill_missing_var_types
 
 ENGINE = "spark"
 
@@ -177,8 +177,25 @@ def cols(self):
                 for k in result.keys():
                     result[k] = fill_missing_var_types(result[k])
             else:
-                result = parse_profiler_dtypes(result)
+                result = Cols.parse_profiler_dtypes(result)
             return result
+
+        @staticmethod
+        def parse_profiler_dtypes(col_data_type):
+            """
+               Parse a spark data type to a profiler data type
+               :return:
+               """
+
+            columns = {}
+            for k, v in col_data_type.items():
+                result_default = {data_type: 0 for data_type in self.constants.DTYPES_TO_PROFILER.keys()}
+                for k1, v1 in v.items():
+                    for k2, v2 in self.constants.DTYPES_TO_PROFILER.items():
+                        if k1 in self.constants.DTYPES_TO_PROFILER[k2]:
+                            result_default[k2] = result_default[k2] + v1
+                columns[k] = result_default
+            return columns
 
         @staticmethod
         def create_exprs(columns, funcs, *args):

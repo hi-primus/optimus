@@ -4,7 +4,6 @@ from optimus.spark.plots.functions import plot_scatterplot, plot_boxplot, plot_f
     plot_correlation, plot_qqplot
 from optimus.helpers.columns import check_column_numbers
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES
 
 
 def plot(self):
@@ -35,7 +34,7 @@ def plot(self):
             :param output_path: path where the image is going to be saved
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             data = self.cols.scatter(columns, buckets)
@@ -50,7 +49,7 @@ def plot(self):
             :param output_path: path where the image is going to be saved
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             for col_name in columns:
@@ -100,7 +99,7 @@ def plot(self):
             """
             df = self
 
-            columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+            columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
 
             if columns is not None:
                 sample_data = df.sample_n(n=n, random=True)

@@ -12,7 +12,7 @@ from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.converter import one_list_to_val, val_to_list
-from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -144,7 +144,7 @@ def is_column_a(df, column, dtypes):
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
 
-    data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
+    data_type = tuple(val_to_list(parse_dtypes(dtypes)))
     column = one_list_to_val(column)
 
     # Filter columns by data type

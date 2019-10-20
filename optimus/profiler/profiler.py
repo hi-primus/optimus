@@ -6,7 +6,6 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import time_it
@@ -16,7 +15,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
-    write_json, write_html, PYSPARK_NUMERIC_TYPES
+    write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
 from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
@@ -238,7 +237,7 @@ class Profiler:
 
         output_columns = self.output_columns
 
-        rows_count = df.count()
+        rows_count = df.rows.count()
         self.rows_count = rows_count
         self.cols_count = cols_count = len(df.columns)
 
@@ -334,7 +333,7 @@ class Profiler:
 
         # Calculate Frequency
         logger.print("Processing Frequency ...")
-        df_freq = df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        df_freq = df.cols.select("*", data_type=df.constants.NUMERIC_TYPES, invert=True)
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
@@ -383,12 +382,17 @@ class Profiler:
 
             funcs = [df.functions.count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
+
+            # print(exprs)
             result.update(df.cols.exec_agg(exprs))
 
         exprs = []
         n = BATCH_SIZE
         result_hist = {}
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
+
+        # print("result", result)
+
         for i, cols in enumerate(list_columns):
             logger.print(
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
@@ -397,8 +401,10 @@ class Profiler:
             # min_max = None
 
             for col_name in cols:
+
                 # Only process histogram id numeric. For others data types use frequency
-                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                if df.cols.is_numeric(col_name):
+
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
                     buckets = result[col_name]["count_uniques"] - 1
                     if buckets > MAX_BUCKETS:
@@ -431,7 +437,8 @@ class Profiler:
         max_value = stats[col_name]["max"]
         min_value = stats[col_name]["min"]
 
-        if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+        if df.cols.is_numeric(col_name):
+            print(stats)
             stddev = stats[col_name]['stddev']
             mean = stats[col_name]['mean']
 

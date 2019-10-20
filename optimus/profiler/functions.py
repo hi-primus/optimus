@@ -6,23 +6,6 @@ from optimus.helpers.constants import *
 from optimus.helpers.json import json_converter
 
 
-def parse_profiler_dtypes(col_data_type):
-    """
-       Parse a spark data type to a profiler data type
-       :return:
-       """
-
-    columns = {}
-    for k, v in col_data_type.items():
-        result_default = {data_type: 0 for data_type in SPARK_DTYPES_TO_PROFILER.keys()}
-        for k1, v1 in v.items():
-            for k2, v2 in SPARK_DTYPES_TO_PROFILER.items():
-                if k1 in SPARK_DTYPES_TO_PROFILER[k2]:
-                    result_default[k2] = result_default[k2] + v1
-        columns[k] = result_default
-    return columns
-
-
 def fill_missing_col_types(col_types):
     """
     Fill missing col types with 0
