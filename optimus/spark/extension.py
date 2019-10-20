@@ -63,7 +63,6 @@ def ext(self):
         def to_dict():
             """
             Return a Python object from a Spark Dataframe
-            :param self:
             :return:
             """
             return collect_as_dict(self)
@@ -115,7 +114,7 @@ def ext(self):
             return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
         @staticmethod
-        def sample_n(n=10, random=False):
+        def sample(n=10, random=False):
             """
             Return a n number of sample from a dataFrame
             :param n: Number of samples
@@ -280,10 +279,10 @@ def ext(self):
         #     return collect_as_dict(self.rdd.glom().collect()[0])
 
         @staticmethod
-        def h_repartition(partitions_number=None, col_name=None):
+        def repartition(partitions_number=None, col_name=None):
             """
             Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and
-            a column if you need more control.
+            a column.
             See
             https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
             https://medium.com/@adrianchang/apache-spark-partitioning-e9faab369d14
