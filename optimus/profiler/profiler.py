@@ -246,13 +246,13 @@ class Profiler:
         if stats is True:
             output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count)
 
-        assign(output_columns, "name", df.get_name(), dict)
-        assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
+        assign(output_columns, "name", df.ext.get_name(), dict)
+        # assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
 
         # Add the General data summary to the output
         data_set_info = {'cols_count': humanize.intword(cols_count),
                          'rows_count': humanize.intword(rows_count),
-                         'size': humanize.naturalsize(df.size())}
+                         'size': humanize.naturalsize(df.ext.size())}
 
         assign(output_columns, "summary", data_set_info, dict)
 
@@ -266,7 +266,7 @@ class Profiler:
         assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
         sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                  "value": df.sample_n(sample).rows.to_list(columns)}
+                  "value": df.ext.sample(sample).rows.to_list(columns)}
 
         assign(output_columns, "sample", sample, dict)
 

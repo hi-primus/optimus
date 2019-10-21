@@ -34,4 +34,4 @@ paho-mqtt==0.4.90
 pypika==0.32.0
 statsmodels==0.10.1
 glom==19.2.0
-dask[complete] ==  2.5.0
+dask[complete] ==  2.6.0

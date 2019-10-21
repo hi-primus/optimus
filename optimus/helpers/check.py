@@ -7,6 +7,7 @@ import re
 
 import math
 import pandas as pd
+from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 from pyspark.sql import DataFrame as SparkDataFrame
 from pyspark.sql import functions as F
@@ -159,6 +160,14 @@ def is_list_of_str(value):
     """
     return bool(value) and isinstance(value, list) and all(isinstance(elem, str) for elem in value)
 
+
+def is_list_of_futures(value):
+    """
+    Check if an object is a list of strings
+    :param value:
+    :return:
+    """
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, distributed.client.Future) for elem in value)
 
 def is_list_of_int(value):
     """

@@ -8,7 +8,8 @@ from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
-from optimus.helpers.check import is_list_of_tuples, is_int
+from optimus.dask.dask import Dask
+from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
@@ -352,19 +353,27 @@ def cols(self):
             :param exprs:
             :return:
             """
-            agg = dd.compute(exprs)[0]
+            agg_list = Dask.instance.compute(exprs)
+            agg_result = []
 
-            if len(agg) > 0:
-                result = {}
-                for agg_value in agg:
-                    col_name = agg_value[0]
-                    agg_result = agg_value[1]
-                    if col_name not in result:
-                        result[col_name] = {}
+            # Distributed mode return a list of Futures objects, Single mode not.
+            if is_list_of_futures(agg_list):
+                for agg_element in agg_list:
+                    agg_result.append(agg_element.result())
+            else:
+                agg_result = agg_list[0]
 
-                    result[col_name].update(agg_result)
+            result = {}
+            if len(agg_result) > 0:
+                for agg_element in agg_result:
+                    agg_col_name, agg_element_result = agg_element
+                    if agg_col_name not in result:
+                        result[agg_col_name] = {}
+
+                    result[agg_col_name].update(agg_element_result)
             else:
                 result = None
+
             return result
 
         @staticmethod

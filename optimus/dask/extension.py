@@ -2,9 +2,9 @@ import json
 
 import imgkit
 import math
+import numpy as np
+from dask.dataframe.core import DataFrame
 from glom import glom, assign, T
-from pyspark.sql import DataFrame
-from pyspark.sql.types import ArrayType
 
 from optimus.bumblebee import Comm
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -14,7 +14,8 @@ from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.profiler import Profiler
 
-DataFrame.output = "html"
+
+# DataFrame.output = "html"
 
 
 def ext(self):
@@ -59,7 +60,7 @@ def ext(self):
             for col_name in df.cols.names():
 
                 data_type = df.cols.schema_dtype(col_name)
-                if isinstance(data_type, ArrayType):
+                if isinstance(data_type, np.array):
                     data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
                 else:
                     data_type = str(data_type) + "()"
@@ -106,14 +107,17 @@ def ext(self):
             else:
                 RaiseIt.value_error(random, ["True", "False"])
 
-            rows_count = self.count()
+            rows_count = self.rows.count()
             if n < rows_count:
-                # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
+                # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1
                 fraction = (n / rows_count) * 1.1
             else:
                 fraction = 1.0
+            return self.sample(frac=fraction, random_state=seed)
 
-            return self.sample(False, fraction, seed=seed).limit(n)
+        @staticmethod
+        def limit(n):
+            raise NotImplementedError
 
         @staticmethod
         def pivot(index, column, values):
@@ -147,7 +151,7 @@ def ext(self):
             :return:
             """
 
-            raise NotImplementedError
+            return 0
 
         @staticmethod
         def run():
@@ -172,11 +176,11 @@ def ext(self):
 
         @staticmethod
         def set_name(value=None):
-            raise NotImplementedError
+            return "Not implemented"
 
         @staticmethod
         def get_name():
-            raise NotImplementedError
+            return "Not implemented"
 
         @staticmethod
         def partitions():
