@@ -103,7 +103,6 @@ def functions(self):
             values = args[1]
 
             def _percentile(serie):
-                print(col_name, values)
                 return {"percentile": {str(i): j for i, j in serie[col_name].quantile(values).iteritems()}}
 
             return _percentile

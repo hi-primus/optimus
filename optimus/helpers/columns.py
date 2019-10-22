@@ -154,6 +154,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     if filter_by_column_dtypes:
         # Get columns for every data type
         # print("filter", filter_by_column_dtypes)
+
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
@@ -277,7 +278,8 @@ def filter_col_name_by_dtypes(df, data_type):
     result = []
     for col_name in df.cols.names():
         for dt in data_type:
-            if df.cols.schema_dtype(col_name) is dt:
+            # print("filter", df.cols.schema_dtype(col_name), dt)
+            if (df.cols.schema_dtype(col_name) is dt) or (isinstance(df.cols.schema_dtype(col_name), dt)):
                 result.append(col_name)
 
     return result

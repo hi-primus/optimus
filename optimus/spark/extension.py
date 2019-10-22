@@ -1,3 +1,4 @@
+import collections
 import json
 
 import humanize
@@ -12,13 +13,12 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
-
 from optimus.bumblebee import Comm
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import val_to_list
-from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
+from optimus.helpers.functions import random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -41,7 +41,6 @@ def ext(self):
                     df = df.cols.set_meta(col_name, "optimus.transformations", [])
             return df
 
-
         @staticmethod
         def roll_out():
             """
@@ -57,15 +56,44 @@ def ext(self):
             Return a json from a Spark Dataframe
             :return:
             """
-            return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
+            return json.dumps(Ext.to_dict(), ensure_ascii=False, default=json_converter)
 
         @staticmethod
         def to_dict():
             """
-            Return a Python object from a Spark Dataframe
+            Return a dict from a Collect result
+            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
             """
-            return collect_as_dict(self)
+            # # Explore this approach seems faster
+            # use_unicode = True
+            # from pyspark.serializers import UTF8Deserializer
+            # from pyspark.rdd import RDD
+            # rdd = df._jdf.toJSON()
+            # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
+            # if limit is None:
+            #     r.collect()
+            # else:
+            #     r.take(limit)
+            # return r
+            #
+            df = self
+            dict_result = []
+
+            # if there is only an element in the dict just return the value
+            if len(dict_result) == 1:
+                dict_result = next(iter(dict_result.values()))
+            else:
+                col_names = parse_columns(df, "*")
+
+                # Because asDict can return messed columns names we order
+                for row in df.collect():
+                    _row = row.asDict()
+                    r = collections.OrderedDict()
+                    for col in col_names:
+                        r[col] = _row[col]
+                    dict_result.append(r)
+            return dict_result
 
         @staticmethod
         def export():
@@ -336,9 +364,9 @@ def ext(self):
                 limit = 10
 
             if limit == "all":
-                data = collect_as_dict(df.cols.select(columns))
+                data = df.cols.select(columns).ext.to_dict()
             else:
-                data = collect_as_dict(df.cols.select(columns).limit(limit))
+                data = df.cols.select(columns).limit(limit).ext.to_dict()
 
             # Load the Jinja template
             template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
@@ -401,7 +429,15 @@ def ext(self):
                     self.show()
             except NameError:
 
-                self.show()
+                self.ext.show()
+
+        @staticmethod
+        def show():
+            """
+            Print df lineage
+            :return:
+            """
+            self.show()
 
         @staticmethod
         def debug():

@@ -9,7 +9,7 @@ from .optimus import *
 
 patch()
 
-from .spark import rows, columns, extension
+from .spark import rows, columns, extension, constants
 from .spark.plots import plots
 from optimus.spark.io import save
 
@@ -19,9 +19,7 @@ from optimus.spark.io import save
 os.environ["PYTHONIOENCODING"] = "utf8"
 
 # PANDAS MONKEY PATCH
-from .pandas import columns
-from .pandas import functions
+from .pandas import columns, functions
 
 # DASK MONKEY PATCH
 from .dask import columns, rows, constants, extension, functions
-

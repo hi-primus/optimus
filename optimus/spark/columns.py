@@ -23,6 +23,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
+from optimus.abstract.cols import AbstractCols
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.engines.spark import SparkEngine
@@ -47,7 +48,7 @@ ENGINE = "spark"
 
 
 def cols(self):
-    class Cols:
+    class Cols(AbstractCols):
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -662,7 +663,7 @@ def cols(self):
             :param relative_error: Relative error calculating the media
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             result = {}
@@ -689,7 +690,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.stddev))
@@ -701,7 +702,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.kurtosis))
@@ -713,7 +714,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.mean))
@@ -725,7 +726,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.skewness))
@@ -737,7 +738,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.sum))
@@ -749,33 +750,35 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             return format_dict(Cols.agg_exprs(columns, F.variance))
 
         @staticmethod
-        def abs(columns):
+        def abs(input_cols, output_cols=None):
             """
             Apply abs to the values in a column
-            :param columns:
+            :param input_cols:
+            :param output_cols:
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
-            check_column_numbers(columns, "*")
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            check_column_numbers(output_cols, "*")
             # Abs not accepts column's string names. Convert to Spark Column
 
             # TODO: make this in one pass.
             df = self
-            for col_name in columns:
+            for col_name in output_cols:
                 df = df.withColumn(col_name, F.abs(F.col(col_name)))
             return df
-            # return Cols.agg_exprs(columns, abs_agg)
 
         @staticmethod
         def mode(columns):
             """
-            Return the the column mode
+            Return the column mode
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
@@ -841,7 +844,7 @@ def cols(self):
             def _trim(col_name, args):
                 return F.trim(F.col(col_name))
 
-            return Cols.apply(input_cols, _trim, filter_col_by_dtypes=DataFrame.constants.NOT_ARRAY_TYPES,
+            return Cols.apply(input_cols, _trim, filter_col_by_dtypes=self.constants.NOT_ARRAY_TYPES,
                               output_cols=output_cols)
 
         @staticmethod
@@ -904,7 +907,7 @@ def cols(self):
             :return:
             """
 
-            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=DataFrame.constants.STRING_TYPES)
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.STRING_TYPES)
             check_column_numbers(input_cols, "*")
 
             df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars",
@@ -924,7 +927,7 @@ def cols(self):
                 return F.regexp_replace(F.col(col_name), " ", "")
 
             df = Cols.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-                            filter_col_by_dtypes=DataFrame.constants.NOT_ARRAY_TYPES)
+                            filter_col_by_dtypes=self.constants.NOT_ARRAY_TYPES)
             return df
 
         @staticmethod
@@ -981,7 +984,7 @@ def cols(self):
                     col_name)
 
             df = Cols.apply(input_cols, func=_years_between, args=[date_format],
-                            filter_col_by_dtypes=DataFrame.constants.NOT_ARRAY_TYPES, output_cols=output_cols)
+                            filter_col_by_dtypes=self.constants.NOT_ARRAY_TYPES, output_cols=output_cols)
 
             df = df.cols.cast(output_cols, "float")
 
@@ -1043,7 +1046,10 @@ def cols(self):
                 RaiseIt.value_error(search_by, ["words", "chars"])
 
             input_cols = parse_columns(self, input_cols,
-                                       filter_by_column_dtypes=DataFrame.constants.STRING_TYPES + DataFrame.constants.NUMERIC_TYPES)
+                                       filter_by_column_dtypes=[
+                                           self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES])
+
+            print(self.constants.NUMERIC_TYPES)
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1074,7 +1080,7 @@ def cols(self):
                 return F.regexp_replace(_input_cols, _search, _replace)
 
             return Cols.apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
-                              filter_col_by_dtypes=DataFrame.constants.STRING_TYPES + DataFrame.constants.NUMERIC_TYPES)
+                              filter_col_by_dtypes=self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES)
 
         @staticmethod
         def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -1091,7 +1097,7 @@ def cols(self):
 
             if data_type is "continuous":
                 input_cols = parse_columns(self, input_cols,
-                                           filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+                                           filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
                 check_column_numbers(input_cols, "*")
                 output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1105,7 +1111,7 @@ def cols(self):
 
             elif data_type is "categorical":
 
-                input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=DataFrame.constants.STRING_TYPES)
+                input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.STRING_TYPES)
                 check_column_numbers(input_cols, "*")
                 output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1132,13 +1138,13 @@ def cols(self):
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
                 func = None
-                if is_column_a(self, input_col, DataFrame.constants.NUMERIC_TYPES):
+                if is_column_a(self, input_col, self.constants.NUMERIC_TYPES):
                     new_value = fast_float(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_column_a(self, input_col, DataFrame.constants.STRING_TYPES):
+                elif is_column_a(self, input_col, self.constants.STRING_TYPES):
                     new_value = str(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_column_a(self, input_col, DataFrame.constants.ARRAY_TYPES):
+                elif is_column_a(self, input_col, self.constants.ARRAY_TYPES):
                     if is_one_element(value):
                         new_value = F.array(F.lit(value))
                     else:
@@ -1273,7 +1279,7 @@ def cols(self):
             :return:
             """
 
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             df = self
@@ -1344,7 +1350,7 @@ def cols(self):
                 stdev_value = self.cols.std(col_name)
                 return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-            return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=DataFrame.constants.NUMERIC_TYPES,
+            return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=self.constants.NUMERIC_TYPES,
                               output_cols=output_cols)
 
         @staticmethod
@@ -1357,7 +1363,7 @@ def cols(self):
             :return:
             """
             iqr_result = {}
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
@@ -1400,7 +1406,7 @@ def cols(self):
             # check_column_numbers(input_cols, ">1")
 
             if shape is "vector":
-                input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+                input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
                 # check_column_numbers(input_cols, ">1")
 
                 vector_assembler = VectorAssembler(
@@ -1848,7 +1854,7 @@ def cols(self):
             df = self
 
             # Values in columns can not be null. Warn user
-            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
 
             # Input is not a vector transform to a vector
             output_col = name_col(input_cols, "correlation")
@@ -1962,7 +1968,7 @@ def cols(self):
             :return:
             """
             df = self
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             for col_name in columns:
@@ -1982,7 +1988,7 @@ def cols(self):
             :return:
             """
 
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             def _clip(_col_name, args):

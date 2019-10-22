@@ -1,21 +1,25 @@
+import collections
 import json
 
+import humanize
 import imgkit
+import jinja2
 import math
 import numpy as np
 from dask.dataframe.core import DataFrame
 from glom import glom, assign, T
 
 from optimus.bumblebee import Comm
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.functions import collect_as_dict, random_int, traverse, absolute_path
+from optimus.helpers.functions import random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.profiler import Profiler
+from optimus.profiler.templates.html import HEADER, FOOTER
 
-
-# DataFrame.output = "html"
+DataFrame.output = "html"
 
 
 def ext(self):
@@ -36,15 +40,33 @@ def ext(self):
             Return a json from a Spark Dataframe
             :return:
             """
-            return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
+            return json.dumps(Ext.to_dict(self), ensure_ascii=False, default=json_converter)
 
         @staticmethod
         def to_dict():
             """
-            Return a Python object from a Spark Dataframe
+            Return a dict from a Collect result
+            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
             """
-            return collect_as_dict(self)
+            df = self
+            dict_result = []
+
+            # if there is only an element in the dict just return the value
+            if len(dict_result) == 1:
+                dict_result = next(iter(dict_result.values()))
+            else:
+                col_names = parse_columns(df, "*")
+
+                # Because asDict can return messed columns names we order
+                for index, row in df.iterrows():
+                    # _row = row.asDict()
+                    r = collections.OrderedDict()
+                    # for col_name, value in row.iteritems():
+                    for col_name in col_names:
+                        r[col_name] = row[col_name]
+                    dict_result.append(r)
+            return dict_result
 
         @staticmethod
         def export():
@@ -117,7 +139,7 @@ def ext(self):
 
         @staticmethod
         def limit(n):
-            raise NotImplementedError
+            return self[:10]
 
         @staticmethod
         def pivot(index, column, values):
@@ -184,7 +206,7 @@ def ext(self):
 
         @staticmethod
         def partitions():
-            raise NotImplementedError
+            return self.npartitions
 
         @staticmethod
         def partitioner():
@@ -205,7 +227,7 @@ def ext(self):
 
             css = absolute_path("/css/styles.css")
 
-            imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
+            imgkit.from_string(Ext.table_html(limit=limit, full=True), path, css=css)
             print_html("<img src='" + path + "'>")
 
         @staticmethod
@@ -222,7 +244,54 @@ def ext(self):
             :return:
             """
 
-            raise NotImplementedError
+            df = self
+            columns = parse_columns(df, columns)
+
+            if limit is None:
+                limit = 10
+
+            if limit == "all":
+                data = df.cols.select(columns).ext.to_dict()
+            else:
+                data = df.cols.select(columns).ext.limit(limit).ext.to_dict()
+
+            # Load the Jinja template
+            template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
+            template_env = jinja2.Environment(loader=template_loader, autoescape=True)
+            template = template_env.get_template("table.html")
+
+            # Filter only the columns and data type info need it
+            dtypes = [(k, v) for k, v in df.cols.dtypes().items()]
+
+            # Remove not selected columns
+            final_columns = []
+            for i in dtypes:
+                for j in columns:
+                    if i[0] == j:
+                        final_columns.append(i)
+
+            if count is True:
+                total_rows = self.rows.approx_count()
+            else:
+                count = None
+
+            if limit == "all":
+                limit = total_rows
+            elif total_rows < limit:
+                limit = total_rows
+
+            total_rows = humanize.intword(total_rows)
+
+            total_cols = self.cols.count()
+            total_partitions = Ext.partitions()
+
+            output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
+                                     total_cols=total_cols,
+                                     partitions=total_partitions, title=title, truncate=truncate)
+
+            if full is True:
+                output = HEADER + output + FOOTER
+            return output
 
         @staticmethod
         def display(limit=None, columns=None, title=None, truncate=True):
@@ -235,10 +304,18 @@ def ext(self):
                     result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                     print_html(result)
                 else:
-                    self.show()
+                    self.ext.show()
             except NameError:
 
                 self.show()
+
+        @staticmethod
+        def show():
+            """
+            Print df lineage
+            :return:
+            """
+            self.head()
 
         @staticmethod
         def debug():

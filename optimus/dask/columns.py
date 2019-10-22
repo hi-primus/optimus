@@ -43,7 +43,7 @@ def cols(self):
 
                     # Cols.set_meta(col_name, "optimus.transformations", "rename", append=True)
                     # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
-                    print(old_col_name, col_name[1])
+
                     if old_col_name != col_name:
                         df = df.rename({old_col_name: col_name[1]})
 
@@ -78,6 +78,10 @@ def cols(self):
         @staticmethod
         def names():
             return list(self.columns)
+
+        @staticmethod
+        def count():
+            return len(self)
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
@@ -297,7 +301,6 @@ def cols(self):
             :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
             :return: percentiles per columns
             """
-            values = [v for v in values]
             return Cols.agg_exprs(columns, self.functions.percentile_agg, self, values, relative_error)
 
         @staticmethod
@@ -354,17 +357,18 @@ def cols(self):
             :return:
             """
             agg_list = Dask.instance.compute(exprs)
-            agg_result = []
 
-            # Distributed mode return a list of Futures objects, Single mode not.
-            if is_list_of_futures(agg_list):
-                for agg_element in agg_list:
-                    agg_result.append(agg_element.result())
-            else:
-                agg_result = agg_list[0]
+            if len(agg_list) > 0:
+                agg_result = []
+                # Distributed mode return a list of Futures objects, Single mode not.
+                if is_list_of_futures(agg_list):
+                    for agg_element in agg_list:
+                        agg_result.append(agg_element.result())
+                else:
+                    agg_result = agg_list[0]
 
-            result = {}
-            if len(agg_result) > 0:
+                result = {}
+
                 for agg_element in agg_result:
                     agg_col_name, agg_element_result = agg_element
                     if agg_col_name not in result:
@@ -378,17 +382,30 @@ def cols(self):
 
         @staticmethod
         def create_exprs(columns, funcs, *args):
+
+            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+            filters = {"object": [self.functions.min],
+                       }
+
+            def _filter(_col_name, _func):
+                for data_type, func_filter in filters.items():
+                    for f in func_filter:
+                        if (func.__code__.co_code == f.__code__.co_code) and self.cols.dtypes(col_name)[col_name] == data_type:
+                            return True
+                return False
+
             columns = parse_columns(self, columns)
             funcs = val_to_list(funcs)
             exprs = {}
 
-            # Some operations support rows
             for col_name in columns:
                 for func in funcs:
-                    if col_name in exprs:
-                        exprs[col_name].update(func(col_name, args)(self))
-                    else:
-                        exprs[col_name] = func(col_name, args)(self)
+                    # If the key exist update it
+                    if not _filter(col_name, func):
+                        if col_name in exprs:
+                            exprs[col_name].update(func(col_name, args)(self))
+                        else:
+                            exprs[col_name] = func(col_name, args)(self)
 
             result = {}
 
@@ -401,6 +418,7 @@ def cols(self):
 
             # Convert to list
             result = [r for r in result.items()]
+            print(result)
             return result
 
         @staticmethod
@@ -450,6 +468,15 @@ def cols(self):
                 result = None
 
             return result
+
+        @staticmethod
+        def min(columns):
+            """
+            Return the min value from a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            return Cols.agg_exprs(columns, self.functions.min)
 
     return Cols()
 

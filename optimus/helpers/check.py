@@ -145,7 +145,7 @@ def is_column_a(df, column, dtypes):
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
 
-    data_type = tuple(val_to_list(parse_dtypes(dtypes)))
+    data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
     # Filter columns by data type
@@ -167,7 +167,9 @@ def is_list_of_futures(value):
     :param value:
     :return:
     """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, distributed.client.Future) for elem in value)
+    return bool(value) and isinstance(value, list) and all(
+        isinstance(elem, distributed.client.Future) for elem in value)
+
 
 def is_list_of_int(value):
     """

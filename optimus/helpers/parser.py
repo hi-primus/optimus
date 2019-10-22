@@ -1,4 +1,5 @@
 from optimus.helpers.constants import PYTHON_SHORT_TYPES
+from optimus.spark.constants import SHORT_DTYPES, DTYPES_DICT_OBJECTS
 
 
 def compress_dict(lst, col_name):
@@ -63,6 +64,7 @@ def parse_dtypes(df, value):
     """
     Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
     :param value:
+    :param df:
     :return:
     """
 
@@ -70,6 +72,7 @@ def parse_dtypes(df, value):
         value = [value]
     try:
         data_type = [df.constants.DTYPES_DICT[df.constants.SHORT_DTYPES[v]] for v in value]
+
     except KeyError:
         data_type = value
 
@@ -101,7 +104,7 @@ def parse_spark_class_dtypes(value):
         value = [value]
 
     try:
-        data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
+        data_type = [DTYPES_DICT_OBJECTS[SHORT_DTYPES[v]] for v in value]
 
     except (KeyError, TypeError):
         data_type = value
