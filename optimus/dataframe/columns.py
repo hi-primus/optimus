@@ -2,6 +2,7 @@ import builtins
 import re
 import string
 import unicodedata
+import uuid
 from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
@@ -181,7 +182,7 @@ def cols(self):
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param input_cols: Columns in which the function is going to be applied
@@ -222,8 +223,15 @@ def cols(self):
             return main_query
 
         for input_col, output_col in zip(input_cols, output_cols):
+            current_meta = self.get_meta()
+
             df = df.withColumn(output_col, expr(when))
-        # df = df.track_cols(self, output_cols)
+
+            # Set meta
+            df = df.set_meta(value=current_meta)
+
+            if meta is not None:
+                df = df.action_meta(meta, output_col)
 
         return df
 
@@ -269,13 +277,21 @@ def cols(self):
             validate_columns_names(self, columns_old_new)
             for col_name in columns_old_new:
                 old_col_name = col_name[0]
-                if is_str(old_col_name):
-                    df = df.withColumnRenamed(old_col_name, col_name[1])
-                elif is_int(old_col_name):
-                    df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
-        df.set_meta(value=self.get_meta())
+                new_col_name = col_name[1]
 
-        # df.cols.append_meta("transformation", "rename")
+                current_meta = self.get_meta()
+
+                if is_str(old_col_name):
+                    df = df.withColumnRenamed(old_col_name, new_col_name)
+                elif is_int(old_col_name):
+                    old_col_name = self.schema.names[old_col_name]
+                    df = df.withColumnRenamed(old_col_name, new_col_name)
+
+                # df = df.rename_meta([(old_col_name, new_col_name)])
+                df = df.set_meta(value=current_meta)
+
+                df = df.rename_meta((old_col_name, new_col_name))
+
         return df
 
     @add_attr(cols)
@@ -372,6 +388,7 @@ def cols(self):
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
+            df = self.action_meta(output_col, "replace")
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
                                output_cols=output_col)
@@ -439,12 +456,16 @@ def cols(self):
         :return: Spark DataFrame
         """
 
+        df = self
         if regex:
             r = re.compile(regex)
             columns = list((r.match, self.columns))
 
         columns = parse_columns(self, columns)
-        return self.select(*columns)
+
+        df = df.cols.select(columns)
+        df = df.action_meta("keep", columns)
+        return df
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
@@ -484,9 +505,13 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
+        meta = df.get_meta()
+
         df = df.drop(*columns)
 
-        # df.cols.append_meta("transformation", "drop")
+        df.set_meta(value=meta)
+        df = self.action_meta("drop", *columns)
+
         return df
 
     @add_attr(cols)
@@ -1050,6 +1075,8 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
+            df = self.action_meta("replace", output_col)
+
             if is_column_a(df, input_col, "int"):
                 df = df.cols.cast(input_col, "str", output_col)
 
@@ -1134,6 +1161,7 @@ def cols(self):
         for input_col, output_col in zip(input_cols, output_cols):
             func = None
             if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
+
                 new_value = fastnumbers.fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
             elif is_column_a(self, input_col, PYSPARK_STRING_TYPES):
@@ -1152,7 +1180,9 @@ def cols(self):
                     func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
-            df = df.cols.apply(input_col, func=func, output_cols=output_col)
+
+            df = df.cols.apply(input_col, func=func, output_cols=output_col, meta="fill_na")
+
         return df
 
     @add_attr(cols)
@@ -1427,7 +1457,7 @@ def cols(self):
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
-        :param output_cols:
+        :param output_cols: Resulted columns after the unnest operation
         :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index: Return a specific index from the nest
@@ -2063,7 +2093,7 @@ def cols(self):
     @add_attr(cols)
     def set_meta(col_name, spec=None, value=None, missing=dict):
         """
-        Sel meta data in a column
+        Set meta data in a column
         :param col_name: Column from where to get the value
         :param spec: Path to the key to be modified
         :param value: dict value
@@ -2071,11 +2101,11 @@ def cols(self):
         :return:
         """
         if spec is not None:
-            target = self.get_meta()
+            target = self.cols.get_meta(col_name)
             data = assign(target, spec, value, missing=missing)
         else:
             data = value
-
+        print(col_name, data)
         return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
 
     @add_attr(cols)
@@ -2087,16 +2117,36 @@ def cols(self):
         :return:
         """
 
+        col_name = parse_columns(self, col_name, accepts_missing_cols=False)
         data = ""
         meta_json = self._jdf.schema().json()
         fields = json.loads(meta_json)["fields"]
+
         for col_info in fields:
             if col_info["name"] == col_name:
                 data = col_info["metadata"]
         if spec is not None:
             data = glom(data, spec, skip_exc=KeyError)
 
+        if data == "":
+            data = {}
         return data
+
+    @add_attr(cols)
+    def get_or_create_meta_col_id(col_name):
+        """
+        Create a uuid id in the col metadata
+        :param col_name:
+        :return:
+        """
+        df = self
+        col_id = df.cols.get_meta(col_name, "id")
+        print(col_id)
+        if col_id is None:
+            col_id = str(uuid.uuid4())
+            df = df.cols.set_meta(col_name, "id", col_id)
+            print(df.cols.get_meta(col_name, "id"))
+        return col_id, self
 
     return cols
 

@@ -243,7 +243,6 @@ def check_for_missing_columns(df, col_names):
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
-
     return False
 
 

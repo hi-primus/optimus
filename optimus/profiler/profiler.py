@@ -1,5 +1,6 @@
 import configparser
 import copy
+from collections import OrderedDict
 
 import humanize
 import imgkit
@@ -53,7 +54,6 @@ class Profiler:
         self.cols_count = None
 
         self.output_columns = {}
-        self.already_run = False
 
     def _count_data_types(self, df, columns, infer=False, mismatch=None):
         """
@@ -226,6 +226,12 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
+    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+                sample=10000, stats=True, format="json", mismatch=None):
+        return self.dataset(df, columns=columns, buckets=buckets, infer=infer, relative_error=relative_error,
+                            approx_count=True,
+                            sample=sample, stats=stats, format=format, mismatch=mismatch)
+
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000, stats=True, format="json", mismatch=None):
         """
@@ -242,22 +248,77 @@ class Profiler:
         :param mismatch:
         :return: json file
         """
+        # Create uniques id per column so we can track,
+        # renamed, any operation that generate a new column and keep/drop.
+        modified_columns = []
+        # df.set
 
-        # Filter which columns needs to be processed
-        # trans = []
-        # for col_name in columns:
-        #     trans.append(df.cols.get_meta(col_name, "transformation"))
-
+        # Track replace, fill_na
         output_columns = self.output_columns
+
+        # Metadata
+        # If not empty the profiler already run.
+        # So process the dataframe's metadata to be sure which columns need to be profiled
+
+        if len(self.output_columns) > 0:
+            update_profiling = True
+        else:
+            update_profiling = False
+
+        if update_profiling:
+            actions = ["fill_na", "replace"]
+            drop = ["drop"]
+
+            def get_names(_actions):
+                transformations = df.get_meta()["transformations"]
+                modified = []
+                for r in _actions:
+                    for t in transformations[r]:
+                        # The column name has been changed. Get the new name
+                        c = transformations["rename"].get(t)
+                        # The column has not been rename. Get the actual
+                        if c is None:
+                            c = t
+                        modified.append(c)
+                return modified
+
+            # Actions applied to current columns
+            modified_columns = get_names(actions)
+
+            # New columns
+            new_columns = []
+
+            i = df.cols.names()
+            for j in i:
+                if j not in get_names(df.cols.names()):
+                    new_columns.append(j)
+
+            # Rename keys to match new names
+            profiler_columns = self.output_columns["columns"]
+            for k, v in df.get_meta()["transformations"]["rename"].items():
+                profiler_columns[v] = profiler_columns.pop(k)
+
+            # # Drop Keys
+            for col_names in get_names(drop):
+                profiler_columns.pop(col_names)
+
+            columns = modified_columns + new_columns
 
         rows_count = df.count()
         self.rows_count = rows_count
         self.cols_count = cols_count = len(df.columns)
 
         # Get the stats for all the columns
-        # if ["drop", "rename"] not in trans and self.already_run is False:
         if stats is True:
             output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
+            # Update last profiling info
+            if update_profiling:
+                last_profile_columns = output_columns["columns"].append(self.output_columns["columns"])
+
+                last_profile_columns = OrderedDict(
+                    (k, last_profile_columns.output_columns["columns"]) for k in df.cols.names())
+                
+                output_columns["columns"] = last_profile_columns
 
         assign(output_columns, "name", df.get_name(), dict)
         assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -272,14 +333,11 @@ class Profiler:
 
         # Nulls
         total_count_na = 0
-        # print(output_columns["columns"])
         for k, v in output_columns["columns"].items():
             total_count_na = total_count_na + v["stats"]["count_na"]
 
         assign(output_columns, "summary.missing_count", total_count_na, dict)
         assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
-
-        # assign(output_columns, "missing_count", 1000, dict)
 
         sample = {"columns": [{"title": cols} for cols in df.cols.names()],
                   "value": df.sample_n(sample).rows.to_list(columns)}
@@ -292,7 +350,6 @@ class Profiler:
             output = output_columns
 
         self.output_columns = output_columns
-        self.already_run = True
 
         return output
 
@@ -329,7 +386,6 @@ class Profiler:
                 count_types[name] = 1
 
         # List the data types this data set have
-
         total = 0
         dtypes = []
         for key, value in count_types.items():
@@ -371,6 +427,7 @@ class Profiler:
             assign(col_info, "column_type", columns_info["columns"][col_name]['type'])
             assign(columns_info, "columns." + col_name, col_info, dict)
 
+            assign(col_info, "id", df.cols.get_meta(col_name, "id"))
         return columns_info
 
     @staticmethod

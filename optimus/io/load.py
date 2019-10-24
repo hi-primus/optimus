@@ -38,7 +38,10 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+
+        df = df.action_meta("columns", df.cols.names())
+        return df
 
     @staticmethod
     def tsv(path, header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
@@ -52,8 +55,8 @@ class Load:
 
         :return:
         """
-
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        df  = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        return df
 
     @staticmethod
     def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
@@ -85,7 +88,8 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+        return df
 
     @staticmethod
     def parquet(path, *args, **kwargs):
@@ -167,7 +171,8 @@ class Load:
             logger.print(error)
             raise
 
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+        return df
 
     @staticmethod
     def zip(path, file_name=None):

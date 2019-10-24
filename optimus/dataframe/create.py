@@ -19,7 +19,7 @@ class Create:
         :return: Dataframe
         """
         if is_(pdf, pd.DataFrame):
-            result = Spark.instance.spark.createDataFrame(pdf)
+            df = Spark.instance.spark.createDataFrame(pdf)
         else:
 
             specs = []
@@ -57,8 +57,8 @@ class Create:
 
             struct_fields = list(map(lambda x: StructField(*x), specs))
 
-            result = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
-
-        return result
+            df = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
+            df = df.action_meta("columns", df.cols.names())
+        return df
 
     df = data_frame

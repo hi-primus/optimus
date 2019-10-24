@@ -87,7 +87,7 @@ class Enricher:
         """
 
         if is_dataframe(df):
-            df = df.create_id(COL_ID)
+            df = df.rows.create_id(COL_ID)
 
         # Load the dataframe data in the enricher
         self.load(df)
