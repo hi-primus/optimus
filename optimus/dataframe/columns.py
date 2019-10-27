@@ -165,7 +165,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None):
+    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
         """
         Apply a expression to column.
         :param input_cols: Columns in which the function is going to be applied
@@ -178,11 +178,11 @@ def cols(self):
         """
 
         return apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                     output_cols=output_cols)
+                     output_cols=output_cols, meta=meta)
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta=None):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param input_cols: Columns in which the function is going to be applied
@@ -196,6 +196,7 @@ def cols(self):
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
+        :param meta: Pass metadata transformation to a dataframe
         :return: DataFrame
         """
 
