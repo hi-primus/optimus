@@ -484,12 +484,100 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
 
 
 @add_method(DataFrame)
-def append_meta(self, path, value):
-    target = self.get_meta()
-    data = glom(target, (path, T.append(value)))
+def rename_meta(self, old_new_columns):
+    """
+    Shortcut to add transformations to a dataframe
+    :param self:
+    :param old_new_columns:
+    :return:
+    """
+
+    key= "transformations.actions.rename"
 
     df = self
-    df.schema[-1].metadata = data
+    renamed_cols = df.get_meta(key)
+
+    old, new = old_new_columns
+    if renamed_cols is None or old not in list(renamed_cols.values()):
+        df = df.update_meta(key, {old: new}, dict)
+    else:
+        # This update a key
+        for k, v in renamed_cols.items():
+            # print(old_new_columns)
+            n, m = old_new_columns
+            if v == n:
+                renamed_cols[k] = m
+
+        df = df.set_meta(key, renamed_cols)
+    return df
+
+
+@add_method(DataFrame)
+def columns_meta(self, key, value):
+    """
+    Shortcut to add transformations to a dataframe
+    :param self:
+    :param key:
+    :param value:
+    :return:
+    """
+    df = self
+    value = val_to_list(value)
+    for v in value:
+        df = df.update_meta("transformations.columns", v, list)
+    return df
+
+@add_method(DataFrame)
+def action_meta(self, key, value):
+    """
+    Shortcut to add transformations to a dataframe
+    :param self:
+    :param key:
+    :param value:
+    :return:
+    """
+    df = self
+    value = val_to_list(value)
+    for v in value:
+        df = df.update_meta("transformations.actions." + key, v, list)
+    return df
+
+@add_method(DataFrame)
+def preserve_meta(self, old_df, new_df, key,value):
+    return new_df.set_meta(value=old_df.get_meta()).action_meta(key,value)
+
+@add_method(DataFrame)
+def update_meta(df, path, value, default=list):
+    """
+    Append meta data to a key
+    :param df:
+    :param path:
+    :param value:
+    :param default:
+    :return:
+    """
+
+    df = df
+
+    new_meta = df.get_meta()
+    if new_meta is None:
+        new_meta = {}
+
+    elements = path.split(".")
+    result = new_meta
+    for i, ele in enumerate(elements):
+        if ele not in result and not len(elements) - 1 == i:
+            result[ele] = {}
+
+        if len(elements) - 1 == i:
+            if default is list:
+                result.setdefault(ele, []).append(value)
+            elif default is dict:
+                result.setdefault(ele, {}).update(value)
+        else:
+            result = result[ele]
+
+    df = df.set_meta(value=new_meta)
     return df
 
 
