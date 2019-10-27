@@ -10,7 +10,7 @@ from optimus.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, 
 def levenshtein_matrix(df, input_col):
     """
     Create a couple of column with all the string combination
-    :param df:
+    :param df: Spark Dataframe
     :param input_col:
     :return:
     """
@@ -39,7 +39,7 @@ def levenshtein_matrix(df, input_col):
 def levenshtein_filter(df, input_col):
     """
     Get the nearest string
-    :param df:
+    :param df: Spark Dataframe
     :param input_col:
     :return:
     """
@@ -81,7 +81,7 @@ def levenshtein_filter(df, input_col):
 def levenshtein_cluster(df, input_col):
     """
     Return a dataframe with a string of cluster related to a string
-    :param df:
+    :param df: Spark Dataframe
     :param input_col:
     :return:
     """
@@ -111,6 +111,6 @@ def levenshtein_cluster(df, input_col):
     # Create Cluster
     df_l = df_l.join(df_t, (df_l[input_col + "_FROM"] == df_t[fingerprint_col]), how="left") \
         .cols.drop(fingerprint_col) \
-        .cols.drop([input_col + "_FROM", input_col + "_TO", input_col + "_LEVENSHTEIN_DISTANCE"])
+        .cols.drop([input_col + "_FROM", input_col + "_TO", name_col(input_col, "LEVENSHTEIN_DISTANCE")])
 
     return df_l
