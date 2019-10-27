@@ -336,7 +336,7 @@ class Profiler:
                     output_columns["columns"].update(self.output_columns["columns"])
 
                 df = df.set_meta(value={})
-                df = df.columns_meta("columns", df.cols.names())
+                df = df.columns_meta(df.cols.names())
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)

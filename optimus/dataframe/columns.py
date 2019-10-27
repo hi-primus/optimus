@@ -123,12 +123,12 @@ def cols(self):
         if columns is not None:
             df = df.select(columns)
             # Metadata get lost when using select(). So we copy here again.
-            df.set_meta(value=self.get_meta())
-            result = df
-        else:
-            result = None
+            df = df.preserve_meta(self)
 
-        return result
+        else:
+            df = None
+
+        return df
 
     @add_attr(cols)
     def copy(input_cols, output_cols):
@@ -223,13 +223,8 @@ def cols(self):
             return main_query
 
         for input_col, output_col in zip(input_cols, output_cols):
-
             df = df.withColumn(output_col, expr(when))
-
-            # Set meta
-            df = df.set_meta(value=self.get_meta())
-            if meta is not None:
-                df = df.action_meta(meta, output_col)
+            df = df.preserve_meta(self, meta, output_col)
 
         return df
 
@@ -504,7 +499,6 @@ def cols(self):
 
         meta = df.get_meta()
 
-        # print(*columns)
         df = df.drop(*columns)
 
         df.set_meta(value=meta)
@@ -838,7 +832,8 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols, meta=Actions.LOWER.value)
+        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols,
+                     meta=Actions.LOWER.value)
 
     @add_attr(cols)
     def upper(input_cols, output_cols=None):
@@ -852,7 +847,8 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols, meta=Actions.UPPER.value)
+        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols,
+                     meta=Actions.UPPER.value)
 
     @add_attr(cols)
     def trim(input_cols, output_cols=None):
@@ -1103,7 +1099,8 @@ def cols(self):
             return F.regexp_replace(_input_cols, _search, _replace)
 
         return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
-                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES, meta=Actions.REPLACE_REGEX.value)
+                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES,
+                     meta=Actions.REPLACE_REGEX.value)
 
     @add_attr(cols)
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -1439,7 +1436,7 @@ def cols(self):
 
             df = vector_assembler.transform(df)
 
-            df = df.preserve_meta(self, df, Actions.NEST.value, output_col)
+            df = df.preserve_meta(self, Actions.NEST.value, output_col)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
@@ -2084,15 +2081,6 @@ def cols(self):
         df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
 
-    # @add_attr(cols)
-    # def append_meta(col_name, value):
-    #     target = self.get_meta()
-    #     data = glom(target, (path, T.append(value)))
-    #
-    #     df = self
-    #     df.schema[-1].metadata = data
-    #     return df
-
     @add_attr(cols)
     def set_meta(col_name, spec=None, value=None, missing=dict):
         """
@@ -2108,7 +2096,6 @@ def cols(self):
             data = assign(target, spec, value, missing=missing)
         else:
             data = value
-        print(col_name, data)
         return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
 
     @add_attr(cols)
@@ -2144,11 +2131,9 @@ def cols(self):
         """
         df = self
         col_id = df.cols.get_meta(col_name, "id")
-        print(col_id)
         if col_id is None:
             col_id = str(uuid.uuid4())
             df = df.cols.set_meta(col_name, "id", col_id)
-            print(df.cols.get_meta(col_name, "id"))
         return col_id, self
 
     return cols

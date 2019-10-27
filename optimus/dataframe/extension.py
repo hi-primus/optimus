@@ -458,7 +458,7 @@ def rename_meta(self, old_new_columns):
     :return:
     """
 
-    key= "transformations.actions.rename"
+    key = "transformations.actions.rename"
 
     df = self
     renamed_cols = df.get_meta(key)
@@ -479,11 +479,10 @@ def rename_meta(self, old_new_columns):
 
 
 @add_method(DataFrame)
-def columns_meta(self, key, value):
+def columns_meta(self, value):
     """
     Shortcut to add transformations to a dataframe
     :param self:
-    :param key:
     :param value:
     :return:
     """
@@ -492,6 +491,7 @@ def columns_meta(self, key, value):
     for v in value:
         df = df.update_meta("transformations.columns", v, list)
     return df
+
 
 @add_method(DataFrame)
 def action_meta(self, key, value):
@@ -508,9 +508,23 @@ def action_meta(self, key, value):
         df = df.update_meta("transformations.actions." + key, v, list)
     return df
 
+
 @add_method(DataFrame)
-def preserve_meta(self, old_df, new_df, key,value):
-    return new_df.set_meta(value=old_df.get_meta()).action_meta(key,value)
+def preserve_meta(self, old_df, key=None, value=None):
+    """
+    In some cases we need to preserve metadata actions before a destructive dataframe transformation.
+    :param self: The target dataframe to get the metadata
+    :param old_df: The Spark dataframe you want to coyp the metadata
+    :param key:
+    :param value:
+    :return:
+    """
+
+    if key is None or value is None:
+        return self.set_meta(value=old_df.get_meta())
+    else:
+        return self.set_meta(value=old_df.get_meta()).action_meta(key, value)
+
 
 @add_method(DataFrame)
 def update_meta(df, path, value, default=list):
