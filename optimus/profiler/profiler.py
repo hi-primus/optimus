@@ -1,6 +1,5 @@
 import configparser
 import copy
-from collections import OrderedDict
 
 import humanize
 import imgkit
@@ -13,7 +12,7 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
@@ -128,8 +127,8 @@ class Profiler:
         #     df.cols.set_meta({"name": col_name})
         # df.set_meta({"initialized": True})
 
-        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
-                              mismatch=mismatch)
+        columns, output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
+                                       mismatch=mismatch)
 
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
@@ -142,7 +141,6 @@ class Profiler:
         html = html + general_template.render(data=output)
 
         template = template_env.get_template("one_column.html")
-
         # Create every column stats
         for col_name in columns:
             hist_pic = None
@@ -165,14 +163,14 @@ class Profiler:
                     "column_dtype"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
-
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
 
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        self.html = html + df.table_html(10)
+        # self.html = html + df.table_html(10)
+        self.html = html
 
         # Display HTML
         print_html(self.html)
@@ -182,7 +180,7 @@ class Profiler:
         self.json = output
 
         # Save file in json format
-        write_json(output, self.path)
+        # write_json(output, self.path)
 
         return self
 
@@ -229,7 +227,7 @@ class Profiler:
     def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000, stats=True, format="json", mismatch=None):
         return self.dataset(df, columns=columns, buckets=buckets, infer=infer, relative_error=relative_error,
-                            approx_count=True,
+                            approx_count=approx_count,
                             sample=sample, stats=stats, format=format, mismatch=mismatch)
 
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
@@ -259,99 +257,118 @@ class Profiler:
         # Metadata
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
+        is_cached = len(self.output_columns) > 0
+        are_actions = not df.get_meta()["transformations"].get("actions") is None
 
-        if len(self.output_columns) > 0:
-            update_profiling = True
+        if are_actions and is_cached:
+            update_profiler = True
         else:
-            update_profiling = False
+            update_profiler = False
 
-        if update_profiling:
-            actions = ["fill_na", "replace"]
+        # if update_profiler or df.get_meta()["transformations"].get("actions") is not None:
+        # Process actions to check if any column must be processed
+        if update_profiler:
+
+            # actions = ["fill_na", "replace"]
+            # print(Actions.list())
+            actions = Actions.list()
             drop = ["drop"]
 
-            def get_names(_actions):
-                transformations = df.get_meta()["transformations"]
+            def match_actions_names(_actions):
+                transformations = df.get_meta()["transformations"]["actions"]
+
                 modified = []
-                for r in _actions:
-                    for t in transformations[r]:
-                        # The column name has been changed. Get the new name
-                        c = transformations["rename"].get(t)
-                        # The column has not been rename. Get the actual
-                        if c is None:
-                            c = t
-                        modified.append(c)
+                for action in _actions:
+                    if transformations.get(action):
+                        modified = modified + (match_names(transformations.get(action)))
+                return modified
+
+            def match_names(col_names):
+                modified = []
+                transformations = df.get_meta()["transformations"].get("actions")
+                for col_name in col_names:
+                    # The column name has been changed. Get the new name
+                    c = transformations["rename"].get(col_name)
+                    # The column has not been rename. Get the actual
+                    if c is None:
+                        c = col_name
+                    modified.append(c)
                 return modified
 
             # Actions applied to current columns
-            modified_columns = get_names(actions)
+            modified_columns = match_actions_names(actions)
 
             # New columns
             new_columns = []
 
             i = df.cols.names()
             for j in i:
-                if j not in get_names(df.cols.names()):
+                if j not in match_names(df.get_meta()["transformations"]["columns"]):
                     new_columns.append(j)
 
             # Rename keys to match new names
             profiler_columns = self.output_columns["columns"]
-            for k, v in df.get_meta()["transformations"]["rename"].items():
+            for k, v in df.get_meta()["transformations"]["actions"]["rename"].items():
                 profiler_columns[v] = profiler_columns.pop(k)
 
             # # Drop Keys
-            for col_names in get_names(drop):
+            for col_names in match_actions_names(drop):
                 profiler_columns.pop(col_names)
 
             columns = modified_columns + new_columns
-
-        rows_count = df.count()
-        self.rows_count = rows_count
-        self.cols_count = cols_count = len(df.columns)
+            # Remove duplicated.
+            columns = list(set(columns))
 
         # Get the stats for all the columns
         if stats is True:
-            output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
-            # Update last profiling info
-            if update_profiling:
-                last_profile_columns = output_columns["columns"].append(self.output_columns["columns"])
+            if are_actions or not is_cached:
+                rows_count = df.count()
+                self.rows_count = rows_count
+                self.cols_count = cols_count = len(df.columns)
 
-                last_profile_columns = OrderedDict(
-                    (k, last_profile_columns.output_columns["columns"]) for k in df.cols.names())
-                
-                output_columns["columns"] = last_profile_columns
+                output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
+                # Reset metadata
 
-        assign(output_columns, "name", df.get_name(), dict)
-        assign(output_columns, "file_name", df.get_meta("file_name"), dict)
+                # Update last profiling info
+                # if update_profiler:
+                # Merge old and current profiling
+                if is_cached:
+                    output_columns["columns"].update(self.output_columns["columns"])
 
-        # Add the General data summary to the output
-        data_set_info = {'cols_count': cols_count,
-                         'rows_count': rows_count,
-                         'size': humanize.naturalsize(df.size()),
-                         'sample_size': sample}
+                df = df.set_meta(value={})
+                df = df.columns_meta("columns", df.cols.names())
 
-        assign(output_columns, "summary", data_set_info, dict)
+                assign(output_columns, "name", df.get_name(), dict)
+                assign(output_columns, "file_name", df.get_meta("file_name"), dict)
 
-        # Nulls
-        total_count_na = 0
-        for k, v in output_columns["columns"].items():
-            total_count_na = total_count_na + v["stats"]["count_na"]
+                # Add the General data summary to the output
+                data_set_info = {'cols_count': cols_count,
+                                 'rows_count': rows_count,
+                                 'size': humanize.naturalsize(df.size()),
+                                 'sample_size': sample}
 
-        assign(output_columns, "summary.missing_count", total_count_na, dict)
-        assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
+                assign(output_columns, "summary", data_set_info, dict)
 
-        sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                  "value": df.sample_n(sample).rows.to_list(columns)}
+                # Nulls
+                total_count_na = 0
+                for k, v in output_columns["columns"].items():
+                    total_count_na = total_count_na + v["stats"]["count_na"]
 
-        assign(output_columns, "sample", sample, dict)
+                assign(output_columns, "summary.missing_count", total_count_na, dict)
+                assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
+                sample = {"columns": [{"title": cols} for cols in df.cols.names()],
+                          "value": df.sample_n(sample).rows.to_list(columns)}
+
+                assign(output_columns, "sample", sample, dict)
         if format == "json":
-            output = json.dumps(output_columns, ignore_nan=True, default=json_converter)
+            result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
-            output = output_columns
+            result = output_columns
 
-        self.output_columns = output_columns
+        self.output_columns = result
 
-        return output
+        return result["columns"].keys(), result
 
     def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                       mismatch=None):
