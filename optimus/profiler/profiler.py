@@ -122,11 +122,6 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-
-        # for col_name in columns:
-        #     df.cols.set_meta({"name": col_name})
-        # df.set_meta({"initialized": True})
-
         columns, output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
                                        mismatch=mismatch)
 
@@ -178,9 +173,6 @@ class Profiler:
         # JSON
         # Save in case we want to output to a json file
         self.json = output
-
-        # Save file in json format
-        # write_json(output, self.path)
 
         return self
 
@@ -246,12 +238,7 @@ class Profiler:
         :param mismatch:
         :return: json file
         """
-        # Create uniques id per column so we can track,
-        # renamed, any operation that generate a new column and keep/drop.
-        modified_columns = []
-        # df.set
 
-        # Track replace, fill_na
         output_columns = self.output_columns
 
         # Metadata
@@ -265,7 +252,6 @@ class Profiler:
         else:
             update_profiler = False
 
-        # if update_profiler or df.get_meta()["transformations"].get("actions") is not None:
         # Process actions to check if any column must be processed
         if update_profiler:
 
@@ -283,10 +269,10 @@ class Profiler:
                         modified = modified + (match_names(transformations.get(action)))
                 return modified
 
-            def match_names(col_names):
+            def match_names(_col_names):
                 modified = []
                 transformations = df.get_meta()["transformations"].get("actions")
-                for col_name in col_names:
+                for col_name in _col_names:
                     # The column name has been changed. Get the new name
                     c = transformations["rename"].get(col_name)
                     # The column has not been rename. Get the actual
