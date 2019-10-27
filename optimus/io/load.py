@@ -27,7 +27,6 @@ class Load:
         file, file_name = prepare_path(path, "json")
 
         try:
-            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read \
                 .option("multiLine", multiline) \
                 .option("mode", "PERMISSIVE") \
