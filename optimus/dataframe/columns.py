@@ -34,7 +34,7 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
 from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
@@ -223,13 +223,11 @@ def cols(self):
             return main_query
 
         for input_col, output_col in zip(input_cols, output_cols):
-            current_meta = self.get_meta()
 
             df = df.withColumn(output_col, expr(when))
 
             # Set meta
-            df = df.set_meta(value=current_meta)
-
+            df = df.set_meta(value=self.get_meta())
             if meta is not None:
                 df = df.action_meta(meta, output_col)
 
@@ -388,10 +386,9 @@ def cols(self):
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
-            df = self.action_meta(output_col, "replace")
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                               output_cols=output_col)
+                               output_cols=output_col, meta=Actions.CAST.value)
 
         return df
 
@@ -507,10 +504,11 @@ def cols(self):
 
         meta = df.get_meta()
 
+        # print(*columns)
         df = df.drop(*columns)
 
         df.set_meta(value=meta)
-        df = self.action_meta("drop", *columns)
+        df = df.action_meta("drop", *columns)
 
         return df
 
@@ -840,7 +838,7 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols)
+        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols, meta=Actions.LOWER.value)
 
     @add_attr(cols)
     def upper(input_cols, output_cols=None):
@@ -854,7 +852,7 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols)
+        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols, meta=Actions.UPPER.value)
 
     @add_attr(cols)
     def trim(input_cols, output_cols=None):
@@ -868,7 +866,8 @@ def cols(self):
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
 
-        return apply(input_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
+        return apply(input_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols,
+                     meta=Actions.TRIM.value)
 
     @add_attr(cols)
     def reverse(input_cols, output_cols=None):
@@ -882,7 +881,8 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols)
+        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols,
+                        meta=Actions.REVERSE.value)
 
         return df
 
@@ -917,7 +917,7 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(input_cols, _remove_accents, "string", output_cols=output_cols)
+        df = apply(input_cols, _remove_accents, "string", output_cols=output_cols, meta=Actions.REMOVE_ACCENTS.value)
         return df
 
     @add_attr(cols)
@@ -933,7 +933,8 @@ def cols(self):
         input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
-        df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
+        df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols,
+                               meta=Actions.REMOVE_SPECIAL_CHARS.value)
         return df
 
     @add_attr(cols)
@@ -949,7 +950,7 @@ def cols(self):
             return F.regexp_replace(F.col(col_name), " ", "")
 
         df = apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, meta=Actions.REMOVE_WHITE_SPACES.value)
         return df
 
     @add_attr(cols)
@@ -1075,7 +1076,7 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-            df = self.action_meta("replace", output_col)
+            df = self.action_meta(Actions.REPLACE.value, output_col)
 
             if is_column_a(df, input_col, "int"):
                 df = df.cols.cast(input_col, "str", output_col)
@@ -1102,7 +1103,7 @@ def cols(self):
             return F.regexp_replace(_input_cols, _search, _replace)
 
         return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
-                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
+                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES, meta=Actions.REPLACE_REGEX.value)
 
     @add_attr(cols)
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -1129,6 +1130,7 @@ def cols(self):
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
 
             model = imputer.setStrategy(strategy).fit(df)
+
             df = model.transform(df)
 
         elif data_type is "categorical":
@@ -1181,7 +1183,7 @@ def cols(self):
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-            df = df.cols.apply(input_col, func=func, output_cols=output_col, meta="fill_na")
+            df = df.cols.apply(input_col, func=func, output_cols=output_col, meta=Actions.FILL_NA.value)
 
         return df
 
@@ -1197,7 +1199,7 @@ def cols(self):
         def _replace_na(_col_name, _value):
             return F.when(F.col(_col_name).isNull(), True).otherwise(False)
 
-        return self.cols.apply(input_cols, _replace_na, output_cols=output_cols)
+        return self.cols.apply(input_cols, _replace_na, output_cols=output_cols, meta=Actions.IS_NA.value)
 
     @add_attr(cols)
     def count():
@@ -1375,12 +1377,13 @@ def cols(self):
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
+        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
+                     meta=Actions.Z_SCORE.value)
 
     @add_attr(cols)
     def iqr(columns, more=None, relative_error=RELATIVE_ERROR):
         """
-        Return the column data type
+        Return the column Inter Quartile Range
         :param columns:
         :param more: Return info about q1 and q3
         :param relative_error:
@@ -1427,26 +1430,26 @@ def cols(self):
         else:
             input_cols = parse_columns(self, input_cols)
 
-        # check_column_numbers(input_cols, ">1")
-
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            # check_column_numbers(input_cols, ">1")
 
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)
+
             df = vector_assembler.transform(df)
+
+            df = df.preserve_meta(self, df, Actions.NEST.value, output_col)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
             df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col,
-                               skip_output_cols_processing=True)
+                               skip_output_cols_processing=True, meta=Actions.NEST.value)
 
         elif shape is "string":
             df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col,
-                               skip_output_cols_processing=True)
+                               skip_output_cols_processing=True, meta=Actions.NEST.value)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
