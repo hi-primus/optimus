@@ -8,15 +8,112 @@ from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
+from optimus.abstract.base_cols import BaseCols
 from optimus.dask.dask import Dask
-from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers
+from optimus.dask.functions import Functions
+from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures, equal_function
+from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.converter import format_dict, val_to_list
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 
 def cols(self):
-    class Cols:
+    df = self
+
+    class Cols(BaseCols):
+        def __init__(self):
+            # print(functions)
+
+            def exec_agg(exprs):
+                """
+                Execute and aggregation
+                :param exprs:
+                :return:
+                """
+                agg_list = Dask.instance.compute(exprs)
+
+                if len(agg_list) > 0:
+                    agg_result = []
+                    # Distributed mode return a list of Futures objects, Single mode not.
+                    if is_list_of_futures(agg_list):
+                        for agg_element in agg_list:
+                            ## Bring results when ready
+                            agg_result.append(agg_element.result())
+                    else:
+                        agg_result = agg_list[0]
+
+                    # Check if __process__ exist arrange the keys
+                    result = {}
+                    for agg_element in agg_result:
+                        if agg_element[0] == "__process__":
+                            # Get agg name and results
+                            for agg_name, agg_results in agg_element[1].items():
+                                result.update(
+                                    {col_name: {agg_name: col_results} for col_name, col_results in
+                                     agg_results.items()})
+                        else:
+                            agg_col_name, agg_element_result = agg_element
+                            if agg_col_name not in result:
+                                result[agg_col_name] = {}
+
+                            result[agg_col_name].update(agg_element_result)
+                else:
+                    result = None
+
+                return result
+
+            def create_exprs(columns, funcs, *args):
+
+                # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+                filters = {"object": [self.functions.min],
+                           }
+
+                def _filter(_col_name, _func):
+                    for data_type, func_filter in filters.items():
+                        for f in func_filter:
+                            if equal_function(func, f) and \
+                                    self.cols.dtypes(col_name)[col_name] == data_type:
+                                return True
+                    return False
+
+                columns = parse_columns(df, columns)
+                funcs = val_to_list(funcs)
+                exprs = {}
+
+                multi = [self.functions.min, self.functions.max, self.functions.stddev,
+                         self.functions.mean, self.functions.variance, self.functions.percentile_agg]
+
+                for func in funcs:
+                    # Create expression for functions that accepts multiple columns
+
+                    if equal_function(func, multi):
+                        exprs.setdefault("__process__", {}).update(func(columns, args)(df))
+                    # If not process by column
+                    else:
+                        for col_name in columns:
+                            # If the key exist update it
+                            if not _filter(col_name, func):
+                                if col_name in exprs:
+                                    exprs[col_name].update(func(col_name, args)(df))
+                                else:
+                                    exprs[col_name] = func(col_name, args)(df)
+
+                result = {}
+
+                for k, v in exprs.items():
+                    if k in result:
+                        result[k].update(v)
+                    else:
+                        result[k] = {}
+                        result[k] = v
+
+                # Convert to list
+                result = [r for r in result.items()]
+
+                return result
+
+            super().__init__(df, Functions(), exec_agg, create_exprs)
 
         # TODO: Check if we must use * to select all the columns
         @staticmethod
@@ -243,6 +340,59 @@ def cols(self):
             return result
 
         @staticmethod
+        def lower(input_cols, output_cols=None):
+
+            def _lower(col_name, args):
+                return col_name[args].str.lower()
+
+            return Cols.apply(input_cols, _lower, func_return_type=str, filter_col_by_dtypes=["string", "object"],
+                              output_cols=output_cols)
+
+        @staticmethod
+        def upper(input_cols, output_cols=None):
+
+            def _upper(col_name, args):
+                return col_name[args].str.upper()
+
+            return Cols.apply(input_cols, _upper, func_return_type=str, filter_col_by_dtypes=["string", "object"],
+                              output_cols=output_cols)
+
+        @staticmethod
+        def trim(input_cols, output_cols=None):
+
+            def _strip(col_name, args):
+                return col_name[args].str.strip()
+
+            return Cols.apply(input_cols, _strip, func_return_type=str, filter_col_by_dtypes=["string", "object"],
+                              output_cols=output_cols)
+
+        @staticmethod
+        def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
+
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                       accepts_missing_cols=True)
+            check_column_numbers(input_cols, "*")
+
+            if skip_output_cols_processing:
+                output_cols = val_to_list(output_cols)
+            else:
+                output_cols = get_output_cols(input_cols, output_cols)
+
+            if output_cols is None:
+                output_cols = input_cols
+
+            df = self
+
+            for input_col, output_col in zip(input_cols, output_cols):
+                # df = df.withColumn(output_col, expr(when))
+                # print(input_col, output_col, args, func_return_type)
+                kwargs = {output_col: self[[input_col]].map_partitions(func, args=(input_col),
+                                                                       meta=(input_col, func_return_type))}
+                df = df.assign(**kwargs)
+            return df
+
+        @staticmethod
         def parse_profiler_dtypes(col_data_type):
             """
                Parse a spark data type to a profiler data type
@@ -258,6 +408,77 @@ def cols(self):
                             result_default[k2] = result_default[k2] + v1
                 columns[k] = result_default
             return columns
+
+        @staticmethod
+        def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+            """
+            Replace a value, list of values by a specified string
+            :param input_cols: '*', list of columns names or a single column name.
+            :param output_cols:
+            :param search: Values to look at to be replaced
+            :param replace_by: New value to replace the old one
+            :param search_by: Match substring or words. Can be 'chars' or 'words'
+            :return:
+            """
+
+            # TODO check if .contains can be used instead of regexp
+            def func_chars(_df, _input_col, _output_col, _search, _replace_by):
+                # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
+
+                # Create as dict
+                if is_list(search):
+                    _search_and_replace_by = {s: _replace_by for s in search}
+                elif is_one_element(search):
+                    _search_and_replace_by = {search: _replace_by}
+
+                _search_and_replace_by = {str(k): str(v) for k, v in _search_and_replace_by.items()}
+
+                def multiple_replace(_value, __search_and_replace_by):
+                    # Create a regular expression from all of the dictionary keys
+                    if _value is not None:
+
+                        _regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
+                        result = _regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
+                    else:
+                        result = None
+                    return result
+
+                return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
+                                      output_cols=_output_col)
+
+            def func_words(_df, _input_col, _output_col, _search, _replace_by):
+                _search = val_to_list(search)
+                # Convert the value to column data type
+                data_type = self.cols.dtypes(_input_col)
+                _search = [PYTHON_TYPES[data_type](s) for s in _search]
+
+                if _input_col != output_col:
+                    _df = _df.cols.copy(_input_col, _output_col)
+
+                return _df.replace(_search, _replace_by, _input_col)
+
+            if search_by is "words":
+                func = func_words
+            elif search_by is "chars":
+                func = func_chars
+            else:
+                RaiseIt.value_error(search_by, ["words", "chars"])
+
+            input_cols = parse_columns(self, input_cols,
+                                       filter_by_column_dtypes=[
+                                           self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES])
+
+            check_column_numbers(input_cols, "*")
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            df = self
+            for input_col, output_col in zip(input_cols, output_cols):
+                if is_column_a(df, input_col, "int"):
+                    df = df.cols.cast(input_col, "str", output_col)
+
+                df = func(df, input_col, output_col, search, replace_by)
+
+            return df
 
         @staticmethod
         def is_numeric(col_name):
@@ -293,17 +514,6 @@ def cols(self):
             return result
 
         @staticmethod
-        def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
-            """
-            Return the percentile of a spark
-            :param columns:  '*', list of columns names or a single column name.
-            :param values: list of percentiles to be calculated
-            :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
-            :return: percentiles per columns
-            """
-            return Cols.agg_exprs(columns, self.functions.percentile_agg, self, values, relative_error)
-
-        @staticmethod
         def median(columns, relative_error=RELATIVE_ERROR):
             """
             Return the median of a column spark
@@ -313,18 +523,6 @@ def cols(self):
             """
 
             return format_dict(Cols.percentile(columns, [0.5], relative_error))
-
-        @staticmethod
-        def agg_exprs(columns, funcs, *args):
-            """
-            Create and run aggregation
-            :param columns:
-            :param funcs:
-            :param args:
-            :return:
-            """
-            # print(args)
-            return Cols.exec_agg(Cols.create_exprs(columns, funcs, *args))
 
         @staticmethod
         def mad(columns, relative_error=RELATIVE_ERROR, more=None):
@@ -348,78 +546,6 @@ def cols(self):
                 result[col_name] = Cols.agg_exprs(columns, funcs, more)
 
             return format_dict(result)
-
-        @staticmethod
-        def exec_agg(exprs):
-            """
-            Execute and aggregation
-            :param exprs:
-            :return:
-            """
-            agg_list = Dask.instance.compute(exprs)
-
-            if len(agg_list) > 0:
-                agg_result = []
-                # Distributed mode return a list of Futures objects, Single mode not.
-                if is_list_of_futures(agg_list):
-                    for agg_element in agg_list:
-                        agg_result.append(agg_element.result())
-                else:
-                    agg_result = agg_list[0]
-
-                result = {}
-
-                for agg_element in agg_result:
-                    agg_col_name, agg_element_result = agg_element
-                    if agg_col_name not in result:
-                        result[agg_col_name] = {}
-
-                    result[agg_col_name].update(agg_element_result)
-            else:
-                result = None
-
-            return result
-
-        @staticmethod
-        def create_exprs(columns, funcs, *args):
-
-            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-            filters = {"object": [self.functions.min],
-                       }
-
-            def _filter(_col_name, _func):
-                for data_type, func_filter in filters.items():
-                    for f in func_filter:
-                        if (func.__code__.co_code == f.__code__.co_code) and self.cols.dtypes(col_name)[col_name] == data_type:
-                            return True
-                return False
-
-            columns = parse_columns(self, columns)
-            funcs = val_to_list(funcs)
-            exprs = {}
-
-            for col_name in columns:
-                for func in funcs:
-                    # If the key exist update it
-                    if not _filter(col_name, func):
-                        if col_name in exprs:
-                            exprs[col_name].update(func(col_name, args)(self))
-                        else:
-                            exprs[col_name] = func(col_name, args)(self)
-
-            result = {}
-
-            for k, v in exprs.items():
-                if k in result:
-                    result[k].update(v)
-                else:
-                    result[k] = {}
-                    result[k] = v
-
-            # Convert to list
-            result = [r for r in result.items()]
-            print(result)
-            return result
 
         @staticmethod
         def schema_dtype(columns="*"):
@@ -468,15 +594,6 @@ def cols(self):
                 result = None
 
             return result
-
-        @staticmethod
-        def min(columns):
-            """
-            Return the min value from a column spark
-            :param columns: '*', list of columns names or a single column name.
-            :return:
-            """
-            return Cols.agg_exprs(columns, self.functions.min)
 
     return Cols()
 

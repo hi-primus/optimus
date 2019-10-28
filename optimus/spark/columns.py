@@ -23,7 +23,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
-from optimus.abstract.cols import AbstractCols
+from optimus.abstract.abstract_cols import AbstractCols
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.engines.spark import SparkEngine
@@ -223,7 +223,6 @@ def cols(self):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 df = df.withColumn(output_col, expr(when))
-            # df = df.track_cols(self, output_cols)
 
             return df
 

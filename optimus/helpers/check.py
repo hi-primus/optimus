@@ -450,3 +450,11 @@ def has_(value, _type):
     :return:
     """
     return any(isinstance(elem, _type) for elem in value)
+
+
+def equal_function(f1, f2):
+    f2 = val_to_list(f2)
+    for func in f2:
+        if f1.__name__ == func.__name__:
+            return True
+    return False

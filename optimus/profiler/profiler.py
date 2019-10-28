@@ -371,8 +371,9 @@ class Profiler:
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
             # TODO: in basic calculations only funcs = [F.min, F.max]
-            funcs = [df.functions.min, df.functions.max, df.functions.stddev, df.functions.kurtosis, df.functions.mean,
-                     df.functions.skewness, df.functions.sum, df.functions.variance, df.functions.zeros_agg]
+            funcs = [df.functions.min, df.functions.max, df.functions.stddev,
+                     df.functions.kurtosis, df.functions.mean, df.functions.skewness, df.functions.sum,
+                     df.functions.variance, df.functions.zeros_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs))
 
             # TODO: None in basic calculation
@@ -383,9 +384,9 @@ class Profiler:
             funcs = [df.functions.count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
 
-            # print(exprs)
             result.update(df.cols.exec_agg(exprs))
 
+        print("hola")
         exprs = []
         n = BATCH_SIZE
         result_hist = {}
@@ -417,6 +418,7 @@ class Profiler:
             if agg_result is not None:
                 result_hist.update(agg_result)
 
+        print("hola1")
         # Merge results
         for col_name in result:
             if col_name in result_hist:

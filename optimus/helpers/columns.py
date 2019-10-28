@@ -251,12 +251,18 @@ def check_for_missing_columns(df, col_names):
 
 
 def colums_names(df):
+    """
+    Helper to get the column names from different dataframes types
+    :param df:
+    :return:
+    """
     if is_spark_dataframe(df):
         columns_names = df.columns
     elif is_pandas_dataframe(df):
         columns_names = list(df.columns)
     elif is_dask_dataframe(df):
         columns_names = list(df.columns)
+
     return columns_names
 
 
@@ -270,7 +276,6 @@ def filter_col_name_by_dtypes(df, data_type):
     """
 
     data_type = parse_dtypes(df, data_type)
-
     # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
 

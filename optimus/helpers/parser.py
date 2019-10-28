@@ -67,12 +67,10 @@ def parse_dtypes(df, value):
     :param df:
     :return:
     """
-
     if not isinstance(value, list):
         value = [value]
     try:
         data_type = [df.constants.DTYPES_DICT[df.constants.SHORT_DTYPES[v]] for v in value]
-
     except KeyError:
         data_type = value
 
