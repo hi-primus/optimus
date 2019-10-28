@@ -28,7 +28,7 @@ from optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
@@ -131,20 +131,40 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def copy(input_cols, output_cols):
+    @dispatch(list)
+    def copy(columns=None):
+        """
+
+        :param columns:
+        :return:
+        """
+        df = self
+        if is_list_of_str(columns):
+
+            output_cols = [col_name + "_copy" for col_name in columns]
+            output_cols = get_output_cols(columns, output_cols)
+            columns = zip(columns, output_cols)
+
+        for input_cols, output_cols in columns:
+            df = df.withColumn(output_cols, F.col(input_cols))
+        return df
+
+    @add_attr(cols)
+    @dispatch(str, str)
+    def copy(input_cols, output_cols=None):
         """
         Copy one or multiple columns
         :param input_cols: Source column to be copied
         :param output_cols: Destination column
+        :param columns:
         :return:
         """
-        input_cols = parse_columns(self, input_cols)
+        df = self
+        input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        df = self
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.withColumn(output_col, F.col(input_col))
-        return df
+        columns = list(zip(input_cols, output_cols))
+        return self.cols.copy(columns)
 
     @add_attr(cols)
     def to_timestamp(input_cols, date_format=None, output_cols=None):
