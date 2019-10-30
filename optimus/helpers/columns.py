@@ -66,7 +66,7 @@ def escape_columns(columns):
 
 def get_output_cols(input_cols, output_cols):
     """
-    Construct output columns names
+    Construct output columns names given
     :param input_cols:
     :param output_cols:
     :return:

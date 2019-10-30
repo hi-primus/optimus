@@ -140,7 +140,6 @@ def cols(self):
         """
         df = self
         if is_list_of_str(columns):
-
             output_cols = [col_name + "_copy" for col_name in columns]
             output_cols = get_output_cols(columns, output_cols)
             columns = zip(columns, output_cols)
@@ -526,6 +525,11 @@ def cols(self):
         df = df.action_meta("drop", *columns)
 
         return df
+
+    @add_attr(cols)
+    def create(output_col, action):
+        df = self
+        return df.withColumn(output_col, action)
 
     @add_attr(cols)
     def create_exprs(columns, funcs, *args):
@@ -1474,15 +1478,14 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None):
+    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None) -> DataFrame:
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
-        :param output_cols: Resulted columns after the unnest operation
+        :param output_cols: Resulted on or multiple columns  after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
         :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
-        :param index: Return a specific index from the nest
-        :return: Spark DataFrame
+        :param index: Return a specific index per columns. [{1,2},()]
         """
 
         # If a number of split was not defined try to infer the length with the first element
@@ -1495,22 +1498,38 @@ def cols(self):
 
         df = self
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            # Struct
+        for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
+            def _final_columns(_index, _splits, _output_col):
+                if _index is not None:
+                    actual_index = _index[idx]
+                    if is_one_element(actual_index):
+                        actual_index = val_to_list(actual_index)
+                else:
+                    actual_index = builtins.range(0, _splits)
+
+                # Create final output columns
+                if is_tuple(_output_col):
+                    columns = zip(actual_index, _output_col)
+                else:
+                    columns = enumerate([_output_col + "_" + str(i) for i in actual_index])
+
+                return columns
+
+            # Parse depending of data types
             if is_column_a(df, input_col, StructType):
                 # Unnest a data Struct
                 df = df.select(output_col + ".*")
 
             elif is_column_a(df, input_col, ArrayType):
-
-                expr = F.col(input_col)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
                     splits = format_dict(self.agg(F.max(F.size(input_col))).to_dict())
 
-                for i in builtins.range(splits):
-                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
+                expr = F.col(input_col)
+                final_columns = _final_columns(index, splits, output_col)
+                for i, col_name in final_columns:
+                    df = df.withColumn(col_name, expr.getItem(i))
 
             # String
             elif is_column_a(df, input_col, StringType):
@@ -1521,14 +1540,10 @@ def cols(self):
                 if infer_splits is True:
                     splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
 
-                if is_int(index):
-                    r = builtins.range(index, index + 1)
-                else:
-                    r = builtins.range(0, splits)
-
                 expr = F.split(F.col(input_col), separator)
-                for i in r:
-                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
+                final_columns = _final_columns(index, splits, output_col)
+                for i, col_name in final_columns:
+                    df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
             elif is_column_a(df, input_col, VectorUDT):
@@ -1549,9 +1564,8 @@ def cols(self):
 
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
-            # df = df.track_cols(self, output_col)
             else:
-                RaiseIt.type_error(input_cols, ["tting", "struct", "array", "vector"])
+                RaiseIt.type_error(input_cols, ["string", "struct", "array", "vector"])
 
         return df
 
