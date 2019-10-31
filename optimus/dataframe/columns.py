@@ -1521,6 +1521,10 @@ def cols(self):
 
                 return columns
 
+            # If numeric convert and parse as string.
+            if is_column_a(df, input_col, PYSPARK_NUMERIC_TYPES):
+                df = df.cols.cast(input_col, "str")
+
             # Parse depending of data types
             if is_column_a(df, input_col, StructType):
                 # Unnest a data Struct
