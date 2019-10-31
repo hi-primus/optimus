@@ -1493,6 +1493,11 @@ def cols(self):
         if splits is None:
             infer_splits = True
 
+        # Special case. A dot must be escaped
+        if separator == ".":
+            separator = "\\."
+        df = self
+
         input_cols = parse_columns(self, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
