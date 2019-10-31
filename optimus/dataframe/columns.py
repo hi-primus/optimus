@@ -1501,25 +1501,23 @@ def cols(self):
         input_cols = parse_columns(self, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        df = self
+        def _final_columns(_index, _splits, _output_col):
+            if _index is not None:
+                actual_index = _index[idx]
+                if is_one_element(actual_index):
+                    actual_index = val_to_list(actual_index)
+            else:
+                actual_index = builtins.range(0, _splits)
+
+            # Create final output columns
+            if is_tuple(_output_col):
+                columns = zip(actual_index, _output_col)
+            else:
+                columns = enumerate([_output_col + "_" + str(i) for i in actual_index])
+
+            return columns
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
-
-            def _final_columns(_index, _splits, _output_col):
-                if _index is not None:
-                    actual_index = _index[idx]
-                    if is_one_element(actual_index):
-                        actual_index = val_to_list(actual_index)
-                else:
-                    actual_index = builtins.range(0, _splits)
-
-                # Create final output columns
-                if is_tuple(_output_col):
-                    columns = zip(actual_index, _output_col)
-                else:
-                    columns = enumerate([_output_col + "_" + str(i) for i in actual_index])
-
-                return columns
 
             # If numeric convert and parse as string.
             if is_column_a(df, input_col, PYSPARK_NUMERIC_TYPES):
@@ -1533,7 +1531,7 @@ def cols(self):
             elif is_column_a(df, input_col, ArrayType):
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(input_col))).to_dict())
+                    splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
                 expr = F.col(input_col)
                 final_columns = _final_columns(index, splits, output_col)
@@ -1547,7 +1545,7 @@ def cols(self):
 
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
+                    splits = format_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
 
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)
@@ -1575,7 +1573,7 @@ def cols(self):
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
             else:
-                RaiseIt.type_error(input_cols, ["string", "struct", "array", "vector"])
+                RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
 
         return df
 
