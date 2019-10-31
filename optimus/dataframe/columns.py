@@ -1546,6 +1546,7 @@ def cols(self):
                     df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
+            # TODO: Maybe we could implement Pandas UDF for better control columns output
             elif is_column_a(df, input_col, VectorUDT):
 
                 def _unnest(row):
