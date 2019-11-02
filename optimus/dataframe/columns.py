@@ -1606,7 +1606,7 @@ def cols(self):
             splits = create_buckets(values[col_name]["range"]["min"], values[col_name]["range"]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
+            df = df.bucketizer(col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
 
         columns_bucket = [name_col(col_name, "bucketizer") for col_name in columns]
 
@@ -2090,15 +2090,56 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def bucketizer(df, input_cols, splits, output_cols=None):
+    def values_to_cols(input_cols, output_cols=None):
         """
-        Bucketize multiples columns at the same time.
-        :param df:
+        Create as many columns as values in an specific column. Fill with '1' the column that match the column value.
         :param input_cols:
-        :param splits: Number of splits
         :param output_cols:
         :return:
         """
+
+        def join_all(_dfs, _keys):
+            if len(_dfs) > 1:
+                return _dfs[0].join(join_all(_dfs[1:], _keys), on=_keys, how='inner')
+            else:
+                return _dfs[0]
+
+        df = self
+        combined = []
+
+        keys = df.cols.names()
+        pivot_cols = parse_columns(df, input_cols)
+        for pivot_col in pivot_cols:
+            pivotDF = df.groupBy(keys).pivot(pivot_col).count()
+            new_names = pivotDF.columns[:len(keys)] + ["{0}_{1}".format(pivot_col, c) for c in
+                                                       pivotDF.columns[len(keys):]]
+            df = pivotDF.toDF(*new_names).fillna(0)
+            combined.append(df)
+
+        return join_all(combined, keys)
+
+    @add_attr(cols)
+    def string_to_index(input_cols, output_cols=None):
+
+        df = self
+
+        input_cols = parse_columns(df, input_cols)
+        # output_cols = get_output_cols(input_cols, output_cols)
+
+        df = ml_string_to_index(df, input_cols, output_cols)
+        # df_sp_encoded = one_hot_encoder(df_sp_indexed, "Symbol_index")
+        return df
+
+    @add_attr(cols)
+    def bucketizer(input_cols, splits, output_cols=None):
+        """
+        Bucketize multiples columns at the same time.
+        :param input_cols:
+        :param splits: Dict of splits. You can use create_buckets() to make it
+        :param output_cols:
+        :return:
+        """
+        df = self
 
         def _bucketizer(col_name, args):
             """
