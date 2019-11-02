@@ -12,7 +12,7 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
@@ -53,7 +53,6 @@ class Profiler:
         self.cols_count = None
 
         self.output_columns = {}
-        self.already_run = False
 
     def _count_data_types(self, df, columns, infer=False, mismatch=None):
         """
@@ -123,13 +122,8 @@ class Profiler:
         """
 
         columns = parse_columns(df, columns)
-
-        # for col_name in columns:
-        #     df.cols.set_meta({"name": col_name})
-        # df.set_meta({"initialized": True})
-
-        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
-                              mismatch=mismatch)
+        columns, output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
+                                       mismatch=mismatch)
 
         # Load jinja
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
@@ -142,7 +136,6 @@ class Profiler:
         html = html + general_template.render(data=output)
 
         template = template_env.get_template("one_column.html")
-
         # Create every column stats
         for col_name in columns:
             hist_pic = None
@@ -165,14 +158,14 @@ class Profiler:
                     "column_dtype"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
-
             if "frequency" in col:
                 freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
 
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        self.html = html + df.table_html(10)
+        # self.html = html + df.table_html(10)
+        self.html = html
 
         # Display HTML
         print_html(self.html)
@@ -180,9 +173,6 @@ class Profiler:
         # JSON
         # Save in case we want to output to a json file
         self.json = output
-
-        # Save file in json format
-        write_json(output, self.path)
 
         return self
 
@@ -226,8 +216,14 @@ class Profiler:
 
             RaiseIt.type_error(output, ["html", "json"])
 
-    def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+    def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000, stats=True, format="json", mismatch=None):
+        return self.dataset(df, columns=columns, buckets=buckets, infer=infer, relative_error=relative_error,
+                            approx_count=approx_count,
+                            sample=sample, stats=stats, format=format, mismatch=mismatch)
+
+    def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+                sample=10000, stats=True, format="dict", mismatch=None):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -243,58 +239,153 @@ class Profiler:
         :return: json file
         """
 
-        # Filter which columns needs to be processed
-        # trans = []
-        # for col_name in columns:
-        #     trans.append(df.cols.get_meta(col_name, "transformation"))
-
         output_columns = self.output_columns
 
-        rows_count = df.count()
-        self.rows_count = rows_count
-        self.cols_count = cols_count = len(df.columns)
+        # Metadata
+        # If not empty the profiler already run.
+        # So process the dataframe's metadata to be sure which columns need to be profiled
+        is_cached = len(self.output_columns) > 0
+        actions = df.get_meta()["transformations"].get("actions")
+
+        are_actions = actions is not None and len(actions) > 0
+
+        # Process actions to check if any column must be processed
+        if is_cached and are_actions:
+
+            drop = ["drop"]
+
+            def match_actions_names(_actions):
+                """
+                Get a list of columns which have been applied and specific action.
+                :param _actions:
+                :return:
+                """
+                transformations = df.get_meta()["transformations"]["actions"]
+
+                modified = []
+                for action in _actions:
+                    if transformations.get(action):
+                        # Check if was renamed
+                        col = transformations.get(action)
+                        if len(match_names(col)) == 0:
+                            _result = col
+                        else:
+                            _result = match_names(col)
+                        modified = modified + _result
+
+                return modified
+
+            def match_names(_col_names):
+                """
+                Get a list fo columns and return the renamed version.
+                :param _col_names:
+                :return:
+                """
+                _renamed_columns = []
+                transformations = df.get_meta()["transformations"].get("actions")
+                _rename = transformations.get("rename")
+                if _rename:
+                    for col_name in _col_names:
+                        # The column name has been changed. Get the new name
+                        c = transformations["rename"].get(col_name)
+                        # The column has not been rename. Get the actual
+                        if c is None:
+                            c = col_name
+                        _renamed_columns.append(c)
+                else:
+                    _renamed_columns = _col_names
+                return _renamed_columns
+
+                # New columns
+
+            new_columns = []
+
+            current_col_names = df.cols.names()
+            renamed_cols = match_names(df.get_meta()["transformations"]["columns"])
+            for current_col_name in current_col_names:
+                if current_col_name not in renamed_cols:
+                    new_columns.append(current_col_name)
+
+            # Rename keys to match new names
+            profiler_columns = self.output_columns["columns"]
+            actions = df.get_meta()["transformations"]["actions"]
+            rename = actions.get("rename")
+            if rename:
+                for k, v in actions["rename"].items():
+                    profiler_columns[v] = profiler_columns.pop(k)
+
+            # # Drop Keys
+            for col_names in match_actions_names(drop):
+                profiler_columns.pop(col_names)
+
+            # Actions applied to current columns
+
+            modified_columns = match_actions_names(Actions.list())
+            calculate_columns = modified_columns + new_columns
+
+            # Remove duplicated.
+            calculate_columns = list(set(calculate_columns))
+
+        elif is_cached and not are_actions:
+            calculate_columns = None
+        else:
+            calculate_columns = columns
 
         # Get the stats for all the columns
-        # if ["drop", "rename"] not in trans and self.already_run is False:
         if stats is True:
-            output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
+            # Are there column to process?
+            if calculate_columns or not is_cached:
+                rows_count = df.count()
+                self.rows_count = rows_count
+                self.cols_count = cols_count = len(df.columns)
+                output_columns = self.columns_stats(df, calculate_columns, buckets, infer, relative_error, approx_count,
+                                                    mismatch)
+                # Reset metadata
 
-        assign(output_columns, "name", df.get_name(), dict)
-        assign(output_columns, "file_name", df.get_meta("file_name"), dict)
+                # Update last profiling info
+                # if update_profiler:
+                # Merge old and current profiling
+                if is_cached:
+                    output_columns["columns"].update(self.output_columns["columns"])
 
-        # Add the General data summary to the output
-        data_set_info = {'cols_count': cols_count,
-                         'rows_count': rows_count,
-                         'size': humanize.naturalsize(df.size()),
-                         'sample_size': sample}
+                assign(output_columns, "name", df.get_name(), dict)
+                assign(output_columns, "file_name", df.get_meta("file_name"), dict)
 
-        assign(output_columns, "summary", data_set_info, dict)
+                # Add the General data summary to the output
+                data_set_info = {'cols_count': cols_count,
+                                 'rows_count': rows_count,
+                                 'size': humanize.naturalsize(df.size()),
+                                 'sample_size': sample}
 
-        # Nulls
-        total_count_na = 0
-        # print(output_columns["columns"])
-        for k, v in output_columns["columns"].items():
-            total_count_na = total_count_na + v["stats"]["count_na"]
+                assign(output_columns, "summary", data_set_info, dict)
 
-        assign(output_columns, "summary.missing_count", total_count_na, dict)
-        assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
+                # Nulls
+                total_count_na = 0
+                for k, v in output_columns["columns"].items():
+                    total_count_na = total_count_na + v["stats"]["count_na"]
 
-        # assign(output_columns, "missing_count", 1000, dict)
+                assign(output_columns, "summary.missing_count", total_count_na, dict)
+                assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
-        sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                  "value": df.sample_n(sample).rows.to_list(columns)}
+                sample = {"columns": [{"title": cols} for cols in df.cols.names()],
+                          "value": df.sample_n(sample).rows.to_list(columns)}
 
-        assign(output_columns, "sample", sample, dict)
+                assign(output_columns, "sample", sample, dict)
+
+        df = df.set_meta(value={})
+        df = df.columns_meta(df.cols.names())
 
         if format == "json":
-            output = json.dumps(output_columns, ignore_nan=True, default=json_converter)
+            result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
-            output = output_columns
+            result = output_columns
+        # print(format)
 
-        self.output_columns = output_columns
-        self.already_run = True
+        self.output_columns = result
+        # print(result)
+        df = df.set_meta("transformations.actions", {})
 
-        return output
+        return result["columns"].keys(), result
 
     def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                       mismatch=None):
@@ -329,7 +420,6 @@ class Profiler:
                 count_types[name] = 1
 
         # List the data types this data set have
-
         total = 0
         dtypes = []
         for key, value in count_types.items():
@@ -371,6 +461,7 @@ class Profiler:
             assign(col_info, "column_type", columns_info["columns"][col_name]['type'])
             assign(columns_info, "columns." + col_name, col_info, dict)
 
+            assign(col_info, "id", df.cols.get_meta(col_name, "id"))
         return columns_info
 
     @staticmethod

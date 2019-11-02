@@ -221,7 +221,7 @@ df.rows.is_in("rank", [7, 10]).table()
 
 # Create and unique id for every row.
 
-df.create_id().table()
+df.rows.create_id().table()
 
 # Create wew columns
 
@@ -361,8 +361,6 @@ df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/ex
 
 df.table()
 
-
-
 # +
 import requests
 
@@ -385,5 +383,3 @@ df_result = e.run(df, func_request, func_response, calls= 60, period = 60, max_t
 # -
 
 df_result.table()
-
-
