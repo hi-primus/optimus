@@ -223,7 +223,7 @@ class Profiler:
                             sample=sample, stats=stats, format=format, mismatch=mismatch)
 
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-                sample=10000, stats=True, format="json", mismatch=None):
+                sample=10000, stats=True, format="dict", mismatch=None):
         """
         Return the profiling data in json format
         :param df: Dataframe to be processed
@@ -245,74 +245,101 @@ class Profiler:
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
         is_cached = len(self.output_columns) > 0
-        are_actions = not df.get_meta()["transformations"].get("actions") is None
+        actions = df.get_meta()["transformations"].get("actions")
 
-        if are_actions and is_cached:
-            update_profiler = True
-        else:
-            update_profiler = False
+        are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
-        if update_profiler:
+        if is_cached and are_actions:
 
-            # actions = ["fill_na", "replace"]
-            # print(Actions.list())
-            actions = Actions.list()
             drop = ["drop"]
 
             def match_actions_names(_actions):
+                """
+                Get a list of columns which have been applied and specific action.
+                :param _actions:
+                :return:
+                """
                 transformations = df.get_meta()["transformations"]["actions"]
 
                 modified = []
                 for action in _actions:
                     if transformations.get(action):
-                        modified = modified + (match_names(transformations.get(action)))
+                        # Check if was renamed
+                        col = transformations.get(action)
+                        if len(match_names(col)) == 0:
+                            _result = col
+                        else:
+                            _result = match_names(col)
+                        modified = modified + _result
+
                 return modified
 
             def match_names(_col_names):
-                modified = []
+                """
+                Get a list fo columns and return the renamed version.
+                :param _col_names:
+                :return:
+                """
+                _renamed_columns = []
                 transformations = df.get_meta()["transformations"].get("actions")
-                for col_name in _col_names:
-                    # The column name has been changed. Get the new name
-                    c = transformations["rename"].get(col_name)
-                    # The column has not been rename. Get the actual
-                    if c is None:
-                        c = col_name
-                    modified.append(c)
-                return modified
+                _rename = transformations.get("rename")
+                if _rename:
+                    for col_name in _col_names:
+                        # The column name has been changed. Get the new name
+                        c = transformations["rename"].get(col_name)
+                        # The column has not been rename. Get the actual
+                        if c is None:
+                            c = col_name
+                        _renamed_columns.append(c)
+                else:
+                    _renamed_columns = _col_names
+                return _renamed_columns
 
-            # Actions applied to current columns
-            modified_columns = match_actions_names(actions)
+                # New columns
 
-            # New columns
             new_columns = []
 
-            i = df.cols.names()
-            for j in i:
-                if j not in match_names(df.get_meta()["transformations"]["columns"]):
-                    new_columns.append(j)
+            current_col_names = df.cols.names()
+            renamed_cols = match_names(df.get_meta()["transformations"]["columns"])
+            for current_col_name in current_col_names:
+                if current_col_name not in renamed_cols:
+                    new_columns.append(current_col_name)
 
             # Rename keys to match new names
             profiler_columns = self.output_columns["columns"]
-            for k, v in df.get_meta()["transformations"]["actions"]["rename"].items():
-                profiler_columns[v] = profiler_columns.pop(k)
+            actions = df.get_meta()["transformations"]["actions"]
+            rename = actions.get("rename")
+            if rename:
+                for k, v in actions["rename"].items():
+                    profiler_columns[v] = profiler_columns.pop(k)
 
             # # Drop Keys
             for col_names in match_actions_names(drop):
                 profiler_columns.pop(col_names)
 
-            columns = modified_columns + new_columns
+            # Actions applied to current columns
+
+            modified_columns = match_actions_names(Actions.list())
+            calculate_columns = modified_columns + new_columns
+
             # Remove duplicated.
-            columns = list(set(columns))
+            calculate_columns = list(set(calculate_columns))
+
+        elif is_cached and not are_actions:
+            calculate_columns = None
+        else:
+            calculate_columns = columns
 
         # Get the stats for all the columns
         if stats is True:
-            if are_actions or not is_cached:
+            # Are there column to process?
+            if calculate_columns or not is_cached:
                 rows_count = df.count()
                 self.rows_count = rows_count
                 self.cols_count = cols_count = len(df.columns)
-
-                output_columns = self.columns_stats(df, columns, buckets, infer, relative_error, approx_count, mismatch)
+                output_columns = self.columns_stats(df, calculate_columns, buckets, infer, relative_error, approx_count,
+                                                    mismatch)
                 # Reset metadata
 
                 # Update last profiling info
@@ -320,9 +347,6 @@ class Profiler:
                 # Merge old and current profiling
                 if is_cached:
                     output_columns["columns"].update(self.output_columns["columns"])
-
-                df = df.set_meta(value={})
-                df = df.columns_meta(df.cols.names())
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -347,12 +371,19 @@ class Profiler:
                           "value": df.sample_n(sample).rows.to_list(columns)}
 
                 assign(output_columns, "sample", sample, dict)
+
+        df = df.set_meta(value={})
+        df = df.columns_meta(df.cols.names())
+
         if format == "json":
             result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
             result = output_columns
+        # print(format)
 
         self.output_columns = result
+        # print(result)
+        df = df.set_meta("transformations.actions", {})
 
         return result["columns"].keys(), result
 

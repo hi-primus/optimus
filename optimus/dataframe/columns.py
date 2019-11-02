@@ -517,12 +517,9 @@ def cols(self):
         columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        meta = df.get_meta()
-
         df = df.drop(*columns)
 
-        df.set_meta(value=meta)
-        df = df.action_meta("drop", *columns)
+        df = df.preserve_meta(self, "drop", columns)
 
         return df
 
@@ -1475,6 +1472,7 @@ def cols(self):
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
+        df = df.preserve_meta(self, Actions.NEST.value, output_col)
         return df
 
     @add_attr(cols)
@@ -1574,7 +1572,7 @@ def cols(self):
 
             else:
                 RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-
+            df = df.preserve_meta(self, Actions.UNNEST.value, [v for k, v in final_columns])
         return df
 
     @add_attr(cols)
