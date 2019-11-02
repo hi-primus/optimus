@@ -689,6 +689,8 @@ t.create(None, "cols.unnest", "array_index", "df", None, array_col, index=2)
 
 t.create(None, "cols.unnest", "array_multi_index", "df", None, array_col, index=[1,2])
 
+t.run()
+
 t.create(None, "cols.unnest", "string_multi_colum_multi_index_multi_output", "df", None, ["date arrival","last date seen"], "/", index=[(1,2),(1,2)], output_cols=[("year1","month1"),("year2","month2")])
 
 t.create(None, "cols.unnest", "string_multi_colum_multi_output", "df", None, ["date arrival","last date seen"], "/", output_cols=[("year1","month1"),("year2","month2")])

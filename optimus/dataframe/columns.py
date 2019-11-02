@@ -1488,19 +1488,25 @@ def cols(self):
         final_columns = None
 
         def _final_columns(_index, _splits, _output_col):
-            if _index is not None:
-                actual_index = _index[idx]
-                if is_one_element(actual_index):
-                    actual_index = val_to_list(actual_index)
-            else:
+
+            if _index is None:
                 actual_index = builtins.range(0, _splits)
+            else:
+                _index = val_to_list(_index)
+
+                if is_list_of_tuples(_index):
+                    _index = [(i - 1, j - 1) for i, j in _index]
+                elif is_list(_index):
+                    _index = [i - 1 for i in _index]
+
+                actual_index = _index
+                print("actual_index",actual_index)
 
             # Create final output columns
             if is_tuple(_output_col):
                 columns = zip(actual_index, _output_col)
             else:
-                columns = tuple(enumerate([_output_col + "_" + str(i) for i in actual_index]))
-
+                columns = [(i, _output_col + "_" + str(i)) for i in actual_index]
             return columns
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
@@ -1514,13 +1520,16 @@ def cols(self):
                 # Unnest a data Struct
                 df = df.select(output_col + ".*")
 
+            # Array
             elif is_column_a(df, input_col, ArrayType):
                 # Try to infer the array length using the first row
                 if infer_splits is True:
                     splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
                 expr = F.col(input_col)
+                print(index, splits, output_col)
                 final_columns = _final_columns(index, splits, output_col)
+                print("final_columns", final_columns)
                 for i, col_name in final_columns:
                     df = df.withColumn(col_name, expr.getItem(i))
 
@@ -1535,8 +1544,8 @@ def cols(self):
 
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)
-
                 for i, col_name in final_columns:
+                    print(i, col_name)
                     df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
