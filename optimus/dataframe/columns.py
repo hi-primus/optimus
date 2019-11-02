@@ -1082,12 +1082,12 @@ def cols(self):
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-            df = self.action_meta(Actions.REPLACE.value, output_col)
-
             if is_column_a(df, input_col, "int"):
                 df = df.cols.cast(input_col, "str", output_col)
+
             df = func(df, input_col, output_col, search, replace_by)
 
+            df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
         return df
 
     @add_attr(cols)
@@ -1486,6 +1486,7 @@ def cols(self):
         input_cols = parse_columns(self, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
         final_columns = None
+
         def _final_columns(_index, _splits, _output_col):
             if _index is not None:
                 actual_index = _index[idx]
