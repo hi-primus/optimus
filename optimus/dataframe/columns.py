@@ -1062,9 +1062,6 @@ def cols(self):
 
         def func_words(_df, _input_col, _output_col, _search, _replace_by):
             _search = val_to_list(search)
-            # Convert the value to column data type
-            data_type = self.cols.dtypes(_input_col)
-            _search = [PYTHON_TYPES[data_type](s) for s in _search]
 
             if _input_col != output_col:
                 _df = _df.cols.copy(_input_col, _output_col)
