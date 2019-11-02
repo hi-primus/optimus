@@ -83,6 +83,9 @@ from enum import Enum
 
 
 class Actions(Enum):
+    """
+    Actions that modify a columns.
+    """
     LOWER = "lower"
     UPPER = "upper"
     TRIM = "trim"
@@ -97,7 +100,9 @@ class Actions(Enum):
     IS_NA = "is_na"
     Z_SCORE = "z_score"
     NEST = "nest"
+    UNNEST = "unnest"
     DROP_ROW = "drop_row"
+    COPY = "copy"
 
     @staticmethod
     def list():
