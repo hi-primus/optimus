@@ -943,8 +943,7 @@ def cols(self):
         input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
-        df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols,
-                               meta=Actions.REMOVE_SPECIAL_CHARS.value)
+        df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
         return df
 
     @add_attr(cols)
