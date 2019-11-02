@@ -673,7 +673,25 @@ t.create(mismatch_df, "cols.count_by_dtypes", "mismatch", "dict", None, "*", inf
 
 t.run()
 
-t.create(None, "cols.unnest", "array_all_columns", "df", array_col, "-", index=1)
+# ## Unnest String
+
+t.create(None, "cols.unnest", "string_multi_index", "df", None, date_col, "/", splits=3, index=2)
+
+t.create(None, "cols.unnest", "string_multi_index", "df", None, date_col, "/", splits=3, index=[1,2])
+
+t.create(None, "cols.unnest", "string_infer_split", "df", None, date_col, "/")
+
+t.create(None, "cols.unnest", "string_no_index", "df", None, date_col, "/", splits=3)
+
+t.create(None, "cols.unnest", "string_output_columns", "df", None, date_col, "/", splits=3, output_cols= [("year", "month","day")])
+
+t.create(None, "cols.unnest", "array_index", "df", None, array_col, index=2)
+
+t.create(None, "cols.unnest", "array_multi_index", "df", None, array_col, index=[1,2])
+
+t.create(None, "cols.unnest", "string_multi_colum_multi_index_multi_output", "df", None, ["date arrival","last date seen"], "/", index=[(1,2),(1,2)], output_cols=[("year1","month1"),("year2","month2")])
+
+t.create(None, "cols.unnest", "string_multi_colum_multi_output", "df", None, ["date arrival","last date seen"], "/", output_cols=[("year1","month1"),("year2","month2")])
 
 t.create(None, "cols.unnest", "array", "df", array_col)
 
