@@ -1595,7 +1595,7 @@ def cols(self):
             splits = create_buckets(values[col_name]["range"]["min"], values[col_name]["range"]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = df.bucketizer(col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
+            df = df.cols.bucketizer(col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
 
         columns_bucket = [name_col(col_name, "bucketizer") for col_name in columns]
 
