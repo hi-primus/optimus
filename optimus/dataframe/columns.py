@@ -33,7 +33,7 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
     PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
@@ -44,6 +44,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
+from optimus.ml.feature import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"
@@ -1086,7 +1087,6 @@ def cols(self):
 
             if is_column_a(df, input_col, "int"):
                 df = df.cols.cast(input_col, "str", output_col)
-
             df = func(df, input_col, output_col, search, replace_by)
 
         return df
@@ -1486,7 +1486,7 @@ def cols(self):
 
         input_cols = parse_columns(self, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
-
+        final_columns = None
         def _final_columns(_index, _splits, _output_col):
             if _index is not None:
                 actual_index = _index[idx]
@@ -1499,7 +1499,7 @@ def cols(self):
             if is_tuple(_output_col):
                 columns = zip(actual_index, _output_col)
             else:
-                columns = enumerate([_output_col + "_" + str(i) for i in actual_index])
+                columns = tuple(enumerate([_output_col + "_" + str(i) for i in actual_index]))
 
             return columns
 
@@ -1535,6 +1535,7 @@ def cols(self):
 
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)
+
                 for i, col_name in final_columns:
                     df = df.withColumn(col_name, expr.getItem(i))
 
