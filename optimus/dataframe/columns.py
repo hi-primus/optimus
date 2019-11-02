@@ -2079,33 +2079,40 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def values_to_cols(input_cols, output_cols=None):
+    def values_to_cols(input_cols):
         """
         Create as many columns as values in an specific column. Fill with '1' the column that match the column value.
         :param input_cols:
-        :param output_cols:
         :return:
         """
+        before = self
+        keys = before.cols.names()
 
-        def join_all(_dfs, _keys):
+        def join_all(_dfs):
+            # _dfs[0].table()
             if len(_dfs) > 1:
-                return _dfs[0].join(join_all(_dfs[1:], _keys), on=_keys, how='inner')
+                # print(_keys)
+                return _dfs[0].join(join_all(_dfs[1:]), on=keys, how='inner')
             else:
                 return _dfs[0]
 
-        df = self
         combined = []
 
-        keys = df.cols.names()
-        pivot_cols = parse_columns(df, input_cols)
-        for pivot_col in pivot_cols:
-            pivotDF = df.groupBy(keys).pivot(pivot_col).count()
-            new_names = pivotDF.columns[:len(keys)] + ["{0}_{1}".format(pivot_col, c) for c in
-                                                       pivotDF.columns[len(keys):]]
-            df = pivotDF.toDF(*new_names).fillna(0)
-            combined.append(df)
+        pivot_cols = parse_columns(before, input_cols)
 
-        return join_all(combined, keys)
+        for pivot_col in pivot_cols:
+            pivotDF = before.groupBy(keys).pivot(pivot_col).count()
+
+            # pivotDF.table()
+            new_names = ["{0}_{1}".format(pivot_col, c) for c in pivotDF.columns[len(keys):]]
+            names = pivotDF.columns[:len(keys)] + new_names
+
+            # names = before.cols.names(keys, invert=True)
+            # print(names)
+            df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
+            # df.table()
+            combined.append(df)
+        return join_all(combined)
 
     @add_attr(cols)
     def string_to_index(input_cols, output_cols=None):
@@ -2116,7 +2123,7 @@ def cols(self):
         # output_cols = get_output_cols(input_cols, output_cols)
 
         df = ml_string_to_index(df, input_cols, output_cols)
-        # df_sp_encoded = one_hot_encoder(df_sp_indexed, "Symbol_index")
+
         return df
 
     @add_attr(cols)
