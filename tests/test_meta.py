@@ -79,7 +79,7 @@ source_df = op.create.df(
                                                                                                        0),
                                                                                      True, bytearray(b'Battle Station'),
                                                                                      None)])
-meta_value = {"key": "value"}
+meta_value = {}
 
 
 class Test_meta(object):
@@ -109,5 +109,5 @@ class Test_meta(object):
     def test_df_get_meta():
         source_df.schema[-1].metadata = meta_value
         actual_value = source_df.get_meta()
-        expected_value = {"key": "value"}
+        expected_value = meta_value
         assert (actual_value == expected_value)
