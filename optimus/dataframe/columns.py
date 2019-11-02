@@ -131,39 +131,30 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    @dispatch(list)
-    def copy(columns=None):
-        """
-
-        :param columns:
-        :return:
-        """
-        df = self
-        if is_list_of_str(columns):
-            output_cols = [col_name + "_copy" for col_name in columns]
-            output_cols = get_output_cols(columns, output_cols)
-            columns = zip(columns, output_cols)
-
-        for input_cols, output_cols in columns:
-            df = df.withColumn(output_cols, F.col(input_cols))
-        return df
-
-    @add_attr(cols)
-    @dispatch(str, str)
-    def copy(input_cols, output_cols=None):
+    def copy(input_cols, output_cols=None, columns=None):
         """
         Copy one or multiple columns
         :param input_cols: Source column to be copied
         :param output_cols: Destination column
-        :param columns:
+        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
         df = self
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        columns = list(zip(input_cols, output_cols))
-        return self.cols.copy(columns)
+        if is_list_of_str(columns):
+            output_cols = [col_name + "_copy" for col_name in columns]
+            output_cols = get_output_cols(columns, output_cols)
+            columns = zip(columns, output_cols)
+        else:
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            columns = list(zip(input_cols, output_cols))
+
+        for input_col, output_col in columns:
+            df = df.withColumn(output_col, F.col(input_col))
+            df = df.preserve_meta(self, Actions.COPY.value, output_col)
+        return df
 
     @add_attr(cols)
     def to_timestamp(input_cols, date_format=None, output_cols=None):
