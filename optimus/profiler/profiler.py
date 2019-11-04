@@ -245,8 +245,10 @@ class Profiler:
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
         is_cached = len(self.output_columns) > 0
-        actions = df.get_meta()["transformations"].get("actions")
-
+        actions = df.get_meta("transformations.actions")
+        # print(actions)
+        # are_actions = None
+        # actions = actions.get("actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -260,13 +262,14 @@ class Profiler:
                 :param _actions:
                 :return:
                 """
-                transformations = df.get_meta()["transformations"]["actions"]
+
+                _actions = df.get_meta("transformations.actions")
 
                 modified = []
                 for action in _actions:
-                    if transformations.get(action):
+                    if _actions.get(action):
                         # Check if was renamed
-                        col = transformations.get(action)
+                        col = _actions.get(action)
                         if len(match_names(col)) == 0:
                             _result = col
                         else:
@@ -282,33 +285,33 @@ class Profiler:
                 :return:
                 """
                 _renamed_columns = []
-                transformations = df.get_meta()["transformations"].get("actions")
-                _rename = transformations.get("rename")
+                _actions = df.get_meta("transformations.actions")
+                _rename = _actions.get("rename")
                 if _rename:
-                    for col_name in _col_names:
+                    for _col_name in _col_names:
                         # The column name has been changed. Get the new name
-                        c = transformations["rename"].get(col_name)
+                        c = _actions["rename"].get(_col_name)
                         # The column has not been rename. Get the actual
                         if c is None:
-                            c = col_name
+                            c = _col_name
                         _renamed_columns.append(c)
                 else:
                     _renamed_columns = _col_names
                 return _renamed_columns
 
-                # New columns
+            # New columns
 
             new_columns = []
 
             current_col_names = df.cols.names()
-            renamed_cols = match_names(df.get_meta()["transformations"]["columns"])
+            renamed_cols = match_names(df.get_meta("transformations.columns"))
             for current_col_name in current_col_names:
                 if current_col_name not in renamed_cols:
                     new_columns.append(current_col_name)
 
             # Rename keys to match new names
             profiler_columns = self.output_columns["columns"]
-            actions = df.get_meta()["transformations"]["actions"]
+            actions = df.get_meta("transformations.actions")
             rename = actions.get("rename")
             if rename:
                 for k, v in actions["rename"].items():
