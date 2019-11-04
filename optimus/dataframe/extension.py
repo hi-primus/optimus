@@ -413,6 +413,21 @@ def table(self, limit=None, columns=None, title=None, truncate=True):
 
 
 @add_method(DataFrame)
+def random_split(self, weights: list = None, seed: int = 1):
+    """
+    Create 2 random splited DataFrames
+    :param self:
+    :param weights:
+    :param seed:
+    :return:
+    """
+    if weights is None:
+        weights = [0.8, 0.2]
+
+    return self.randomSplit(weights, seed)
+
+
+@add_method(DataFrame)
 def debug(self):
     """
 
