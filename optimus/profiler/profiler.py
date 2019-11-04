@@ -378,6 +378,7 @@ class Profiler:
         df = df.set_meta(value={})
         df = df.columns_meta(df.cols.names())
 
+        col_names = output_columns["columns"].keys()
         if format == "json":
             result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
@@ -388,7 +389,7 @@ class Profiler:
         # print(result)
         df = df.set_meta("transformations.actions", {})
 
-        return result["columns"].keys(), result
+        return col_names, result
 
     def columns_stats(self, df, columns, buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                       mismatch=None):

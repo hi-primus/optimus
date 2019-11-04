@@ -456,6 +456,7 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
                                        approx_count=True,
                                        sample=10000,
                                        stats=stats,
+                                       format="json",
                                        mismatch=mismatch)
 
     if Comm:
