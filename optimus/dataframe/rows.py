@@ -220,6 +220,18 @@ def rows(self):
         df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
+    @add_attr(rows)
+    def limit(count):
+        """
+        Limit the number of rows
+        :param count:
+        :return:
+        """
+        df = self
+        df = df.limit(count)
+        df = df.preserve_meta(self)
+        return df
+
     # TODO: Merge with select
     @add_attr(rows)
     def is_in(input_cols, values):
