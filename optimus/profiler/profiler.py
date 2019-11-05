@@ -217,10 +217,11 @@ class Profiler:
             RaiseIt.type_error(output, ["html", "json"])
 
     def to_json(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-                sample=10000, stats=True, format="json", mismatch=None):
-        return self.dataset(df, columns=columns, buckets=buckets, infer=infer, relative_error=relative_error,
-                            approx_count=approx_count,
-                            sample=sample, stats=stats, format=format, mismatch=mismatch)
+                sample=10000, stats=True, mismatch=None):
+        columns, output = self.dataset(df, columns=columns, buckets=buckets, infer=infer, relative_error=relative_error,
+                                       approx_count=approx_count,
+                                       sample=sample, stats=stats, format="json", mismatch=mismatch)
+        return output
 
     def dataset(self, df, columns="*", buckets=10, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
                 sample=10000, stats=True, format="dict", mismatch=None):
@@ -383,9 +384,8 @@ class Profiler:
             result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
             result = output_columns
-        # print(format)
 
-        self.output_columns = result
+        self.output_columns = output_columns
         # print(result)
         df = df.set_meta("transformations.actions", {})
 

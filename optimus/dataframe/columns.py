@@ -1117,7 +1117,7 @@ def cols(self):
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: list of columns to be analyze.
         :param output_cols:
-        :param data_type: continuous or categorical
+        :param data_type: "continuous" or "categorical"
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
         or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
@@ -2125,7 +2125,12 @@ def cols(self):
 
     @add_attr(cols)
     def string_to_index(input_cols, output_cols=None):
-
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
         df = self
 
         input_cols = parse_columns(df, input_cols)
