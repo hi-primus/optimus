@@ -1500,7 +1500,6 @@ def cols(self):
                     _index = [i - 1 for i in _index]
 
                 actual_index = _index
-                print("actual_index",actual_index)
 
             # Create final output columns
             if is_tuple(_output_col):
@@ -1527,9 +1526,7 @@ def cols(self):
                     splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
                 expr = F.col(input_col)
-                print(index, splits, output_col)
                 final_columns = _final_columns(index, splits, output_col)
-                print("final_columns", final_columns)
                 for i, col_name in final_columns:
                     df = df.withColumn(col_name, expr.getItem(i))
 
@@ -1545,7 +1542,6 @@ def cols(self):
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)
                 for i, col_name in final_columns:
-                    print(i, col_name)
                     df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
