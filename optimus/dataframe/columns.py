@@ -2141,11 +2141,15 @@ def cols(self):
         """
         Bucketize multiples columns at the same time.
         :param input_cols:
-        :param splits: Dict of splits. You can use create_buckets() to make it
+        :param splits: Dict of splits or ints. You can use create_buckets() to make it
         :param output_cols:
         :return:
         """
         df = self
+
+        if is_int(splits):
+            min_max = df.cols.range(input_cols)[input_cols]["range"]
+            splits = create_buckets(min_max["min"], min_max["max"], splits)
 
         def _bucketizer(col_name, args):
             """
