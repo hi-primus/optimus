@@ -29,6 +29,7 @@ PYTHON_SHORT_TYPES = {"string": "string",
                       "array": "array",
                       "null": "null"
                       }
+
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 
 PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]

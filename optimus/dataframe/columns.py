@@ -1117,7 +1117,7 @@ def cols(self):
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: list of columns to be analyze.
         :param output_cols:
-        :param data_type: continuous or categorical
+        :param data_type: "continuous" or "categorical"
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
         or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
@@ -1500,7 +1500,6 @@ def cols(self):
                     _index = [i - 1 for i in _index]
 
                 actual_index = _index
-                print("actual_index",actual_index)
 
             # Create final output columns
             if is_tuple(_output_col):
@@ -1527,9 +1526,7 @@ def cols(self):
                     splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
                 expr = F.col(input_col)
-                print(index, splits, output_col)
                 final_columns = _final_columns(index, splits, output_col)
-                print("final_columns", final_columns)
                 for i, col_name in final_columns:
                     df = df.withColumn(col_name, expr.getItem(i))
 
@@ -1545,7 +1542,6 @@ def cols(self):
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)
                 for i, col_name in final_columns:
-                    print(i, col_name)
                     df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
@@ -2125,7 +2121,12 @@ def cols(self):
 
     @add_attr(cols)
     def string_to_index(input_cols, output_cols=None):
-
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
         df = self
 
         input_cols = parse_columns(df, input_cols)
@@ -2140,11 +2141,15 @@ def cols(self):
         """
         Bucketize multiples columns at the same time.
         :param input_cols:
-        :param splits: Dict of splits. You can use create_buckets() to make it
+        :param splits: Dict of splits or ints. You can use create_buckets() to make it
         :param output_cols:
         :return:
         """
         df = self
+
+        if is_int(splits):
+            min_max = df.cols.range(input_cols)[input_cols]["range"]
+            splits = create_buckets(min_max["min"], min_max["max"], splits)
 
         def _bucketizer(col_name, args):
             """

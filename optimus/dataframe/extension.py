@@ -452,7 +452,7 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
     if name is not None:
         df.set_name(name)
 
-    result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
+    columns, output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
                                        approx_count=True,
                                        sample=10000,
                                        stats=stats,
@@ -460,7 +460,7 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
                                        mismatch=mismatch)
 
     if Comm:
-        Comm.instance.send(result)
+        Comm.instance.send(output)
     else:
         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
