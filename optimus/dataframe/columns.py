@@ -337,9 +337,6 @@ def cols(self):
         :return: Spark DataFrame
         """
 
-        if dtype is None:
-            RaiseIt.value_error(dtype, "datatype")
-
         _dtype = []
         # Parse params
         if columns is None:
