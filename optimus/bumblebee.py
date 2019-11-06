@@ -28,18 +28,20 @@ class Comm:
     Send encrypted message to the Bumblebee
     """
 
-    def __init__(self, queue_name=None):
+    def __init__(self, queue_name=None, key=None):
 
         # If queue_name was not given try lo load from file if not generate one
         if queue_name is None:
             self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
+        else:
+            self.queue_name = queue_name
 
+        if key is None:
             # key is generated as byte convert to base64 so we can saved it in the config file
             key = Fernet.generate_key()
             self.key = save_config_key("bumblebee.ini", "DEFAULT", "Key", key.decode())
-
         else:
-            self.queue_name = queue_name
+            self.key = key
 
         keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=FULL_DOMAIN,
                                                                   SESSION=self.queue_name, KEY=self.key)

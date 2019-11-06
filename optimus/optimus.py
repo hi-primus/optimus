@@ -81,8 +81,8 @@ class Optimus:
 
         if comm is True:
             Comm.instance = Comm()
-        # else:
-        #     Comm.instance = comm
+        else:
+            Comm.instance = comm
 
         if session is None:
             # Creating Spark Session
