@@ -247,9 +247,6 @@ class Profiler:
         # So process the dataframe's metadata to be sure which columns need to be profiled
         is_cached = len(self.output_columns) > 0
         actions = df.get_meta("transformations.actions")
-        # print(actions)
-        # are_actions = None
-        # actions = actions.get("actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -264,13 +261,13 @@ class Profiler:
                 :return:
                 """
 
-                _actions = df.get_meta("transformations.actions")
+                _actions_json = df.get_meta("transformations.actions")
 
                 modified = []
                 for action in _actions:
-                    if _actions.get(action):
+                    if _actions_json.get(action):
                         # Check if was renamed
-                        col = _actions.get(action)
+                        col = _actions_json.get(action)
                         if len(match_names(col)) == 0:
                             _result = col
                         else:
@@ -325,6 +322,7 @@ class Profiler:
             # Actions applied to current columns
 
             modified_columns = match_actions_names(Actions.list())
+            # print(modified_columns, new_columns)
             calculate_columns = modified_columns + new_columns
 
             # Remove duplicated.
@@ -332,9 +330,10 @@ class Profiler:
 
         elif is_cached and not are_actions:
             calculate_columns = None
-        else:
+        elif not is_cached:
             calculate_columns = columns
 
+        # print ("calculate_columns",calculate_columns)
         # Get the stats for all the columns
         if stats is True:
             # Are there column to process?
@@ -386,7 +385,6 @@ class Profiler:
             result = output_columns
 
         self.output_columns = output_columns
-        # print(result)
         df = df.set_meta("transformations.actions", {})
 
         return col_names, result
