@@ -2117,17 +2117,20 @@ def cols(self):
         return join_all(combined)
 
     @add_attr(cols)
-    def string_to_index(input_cols, output_cols=None):
+    def string_to_index(input_cols=None, output_cols=None, columns=None):
         """
         Encodes a string column of labels to a column of label indices
         :param input_cols:
         :param output_cols:
+        :param columns:
         :return:
         """
         df = self
 
-        input_cols = parse_columns(df, input_cols)
-        # output_cols = get_output_cols(input_cols, output_cols)
+        if columns is None:
+            input_cols = parse_columns(df, input_cols)
+        else:
+            input_cols, output_cols = zip(*columns)
 
         df = ml_string_to_index(df, input_cols, output_cols)
 

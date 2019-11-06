@@ -28,26 +28,28 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols, output_col=None, **kargs):
+def string_to_index(df, input_cols, output_cols=None, **kargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
     :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
-    :param output_col:Column where the ouput is going to be saved
+    :param output_cols:Column where the ouput is going to be saved
     :return: Dataframe with indexed columns.
     """
 
-    input_cols = parse_columns(df, input_cols)
-    if output_col is None:
-        output_col = name_col(input_cols, "index_to_string")
+    # input_cols = parse_columns(df, input_cols)
+    if output_cols is None:
 
-    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col
-                in list(set(input_cols))]
+        output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+    print(output_cols)
+
+    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
+                in zip(list(set(input_cols)), list(set(output_cols)))]
 
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
-
+    # df.show()
     return df
 
 
