@@ -436,6 +436,12 @@ def debug(self):
     """
     print(self.rdd.toDebugString().decode("ascii"))
 
+@add_method(DataFrame)
+def reset(self):
+
+    df = self.set_meta("transformations.actions", {})
+    Profiler.instance.output_columns = {}
+    return df
 
 @add_method(DataFrame)
 def send(self, name=None, infer=True, mismatch=None, stats=True):
