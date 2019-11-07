@@ -153,8 +153,10 @@ def cols(self):
             columns = list(zip(input_cols, output_cols))
 
         for input_col, output_col in columns:
+            current_meta = self.get_meta()
             df = df.withColumn(output_col, F.col(input_col))
-            df = df.preserve_meta(self, Actions.COPY.value, output_col)
+            df = df.set_meta(value=current_meta)
+            df = df.copy_meta({input_col: output_col})
         return df
 
     @add_attr(cols)

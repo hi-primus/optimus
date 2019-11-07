@@ -436,12 +436,13 @@ def debug(self):
     """
     print(self.rdd.toDebugString().decode("ascii"))
 
+
 @add_method(DataFrame)
 def reset(self):
-
     df = self.set_meta("transformations.actions", {})
     Profiler.instance.output_columns = {}
     return df
+
 
 @add_method(DataFrame)
 def send(self, name=None, infer=True, mismatch=None, stats=True):
@@ -459,16 +460,39 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
         df.set_name(name)
 
     columns, output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                       approx_count=True,
-                                       sample=10000,
-                                       stats=stats,
-                                       format="json",
-                                       mismatch=mismatch)
+                                                approx_count=True,
+                                                sample=10000,
+                                                stats=stats,
+                                                format="json",
+                                                mismatch=mismatch)
 
     if Comm:
         Comm.instance.send(output)
     else:
         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+
+
+@add_method(DataFrame)
+def copy_meta(self, old_new_columns):
+    """
+    Shortcut to add transformations to a dataframe
+    :param self:
+    :param old_new_columns:
+    :return:
+    """
+
+    key = "transformations.actions.copy"
+
+    df = self
+
+    copy_cols = df.get_meta(key)
+    if copy_cols is None:
+        copy_cols = {}
+    copy_cols.update(old_new_columns)
+
+    df = df.set_meta(key, copy_cols)
+
+    return df
 
 
 @add_method(DataFrame)
