@@ -9,7 +9,7 @@ from glom import assign
 
 from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a, is_dict, is_list_of_one_element
+from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -253,7 +253,6 @@ class Profiler:
         if is_cached and are_actions:
 
             drop = ["drop"]
-            copy = ["copy"]
 
             def match_actions_names(_actions):
                 """
@@ -269,15 +268,15 @@ class Profiler:
                     if _actions_json.get(action):
                         # Check if was renamed
                         col = _actions_json.get(action)
-                        if len(match_names(col)) == 0:
+                        if len(match_renames(col)) == 0:
                             _result = col
                         else:
-                            _result = match_names(col)
+                            _result = match_renames(col)
                         modified = modified + _result
 
                 return modified
 
-            def match_names(_col_names):
+            def match_renames(_col_names):
                 """
                 Get a list fo columns and return the renamed version.
                 :param _col_names:
@@ -288,7 +287,7 @@ class Profiler:
                 _rename = _actions.get("rename")
 
                 def get_name(_col_name):
-                    c = _actions["rename"].get(_col_name)
+                    c = _rename.get(_col_name)
                     # The column has not been rename. Get the actual column name
                     if c is None:
                         c = _col_name
@@ -296,14 +295,14 @@ class Profiler:
 
                 if _rename:
                     # if a list
-                    if is_list_of_one_element(_col_names):
+                    if is_list_of_str(_col_names):
                         for _col_name in _col_names:
                             # The column name has been changed. Get the new name
                             _renamed_columns.append(get_name(_col_name))
                     # if a dict
                     if is_dict(_col_names):
                         for _col1, _col2 in _col_names.items():
-                            _renamed_columns.append({get_name(_col1):get_name(_col2)})
+                            _renamed_columns.append({get_name(_col1): get_name(_col2)})
 
                 else:
                     _renamed_columns = _col_names
@@ -313,7 +312,7 @@ class Profiler:
             new_columns = []
 
             current_col_names = df.cols.names()
-            renamed_cols = match_names(df.get_meta("transformations.columns"))
+            renamed_cols = match_renames(df.get_meta("transformations.columns"))
             for current_col_name in current_col_names:
                 if current_col_name not in renamed_cols:
                     new_columns.append(current_col_name)
@@ -331,13 +330,16 @@ class Profiler:
                 profiler_columns.pop(col_names)
 
             # Copy Keys
-            for source, target in df.get_meta("transformations.actions.copy").items():
-                profiler_columns[target] = profiler_columns[source]
+            copy_columns = df.get_meta("transformations.actions.copy")
+            if copy_columns is not None:
+                for source, target in copy_columns.items():
+                    profiler_columns[target] = profiler_columns[source]
+                # Check is a new column is a copied column
+                new_columns = list(set(new_columns) - set(copy_columns.values()))
 
             # Actions applied to current columns
 
             modified_columns = match_actions_names(Actions.list())
-            # print(modified_columns, new_columns)
             calculate_columns = modified_columns + new_columns
 
             # Remove duplicated.
@@ -391,6 +393,7 @@ class Profiler:
                 assign(output_columns, "sample", sample, dict)
 
         df = df.set_meta(value={})
+        print(df.cols.names())
         df = df.columns_meta(df.cols.names())
 
         col_names = output_columns["columns"].keys()
