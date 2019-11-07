@@ -324,6 +324,7 @@ class Profiler:
             if rename:
                 for k, v in actions["rename"].items():
                     profiler_columns[v] = profiler_columns.pop(k)
+                    profiler_columns[v]["name"] = v
 
             # Drop Keys
             for col_names in match_actions_names(drop):
@@ -333,7 +334,8 @@ class Profiler:
             copy_columns = df.get_meta("transformations.actions.copy")
             if copy_columns is not None:
                 for source, target in copy_columns.items():
-                    profiler_columns[target] = profiler_columns[source]
+                    profiler_columns[target] = profiler_columns[source].copy()
+                    profiler_columns[target]["name"]= target
                 # Check is a new column is a copied column
                 new_columns = list(set(new_columns) - set(copy_columns.values()))
 
@@ -393,7 +395,6 @@ class Profiler:
                 assign(output_columns, "sample", sample, dict)
 
         df = df.set_meta(value={})
-        print(df.cols.names())
         df = df.columns_meta(df.cols.names())
 
         col_names = output_columns["columns"].keys()
