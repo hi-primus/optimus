@@ -2113,10 +2113,15 @@ def cols(self):
 
             # names = before.cols.names(keys, invert=True)
             # print(names)
+            pivotDF = pivotDF.preserve_meta(self)
             df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
-            # df.table()
+            df = df.preserve_meta(self, Actions.VALUES_TO_COLS.value, new_names)
+
             combined.append(df)
-        return join_all(combined)
+
+        df = join_all(combined)
+
+        return df
 
     @add_attr(cols)
     def string_to_index(input_cols=None, output_cols=None, columns=None):
