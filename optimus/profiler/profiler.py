@@ -1,5 +1,6 @@
 import configparser
 import copy
+from collections import OrderedDict
 
 import humanize
 import imgkit
@@ -335,7 +336,7 @@ class Profiler:
             if copy_columns is not None:
                 for source, target in copy_columns.items():
                     profiler_columns[target] = profiler_columns[source].copy()
-                    profiler_columns[target]["name"]= target
+                    profiler_columns[target]["name"] = target
                 # Check is a new column is a copied column
                 new_columns = list(set(new_columns) - set(copy_columns.values()))
 
@@ -349,7 +350,8 @@ class Profiler:
 
         elif is_cached and not are_actions:
             calculate_columns = None
-        elif not is_cached:
+        # elif not is_cached:
+        else:
             calculate_columns = columns
 
         # print ("calculate_columns",calculate_columns)
@@ -362,13 +364,16 @@ class Profiler:
                 self.cols_count = cols_count = len(df.columns)
                 output_columns = self.columns_stats(df, calculate_columns, buckets, infer, relative_error, approx_count,
                                                     mismatch)
-                # Reset metadata
 
                 # Update last profiling info
-                # if update_profiler:
                 # Merge old and current profiling
                 if is_cached:
                     output_columns["columns"].update(self.output_columns["columns"])
+                    actual_columns = output_columns["columns"]
+                    # Order columns
+                    output_columns["columns"] = OrderedDict(
+                        {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
+                         _cols_name in list(actual_columns.keys())})
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -483,6 +488,7 @@ class Profiler:
             assign(columns_info, "columns." + col_name, col_info, dict)
 
             assign(col_info, "id", df.cols.get_meta(col_name, "id"))
+
         return columns_info
 
     @staticmethod
