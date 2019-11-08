@@ -369,11 +369,6 @@ class Profiler:
                 # Merge old and current profiling
                 if is_cached:
                     output_columns["columns"].update(self.output_columns["columns"])
-                    actual_columns = output_columns["columns"]
-                    # Order columns
-                    output_columns["columns"] = OrderedDict(
-                        {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
-                         _cols_name in list(actual_columns.keys())})
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -398,6 +393,12 @@ class Profiler:
                           "value": df.sample_n(sample).rows.to_list(columns)}
 
                 assign(output_columns, "sample", sample, dict)
+
+        actual_columns = output_columns["columns"]
+        # Order columns
+        output_columns["columns"] = dict(OrderedDict(
+            {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
+             _cols_name in list(actual_columns.keys())}))
 
         df = df.set_meta(value={})
         df = df.columns_meta(df.cols.names())
