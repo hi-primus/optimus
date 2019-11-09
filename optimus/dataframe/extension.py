@@ -399,10 +399,27 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     return output
 
 
+def isnotebook():
+    """
+    Detect you are in a notebook or in a terminal
+    :return:
+    """
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True  # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False  # Probably standard Python interpreter
+
+
 @add_method(DataFrame)
 def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
-        if __IPYTHON__ and DataFrame.output == "html":
+        if isnotebook() and DataFrame.output == "html":
             result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:
