@@ -37,7 +37,7 @@ tqdm==4.28.1
 kombu==4.6.1
 packaging==19.1
 ordered-set==3.1.1
-deepdiff==4.0.6
+deepdiff==4.0.9
 papermill==1.0.1
 paho-mqtt==1.5.0
 cryptography==2.7
