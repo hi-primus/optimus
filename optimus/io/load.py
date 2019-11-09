@@ -58,7 +58,7 @@ class Load:
         return df
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
+    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -68,6 +68,7 @@ class Load:
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
         :param charset: Charset file encoding
+        :param null_value: value to convert the string to a None value
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
@@ -80,6 +81,7 @@ class Load:
                   .options(mode="DROPMALFORMED")
                   .options(delimiter=sep)
                   .options(inferSchema=infer_schema)
+                  .options(nullValue=null_value)
                   .option("charset", charset)
                   .csv(file, *args, **kwargs))
 
