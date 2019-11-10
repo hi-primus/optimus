@@ -205,7 +205,7 @@ def check_column_numbers(columns, number=0):
     elif number == ">1":
         if not len(columns) > 1:
             RaiseIt.value_error(len(columns), ["more than 1"])
-    elif len(columns) == number:
+    elif len(columns) != number:
         RaiseIt.value_error(count, "{} columns, {} needed".format(number, columns))
 
 
