@@ -103,7 +103,8 @@ class Actions(Enum):
     NEST = "nest"
     UNNEST = "unnest"
     DROP_ROW = "drop_row"
-    COPY = "copy"
+    VALUES_TO_COLS = "values_to_cols"
+    SET = "set"
 
     @staticmethod
     def list():

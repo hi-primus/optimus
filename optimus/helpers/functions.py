@@ -297,8 +297,8 @@ def create_buckets(lower_bound, upper_bound, bins):
             buckets.append({"lower": low, "upper": high, "bucket": i})
             low = high
 
-    # ensure that the upper bound is exactly the higher value.
-    # Because floating point calculation it can miss the upper bound in the final sum
+        # ensure that the upper bound is exactly the higher value.
+        # Because floating point calculation it can miss the upper bound in the final sum
 
         buckets[bins - 1]["upper"] = upper_bound
     return buckets

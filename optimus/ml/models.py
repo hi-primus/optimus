@@ -1,6 +1,6 @@
 from pyspark.ml import feature, classification
 from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
-from pyspark.sql.functions import *
+from pyspark.sql import functions as F
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
@@ -139,7 +139,7 @@ class ML:
         model = automl.fit(df_va)
         df_raw = model.transform(df_va)
 
-        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["value"] > 0.5, 1.0).otherwise(0.0))
+        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["value"] > 0.5, 1.0).otherwise(0.0))
 
         return df_pred, model
 
@@ -161,7 +161,7 @@ class ML:
         model = h2o_deeplearning.fit(df_va)
         df_raw = model.transform(df_va)
 
-        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
+        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
 
         return df_pred, model
 
@@ -179,7 +179,7 @@ class ML:
         model = h2o_xgboost.fit(df_va)
         df_raw = model.transform(df_va)
 
-        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
+        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
 
         return df_pred, model
 
@@ -198,6 +198,6 @@ class ML:
         model = h2o_gbm.fit(df_va)
         df_raw = model.transform(df_va)
 
-        df_pred = df_raw.withColumn("prediction", when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
+        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
 
         return df_pred, model

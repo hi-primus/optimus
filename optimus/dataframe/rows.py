@@ -12,7 +12,7 @@ from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_l
 from optimus.helpers.columns import parse_columns, validate_columns_names
 from optimus.helpers.constants import Actions
 from optimus.helpers.converter import one_list_to_val
-from optimus.helpers.decorators import *
+from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.raiseit import RaiseIt
 

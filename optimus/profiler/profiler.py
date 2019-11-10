@@ -1,5 +1,6 @@
 import configparser
 import copy
+from collections import OrderedDict
 
 import humanize
 import imgkit
@@ -9,18 +10,17 @@ from glom import assign
 
 from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a
+from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_col_types, \
-    write_json, write_html, PYSPARK_NUMERIC_TYPES
+from optimus.profiler.functions import fill_missing_col_types, write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
 
 MAX_BUCKETS = 33
@@ -247,9 +247,6 @@ class Profiler:
         # So process the dataframe's metadata to be sure which columns need to be profiled
         is_cached = len(self.output_columns) > 0
         actions = df.get_meta("transformations.actions")
-        # print(actions)
-        # are_actions = None
-        # actions = actions.get("actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -264,22 +261,22 @@ class Profiler:
                 :return:
                 """
 
-                _actions = df.get_meta("transformations.actions")
+                _actions_json = df.get_meta("transformations.actions")
 
                 modified = []
                 for action in _actions:
-                    if _actions.get(action):
+                    if _actions_json.get(action):
                         # Check if was renamed
-                        col = _actions.get(action)
-                        if len(match_names(col)) == 0:
+                        col = _actions_json.get(action)
+                        if len(match_renames(col)) == 0:
                             _result = col
                         else:
-                            _result = match_names(col)
+                            _result = match_renames(col)
                         modified = modified + _result
 
                 return modified
 
-            def match_names(_col_names):
+            def match_renames(_col_names):
                 """
                 Get a list fo columns and return the renamed version.
                 :param _col_names:
@@ -288,24 +285,34 @@ class Profiler:
                 _renamed_columns = []
                 _actions = df.get_meta("transformations.actions")
                 _rename = _actions.get("rename")
+
+                def get_name(_col_name):
+                    c = _rename.get(_col_name)
+                    # The column has not been rename. Get the actual column name
+                    if c is None:
+                        c = _col_name
+                    return c
+
                 if _rename:
-                    for _col_name in _col_names:
-                        # The column name has been changed. Get the new name
-                        c = _actions["rename"].get(_col_name)
-                        # The column has not been rename. Get the actual
-                        if c is None:
-                            c = _col_name
-                        _renamed_columns.append(c)
+                    # if a list
+                    if is_list_of_str(_col_names):
+                        for _col_name in _col_names:
+                            # The column name has been changed. Get the new name
+                            _renamed_columns.append(get_name(_col_name))
+                    # if a dict
+                    if is_dict(_col_names):
+                        for _col1, _col2 in _col_names.items():
+                            _renamed_columns.append({get_name(_col1): get_name(_col2)})
+
                 else:
                     _renamed_columns = _col_names
                 return _renamed_columns
 
             # New columns
-
             new_columns = []
 
             current_col_names = df.cols.names()
-            renamed_cols = match_names(df.get_meta("transformations.columns"))
+            renamed_cols = match_renames(df.get_meta("transformations.columns"))
             for current_col_name in current_col_names:
                 if current_col_name not in renamed_cols:
                     new_columns.append(current_col_name)
@@ -317,10 +324,20 @@ class Profiler:
             if rename:
                 for k, v in actions["rename"].items():
                     profiler_columns[v] = profiler_columns.pop(k)
+                    profiler_columns[v]["name"] = v
 
-            # # Drop Keys
+            # Drop Keys
             for col_names in match_actions_names(drop):
                 profiler_columns.pop(col_names)
+
+            # Copy Keys
+            copy_columns = df.get_meta("transformations.actions.copy")
+            if copy_columns is not None:
+                for source, target in copy_columns.items():
+                    profiler_columns[target] = profiler_columns[source].copy()
+                    profiler_columns[target]["name"] = target
+                # Check is a new column is a copied column
+                new_columns = list(set(new_columns) - set(copy_columns.values()))
 
             # Actions applied to current columns
 
@@ -332,9 +349,11 @@ class Profiler:
 
         elif is_cached and not are_actions:
             calculate_columns = None
+        # elif not is_cached:
         else:
             calculate_columns = columns
 
+        # print ("calculate_columns",calculate_columns)
         # Get the stats for all the columns
         if stats is True:
             # Are there column to process?
@@ -344,10 +363,8 @@ class Profiler:
                 self.cols_count = cols_count = len(df.columns)
                 output_columns = self.columns_stats(df, calculate_columns, buckets, infer, relative_error, approx_count,
                                                     mismatch)
-                # Reset metadata
 
                 # Update last profiling info
-                # if update_profiler:
                 # Merge old and current profiling
                 if is_cached:
                     output_columns["columns"].update(self.output_columns["columns"])
@@ -376,6 +393,12 @@ class Profiler:
 
                 assign(output_columns, "sample", sample, dict)
 
+        actual_columns = output_columns["columns"]
+        # Order columns
+        output_columns["columns"] = dict(OrderedDict(
+            {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
+             _cols_name in list(actual_columns.keys())}))
+
         df = df.set_meta(value={})
         df = df.columns_meta(df.cols.names())
 
@@ -386,7 +409,6 @@ class Profiler:
             result = output_columns
 
         self.output_columns = output_columns
-        # print(result)
         df = df.set_meta("transformations.actions", {})
 
         return col_names, result
@@ -466,6 +488,7 @@ class Profiler:
             assign(columns_info, "columns." + col_name, col_info, dict)
 
             assign(col_info, "id", df.cols.get_meta(col_name, "id"))
+
         return columns_info
 
     @staticmethod

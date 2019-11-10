@@ -81,3 +81,7 @@ This will prompt your test.pypi.org credentials
 Now install from test.pypi.org
 
 `!pip install --index-url https://test.pypi.org/simple optimuspyspark`
+
+### Installing from github
+
+` pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop`

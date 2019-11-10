@@ -48,7 +48,8 @@ def parse_col_names_funcs_to_keys(data):
                 _col_name = k[len(temp_func_name):]
                 if is_nan(v):
                     logger.print(
-                        "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. Seems that '{COL_NAME}' has 'nan' values".format(
+                        "'{FUNCTION}' function in '{COL_NAME}' column is returning 'nan'. Is that what you expected?. "
+                        "Seems that '{COL_NAME}' has 'nan' values".format(
                             FUNCTION=f,
                             COL_NAME=_col_name))
                 # If the value is numeric only get 5 decimals

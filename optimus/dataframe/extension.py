@@ -399,10 +399,27 @@ def table_html(self, limit=10, columns=None, title=None, full=False, truncate=Tr
     return output
 
 
+def isnotebook():
+    """
+    Detect you are in a notebook or in a terminal
+    :return:
+    """
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True  # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False  # Probably standard Python interpreter
+
+
 @add_method(DataFrame)
 def table(self, limit=None, columns=None, title=None, truncate=True):
     try:
-        if __IPYTHON__ and DataFrame.output == "html":
+        if isnotebook() and DataFrame.output == "html":
             result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
             print_html(result)
         else:
@@ -438,6 +455,13 @@ def debug(self):
 
 
 @add_method(DataFrame)
+def reset(self):
+    df = self.set_meta("transformations.actions", {})
+    Profiler.instance.output_columns = {}
+    return df
+
+
+@add_method(DataFrame)
 def send(self, name=None, infer=True, mismatch=None, stats=True):
     """
     Profile and send the data to the queue
@@ -453,16 +477,39 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
         df.set_name(name)
 
     columns, output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                       approx_count=True,
-                                       sample=10000,
-                                       stats=stats,
-                                       format="json",
-                                       mismatch=mismatch)
+                                                approx_count=True,
+                                                sample=10000,
+                                                stats=stats,
+                                                format="json",
+                                                mismatch=mismatch)
 
-    if Comm:
+    if Comm.instance:
         Comm.instance.send(output)
     else:
         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+
+
+@add_method(DataFrame)
+def copy_meta(self, old_new_columns):
+    """
+    Shortcut to add transformations to a dataframe
+    :param self:
+    :param old_new_columns:
+    :return:
+    """
+
+    key = "transformations.actions.copy"
+
+    df = self
+
+    copy_cols = df.get_meta(key)
+    if copy_cols is None:
+        copy_cols = {}
+    copy_cols.update(old_new_columns)
+
+    df = df.set_meta(key, copy_cols)
+
+    return df
 
 
 @add_method(DataFrame)

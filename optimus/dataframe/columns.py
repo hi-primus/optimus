@@ -28,7 +28,7 @@ from optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str, is_numeric
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
@@ -48,6 +48,9 @@ from optimus.ml.feature import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"
+# Because the monkey patching and the need to call set a function we need to rename the standard python set.
+# This is awful but the best option for the user.
+python_set = set
 
 
 def cols(self):
@@ -153,8 +156,10 @@ def cols(self):
             columns = list(zip(input_cols, output_cols))
 
         for input_col, output_col in columns:
+            current_meta = self.get_meta()
             df = df.withColumn(output_col, F.col(input_col))
-            df = df.preserve_meta(self, Actions.COPY.value, output_col)
+            df = df.set_meta(value=current_meta)
+            df = df.copy_meta({input_col: output_col})
         return df
 
     @add_attr(cols)
@@ -203,7 +208,7 @@ def cols(self):
         :param func_return_type: function return type. This is required by UDF and Pandas UDF.
         :param args: Arguments to be passed to the function
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param when: A expression to better control when the function is going to be apllied
+        :param when: A expression to better control when the function is going to be applied
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
@@ -257,6 +262,33 @@ def cols(self):
         for col_name in columns:
             df = df.cols.apply(col_name, func=func, func_return_type=func_return_type, args=args, func_type=func_type,
                                when=fbdt(col_name, data_type))
+        return df
+
+    # TODO: Maybe we could merge this with apply()
+    @add_attr(cols)
+    def set(output_col, value=None):
+        """
+        Execute a hive expression. Also handle ints and list in columns
+        :param output_col:
+        :param value: numeric, list or hive expression
+        :return:
+        """
+        df = self
+
+        columns = parse_columns(self, output_col, accepts_missing_cols=True)
+        check_column_numbers(columns, 1)
+
+        if is_list(value):
+            expr = F.array([F.lit(x) for x in value])
+        elif is_numeric(value):
+            expr = F.lit(value)
+        elif is_str(value):
+            expr = F.expr(value)
+        else:
+            RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
+
+        df = df.withColumn(output_col, expr)
+        df = df.preserve_meta(self, Actions.SET.value, columns)
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -336,9 +368,6 @@ def cols(self):
                 the transformation is made.
         :return: Spark DataFrame
         """
-
-        if dtype is None:
-            RaiseIt.value_error(dtype, "datatype")
 
         _dtype = []
         # Parse params
@@ -514,11 +543,6 @@ def cols(self):
         df = df.preserve_meta(self, "drop", columns)
 
         return df
-
-    @add_attr(cols)
-    def create(output_col, action):
-        df = self
-        return df.withColumn(output_col, action)
 
     @add_attr(cols)
     def create_exprs(columns, funcs, *args):
@@ -1257,7 +1281,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        # check_column_numbers(columns, 1)
+        # .value(columns, 1)
 
         result = {}
         for col_name in columns:
@@ -1273,7 +1297,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        check_column_numbers(columns, "1")
+        # .value(columns, "1")
 
         result = {}
         for col_name in columns:
@@ -1426,10 +1450,10 @@ def cols(self):
         :param output_col:
         :return: Spark DataFrame
         """
-
+        df = self
+        output_col = parse_columns(df, output_col, accepts_missing_cols=True)
         check_column_numbers(output_col, 1)
 
-        df = self
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
             input_cols = [F.lit(col) if not is_(col, F.col) else col for col in input_cols]
@@ -1438,7 +1462,7 @@ def cols(self):
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
+            output_col = one_list_to_val(output_col)
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)
@@ -1621,11 +1645,17 @@ def cols(self):
         result = agg_exprs(columns, hist_agg, self, buckets)
         # TODO: for some reason casting to int in the exprs do not work. Casting Here. A Spark bug?
         # Example
-        # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT), lower, 7, upper, 7.75) AS `hist_agg_rank_0`, map(count, CAST(sum(CASE WHEN ((rank >= 7.75) AND (rank < 8.5)) THEN 1 ELSE 0 END) AS INT), lower, 7.75, upper, 8.5) AS `hist_agg_rank_1`, map(count, CAST(sum(CASE WHEN ((rank >= 8.5) AND (rank < 9.25)) THEN 1 ELSE 0 END) AS INT), lower, 8.5, upper, 9.25) AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10)) THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
+        # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT),
+        # lower, 7, upper, 7.75) AS `hist_agg_rank_0`, map(count, CAST(sum(CASE WHEN ((rank >= 7.75) AND (rank < 8.5))
+        # THEN 1 ELSE 0 END) AS INT), lower, 7.75, upper, 8.5) AS `hist_agg_rank_1`, map(count,
+        # CAST(sum(CASE WHEN ((rank >= 8.5) AND (rank < 9.25)) THEN 1 ELSE 0 END) AS INT), lower, 8.5, upper, 9.25)
+        # AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10))
+        # THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
 
         return result
 
-        # TODO: In tests this code run faster than using agg_exprs when run over all the columns. Not when running over columns individually
+        # TODO: In tests this code run faster than using agg_exprs when run over all the columns.
+        #  Not when running over columns individually
         # columns = parse_columns(self, columns)
         # df = self
         # for col_name in columns:
@@ -1707,7 +1737,7 @@ def cols(self):
                 return str_to_data_type(_value, (list, tuple))
 
             def str_to_object(_value):
-                return str_to_data_type(_value, (dict, set))
+                return str_to_data_type(_value, (dict, python_set))
 
             def str_to_data_type(_value, _dtypes):
                 """
@@ -2114,23 +2144,31 @@ def cols(self):
 
             # names = before.cols.names(keys, invert=True)
             # print(names)
+            pivotDF = pivotDF.preserve_meta(self)
             df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
-            # df.table()
+            df = df.preserve_meta(self, Actions.VALUES_TO_COLS.value, new_names)
+
             combined.append(df)
-        return join_all(combined)
+
+        df = join_all(combined)
+
+        return df
 
     @add_attr(cols)
-    def string_to_index(input_cols, output_cols=None):
+    def string_to_index(input_cols=None, output_cols=None, columns=None):
         """
         Encodes a string column of labels to a column of label indices
         :param input_cols:
         :param output_cols:
+        :param columns:
         :return:
         """
         df = self
 
-        input_cols = parse_columns(df, input_cols)
-        # output_cols = get_output_cols(input_cols, output_cols)
+        if columns is None:
+            input_cols = parse_columns(df, input_cols)
+        else:
+            input_cols, output_cols = zip(*columns)
 
         df = ml_string_to_index(df, input_cols, output_cols)
 
