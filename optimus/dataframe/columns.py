@@ -1451,7 +1451,7 @@ def cols(self):
         :return: Spark DataFrame
         """
         df = self
-        output_col = parse_columns(df, output_col)
+        output_col = parse_columns(df, output_col, accepts_missing_cols=True)
         check_column_numbers(output_col, 1)
 
         if has_(input_cols, F.Column):
