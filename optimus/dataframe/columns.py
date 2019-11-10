@@ -28,7 +28,7 @@ from optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str, is_numeric
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
@@ -205,7 +205,7 @@ def cols(self):
         :param func_return_type: function return type. This is required by UDF and Pandas UDF.
         :param args: Arguments to be passed to the function
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param when: A expression to better control when the function is going to be apllied
+        :param when: A expression to better control when the function is going to be applied
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
@@ -1275,7 +1275,7 @@ def cols(self):
         :return:
         """
         columns = parse_columns(self, columns)
-        # check_column_numbers(columns, 1)
+        # .value(columns, 1)
 
         result = {}
         for col_name in columns:
@@ -1291,7 +1291,7 @@ def cols(self):
         """
         columns = parse_columns(self, columns)
 
-        check_column_numbers(columns, "1")
+        # .value(columns, "1")
 
         result = {}
         for col_name in columns:
@@ -1444,10 +1444,10 @@ def cols(self):
         :param output_col:
         :return: Spark DataFrame
         """
-
+        df = self
+        output_col = parse_columns(df, output_col)
         check_column_numbers(output_col, 1)
 
-        df = self
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
             input_cols = [F.lit(col) if not is_(col, F.col) else col for col in input_cols]
