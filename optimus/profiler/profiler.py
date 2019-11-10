@@ -13,15 +13,14 @@ from optimus.dataframe.plots.functions import plot_frequency, plot_missing_value
 from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_col_types, \
-    write_json, write_html, PYSPARK_NUMERIC_TYPES
+from optimus.profiler.functions import fill_missing_col_types, write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
 
 MAX_BUCKETS = 33
