@@ -48,6 +48,9 @@ from optimus.ml.feature import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"
+# Because the monkey patching and the need to call set a function we need to rename the standard python set.
+# This is awful but the best option for the user.
+python_set = set
 
 
 def cols(self):
@@ -261,6 +264,7 @@ def cols(self):
                                when=fbdt(col_name, data_type))
         return df
 
+    # TODO: Maybe we could merge this with apply()
     @add_attr(cols)
     def set(output_col, value=None):
         """
@@ -278,12 +282,14 @@ def cols(self):
             expr = F.array([F.lit(x) for x in value])
         elif is_numeric(value):
             expr = F.lit(value)
-        elif value:
+        elif is_str(value):
             expr = F.expr(value)
         else:
             RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
-        return df.withColumn(output_col, expr)
+        df = df.withColumn(output_col, expr)
+        df = df.preserve_meta(self, Actions.SET.value, columns)
+        return df
 
     # TODO: Check if we must use * to select all the columns
     @add_attr(cols)
@@ -1725,7 +1731,7 @@ def cols(self):
                 return str_to_data_type(_value, (list, tuple))
 
             def str_to_object(_value):
-                return str_to_data_type(_value, (dict, set))
+                return str_to_data_type(_value, (dict, python_set))
 
             def str_to_data_type(_value, _dtypes):
                 """
