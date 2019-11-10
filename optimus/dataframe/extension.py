@@ -483,7 +483,7 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
                                                 format="json",
                                                 mismatch=mismatch)
 
-    if Comm:
+    if Comm.instance:
         Comm.instance.send(output)
     else:
         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
