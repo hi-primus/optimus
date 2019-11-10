@@ -4,6 +4,16 @@
 ## Run containers
 First you need to run the containers
 
+### Oracle
+```
+docker run \
+    --name=oracle \
+    --shm-size=1g \
+    -p 1521:1521 -p 8080:8080 \
+    -e ORACLE_PWD=sA123456 \
+    -v "oracle:/u01/app/oracle/oradata" \
+    oracle/database:19.3.0-ee
+```
 
 ### Mysql
 ```
@@ -25,7 +35,8 @@ sudo docker start mysql
 
 ### Postgres
 ```
-sudo docker run --name postgres \
+sudo docker run \
+    --name=postgres \
     -e POSTGRES_USER=SA \
     -e POSTGRES_PASSWORD=SA123 \
     -e POSTGRES_DB=optimus \
@@ -36,7 +47,8 @@ sudo docker run --name postgres \
 ### Redshift
 This is just postgres with some configuration options to looks like Redshift
 ```
-sudo docker run --name=redshift \
+sudo docker run \
+    --name=redshift \
     -d \
     -p 5439:5439 \
     -e POSTGRES_USER=SA \
@@ -52,7 +64,7 @@ sudo docker run \
     -d \
     -p 1433:1433  \
     -e 'ACCEPT_EULA=Y' \
-    -e 'SA_PASSWORD=SA123456' \
+    -e 'SA_PASSWORD=sA123456' \
     microsoft/mssql-server-linux:2017-latest
 ```
 
