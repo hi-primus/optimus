@@ -25,7 +25,7 @@ humanize==0.5.1
 h2o-pysparkling-2.4==2.4.13
 psutil==5.4.8
 backoff==1.8.0
-kombu==4.6.1
+kombu==4.6.6
 pandas==0.24.2
 ordered-set==3.1.1
 deepdiff==4.0.6
