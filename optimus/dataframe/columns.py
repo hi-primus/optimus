@@ -1462,7 +1462,7 @@ def cols(self):
 
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-
+            output_col = one_list_to_val(output_col)
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)

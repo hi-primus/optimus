@@ -38,18 +38,16 @@ def string_to_index(df, input_cols, output_cols=None, **kargs):
     :return: Dataframe with indexed columns.
     """
 
-    # input_cols = parse_columns(df, input_cols)
+    input_cols = parse_columns(df, input_cols)
     if output_cols is None:
-
         output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
-    print(output_cols)
 
     indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
                 in zip(list(set(input_cols)), list(set(output_cols)))]
 
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
-    # df.show()
+    
     return df
 
 
