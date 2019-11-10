@@ -261,6 +261,30 @@ def cols(self):
                                when=fbdt(col_name, data_type))
         return df
 
+    @add_attr(cols)
+    def set(output_col, value=None):
+        """
+        Execute a hive expression. Also handle ints and list in columns
+        :param output_col:
+        :param value: numeric, list or hive expression
+        :return:
+        """
+        df = self
+
+        columns = parse_columns(self, output_col, accepts_missing_cols=True)
+        check_column_numbers(columns, 1)
+
+        if is_list(value):
+            expr = F.array([F.lit(x) for x in value])
+        elif is_numeric(value):
+            expr = F.lit(value)
+        elif value:
+            expr = F.expr(value)
+        else:
+            RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
+
+        return df.withColumn(output_col, expr)
+
     # TODO: Check if we must use * to select all the columns
     @add_attr(cols)
     @dispatch(object, object)
@@ -513,11 +537,6 @@ def cols(self):
         df = df.preserve_meta(self, "drop", columns)
 
         return df
-
-    @add_attr(cols)
-    def create(output_col, action):
-        df = self
-        return df.withColumn(output_col, action)
 
     @add_attr(cols)
     def create_exprs(columns, funcs, *args):
