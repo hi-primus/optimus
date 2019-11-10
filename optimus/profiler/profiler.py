@@ -420,8 +420,8 @@ class Profiler:
         :param df: Dataframe to be processed
         :param columns: Columns that you want to profile
         :param buckets: Create buckets divided by range. Each bin is equal.
-        :param infer: try to infer the column datatype
-        :param relative_error: relative error when the percentile is calculated. 0 is more exact as slow 1 more error and faster
+        :param infer: try to infer the column dataType
+        :param relative_error: relative error when the percentile is calculated. 0 is more precision/slow 1 less precision/faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :param mismatch:
         :return: json object
