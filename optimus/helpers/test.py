@@ -237,7 +237,7 @@ class Test:
         elif output == "dict":
             print(df_result)
 
-            expected = "\texpected_value =" + df_result + "\n"
+            expected = "\texpected_value =" + str(df_result) + "\n"
         else:
             expected = "\t\n"
 

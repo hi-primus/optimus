@@ -10,6 +10,7 @@ from optimus import val_to_list
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
+from optimus.helpers.constants import Actions
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.decorators import *
 from optimus.helpers.functions import append as append_df
@@ -17,6 +18,16 @@ from optimus.helpers.raiseit import RaiseIt
 
 
 def rows(self):
+    @add_attr(rows)
+    def create_id(column="id"):
+        """
+        Create a unique id for every row.
+        :param column: Columns to be processed
+        :return:
+        """
+
+        return self.withColumn(column, F.monotonically_increasing_id())
+
     @add_attr(rows)
     def append(rows):
         """
@@ -39,6 +50,9 @@ def rows(self):
             df_result = append_df(row, like="rows")
         else:
             RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
+
+        df_result = df_result.preserve_meta(self, Actions.NEST.value, df.cols.names())
+
         return df_result
 
     @add_attr(rows)
@@ -137,7 +151,10 @@ def rows(self):
         :param where: Expression used to drop the row
         :return: Spark DataFrame
         """
-        return self.where(~where)
+        df = self
+        df = df.where(~where)
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def drop_by_dtypes(input_cols, data_type=None):
@@ -147,8 +164,11 @@ def rows(self):
         :param data_type: filter by string, integer, float or boolean
         :return: Spark DataFrame
         """
-        validate_columns_names(self, input_cols)
-        return self.rows.drop(fbdt(input_cols, data_type))
+        df = self
+        validate_columns_names(df, input_cols)
+        df = df.rows.drop(fbdt(input_cols, data_type))
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def drop_na(input_cols, how="any"):
@@ -161,10 +181,12 @@ def rows(self):
         values are null. The default is 'all'.
         :return: Returns a new DataFrame omitting rows with null values.
         """
-
+        df = self
         input_cols = parse_columns(self, input_cols)
 
-        return self.dropna(how, subset=input_cols)
+        df = df.dropna(how, subset=input_cols)
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def drop_duplicates(input_cols=None, keep="first"):
@@ -181,8 +203,11 @@ def rows(self):
         #  last : Drop duplicates except for the last occurrence.
         #  all: Drop all duplicates except for the last occurrence.
 
+        df = self
         input_cols = parse_columns(self, input_cols)
-        return self.drop_duplicates(subset=input_cols)
+        df = df.drop_duplicates(subset=input_cols)
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def drop_first():
@@ -190,26 +215,43 @@ def rows(self):
         Remove first row in a dataframe
         :return: Spark DataFrame
         """
-        return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
+        df = self
+        df = df.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
+
+    @add_attr(rows)
+    def limit(count):
+        """
+        Limit the number of rows
+        :param count:
+        :return:
+        """
+        df = self
+        df = df.limit(count)
+        df = df.preserve_meta(self)
+        return df
 
     # TODO: Merge with select
     @add_attr(rows)
-    def is_in(columns, values):
+    def is_in(input_cols, values):
         """
         Filter rows which columns that match a specific value
         :return: Spark DataFrame
         """
+        df = self
 
         # Ensure that we have a list
         values = val_to_list(values)
 
         # Create column/value expression
-        column_expr = [(F.col(columns) == v) for v in values]
+        column_expr = [(F.col(input_cols) == v) for v in values]
 
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
-
-        return self.rows.select(expr)
+        df = df.rows.select(expr)
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def unnest(input_cols):
@@ -220,7 +262,9 @@ def rows(self):
         """
         input_cols = parse_columns(self, input_cols)[0]
         df = self
-        return df.withColumn(input_cols, F.explode(input_cols))
+        df = df.withColumn(input_cols, F.explode(input_cols))
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @add_attr(rows)
     def approx_count(timeout=1000, confidence=0.90):

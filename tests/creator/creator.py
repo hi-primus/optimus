@@ -79,8 +79,50 @@ rows = [
     ]
 source_df = op.create.df(cols ,rows)
 source_df.table()
-# -
 
+
+# +
+import pandas as pd
+from pyspark.sql.types import *
+from datetime import date, datetime
+
+
+cols = [
+        ("names", "str"),
+        ("height(ft)", ShortType()),
+        ("function", "str"),
+        ("rank", ByteType()),
+        ("age", "int"),
+        ("weight(t)", "float"),
+        "japanese name",
+        "last position seen",
+        "date arrival",
+        "last date seen",
+        ("attributes", ArrayType(FloatType())),
+        ("Date Type", DateType()),
+        ("timestamp", TimestampType()),
+        ("Cybertronian", BooleanType())
+
+    ]
+
+rows = [
+        ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+         "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True),
+        ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
+         "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True),
+        ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
+         "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True),
+        ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
+         "2013/06/10", [3.9624, 1800.0], date(2013, 6, 24), datetime(2014, 6, 24), True),
+        ("Megatron", None, "None", 10, 5000000, 5.70, ["Megatron"], None, "1980/04/10", "2012/05/10", [None, 5700.0],
+         date(2012, 5, 10), datetime(2014, 6, 24), True),
+        ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
+         [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True),
+
+    ]
+source_df_string_to_index = op.create.df(cols ,rows)
+source_df_string_to_index.table()
+# -
 
 # ### End Init Section
 
@@ -129,6 +171,8 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "import datetime",
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
+source_df.table()
+
 # +
 from pyspark.sql import functions as F
 
@@ -145,6 +189,16 @@ date_col_B = "last date seen"
 new_col = "new col"
 array_col = "attributes"
 # -
+
+t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "rank")
+
+t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
+
+t.run()
+
+t.create(source_df_string_to_index, "cols.values_to_cols", "all_columns", "df", None, ["names","height(ft)"])
+
+t.run()
 
 t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
@@ -338,7 +392,11 @@ source_df.table()
 
 t.create(None, "cols.remove_special_chars", None, "df", string_col)
 
-t.create(None, "cols.remove_special_chars", "all_columns", "df", "*")
+t.create(None, "cols.remove_special_chars", "all_columns","df", None, "*")
+t.run()
+# t.create(None, "cols.value_counts", None, "json", None, numeric_col)
+
+source_df.cols.remove_special_chars("*").table()
 
 t.create(None, "cols.remove_white_spaces", None, "df", string_col)
 
@@ -615,7 +673,27 @@ t.create(mismatch_df, "cols.count_by_dtypes", "mismatch", "dict", None, "*", inf
 
 t.run()
 
-t.create(None, "cols.unnest", "array_all_columns", "df", array_col, "-", index=1)
+# ## Unnest String
+
+t.create(None, "cols.unnest", "string_multi_index", "df", None, date_col, "/", splits=3, index=2)
+
+t.create(None, "cols.unnest", "string_multi_index", "df", None, date_col, "/", splits=3, index=[1,2])
+
+t.create(None, "cols.unnest", "string_infer_split", "df", None, date_col, "/")
+
+t.create(None, "cols.unnest", "string_no_index", "df", None, date_col, "/", splits=3)
+
+t.create(None, "cols.unnest", "string_output_columns", "df", None, date_col, "/", splits=3, output_cols= [("year", "month","day")])
+
+t.create(None, "cols.unnest", "array_index", "df", None, array_col, index=2)
+
+t.create(None, "cols.unnest", "array_multi_index", "df", None, array_col, index=[1,2])
+
+t.run()
+
+t.create(None, "cols.unnest", "string_multi_colum_multi_index_multi_output", "df", None, ["date arrival","last date seen"], "/", index=[(1,2),(1,2)], output_cols=[("year1","month1"),("year2","month2")])
+
+t.create(None, "cols.unnest", "string_multi_colum_multi_output", "df", None, ["date arrival","last date seen"], "/", output_cols=[("year1","month1"),("year2","month2")])
 
 t.create(None, "cols.unnest", "array", "df", array_col)
 

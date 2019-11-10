@@ -29,6 +29,7 @@ PYTHON_SHORT_TYPES = {"string": "string",
                       "array": "array",
                       "null": "null"
                       }
+
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 
 PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
@@ -82,10 +83,37 @@ SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "de
 from enum import Enum
 
 
+class Actions(Enum):
+    """
+    Actions that modify a columns.
+    """
+    LOWER = "lower"
+    UPPER = "upper"
+    TRIM = "trim"
+    REVERSE = "reverse"
+    REMOVE_ACCENTS = "remove"
+    REMOVE_SPECIAL_CHARS = "remove"
+    REMOVE_WHITE_SPACES = "remove"
+    REPLACE = "replace"
+    REPLACE_REGEX = "replace"
+    FILL_NA = "fill_na"
+    CAST = "cast"
+    IS_NA = "is_na"
+    Z_SCORE = "z_score"
+    NEST = "nest"
+    UNNEST = "unnest"
+    DROP_ROW = "drop_row"
+    COPY = "copy"
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, Actions))
+
+
 class ProfilerDataTypes(Enum):
     INT = "int"
     DECIMAL = "decimal"
-    STRING = "string"
+    TRIM = "string"
     BOOLEAN = "boolean"
     DATE = "date"
     ARRAY = "array"

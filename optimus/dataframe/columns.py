@@ -2,6 +2,7 @@ import builtins
 import re
 import string
 import unicodedata
+import uuid
 from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
@@ -27,13 +28,13 @@ from optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe
+    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYTHON_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR
+from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
+    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
@@ -43,6 +44,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
+from optimus.ml.feature import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"
@@ -122,27 +124,37 @@ def cols(self):
         if columns is not None:
             df = df.select(columns)
             # Metadata get lost when using select(). So we copy here again.
-            df.set_meta(value=self.get_meta())
-            result = df
-        else:
-            result = None
+            df = df.preserve_meta(self)
 
-        return result
+        else:
+            df = None
+
+        return df
 
     @add_attr(cols)
-    def copy(input_cols, output_cols):
+    def copy(input_cols, output_cols=None, columns=None):
         """
         Copy one or multiple columns
         :param input_cols: Source column to be copied
         :param output_cols: Destination column
+        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        input_cols = parse_columns(self, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
         df = self
-        for input_col, output_col in zip(input_cols, output_cols):
+
+        if is_list_of_str(columns):
+            output_cols = [col_name + "_copy" for col_name in columns]
+            output_cols = get_output_cols(columns, output_cols)
+            columns = zip(columns, output_cols)
+        else:
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            columns = list(zip(input_cols, output_cols))
+
+        for input_col, output_col in columns:
             df = df.withColumn(output_col, F.col(input_col))
+            df = df.preserve_meta(self, Actions.COPY.value, output_col)
         return df
 
     @add_attr(cols)
@@ -164,7 +176,7 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None):
+    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
         """
         Apply a expression to column.
         :param input_cols: Columns in which the function is going to be applied
@@ -177,11 +189,11 @@ def cols(self):
         """
 
         return apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                     output_cols=output_cols)
+                     output_cols=output_cols, meta=meta)
 
     @add_attr(cols)
     def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param input_cols: Columns in which the function is going to be applied
@@ -195,6 +207,7 @@ def cols(self):
         :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
         :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
         True or False
+        :param meta: Pass metadata transformation to a dataframe
         :return: DataFrame
         """
 
@@ -223,7 +236,7 @@ def cols(self):
 
         for input_col, output_col in zip(input_cols, output_cols):
             df = df.withColumn(output_col, expr(when))
-        # df = df.track_cols(self, output_cols)
+            df = df.preserve_meta(self, meta, output_col)
 
         return df
 
@@ -269,13 +282,21 @@ def cols(self):
             validate_columns_names(self, columns_old_new)
             for col_name in columns_old_new:
                 old_col_name = col_name[0]
-                if is_str(old_col_name):
-                    df = df.withColumnRenamed(old_col_name, col_name[1])
-                elif is_int(old_col_name):
-                    df = df.withColumnRenamed(self.schema.names[old_col_name], col_name[1])
-        df.set_meta(value=self.get_meta())
+                new_col_name = col_name[1]
 
-        # df.cols.append_meta("transformation", "rename")
+                current_meta = self.get_meta()
+
+                if is_str(old_col_name):
+                    df = df.withColumnRenamed(old_col_name, new_col_name)
+                elif is_int(old_col_name):
+                    old_col_name = self.schema.names[old_col_name]
+                    df = df.withColumnRenamed(old_col_name, new_col_name)
+
+                # df = df.rename_meta([(old_col_name, new_col_name)])
+                df = df.set_meta(value=current_meta)
+
+                df = df.rename_meta((old_col_name, new_col_name))
+
         return df
 
     @add_attr(cols)
@@ -374,7 +395,7 @@ def cols(self):
             return_type, func, func_type = cast_factory(data_type)
 
             df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                               output_cols=output_col)
+                               output_cols=output_col, meta=Actions.CAST.value)
 
         return df
 
@@ -439,12 +460,16 @@ def cols(self):
         :return: Spark DataFrame
         """
 
+        df = self
         if regex:
             r = re.compile(regex)
             columns = list((r.match, self.columns))
 
         columns = parse_columns(self, columns)
-        return self.select(*columns)
+
+        df = df.cols.select(columns)
+        df = df.action_meta("keep", columns)
+        return df
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
@@ -486,8 +511,14 @@ def cols(self):
 
         df = df.drop(*columns)
 
-        # df.cols.append_meta("transformation", "drop")
+        df = df.preserve_meta(self, "drop", columns)
+
         return df
+
+    @add_attr(cols)
+    def create(output_col, action):
+        df = self
+        return df.withColumn(output_col, action)
 
     @add_attr(cols)
     def create_exprs(columns, funcs, *args):
@@ -815,7 +846,8 @@ def cols(self):
         def _lower(col, args):
             return F.lower(F.col(col))
 
-        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols)
+        return apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols,
+                     meta=Actions.LOWER.value)
 
     @add_attr(cols)
     def upper(input_cols, output_cols=None):
@@ -829,7 +861,8 @@ def cols(self):
         def _upper(col, args):
             return F.upper(F.col(col))
 
-        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols)
+        return apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols,
+                     meta=Actions.UPPER.value)
 
     @add_attr(cols)
     def trim(input_cols, output_cols=None):
@@ -843,7 +876,8 @@ def cols(self):
         def _trim(col_name, args):
             return F.trim(F.col(col_name))
 
-        return apply(input_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols)
+        return apply(input_cols, _trim, filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, output_cols=output_cols,
+                     meta=Actions.TRIM.value)
 
     @add_attr(cols)
     def reverse(input_cols, output_cols=None):
@@ -857,7 +891,8 @@ def cols(self):
         def _reverse(col, args):
             return F.reverse(F.col(col))
 
-        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols)
+        df = apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols,
+                        meta=Actions.REVERSE.value)
 
         return df
 
@@ -892,7 +927,7 @@ def cols(self):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = apply(input_cols, _remove_accents, "string", output_cols=output_cols)
+        df = apply(input_cols, _remove_accents, "string", output_cols=output_cols, meta=Actions.REMOVE_ACCENTS.value)
         return df
 
     @add_attr(cols)
@@ -924,7 +959,7 @@ def cols(self):
             return F.regexp_replace(F.col(col_name), " ", "")
 
         df = apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES)
+                   filter_col_by_dtypes=PYSPARK_NOT_ARRAY_TYPES, meta=Actions.REMOVE_WHITE_SPACES.value)
         return df
 
     @add_attr(cols)
@@ -1027,9 +1062,6 @@ def cols(self):
 
         def func_words(_df, _input_col, _output_col, _search, _replace_by):
             _search = val_to_list(search)
-            # Convert the value to column data type
-            data_type = self.cols.dtypes(_input_col)
-            _search = [PYTHON_TYPES[data_type](s) for s in _search]
 
             if _input_col != output_col:
                 _df = _df.cols.copy(_input_col, _output_col)
@@ -1055,6 +1087,7 @@ def cols(self):
 
             df = func(df, input_col, output_col, search, replace_by)
 
+            df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
         return df
 
     @add_attr(cols)
@@ -1075,7 +1108,8 @@ def cols(self):
             return F.regexp_replace(_input_cols, _search, _replace)
 
         return apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
-                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES)
+                     filter_col_by_dtypes=PYSPARK_STRING_TYPES + PYSPARK_NUMERIC_TYPES,
+                     meta=Actions.REPLACE_REGEX.value)
 
     @add_attr(cols)
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -1083,7 +1117,7 @@ def cols(self):
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: list of columns to be analyze.
         :param output_cols:
-        :param data_type: continuous or categorical
+        :param data_type: "continuous" or "categorical"
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
         or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
@@ -1102,6 +1136,7 @@ def cols(self):
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
 
             model = imputer.setStrategy(strategy).fit(df)
+
             df = model.transform(df)
 
         elif data_type is "categorical":
@@ -1134,6 +1169,7 @@ def cols(self):
         for input_col, output_col in zip(input_cols, output_cols):
             func = None
             if is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
+
                 new_value = fastnumbers.fast_float(value)
                 func = F.when(match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
             elif is_column_a(self, input_col, PYSPARK_STRING_TYPES):
@@ -1152,7 +1188,9 @@ def cols(self):
                     func = F.when(match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
                     RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
-            df = df.cols.apply(input_col, func=func, output_cols=output_col)
+
+            df = df.cols.apply(input_col, func=func, output_cols=output_col, meta=Actions.FILL_NA.value)
+
         return df
 
     @add_attr(cols)
@@ -1167,7 +1205,7 @@ def cols(self):
         def _replace_na(_col_name, _value):
             return F.when(F.col(_col_name).isNull(), True).otherwise(False)
 
-        return self.cols.apply(input_cols, _replace_na, output_cols=output_cols)
+        return self.cols.apply(input_cols, _replace_na, output_cols=output_cols, meta=Actions.IS_NA.value)
 
     @add_attr(cols)
     def count():
@@ -1345,12 +1383,13 @@ def cols(self):
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
 
-        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols)
+        return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
+                     meta=Actions.Z_SCORE.value)
 
     @add_attr(cols)
     def iqr(columns, more=None, relative_error=RELATIVE_ERROR):
         """
-        Return the column data type
+        Return the column Inter Quartile Range
         :param columns:
         :param more: Return info about q1 and q3
         :param relative_error:
@@ -1397,41 +1436,41 @@ def cols(self):
         else:
             input_cols = parse_columns(self, input_cols)
 
-        # check_column_numbers(input_cols, ">1")
-
         if shape is "vector":
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
-            # check_column_numbers(input_cols, ">1")
 
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
                 outputCol=output_col)
+
             df = vector_assembler.transform(df)
+
+            df = df.preserve_meta(self, Actions.NEST.value, output_col)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
             df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col,
-                               skip_output_cols_processing=True)
+                               skip_output_cols_processing=True, meta=Actions.NEST.value)
 
         elif shape is "string":
             df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col,
-                               skip_output_cols_processing=True)
+                               skip_output_cols_processing=True, meta=Actions.NEST.value)
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
+        df = df.preserve_meta(self, Actions.NEST.value, output_col)
         return df
 
     @add_attr(cols)
-    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None):
+    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None) -> DataFrame:
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
-        :param output_cols:
+        :param output_cols: Resulted on or multiple columns  after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
         :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
-        :param index: Return a specific index from the nest
-        :return: Spark DataFrame
+        :param index: Return a specific index per columns. [{1,2},()]
         """
 
         # If a number of split was not defined try to infer the length with the first element
@@ -1439,27 +1478,57 @@ def cols(self):
         if splits is None:
             infer_splits = True
 
-        input_cols = parse_columns(self, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
+        # Special case. A dot must be escaped
+        if separator == ".":
+            separator = "\\."
         df = self
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            # Struct
+        input_cols = parse_columns(self, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        final_columns = None
 
+        def _final_columns(_index, _splits, _output_col):
+
+            if _index is None:
+                actual_index = builtins.range(0, _splits)
+            else:
+                _index = val_to_list(_index)
+
+                if is_list_of_tuples(_index):
+                    _index = [(i - 1, j - 1) for i, j in _index]
+                elif is_list(_index):
+                    _index = [i - 1 for i in _index]
+
+                actual_index = _index
+
+            # Create final output columns
+            if is_tuple(_output_col):
+                columns = zip(actual_index, _output_col)
+            else:
+                columns = [(i, _output_col + "_" + str(i)) for i in actual_index]
+            return columns
+
+        for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
+
+            # If numeric convert and parse as string.
+            if is_column_a(df, input_col, PYSPARK_NUMERIC_TYPES):
+                df = df.cols.cast(input_col, "str")
+
+            # Parse depending of data types
             if is_column_a(df, input_col, StructType):
                 # Unnest a data Struct
                 df = df.select(output_col + ".*")
 
+            # Array
             elif is_column_a(df, input_col, ArrayType):
-
-                expr = F.col(input_col)
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(input_col))).to_dict())
+                    splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
-                for i in builtins.range(splits):
-                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
+                expr = F.col(input_col)
+                final_columns = _final_columns(index, splits, output_col)
+                for i, col_name in final_columns:
+                    df = df.withColumn(col_name, expr.getItem(i))
 
             # String
             elif is_column_a(df, input_col, StringType):
@@ -1468,18 +1537,15 @@ def cols(self):
 
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
-
-                if is_int(index):
-                    r = builtins.range(index, index + 1)
-                else:
-                    r = builtins.range(0, splits)
+                    splits = format_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
 
                 expr = F.split(F.col(input_col), separator)
-                for i in r:
-                    df = df.withColumn(output_col + "_" + str(i), expr.getItem(i))
+                final_columns = _final_columns(index, splits, output_col)
+                for i, col_name in final_columns:
+                    df = df.withColumn(col_name, expr.getItem(i))
 
             # Vector
+            # TODO: Maybe we could implement Pandas UDF for better control columns output
             elif is_column_a(df, input_col, VectorUDT):
 
                 def _unnest(row):
@@ -1498,10 +1564,9 @@ def cols(self):
 
                 df = df.rdd.map(_unnest).toDF(df.columns)
 
-            # df = df.track_cols(self, output_col)
             else:
-                RaiseIt.type_error(input_cols, ["tting", "struct", "array", "vector"])
-
+                RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
+            df = df.preserve_meta(self, Actions.UNNEST.value, [v for k, v in final_columns])
         return df
 
     @add_attr(cols)
@@ -1535,7 +1600,7 @@ def cols(self):
             splits = create_buckets(values[col_name]["range"]["min"], values[col_name]["range"]["max"], buckets)
 
             # Create buckets in the dataFrame
-            df = bucketizer(df, col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
+            df = df.cols.bucketizer(col_name, splits=splits, output_cols=name_col(col_name, "bucketizer"))
 
         columns_bucket = [name_col(col_name, "bucketizer") for col_name in columns]
 
@@ -1711,7 +1776,7 @@ def cols(self):
                     (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
                 ]
 
-            mismatch_count = 1
+            mismatch_count = 0
             if _dtypes[col_name] == "string" and mismatch is not None:
                 # Here we can create a list of predefined functions
                 regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
@@ -1727,6 +1792,8 @@ def cols(self):
                     regex = re.compile(expr)
                     if regex.match(value):
                         mismatch_count = 0
+                    else:
+                        mismatch_count = 1
 
             if _dtypes[col_name] == "string" and infer is True:
 
@@ -2017,15 +2084,72 @@ def cols(self):
         return df
 
     @add_attr(cols)
-    def bucketizer(df, input_cols, splits, output_cols=None):
+    def values_to_cols(input_cols):
         """
-        Bucketize multiples columns at the same time.
-        :param df:
+        Create as many columns as values in an specific column. Fill with '1' the column that match the column value.
         :param input_cols:
-        :param splits: Number of splits
+        :return:
+        """
+        before = self
+        keys = before.cols.names()
+
+        def join_all(_dfs):
+            # _dfs[0].table()
+            if len(_dfs) > 1:
+                # print(_keys)
+                return _dfs[0].join(join_all(_dfs[1:]), on=keys, how='inner')
+            else:
+                return _dfs[0]
+
+        combined = []
+
+        pivot_cols = parse_columns(before, input_cols)
+
+        for pivot_col in pivot_cols:
+            pivotDF = before.groupBy(keys).pivot(pivot_col).count()
+
+            # pivotDF.table()
+            new_names = ["{0}_{1}".format(pivot_col, c) for c in pivotDF.columns[len(keys):]]
+            names = pivotDF.columns[:len(keys)] + new_names
+
+            # names = before.cols.names(keys, invert=True)
+            # print(names)
+            df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
+            # df.table()
+            combined.append(df)
+        return join_all(combined)
+
+    @add_attr(cols)
+    def string_to_index(input_cols, output_cols=None):
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
         :param output_cols:
         :return:
         """
+        df = self
+
+        input_cols = parse_columns(df, input_cols)
+        # output_cols = get_output_cols(input_cols, output_cols)
+
+        df = ml_string_to_index(df, input_cols, output_cols)
+
+        return df
+
+    @add_attr(cols)
+    def bucketizer(input_cols, splits, output_cols=None):
+        """
+        Bucketize multiples columns at the same time.
+        :param input_cols:
+        :param splits: Dict of splits or ints. You can use create_buckets() to make it
+        :param output_cols:
+        :return:
+        """
+        df = self
+
+        if is_int(splits):
+            min_max = df.cols.range(input_cols)[input_cols]["range"]
+            splits = create_buckets(min_max["min"], min_max["max"], splits)
 
         def _bucketizer(col_name, args):
             """
@@ -2049,19 +2173,10 @@ def cols(self):
         df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
         return df
 
-    # @add_attr(cols)
-    # def append_meta(col_name, value):
-    #     target = self.get_meta()
-    #     data = glom(target, (path, T.append(value)))
-    #
-    #     df = self
-    #     df.schema[-1].metadata = data
-    #     return df
-
     @add_attr(cols)
     def set_meta(col_name, spec=None, value=None, missing=dict):
         """
-        Sel meta data in a column
+        Set meta data in a column
         :param col_name: Column from where to get the value
         :param spec: Path to the key to be modified
         :param value: dict value
@@ -2069,11 +2184,10 @@ def cols(self):
         :return:
         """
         if spec is not None:
-            target = self.get_meta()
+            target = self.cols.get_meta(col_name)
             data = assign(target, spec, value, missing=missing)
         else:
             data = value
-
         return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
 
     @add_attr(cols)
@@ -2085,16 +2199,34 @@ def cols(self):
         :return:
         """
 
+        col_name = parse_columns(self, col_name, accepts_missing_cols=False)
         data = ""
         meta_json = self._jdf.schema().json()
         fields = json.loads(meta_json)["fields"]
+
         for col_info in fields:
             if col_info["name"] == col_name:
                 data = col_info["metadata"]
         if spec is not None:
             data = glom(data, spec, skip_exc=KeyError)
 
+        if data == "":
+            data = {}
         return data
+
+    @add_attr(cols)
+    def get_or_create_meta_col_id(col_name):
+        """
+        Create a uuid id in the col metadata
+        :param col_name:
+        :return:
+        """
+        df = self
+        col_id = df.cols.get_meta(col_name, "id")
+        if col_id is None:
+            col_id = str(uuid.uuid4())
+            df = df.cols.set_meta(col_name, "id", col_id)
+        return col_id, self
 
     return cols
 

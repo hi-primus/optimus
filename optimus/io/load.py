@@ -1,6 +1,8 @@
+import io
 import ntpath
 import os
 import tempfile
+import zipfile
 from urllib.request import Request, urlopen
 
 import pandas as pd
@@ -25,7 +27,6 @@ class Load:
         file, file_name = prepare_path(path, "json")
 
         try:
-            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = Spark.instance.spark.read \
                 .option("multiLine", multiline) \
                 .option("mode", "PERMISSIVE") \
@@ -36,24 +37,28 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+
+        df = df.action_meta("columns", df.cols.names())
+        return df
 
     @staticmethod
-    def tsv(path, header='true', infer_schema='true', *args, **kwargs):
+    def tsv(path, header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
         """
         Return a dataframe from a tsv file.
         :param path: path or location of the file.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
+        :param charset: Charset file encoding
         It requires one extra pass over the data. 'true' default.
 
         :return:
         """
-
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
+        df  = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        return df
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
+    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -62,6 +67,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
+        :param charset: Charset file encoding
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
@@ -74,13 +80,15 @@ class Load:
                   .options(mode="DROPMALFORMED")
                   .options(delimiter=sep)
                   .options(inferSchema=infer_schema)
+                  .option("charset", charset)
                   .csv(file, *args, **kwargs))
 
             df.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+        return df
 
     @staticmethod
     def parquet(path, *args, **kwargs):
@@ -162,7 +170,34 @@ class Load:
             logger.print(error)
             raise
 
-        return replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df)
+        return df
+
+    @staticmethod
+    def zip(path, file_name=None):
+        """
+        Return a Dataframe from a file inside a zip
+        :param path:
+        :param file:
+        :return:
+        """
+
+        zip_file, zip_filename = prepare_path(path, "zip")
+
+        def zip_extract(x):
+            in_memory_data = io.BytesIO(x[1])
+            file_obj = zipfile.ZipFile(in_memory_data, "r")
+            files = [i for i in file_obj.namelist()]
+            return dict(zip(files, [file_obj.open(file).read() for file in files]))
+
+        zips = Spark.instance.sc.binaryFiles(zip_file)
+
+        files_data = zips.map(zip_extract).collect()
+        if file_name is None:
+            result = files_data
+        else:
+            result = files_data[file_name]
+        return result
 
 
 def prepare_path(path, file_format):
@@ -172,6 +207,7 @@ def prepare_path(path, file_format):
     :param file_format: format file
     :return:
     """
+
     file_name = ntpath.basename(path)
     if is_url(path):
         file = downloader(path, file_format)
