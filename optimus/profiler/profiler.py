@@ -444,10 +444,10 @@ class Profiler:
         # Calculate Frequency
         logger.print("Processing Frequency ...")
         df_freq = df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
-
         for col_name in columns:
             col_info = {}
             assign(col_info, "stats", stats[col_name], dict)
