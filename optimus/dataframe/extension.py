@@ -462,7 +462,7 @@ def reset(self):
 
 
 @add_method(DataFrame)
-def send(self, name=None, infer=True, mismatch=None, stats=True):
+def send(self, name=None, infer=True, mismatch=None, stats=True, advanced_stats=True):
     """
     Profile and send the data to the queue
     :param self:
@@ -476,12 +476,14 @@ def send(self, name=None, infer=True, mismatch=None, stats=True):
     if name is not None:
         df.set_name(name)
 
-    columns, output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                                approx_count=True,
-                                                sample=10000,
-                                                stats=stats,
-                                                format="json",
-                                                mismatch=mismatch)
+    output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
+                                       approx_count=True,
+                                       sample=10000,
+                                       stats=stats,
+                                       format="json",
+                                       mismatch=mismatch,
+                                       advanced_stats=advanced_stats
+                                       )
 
     if Comm.instance:
         Comm.instance.send(output)
