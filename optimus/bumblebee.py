@@ -17,9 +17,7 @@ PROTOCOL_SSL = "https://"
 
 DOMAIN_API = "api.hi-bumblebee.com"
 FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
-END_POINT = FULL_DOMAIN_API + "/dataset"
-
-DOMAIN_APP = "app.hi-bumblebee.com"
+END_POINT = "/dataset"
 
 
 class Comm:
@@ -30,11 +28,11 @@ class Comm:
     def __init__(self, url=None, queue_name=None, key=None):
 
         # If queue_name was not given try lo load from file if not generate one
+
         if url is None:
-            FULL_DOMAIN = save_config_key("bumblebee.ini", "DEFAULT", "url", PROTOCOL_SSL + DOMAIN_APP)
-            print(FULL_DOMAIN)
+            self.url = save_config_key("bumblebee.ini", "DEFAULT", "url", FULL_DOMAIN_API)
         else:
-            FULL_DOMAIN = url
+            self.url = url
 
         if queue_name is None:
             self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
@@ -47,12 +45,11 @@ class Comm:
             self.key = save_config_key("bumblebee.ini", "DEFAULT", "Key", key.decode())
         else:
             self.key = key
-
-        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=FULL_DOMAIN,
+        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=self.url,
                                                                 SESSION=self.queue_name, KEY=self.key)
 
         direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
-            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
+            FULL_DOMAIN=self.url, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
             "Open Bumblebee: " + direct_link +
@@ -92,7 +89,8 @@ class Comm:
             headers = {'content-type': 'application/json'}
 
             data = json.dumps({"username": self.queue_name, "data": self.token})
-            response = requests.post(END_POINT, data=data, headers=headers)
+            end_point_dataset = self.url + END_POINT
+            response = requests.post(end_point_dataset, data=data, headers=headers)
 
             # If the response was successful, no Exception will be raised
             response.raise_for_status()
