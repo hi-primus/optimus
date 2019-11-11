@@ -7,7 +7,7 @@ tqdm==4.28.1
 pymongo==3.9.0
 fastnumbers==2.2.1
 multipledispatch==0.6.0
-numpy==1.11.1
+numpy==1.17.4
 matplotlib==1.5.3
 seaborn==0.7.1
 deprecated==1.2.5
