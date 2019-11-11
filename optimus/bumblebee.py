@@ -20,7 +20,6 @@ FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
 END_POINT = FULL_DOMAIN_API + "/dataset"
 
 DOMAIN_APP = "app.hi-bumblebee.com"
-FULL_DOMAIN = PROTOCOL_SSL + DOMAIN_APP
 
 
 class Comm:
@@ -28,9 +27,15 @@ class Comm:
     Send encrypted message to the Bumblebee
     """
 
-    def __init__(self, queue_name=None, key=None):
+    def __init__(self, url=None, queue_name=None, key=None):
 
         # If queue_name was not given try lo load from file if not generate one
+        if url is None:
+            FULL_DOMAIN = save_config_key("bumblebee.ini", "DEFAULT", "url", PROTOCOL_SSL + DOMAIN_APP)
+            print(FULL_DOMAIN)
+        else:
+            FULL_DOMAIN = url
+
         if queue_name is None:
             self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
         else:
@@ -44,7 +49,7 @@ class Comm:
             self.key = key
 
         keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=FULL_DOMAIN,
-                                                                  SESSION=self.queue_name, KEY=self.key)
+                                                                SESSION=self.queue_name, KEY=self.key)
 
         direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
             FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
@@ -52,7 +57,6 @@ class Comm:
         print_html(
             "Open Bumblebee: " + direct_link +
             "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
-
 
         )
 
