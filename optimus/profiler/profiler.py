@@ -311,6 +311,7 @@ class Profiler:
         :param stats: calculate stats, if not only data table returned
         :param format: dict or json
         :param mismatch:
+        :param advanced_stats:
         :return: dict or json
         """
         output_columns = self.output_columns
@@ -350,10 +351,11 @@ class Profiler:
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
-                sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                          "value": df.sample_n(sample).rows.to_list(columns)}
+            # TODO: drop, rename and move operation must affect  the sample
+            sample = {"columns": [{"title": cols} for cols in df.cols.names()],
+                      "value": df.sample_n(sample).rows.to_list(columns)}
 
-                assign(output_columns, "sample", sample, dict)
+            assign(output_columns, "sample", sample, dict)
 
         actual_columns = output_columns["columns"]
         # Order columns
@@ -463,6 +465,8 @@ class Profiler:
             assign(col_info, "id", df.cols.get_meta(col_name, "id"))
 
         return columns_info
+
+
 
     def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True, advanced_stats=True):
         columns = parse_columns(df, columns)
