@@ -10,7 +10,7 @@ multipledispatch==0.6.0
 numpy==1.11.1
 matplotlib==1.5.3
 seaborn==0.7.1
-deprecated==1.2.5
+deprecated==1.2.7
 setuptools==41.6.0
 pyarrow==0.13.0
 Jinja2==2.10.1
