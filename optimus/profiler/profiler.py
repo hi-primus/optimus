@@ -26,6 +26,28 @@ from optimus.profiler.templates.html import FOOTER, HEADER
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
 
+import collections
+import six
+
+# python 3.8+ compatibility
+try:
+    collectionsAbc = collections.abc
+except:
+    collectionsAbc = collections
+
+
+def update(d, u):
+    for k, v in six.iteritems(u):
+        dv = d.get(k, {})
+        if not isinstance(dv, collectionsAbc.Mapping):
+            d[k] = v
+        elif isinstance(v, collectionsAbc.Mapping):
+            d[k] = update(dv, v)
+        else:
+            d[k] = v
+    return d
+
+
 class Profiler:
 
     def __init__(self, output_path=None):
@@ -328,14 +350,13 @@ class Profiler:
 
                 # Update last profiling info
                 # Merge old and current profiling
-                if self.is_cached():
-                    for c in cols_to_profile:
-                        # output_columns["columns"].update()
-                        output_columns["columns"][c].update(updated_columns["columns"][c])
-                else:
-                    output_columns = updated_columns
-
-                # output_columns = copy.deepcopy(self.output_columns)
+                # if self.is_cached():
+                #     for c in cols_to_profile:
+                #         # output_columns["columns"].update()
+                #         output_columns["columns"][c].update(updated_columns["columns"][c])
+                # else:
+                #     output_columns = updated_columns
+                output_columns = update(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
