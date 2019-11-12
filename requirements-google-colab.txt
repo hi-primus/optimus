@@ -11,7 +11,7 @@ numpy>=1.16.5
 matplotlib==3.0.3
 pyspark==2.4.1
 seaborn==0.9.0
-deprecated==1.2.5
+deprecated==1.2.7
 setuptools>=41.6.0
 pyarrow>=0.14.1
 Jinja2==2.10.1
