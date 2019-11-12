@@ -26,7 +26,6 @@ from optimus.profiler.templates.html import FOOTER, HEADER
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
 
-
 class Profiler:
 
     def __init__(self, output_path=None):
@@ -324,13 +323,19 @@ class Profiler:
                 rows_count = df.count()
                 self.rows_count = rows_count
                 self.cols_count = cols_count = len(df.columns)
-                output_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
-                                                    mismatch, advanced_stats)
+                updated_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
+                                                     mismatch, advanced_stats)
 
                 # Update last profiling info
                 # Merge old and current profiling
                 if self.is_cached():
-                    output_columns["columns"].update(self.output_columns["columns"])
+                    for c in cols_to_profile:
+                        # output_columns["columns"].update()
+                        output_columns["columns"][c].update(updated_columns["columns"][c])
+                else:
+                    output_columns = updated_columns
+
+                # output_columns = copy.deepcopy(self.output_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -443,17 +448,20 @@ class Profiler:
 
         # Calculate Frequency
         logger.print("Processing Frequency ...")
-        df_freq = df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        # print("COLUMNS",columns)
+        df_freq = df.cols.select(columns, data_type=PYSPARK_NUMERIC_TYPES, invert=True)
 
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
+            # print("FREQUENCY1", freq)
         for col_name in columns:
             col_info = {}
             assign(col_info, "stats", stats[col_name], dict)
 
             if freq is not None:
                 if col_name in freq:
+                    # print("ASSIGN")
                     assign(col_info, "frequency", freq[col_name])
 
             assign(col_info, "name", col_name)
@@ -466,9 +474,8 @@ class Profiler:
 
         return columns_info
 
-
-
-    def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True, advanced_stats=True):
+    def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True,
+                    advanced_stats=True):
         columns = parse_columns(df, columns)
         n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
@@ -583,8 +590,6 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
-
-
 
     @staticmethod
     def missing_values(df, columns):
