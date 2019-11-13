@@ -57,7 +57,7 @@ class JDBC:
         self.user = user
         self.password = password
         self.schema = schema
-        print(self.url)
+        logger.print(self.url)
 
     def tables(self, schema=None, database=None, limit=None):
         """
@@ -148,7 +148,6 @@ class JDBC:
 
         logger.print(query)
         logger.print(self.url)
-        print(self.url)
 
         conf = Spark.instance.spark.read \
             .format(
