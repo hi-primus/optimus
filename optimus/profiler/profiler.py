@@ -26,6 +26,27 @@ from optimus.profiler.templates.html import FOOTER, HEADER
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
 
+import collections
+import six
+
+# python 3.8+ compatibility
+try:
+    collectionsAbc = collections.abc
+except:
+    collectionsAbc = collections
+
+
+def update(d, u):
+    for k, v in six.iteritems(u):
+        dv = d.get(k, {})
+        if not isinstance(dv, collectionsAbc.Mapping):
+            d[k] = v
+        elif isinstance(v, collectionsAbc.Mapping):
+            d[k] = update(dv, v)
+        else:
+            d[k] = v
+    return d
+
 
 class Profiler:
 
@@ -311,6 +332,7 @@ class Profiler:
         :param stats: calculate stats, if not only data table returned
         :param format: dict or json
         :param mismatch:
+        :param advanced_stats:
         :return: dict or json
         """
         output_columns = self.output_columns
@@ -323,13 +345,18 @@ class Profiler:
                 rows_count = df.count()
                 self.rows_count = rows_count
                 self.cols_count = cols_count = len(df.columns)
-                output_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
-                                                    mismatch, advanced_stats)
+                updated_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
+                                                     mismatch, advanced_stats)
 
                 # Update last profiling info
                 # Merge old and current profiling
-                if self.is_cached():
-                    output_columns["columns"].update(self.output_columns["columns"])
+                # if self.is_cached():
+                #     for c in cols_to_profile:
+                #         # output_columns["columns"].update()
+                #         output_columns["columns"][c].update(updated_columns["columns"][c])
+                # else:
+                #     output_columns = updated_columns
+                output_columns = update(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -350,10 +377,11 @@ class Profiler:
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
-                sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                          "value": df.sample_n(sample).rows.to_list(columns)}
+            # TODO: drop, rename and move operation must affect  the sample
+            sample = {"columns": [{"title": cols} for cols in df.cols.names()],
+                      "value": df.sample_n(sample).rows.to_list(columns)}
 
-                assign(output_columns, "sample", sample, dict)
+            assign(output_columns, "sample", sample, dict)
 
         actual_columns = output_columns["columns"]
         # Order columns
@@ -441,17 +469,20 @@ class Profiler:
 
         # Calculate Frequency
         logger.print("Processing Frequency ...")
-        df_freq = df.cols.select("*", data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        # print("COLUMNS",columns)
+        df_freq = df.cols.select(columns, data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
-
+            # print("FREQUENCY1", freq)
         for col_name in columns:
             col_info = {}
             assign(col_info, "stats", stats[col_name], dict)
 
             if freq is not None:
                 if col_name in freq:
+                    # print("ASSIGN")
                     assign(col_info, "frequency", freq[col_name])
 
             assign(col_info, "name", col_name)
@@ -464,7 +495,8 @@ class Profiler:
 
         return columns_info
 
-    def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True, advanced_stats=True):
+    def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True,
+                    advanced_stats=True):
         columns = parse_columns(df, columns)
         n = BATCH_SIZE
         list_columns = [columns[i * n:(i + 1) * n] for i in range((len(columns) + n - 1) // n)]
@@ -579,8 +611,6 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
-
-
 
     @staticmethod
     def missing_values(df, columns):

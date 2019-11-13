@@ -462,7 +462,7 @@ def reset(self):
 
 
 @add_method(DataFrame)
-def send(self, name=None, infer=True, mismatch=None, stats=True, advanced_stats=True):
+def send(self, name=None, infer=True, mismatch=None, stats=True, advanced_stats=True, output="http"):
     """
     Profile and send the data to the queue
     :param self:
@@ -470,23 +470,24 @@ def send(self, name=None, infer=True, mismatch=None, stats=True, advanced_stats=
     :param mismatch: a dict with the column name or regular expression to identify correct values.
     :param name: Specified a name for the view/dataframe
     :param stats: calculate stats or only vales
+    :param output:
     :return:
     """
     df = self
     if name is not None:
         df.set_name(name)
 
-    output = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                       approx_count=True,
-                                       sample=10000,
-                                       stats=stats,
-                                       format="json",
-                                       mismatch=mismatch,
-                                       advanced_stats=advanced_stats
-                                       )
+    message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
+                                        approx_count=True,
+                                        sample=10000,
+                                        stats=stats,
+                                        format="json",
+                                        mismatch=mismatch,
+                                        advanced_stats=advanced_stats
+                                        )
 
     if Comm.instance:
-        Comm.instance.send(output)
+        return Comm.instance.send(message, output=output)
     else:
         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 

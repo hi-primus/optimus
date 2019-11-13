@@ -15,12 +15,16 @@ from optimus.helpers.output import print_html
 PROTOCOL = "http://"
 PROTOCOL_SSL = "https://"
 
+# API
 DOMAIN_API = "api.hi-bumblebee.com"
-FULL_DOMAIN_API = PROTOCOL_SSL + DOMAIN_API
-END_POINT = FULL_DOMAIN_API + "/dataset"
+FULL_API_URL = PROTOCOL_SSL + DOMAIN_API
 
+# API END POINTS
+END_POINT = "/dataset"
+
+# APP
 DOMAIN_APP = "app.hi-bumblebee.com"
-FULL_DOMAIN = PROTOCOL_SSL + DOMAIN_APP
+FULL_APP_URL = PROTOCOL_SSL + DOMAIN_APP
 
 
 class Comm:
@@ -28,9 +32,21 @@ class Comm:
     Send encrypted message to the Bumblebee
     """
 
-    def __init__(self, queue_name=None, key=None):
+    def __init__(self, app_url=None, api_url=None, queue_name=None, key=None):
 
         # If queue_name was not given try lo load from file if not generate one
+
+        if app_url is None:
+            self.app_url = save_config_key("bumblebee.ini", "DEFAULT", "appUrl", FULL_APP_URL)
+        else:
+            self.app_url = api_url
+
+        # API
+        if api_url is None:
+            self.api_url = save_config_key("bumblebee.ini", "DEFAULT", "apiUrl", FULL_API_URL)
+        else:
+            self.api_url = api_url
+
         if queue_name is None:
             self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
         else:
@@ -43,21 +59,19 @@ class Comm:
         else:
             self.key = key
 
-        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=FULL_DOMAIN,
-                                                                  SESSION=self.queue_name, KEY=self.key)
+        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=self.app_url,
+                                                                SESSION=self.queue_name, KEY=self.key)
 
         direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
-            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
+            FULL_DOMAIN=self.app_url, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
             "Open Bumblebee: " + direct_link +
             "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
 
-
         )
 
         self.token = None
-
         self.f = Fernet(self.key)
 
     @staticmethod
@@ -74,30 +88,36 @@ class Comm:
             message = str(message).encode()
         return self.f.encrypt(message)
 
-    def send(self, message):
+    def send(self, message, output):
         """
         Send the info to the queue
         :param message:
+        :param output: "http" or "json"
         :return:
         """
         logger.print(message)
         self.token = self._encrypt(self._compress(message)).decode()
 
         logger.print(self.token)
-        try:
-            headers = {'content-type': 'application/json'}
+        data = json.dumps({"username": self.queue_name, "data": self.token})
 
-            data = json.dumps({"username": self.queue_name, "data": self.token})
-            response = requests.post(END_POINT, data=data, headers=headers)
+        if output == "http":
+            try:
+                headers = {'content-type': 'application/json'}
 
-            # If the response was successful, no Exception will be raised
-            response.raise_for_status()
-        except HTTPError as http_err:
-            print(f'HTTP error occurred: {http_err}')
-        except Exception as err:
-            print(f'Other error occurred: {err}')
+                end_point_dataset = self.api_url + END_POINT
+                response = requests.post(end_point_dataset, data=data, headers=headers)
+
+                # If the response was successful, no Exception will be raised
+                response.raise_for_status()
+            except HTTPError as http_err:
+                print(f'HTTP error occurred: {http_err}')
+            except Exception as err:
+                print(f'Other error occurred: {err}')
+            else:
+                print('Send!')
         else:
-            print('Send!')
+            return data
 
     def _decrypt(self, token):
         return self.f.decrypt(token)
