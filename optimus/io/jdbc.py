@@ -27,11 +27,14 @@ class JDBC:
         :return:
         """
 
-        if database is None: database = ""
+        if database is None:
+            database = ""
+
         self.db_driver = driver
         self.oracle_sid = oracle_sid
         self.cassandra_keyspace = cassandra_keyspace
         self.cassandra_table = cassandra_table
+
         self.driver_context = DriverContext(DriverFactory.get(self.db_driver))
         self.driver_properties = self.driver_context.properties()
 
@@ -54,7 +57,7 @@ class JDBC:
         self.user = user
         self.password = password
         self.schema = schema
-        logger.print(self.url)
+        print(self.url)
 
     def tables(self, schema=None, database=None, limit=None):
         """
@@ -63,8 +66,11 @@ class JDBC:
         """
 
         # Override the schema used in the constructor
-        if database is None: database = self.database
-        if schema is None: schema = self.schema
+        if database is None:
+            database = self.database
+
+        if schema is None:
+            schema = self.schema
         query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
         return df.table(limit)
@@ -142,6 +148,7 @@ class JDBC:
 
         logger.print(query)
         logger.print(self.url)
+        print(self.url)
 
         conf = Spark.instance.spark.read \
             .format(
