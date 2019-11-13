@@ -6,7 +6,7 @@ pylint==2.3.1
 fastnumbers==2.2.1
 multipledispatch==0.6.0
 python_dateutil==2.7.5
-numpy==1.17.0
+numpy==1.17.2
 matplotlib==3.0.3
 pyspark==2.4.1
 pytest==4.6.2
@@ -14,7 +14,7 @@ findspark==1.3.0
 nose==1.3.7
 seaborn==0.9.0
 deprecated==1.2.5
-setuptools==41.1.0
+setuptools==41.6.0
 pyarrow==0.13.0
 tabulate==0.8.2
 Jinja2==2.10.1
@@ -39,8 +39,8 @@ packaging==19.1
 ordered-set==3.1.1
 deepdiff==4.0.6
 papermill==1.0.1
-paho-mqtt==0.4.90
+paho-mqtt==1.5.0
 cryptography==2.7
 pypika==0.32.0
 statsmodels==0.10.1
-glom==19.2.0
+glom==19.10.0
