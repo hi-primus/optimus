@@ -34,12 +34,15 @@ class JDBC:
         self.cassandra_table = cassandra_table
         self.driver_context = DriverContext(DriverFactory.get(self.db_driver))
         self.driver_properties = self.driver_context.properties()
-        self.port = self.driver_properties.value["port"]
+
+        if port is None:
+            self.port = self.driver_properties.value["port"]
+
         self.driver_option = self.driver_properties.value["java_class"]
         self.url = self.driver_context.url(
             driver=driver,
             host=host,
-            port=str(port),
+            port=str(self.port),
             database=database,
             schema=schema,
             oracle_tns=oracle_tns,
