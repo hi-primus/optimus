@@ -933,9 +933,15 @@ from optimus.ml import distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")
+# -
+
+t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(dc, "levenshtein_filter", None, 'df', None, source_df, "STATE")
+# -
+
+t.create(dc, "levenshtein_json", None, 'dict', None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
