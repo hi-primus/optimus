@@ -6,7 +6,7 @@ import numpy as np
 nan = np.nan
 import datetime
 from pyspark.sql import functions as F
-from optimus.ml import feature as fe
+from optimus.ml import encoding as fe
 op = Optimus(master='local')
 source_df=op.create.df([('id', LongType(), True),('x', LongType(), True),('y', LongType(), True),('features', VectorUDT(), True)], [(0, 1, 2, DenseVector([1.0, 0.5, -1.0])), (1, 2, 3, DenseVector([2.0, 1.0, 1.0])), (2, 3, 4, DenseVector([4.0, 10.0, 2.0]))])
 class Testdf_ml_2(object):
