@@ -1,6 +1,7 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 
+from optimus.helpers.constants import Actions
 from optimus.helpers.check import is_dataframe, is_, is_str
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
@@ -37,7 +38,7 @@ def string_to_index(df, input_cols, output_cols=None, **kargs):
     :param output_cols:Column where the ouput is going to be saved
     :return: Dataframe with indexed columns.
     """
-
+    df_old = df
     input_cols = parse_columns(df, input_cols)
     if output_cols is None:
         output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
@@ -47,7 +48,8 @@ def string_to_index(df, input_cols, output_cols=None, **kargs):
 
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
-    
+    df = df.preserve_meta(df_old, Actions.STRING_TO_INDEX.value, output_cols)
+
     return df
 
 
