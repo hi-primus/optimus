@@ -2252,20 +2252,6 @@ def cols(self):
             data = {}
         return data
 
-    @add_attr(cols)
-    def get_or_create_meta_col_id(col_name):
-        """
-        Create a uuid id in the col metadata
-        :param col_name:
-        :return:
-        """
-        df = self
-        col_id = df.cols.get_meta(col_name, "id")
-        if col_id is None:
-            col_id = str(uuid.uuid4())
-            df = df.cols.set_meta(col_name, "id", col_id)
-        return col_id, self
-
     return cols
 
 
