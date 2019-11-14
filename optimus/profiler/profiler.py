@@ -15,7 +15,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
 from optimus.helpers.decorators import time_it
-from optimus.helpers.functions import absolute_path
+from optimus.helpers.functions import absolute_path, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
@@ -25,27 +25,6 @@ from optimus.profiler.templates.html import FOOTER, HEADER
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
-
-import collections
-import six
-
-# python 3.8+ compatibility
-try:
-    collectionsAbc = collections.abc
-except:
-    collectionsAbc = collections
-
-
-def update(d, u):
-    for k, v in six.iteritems(u):
-        dv = d.get(k, {})
-        if not isinstance(dv, collectionsAbc.Mapping):
-            d[k] = v
-        elif isinstance(v, collectionsAbc.Mapping):
-            d[k] = update(dv, v)
-        else:
-            d[k] = v
-    return d
 
 
 class Profiler:
@@ -348,15 +327,7 @@ class Profiler:
                 updated_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
                                                      mismatch, advanced_stats)
 
-                # Update last profiling info
-                # Merge old and current profiling
-                # if self.is_cached():
-                #     for c in cols_to_profile:
-                #         # output_columns["columns"].update()
-                #         output_columns["columns"][c].update(updated_columns["columns"][c])
-                # else:
-                #     output_columns = updated_columns
-                output_columns = update(output_columns, updated_columns)
+                output_columns = update_dict(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.get_meta("file_name"), dict)
@@ -417,8 +388,7 @@ class Profiler:
         :param mismatch:
         :return: json object
         """
-        if self.rows_count is None:
-            self.rows_count = df.count()
+
         columns = parse_columns(df, columns)
 
         # Initialize Objects
@@ -602,6 +572,9 @@ class Profiler:
                 else:
                     col_info['mad'] = None
 
+            if self.rows_count is None:
+                self.rows_count = df.count()
+
             col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
             col_info['p_count_uniques'] = round((stats[col_name]['count_uniques'] * 100) / self.rows_count, 2)
             return col_info
@@ -611,6 +584,7 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
+
 
     @staticmethod
     def missing_values(df, columns):
