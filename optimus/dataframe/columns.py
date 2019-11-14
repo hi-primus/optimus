@@ -44,7 +44,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
-from optimus.ml.feature import string_to_index as ml_string_to_index
+from optimus.ml.encoding import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"

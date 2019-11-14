@@ -27,19 +27,25 @@ class JDBC:
         :return:
         """
 
-        if database is None: database = ""
+        if database is None:
+            database = ""
+
         self.db_driver = driver
         self.oracle_sid = oracle_sid
         self.cassandra_keyspace = cassandra_keyspace
         self.cassandra_table = cassandra_table
+
         self.driver_context = DriverContext(DriverFactory.get(self.db_driver))
         self.driver_properties = self.driver_context.properties()
-        self.port = self.driver_properties.value["port"]
+
+        if port is None:
+            self.port = self.driver_properties.value["port"]
+
         self.driver_option = self.driver_properties.value["java_class"]
         self.url = self.driver_context.url(
             driver=driver,
             host=host,
-            port=str(port),
+            port=str(self.port),
             database=database,
             schema=schema,
             oracle_tns=oracle_tns,
@@ -60,8 +66,11 @@ class JDBC:
         """
 
         # Override the schema used in the constructor
-        if database is None: database = self.database
-        if schema is None: schema = self.schema
+        if database is None:
+            database = self.database
+
+        if schema is None:
+            schema = self.schema
         query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
         return df.table(limit)

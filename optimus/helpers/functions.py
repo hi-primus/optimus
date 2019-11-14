@@ -8,6 +8,7 @@ from functools import reduce
 from pathlib import Path
 
 import fastnumbers
+import six
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -335,6 +336,7 @@ def append(dfs, like="columns"):
 
     return df_result
 
+
 def deep_sort(obj):
     """
     Recursively sort list or dict nested lists
@@ -355,3 +357,21 @@ def deep_sort(obj):
         _sorted = obj
 
     return _sorted
+
+
+def update_dict(d, u):
+    # python 3.8+ compatibility
+    try:
+        collectionsAbc = collections.abc
+    except ModuleNotFoundError:
+        collectionsAbc = collections
+
+    for k, v in six.iteritems(u):
+        dv = d.get(k, {})
+        if not isinstance(dv, collectionsAbc.Mapping):
+            d[k] = v
+        elif isinstance(v, collectionsAbc.Mapping):
+            d[k] = update_dict(dv, v)
+        else:
+            d[k] = v
+    return d

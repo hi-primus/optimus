@@ -75,6 +75,8 @@ SPARK_DTYPES_DICT_OBJECTS = \
 
 # Profiler
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
+PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "decimal": "numeric",
+                         "date": "date", "array": "array", "binaty": "binary", "null": "null"}
 
 SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
                             "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
