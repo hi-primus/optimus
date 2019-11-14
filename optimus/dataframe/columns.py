@@ -2,7 +2,6 @@ import builtins
 import re
 import string
 import unicodedata
-import uuid
 from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
@@ -502,24 +501,27 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
-    def sort(order="asc"):
+    def sort(order="asc", columns=None):
         """
         Sort dataframes columns asc or desc
         :param order: 'asc' or 'desc' accepted
+        :param columns:
         :return: Spark DataFrame
         """
-        _reverse = None
-        if order == "asc":
-            _reverse = False
-        elif order == "desc":
-            _reverse = True
-        else:
-            RaiseIt.value_error(order, ["asc", "desc"])
+        df = self
+        if columns is None:
+            _reverse = None
+            if order == "asc":
+                _reverse = False
+            elif order == "desc":
+                _reverse = True
+            else:
+                RaiseIt.value_error(order, ["asc", "desc"])
 
-        columns = self.cols.names()
-        columns.sort(key=lambda v: v.upper(), reverse=_reverse)
+            columns = df.cols.names()
+            columns.sort(key=lambda v: v.upper(), reverse=_reverse)
 
-        return self.select(columns)
+        return df.select(columns)
 
     @add_attr(cols)
     def drop(columns=None, regex=None, data_type=None):
@@ -2163,8 +2165,11 @@ def cols(self):
         :param columns:
         :return:
         """
+        df = self
 
-        return ml_string_to_index(df, input_cols, output_cols, columns)
+        df = ml_string_to_index(df, input_cols, output_cols, columns)
+
+        return df
 
     @add_attr(cols)
     def bucketizer(input_cols, splits, output_cols=None):
