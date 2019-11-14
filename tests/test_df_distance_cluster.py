@@ -21,5 +21,5 @@ class Test_df_distance_cluster(unittest.TestCase):
 	@staticmethod
 	def test_levenshtein_matrix():
 		actual_df =dc.levenshtein_matrix(source_df,'STATE')
-		expected_df = op.create.df([('STATE_LEVENSHTEIN_1', StringType(), True),('STATE_LEVENSHTEIN_2', StringType(), True),('STATE***LEVENSHTEIN_DISTANCE', IntegerType(), True)], [('estadodemexico', 'estadodemexico', 0), ('estadodemexico', 'distritofederal', 11), ('distritofederal', 'estadodemexico', 11), ('distritofederal', 'distritofederal', 0)])
+		expected_df = op.create.df([('STATE_LEVENSHTEIN_1', StringType(), True),('STATE_LEVENSHTEIN_2', StringType(), True),('STATE***LEVENSHTEIN_DISTANCE', IntegerType(), True)], [('distritofederal', 'distritofederal', 0), ('distritofederal', 'estadodemexico', 11), ('estadodemexico', 'distritofederal', 11), ('estadodemexico', 'estadodemexico', 0)])
 		assert (expected_df.collect() == actual_df.collect())
