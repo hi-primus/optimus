@@ -2163,16 +2163,8 @@ def cols(self):
         :param columns:
         :return:
         """
-        df = self
 
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-        else:
-            input_cols, output_cols = zip(*columns)
-
-        df = ml_string_to_index(df, input_cols, output_cols)
-
-        return df
+        return ml_string_to_index(df, input_cols, output_cols, columns)
 
     @add_attr(cols)
     def bucketizer(input_cols, splits, output_cols=None):
