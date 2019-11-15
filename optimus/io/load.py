@@ -40,6 +40,7 @@ class Load:
         df = replace_columns_special_characters(df)
 
         df = df.action_meta("columns", df.cols.names())
+        df.reset()
         return df
 
     @staticmethod
@@ -54,7 +55,8 @@ class Load:
 
         :return:
         """
-        df  = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        df.reset()
         return df
 
     @staticmethod
@@ -90,6 +92,7 @@ class Load:
             logger.print(error)
             raise
         df = replace_columns_special_characters(df)
+        df.reset()
         return df
 
     @staticmethod
@@ -111,7 +114,7 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-
+        df.reset()
         return df
 
     @staticmethod
@@ -136,7 +139,7 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-
+        df.reset()
         return df
 
     @staticmethod
@@ -173,6 +176,7 @@ class Load:
             raise
 
         df = replace_columns_special_characters(df)
+        df.reset()
         return df
 
     @staticmethod
@@ -199,6 +203,7 @@ class Load:
             result = files_data
         else:
             result = files_data[file_name]
+        df.reset()
         return result
 
 

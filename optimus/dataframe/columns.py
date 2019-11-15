@@ -2,7 +2,6 @@ import builtins
 import re
 import string
 import unicodedata
-import uuid
 from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
@@ -502,24 +501,27 @@ def cols(self):
 
     @add_attr(cols)
     # TODO: Create a function to sort by datatype?
-    def sort(order="asc"):
+    def sort(order="asc", columns=None):
         """
         Sort dataframes columns asc or desc
         :param order: 'asc' or 'desc' accepted
+        :param columns:
         :return: Spark DataFrame
         """
-        _reverse = None
-        if order == "asc":
-            _reverse = False
-        elif order == "desc":
-            _reverse = True
-        else:
-            RaiseIt.value_error(order, ["asc", "desc"])
+        df = self
+        if columns is None:
+            _reverse = None
+            if order == "asc":
+                _reverse = False
+            elif order == "desc":
+                _reverse = True
+            else:
+                RaiseIt.value_error(order, ["asc", "desc"])
 
-        columns = self.cols.names()
-        columns.sort(key=lambda v: v.upper(), reverse=_reverse)
+            columns = df.cols.names()
+            columns.sort(key=lambda v: v.upper(), reverse=_reverse)
 
-        return self.select(columns)
+        return df.select(columns)
 
     @add_attr(cols)
     def drop(columns=None, regex=None, data_type=None):
@@ -2165,12 +2167,7 @@ def cols(self):
         """
         df = self
 
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-        else:
-            input_cols, output_cols = zip(*columns)
-
-        df = ml_string_to_index(df, input_cols, output_cols)
+        df = ml_string_to_index(df, input_cols, output_cols, columns)
 
         return df
 
@@ -2251,20 +2248,6 @@ def cols(self):
         if data == "":
             data = {}
         return data
-
-    @add_attr(cols)
-    def get_or_create_meta_col_id(col_name):
-        """
-        Create a uuid id in the col metadata
-        :param col_name:
-        :return:
-        """
-        df = self
-        col_id = df.cols.get_meta(col_name, "id")
-        if col_id is None:
-            col_id = str(uuid.uuid4())
-            df = df.cols.set_meta(col_name, "id", col_id)
-        return col_id, self
 
     return cols
 

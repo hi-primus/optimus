@@ -585,11 +585,15 @@ def preserve_meta(self, old_df, key=None, value=None):
     :param value:
     :return:
     """
+    old_meta = old_df.get_meta()
+    new_meta = self.get_meta()
 
+    new_meta.update(old_meta)
     if key is None or value is None:
-        return self.set_meta(value=old_df.get_meta())
+        return self.set_meta(value=new_meta)
     else:
-        return self.set_meta(value=old_df.get_meta()).action_meta(key, value)
+
+        return self.set_meta(value=new_meta).action_meta(key, value)
 
 
 @add_method(DataFrame)

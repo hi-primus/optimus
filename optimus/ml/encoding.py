@@ -2,7 +2,8 @@ from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 
 from optimus.helpers.check import is_dataframe, is_, is_str
-from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.columns import parse_columns, name_col, get_output_cols
+from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -28,7 +29,7 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols, output_cols=None, **kargs):
+def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
@@ -37,17 +38,24 @@ def string_to_index(df, input_cols, output_cols=None, **kargs):
     :param output_cols:Column where the ouput is going to be saved
     :return: Dataframe with indexed columns.
     """
+    df_actual = df
 
-    input_cols = parse_columns(df, input_cols)
-    if output_cols is None:
-        output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+    if columns is None:
+        input_cols = parse_columns(df, input_cols)
+        if output_cols is None:
+            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+        output_cols = get_output_cols(input_cols, output_cols)
+    else:
+        input_cols, output_cols = zip(*columns)
 
     indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
                 in zip(list(set(input_cols)), list(set(output_cols)))]
 
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
-    
+
+    df = df.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+
     return df
 
 
