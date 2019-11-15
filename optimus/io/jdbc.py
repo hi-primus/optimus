@@ -1,5 +1,7 @@
-from pyspark.sql import DataFrame
 import json
+
+from pyspark.sql import DataFrame
+
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.io.driver_context import DriverContext
@@ -39,7 +41,9 @@ class JDBC:
         self.driver_properties = self.driver_context.properties()
 
         if port is None:
-            self.port = self.driver_properties.value["port"]
+            port = self.driver_properties.value["port"]
+
+        self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
         self.url = self.driver_context.url(
