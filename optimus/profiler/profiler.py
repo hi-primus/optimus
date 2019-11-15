@@ -8,19 +8,17 @@ import jinja2
 import simplejson as json
 from glom import assign
 
-from optimus.audf import *
-from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
+from optimus.helpers.check import is_list_of_str, is_dict, is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
+from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYTHON_TO_PROFILER
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_col_types, write_json, write_html
+from optimus.profiler.functions import fill_missing_col_types, \
+    write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
 from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
@@ -387,6 +385,7 @@ class Profiler:
         0 more precision/slow 1 less precision/faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :param mismatch:
+        :param advanced_stats:
         :return: json object
         """
 
@@ -441,7 +440,7 @@ class Profiler:
         # Calculate Frequency
         logger.print("Processing Frequency ...")
         # print("COLUMNS",columns)
-        df_freq = df.cols.select(columns, data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        df_freq = df.cols.select(columns, data_type=df.constants.NUMERIC_TYPES, invert=True)
 
         freq = None
         if df_freq is not None:
@@ -479,21 +478,22 @@ class Profiler:
             logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             # Count uniques is necessary for calculate the histogram buckets
-            funcs = [count_uniques_agg]
+            funcs = [df.functions.count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
-            funcs = [F.min, F.max]
+            funcs = [df.functions.min, df.functions.max]
             exprs.extend(df.cols.create_exprs(cols, funcs))
 
-            funcs = [count_na_agg]
+            funcs = [df.functions.count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
 
             if advanced_stats is True:
-                funcs = [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
+                funcs = [df.functions.stddev, df.functions.kurtosis, df.functions.mean, df.functions.skewness,
+                         df.functions.sum, df.functions.variance, df.functions.zeros_agg]
                 exprs.extend(df.cols.create_exprs(cols, funcs))
 
                 # TODO: None in basic calculation
-                funcs = [percentile_agg]
+                funcs = [df.functions.percentile_agg]
                 exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
                                                   relative_error))
 
@@ -507,11 +507,11 @@ class Profiler:
             logger.print(
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-            funcs = [hist_agg]
+            funcs = [df.functions.hist_agg]
 
             for col_name in cols:
                 # Only process histogram for numeric columns. For other data types using frequency
-                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
                     buckets = result[col_name]["count_uniques"] - 1
                     if buckets > MAX_BUCKETS:
@@ -523,7 +523,6 @@ class Profiler:
             if agg_result is not None:
                 result_hist.update(agg_result)
 
-        print("hola1")
         # Merge results
         for col_name in result:
             if col_name in result_hist:
@@ -543,7 +542,7 @@ class Profiler:
             max_value = stats[col_name]["max"]
             min_value = stats[col_name]["min"]
 
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 stddev = stats[col_name]['stddev']
                 mean = stats[col_name]['mean']
 
@@ -586,7 +585,6 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
-
 
     @staticmethod
     def missing_values(df, columns):
