@@ -2,79 +2,76 @@ import base64
 import configparser
 import json
 import os
-import time
 import uuid
 import zlib
 
-import paho.mqtt.client as mqtt
+import requests
 from cryptography.fernet import Fernet
+from requests import HTTPError
 
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 
-IP_QUEUE = "165.22.149.93"
-DOMAIN_QUEUE = "app.hi-bumblebee.com"
-FULL_DOMAIN = "http://" + DOMAIN_QUEUE
+PROTOCOL = "http://"
+PROTOCOL_SSL = "https://"
+
+# API
+DOMAIN_API = "api.hi-bumblebee.com"
+FULL_API_URL = PROTOCOL_SSL + DOMAIN_API
+
+# API END POINTS
+END_POINT = "/dataset"
+
+# APP
+DOMAIN_APP = "app.hi-bumblebee.com"
+FULL_APP_URL = PROTOCOL_SSL + DOMAIN_APP
 
 
 class Comm:
     """
-    Connect to a MQTT/Rabbit Queue
+    Send encrypted message to the Bumblebee
     """
 
-    def __init__(self, queue_name=None, username="mqtt-test", password="mqtt-test"):
+    def __init__(self, app_url=None, api_url=None, queue_name=None, key=None):
 
         # If queue_name was not given try lo load from file if not generate one
+
+        if app_url is None:
+            self.app_url = save_config_key("bumblebee.ini", "DEFAULT", "appUrl", FULL_APP_URL)
+        else:
+            self.app_url = api_url
+
+        # API
+        if api_url is None:
+            self.api_url = save_config_key("bumblebee.ini", "DEFAULT", "apiUrl", FULL_API_URL)
+        else:
+            self.api_url = api_url
+
         if queue_name is None:
-            self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
-
-            # key is generated as byte convert to base64 so we can saved it in the config file
-            key = Fernet.generate_key()
-            self.key = save_config_key("bumblebee.ini", "DEFAULT", "Key", key.decode())
-
+            self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "session", str(uuid.uuid4()))
         else:
             self.queue_name = queue_name
 
-        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>. ".format(FULL_DOMAIN=FULL_DOMAIN,
-                                                                  SESSION=self.queue_name, KEY=self.key)
+        if key is None:
+            # key is generated as byte convert to base64 so we can saved it in the config file
+            key = Fernet.generate_key()
+            self.key = save_config_key("bumblebee.ini", "DEFAULT", "Key", key.decode())
+        else:
+            self.key = key
 
-        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>call bumblebee</a>".format(
-            FULL_DOMAIN=FULL_DOMAIN, SESSION=self.queue_name, KEY=self.key)
+        keys_link = "<a href ='{FULL_DOMAIN}'> here</a>".format(FULL_DOMAIN=self.app_url,
+                                                                SESSION=self.queue_name, KEY=self.key)
+
+        direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
+            FULL_DOMAIN=self.app_url, SESSION=self.queue_name, KEY=self.key)
 
         print_html(
-            "Your connection keys are in bumblebee.ini. If you really care about privacy get your keys and put them" + keys_link +
-            "If you are testing just " + direct_link
+            "Open Bumblebee: " + direct_link +
+            "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
 
         )
 
-        # Queue config
-        client = mqtt.Client("MQTT")
-        client.username_pw_set(username=username, password=password)
-
-        # Callbacks
-        client.connected_flag = False
-
-        def on_connect(client, userdata, flags, rc):
-            if rc == 0:
-                client.connected_flag = True  # set flag
-                # print("connected...")
-            else:
-                print("Bad connection Returned code=", rc)
-
-        def on_disconnect(client, userdata, rc):
-            # print("disconnected")
-            client.connected_flag = False
-
-        def on_publish(client, userdata, result):  # create function for callback
-            print("Data sent \n")
-
-        client.on_publish = on_publish
-        client.on_disconnect = on_disconnect
-        client.on_connect = on_connect
-
-        self.queue = client
         self.token = None
-
         self.f = Fernet(self.key)
 
     @staticmethod
@@ -91,15 +88,36 @@ class Comm:
             message = str(message).encode()
         return self.f.encrypt(message)
 
-    def send(self, message):
+    def send(self, message, output):
         """
         Send the info to the queue
         :param message:
+        :param output: "http" or "json"
         :return:
         """
         logger.print(message)
         self.token = self._encrypt(self._compress(message)).decode()
-        self.to_queue(self.token)
+
+        logger.print(self.token)
+        data = json.dumps({"username": self.queue_name, "data": self.token})
+
+        if output == "http":
+            try:
+                headers = {'content-type': 'application/json'}
+
+                end_point_dataset = self.api_url + END_POINT
+                response = requests.post(end_point_dataset, data=data, headers=headers)
+
+                # If the response was successful, no Exception will be raised
+                response.raise_for_status()
+            except HTTPError as http_err:
+                print(f'HTTP error occurred: {http_err}')
+            except Exception as err:
+                print(f'Other error occurred: {err}')
+            else:
+                print('Send!')
+        else:
+            return data
 
     def _decrypt(self, token):
         return self.f.decrypt(token)
@@ -130,34 +148,6 @@ class Comm:
             raise RuntimeError("Could interpret the unzipped contents")
 
         return content
-
-    def to_queue(self, message):
-        """
-        Send the profiler information to a queue. By default it use a public encrypted queue.
-        :return:
-
-
-        """
-        logger.print(message)
-        client = self.queue
-        client.connected_flag = False
-        client.disconnect()
-
-        try:
-            client.connect(IP_QUEUE)
-        except Exception:
-            print("Connection failed. Please try again")
-            exit(1)  # Should quit or raise flag to quit or retry
-
-        client.loop_start()  # start the loop
-
-        # print(message)
-        while not client.connected_flag:  # wait in loop
-            time.sleep(1)
-
-        client.publish(self.queue_name, payload=message)
-
-        client.loop_stop()
 
 
 def save_config_key(file_name, section="DEFAULT", key=None, value=None):

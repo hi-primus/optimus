@@ -4,10 +4,27 @@
 ## Run containers
 First you need to run the containers
 
+### Oracle
+```
+docker run \
+    --name=oracle \
+    --shm-size=1g \
+    -p 1521:1521 -p 8080:8080 \
+    -e ORACLE_PWD=sA123456 \
+    -v "oracle:/u01/app/oracle/oradata" \
+    oracle/database:19.3.0-ee
+```
 
 ### Mysql
 ```
-sudo docker run --name=mysql -d -p 3306:3306 -e MYSQL_USER=SA -e MYSQL_PASSWORD=SA123 -e MYSQL_DATABASE=optimus mysql/mysql-server
+sudo docker run \
+    --name=mysql \
+    -d \
+    -p 3306:3306 \
+    -e MYSQL_USER=SA \
+    -e MYSQL_PASSWORD=SA123 \
+    -e MYSQL_DATABASE=optimus \
+    mysql/mysql-server
 ```
 
 if you already run the last command just start the container
@@ -18,18 +35,52 @@ sudo docker start mysql
 
 ### Postgres
 ```
-sudo docker run --name postgres --e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus -p 5432:5432 -d postgres
+sudo docker run \
+    --name=postgres \
+    -e POSTGRES_USER=SA \
+    -e POSTGRES_PASSWORD=SA123 \
+    -e POSTGRES_DB=optimus \
+    -p 5432:5432 \
+    -d postgres
 ```
 
-### Redshit
-This is just postgres with some confgiruation options to looks like redshit
+### Redshift
+This is just postgres with some configuration options to looks like Redshift
 ```
-sudo docker run --name=redshift -d -p 5439:5439 -e POSTGRES_USER=SA -e POSTGRES_PASSWORD=SA123 -e POSTGRES_DB=optimus guildeducation/docker-amazon-redshift
+sudo docker run \
+    --name=redshift \
+    -d \
+    -p 5439:5439 \
+    -e POSTGRES_USER=SA \
+    -e POSTGRES_PASSWORD=SA123 \
+    -e POSTGRES_DB=optimus \
+    guildeducation/docker-amazon-redshift
 ```
 
 ### Mssql server
 ```
-sudo docker run --name=mssql -d -p 1433:1433  -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=SA123' microsoft/mssql-server-linux:2017-latest
+sudo docker run \
+    --name=mssql \
+    -d \
+    -p 1433:1433  \
+    -e 'ACCEPT_EULA=Y' \
+    -e 'SA_PASSWORD=sA123456' \
+    microsoft/mssql-server-linux:2017-latest
+```
+
+### Cassandra
+```
+sudo docker run \
+    --name=cassandra \
+    -d \
+    -p 9042:9042  \
+    -e 'MAX_HEAP_SIZE=256M' \
+    -e 'HEAP_NEWSIZE=128M' \
+    cassandra/latest
+
+sudo docker exec \
+    -it cassandra \
+    sleep 60 && echo 'loading cassandra keyspace' && cqlsh cassandra -f /main.cql
 ```
 
 ## Some Tips
@@ -53,6 +104,11 @@ sudo docker image ls
 List containers
 ```
 sudo dokcer container ls
+```
+
+Start all databases
+```
+sudo docker-compose up -d
 ```
 
 Remove container

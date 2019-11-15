@@ -6,7 +6,8 @@ import sys
 from functools import reduce
 from pathlib import Path
 
-from fastnumbers import isint, isfloat
+import fastnumbers
+import six
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -34,10 +35,10 @@ def infer(value):
     elif is_bool(value):
         result = "bool"
 
-    elif isint(value):
+    elif fastnumbers.isint(value):
         result = "int"
 
-    elif isfloat(value):
+    elif fastnumbers.isfloat(value):
         result = "float"
 
     elif is_list(value):
@@ -261,8 +262,8 @@ def create_buckets(lower_bound, upper_bound, bins):
             buckets.append({"lower": low, "upper": high, "bucket": i})
             low = high
 
-    # ensure that the upper bound is exactly the higher value.
-    # Because floating point calculation it can miss the upper bound in the final sum
+        # ensure that the upper bound is exactly the higher value.
+        # Because floating point calculation it can miss the upper bound in the final sum
 
         buckets[bins - 1]["upper"] = upper_bound
     return buckets
@@ -299,6 +300,7 @@ def append(dfs, like="columns"):
 
     return df_result
 
+
 def deep_sort(obj):
     """
     Recursively sort list or dict nested lists
@@ -319,3 +321,21 @@ def deep_sort(obj):
         _sorted = obj
 
     return _sorted
+
+
+def update_dict(d, u):
+    # python 3.8+ compatibility
+    try:
+        collectionsAbc = collections.abc
+    except ModuleNotFoundError:
+        collectionsAbc = collections
+
+    for k, v in six.iteritems(u):
+        dv = d.get(k, {})
+        if not isinstance(dv, collectionsAbc.Mapping):
+            d[k] = v
+        elif isinstance(v, collectionsAbc.Mapping):
+            d[k] = update_dict(dv, v)
+        else:
+            d[k] = v
+    return d

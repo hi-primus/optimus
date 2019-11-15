@@ -1,7 +1,11 @@
+from pyspark.sql import DataFrame
+
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
-from optimus.spark.spark import Spark
+from optimus.io.driver_context import DriverContext
+from optimus.io.factory import DriverFactory
+from optimus.io.properties import DriverProperties
+from optimus.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -14,133 +18,60 @@ class JDBC:
     Helper for JDBC connections and queries
     """
 
-    def __init__(self, driver, host, database, user, password, port=None, schema="public", oracle_tns=None,
-                 oracle_service_name=None, oracle_sid=None, presto_catalog=None):
+    def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
+                 oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
+                 cassandra_table=None):
+
         """
         Create the JDBC connection object
         :return:
         """
 
-        self.db_driver = driver
-        self.oracle_sid = oracle_sid
-
-        # Handle the default port
-        if self.db_driver == "redshift":
-            if port is None: self.port = 5439
-            # "com.databricks.spark.redshift"
-
-        elif self.db_driver == "postgresql":
-            if port is None: self.port = 5432
-            self.driver_option = "org.postgresql.Driver"
-
-        elif self.db_driver == "postgres": # backward compat
-            if port is None: self.port = 5432
-            self.driver_option = "org.postgresql.Driver"
-            self.db_driver = "postgresql"
-
-        elif self.db_driver == "mysql":
-            if port is None: self.port = 3306
-            # "com.mysql.jdbc.Driver"
-
-        elif self.db_driver == "sqlserver":
-            if port is None: self.port = 1433
-            # "com.microsoft.jdbc.sqlserver.SQLServerDriver"
-
-        elif self.db_driver == "oracle":
-            if port is None: self.port = 1521
-            self.driver_option = "oracle.jdbc.OracleDriver"
-
-        elif self.db_driver == 'presto':
-            if port is None: self.port = 8080
-            self.driver_option = "com.facebook.presto.jdbc.PrestoDriver"
-
-        # TODO: add mongo?
-        else:
-            # print("Driver not supported")
-            RaiseIt.value_error(driver, ["redshift", "postgres", "mysql", "sqlite"])
-
         if database is None:
             database = ""
 
-        # Create string connection
-        if self.db_driver == "sqlite":
-            url = "jdbc:{DB_DRIVER}://{HOST}/{DATABASE}".format(DB_DRIVER=driver, HOST=host, DATABASE=database)
-        elif self.db_driver == "postgresql" or self.db_driver == "redshift" or self.db_driver == "mysql":
-            # url = "jdbc:" + db_type + "://" + url + ":" + port + "/" + database + "?currentSchema=" + schema
-            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{DATABASE}?currentSchema={SCHEMA}".format(DB_DRIVER=self.db_driver,
-                                                                                              HOST=host,
-                                                                                              PORT=port,
-                                                                                              DATABASE=database,
-                                                                                              SCHEMA=schema)
+        self.db_driver = driver
+        self.oracle_sid = oracle_sid
+        self.cassandra_keyspace = cassandra_keyspace
+        self.cassandra_table = cassandra_table
 
-        elif self.db_driver == "oracle":
-            if oracle_sid:
-                url = "jdbc:{DB_DRIVER}:thin:@{HOST}:{PORT}/{ORACLE_SID}".format(
-                    DB_DRIVER=driver,
-                    HOST=host,
-                    PORT=port,
-                    DATABASE=database,
-                    ORACLE_SID=oracle_sid,
-                    SCHEMA=schema)
-            elif oracle_service_name:
-                url = "jdbc:{DB_DRIVER}:thin:@//{HOST}:{PORT}/{ORACLE_SERVICE_NAME}".format(DB_DRIVER=driver,
-                                                                                            HOST=host,
-                                                                                            PORT=port,
-                                                                                            DATABASE=database,
-                                                                                            ORACLE_SERVICE_NAME=oracle_service_name)
+        self.driver_context = DriverContext(DriverFactory.get(self.db_driver))
+        self.driver_properties = self.driver_context.properties()
 
-            elif oracle_tns:
-                url = "jdbc:{DB_DRIVER}:thin:@//{TNS}".format(DB_DRIVER=driver, TNS=oracle_tns)
+        if port is None:
+            self.port = self.driver_properties.value["port"]
 
-        elif self.db_driver == "presto":
-            url = "jdbc:{DB_DRIVER}://{HOST}:{PORT}/{CATALOG}/{DATABASE}".format(
-                DB_DRIVER=self.db_driver,
-                HOST=host,
-                PORT=port,
-                CATALOG=presto_catalog,
-                DATABASE=database
-            )
-        logger.print(url)
-
-        self.url = url
+        self.driver_option = self.driver_properties.value["java_class"]
+        self.url = self.driver_context.url(
+            driver=driver,
+            host=host,
+            port=str(self.port),
+            database=database,
+            schema=schema,
+            oracle_tns=oracle_tns,
+            oracle_sid=oracle_sid,
+            oracle_service_name=oracle_service_name,
+            presto_catalog=presto_catalog
+        )
         self.database = database
         self.user = user
         self.password = password
         self.schema = schema
+        logger.print(self.url)
 
     def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
         :return:
         """
+
         # Override the schema used in the constructor
         if database is None:
             database = self.database
 
         if schema is None:
             schema = self.schema
-
-        query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
-            query = """
-            SELECT relname as table_name,cast (reltuples as integer) AS count 
-            FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-            WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
-
-        elif self.db_driver == "mysql":
-            query = "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + database + "'"
-
-        elif self.db_driver == "presto":
-            query = "SELECT table_name, 0 as table_rows FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '" + database + "'"
-
-        elif self.db_driver == "sqlite":
-            query = ""
-
-        elif self.db_driver == "oracle":
-            query = """SELECT table_name, 
-                extractvalue(xmltype( dbms_xmlgen.getxml('select count(*) c from '||table_name)) ,'/ROWSET/ROW/C') count 
-                    FROM user_tables ORDER BY table_name"""
-
+        query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
         return df.table(limit)
 
@@ -151,28 +82,11 @@ class JDBC:
         """
 
         # Override the schema used in the constructors
-        if schema is None:
-            schema = self.schema
-
-        query = None
-        if (self.db_driver == "redshift") or (self.db_driver == "postgresql"):
-            query = """
-                        SELECT relname as table_name 
-                        FROM pg_class C LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) 
-                        WHERE nspname IN ('""" + schema + """') AND relkind='r' ORDER BY reltuples DESC"""
-
-        elif self.db_driver == "mysql":
-            query = "SELECT TABLE_NAME AS table_name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" \
-                    + self.database + "' GROUP BY TABLE_NAME ORDER BY count DESC"
-
-        elif self.db_driver == "sqlite":
-            query = ""
-
-        elif self.db_driver == "oracle":
-            query = "SELECT table_name as 'table_name' FROM user_tables"
-
+        if schema is None: schema = self.schema
+        query = self.driver_context.table_name_query(schema=schema, database=self.database)
+        table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i['table_name'] for i in df.to_json()]
+        return [i[table_name] for i in df.to_dict()]
 
     @property
     def table(self):
@@ -191,17 +105,12 @@ class JDBC:
         """
 
         db_table = table_name
+        query = self.driver_context.count_query(db_table=db_table)
         if limit == "all":
-            if self.db_driver == "oracle":
-                query = "SELECT COUNT(*) COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["COUNT"]
-            else:
-                query = "SELECT COUNT(*) as COUNT FROM " + db_table
-                count = self.execute(query, "all").to_json()[0]["count"]
+            count = self.execute(query, "all").first()[0]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
-
-            print(str(count) + " rows")
+            print(str(int(count)) + " rows")
 
         if columns == "*":
             columns_sql = "*"
@@ -210,6 +119,7 @@ class JDBC:
             columns_sql = ",".join(columns)
 
         query = "SELECT " + columns_sql + " FROM " + db_table
+
         logger.print(query)
         df = self.execute(query, limit)
 
@@ -227,31 +137,40 @@ class JDBC:
         """
 
         # play defensive with a select clause
-        if self.db_driver == "oracle":
-            alias = " t"
-        elif self.db_driver == "presto":
-            alias = ""
+        if self.db_driver == DriverProperties.ORACLE.value["name"]:
+            query = "(" + query + ") t"
+        elif self.db_driver == DriverProperties.PRESTO.value["name"]:
+            query = "(" + query + ")"
+        elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+            query = query
         else:
-            alias = " AS t"
-
-        query = "(" + query + self._limit(limit) + ")" + alias
+            query = "(" + query + ") AS t"
 
         logger.print(query)
         logger.print(self.url)
 
         conf = Spark.instance.spark.read \
-            .format("jdbc") \
+            .format(
+            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
+            DriverProperties.CASSANDRA.value["java_class"]) \
             .option("url", self.url) \
-            .option("dbtable", query) \
-            .option("user", self.user)
+            .option("user", self.user) \
+            .option("dbtable", query)
 
-        if self.db_driver != "presto" and self.password is not None:
+        # Password
+        if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:
             conf.option("password", self.password)
 
-        if self.db_driver == "oracle" or self.db_driver == 'postgresql' or self.db_driver == 'presto':
+        # Driver
+        if self.db_driver == DriverProperties.ORACLE.value["name"] \
+                or self.db_driver == DriverProperties.POSTGRESQL.value["name"] \
+                or self.db_driver == DriverProperties.PRESTO.value["name"]:
             conf.option("driver", self.driver_option)
 
-        return conf.load()
+        if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+            conf.options(table=self.cassandra_table, keyspace=self.cassandra_keyspace)
+
+        return self._limit(conf.load(), limit)
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
@@ -266,32 +185,34 @@ class JDBC:
         df = df.cols.cast(columns, "str")
 
         conf = df.write \
-            .format("jdbc") \
+            .format(
+            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
+            DriverProperties.CASSANDRA.value["java_class"]) \
             .mode(mode) \
             .option("url", self.url) \
             .option("dbtable", table) \
             .option("user", self.user) \
             .option("password", self.password)
 
-        if self.db_driver == "oracle":
+        if self.db_driver == DriverProperties.ORACLE.value["name"]:
             conf.option("driver", self.driver_option)
         conf.save()
 
     @staticmethod
-    def _limit(limit=None):
+    def _limit(df: DataFrame, limit=None):
         """
         Handle limit defensive so we do not retrieve the whole at we explicit want
         :param limit:
-        :return:
+        :param df:
+        :return a limited DataFrame if specified
         """
         # we use a default limit here in case the query will return a huge chunk of data
         if limit is None:
-            limit_query = " LIMIT " + str(LIMIT_TABLE)
+            return df.limit(LIMIT_TABLE)
         elif limit == "all":
-            limit_query = ""
+            return df
         else:
-            limit_query = " LIMIT " + str(limit)
-        return limit_query
+            return df.limit(int(limit))
 
 
 class Table:

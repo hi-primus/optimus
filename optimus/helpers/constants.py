@@ -13,18 +13,50 @@ PYTHON_SHORT_TYPES = {"string": "string",
                       "array": "array",
                       "null": "null"
                       }
+
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 
 # Profiler
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
+PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "decimal": "numeric",
+                      "date": "date", "array": "array", "binaty": "binary", "null": "null"}
 
 # DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "decimal": ["float64"]}
+
+
+class Actions(Enum):
+    """
+    Actions that modify a columns.
+    """
+    LOWER = "lower"
+    UPPER = "upper"
+    TRIM = "trim"
+    REVERSE = "reverse"
+    REMOVE_ACCENTS = "remove"
+    REMOVE_SPECIAL_CHARS = "remove"
+    REMOVE_WHITE_SPACES = "remove"
+    REPLACE = "replace"
+    REPLACE_REGEX = "replace"
+    FILL_NA = "fill_na"
+    CAST = "cast"
+    IS_NA = "is_na"
+    Z_SCORE = "z_score"
+    NEST = "nest"
+    UNNEST = "unnest"
+    DROP_ROW = "drop_row"
+    VALUES_TO_COLS = "values_to_cols"
+    SET = "set"
+    STRING_TO_INDEX = "string_to_index"
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, Actions))
 
 
 class ProfilerDataTypes(Enum):
     INT = "int"
     DECIMAL = "decimal"
-    STRING = "string"
+    TRIM = "string"
     BOOLEAN = "boolean"
     DATE = "date"
     ARRAY = "array"

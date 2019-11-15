@@ -66,7 +66,7 @@ def escape_columns(columns):
 
 def get_output_cols(input_cols, output_cols):
     """
-    Construct output columns names
+    Construct output columns names given
     :param input_cols:
     :param output_cols:
     :return:
@@ -208,7 +208,7 @@ def check_column_numbers(columns, number=0):
     elif number == ">1":
         if not len(columns) > 1:
             RaiseIt.value_error(len(columns), ["more than 1"])
-    elif len(columns) == number:
+    elif len(columns) != number:
         RaiseIt.value_error(count, "{} columns, {} needed".format(number, columns))
 
 
@@ -246,7 +246,6 @@ def check_for_missing_columns(df, col_names):
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
-
     return False
 
 

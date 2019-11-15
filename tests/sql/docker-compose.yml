@@ -2,16 +2,17 @@ version: '2'
 
 services:
   mysql:
-    image: mysql/mysql-server
+    image: mysql:5.7
     ports:
       - 3306:3306
     environment:
       - MYSQL_USER=SA
       - MYSQL_PASSWORD=SA123
       - MYSQL_DATABASE=optimus
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   postgres:
-    image: postgres
+    image: postgres:12
     ports:
       - 5432:5432
     environment:
@@ -20,11 +21,11 @@ services:
       - POSTGRES_DB=optimus
 
   mssql:
-    image: microsoft/mssql-server-linux:2017-latest
+    image: mcr.microsoft.com/mssql/server:2017-CU8-ubuntu
     ports:
       - 1433:1433
     environment:
-      - SA_PASSWORD=SA123
+      - SA_PASSWORD=sA123456
       - ACCEPT_EULA=Y
 
   redshift:
@@ -35,3 +36,35 @@ services:
       - POSTGRES_USER=SA
       - POSTGRES_PASSWORD=SA123
       - POSTGRES_DB=optimus
+
+  cassandra:
+    image: cassandra:3.11.5
+    container_name: cassandra
+    ports:
+      - 9042:9042
+    environment:
+      - MAX_HEAP_SIZE=256M
+      - HEAP_NEWSIZE=128M
+    restart: always
+    volumes:
+      - ./out/cassandra_data:/var/lib/cassandra
+
+  cassandra-load-keyspace:
+    container_name: cassandra-load-keyspace
+    image: cassandra:latest
+    depends_on:
+      - cassandra
+    volumes:
+      - ./cassandra_main.cql:/main.cql
+    command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra -f /main.cql"
+
+  oracle:
+    image: ironmussa/optimus:oracle_19.3.0-ee
+    environment:
+      - ORACLE_PWD=sA123456
+    volumes:
+      - oracle/oradata:/u01/app/oracle/oradata
+    ports:
+      - 1521:1521
+      - 8080:8080
+      - 5500:5500
