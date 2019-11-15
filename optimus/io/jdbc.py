@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-
+import json
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
 from optimus.io.driver_context import DriverContext
@@ -82,11 +82,13 @@ class JDBC:
         """
 
         # Override the schema used in the constructors
-        if schema is None: schema = self.schema
+        if schema is None:
+            schema = self.schema
         query = self.driver_context.table_name_query(schema=schema, database=self.database)
         table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i[table_name] for i in df.to_dict()]
+
+        return json.dumps([i[table_name] for i in df.to_dict()])
 
     @property
     def table(self):
