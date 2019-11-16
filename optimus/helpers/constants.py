@@ -104,12 +104,13 @@ class Actions(Enum):
     Z_SCORE = "z_score"
     NEST = "nest"
     UNNEST = "unnest"
-    DROP_ROW = "drop_row"
     VALUES_TO_COLS = "values_to_cols"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
+    DROP_ROW = "drop_row"
+    SORT_ROW = "sort_row"
 
     @staticmethod
     def list():
