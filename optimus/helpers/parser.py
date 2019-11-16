@@ -1,5 +1,6 @@
-from optimus.helpers.constants import SPARK_DTYPES_DICT, SPARK_SHORT_DTYPES, PYTHON_SHORT_TYPES, \
-    SPARK_DTYPES_DICT_OBJECTS
+from optimus.helpers.constants import PYTHON_SHORT_TYPES
+from optimus.spark.constants import SHORT_DTYPES, DTYPES_DICT_OBJECTS
+
 from optimus.helpers.logger import logger
 
 
