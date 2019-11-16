@@ -1,5 +1,5 @@
 from pyspark.sql.types import *
-from optimus import Optimus
+from optimus import optimus as Optimus
 import datetime
 from pyspark.sql import functions as F
 

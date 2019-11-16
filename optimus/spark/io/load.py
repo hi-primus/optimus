@@ -92,7 +92,7 @@ class Load:
             logger.print(error)
             raise
         df = replace_columns_special_characters(df)
-        df.reset()
+        df.ext.reset()
         return df
 
     @staticmethod

@@ -5,12 +5,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_column_a, is_numeric
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPES
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
 
 
-# These function can return and Column Expression or a list of columns expression
+# These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
 
 def functions(self):
@@ -135,7 +134,7 @@ def functions(self):
 
             def hist_numeric(_min_max, _buckets):
                 if _min_max is None:
-                    _min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+                    _min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).ext.to_dict()[0]
 
                 if _min_max["min"] is not None and _min_max["max"] is not None:
                     _buckets = create_buckets(_min_max["min"], _min_max["max"], _buckets)
@@ -201,7 +200,7 @@ def functions(self):
                 else:
                     exprs = None
             else:
-                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                     exprs = hist_numeric(min_max, buckets)
 
                 elif is_column_a(df, col_name, "str"):
@@ -222,10 +221,10 @@ def functions(self):
 
             # Select the nan/null rows depending of the columns data type
             # If numeric
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 expr = F.count(F.when(Functions.match_nulls_integers(col_name), col_name))
             # If string. Include 'nan' string
-            elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
+            elif is_column_a(df, col_name, df.constants.STRING_TYPES):
                 expr = F.count(
                     F.when(Functions.match_nulls_strings(col_name), col_name))
                 # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
@@ -253,7 +252,7 @@ def functions(self):
             values = val_to_list(values)
             values = list(map(str, values))
 
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 # Get percentiles
 
                 p = F.expr("percentile_approx(`{COLUMN}`, array({VALUES}), {ERROR})".format(COLUMN=col_name,

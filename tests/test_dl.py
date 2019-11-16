@@ -1,4 +1,4 @@
-from optimus import Optimus
+from optimus import optimus as Optimus
 from optimus.spark.dl.models import DL
 import pyspark
 from pyspark.sql.functions import lit

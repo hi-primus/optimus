@@ -112,7 +112,7 @@ class Profiler:
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        # self.html = html + df.table_html(10)
+        # self.html = html + df.ext.display_html(10)
         self.html = html
 
         # Display HTML
@@ -179,7 +179,7 @@ class Profiler:
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
 
-        actions = df.get_meta("transformations.actions")
+        actions = df.ext.get_meta("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -195,7 +195,7 @@ class Profiler:
                     :return:
                     """
 
-                    _actions_json = df.get_meta("transformations.actions")
+                    _actions_json = df.ext.get_meta("transformations.actions")
 
                     modified = []
                     for action in _actions:
@@ -217,7 +217,7 @@ class Profiler:
                     :return:
                     """
                     _renamed_columns = []
-                    _actions = df.get_meta("transformations.actions")
+                    _actions = df.ext.get_meta("transformations.actions")
                     _rename = _actions.get("rename")
 
                     def get_name(_col_name):
@@ -246,14 +246,14 @@ class Profiler:
                 new_columns = []
 
                 current_col_names = df.cols.names()
-                renamed_cols = match_renames(df.get_meta("transformations.columns"))
+                renamed_cols = match_renames(df.ext.get_meta("transformations.columns"))
                 for current_col_name in current_col_names:
                     if current_col_name not in renamed_cols:
                         new_columns.append(current_col_name)
 
                 # Rename keys to match new names
                 profiler_columns = self.output_columns["columns"]
-                actions = df.get_meta("transformations.actions")
+                actions = df.ext.get_meta("transformations.actions")
                 rename = actions.get("rename")
                 if rename:
                     for k, v in actions["rename"].items():
@@ -265,7 +265,7 @@ class Profiler:
                     profiler_columns.pop(col_names)
 
                 # Copy Keys
-                copy_columns = df.get_meta("transformations.actions.copy")
+                copy_columns = df.ext.get_meta("transformations.actions.copy")
                 if copy_columns is not None:
                     for source, target in copy_columns.items():
                         profiler_columns[target] = profiler_columns[source].copy()
@@ -328,13 +328,13 @@ class Profiler:
 
                 output_columns = update_dict(output_columns, updated_columns)
 
-                assign(output_columns, "name", df.get_name(), dict)
-                assign(output_columns, "file_name", df.get_meta("file_name"), dict)
+                assign(output_columns, "name", df.ext.get_name(), dict)
+                assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
 
                 # Add the General data summary to the output
                 data_set_info = {'cols_count': cols_count,
                                  'rows_count': rows_count,
-                                 'size': humanize.naturalsize(df.size()),
+                                 'size': humanize.naturalsize(df.ext.size()),
                                  'sample_size': sample}
 
                 assign(output_columns, "summary", data_set_info, dict)
@@ -349,7 +349,7 @@ class Profiler:
 
             # TODO: drop, rename and move operation must affect  the sample
             sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                      "value": df.sample_n(sample).rows.to_list(columns)}
+                      "value": df.ext.sample(sample).rows.to_list(columns)}
 
             assign(output_columns, "sample", sample, dict)
 
@@ -359,17 +359,15 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.set_meta(value={})
-        df = df.columns_meta(df.cols.names())
-
-        # col_names = output_columns["columns"].keys()
         if format == "json":
             result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
         else:
             result = output_columns
 
         self.output_columns = output_columns
-        df.set_meta("transformations.actions", {})
+
+        df.ext.reset()
+        df.ext.columns_meta(df.cols.names())
 
         return result
 

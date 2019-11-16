@@ -58,7 +58,7 @@ class Create:
             struct_fields = list(map(lambda x: StructField(*x), specs))
 
             df = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
-            df = df.columns_meta(df.cols.names())
+            df = df.ext.columns_meta(df.cols.names())
         return df
 
     df = data_frame

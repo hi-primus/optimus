@@ -1,7 +1,7 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.spark.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
     NGRAM_FINGERPRINT_COL

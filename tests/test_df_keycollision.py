@@ -1,5 +1,5 @@
 from pyspark.sql.types import *
-from optimus import Optimus
+from optimus import optimus as Optimus
 import numpy as np
 nan = np.nan
 from optimus.spark.ml import keycollision as keyCol

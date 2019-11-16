@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import requests
 from backoff import on_exception, expo
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from pyspark.sql.functions import DataFrame
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from ratelimit import limits, RateLimitException

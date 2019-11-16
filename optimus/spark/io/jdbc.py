@@ -5,7 +5,7 @@ from optimus.helpers.logger import logger
 from optimus.io.driver_context import DriverContext
 from optimus.io.factory import DriverFactory
 from optimus.io.properties import DriverProperties
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -73,7 +73,7 @@ class JDBC:
             schema = self.schema
         query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
-        return df.table(limit)
+        return df.ext.display(limit)
 
     def tables_names_to_json(self, schema=None):
         """
@@ -86,7 +86,7 @@ class JDBC:
         query = self.driver_context.table_name_query(schema=schema, database=self.database)
         table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i[table_name] for i in df.to_dict()]
+        return [i[table_name] for i in df.ext.to_dict()]
 
     @property
     def table(self):

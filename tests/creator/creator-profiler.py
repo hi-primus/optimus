@@ -26,7 +26,7 @@ import sys
 sys.path.append("../..")
 # -
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 from optimus.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)
@@ -78,7 +78,7 @@ rows = [
 
     ]
 source_df = op.create.df(cols ,rows)
-source_df.table()
+source_df.ext.display()
 # -
 
 

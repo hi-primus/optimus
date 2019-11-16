@@ -65,7 +65,7 @@ sys.path.append(repo_path)
 
 # ## Import Optimus and start it
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 op = Optimus(master="local")
 
@@ -95,7 +95,7 @@ df = op.create.df(
         ("Metroplex_)^$", 300.0, "Battle Station", 8, None, ["Metroflex"], None, [91.44, None]),
 
     ]).h_repartition(1)
-df.table()
+df.ext.display()
 
 # Creating a spark by passing a list of tuples specifyng the column data type. You can specify as data type an string or a Spark Datatypes. https://spark.apache.org/docs/2.3.1/api/java/org/apache/spark/sql/types/package-summary.html
 #
@@ -120,7 +120,7 @@ df = op.create.df(
         ("Megatron", None, "None", None),
 
     ])
-df.table()
+df.ext.display()
 
 # Creating a spark and specify if the column accepts null values
 
@@ -139,7 +139,7 @@ df = op.create.df(
         ("Megatron", None, "None", None),
 
     ])
-df.table()
+df.ext.display()
 
 # Creating a Daframe using a pandas spark
 
@@ -155,13 +155,13 @@ labels = ["names", "height", "function", "rank"]
 pdf = pd.DataFrame.from_records(data, columns=labels)
 
 df = op.create.df(pdf=pdf)
-df.table()
+df.ext.display()
 # -
 
 # ## Viewing data
 # Here is how to View the first 10 elements in a spark.
 
-df.table(10)
+df.ext.display(10)
 
 # ## About Spark
 # Spark and Optimus work differently than pandas or R. If you are not familiar with Spark, we recommend taking the time to take a look at the links below.
@@ -317,7 +317,7 @@ op.append([df, df_new], "rows").table()
 
 # + {"inputHidden": false, "outputHidden": false}
 df_melt = df.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
-df.table()
+df.ext.display()
 # -
 
 df_melt.pivot("names", "variable", "value").table()
@@ -340,7 +340,7 @@ df.to_json()
 df.schema
 # -
 
-df.table()
+df.ext.display()
 
 # + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height", infer=True)
@@ -353,13 +353,13 @@ df_json.table()
 
 df_csv.save.csv("test.csv")
 
-df.table()
+df.ext.display()
 
 # ## Enrichment
 
 df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
-df.table()
+df.ext.display()
 
 # +
 import requests

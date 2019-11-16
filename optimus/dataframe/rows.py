@@ -153,7 +153,7 @@ def rows(self):
         """
         df = self
         df = df.where(~where)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -167,7 +167,7 @@ def rows(self):
         df = self
         validate_columns_names(df, input_cols)
         df = df.rows.drop(fbdt(input_cols, data_type))
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -185,7 +185,7 @@ def rows(self):
         input_cols = parse_columns(self, input_cols)
 
         df = df.dropna(how, subset=input_cols)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -206,7 +206,7 @@ def rows(self):
         df = self
         input_cols = parse_columns(self, input_cols)
         df = df.drop_duplicates(subset=input_cols)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -217,7 +217,7 @@ def rows(self):
         """
         df = self
         df = df.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -229,7 +229,7 @@ def rows(self):
         """
         df = self
         df = df.limit(count)
-        df = df.preserve_meta(self)
+        df = df.ext.preserve_meta(self)
         return df
 
     # TODO: Merge with select
@@ -250,7 +250,7 @@ def rows(self):
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
         df = df.rows.select(expr)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)
@@ -263,7 +263,7 @@ def rows(self):
         input_cols = parse_columns(self, input_cols)[0]
         df = self
         df = df.withColumn(input_cols, F.explode(input_cols))
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.ext.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)

@@ -1,7 +1,7 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 
-from optimus.helpers.check import is_dataframe, is_, is_str
+from optimus.helpers.check import is_spark_dataframe, is_, is_str
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
@@ -16,7 +16,7 @@ def n_gram(df, input_col, n=2):
     :return: Spark DataFrame with n-grams calculated.
     """
 
-    is_dataframe(df)
+    is_spark_dataframe(df)
 
     tokenizer = feature.Tokenizer().setInputCol(input_col) | feature.StopWordsRemover()
     count = feature.CountVectorizer()
@@ -54,7 +54,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
 
-    df = df.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+    df = df.ext.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
 
     return df
 

@@ -1,5 +1,5 @@
 from pyspark.sql.types import *
-from optimus import Optimus
+from optimus import optimus as Optimus
 from pyspark.ml.linalg import VectorUDT, DenseVector, SparseVector
 import numpy as np
 nan = np.nan

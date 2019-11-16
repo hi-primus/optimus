@@ -1,4 +1,4 @@
-def optimus(engine, *args, **kwargs):
+def optimus(engine="spark", *args, **kwargs):
     if engine == "spark":
         from optimus.engines.spark import SparkEngine
         return SparkEngine(*args, **kwargs)

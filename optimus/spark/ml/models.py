@@ -7,7 +7,7 @@ from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 from optimus.helpers.check import is_spark_dataframe, is_str
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.ml.encoding import string_to_index, vector_assembler
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 
 class ML:
@@ -49,7 +49,7 @@ class ML:
         df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = RandomForestClassifier(**kwargs)
-        df.table()
+        df.ext.display()
         df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
 
         rf_model = model.fit(df)

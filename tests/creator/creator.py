@@ -26,7 +26,7 @@ import sys
 sys.path.append("../..")
 # -
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 from optimus.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)
@@ -77,7 +77,7 @@ rows = [
 
     ]
 source_df = op.create.df(cols ,rows)
-source_df.table()
+source_df.ext.display()
 
 
 # +
@@ -120,7 +120,7 @@ rows = [
 
     ]
 source_df_string_to_index = op.create.df(cols ,rows)
-source_df_string_to_index.table()
+source_df_string_to_index.ext.display()
 # -
 
 # ### End Init Section
@@ -168,7 +168,7 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "import datetime",
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
-source_df.table()
+source_df.ext.display()
 
 # +
 
@@ -187,6 +187,8 @@ array_col = "attributes"
 # -
 
 t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "rank")
+
+t.run()
 
 t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
 
@@ -222,7 +224,7 @@ t.create(None, "cols.range", "all_columns", "json",None, "*")
 
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 t.create(None, "cols.median", None, "json", None,numeric_col)
 
@@ -273,7 +275,7 @@ t.create(None, "cols.variance", None, "json", numeric_col)
 t.create(None, "cols.variance", "all_columns", "json", None, "*")
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 from pyspark.sql import functions as F
 source_df.select(F.abs(F.col("age")))
@@ -282,7 +284,7 @@ t.create(None, "cols.abs", None, "df", None,"weight(t)")
 
 t.create(None, "cols.abs", "all_columns", "json", None, "*")
 
-source_df.table()
+source_df.ext.display()
 
 # +
 from pyspark.sql import functions as F
@@ -306,7 +308,7 @@ t.run()
 
 source_df.cols.names("rank",["str","int","float"],True)
 
-t.create(None, "cols.count_zeros", None, "json", numeric_col)
+t.create(None, "cols.count_zeros", None, "dict", None, numeric_col)
 
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
 t.run()
@@ -330,7 +332,7 @@ t.run()
 t.create(None, "cols.count_uniques", "all_columns", "json",None, "*")
 t.run()
 
-t.create(None, "cols.unique", None, "json", None,numeric_col)
+t.create(None, "cols.unique", None, "dict", None,numeric_col)
 t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", None,"*")
@@ -384,7 +386,7 @@ t.create(None, "cols.remove_accents", None, "df", string_col)
 
 t.create(None, "cols.remove_accents", "all_columns", "df", string_col)
 
-source_df.table()
+source_df.ext.display()
 
 t.create(None, "cols.remove_special_chars", None, "df", string_col)
 
@@ -392,7 +394,7 @@ t.create(None, "cols.remove_special_chars", "all_columns","df", None, "*")
 t.run()
 # t.create(None, "cols.value_counts", None, "json", None, numeric_col)
 
-source_df.cols.remove_special_chars("*").table()
+source_df.cols.remove_special_chars("*").ext.display()
 
 t.create(None, "cols.remove_white_spaces", None, "df", string_col)
 
@@ -610,7 +612,7 @@ t.create(source_df, "cols.count_by_dtypes", None, "dict", None, "*", infer=False
 
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 # +
 import logging
@@ -619,7 +621,7 @@ from datetime import date, datetime
 
 from pyspark.sql.types import *
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 mismatch_df = op.create.df(
     [
@@ -714,10 +716,10 @@ expected_df = op.create.df([('billingId', LongType(), True),('birth', StringType
 
 from deepdiff import DeepDiff  # For Deep Difference of 2 objects
 
-actual_df.table()
-expected_df.table()
+actual_df.ext.display()
+expected_df.ext.display()
 
-# source_df.table()
+# source_df.ext.display()
 # print(actual_df.to_json())
 # print(expected_df.to_json())
 a1 = actual_df.to_json()
@@ -782,7 +784,7 @@ t.create(None, "save.parquet", None, None, "test.parquet")
 t.run()
 
 
-source_df.table()
+source_df.ext.display()
 
 
 # # Ouliers
@@ -945,7 +947,7 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
 
 df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
-df_model.table()
+df_model.ext.display()
 
 source_df = op.create.df([
     ("words", "str", True),

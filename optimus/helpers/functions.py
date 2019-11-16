@@ -20,7 +20,7 @@ from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_da
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
-
+import collections
 
 def infer(value):
     """

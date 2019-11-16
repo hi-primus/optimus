@@ -4,7 +4,7 @@ from nose.tools import assert_equal
 import pyspark
 import py_sparkling
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 import optimus.ml.encoding as fe
 

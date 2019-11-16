@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pyspark.sql.types import *
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 op = Optimus()
 

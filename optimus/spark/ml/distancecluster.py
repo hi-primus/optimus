@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 from optimus.helpers.columns import name_col
 from optimus.spark.ml import keycollision
 from optimus.spark.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
@@ -15,7 +15,7 @@ def levenshtein_json(df, input_col):
     :return:
     """
     df = keycollision.fingerprint(df, input_col)
-    # df.table()
+    # df.ext.display()
     fingerprint_col = name_col(input_col, FINGERPRINT_COL)
     distance_col_name = name_col(input_col, LEVENSHTEIN_DISTANCE)
 
@@ -80,7 +80,7 @@ def levenshtein_matrix(df, input_col):
     :return:
     """
     df = keycollision.fingerprint(df, input_col)
-    # df.table()
+    # df.ext.display()
     fingerprint_col = name_col(input_col, FINGERPRINT_COL)
     distance_col_name = name_col(input_col, LEVENSHTEIN_DISTANCE)
 

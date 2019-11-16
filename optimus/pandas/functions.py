@@ -76,7 +76,7 @@ def functions(self):
             :return:
             """
 
-            return col_name.value_counts().to_dict()
+            return col_name.value_counts().ext.to_dict()
 
         # @staticmethod
         # def range_agg(col_name):
@@ -234,7 +234,7 @@ def functions(self):
             if values is None:
                 values = [0.05, 0.25, 0.5, 0.75, 0.95]
 
-            return col_name.quantile(values).to_dict()
+            return col_name.quantile(values).ext.to_dict()
 
     return Functions()
 

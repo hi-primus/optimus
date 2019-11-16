@@ -29,7 +29,7 @@ sys.path.append("..")
 #
 # In this notebook you can see a detailed overview ok all the columns operations available in Optimus. You can access the operation via df.cols.
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 # Create optimus
 op = Optimus()
@@ -60,7 +60,7 @@ df = op.create.df(
         (None, 3, "eagle", "glass", "lion-pc", "c", "4", ["baby 3", "sorry 3"], [7, 8])
     ])
 
-df.table()
+df.ext.display()
 # -
 
 # ## Create Columns
@@ -75,9 +75,9 @@ df.table()
 # ### Create a column with a constant value
 
 df = df.cols.append("new_col_1", 1)
-df.table()
+df.ext.display()
 
-df.table()
+df.ext.display()
 
 # ### Append 2 or multiples dataframes columns like
 
@@ -119,7 +119,7 @@ df.cols.append([
 # ### Pandas
 # * You can not select columns by string and index at the same time
 
-df.table()
+df.ext.display()
 columns = ["words", 1, "animals", 3]
 df.cols.select(columns).table()
 
@@ -204,7 +204,7 @@ from pyspark.sql.functions import *
 
 df.withColumn("num", col("num").cast(StringType()))
 
-df.table()
+df.ext.display()
 df.cols.keep("num").table()
 
 # ## Move columns
@@ -249,7 +249,7 @@ df2.table()
 df2 = df.cols.drop(["num", "words"])
 df2.table()
 
-df.table()
+df.ext.display()
 
 # ## Chaining
 #
@@ -259,7 +259,7 @@ df.table()
 #
 # The past transformations were done step by step, but this can be achieved by chaining all operations into one line of code, like the cell below. This way is much more efficient and scalable because it uses all optimization issues from the lazy evaluation approach.
 
-df.table()
+df.ext.display()
 df \
     .cols.rename([('num', 'number')]) \
     .cols.drop(["number", "words"]) \
@@ -279,7 +279,7 @@ df \
 # ### Pandas
 # via str.split()
 
-df.table()
+df.ext.display()
 df.cols.unnest("two strings", "-") \
     .table()
 
@@ -360,7 +360,7 @@ df.cols.select_by_dtypes("int").table()
 # ### Pandas
 # Almost the same behavior that Optimus
 
-df.table()
+df.ext.display()
 
 
 # ### Create a function that only apply to string value in column filter
@@ -509,7 +509,7 @@ df.cols.count_uniques("*")
 # ### Pandas
 # Similar behavior than pandas
 
-df.table()
+df.ext.display()
 
 df_distinct = op.create.df(
     [
@@ -537,7 +537,7 @@ df.cols.dtypes('*')
 
 # ## Replace
 
-df.table()
+df.ext.display()
 
 # ### Replace "dog","cat" in column "animals" by the word "animals"
 
@@ -603,7 +603,7 @@ df.cols.nest(["animals", "two strings", "num 2"], output_col="col_nested", shape
 
 df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
-df.table()
+df.ext.display()
 
 df.cols.hist("price", 10)
 
@@ -649,7 +649,7 @@ print(df.cols.mode(["price", "billingId"]))
 
 # ## String Operations
 
-df.table()
+df.ext.display()
 
 df \
     .cols.trim("lastName") \

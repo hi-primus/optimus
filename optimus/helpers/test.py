@@ -45,7 +45,7 @@ class Test:
         print("Creating file " + filename)
         _imports = [
             "from pyspark.sql.types import *",
-            "from optimus import Optimus",
+            "from optimus import optimus as Optimus",
             "from optimus.helpers.json import json_enconding",
             "from optimus.helpers.functions import deep_sort",
             "import unittest"
@@ -62,7 +62,7 @@ class Test:
 
         # Global Dataframe
         if self.df is not None:
-            source_df = "source_df=op.create.df(" + self.df.export() + ")\n"
+            source_df = "source_df=op.create.df(" + self.df.ext.export() + ")\n"
             test_file.write(source_df)
 
         # Class name
@@ -142,7 +142,7 @@ class Test:
             df_func = self.df
         elif isinstance(obj, pyspark.sql.dataframe.DataFrame):
 
-            source_df = "\tsource_df=op.create.df(" + obj.export() + ")\n"
+            source_df = "\tsource_df=op.create.df(" + obj.ext.export() + ")\n"
             df_func = obj
             add_buffer(source_df)
         else:
@@ -222,8 +222,8 @@ class Test:
 
         if output == "df":
 
-            df_result.table()
-            expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
+            df_result.ext.table()
+            expected = "\texpected_df = op.create.df(" + df_result.ext.export() + ")\n"
         elif output == "json":
             print(df_result)
 

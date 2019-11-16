@@ -1,6 +1,6 @@
 from kombu import Connection, Exchange, Queue, Producer
 from packaging import version
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.columns import parse_columns

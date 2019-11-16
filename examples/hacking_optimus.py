@@ -26,7 +26,7 @@ import sys
 sys.path.append("..")
 
 # Create Optimus
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 op = Optimus()
 
@@ -57,4 +57,4 @@ df = op.create.df(
         (None, 3, "eagle", "glass", "lion-pc", "c", "4", ["baby 3", "sorry 3"], [7, 8])
     ])
 
-# df.table()
+# df.ext.display()

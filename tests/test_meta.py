@@ -1,7 +1,7 @@
 import numpy as np
 from pyspark.sql.types import *
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 
 nan = np.nan
 import datetime

@@ -4,7 +4,7 @@ from pyspark.sql.types import *
 import datetime
 import sys
 
-from optimus import Optimus
+from optimus import optimus as Optimus
 # -
 
 op = Optimus()
@@ -82,7 +82,7 @@ source_df = op.create.df(
                                                                                      True, bytearray(b'Battle Station'),
                                                                                      None)])
 
-source_df.table()
+source_df.ext.display()
 
 
 class TestDataFrameCols(object):
