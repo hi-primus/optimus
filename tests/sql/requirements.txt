@@ -3,5 +3,5 @@ mysqlclient==1.4.4
 records==0.5.3
 psycopg2-binary==2.8.4
 pyodbc==4.0.27
-pymssql==2.1.4
+pymssql==3.0.3
 redshift-sqlalchemy==0.4
