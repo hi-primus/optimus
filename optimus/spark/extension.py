@@ -5,7 +5,7 @@ import humanize
 import imgkit
 import jinja2
 import math
-from glom import glom, assign, T
+from glom import glom, assign
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -421,15 +421,31 @@ def ext(self):
 
         @staticmethod
         def table(limit=None, columns=None, title=None, truncate=True):
+            def isnotebook():
+                """
+                Detect you are in a notebook or in a terminal
+                :return:
+                """
+                try:
+                    shell = get_ipython().__class__.__name__
+                    if shell == 'ZMQInteractiveShell':
+                        return True  # Jupyter notebook or qtconsole
+                    elif shell == 'TerminalInteractiveShell':
+                        return False  # Terminal running IPython
+                    else:
+                        return False  # Other type (?)
+                except NameError:
+                    return False  # Probably standard Python interpreter
+
             try:
-                if __IPYTHON__ and DataFrame.output is "html":
+                if isnotebook() and DataFrame.output == "html":
                     result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                     print_html(result)
                 else:
                     self.show()
             except NameError:
 
-                self.ext.show()
+                self.show()
 
         @staticmethod
         def show():
@@ -458,56 +474,199 @@ def ext(self):
             return self.withColumn(column, F.monotonically_increasing_id())
 
         @staticmethod
-        def send(name: str = None, stats: bool = True):
+        def send(name: str = None, infer: bool = True, mismatch=None, stats: bool = True, advanced_stats: bool = True,
+                 output: str = "http"):
             """
             Profile and send the data to the queue
-            :param name: Specified a name for the view/spark
-            :param stats:
+            :param infer: infer datatypes
+            :param mismatch: a dict with the column name or regular expression to identify correct values.
+            :param name: Specified a name for the view/dataframe
+            :param stats: calculate stats or only vales
+            :param output:
             :return:
             """
             df = self
             if name is not None:
                 df.set_name(name)
 
-            result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
-                                               approx_count=True,
-                                               sample=10000,
-                                               stats=stats)
+            message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
+                                                approx_count=True,
+                                                sample=10000,
+                                                stats=stats,
+                                                format="json",
+                                                mismatch=mismatch,
+                                                advanced_stats=advanced_stats
+                                                )
 
-            Comm.instance.send(result)
+            if Comm.instance:
+                return Comm.instance.send(message, output=output)
+            else:
+                raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+
+        # @staticmethod
+        # def append_meta(spec, value):
+        #     target = self.get_meta()
+        #     data = glom(target, (spec, T.append(value)))
+        #
+        #     df = self
+        #     df.schema[-1].metadata = data
+        #     return df
 
         @staticmethod
-        def append_meta(spec, value):
-            target = self.get_meta()
-            data = glom(target, (spec, T.append(value)))
+        def reset():
+            df = Ext.set_meta("transformations.actions", {})
+            Profiler.instance.output_columns = {}
+            return df
+
+        @staticmethod
+        def copy_meta(old_new_columns):
+            """
+            Shortcut to add transformations to a dataframe
+            :param old_new_columns:
+            :return:
+            """
+
+            key = "transformations.actions.copy"
 
             df = self
-            df.schema[-1].metadata = data
+
+            copy_cols = df.get_meta(key)
+            if copy_cols is None:
+                copy_cols = {}
+            copy_cols.update(old_new_columns)
+
+            df = df.set_meta(key, copy_cols)
+
+            return df
+
+        @staticmethod
+        def rename_meta(old_new_columns):
+            """
+            Shortcut to add transformations to a dataframe
+            :param old_new_columns:
+            :return:
+            """
+            key = "transformations.actions.rename"
+
+            df = self
+            renamed_cols = df.ext.get_meta(key)
+            old_col, new_col = old_new_columns
+            if renamed_cols is None or old_col not in list(renamed_cols.values()):
+                df = df.ext.update_meta(key, {old_col: new_col}, dict)
+            else:
+                # This update a key
+                for k, v in renamed_cols.items():
+                    n, m = old_new_columns
+                    if v == n:
+                        renamed_cols[k] = m
+
+                df = df.ext.set_meta(key, renamed_cols)
+            return df
+
+        @staticmethod
+        def columns_meta(value):
+            """
+            Shortcut to add transformations to a dataframe
+            :param value:
+            :return:
+            """
+            df = self
+            value = val_to_list(value)
+            for v in value:
+                df = df.ext.update_meta("transformations.columns", v, list)
+            return df
+
+        @staticmethod
+        def action_meta(key, value):
+            """
+            Shortcut to add transformations to a dataframe
+            :param self:
+            :param key:
+            :param value:
+            :return:
+            """
+            df = self
+            value = val_to_list(value)
+            for v in value:
+                df = df.ext.update_meta("transformations.actions." + key, v, list)
+            return df
+
+        @staticmethod
+        def preserve_meta(old_df, key=None, value=None):
+            """
+            In some cases we need to preserve metadata actions before a destructive dataframe transformation.
+            :param old_df: The Spark dataframe you want to coyp the metadata
+            :param key:
+            :param value:
+            :return:
+            """
+            old_meta = old_df.ext.get_meta()
+            new_meta = Ext.get_meta()
+
+            new_meta.update(old_meta)
+            if key is None or value is None:
+                return Ext.set_meta(value=new_meta)
+            else:
+
+                return Ext.set_meta(value=new_meta).ext.action_meta(key, value)
+
+        @staticmethod
+        def update_meta(path, value, default=list):
+            """
+            Append meta data to a key
+            :param path:
+            :param value:
+            :param default:
+            :return:
+            """
+
+            df = self
+
+            new_meta = df.ext.get_meta()
+            if new_meta is None:
+                new_meta = {}
+
+            elements = path.split(".")
+            result = new_meta
+            for i, ele in enumerate(elements):
+                if ele not in result and not len(elements) - 1 == i:
+                    result[ele] = {}
+
+                if len(elements) - 1 == i:
+                    if default is list:
+                        result.setdefault(ele, []).append(value)
+                    elif default is dict:
+                        result.setdefault(ele, {}).update(value)
+                else:
+                    result = result[ele]
+
+            df = df.ext.set_meta(value=new_meta)
             return df
 
         @staticmethod
         def set_meta(spec=None, value=None, missing=dict):
             """
-            Set metadata in a spark columns
+            Set metadata in a dataframe columns
+            :param self:
             :param spec: path to the key to be modified
             :param value: dict value
             :param missing:
             :return:
             """
-            df = self
             if spec is not None:
-                target = df.ext.get_meta()
+                target = Ext.get_meta()
                 data = assign(target, spec, value, missing=missing)
             else:
                 data = value
 
+            df = self
             df.schema[-1].metadata = data
             return df
 
         @staticmethod
         def get_meta(spec=None):
             """
-            Get metadata from a spark column
+            Get metadata from a dataframe column
             :param spec: path to the key to be modified
             :return:
             """

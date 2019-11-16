@@ -5,7 +5,7 @@ from optimus.helpers.logger import logger
 from optimus.io.driver_context import DriverContext
 from optimus.io.factory import DriverFactory
 from optimus.io.properties import DriverProperties
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
