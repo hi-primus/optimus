@@ -16,7 +16,7 @@ class DaskEngine:
         self.load = Load()
         # self.read = self.spark.read
 
-        Dask.instance = Client(n_workers=1, threads_per_worker=4, processes=False, memory_limit='2GB')
+        Dask.instance = Client(n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB')
 
     # def create(self, data):
     #     import dask.dataframe as dd

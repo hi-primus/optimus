@@ -355,52 +355,11 @@ def ext(self):
             Comm.instance.send(result)
 
         @staticmethod
-        def append_meta(spec, value):
-            target = self.get_meta()
-            data = glom(target, (spec, T.append(value)))
-
-            df = self
-            df.schema[-1].metadata = data
+        def reset():
+            df = self.meta.set("transformations.actions", {})
+            Profiler.instance.output_columns = {}
             return df
 
-        @staticmethod
-        def set_meta(spec=None, value=None, missing=dict):
-            """
-            Set metadata in a spark columns
-            :param spec: path to the key to be modified
-            :param value: dict value
-            :param missing:
-            :return:
-            """
-            df = self
-            if spec is not None:
-                target = df.meta.get()
-                data = assign(target, spec, value, missing=missing)
-            else:
-                data = value
-
-            df.schema[-1].metadata = data
-            return df
-
-        @staticmethod
-        def get_meta(spec=None):
-            """
-            Get metadata from a spark column
-            :param spec: path to the key to be modified
-            :return:
-            """
-            data = self.schema[-1].metadata
-            if spec is not None:
-                data = glom(data, spec, skip_exc=KeyError)
-            return data
-
-        @property
-        def meta(self):
-            return Ext.get_meta()
-
-        @meta.setter
-        def meta(self, metadata):
-            Ext.set_meta(value=metadata)
 
     return Ext()
 

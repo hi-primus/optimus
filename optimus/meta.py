@@ -1,5 +1,6 @@
+from dask.dataframe.core import DataFrame as DaskDataFrame
 from glom import glom, assign
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame as SparkDataFrame
 
 from optimus.helpers.converter import val_to_list
 
@@ -178,4 +179,5 @@ def meta(self):
     return Meta()
 
 
-DataFrame.meta = property(meta)
+SparkDataFrame.meta = property(meta)
+DaskDataFrame.meta = property(meta)

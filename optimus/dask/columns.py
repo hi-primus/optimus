@@ -4,12 +4,12 @@ from ast import literal_eval
 import dask.dataframe as dd
 import numpy as np
 from dask.dataframe.core import DataFrame
+from dask.distributed import as_completed
 from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
-from optimus.dask.functions import Functions
 from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures, equal_function, is_column_a, is_list, \
     is_one_element
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
@@ -18,7 +18,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 
-def cols(self):
+def cols(self: DataFrame):
     df = self
 
     class Cols:
@@ -31,15 +31,25 @@ def cols(self):
             :param exprs:
             :return:
             """
+
+            def parse_percentile(value):
+                _result = {}
+                value = value[0][1]["percentile"]
+                for (col_name, row) in value.iteritems():
+                    for c in row.items():
+                        _result.setdefault(col_name, {})
+                        _result[col_name].setdefault("percentile", {})
+                        _result[col_name]["percentile"][c[0]] = c[1]
+                return _result
+
             agg_list = Dask.instance.compute(exprs)
 
             if len(agg_list) > 0:
                 agg_result = []
                 # Distributed mode return a list of Futures objects, Single mode not.
                 if is_list_of_futures(agg_list):
-                    for agg_element in agg_list:
-                        ## Bring results when ready
-                        agg_result.append(agg_element.result())
+                    for future in as_completed(agg_list):
+                        agg_result.append(future.result())
                 else:
                     agg_result = agg_list[0]
 
@@ -49,9 +59,14 @@ def cols(self):
                     if agg_element[0] == "__process__":
                         # Get agg name and results
                         for agg_name, agg_results in agg_element[1].items():
+                            # print(agg_result)
+                            if agg_name == "percentile":
+                                agg_parsed = parse_percentile(agg_result)
+                            else:
+                                agg_parsed = agg_result
                             result.update(
                                 {col_name: {agg_name: col_results} for col_name, col_results in
-                                 agg_results.items()})
+                                 agg_parsed.items()})
                     else:
                         agg_col_name, agg_element_result = agg_element
                         if agg_col_name not in result:
@@ -512,6 +527,41 @@ def cols(self):
             return result
 
         @staticmethod
+        def test_agg(columns):
+            def chunk(s):
+                # for the comments, assume only a single grouping column, the
+                # implementation can handle multiple group columns.
+                #
+                # s is a grouped series. value_counts creates a multi-series like
+                # (group, value): count
+                return s.value_counts()
+
+            def agg(s):
+                # s is a grouped multi-index series. In .apply the full sub-df will passed
+                # multi-index and all. Group on the value level and sum the counts. The
+                # result of the lambda function is a series. Therefore, the result of the
+                # apply is a multi-index series like (group, value): count
+                return s.apply(lambda s: s.groupby(level=-1).sum())
+
+                # faster version using pandas internals
+                s = s._selected_obj
+                return s.groupby(level=list(range(s.index.nlevels))).sum()
+
+            def finalize(s):
+                # s is a multi-index series of the form (group, value): count. First
+                # manually group on the group part of the index. The lambda will receive a
+                # sub-series with multi index. Next, drop the group part from the index.
+                # Finally, determine the index with the maximum value, i.e., the mode.
+                level = list(range(s.index.nlevels - 1))
+                return (
+                    s.groupby(level=level)
+                        .apply(lambda s: s.reset_index(level=level, drop=True).argmax())
+                )
+
+            mode = dd.Aggregation('mode', chunk, agg, finalize)
+            res = ddf.groupby(['g0', 'g1']).agg({'col': mode}).compute()
+
+        @staticmethod
         def median(columns, relative_error=RELATIVE_ERROR):
             """
             Return the median of a column spark
@@ -592,6 +642,195 @@ def cols(self):
                 result = None
 
             return result
+
+        ####################################################
+        ####################################################
+        ####################################################
+        ####################################################
+        ####################################################
+
+        # TODO: This functions are the same that spark/columns.py
+        #  but I have not figure out the best way to abstract them. Some Work in commit abstracting
+        #  this functions in 95fdbeb128e6d29676f5ed65e0bfd1d8d64d805c
+
+        @staticmethod
+        def min(columns):
+            """
+            Return the min value from a Dask dataframe column
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+
+            return Cols.agg_exprs(columns, df.functions.min)
+
+        @staticmethod
+        def max(columns):
+            """
+            Return the max value from a Dask dataframe column
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+
+            return Cols.agg_exprs(columns, df.functions.max)
+
+        @staticmethod
+        def range(columns):
+            """
+            Return the range form the min to the max value
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+
+            return Cols.agg_exprs(columns, df.functions.range_agg)
+
+        @staticmethod
+        def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
+            """
+            Return the percentile of a spark
+            :param columns:  '*', list of columns names or a single column name.
+            :param values: list of percentiles to be calculated
+            :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
+            :return: percentiles per columns
+            """
+            # values = [str(v) for v in values]
+            if values is None:
+                values = [0.5]
+            return Cols.agg_exprs(columns, df.functions.percentile_agg, df, values, relative_error)
+
+        # Descriptive Analytics
+        # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
+
+        @staticmethod
+        def std(columns):
+            """
+            Return the standard deviation of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.stddev))
+
+        @staticmethod
+        def kurt(columns):
+            """
+            Return the kurtosis of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.kurtosis))
+
+        @staticmethod
+        def mean(columns):
+            """
+            Return the mean of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.mean))
+
+        @staticmethod
+        def skewness(columns):
+            """
+            Return the skewness of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.skewness))
+
+        @staticmethod
+        def sum(columns):
+            """
+            Return the sum of a column spark
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.sum))
+
+        @staticmethod
+        def variance(columns):
+            """
+            Return the column variance
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            check_column_numbers(columns, "*")
+
+            return format_dict(Cols.agg_exprs(columns, df.functions.variance))
+
+        @staticmethod
+        def abs(input_cols, output_cols=None):
+            """
+            Apply abs to the values in a column
+            :param input_cols:
+            :param output_cols:
+            :return:
+            """
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            check_column_numbers(output_cols, "*")
+            # Abs not accepts column's string names. Convert to Spark Column
+
+            # TODO: make this in one pass.
+            df = self
+            for col_name in output_cols:
+                df = df.withColumn(col_name, F.abs(F.col(col_name)))
+            return df
+
+        @staticmethod
+        def mode(columns):
+            """
+            Return the column mode
+            :param columns: '*', list of columns names or a single column name.
+            :return:
+            """
+
+            columns = parse_columns(self, columns)
+            mode_result = []
+
+            for col_name in columns:
+                count = self.groupBy(col_name).count()
+                mode_df = count.join(
+                    count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
+                )
+                if SparkEngine.cache:
+                    mode_df = mode_df.cache()
+                # if none of the values are repeated we not have mode
+                mode_list = (mode_df
+                             .rows.select(mode_df["count"] > 1)
+                             .cols.select(col_name)
+                             .collect())
+
+                mode_result.append({col_name: filter_list(mode_list)})
+
+            return format_dict(mode_result)
+
+        @staticmethod
+        def agg_exprs(columns, funcs, *args):
+            """
+            Create and run aggregation
+            :param columns:
+            :param funcs:
+            :param args:
+            :return:
+            """
+            # print(args)
+            return Cols.exec_agg(Cols.create_exprs(columns, funcs, *args))
 
     return Cols()
 
