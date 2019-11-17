@@ -47,6 +47,8 @@ class Actions(Enum):
     VALUES_TO_COLS = "values_to_cols"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
+    MIN_MAX_SCALER = "min_max_scaler"
+    MAX_ABS_SCALER = "max_abs_scaler"
 
     @staticmethod
     def list():

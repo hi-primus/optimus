@@ -1253,7 +1253,7 @@ def cols(self):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-            columns = parse_columns(self, columns)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES + self.constants.STRING_TYPES)
 
             return format_dict(Cols.agg_exprs(columns, self.functions.zeros_agg))
 
@@ -1294,7 +1294,7 @@ def cols(self):
             """
             columns = parse_columns(self, columns)
 
-            check_column_numbers(columns, ">1")
+            check_column_numbers(columns, "*")
 
             result = {}
             for col_name in columns:
@@ -1598,7 +1598,7 @@ def cols(self):
 
                     # Try to infer the array length using the first row
                     if infer_splits is True:
-                        splits = format_dict(self.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
+                        splits = format_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).ext.to_dict())
 
                     expr = F.split(F.col(input_col), separator)
                     final_columns = _final_columns(index, splits, output_col)
@@ -1935,7 +1935,7 @@ def cols(self):
             if infer is True:
                 result = fill_missing_var_types(result, dtypes)
             else:
-                result = Cols.parse_profiler_dtypes(result, dtypes)
+                result = Cols.parse_profiler_dtypes(result)
             return result
 
         @staticmethod
@@ -2161,6 +2161,62 @@ def cols(self):
             df = self
             for col_name in columns:
                 df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
+            return df
+
+        @staticmethod
+        def values_to_cols(input_cols):
+            """
+            Create as many columns as values in an specific column. Fill with '1' the column that match the column value.
+            :param input_cols:
+            :return:
+            """
+            before = self
+            keys = before.cols.names()
+
+            def join_all(_dfs):
+                # _dfs[0].table()
+                if len(_dfs) > 1:
+                    # print(_keys)
+                    return _dfs[0].join(join_all(_dfs[1:]), on=keys, how='inner')
+                else:
+                    return _dfs[0]
+
+            combined = []
+
+            pivot_cols = parse_columns(before, input_cols)
+
+            for pivot_col in pivot_cols:
+                pivotDF = before.groupBy(keys).pivot(pivot_col).count()
+
+                # pivotdf.ext.display()
+                new_names = ["{0}_{1}".format(pivot_col, c) for c in pivotDF.columns[len(keys):]]
+                names = pivotDF.columns[:len(keys)] + new_names
+
+                # names = before.cols.names(keys, invert=True)
+                # print(names)
+                pivotDF = pivotDF.ext.preserve_meta(self)
+                df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
+                df = df.ext.preserve_meta(self, Actions.VALUES_TO_COLS.value, new_names)
+
+                combined.append(df)
+
+            df = join_all(combined)
+
+            return df
+
+        @staticmethod
+        def string_to_index(input_cols=None, output_cols=None, columns=None):
+            """
+            Encodes a string column of labels to a column of label indices
+            :param input_cols:
+            :param output_cols:
+            :param columns:
+            :return:
+            """
+            df = self
+
+            df = ml_string_to_index(df, input_cols, output_cols, columns)
+
             return df
 
         @staticmethod

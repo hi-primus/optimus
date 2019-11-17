@@ -308,7 +308,8 @@ t.run()
 
 source_df.cols.names("rank",["str","int","float"],True)
 
-t.create(None, "cols.count_zeros", None, "dict", None, numeric_col)
+t.create(None, "cols.count_zeros", None, "json", None, numeric_col)
+t.run()
 
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
 t.run()
@@ -332,7 +333,7 @@ t.run()
 t.create(None, "cols.count_uniques", "all_columns", "json",None, "*")
 t.run()
 
-t.create(None, "cols.unique", None, "dict", None,numeric_col)
+t.create(None, "cols.unique", None, "json", None,numeric_col)
 t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", None,"*")
@@ -355,6 +356,12 @@ t.create(None, "cols.div", None, "df", [numeric_col, numeric_col_B])
 t.create(None, "cols.div", "all_columns", "df", "*")
 
 t.create(None, "cols.z_score", None, "df", numeric_col)
+
+t.create(None, "cols.min_max_scaler", None, "df",None, numeric_col)
+
+t.create(None, "cols.max_abs_scaler", None, "df",None, numeric_col)
+
+t.run()
 
 t.create(None, "cols.z_score", "all_columns", "df", "*")
 
