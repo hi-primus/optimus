@@ -53,7 +53,7 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', *args, **kwargs):
+    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -62,6 +62,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
+        :param charset:
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
@@ -69,8 +70,8 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-
-            df = dd.read_csv(path, sep=sep, encoding="ISO-8859–1", *args, **kwargs)
+            # "ISO-8859–1"/
+            df = dd.read_csv(path, sep=sep, encoding=charset, *args, **kwargs)
             # df.ext.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)

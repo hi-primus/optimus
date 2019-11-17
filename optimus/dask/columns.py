@@ -8,10 +8,10 @@ from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
-from optimus.abstract.base_cols import BaseCols
 from optimus.dask.dask import Dask
 from optimus.dask.functions import Functions
-from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures, equal_function
+from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures, equal_function, is_column_a, is_list, \
+    is_one_element
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
@@ -21,99 +21,97 @@ from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 def cols(self):
     df = self
 
-    class Cols(BaseCols):
-        def __init__(self):
-            # print(functions)
+    class Cols:
+        # def __init__(self):
+        #     # print(functions)
+        @staticmethod
+        def exec_agg(exprs):
+            """
+            Execute and aggregation
+            :param exprs:
+            :return:
+            """
+            agg_list = Dask.instance.compute(exprs)
 
-            def exec_agg(exprs):
-                """
-                Execute and aggregation
-                :param exprs:
-                :return:
-                """
-                agg_list = Dask.instance.compute(exprs)
-
-                if len(agg_list) > 0:
-                    agg_result = []
-                    # Distributed mode return a list of Futures objects, Single mode not.
-                    if is_list_of_futures(agg_list):
-                        for agg_element in agg_list:
-                            ## Bring results when ready
-                            agg_result.append(agg_element.result())
-                    else:
-                        agg_result = agg_list[0]
-
-                    # Check if __process__ exist arrange the keys
-                    result = {}
-                    for agg_element in agg_result:
-                        if agg_element[0] == "__process__":
-                            # Get agg name and results
-                            for agg_name, agg_results in agg_element[1].items():
-                                result.update(
-                                    {col_name: {agg_name: col_results} for col_name, col_results in
-                                     agg_results.items()})
-                        else:
-                            agg_col_name, agg_element_result = agg_element
-                            if agg_col_name not in result:
-                                result[agg_col_name] = {}
-
-                            result[agg_col_name].update(agg_element_result)
+            if len(agg_list) > 0:
+                agg_result = []
+                # Distributed mode return a list of Futures objects, Single mode not.
+                if is_list_of_futures(agg_list):
+                    for agg_element in agg_list:
+                        ## Bring results when ready
+                        agg_result.append(agg_element.result())
                 else:
-                    result = None
+                    agg_result = agg_list[0]
 
-                return result
-
-            def create_exprs(columns, funcs, *args):
-
-                # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-                filters = {"object": [self.functions.min],
-                           }
-
-                def _filter(_col_name, _func):
-                    for data_type, func_filter in filters.items():
-                        for f in func_filter:
-                            if equal_function(func, f) and \
-                                    self.cols.dtypes(col_name)[col_name] == data_type:
-                                return True
-                    return False
-
-                columns = parse_columns(df, columns)
-                funcs = val_to_list(funcs)
-                exprs = {}
-
-                multi = [self.functions.min, self.functions.max, self.functions.stddev,
-                         self.functions.mean, self.functions.variance, self.functions.percentile_agg]
-
-                for func in funcs:
-                    # Create expression for functions that accepts multiple columns
-
-                    if equal_function(func, multi):
-                        exprs.setdefault("__process__", {}).update(func(columns, args)(df))
-                    # If not process by column
-                    else:
-                        for col_name in columns:
-                            # If the key exist update it
-                            if not _filter(col_name, func):
-                                if col_name in exprs:
-                                    exprs[col_name].update(func(col_name, args)(df))
-                                else:
-                                    exprs[col_name] = func(col_name, args)(df)
-
+                # Check if __process__ exist arrange the keys
                 result = {}
-
-                for k, v in exprs.items():
-                    if k in result:
-                        result[k].update(v)
+                for agg_element in agg_result:
+                    if agg_element[0] == "__process__":
+                        # Get agg name and results
+                        for agg_name, agg_results in agg_element[1].items():
+                            result.update(
+                                {col_name: {agg_name: col_results} for col_name, col_results in
+                                 agg_results.items()})
                     else:
-                        result[k] = {}
-                        result[k] = v
+                        agg_col_name, agg_element_result = agg_element
+                        if agg_col_name not in result:
+                            result[agg_col_name] = {}
 
-                # Convert to list
-                result = [r for r in result.items()]
+                        result[agg_col_name].update(agg_element_result)
+            else:
+                result = None
 
-                return result
+            return result
 
-            super().__init__(df, Functions(), exec_agg, create_exprs)
+        def create_exprs(columns, funcs, *args):
+
+            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+            filters = {"object": [self.functions.min],
+                       }
+
+            def _filter(_col_name, _func):
+                for data_type, func_filter in filters.items():
+                    for f in func_filter:
+                        if equal_function(func, f) and \
+                                self.cols.dtypes(col_name)[col_name] == data_type:
+                            return True
+                return False
+
+            columns = parse_columns(df, columns)
+            funcs = val_to_list(funcs)
+            exprs = {}
+
+            multi = [self.functions.min, self.functions.max, self.functions.stddev,
+                     self.functions.mean, self.functions.variance, self.functions.percentile_agg]
+
+            for func in funcs:
+                # Create expression for functions that accepts multiple columns
+
+                if equal_function(func, multi):
+                    exprs.setdefault("__process__", {}).update(func(columns, args)(df))
+                # If not process by column
+                else:
+                    for col_name in columns:
+                        # If the key exist update it
+                        if not _filter(col_name, func):
+                            if col_name in exprs:
+                                exprs[col_name].update(func(col_name, args)(df))
+                            else:
+                                exprs[col_name] = func(col_name, args)(df)
+
+            result = {}
+
+            for k, v in exprs.items():
+                if k in result:
+                    result[k].update(v)
+                else:
+                    result[k] = {}
+                    result[k] = v
+
+            # Convert to list
+            result = [r for r in result.items()]
+
+            return result
 
         # TODO: Check if we must use * to select all the columns
         @staticmethod

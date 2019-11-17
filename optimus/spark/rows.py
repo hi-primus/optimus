@@ -8,7 +8,8 @@ from pyspark.sql import functions as F
 import optimus as op
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_spark_dataframe
-from optimus.helpers.columns import parse_columns, validate_columns_names
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import Actions
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.raiseit import RaiseIt
@@ -17,9 +18,19 @@ from optimus.helpers.raiseit import RaiseIt
 def rows(self):
     class Rows:
         @staticmethod
+        def create_id(column="id"):
+            """
+            Create a unique id for every row.
+            :param column: Columns to be processed
+            :return:
+            """
+
+            return self.withColumn(column, F.monotonically_increasing_id())
+
+        @staticmethod
         def append(rows):
             """
-            Append a row at the end of a spark
+            Append a row at the end of a dataframe
             :param rows: List of values or tuples to be appended
             :return: Spark DataFrame
             """
@@ -38,6 +49,9 @@ def rows(self):
                 df_result = append_df(row, like="rows")
             else:
                 RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
+
+            df_result = df_result.preserve_meta(self, Actions.NEST.value, df.cols.names())
+
             return df_result
 
         @staticmethod
@@ -69,7 +83,7 @@ def rows(self):
             return self.count()
 
         @staticmethod
-        def select(*args, **kwargs):
+        def select(*args, **kwargs) -> DataFrame:
             """
             Alias of Spark filter function. Return rows that match a expression
             :param args:
@@ -90,7 +104,7 @@ def rows(self):
 
         @staticmethod
         @dispatch(str)
-        def sort(input_cols):
+        def sort(input_cols) -> DataFrame:
             """
             Sort column by row
             """
@@ -99,7 +113,7 @@ def rows(self):
 
         @staticmethod
         @dispatch(str, str)
-        def sort(columns, order="desc"):
+        def sort(columns, order="desc") -> DataFrame:
             """
             Sort column by row
             """
@@ -108,7 +122,7 @@ def rows(self):
 
         @staticmethod
         @dispatch(list)
-        def sort(col_sort):
+        def sort(col_sort) -> DataFrame:
             """
             Sort rows taking in account multiple columns
             :param col_sort: column and sort type combination (col_name, "asc")
@@ -132,32 +146,40 @@ def rows(self):
                     sort_func = F.asc
                 elif order == "desc":
                     sort_func = F.desc
+
                 func.append(sort_func(col_name))
             df = self.sort(*func)
             return df
 
         @staticmethod
-        def drop(where=None):
+        def drop(where=None) -> DataFrame:
             """
             Drop a row depending on a spark expression
             :param where: Expression used to drop the row
             :return: Spark DataFrame
             """
-            return self.where(~where)
+            df = self
+            df = df.where(~where)
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
-        def drop_by_dtypes(input_cols, data_type=None):
+        def drop_by_dtypes(input_cols, data_type=None) -> DataFrame:
             """
             Drop rows by cell data type
-            :param input_cols: Column in which the filter is going to be apllied
+            :param input_cols: Column in which the filter is going to be applied
             :param data_type: filter by string, integer, float or boolean
             :return: Spark DataFrame
             """
-            validate_columns_names(self, input_cols)
-            return self.rows.drop(fbdt(input_cols, data_type))
+            df = self
+            input_cols = parse_columns(df, input_cols)
+
+            df = df.rows.drop(fbdt(input_cols, data_type))
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
-        def drop_na(input_cols, how="any"):
+        def drop_na(input_cols, how="any") -> DataFrame:
             """
             Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
             'any' of the values is null.
@@ -168,20 +190,26 @@ def rows(self):
             :return: Returns a new DataFrame omitting rows with null values.
             """
 
+            df = self
             input_cols = parse_columns(self, input_cols)
 
-            return self.dropna(how, subset=input_cols)
+            df = df.dropna(how, subset=input_cols)
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
-        def drop_duplicates(input_cols=None):
+        def drop_duplicates(input_cols=None) -> DataFrame:
             """
             Drop duplicates values in a spark
             :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
             for dropping duplicates. The default behavior will only drop the whole identical rows.
             :return: Return a new DataFrame with duplicate rows removed
             """
+            df = self
             input_cols = parse_columns(self, input_cols)
-            return self.drop_duplicates(subset=input_cols)
+            df = df.drop_duplicates(subset=input_cols)
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
         def drop_first():
@@ -191,27 +219,41 @@ def rows(self):
             """
             return self.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
 
+        @staticmethod
+        def limit(count) -> DataFrame:
+            """
+            Limit the number of rows
+            :param count:
+            :return:
+            """
+            df = self
+            df = df.limit(count)
+            df = df.meta.preserve(self)
+            return df
+
         # TODO: Merge with select
         @staticmethod
-        def is_in(columns, values):
+        def is_in(input_cols, values) -> DataFrame:
             """
             Filter rows which columns that match a specific value
             :return: Spark DataFrame
             """
+            df = self
 
             # Ensure that we have a list
             values = val_to_list(values)
 
             # Create column/value expression
-            column_expr = [(F.col(columns) == v) for v in values]
+            column_expr = [(F.col(input_cols) == v) for v in values]
 
             # Concat expression with and logical or
             expr = reduce(lambda a, b: a | b, column_expr)
-
-            return self.rows.select(expr)
+            df = df.rows.select(expr)
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
-        def unnest(input_cols):
+        def unnest(input_cols) -> DataFrame:
             """
             Convert a list in a rows to multiple rows with the list values
             :param input_cols:
@@ -219,10 +261,12 @@ def rows(self):
             """
             input_cols = parse_columns(self, input_cols)[0]
             df = self
-            return df.withColumn(input_cols, F.explode(input_cols))
+            df = df.withColumn(input_cols, F.explode(input_cols))
+            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+            return df
 
         @staticmethod
-        def approx_count(timeout=1000, confidence=0.90):
+        def approx_count(timeout=1000, confidence=0.90) -> DataFrame:
             """
             Return aprox rows count
             :param timeout:

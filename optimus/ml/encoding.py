@@ -54,7 +54,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
 
-    df = df.ext.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+    df = df.meta.preserve(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
 
     return df
 

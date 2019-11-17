@@ -179,7 +179,7 @@ class Profiler:
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
 
-        actions = df.ext.get_meta("transformations.actions")
+        actions = df.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -195,7 +195,7 @@ class Profiler:
                     :return:
                     """
 
-                    _actions_json = df.ext.get_meta("transformations.actions")
+                    _actions_json = df.meta.get("transformations.actions")
 
                     modified = []
                     for action in _actions:
@@ -217,7 +217,7 @@ class Profiler:
                     :return:
                     """
                     _renamed_columns = []
-                    _actions = df.ext.get_meta("transformations.actions")
+                    _actions = df.meta.get("transformations.actions")
                     _rename = _actions.get("rename")
 
                     def get_name(_col_name):
@@ -246,14 +246,14 @@ class Profiler:
                 new_columns = []
 
                 current_col_names = df.cols.names()
-                renamed_cols = match_renames(df.ext.get_meta("transformations.columns"))
+                renamed_cols = match_renames(df.meta.get("transformations.columns"))
                 for current_col_name in current_col_names:
                     if current_col_name not in renamed_cols:
                         new_columns.append(current_col_name)
 
                 # Rename keys to match new names
                 profiler_columns = self.output_columns["columns"]
-                actions = df.ext.get_meta("transformations.actions")
+                actions = df.meta.get("transformations.actions")
                 rename = actions.get("rename")
                 if rename:
                     for k, v in actions["rename"].items():
@@ -265,7 +265,7 @@ class Profiler:
                     profiler_columns.pop(col_names)
 
                 # Copy Keys
-                copy_columns = df.ext.get_meta("transformations.actions.copy")
+                copy_columns = df.meta.get("transformations.actions.copy")
                 if copy_columns is not None:
                     for source, target in copy_columns.items():
                         profiler_columns[target] = profiler_columns[source].copy()
@@ -329,7 +329,7 @@ class Profiler:
                 output_columns = update_dict(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
-                assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
+                assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 # Add the General data summary to the output
                 data_set_info = {'cols_count': cols_count,

@@ -374,7 +374,7 @@ def ext(self):
             """
             df = self
             if spec is not None:
-                target = df.ext.get_meta()
+                target = df.meta.get()
                 data = assign(target, spec, value, missing=missing)
             else:
                 data = value

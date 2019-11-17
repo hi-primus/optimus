@@ -22,7 +22,6 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
-from optimus.abstract.abstract_cols import AbstractCols
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.engines.spark import SparkEngine
@@ -50,7 +49,7 @@ python_set = set
 
 
 def cols(self):
-    class Cols(AbstractCols):
+    class Cols:
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -124,7 +123,7 @@ def cols(self):
             if columns is not None:
                 df = df.select(columns)
                 # Metadata get lost when using select(). So we copy here again.
-                df = df.ext.preserve_meta(self)
+                df = df.meta.preserve(self)
 
             else:
                 df = None
@@ -153,7 +152,7 @@ def cols(self):
                 columns = list(zip(input_cols, output_cols))
 
             for input_col, output_col in columns:
-                current_meta = self.ext.get_meta()
+                current_meta = self.meta.get()
                 df = df.withColumn(output_col, F.col(input_col))
                 df = df.ext.set_meta(value=current_meta)
                 df = df.copy_meta({input_col: output_col})
@@ -239,7 +238,7 @@ def cols(self):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 df = df.withColumn(output_col, expr(when))
-                df = df.ext.preserve_meta(self, meta, output_col)
+                df = df.meta.preserve(self, meta, output_col)
 
             return df
 
@@ -287,7 +286,7 @@ def cols(self):
                 RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
             df = df.withColumn(output_col, expr)
-            df = df.ext.preserve_meta(self, Actions.SET.value, columns)
+            df = df.meta.preserve(self, Actions.SET.value, columns)
             return df
 
         # TODO: Check if we must use * to select all the columns
@@ -315,7 +314,7 @@ def cols(self):
                     old_col_name = col_name[0]
                     new_col_name = col_name[1]
 
-                    # current_meta = self.ext.get_meta()
+                    # current_meta = self.meta.get()
 
                     if is_str(old_col_name):
                         df = df.withColumnRenamed(old_col_name, new_col_name)
@@ -323,8 +322,8 @@ def cols(self):
                         old_col_name = self.schema.names[old_col_name]
                         df = df.withColumnRenamed(old_col_name, new_col_name)
 
-                    df = df.ext.preserve_meta(self)
-                    df = df.ext.rename_meta((old_col_name, new_col_name))
+                    df = df.meta.preserve(self)
+                    df = df.meta.rename_action((old_col_name, new_col_name))
             return df
 
         @staticmethod
@@ -492,7 +491,7 @@ def cols(self):
             columns = parse_columns(self, columns)
 
             df = df.cols.select(columns)
-            df = df.ext.action_meta("keep", columns)
+            df = df.meta.action_meta("keep", columns)
             return df
 
         # TODO: Create a function to sort by datatype?
@@ -538,7 +537,7 @@ def cols(self):
 
             df = df.drop(*columns)
 
-            df = df.ext.preserve_meta(self, "drop", columns)
+            df = df.meta.preserve(self, "drop", columns)
 
             return df
 
@@ -1113,7 +1112,7 @@ def cols(self):
                     df = df.cols.cast(input_col, "str", output_col)
 
                 df = func(df, input_col, output_col, search, replace_by)
-                df = df.ext.preserve_meta(self, Actions.REPLACE.value, output_col)
+                df = df.meta.preserve(self, Actions.REPLACE.value, output_col)
             return df
 
         @staticmethod
@@ -1506,7 +1505,7 @@ def cols(self):
 
                 df = vector_assembler.transform(df)
 
-                df = df.ext.preserve_meta(self, Actions.NEST.value, output_col)
+                df = df.meta.preserve(self, Actions.NEST.value, output_col)
 
             elif shape is "array":
                 # Arrays needs all the elements with the same data type. We try to cast to type
@@ -1520,7 +1519,7 @@ def cols(self):
             else:
                 RaiseIt.value_error(shape, ["vector", "array", "string"])
 
-            df = df.ext.preserve_meta(self, Actions.NEST.value, output_col)
+            df = df.meta.preserve(self, Actions.NEST.value, output_col)
             return df
 
         @staticmethod
@@ -1627,7 +1626,7 @@ def cols(self):
 
                 else:
                     RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-                df = df.ext.preserve_meta(self, Actions.UNNEST.value, [v for k, v in final_columns])
+                df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
             return df
 
         @staticmethod
@@ -2194,9 +2193,9 @@ def cols(self):
 
                 # names = before.cols.names(keys, invert=True)
                 # print(names)
-                pivotDF = pivotDF.ext.preserve_meta(self)
+                pivotDF = pivotDF.meta.preserve(self)
                 df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
-                df = df.ext.preserve_meta(self, Actions.VALUES_TO_COLS.value, new_names)
+                df = df.meta.preserve(self, Actions.VALUES_TO_COLS.value, new_names)
 
                 combined.append(df)
 

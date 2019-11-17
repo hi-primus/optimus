@@ -5,7 +5,6 @@ import humanize
 import imgkit
 import jinja2
 import math
-from glom import glom, assign
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -31,15 +30,6 @@ DataFrame.output = "html"
 
 def ext(self):
     class Ext:
-        @staticmethod
-        def init():
-            df = self
-            if Ext.get_meta("optimus.init") is None:
-                # Save columns as the data set original name
-                for col_name in df.cols.names():
-                    df = df.cols.set_meta(col_name, "optimus.name", col_name)
-                    df = df.cols.set_meta(col_name, "optimus.transformations", [])
-            return df
 
         @staticmethod
         def roll_out():
@@ -263,7 +253,7 @@ def ext(self):
             :param value:
             :return:
             """
-            Ext.set_meta("name", value)
+            self.meta.set("name", value)
             if not is_str(value):
                 RaiseIt.type_error(value, ["string"])
 
@@ -296,15 +286,6 @@ def ext(self):
             :return:
             """
             return self.rdd.partitioner
-
-        # @add_attr(DataFrame)
-        # def glom(self):
-        #     """
-        #
-        #     :param self: Spark Dataframe
-        #     :return:
-        #     """
-        #     return collect_as_dict(self.rdd.glom().collect()[0])
 
         @staticmethod
         def repartition(partitions_number=None, col_name=None):
@@ -394,15 +375,15 @@ def ext(self):
 
             if count is True:
                 total_rows = self.rows.approx_count()
+
+                if limit == "all":
+                    limit = total_rows
+                elif total_rows < limit:
+                    limit = total_rows
+
+                total_rows = humanize.intword(total_rows)
             else:
-                count = None
-
-            if limit == "all":
-                limit = total_rows
-            elif total_rows < limit:
-                limit = total_rows
-
-            total_rows = humanize.intword(total_rows)
+                total_rows = None
 
             total_cols = self.cols.count()
             total_partitions = Ext.partitions()
@@ -464,16 +445,6 @@ def ext(self):
             print(self.rdd.toDebugString().decode("ascii"))
 
         @staticmethod
-        def create_id(column="id"):
-            """
-            Create a unique id for every row.
-            :param column: Columns to be processed
-            :return:
-            """
-
-            return self.withColumn(column, F.monotonically_increasing_id())
-
-        @staticmethod
         def send(name: str = None, infer: bool = True, mismatch=None, stats: bool = True, advanced_stats: bool = True,
                  output: str = "http"):
             """
@@ -503,185 +474,11 @@ def ext(self):
             else:
                 raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
-        # @staticmethod
-        # def append_meta(spec, value):
-        #     target = self.get_meta()
-        #     data = glom(target, (spec, T.append(value)))
-        #
-        #     df = self
-        #     df.schema[-1].metadata = data
-        #     return df
-
         @staticmethod
         def reset():
-            df = Ext.set_meta("transformations.actions", {})
+            df = self.meta.set("transformations.actions", {})
             Profiler.instance.output_columns = {}
             return df
-
-        @staticmethod
-        def copy_meta(old_new_columns):
-            """
-            Shortcut to add transformations to a dataframe
-            :param old_new_columns:
-            :return:
-            """
-
-            key = "transformations.actions.copy"
-
-            df = self
-
-            copy_cols = df.get_meta(key)
-            if copy_cols is None:
-                copy_cols = {}
-            copy_cols.update(old_new_columns)
-
-            df = df.set_meta(key, copy_cols)
-
-            return df
-
-        @staticmethod
-        def rename_meta(old_new_columns):
-            """
-            Shortcut to add transformations to a dataframe
-            :param old_new_columns:
-            :return:
-            """
-            key = "transformations.actions.rename"
-
-            df = self
-            renamed_cols = df.ext.get_meta(key)
-            old_col, new_col = old_new_columns
-            if renamed_cols is None or old_col not in list(renamed_cols.values()):
-                df = df.ext.update_meta(key, {old_col: new_col}, dict)
-            else:
-                # This update a key
-                for k, v in renamed_cols.items():
-                    n, m = old_new_columns
-                    if v == n:
-                        renamed_cols[k] = m
-
-                df = df.ext.set_meta(key, renamed_cols)
-            return df
-
-        @staticmethod
-        def columns_meta(value):
-            """
-            Shortcut to add transformations to a dataframe
-            :param value:
-            :return:
-            """
-            df = self
-            value = val_to_list(value)
-            for v in value:
-                df = df.ext.update_meta("transformations.columns", v, list)
-            return df
-
-        @staticmethod
-        def action_meta(key, value):
-            """
-            Shortcut to add transformations to a dataframe
-            :param self:
-            :param key:
-            :param value:
-            :return:
-            """
-            df = self
-            value = val_to_list(value)
-            for v in value:
-                df = df.ext.update_meta("transformations.actions." + key, v, list)
-            return df
-
-        @staticmethod
-        def preserve_meta(old_df, key=None, value=None):
-            """
-            In some cases we need to preserve metadata actions before a destructive dataframe transformation.
-            :param old_df: The Spark dataframe you want to coyp the metadata
-            :param key:
-            :param value:
-            :return:
-            """
-            old_meta = old_df.ext.get_meta()
-            new_meta = Ext.get_meta()
-
-            new_meta.update(old_meta)
-            if key is None or value is None:
-                return Ext.set_meta(value=new_meta)
-            else:
-
-                return Ext.set_meta(value=new_meta).ext.action_meta(key, value)
-
-        @staticmethod
-        def update_meta(path, value, default=list):
-            """
-            Append meta data to a key
-            :param path:
-            :param value:
-            :param default:
-            :return:
-            """
-
-            df = self
-
-            new_meta = df.ext.get_meta()
-            if new_meta is None:
-                new_meta = {}
-
-            elements = path.split(".")
-            result = new_meta
-            for i, ele in enumerate(elements):
-                if ele not in result and not len(elements) - 1 == i:
-                    result[ele] = {}
-
-                if len(elements) - 1 == i:
-                    if default is list:
-                        result.setdefault(ele, []).append(value)
-                    elif default is dict:
-                        result.setdefault(ele, {}).update(value)
-                else:
-                    result = result[ele]
-
-            df = df.ext.set_meta(value=new_meta)
-            return df
-
-        @staticmethod
-        def set_meta(spec=None, value=None, missing=dict):
-            """
-            Set metadata in a dataframe columns
-            :param self:
-            :param spec: path to the key to be modified
-            :param value: dict value
-            :param missing:
-            :return:
-            """
-            if spec is not None:
-                target = Ext.get_meta()
-                data = assign(target, spec, value, missing=missing)
-            else:
-                data = value
-
-            df = self
-            df.schema[-1].metadata = data
-            return df
-
-        @staticmethod
-        def get_meta(spec=None):
-            """
-            Get metadata from a dataframe column
-            :param spec: path to the key to be modified
-            :return:
-            """
-            data = self.schema[-1].metadata
-            if spec is not None:
-                data = glom(data, spec, skip_exc=KeyError)
-            return data
-
-        @property
-        def meta(self):
-            return Ext.get_meta()
-
-        @meta.setter
-        def meta(self, metadata):
-            Ext.set_meta(value=metadata)
 
     return Ext()
 
