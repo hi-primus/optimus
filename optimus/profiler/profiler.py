@@ -328,7 +328,7 @@ class Profiler:
 
                 output_columns = update_dict(output_columns, updated_columns)
 
-                assign(output_columns, "name", df.ext.get_name(), dict)
+                assign(output_columns, "name", df.get_name(), dict)
                 assign(output_columns, "file_name", df.ext.get_meta("file_name"), dict)
 
                 # Add the General data summary to the output
