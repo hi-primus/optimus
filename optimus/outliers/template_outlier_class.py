@@ -1,4 +1,4 @@
-# TODO: We shold implement this has and interface
+# TODO: We should implement this as an interface
 class TemplateOutlierClass:
     """
     This is a template class to expand the outliers methods

@@ -1,3 +1,5 @@
+import json
+
 from pyspark.sql import DataFrame
 
 from optimus.helpers.converter import val_to_list
@@ -39,7 +41,9 @@ class JDBC:
         self.driver_properties = self.driver_context.properties()
 
         if port is None:
-            self.port = self.driver_properties.value["port"]
+            port = self.driver_properties.value["port"]
+
+        self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
         self.url = self.driver_context.url(
@@ -82,11 +86,13 @@ class JDBC:
         """
 
         # Override the schema used in the constructors
-        if schema is None: schema = self.schema
+        if schema is None:
+            schema = self.schema
         query = self.driver_context.table_name_query(schema=schema, database=self.database)
         table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i[table_name] for i in df.to_dict()]
+
+        return json.dumps([i[table_name] for i in df.to_dict()])
 
     @property
     def table(self):
@@ -126,6 +132,9 @@ class JDBC:
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         df = df.run()
+        df.set_meta("file_name", table_name)
+        df.reset()
+
         return df
 
     def execute(self, query, limit=None):

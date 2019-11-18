@@ -11,7 +11,7 @@ patch()
 from .dataframe import rows, columns, extension
 from .dataframe.plots import plots
 from .io import save
-# from optimus.outliers import outliers
+from optimus.outliers import outliers
 # from optimus.profiler.profiler import Profiler
 # from optimus.bumblebee import Comm
 

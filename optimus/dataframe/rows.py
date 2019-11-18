@@ -124,6 +124,8 @@ def rows(self):
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
+        df = self
+
         t = []
         if is_list_of_str_or_int(col_sort):
             for col_name in col_sort:
@@ -131,7 +133,6 @@ def rows(self):
             col_sort = t
 
         func = []
-
         for cs in col_sort:
             col_name = one_list_to_val(cs[0])
             order = cs[1]
@@ -140,8 +141,13 @@ def rows(self):
                 sort_func = F.asc
             elif order == "desc":
                 sort_func = F.desc
+            else:
+                RaiseIt.value_error(sort_func, ["asc", "desc"])
+
             func.append(sort_func(col_name))
-        df = self.sort(*func)
+            df = df.preserve_meta(self, Actions.SORT_ROW.value, col_name)
+
+        df = df.sort(*func)
         return df
 
     @add_attr(rows)

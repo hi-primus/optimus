@@ -1398,7 +1398,7 @@ def cols(self):
     @add_attr(cols)
     def z_score(input_cols, output_cols=None):
         """
-        Return the column data type
+        Return the column z score
         :param input_cols: '*', list of columns names or a single column name
         :param output_cols:
         :return:
@@ -1411,6 +1411,44 @@ def cols(self):
 
         return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
                      meta=Actions.Z_SCORE.value)
+
+    @add_attr(cols)
+    def min_max_scaler(input_cols, output_cols=None):
+        """
+        Return the column min max scaler result
+        :param input_cols: '*', list of columns names or a single column name
+        :param output_cols:
+        :return:
+        """
+
+        def _min_max(col_name, attr):
+            range_value = self.cols.range(col_name)
+            min_value = range_value[col_name]["range"]["min"]
+            max_value = range_value[col_name]["range"]["max"]
+            return F.abs((F.col(col_name) - min_value) / max_value - min_value)
+
+        return apply(input_cols, func=_min_max, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
+                     meta=Actions.MIN_MAX_SCALER.value)
+
+    @add_attr(cols)
+    def max_abs_scaler(input_cols, output_cols=None):
+        """
+        Return the max abs scaler result
+        :param input_cols: '*', list of columns names or a single column name
+        :param output_cols:
+        :return:
+        """
+
+        def _result(col_name, attr):
+            def max_abs(col_name):
+                return F.max(F.abs(F.col(col_name)))
+
+            max_abs_result = format_dict(agg_exprs(input_cols, max_abs))
+
+            return (F.col(col_name)) / max_abs_result
+
+        return apply(input_cols, func=_result, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
+                     meta=Actions.MAX_ABS_SCALER.value)
 
     @add_attr(cols)
     def iqr(columns, more=None, relative_error=RELATIVE_ERROR):

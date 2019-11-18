@@ -48,7 +48,7 @@ class Comm:
             self.api_url = api_url
 
         if queue_name is None:
-            self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "QueueName", str(uuid.uuid4()))
+            self.queue_name = save_config_key("bumblebee.ini", "DEFAULT", "session", str(uuid.uuid4()))
         else:
             self.queue_name = queue_name
 
