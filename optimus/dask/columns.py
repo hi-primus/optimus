@@ -17,11 +17,12 @@ from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
+# Some expression accepts multiple columns at the same time.
+PROCESS_MULTIPLE_COLUMNS = "__process__"
+
 
 def cols(self: DataFrame):
     class Cols:
-        # def __init__(self):
-        #     # print(functions)
         @staticmethod
         def exec_agg(exprs):
             """
@@ -30,47 +31,60 @@ def cols(self: DataFrame):
             :return:
             """
 
-            def parse_percentile(value):
-                _result = {}
-                value = value[0][1]["percentile"]
-                for (col_name, row) in value.iteritems():
-                    for c in row.items():
-                        _result.setdefault(col_name, {})
-                        _result[col_name].setdefault("percentile", {})
-                        _result[col_name]["percentile"][c[0]] = c[1]
-                return _result
-
             agg_list = Dask.instance.compute(exprs)
 
             if len(agg_list) > 0:
-                agg_result = []
+                agg_results = []
                 # Distributed mode return a list of Futures objects, Single mode not.
                 if is_list_of_futures(agg_list):
                     for future in as_completed(agg_list):
-                        agg_result.append(future.result())
+                        agg_results.append(future.result())
                 else:
-                    agg_result = agg_list[0]
+                    agg_results = agg_list[0]
 
-                # Check if __process__ exist arrange the keys
                 result = {}
-                for agg_element in agg_result:
-                    if agg_element[0] == "__process__":
-                        # Get agg name and results
-                        for agg_name, agg_results in agg_element[1].items():
-                            # print(agg_result)
-                            if agg_name == "percentile":
-                                agg_parsed = parse_percentile(agg_result)
-                            else:
-                                agg_parsed = agg_result
-                            result.update(
-                                {col_name: {agg_name: col_results} for col_name, col_results in
-                                 agg_parsed.items()})
-                    else:
-                        agg_col_name, agg_element_result = agg_element
-                        if agg_col_name not in result:
-                            result[agg_col_name] = {}
+                # print("AGG_RESULT", agg_result)
+                for agg_element in agg_results:
+                    agg_col_name, agg_element_result = agg_element
+                    if agg_col_name not in result:
+                        result[agg_col_name] = {}
 
-                        result[agg_col_name].update(agg_element_result)
+                    result[agg_col_name].update(agg_element_result)
+
+                # Parsing results
+                def parse_percentile(value):
+                    _result = {}
+
+                    for (p_value, p_result) in value.iteritems():
+                        _result.setdefault(p_value, p_result)
+                    return _result
+
+                def parse_hist(value):
+                    x = value["count"]
+                    y = value["bins"]
+                    _result = []
+                    for idx, v in enumerate(y):
+                        if idx < len(y) - 1:
+                            _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
+                    return _result
+
+                # def parse_single(value):
+                #     _result = value
+                #     return _result
+
+                # print("RESULT", result)
+                for columns in result.values():
+                    for agg_name, agg_results in columns.items():
+                        if agg_name == "percentile":
+                            agg_parsed = parse_percentile(agg_results)
+                        elif agg_name == "hist":
+                            agg_parsed = parse_hist(agg_results)
+                        # elif agg_name in ["min", "max", "stddev", "mean", "variance"]:
+                        #     agg_parsed = parse_single(agg_results)
+                        else:
+                            agg_parsed = agg_results
+                        columns[agg_name] = agg_parsed
+
             else:
                 result = None
 
@@ -101,17 +115,17 @@ def cols(self: DataFrame):
             for func in funcs:
                 # Create expression for functions that accepts multiple columns
 
-                if equal_function(func, multi):
-                    exprs.setdefault("__process__", {}).update(func(columns, args)(df))
-                # If not process by column
-                else:
-                    for col_name in columns:
-                        # If the key exist update it
-                        if not _filter(col_name, func):
-                            if col_name in exprs:
-                                exprs[col_name].update(func(col_name, args)(df))
-                            else:
-                                exprs[col_name] = func(col_name, args)(df)
+                # if equal_function(func, multi):
+                #     exprs.setdefault(PROCESS_MULTIPLE_COLUMNS, {}).update(func(columns, args)(df))
+                # # If not process by column
+                # else:
+                for col_name in columns:
+                    # If the key exist update it
+                    if not _filter(col_name, func):
+                        if col_name in exprs:
+                            exprs[col_name].update(func(col_name, args)(df))
+                        else:
+                            exprs[col_name] = func(col_name, args)(df)
 
             result = {}
 

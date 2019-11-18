@@ -133,11 +133,12 @@ def functions(self):
             if min_max is None:
                 min_max = df.cols.range(col_name)[col_name]
 
-            def hist_agg_(serie):
 
-                h, b = da.histogram(serie[col_name], bins=bins , range=[min_max["min"], min_max["max"]])
+            def hist_agg_(serie):
+                # print(serie, bins, min_max)
+                h, b = da.histogram(serie[col_name], bins=bins, range=[min_max["min"], min_max["max"]])
                 return {
-                    "hist_agg": h}
+                    "hist": {"count": h, "bins": b}}
 
             return hist_agg_
 
