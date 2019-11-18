@@ -508,6 +508,11 @@ def cols(self: DataFrame):
             return result
 
         @staticmethod
+        def hist(columns, buckets=20):
+            result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets,[1,10])
+            return result
+
+        @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):
             columns = parse_columns(self, columns)
             df = self
