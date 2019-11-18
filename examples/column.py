@@ -29,7 +29,7 @@ sys.path.append("..")
 #
 # In this notebook you can see a detailed overview ok all the columns operations available in Optimus. You can access the operation via df.cols.
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 
 # Create optimus
 op = Optimus()

@@ -61,47 +61,6 @@ def functions(self):
 
             return _percentile
 
-        # @staticmethod
-        # def min(col_name, args):
-        #     def min_(serie):
-        #         return {"min": serie[col_name].min()}
-        #
-        #     return min_
-        #
-        # @staticmethod
-        # def max(col_name, args):
-        #     def max_(serie):
-        #         return {"max": serie[col_name].max()}
-        #
-        #     return max_
-        #
-        # @staticmethod
-        # def stddev(col_name, args):
-        #     def std_(serie):
-        #         return {"stddev": serie[col_name].max()}
-        #
-        #     return std_
-        # @staticmethod
-        # def mean(col_name, args):
-        #     def _mean(serie):
-        #         return {"mean": serie[col_name].mean()}
-        #
-        #     return _mean
-        #
-        # @staticmethod
-        # def sum(col_name, args):
-        #     def std_(serie):
-        #         return {"sum": serie[col_name].sum()}
-        #
-        #     return std_
-        #
-        # @staticmethod
-        # def variance(col_name, args):
-        #     def var_(serie):
-        #         return {"variance": serie[col_name].var()}
-        #
-        #     return var_
-
         @staticmethod
         def zeros_agg(col_name, args):
 
@@ -132,7 +91,6 @@ def functions(self):
 
             if min_max is None:
                 min_max = df.cols.range(col_name)[col_name]
-
 
             def hist_agg_(serie):
                 # print(serie, bins, min_max)

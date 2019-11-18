@@ -24,7 +24,7 @@ sys.path.append("..")
 # ### Now you can get extra information for the profiler if you activate pass verbose= True to optimus
 
 # Create optimus
-from optimus import optimus as Optimus
+from optimus import Optimus
 op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True, verbose=True)
 
 df = op.load.csv("data/Meteorite_Landings.csv").h_repartition()

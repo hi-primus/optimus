@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 from optimus.helpers.columns import name_col
 from optimus.spark.ml import keycollision
 from optimus.spark.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \

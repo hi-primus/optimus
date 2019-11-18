@@ -65,7 +65,7 @@ sys.path.append(repo_path)
 
 # ## Import Optimus and start it
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 
 op = Optimus(master="local")
 

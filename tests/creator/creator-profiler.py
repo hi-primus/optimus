@@ -26,7 +26,7 @@ import sys
 sys.path.append("../..")
 # -
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 from optimus.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)

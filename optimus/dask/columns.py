@@ -2,11 +2,11 @@ import re
 from ast import literal_eval
 
 import dask.dataframe as dd
+import fastnumbers
 import numpy as np
 from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
 from dateutil.parser import parse as dparse
-from fastnumbers import isint, isfloat
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
@@ -18,7 +18,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 # Some expression accepts multiple columns at the same time.
-PROCESS_MULTIPLE_COLUMNS = "__process__"
+python_set = set
 
 
 def cols(self: DataFrame):
@@ -68,11 +68,6 @@ def cols(self: DataFrame):
                             _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
                     return _result
 
-                # def parse_single(value):
-                #     _result = value
-                #     return _result
-
-                # print("RESULT", result)
                 for columns in result.values():
                     for agg_name, agg_results in columns.items():
                         if agg_name == "percentile":
@@ -109,16 +104,9 @@ def cols(self: DataFrame):
             funcs = val_to_list(funcs)
             exprs = {}
 
-            multi = [self.functions.min, self.functions.max, self.functions.stddev,
-                     self.functions.mean, self.functions.variance, self.functions.percentile_agg]
-
             for func in funcs:
                 # Create expression for functions that accepts multiple columns
 
-                # if equal_function(func, multi):
-                #     exprs.setdefault(PROCESS_MULTIPLE_COLUMNS, {}).update(func(columns, args)(df))
-                # # If not process by column
-                # else:
                 for col_name in columns:
                     # If the key exist update it
                     if not _filter(col_name, func):
@@ -207,8 +195,11 @@ def cols(self: DataFrame):
             return len(self)
 
         @staticmethod
-        def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
-            def parse(value, col_name, _infer, _dtypes, _str_funcs, _int_funcs):
+        def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+            def parse1(value, _infer, _dtypes, _str_funcs, _int_funcs):
+                print("PARSE", (value, _infer, _dtypes, _str_funcs, _int_funcs))
+
+                col_name, value = value
 
                 def str_to_boolean(_value):
                     _value = _value.lower()
@@ -240,7 +231,7 @@ def cols(self: DataFrame):
                     return str_to_data_type(_value, (list, tuple))
 
                 def str_to_object(_value):
-                    return str_to_data_type(_value, (dict, set))
+                    return str_to_data_type(_value, (dict, python_set))
 
                 def str_to_data_type(_value, _dtypes):
                     """
@@ -295,8 +286,7 @@ def cols(self: DataFrame):
                     return False
 
                 def str_to_missing(_value):
-                    # print(_value)
-                    if _value == "":
+                    if value == "":
                         return True
 
                 # Try to order the functions from less to more computational expensive
@@ -309,20 +299,39 @@ def cols(self: DataFrame):
                         (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"), (str_to_url, "url"),
                         (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
                     ]
-                # print(_dtypes)
+
+                mismatch_count = 0
+                if _dtypes[col_name] == "string" and mismatch is not None:
+                    # Here we can create a list of predefined functions
+                    regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
+                                  "yyyy-mm-dd": '([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
+                                  }
+
+                    if col_name in mismatch:
+                        predefined = mismatch[col_name]
+                        if predefined in regex_list:
+                            expr = regex_list[predefined]
+                        else:
+                            expr = mismatch[col_name]
+                        regex = re.compile(expr)
+                        if regex.match(value):
+                            mismatch_count = 0
+                        else:
+                            mismatch_count = 1
+
                 if _dtypes[col_name] == "string" and infer is True:
 
                     if isinstance(value, bool):
                         _data_type = "boolean"
 
-                    elif isint(value):  # Check if value is integer
+                    elif fastnumbers.isint(value):  # Check if value is integer
                         _data_type = "int"
                         for func in _int_funcs:
                             if func[0](value) is True:
                                 _data_type = func[1]
                                 break
 
-                    elif isfloat(value):
+                    elif fastnumbers.isfloat(value):
                         _data_type = "decimal"
 
                     elif isinstance(value, str):
@@ -333,6 +342,7 @@ def cols(self: DataFrame):
                                 break
                     else:
                         _data_type = "null"
+
                 else:
                     _data_type = _dtypes[col_name]
                     if is_null(value) is True:
@@ -345,7 +355,12 @@ def cols(self: DataFrame):
                         else:
                             _data_type = _dtypes[col_name]
 
-                return _data_type
+                if mismatch:
+                    result = (col_name, _data_type), (1, mismatch_count)
+                else:
+                    result = (col_name, _data_type), 1
+
+                return result
 
             columns = parse_columns(self, columns)
             df = self
@@ -353,7 +368,9 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs),
+                print((col_name, infer, dtypes, str_funcs, int_funcs))
+
+                df_result = df[col_name].apply(parse1, args=(col_name, infer, dtypes, str_funcs),
                                                meta=str).compute()
 
                 result[col_name] = dict(df_result.value_counts())
@@ -394,7 +411,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False):
+                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
 
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                        accepts_missing_cols=True)

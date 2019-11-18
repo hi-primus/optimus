@@ -1,5 +1,5 @@
 from pyspark.sql.types import *
-from optimus import optimus as Optimus
+from optimus import Optimus
 from optimus.helpers.json import json_enconding
 from optimus.helpers.functions import deep_sort
 import unittest

@@ -26,7 +26,7 @@ import sys
 sys.path.append("..")
 
 # Create Optimus
-from optimus import optimus as Optimus
+from optimus import Optimus
 
 op = Optimus()
 

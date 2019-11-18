@@ -26,7 +26,7 @@ import sys
 sys.path.append("../..")
 # -
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 from optimus.helpers.test import Test
 
 op = Optimus(master='local', verbose=True)
@@ -628,7 +628,7 @@ from datetime import date, datetime
 
 from pyspark.sql.types import *
 
-from optimus import optimus as Optimus
+from optimus import Optimus
 
 mismatch_df = op.create.df(
     [

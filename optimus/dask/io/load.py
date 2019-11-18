@@ -71,11 +71,11 @@ class Load:
 
         try:
             df = dd.read_csv(path, sep=sep, encoding=charset, *args, **kwargs)
-            # df.meta.set("file_name", file_name)
+            df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
-        # df.ext.reset()
+        df.ext.reset()
         return df
 
     @staticmethod

@@ -1,4 +1,4 @@
-from optimus import optimus as Optimus
+from optimus import Optimus
 from pyspark.sql.types import *
 
 op = Optimus()
