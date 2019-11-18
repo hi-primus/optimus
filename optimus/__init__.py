@@ -9,7 +9,8 @@ from .optimus import *
 
 patch()
 
-from .spark import rows, columns, extension, constants, functions
+from .spark import rows, columns, extension, constants, functions, outliers
+
 from optimus import meta
 from .spark.plots import plots
 from optimus.spark.io import save
