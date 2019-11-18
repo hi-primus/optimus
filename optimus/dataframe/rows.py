@@ -145,7 +145,7 @@ def rows(self):
                 RaiseIt.value_error(sort_func, ["asc", "desc"])
 
             func.append(sort_func(col_name))
-            df = df.preserve_meta(self, Actions.SORT_ROW, col_name)
+            df = df.preserve_meta(self, Actions.SORT_ROW.value, col_name)
 
         df = df.sort(*func)
         return df
