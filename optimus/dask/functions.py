@@ -121,15 +121,23 @@ def functions(self):
 
             return count_na_
 
+        # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
         def hist_agg(col_name, args):
+            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
+            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
             df = args[0]
             bins = args[1]
-            range = args[2]
+            min_max = args[2]
+
+            if min_max is None:
+                min_max = df.cols.range(col_name)[col_name]
 
             def hist_agg_(serie):
+
+                h, b = da.histogram(serie[col_name], bins=bins , range=[min_max["min"], min_max["max"]])
                 return {
-                    "hist_agg": list(da.histogram(serie[col_name], bins=bins, range=[range["min"], range["max"]])[0])}
+                    "hist_agg": h}
 
             return hist_agg_
 

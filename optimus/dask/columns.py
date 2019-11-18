@@ -19,8 +19,6 @@ from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 
 def cols(self: DataFrame):
-    df = self
-
     class Cols:
         # def __init__(self):
         #     # print(functions)
@@ -78,8 +76,9 @@ def cols(self: DataFrame):
 
             return result
 
+        @staticmethod
         def create_exprs(columns, funcs, *args):
-
+            df = self
             # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
             filters = {"object": [self.functions.min],
                        }
@@ -509,7 +508,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def hist(columns, buckets=20):
-            result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets,[1,10])
+            result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets, None)
             return result
 
         @staticmethod
@@ -521,12 +520,18 @@ def cols(self: DataFrame):
                 q.append({col_name: [{"value": k, "count": v} for k, v in
                                      self[col_name].value_counts().nlargest(n).iteritems()]})
 
-            result = dd.compute(*q)[0]
+            result = dd.compute(*q)
+            # From list of tuples to dict
+            final_result = {}
+            for i in result:
+                for x, y in i.items():
+                    final_result[x] = y
 
+            print(result)
             if percentage is True:
                 if total_rows is None:
                     total_rows = df.rows.count()
-                    for c in result:
+                    for c in final_result:
                         c["percentage"] = round((c["count"] * 100 / total_rows), 2)
 
             return result
@@ -665,7 +670,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-
+            df = self
             return Cols.agg_exprs(columns, df.functions.min)
 
         @staticmethod
@@ -675,7 +680,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-
+            df = self
             return Cols.agg_exprs(columns, df.functions.max)
 
         @staticmethod
@@ -685,7 +690,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
-
+            df = self
             return Cols.agg_exprs(columns, df.functions.range_agg)
 
         @staticmethod
@@ -697,6 +702,7 @@ def cols(self: DataFrame):
             :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
             :return: percentiles per columns
             """
+            df = self
             # values = [str(v) for v in values]
             if values is None:
                 values = [0.5]
@@ -712,6 +718,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -724,6 +731,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -736,6 +744,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -748,6 +757,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -760,6 +770,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -772,6 +783,7 @@ def cols(self: DataFrame):
             :param columns: '*', list of columns names or a single column name.
             :return:
             """
+            df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
@@ -785,14 +797,15 @@ def cols(self: DataFrame):
             :param output_cols:
             :return:
             """
-            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+            df = self
+            input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             output_cols = get_output_cols(input_cols, output_cols)
 
             check_column_numbers(output_cols, "*")
             # Abs not accepts column's string names. Convert to Spark Column
 
             # TODO: make this in one pass.
-            df = self
+
             for col_name in output_cols:
                 df = df.withColumn(col_name, F.abs(F.col(col_name)))
             return df
