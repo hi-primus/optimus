@@ -132,13 +132,27 @@ def ext(self):
             return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
         @staticmethod
-        def sample(n=10, random=False):
+        def stratified_sample(col_name, seed: int = 1) -> DataFrame:
             """
-            Return a n number of sample from a dataFrame
+            Stratified Sampling
+            :param col_name:
+            :param seed:
+            :return:
+            """
+            df = self
+            fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
+            df = df.stat.sampleBy(col_name, fractions, seed)
+            return df
+
+        @staticmethod
+        def sample(n: int = 10, random: bool = False) -> DataFrame:
+            """
+            Return n number of samples from a dataFrame
             :param n: Number of samples
             :param random: if true get a semi random sample
             :return:
             """
+            df = self
             if random is True:
                 seed = random_int()
             elif random is False:
@@ -146,14 +160,14 @@ def ext(self):
             else:
                 RaiseIt.value_error(random, ["True", "False"])
 
-            rows_count = self.count()
+            rows_count = df.count()
             if n < rows_count:
                 # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
                 fraction = (n / rows_count) * 1.1
             else:
                 fraction = 1.0
 
-            return self.sample(False, fraction, seed=seed).limit(n)
+            return df.sample(False, fraction, seed=seed).limit(n)
 
         @staticmethod
         def pivot(index, column, values):
@@ -476,6 +490,10 @@ def ext(self):
 
         @staticmethod
         def reset():
+            """
+            Reset actions metadata and the profiler cache
+            :return:
+            """
             df = self.meta.set("transformations.actions", {})
             Profiler.instance.output_columns = {}
             return df
