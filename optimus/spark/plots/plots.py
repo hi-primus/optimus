@@ -102,7 +102,7 @@ def plot(self):
             columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
 
             if columns is not None:
-                sample_data = df.sample_n(n=n, random=True)
+                sample_data = df.ext.sample(n=n, random=True)
                 for col_name in columns:
                     plot_qqplot(col_name, sample_data, output=output_format, path=output_path)
 

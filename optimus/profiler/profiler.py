@@ -320,7 +320,7 @@ class Profiler:
         if stats is True:
             # Are there column to process?
             if cols_to_profile or not self.is_cached():
-                rows_count = df.count()
+                rows_count = df.rows.count()
                 self.rows_count = rows_count
                 self.cols_count = cols_count = len(df.columns)
                 updated_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
@@ -367,7 +367,7 @@ class Profiler:
         self.output_columns = output_columns
 
         df.ext.reset()
-        df.ext.columns_meta(df.cols.names())
+        df.meta.add_columns(df.cols.names())
 
         return result
 
@@ -572,7 +572,7 @@ class Profiler:
                     col_info['mad'] = None
 
             if self.rows_count is None:
-                self.rows_count = df.count()
+                self.rows_count = df.rows.count()
 
             col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
             col_info['p_count_uniques'] = round((stats[col_name]['count_uniques'] * 100) / self.rows_count, 2)
@@ -596,7 +596,7 @@ class Profiler:
 
         data = {}
         cols = {}
-        rows_count = df.count()
+        rows_count = df.rows.count()
         for col_name in columns:
             missing_count = df.cols.count_na(col_name)
 

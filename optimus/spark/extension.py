@@ -141,6 +141,7 @@ def ext(self):
             """
             df = self
             fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
+            # print(col_name, fractions, seed)
             df = df.stat.sampleBy(col_name, fractions, seed)
             return df
 
@@ -160,13 +161,13 @@ def ext(self):
             else:
                 RaiseIt.value_error(random, ["True", "False"])
 
-            rows_count = df.count()
+            rows_count = df.rows.count()
             if n < rows_count:
                 # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
                 fraction = (n / rows_count) * 1.1
             else:
                 fraction = 1.0
-
+            # print(seed, n)
             return df.sample(False, fraction, seed=seed).limit(n)
 
         @staticmethod
