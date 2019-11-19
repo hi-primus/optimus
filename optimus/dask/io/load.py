@@ -3,9 +3,9 @@ import os
 import tempfile
 from urllib.request import Request, urlopen
 
-from dask import dataframe as dd
+import dask.bag as db
 import pandas as pd
-from packaging import version
+from dask import dataframe as dd
 
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
@@ -17,29 +17,26 @@ class Load:
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
-        Return a spark from a json file.
+        Return a dask dataframe from a json file.
         :param path: path or location of the file.
         :param multiline:
+
         :return:
         """
         file, file_name = prepare_path(path, "json")
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = Spark.instance.spark.read \
-                .option("multiLine", multiline) \
-                .option("mode", "PERMISSIVE") \
-                .json(file, *args, **kwargs)
-
-            df.ext.set_meta("file_name", file_name)
+            df = dd.read_json(path, lines=multiline, *args, **kwargs)
+            df.meta.set("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
             raise
-        return replace_columns_special_characters(df)
+        return df
 
     @staticmethod
-    def tsv(path, header='true', infer_schema='true', *args, **kwargs):
+    def tsv(path, header=0, infer_schema='true', *args, **kwargs):
         """
         Return a spark from a tsv file.
         :param path: path or location of the file.
@@ -53,7 +50,7 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=0, infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -62,6 +59,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
+        :param null_value:
         :param charset:
         It requires one extra pass over the data. 'true' default.
 
@@ -70,7 +68,7 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = dd.read_csv(path, sep=sep, encoding=charset, *args, **kwargs)
+            df = dd.read_csv(path, sep=sep, header=header, encoding=charset, na_values=null_value, *args, **kwargs)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
@@ -93,7 +91,7 @@ class Load:
 
         try:
             df = dd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
-            df.ext.set_meta("file_name", file_name)
+            df.meta.set("file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -113,13 +111,9 @@ class Load:
         file, file_name = prepare_path(path, "avro")
 
         try:
-            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
-                avro_version = "com.databricks.spark.avro"
-            else:
-                avro_version = "avro "
-            df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
+            df = db.read_avro(path, *args, **kwargs).to_dataframe()
+            df.meta.set("file_name", file_name)
 
-            df.ext.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -153,13 +147,13 @@ class Load:
             pdf = pdf.astype(column_dtype)
 
             # Create spark data frame
-            df = Spark.instance.spark.createDataFrame(pdf)
-            df.ext.set_meta("file_name", ntpath.basename(file_name))
+            df = dd.from_pandas(pdf, npartitions=3)
+            df.meta.set("file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise
 
-        return replace_columns_special_characters(df)
+        return df
 
 
 def prepare_path(path, file_format):
@@ -169,6 +163,7 @@ def prepare_path(path, file_format):
     :param file_format: format file
     :return:
     """
+    print(path)
     file_name = ntpath.basename(path)
     if is_url(path):
         file = downloader(path, file_format)

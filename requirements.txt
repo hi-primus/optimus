@@ -34,3 +34,4 @@ pypika==0.32.0
 statsmodels==0.10.1
 glom==19.10.0
 singleton-decorator==1.0.0
+fastavro==0.22.7
