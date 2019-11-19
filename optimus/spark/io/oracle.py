@@ -2,8 +2,8 @@ from enum import Enum
 
 from singleton_decorator import singleton
 
-from optimus.io.abstract_driver import AbstractDriver
-from optimus.io.properties import DriverProperties
+from optimus.spark.io.abstract_driver import AbstractDriver
+from optimus.spark.io.properties import DriverProperties
 
 
 @singleton

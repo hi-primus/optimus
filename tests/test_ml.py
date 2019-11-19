@@ -6,7 +6,7 @@ import py_sparkling
 
 from optimus import Optimus
 
-import optimus.ml.encoding as fe
+import optimus.spark.ml.encoding as fe
 
 op = Optimus(master='local')
 
