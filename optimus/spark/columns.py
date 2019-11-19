@@ -1991,7 +1991,7 @@ def cols(self):
 
                 if percentage:
                     if total_rows is None:
-                        total_rows = df.count()
+                        total_rows = df.rows.count()
 
                         RaiseIt.type_error(total_rows, ["int"])
                     for col_name in columns:
