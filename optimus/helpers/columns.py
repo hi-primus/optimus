@@ -277,7 +277,6 @@ def filter_col_name_by_dtypes(df, data_type):
     data_type = parse_dtypes(df, data_type)
     # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
-
     # Filter columns by data type
     result = []
     for col_name in df.cols.names():

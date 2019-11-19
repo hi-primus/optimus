@@ -30,7 +30,6 @@ def cols(self: DataFrame):
             :param exprs:
             :return:
             """
-
             agg_list = Dask.instance.compute(exprs)
 
             if len(agg_list) > 0:
@@ -104,16 +103,22 @@ def cols(self: DataFrame):
             funcs = val_to_list(funcs)
             exprs = {}
 
+            multi = [self.functions.min, self.functions.max, self.functions.stddev,
+                     self.functions.mean, self.functions.variance, self.functions.percentile_agg]
+
             for func in funcs:
                 # Create expression for functions that accepts multiple columns
-
-                for col_name in columns:
-                    # If the key exist update it
-                    if not _filter(col_name, func):
-                        if col_name in exprs:
-                            exprs[col_name].update(func(col_name, args)(df))
-                        else:
-                            exprs[col_name] = func(col_name, args)(df)
+                if equal_function(func, multi):
+                    exprs.update(func(columns, args)(df))
+                # If not process by column
+                else:
+                    for col_name in columns:
+                        # If the key exist update it
+                        if not _filter(col_name, func):
+                            if col_name in exprs:
+                                exprs[col_name].update(func(col_name, args)(df))
+                            else:
+                                exprs[col_name] = func(col_name, args)(df)
 
             result = {}
 
@@ -196,10 +201,10 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-            def parse1(value, _infer, _dtypes, _str_funcs, _int_funcs):
-                print("PARSE", (value, _infer, _dtypes, _str_funcs, _int_funcs))
+            def parse(value, col_name, _infer, _dtypes, _str_funcs, _int_funcs):
+                # print("PARSE", (value, _infer, _dtypes, _str_funcs, _int_funcs))
 
-                col_name, value = value
+                # col_name, value = value
 
                 def str_to_boolean(_value):
                     _value = _value.lower()
@@ -368,9 +373,9 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                print((col_name, infer, dtypes, str_funcs, int_funcs))
+                # print((col_name, infer, dtypes, str_funcs, int_funcs))
 
-                df_result = df[col_name].apply(parse1, args=(col_name, infer, dtypes, str_funcs),
+                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs),
                                                meta=str).compute()
 
                 result[col_name] = dict(df_result.value_counts())
@@ -752,7 +757,6 @@ def cols(self: DataFrame):
             df = self
             columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
-
             return format_dict(Cols.agg_exprs(columns, df.functions.stddev))
 
         @staticmethod

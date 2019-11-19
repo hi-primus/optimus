@@ -154,7 +154,7 @@ def cols(self):
             for input_col, output_col in columns:
                 current_meta = self.meta.get()
                 df = df.withColumn(output_col, F.col(input_col))
-                df = df.ext.set_meta(value=current_meta)
+                df = df.meta.set(value=current_meta)
                 df = df.copy_meta({input_col: output_col})
             return df
 

@@ -24,13 +24,6 @@ def functions(self):
             return dataframe_max_
 
         @staticmethod
-        def stddev(columns, args):
-            def dataframe_stddev_(df):
-                return {"max": df[columns].std()}
-
-            return dataframe_stddev_
-
-        @staticmethod
         def mean(columns, args):
             def dataframe_mean_(df):
                 return {"mean": df[columns].mean()}
@@ -60,6 +53,41 @@ def functions(self):
                 return {"percentile": df[columns].quantile(values)}
 
             return _percentile
+
+        @staticmethod
+        def stddev(col_name, args):
+            def std_(serie):
+                return {"stddev": serie[col_name].std()}
+
+            return std_
+
+        # @staticmethod
+        # def stddev(columns, args):
+        #     def dataframe_stddev_(df):
+        #         return {"stddev": df[columns].std()}
+        #
+        #     return dataframe_stddev_
+
+        # @staticmethod
+        # def mean(col_name, args):
+        #     def _mean(serie):
+        #         return {"mean": serie[col_name].mean()}
+        #
+        #     return _mean
+        #
+        # @staticmethod
+        # def sum(col_name, args):
+        #     def std_(serie):
+        #         return {"sum": serie[col_name].sum()}
+        #
+        #     return std_
+        #
+        # @staticmethod
+        # def variance(col_name, args):
+        #     def var_(serie):
+        #         return {"variance": serie[col_name].var()}
+        #
+        #     return var_
 
         @staticmethod
         def zeros_agg(col_name, args):

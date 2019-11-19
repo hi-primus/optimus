@@ -4,7 +4,7 @@ from dask.dataframe.core import DataFrame
 
 def constants(self):
     class Constants:
-        DTYPES_DICT = {"string": np.str, "int32": np.int32, "int64": np.int64, "float": np.float,
+        DTYPES_DICT = {"string": np.str, "int32": np.int32, "int64": np.int64, "float": np.float, "float64": np.float64,
                        "boolean": np.bool, "array": np.array,
                        "bigint": np.int64, "object": np.object}
 
@@ -14,6 +14,7 @@ def constants(self):
                         "int": "int",
                         "int64": "int64",
                         "int32": "int32",
+                        "float64": "float64",
                         "big": "bigint",
                         "long": "bigint",
                         "float": "float",
@@ -30,14 +31,13 @@ def constants(self):
                         "null": "null",
                         "vector": "vector",
                         "timestamp": "datetime",
-                        "object":"object"
+                        "object": "object"
                         }
 
-        NUMERIC_TYPES = ["int32", "int64"]
+        NUMERIC_TYPES = ["int32", "int64", "float64"]
         DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "float": ["float64"]}
 
     return Constants()
 
 
 DataFrame.constants = property(constants)
-
