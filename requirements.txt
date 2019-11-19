@@ -35,3 +35,4 @@ statsmodels==0.10.1
 glom==19.10.0
 singleton-decorator==1.0.0
 fastavro==0.22.7
+dask-cudf==0.6.1
