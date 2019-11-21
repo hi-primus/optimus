@@ -307,8 +307,8 @@ def create_buckets(lower_bound, upper_bound, bins):
 
 def append(dfs, like="columns"):
     """
-    Concat multiple dataframes columns or rows wise
-    :param dfs: List of Dataframes
+    Concat multiple dataFrames columns or rows wise
+    :param dfs: List of DataFrames
     :param like: concat as columns or rows
     :return:
     """

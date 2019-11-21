@@ -1,8 +1,9 @@
 from pyspark.sql import SparkSession
 
-from optimus.helpers.constants import *
-from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
-from optimus.helpers.logger import logger
+
+# from optimus.helpers.constants import *
+# from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
+# from optimus.helpers.logger import logger
 
 
 class Spark:
@@ -18,19 +19,6 @@ class Spark:
         :param app_name: Sets a name for the application, which will be shown in the Spark web UI
         """
 
-        logger.print(JUST_CHECKING)
-        logger.print("-----")
-        check_env_vars(["SPARK_HOME", "HADOOP_HOME", "PYSPARK_PYTHON", "PYSPARK_DRIVER_PYTHON", "PYSPARK_SUBMIT_ARGS",
-                        "JAVA_HOME"])
-
-        if is_pyarrow_installed() is True:
-            logger.print("Pyarrow Installed")
-        else:
-            logger.print(
-                "Pyarrow not installed. Pandas UDF not available. Install using 'pip install pyarrow'")
-        logger.print("-----")
-        logger.print(STARTING_SPARK)
-
         # Build the spark session
         self._spark = SparkSession.builder \
             .appName(app_name) \
@@ -38,10 +26,8 @@ class Spark:
             .getOrCreate()
 
         self._sc = self._spark.sparkContext
-        logger.print("Spark Version:" + self._sc.version)
 
         return self
-
 
     def load(self, session):
         self._spark = session

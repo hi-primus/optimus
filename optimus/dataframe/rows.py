@@ -6,12 +6,12 @@ from pyspark.sql import functions as F
 
 # Helpers
 import optimus as op
-from optimus import val_to_list
+
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
 from optimus.helpers.constants import Actions
-from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.raiseit import RaiseIt
@@ -77,14 +77,20 @@ def rows(self):
         return self.where(fbdt(input_cols, data_type))
 
     @add_attr(rows)
-    def select(*args, **kwargs):
+    def select(columns, *args, **kwargs):
         """
         Alias of Spark filter function. Return rows that match a expression
+        :param columns:
         :param args:
         :param kwargs:
         :return: Spark DataFrame
         """
-        return self.filter(*args, **kwargs)
+        df = self
+        columns = parse_columns(df, columns)
+
+        df = df.filter(columns, *args, **kwargs)
+        df = df.preserve_meta(self, Actions.SORT_ROW.value, columns)
+        return df
 
     @add_attr(rows)
     def to_list(input_cols):
@@ -256,7 +262,7 @@ def rows(self):
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
         df = df.rows.select(expr)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, input_cols)
         return df
 
     @add_attr(rows)
@@ -269,7 +275,7 @@ def rows(self):
         input_cols = parse_columns(self, input_cols)[0]
         df = self
         df = df.withColumn(input_cols, F.explode(input_cols))
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, input_cols)
         return df
 
     @add_attr(rows)

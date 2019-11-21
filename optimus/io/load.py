@@ -87,7 +87,7 @@ class Load:
                   .option("charset", charset)
                   .csv(file, *args, **kwargs))
 
-            df.set_meta("file_name", file_name)
+            # df.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise

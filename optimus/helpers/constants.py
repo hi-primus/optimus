@@ -109,6 +109,8 @@ class Actions(Enum):
     STRING_TO_INDEX = "string_to_index"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
+    # ROWS
+    SELECT_ROW = "select_row"
     DROP_ROW = "drop_row"
     SORT_ROW = "sort_row"
 
