@@ -1,7 +1,10 @@
+import simplejson as json
+
 from pyspark.sql import functions as F
 
 from optimus import Optimus
 from optimus.helpers.columns import name_col
+from optimus.helpers.json import json_converter
 from optimus.ml import keycollision
 from optimus.ml.contants import FINGERPRINT_COL, CLUSTER_COL, CLUSTER_SIZE_COL, RECOMMENDED_COL, COUNT_COL, \
     LEVENSHTEIN_DISTANCE
@@ -69,6 +72,8 @@ def levenshtein_json(df, input_col):
         for iv in v:
             a.append(kv_dict[iv])
 
+    # json.dump(data, outfile, indent=4, ensure_ascii=False, default=json_converter)
+    result = json.dumps(result, ignore_nan=True, default=json_converter)
     return result
 
 
