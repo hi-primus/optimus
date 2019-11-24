@@ -1094,10 +1094,17 @@ def cols(self):
 
             return _df.replace(_search, _replace_by, _input_col)
 
-        if search_by is "words":
+        def func_numeric(_df, _input_col, _output_col, _search, _replace_by):
+            _df = _df.withColumn(_output_col, F.when(df[_input_col] == _search, _replace_by).otherwise(df[_output_col]))
+            return _df
+
+        if search_by == "words":
             func = func_words
-        elif search_by is "chars":
+        elif search_by == "chars":
             func = func_chars
+        # elif search_by == "numeric":
+        #     print(1)
+        #     func = func_numeric
         else:
             RaiseIt.value_error(search_by, ["words", "chars"])
 
@@ -1109,7 +1116,8 @@ def cols(self):
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
             if is_column_a(df, input_col, "int"):
-                df = df.cols.cast(input_col, "str", output_col)
+                func = func_numeric
+                # df = df.cols.cast(input_col, "str", output_col)
 
             df = func(df, input_col, output_col, search, replace_by)
 
