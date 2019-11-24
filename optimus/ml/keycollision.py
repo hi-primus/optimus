@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 
 from optimus import Optimus
 from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.json import dump_json
 from optimus.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
     NGRAM_FINGERPRINT_COL
 
@@ -39,21 +40,20 @@ def fingerprint(df, input_cols):
               .cols.remove_accents(output_col)
               .cols.apply(output_col, _split_sort_remove_join, "string")
               )
-        if Optimus.cache:
-            df = df.cache()
     return df
 
 
-def fingerprint_cluster(df, input_cols):
+def fingerprint_cluster(df, input_cols, output: str = "dict"):
     """
     Cluster a dataframe column based on the Fingerprint algorithm
     :param df: Dataframe to be processed
     :param input_cols: Columns to be processed
+    :param output: "dict" or "json"
     :return:
     """
     # df = self.df
     input_cols = parse_columns(df, input_cols)
-
+    result = {}
     for input_col in input_cols:
         output_col = name_col(input_col, FINGERPRINT_COL)
         # Instead of apply the fingerprint to the whole data set we group by names
@@ -61,10 +61,7 @@ def fingerprint_cluster(df, input_cols):
               .groupBy(input_col)
               .count()
               .select('count', input_col)
-              )
-
-        if Optimus.cache:
-            df = df.cache()
+              ).h_repartition(1)
 
         # Calculate the fingerprint
         df = fingerprint(df, input_col)
@@ -74,13 +71,20 @@ def fingerprint_cluster(df, input_cols):
         recommended_col = name_col(input_col, RECOMMENDED_COL)
         cluster_size_col = name_col(input_col, CLUSTER_SIZE_COL)
 
-        df = df.groupby(output_col).agg(
+        fingerprint_count = df.groupby(output_col).agg(
             F.collect_set(input_col).alias(cluster_col),
             F.sum("count").alias(count_col),
             F.first(input_col).alias(recommended_col),
             F.size(F.collect_set(input_col)).alias(cluster_size_col)
-        ).select(cluster_size_col, cluster_col, count_col, recommended_col)
-    return df
+        ).collect()
+
+        for row in fingerprint_count:
+            _row = list(row.asDict().values())
+            result[_row[3]] = {"similar": _row[1], "count": _row[2], "sum": _row[4]}
+
+        if output == "json":
+            result = dump_json(result)
+    return result
 
 
 def n_gram_fingerprint(df, input_cols, n_size=2):
@@ -119,17 +123,15 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
               # For create n-grams we need an Array type column
               .cols.nest(input_cols=ngram_col, output_col=ngram_col, shape='array')
               )
-        if Optimus.cache:
-            df = df.cache()
 
         n_gram = NGram(n=n_size, inputCol=ngram_col, outputCol=ngram_fingerprint_col)
         df = n_gram.transform(df)
-        df = df.cols.apply(ngram_fingerprint_col, remote_white_spaces_remove_sort_join, "string")
+        df = df.cols.apply(ngram_col, remote_white_spaces_remove_sort_join, "string", output_cols=ngram_fingerprint_col)
 
     return df
 
 
-def n_gram_fingerprint_cluster(df, input_cols, n_size=2):
+def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
     """
     Cluster a DataFrame column based on the N-Gram Fingerprint algorithm
     :param df: Dataframe to be processed
@@ -138,6 +140,7 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2):
     :return:
     """
     input_cols = parse_columns(df, input_cols)
+    result = {}
     for input_col in input_cols:
         ngram_fingerprint_col = name_col(input_col, NGRAM_FINGERPRINT_COL)
 
@@ -146,22 +149,27 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2):
               .groupBy(input_col)
               .count()
               .select('count', input_col)
-              )
+              ).repartition(1)
 
-        if Optimus.cache:
-            df = df.cache()
         df = n_gram_fingerprint(df, input_col, n_size)
-
+        df.table()
         count_col = name_col(input_col, COUNT_COL)
         cluster_col = name_col(input_col, CLUSTER_COL)
         recommended_col = name_col(input_col, RECOMMENDED_COL)
         cluster_size_col = name_col(input_col, CLUSTER_SIZE_COL)
 
-        df = df.groupby(ngram_fingerprint_col).agg(
+        fingerprint_count = df.groupby(ngram_fingerprint_col).agg(
             F.collect_set(input_col).alias(cluster_col),
             F.sum("count").alias(count_col),
             F.first(input_col).alias(recommended_col),
             F.size(F.collect_set(input_col)).alias(cluster_size_col)
-        ).select(cluster_size_col, cluster_col, count_col, recommended_col)
+        ).select(cluster_size_col, cluster_col, count_col, recommended_col).collect()
 
-        return df
+        for row in fingerprint_count:
+            _row = list(row.asDict().values())
+            result[_row[3]] = {"similar": _row[1], "count": _row[0], "sum": _row[2]}
+
+        if output == "json":
+            result = dump_json(result)
+
+        return result
