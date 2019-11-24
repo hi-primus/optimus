@@ -4,9 +4,10 @@ from optimus.helpers.check import is_dataframe, is_numeric
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val
+from optimus.outliers.abstract_outliers import AbstractOutlier
 
 
-class ModifiedZScore:
+class ModifiedZScore(AbstractOutlier):
     """
     Handle outliers from a DataFrame using modified z score
     Reference: http://colingorrie.github.io/outlier-detection.html#modified-z-score-method
@@ -20,6 +21,7 @@ class ModifiedZScore:
         :param col_name:
         :param threshold:
         """
+        super().__init__(df, col_name)
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
@@ -43,24 +45,6 @@ class ModifiedZScore:
         m_z_col_name = name_col(col_name, "modified_z_score")
 
         return df.withColumn(m_z_col_name, F.abs(0.6745 * (F.col(col_name) - mad["median"]) / mad["mad"]))
-
-    def select(self):
-
-        m_z_col_name = name_col(self.col_name, "modified_z_score")
-        df = self._m_z_score()
-        return df.rows.select(F.col(m_z_col_name) > self.threshold).cols.drop(m_z_col_name)
-
-    def drop(self):
-
-        m_z_col_name = name_col(self.col_name, "modified_z_score")
-        df = self._m_z_score()
-        return df.rows.drop(F.col(m_z_col_name) > self.threshold).cols.drop(m_z_col_name)
-
-    def non_outliers_count(self):
-        return self.drop().count()
-
-    def count(self):
-        return self.select().count()
 
     def info(self):
         m_z_col_name = name_col(self.col_name, "modified_z_score")

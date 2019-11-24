@@ -1,11 +1,10 @@
-from pyspark.sql import functions as F
-
 from optimus.helpers.check import is_dataframe, is_numeric
-from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.converter import one_list_to_val
+from optimus.outliers.abstract_outliers import AbstractOutlier
 
 
-class ZScore:
+class ZScore(AbstractOutlier):
     """
     Handle outliers using z Score
     """
@@ -28,29 +27,6 @@ class ZScore:
 
         self.col_name = one_list_to_val(parse_columns(df, col_name))
 
-    def drop(self):
-        col_name = self.col_name
-        z_col_name = name_col(col_name, "z_score")
-        threshold = self.threshold
-
-        return self.df.cols.z_score(col_name, z_col_name) \
-            .rows.drop(F.col(z_col_name) > threshold) \
-            .cols.drop(z_col_name)
-
-    def select(self):
-        col_name = self.col_name
-        z_col_name = name_col(col_name, "z_score")
-
-        return self.df.cols.z_score(col_name, z_col_name) \
-            .rows.select(F.col(z_col_name) > self.threshold) \
-            .cols.drop(z_col_name)
-
-    def non_outliers_count(self):
-        return self.drop().count()
-
-    def count(self):
-        return self.select().count()
-
     def info(self):
         col_name = self.col_name
         z_col_name = name_col(col_name, "z_score")
@@ -58,4 +34,5 @@ class ZScore:
         max_z_score = self.df.cols.z_score(col_name, z_col_name) \
             .cols.max(z_col_name)
 
-        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(), "max_z_score": max_z_score}
+        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
+                "max_z_score": max_z_score}
