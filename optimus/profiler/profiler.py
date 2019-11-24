@@ -16,7 +16,7 @@ from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg
 from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, update_dict
-from optimus.helpers.json import json_converter
+from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -365,7 +365,7 @@ class Profiler:
 
         # col_names = output_columns["columns"].keys()
         if format == "json":
-            result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
+            result = dump_json(output_columns)
         else:
             result = output_columns
 
@@ -386,6 +386,7 @@ class Profiler:
         0 more precision/slow 1 less precision/faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :param mismatch:
+        :param advanced_stats:
         :return: json object
         """
 
@@ -584,7 +585,6 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
-
 
     @staticmethod
     def missing_values(df, columns):

@@ -1,5 +1,6 @@
 import datetime
-import json
+
+import simplejson as json
 
 
 def json_converter(obj):
@@ -22,3 +23,7 @@ def json_enconding(obj):
     :return:
     """
     return json.dumps(obj, default=json_converter)
+
+
+def dump_json(value):
+    return json.dumps(value, ignore_nan=True, default=json_converter)
