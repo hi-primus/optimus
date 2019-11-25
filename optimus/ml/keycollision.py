@@ -82,8 +82,8 @@ def fingerprint_cluster(df, input_cols, output: str = "dict"):
             _row = list(row.asDict().values())
             result[_row[3]] = {"similar": _row[1], "count": _row[2], "sum": _row[4]}
 
-        if output == "json":
-            result = dump_json(result)
+    if output == "json":
+        result = dump_json(result)
     return result
 
 
@@ -137,6 +137,7 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
     :param df: Dataframe to be processed
     :param input_cols: Columns to be processed
     :param n_size:
+    :param output:
     :return:
     """
     input_cols = parse_columns(df, input_cols)
@@ -152,7 +153,7 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
               ).repartition(1)
 
         df = n_gram_fingerprint(df, input_col, n_size)
-        df.table()
+
         count_col = name_col(input_col, COUNT_COL)
         cluster_col = name_col(input_col, CLUSTER_COL)
         recommended_col = name_col(input_col, RECOMMENDED_COL)
@@ -169,7 +170,7 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
             _row = list(row.asDict().values())
             result[_row[3]] = {"similar": _row[1], "count": _row[0], "sum": _row[2]}
 
-        if output == "json":
-            result = dump_json(result)
+    if output == "json":
+        result = dump_json(result)
 
-        return result
+    return result
