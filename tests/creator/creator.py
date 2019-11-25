@@ -171,8 +171,6 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "import datetime",
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
-source_df.table()
-
 # +
 from pyspark.sql import functions as F
 
@@ -468,10 +466,19 @@ t.create(None, "cols.clip", None, "df", numeric_col_B, 3, 5)
 
 t.create(None, "cols.clip", "all_columns", "df", "*", 3, 5)
 
-t.create(None, "cols.replace", None, "df", string_col, ["Security", "Leader"], "Match")
+t.create(None, "cols.replace", "full", "df", None,string_col,["First Lieutenant","Battle"], "Match", search_by="full")
+
+t.create(None, "cols.replace", "words", "df", None,string_col,["Security", "Leader"], "Match", search_by="words")
+t.run()
+
+t.create(None, "cols.replace", "chars", "df", None,string_col,["F", "E"], "Match", search_by="chars")
+
+t.create(None, "cols.replace", "numeric", "df", None,"age",5000000, 5, search_by="numeric")
+
+t.run()
 
 # Assert is failing I can see why
-t.delete(None, "cols.replace", "all_columns", "df", "*", ["Jazz", "Leader"], "Match")
+t.create(None, "cols.replace", "all_columns", "df", None,"*", ["Jazz", "Leader"], "Match")
 t.run()
 
 
