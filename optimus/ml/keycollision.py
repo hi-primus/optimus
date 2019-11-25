@@ -79,7 +79,12 @@ def fingerprint_cluster(df, input_cols, output: str = "dict"):
 
         for row in fingerprint_count:
             _row = list(row.asDict().values())
-            result[_row[3]] = {"similar": _row[1], "count": _row[2], "sum": _row[4]}
+            r = {}
+            for l in _row[1]:
+                r[l] = 1
+
+            _row = list(row.asDict().values())
+            result[_row[3]] = {"similar": r, "count": _row[2], "sum": _row[4]}
 
     if output == "json":
         result = dump_json(result)
