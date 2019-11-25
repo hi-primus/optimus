@@ -214,10 +214,8 @@ def cols(self):
         :param meta: Pass metadata transformation to a dataframe
         :return: DataFrame
         """
-
         input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                    accepts_missing_cols=True)
-
         check_column_numbers(input_cols, "*")
 
         if skip_output_cols_processing:
@@ -1416,6 +1414,17 @@ def cols(self):
             mean_value = self.cols.mean(col_name)
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
+
+        df = self
+
+        input_cols = parse_columns(df, input_cols)
+
+        # Hint the user if the column has not the correct data type
+        for input_col in input_cols:
+            if not is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
+                print(
+                    "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
+                        input_col))
 
         return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
                      meta=Actions.Z_SCORE.value)
