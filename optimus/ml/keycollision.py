@@ -1,7 +1,6 @@
 from pyspark.ml.feature import NGram
 from pyspark.sql import functions as F
 
-from optimus import Optimus
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.json import dump_json
 from optimus.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_SIZE_COL, NGRAM_COL, FINGERPRINT_COL, \
@@ -168,7 +167,10 @@ def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
 
         for row in fingerprint_count:
             _row = list(row.asDict().values())
-            result[_row[3]] = {"similar": _row[1], "count": _row[0], "sum": _row[2]}
+            r = {}
+            for l in _row[1]:
+                r[l] = 1
+            result[_row[3]] = {"similar": r, "count": _row[0], "sum": _row[2]}
 
     if output == "json":
         result = dump_json(result)
