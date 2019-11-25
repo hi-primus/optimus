@@ -49,7 +49,7 @@ def levenshtein_cluster(df, input_col, threshold: int = None, output: str = "dic
         where = (F.col(distance_col) == 0) | (F.col(distance_col) > threshold)
 
     df_r = (df.rows.drop(where)
-            .cols.replace(distance_col, 0, None)
+            .cols.replace(distance_col, 0, None, search_by="numeric")
             .groupby(temp_col_1)
             .agg(F.min(distance_col).alias(distance_r_col))
             # .cols.rename(distance_col, distance_r_col)
