@@ -1,9 +1,10 @@
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.filters import dict_filter
-from optimus.outliers.abstract_outliers import AbstractOutlier
+from optimus.helpers.json import dump_json
+from optimus.outliers.abstract_outliers_bounds import AbstractOutlierBounds
 
 
-class MAD(AbstractOutlier):
+class MAD(AbstractOutlierBounds):
     """
     Handle outliers using mad
     """
@@ -35,7 +36,7 @@ class MAD(AbstractOutlier):
 
         return {"lower_bound": lower_bound, "upper_bound": upper_bound}
 
-    def info(self):
+    def info(self, output: str = "dict"):
         """
         Get whiskers, iqrs and outliers and non outliers count
         :return:
@@ -43,6 +44,9 @@ class MAD(AbstractOutlier):
         upper_bound, lower_bound, = dict_filter(self.whiskers(),
                                                 ["upper_bound", "lower_bound"])
 
-        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
-                "lower_bound": lower_bound, "lower_bound_count": self.count_lower_bound(lower_bound),
-                "upper_bound": upper_bound, "upper_bound_count": self.count_upper_bound(upper_bound)}
+        result = {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
+                  "lower_bound": lower_bound, "lower_bound_count": self.count_lower_bound(lower_bound),
+                  "upper_bound": upper_bound, "upper_bound_count": self.count_upper_bound(upper_bound)}
+        if output == "json":
+            result = dump_json(result)
+        return result

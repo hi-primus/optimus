@@ -8,7 +8,7 @@ from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.filters import dict_filter
 
 
-class AbstractOutlier(ABC):
+class AbstractOutlierThreshold(ABC):
     """
      This is a template class to expand the outliers methods
      Also you need to add the function to outliers.py
@@ -25,14 +25,6 @@ class AbstractOutlier(ABC):
 
         self.df = df
         self.col_name = one_list_to_val(parse_columns(df, col_name))
-
-    @abstractmethod
-    def whiskers(self):
-        """
-        Get the whiskers and IQR
-        :return:
-        """
-        pass
 
     def select(self):
         """
@@ -86,10 +78,11 @@ class AbstractOutlier(ABC):
         :return:
         """
         col_name = self.col_name
-        return self.df.rows.select((F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).count()
+        return self.df.rows.select(
+            (F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).count()
 
     @abstractmethod
-    def info(self):
+    def info(self, output: str = "dict"):
         """
         Get whiskers, iqrs and outliers and non outliers count
         :return:

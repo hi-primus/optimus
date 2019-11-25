@@ -1,8 +1,9 @@
 from optimus.helpers.filters import dict_filter
-from optimus.outliers.abstract_outliers import AbstractOutlier
+from optimus.helpers.json import dump_json
+from optimus.outliers.abstract_outliers_bounds import AbstractOutlierBounds
 
 
-class Tukey(AbstractOutlier):
+class Tukey(AbstractOutlierBounds):
     """
     Handle outliers using inter quartile range
     """
@@ -31,7 +32,7 @@ class Tukey(AbstractOutlier):
 
         return {"lower_bound": lower_bound, "upper_bound": upper_bound, "iqr1": iqr["q1"], "iqr3": iqr["q3"]}
 
-    def info(self):
+    def info(self, output: str = "dict"):
         """
         Get whiskers, iqrs and outliers and non outliers count
         :return:
@@ -41,7 +42,11 @@ class Tukey(AbstractOutlier):
         iqr1 = self.iqr1
         iqr3 = self.iqr3
 
-        return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
-                "lower_bound": lower_bound, "lower_bound_count": self.count_lower_bound(lower_bound),
-                "upper_bound": upper_bound, "upper_bound_count": self.count_upper_bound(upper_bound),
-                "iqr1": iqr1, "iqr3": iqr3}
+        result = {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
+                  "lower_bound": lower_bound, "lower_bound_count": self.count_lower_bound(lower_bound),
+                  "upper_bound": upper_bound, "upper_bound_count": self.count_upper_bound(upper_bound),
+                  "iqr1": iqr1, "iqr3": iqr3}
+
+        if output == "json":
+            result = dump_json(result)
+        return result

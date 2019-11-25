@@ -4,10 +4,10 @@ from optimus.helpers.check import is_dataframe, is_numeric
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val
-from optimus.outliers.abstract_outliers import AbstractOutlier
+from optimus.outliers.abstract_outliers_threshold import AbstractOutlierThreshold
 
 
-class ModifiedZScore(AbstractOutlier):
+class ModifiedZScore(AbstractOutlierThreshold):
     """
     Handle outliers from a DataFrame using modified z score
     Reference: http://colingorrie.github.io/outlier-detection.html#modified-z-score-method
@@ -21,7 +21,6 @@ class ModifiedZScore(AbstractOutlier):
         :param col_name:
         :param threshold:
         """
-        super().__init__(df, col_name)
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
@@ -34,8 +33,9 @@ class ModifiedZScore(AbstractOutlier):
         self.df = df
         self.threshold = threshold
         self.relative_error = relative_error
-
         self.col_name = one_list_to_val(parse_columns(df, col_name))
+
+        super().__init__(df, col_name)
 
     def _m_z_score(self):
         df = self.df
