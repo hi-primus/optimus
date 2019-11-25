@@ -1057,12 +1057,12 @@ def cols(self):
         :param output_cols:
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one
-        :param search_by: Match substring or words
+        :param search_by: Can be "full","words","chars" or "numeric".
         :return:
         """
 
         # TODO check if .contains can be used instead of regexp
-        def func_chars(_df, _input_col, _output_col, _search, _replace_by):
+        def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             # Create as dict
@@ -1072,13 +1072,16 @@ def cols(self):
                 _search_and_replace_by = {search: _replace_by}
 
             _search_and_replace_by = {str(k): str(v) for k, v in _search_and_replace_by.items()}
+            _regex = re.compile("|".join(map(re.escape, _search_and_replace_by.keys())))
 
             def multiple_replace(_value, __search_and_replace_by):
                 # Create a regular expression from all of the dictionary keys
                 if _value is not None:
-
-                    _regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
-                    result = _regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
+                    if search_by == "chars":
+                        __regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
+                    elif search_by == "words":
+                        __regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, __search_and_replace_by.keys())))
+                    result = __regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
                 else:
                     result = None
                 return result
@@ -1086,7 +1089,7 @@ def cols(self):
             return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
                                   output_cols=_output_col)
 
-        def func_words(_df, _input_col, _output_col, _search, _replace_by):
+        def func_full(_df, _input_col, _output_col, _search, _replace_by):
             _search = val_to_list(search)
 
             if _input_col != output_col:
@@ -1098,15 +1101,12 @@ def cols(self):
             _df = _df.withColumn(_output_col, F.when(df[_input_col] == _search, _replace_by).otherwise(df[_output_col]))
             return _df
 
-        if search_by == "words":
-            func = func_words
-        elif search_by == "chars":
-            func = func_chars
-        # elif search_by == "numeric":
-        #     print(1)
-        #     func = func_numeric
+        if search_by == "full":
+            func = func_full
+        elif search_by == "chars" or search_by == "words":
+            func = func_chars_words
         else:
-            RaiseIt.value_error(search_by, ["words", "chars"])
+            RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
         input_cols = parse_columns(self, input_cols,
                                    filter_by_column_dtypes=[PYSPARK_STRING_TYPES, PYSPARK_NUMERIC_TYPES])
