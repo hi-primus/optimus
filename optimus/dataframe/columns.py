@@ -1064,6 +1064,7 @@ def cols(self):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             # Create as dict
+            _search_and_replace_by = None
             if is_list(search):
                 _search_and_replace_by = {s: _replace_by for s in search}
             elif is_one_element(search):
@@ -1075,10 +1076,12 @@ def cols(self):
             def multiple_replace(_value, __search_and_replace_by):
                 # Create a regular expression from all of the dictionary keys
                 if _value is not None:
+                    __regex = None
                     if search_by == "chars":
                         __regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
                     elif search_by == "words":
                         __regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, __search_and_replace_by.keys())))
+
                     result = __regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
                 else:
                     result = None
@@ -1099,15 +1102,17 @@ def cols(self):
             _df = _df.withColumn(_output_col, F.when(df[_input_col] == _search, _replace_by).otherwise(df[_output_col]))
             return _df
 
+        func = None
         if search_by == "full":
             func = func_full
         elif search_by == "chars" or search_by == "words":
             func = func_chars_words
         elif search_by == "numeric":
-            func == func_numeric
+            func = func_numeric
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
 
+        filter_dtype = None
         if search_by in ["chars", "words", "full"]:
             filter_dtype = [PYSPARK_STRING_TYPES]
         elif search_by == "numeric":
