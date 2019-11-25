@@ -55,6 +55,7 @@ def rows(self):
 
         return df_result
 
+
     @add_attr(rows)
     def select_by_dtypes(input_cols, data_type=None):
         """
@@ -84,7 +85,8 @@ def rows(self):
         :param kwargs:
         :return: Spark DataFrame
         """
-        return self.filter(*args, **kwargs)
+        df = self
+        return df.filter(*args, **kwargs)
 
     @add_attr(rows)
     def to_list(input_cols):

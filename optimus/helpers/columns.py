@@ -119,6 +119,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     elif cols_args == "*" or cols_args is None:
         cols = df.columns
 
+
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
     # def func(attrs): attrs return (1,2) and (3,4)
@@ -163,7 +164,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         final_columns = cols
 
     cols_params = []
-
     if invert:
         final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
 

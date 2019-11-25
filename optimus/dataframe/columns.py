@@ -1103,20 +1103,23 @@ def cols(self):
             func = func_full
         elif search_by == "chars" or search_by == "words":
             func = func_chars_words
+        elif search_by == "numeric":
+            func == func_numeric
         else:
-            RaiseIt.value_error(search_by, ["chars", "words", "full"])
+            RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
 
-        input_cols = parse_columns(self, input_cols,
-                                   filter_by_column_dtypes=[PYSPARK_STRING_TYPES, PYSPARK_NUMERIC_TYPES])
+        if search_by in ["chars", "words", "full"]:
+            filter_dtype = [PYSPARK_STRING_TYPES]
+        elif search_by == "numeric":
+            filter_dtype = [PYSPARK_NUMERIC_TYPES]
+
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_dtype)
+
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-            if is_column_a(df, input_col, "int"):
-                func = func_numeric
-                # df = df.cols.cast(input_col, "str", output_col)
-
             df = func(df, input_col, output_col, search, replace_by)
 
             df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
