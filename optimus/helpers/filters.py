@@ -5,4 +5,4 @@ def dict_filter(dic, keys: list) -> list:
     :param keys: list of keys to be used as filter
     :return:
     """
-    return [(dic[i]) for i in keys if i in dic]
+    return [(dic[i]) for i in keys if i in list(dic.keys())]

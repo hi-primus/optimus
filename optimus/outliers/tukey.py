@@ -16,9 +16,11 @@ class Tukey(AbstractOutlierBounds):
         """
         self.df = df
         self.col_name = col_name
-        self.upper_bound, self.lower_bound, self.iqr1, self.iqr3 = dict_filter(self.whiskers(),
-                                                                               ["upper_bound", "lower_bound", "iqr1",
-                                                                                "iqr3"])
+
+        self.upper_bound, self.lower_bound, self.q1, self.median, self.q3, self.iqr = dict_filter(
+            self.whiskers(), ["lower_bound", "upper_bound", "q1", "median", "q3", "iqr"]
+        )
+        # print(self.upper_bound, self.lower_bound, self.q1, self.median, self.q3, self.iqr)
         super().__init__(df, col_name)
 
     def whiskers(self):
@@ -27,10 +29,12 @@ class Tukey(AbstractOutlierBounds):
         :return:
         """
         iqr = self.df.cols.iqr(self.col_name, more=True)
+
         lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
         upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-        return {"lower_bound": lower_bound, "upper_bound": upper_bound, "iqr1": iqr["q1"], "iqr3": iqr["q3"]}
+        return {"lower_bound": lower_bound, "upper_bound": upper_bound, "q1": iqr["q1"], "median": iqr["q2"],
+                "q3": iqr["q3"], "iqr": iqr["iqr"]}
 
     def info(self, output: str = "dict"):
         """
@@ -39,13 +43,16 @@ class Tukey(AbstractOutlierBounds):
         """
         lower_bound = self.lower_bound
         upper_bound = self.upper_bound
-        iqr1 = self.iqr1
-        iqr3 = self.iqr3
+
+        q1 = self.q1
+        median = self.median
+        q3 = self.q3
+        iqr = self.iqr
 
         result = {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                   "lower_bound": lower_bound, "lower_bound_count": self.count_lower_bound(lower_bound),
                   "upper_bound": upper_bound, "upper_bound_count": self.count_upper_bound(upper_bound),
-                  "iqr1": iqr1, "iqr3": iqr3}
+                  "q1": q1, "median": median, "q3": q3, "iqr": iqr}
 
         if output == "json":
             result = dump_json(result)
