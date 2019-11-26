@@ -89,15 +89,14 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
 
 
 def fingerprint_cluster(df, input_cols, output: str = "dict"):
-    return base_cluster(df, input_cols, output, func=fingerprint, args=[input_cols])
+    return base_clustering_function(df, input_cols, output, func=fingerprint, args=[input_cols])
 
 
 def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
-    return base_cluster(df, input_cols, output, func=n_gram_fingerprint, args=[input_cols, n_size])
+    return base_clustering_function(df, input_cols, output, func=n_gram_fingerprint, args=[input_cols, n_size])
 
 
-# df, input_cols, output: str = "dict"
-def base_cluster(df, input_cols, output, func=None, args=None):
+def base_clustering_function(df, input_cols, output, func=None, args=None):
     """
     Cluster a dataframe column based on the Fingerprint algorithm
     :return:
