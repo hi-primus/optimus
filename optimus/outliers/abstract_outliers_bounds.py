@@ -6,6 +6,7 @@ from optimus.helpers.check import is_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.filters import dict_filter
+from optimus.helpers.json import dump_json
 
 
 class AbstractOutlierBounds(ABC):
@@ -26,6 +27,9 @@ class AbstractOutlierBounds(ABC):
         self.df = df
         self.col_name = one_list_to_val(parse_columns(df, col_name))
 
+        self.lower_bound = None
+        self.upper_bound = None
+
     @abstractmethod
     def whiskers(self):
         """
@@ -42,8 +46,21 @@ class AbstractOutlierBounds(ABC):
 
         col_name = self.col_name
         upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
+        print(upper_bound, lower_bound)
 
         return self.df.rows.select((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+
+    def select_lower_bound(self):
+        col_name = self.col_name
+        sample = {"columns": [{"title": cols} for cols in self.df.cols.names()],
+                  "value": self.df.rows.select(self.df[col_name] < self.lower_bound).limit(100).rows.to_list("*")}
+        return dump_json(sample)
+
+    def select_upper_bound(self):
+        col_name = self.col_name
+        sample = {"columns": [{"title": cols} for cols in self.df.cols.names()],
+                  "value": self.df.rows.select(self.df[col_name] > self.upper_bound).limit(100).rows.to_list("*")}
+        return dump_json(sample)
 
     def drop(self):
         """
@@ -52,9 +69,9 @@ class AbstractOutlierBounds(ABC):
         """
 
         col_name = self.col_name
-        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-        print(upper_bound, lower_bound)
-        return self.df.rows.drop((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+        # upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
+        # print(upper_bound, lower_bound)
+        return self.df.rows.drop((F.col(col_name) > self.upper_bound) | (F.col(col_name) < self.lower_bound))
 
     def count_lower_bound(self, bound):
         """
