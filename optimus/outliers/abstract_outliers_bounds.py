@@ -9,6 +9,11 @@ from optimus.helpers.filters import dict_filter
 from optimus.helpers.json import dump_json
 
 
+# LOWER_BOUND =
+# UPPER_BOUND =
+# OUTLIERS =
+# NON_OUTLIERS =
+
 class AbstractOutlierBounds(ABC):
     """
      This is a template class to expand the outliers methods
@@ -45,6 +50,25 @@ class AbstractOutlierBounds(ABC):
         upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
 
         return self.df.rows.select((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+
+    #TODO: Pass a defined division param instead or run 3 separated jobs
+    def hist(self, col_name):
+        # lower bounf
+        lower_bound_hist = self.df.rows.select(self.df[col_name] < self.lower_bound).cols.hist(col_name, 20)
+
+        # upper bound
+        upper_bound_hist = self.df.rows.select(self.df[col_name] > self.upper_bound).cols.hist(col_name, 20)
+
+        # Non outliers
+        non_outlier_hist = self.df.rows.select(
+            (F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).cols.hist(col_name, 20)
+
+        result = {}
+        result["lower_bound"] = lower_bound_hist
+        result["non_outlier_hist"] = non_outlier_hist
+        result["upper_bound"] = upper_bound_hist
+
+        return dump_json(result)
 
     def select_lower_bound(self):
         col_name = self.col_name
