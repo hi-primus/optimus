@@ -923,7 +923,7 @@ t.run()
 t.create(keyCol, "n_gram_fingerprint", None, "df", None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, source_df, "STATE", 2)
+t.create(keyCol, "n_gram_fingerprint_cluster", None, "json", None, source_df, "STATE", 2)
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
