@@ -34,8 +34,8 @@ class ModifiedZScore(AbstractOutlierThreshold):
         self.threshold = threshold
         self.relative_error = relative_error
         self.col_name = one_list_to_val(parse_columns(df, col_name))
-
-        super().__init__(df, col_name)
+        self.df_score = self._m_z_score()
+        super().__init__(self.df_score, col_name, "modified_z_score")
 
     def _m_z_score(self):
         df = self.df

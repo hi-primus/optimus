@@ -14,52 +14,34 @@ class ZScore(AbstractOutlierThreshold):
     def __init__(self, df, col_name, threshold):
         """
 
-        :param df: Spark Dataframe
+        :para df:
         :param col_name:
+        :param threshold:
         """
-
         if not is_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
-        self.df = df
-
         if not is_numeric(threshold):
             raise TypeError("Numeric expected")
+
+        self.df = df
         self.threshold = threshold
-
         self.col_name = one_list_to_val(parse_columns(df, col_name))
+        self.tmp_col = name_col(col_name, "z_score")
+        self.df_score = self.z_score()
+        super().__init__(self.df_score, col_name, "z_score")
 
-        super().__init__(df, col_name)
-
-    def drop(self):
+    def z_score(self):
+        df = self.df
         col_name = self.col_name
-        z_col_name = name_col(col_name, "z_score")
-        threshold = self.threshold
 
-        return self.df.cols.z_score(col_name, z_col_name) \
-            .rows.drop(F.col(z_col_name) > threshold) \
-            .cols.drop(z_col_name)
-
-    def select(self):
-        col_name = self.col_name
-        z_col_name = name_col(col_name, "z_score")
-
-        return self.df.cols.z_score(col_name, z_col_name) \
-            .rows.select(F.col(z_col_name) > self.threshold) \
-            .cols.drop(z_col_name)
-
-    def non_outliers_count(self):
-        return self.drop().count()
-
-    def count(self):
-        return self.select().count()
+        return df.cols.z_score(col_name, output_cols=self.tmp_col)
 
     def info(self):
-        col_name = self.col_name
-        z_col_name = name_col(col_name, "z_score")
+        self.tmp_col = name_col(self.col_name, "z_score")
 
-        max_z_score = self.df.cols.z_score(col_name, z_col_name) \
-            .cols.max(z_col_name)
+        df = self.z_score()
+        max_z_score = df.rows.select(F.col(self.tmp_col) > self.threshold).cols.max(self.tmp_col)
 
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                 "max_z_score": max_z_score}

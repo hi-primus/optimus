@@ -45,7 +45,7 @@ class Test_df_outliers(unittest.TestCase):
 		actual_df =source_df.outliers.modified_z_score('height(ft)',0.5,10000).count()
 		actual_df =json_enconding(actual_df)
 		expected_value =json_enconding(3)
-		assert (expected_value == actual_df)
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_modified_z_score_drop():
 		actual_df =source_df.outliers.modified_z_score('height(ft)',0.5,10000).drop()
@@ -56,13 +56,13 @@ class Test_df_outliers(unittest.TestCase):
 		actual_df =source_df.outliers.modified_z_score('height(ft)',0.5,10000).info()
 		actual_df =json_enconding(actual_df)
 		expected_value =json_enconding({'count_outliers': 3, 'count_non_outliers': 2, 'max_m_z_score': 21.20928})
-		assert (expected_value == actual_df)
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_modified_z_score_non_outliers_count():
 		actual_df =source_df.outliers.modified_z_score('height(ft)',0.5,10000).non_outliers_count()
 		actual_df =json_enconding(actual_df)
 		expected_value =json_enconding(2)
-		assert (expected_value == actual_df)
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_modified_z_score_select():
 		actual_df =source_df.outliers.modified_z_score('height(ft)',0.5,10000).select()

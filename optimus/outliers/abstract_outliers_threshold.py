@@ -3,9 +3,8 @@ from abc import ABC, abstractmethod
 from pyspark.sql import functions as F
 
 from optimus.helpers.check import is_dataframe
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.converter import one_list_to_val
-from optimus.helpers.filters import dict_filter
 
 
 class AbstractOutlierThreshold(ABC):
@@ -14,7 +13,7 @@ class AbstractOutlierThreshold(ABC):
      Also you need to add the function to outliers.py
      """
 
-    def __init__(self, df, col_name):
+    def __init__(self, df, col_name, prefix):
         """
 
         :param df: Spark Dataframe
@@ -25,6 +24,7 @@ class AbstractOutlierThreshold(ABC):
 
         self.df = df
         self.col_name = one_list_to_val(parse_columns(df, col_name))
+        self.tmp_col = name_col(self.col_name, prefix)
 
     def select(self):
         """
@@ -32,10 +32,8 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
 
-        col_name = self.col_name
-        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-
-        return self.df.rows.select((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+        df = self.df
+        return df.rows.select(F.col(self.tmp_col) > self.threshold).cols.drop(self.tmp_col)
 
     def drop(self):
         """
@@ -43,10 +41,8 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
 
-        col_name = self.col_name
-        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-        print(upper_bound, lower_bound)
-        return self.df.rows.drop((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
+        df = self.df
+        return df.rows.drop(F.col(self.tmp_col) >= self.threshold).cols.drop(self.tmp_col)
 
     def count_lower_bound(self, bound):
         """
@@ -62,24 +58,22 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
         col_name = self.col_name
-        return self.df.rows.select(self.df[col_name] > bound).count()
+        return self.df.rows.select(self.df[col_name] >= bound).count()
 
     def count(self):
         """
         Count the outliers rows using the selected column
         :return:
         """
-        col_name = self.col_name
-        return self.df.rows.select((F.col(col_name) > self.upper_bound) | (F.col(col_name) < self.lower_bound)).count()
+        return self.select().count()
 
     def non_outliers_count(self):
         """
         Count non outliers rows using the selected column
         :return:
         """
-        col_name = self.col_name
-        return self.df.rows.select(
-            (F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).count()
+        df = self.df
+        return df.rows.select(F.col(self.tmp_col) < self.threshold).cols.drop(self.tmp_col).count()
 
     @abstractmethod
     def info(self, output: str = "dict"):
