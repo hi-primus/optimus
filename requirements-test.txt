@@ -44,3 +44,4 @@ pypika==0.32.0
 statsmodels==0.10.1
 glom==19.10.0
 singleton-decorator==1.0.0
+nltk==3.4.5
