@@ -131,6 +131,21 @@ def sample_n(self, n=10, random=False):
 
 
 @add_method(DataFrame)
+def stratified_sample(self, col_name, seed: int = 1) -> DataFrame:
+    """
+    Stratified Sampling
+    :param self:
+    :param col_name:
+    :param seed:
+    :return:
+    """
+    df = self
+    fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
+    df = df.stat.sampleBy(col_name, fractions, seed)
+    return df
+
+
+@add_method(DataFrame)
 def pivot(self, index, column, values):
     """
     Return reshaped DataFrame organized by given index / column values.
