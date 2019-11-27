@@ -581,6 +581,8 @@ t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,num
 
 t.create(None, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
 
+t.create(None, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
+
 t.run()
 
 # +
@@ -894,7 +896,7 @@ t.run()
 
 # ## Keycolision
 
-source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
 
 # +
 t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
@@ -912,7 +914,10 @@ t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
 t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint_cluster", None, "df", None, source_df, "STATE")
+t.create(keyCol, "fingerprint_cluster", None, "json", None, source_df, "STATE")
+# -
+
+t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(keyCol, "n_gram_fingerprint", None, "df", None, source_df, "STATE")
@@ -937,22 +942,16 @@ t = Test(op, source_df, "df_distance_cluster", imports=["from pyspark.ml.linalg 
                                         "from optimus.ml import distancecluster as dc"], path = "df_distance_cluster", final_path="..")
 
 from optimus.ml import distancecluster as dc
+# -
+
+df.table()
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")
+t.create(dc, "levenshtein_cluster", None, 'dict', None, source_df, "STATE")
 # -
 
 t.run()
 
-# + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_filter", None, 'df', None, source_df, "STATE")
-# -
-
-t.create(dc, "levenshtein_json", None, 'dict', None, source_df, "STATE")
-
-# + {"outputHidden": false, "inputHidden": false}
-t.run()
-# -
 df_cancer = op.spark.read.csv('../data_cancer.csv', sep=',', header=True, inferSchema=True)
 
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',

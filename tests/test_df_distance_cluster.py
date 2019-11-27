@@ -14,16 +14,12 @@ source_df=op.create.df([('LOCNCODE', StringType(), True),('LOCNDSCR', StringType
 class Test_df_distance_cluster(unittest.TestCase):
 	maxDiff = None
 	@staticmethod
-	def test_levenshtein_filter():
-		actual_df =dc.levenshtein_filter(source_df,'STATE')
-		expected_df = op.create.df([('STATE_FROM', StringType(), True),('STATE***LEVENSHTEIN_DISTANCE', IntegerType(), True),('STATE_TO', StringType(), True)], [('estadodemexico', 11, 'distritofederal'), ('distritofederal', 11, 'estadodemexico')])
-		assert (expected_df.collect() == actual_df.collect())
-	def test_levenshtein_json(self):
-		actual_df =dc.levenshtein_json(source_df,'STATE')
-		expected_value ={'Estado de México': ['Distrito Federal'], 'Distrito Federal': ['Estado de México']}
+	def test_fingerprint_cluster():
+		actual_df =keyCol.fingerprint_cluster(source_df,'STATE')
+		actual_df =json_enconding(actual_df)
+		expected_value =json_enconding({'Estado de México': {'similar': {'Estado de México': 290}, 'count': 1, 'sum': 290}, 'Distrito Federal': {'similar': {'Distrito Federal': 710}, 'count': 1, 'sum': 710}})
+		assert(expected_value == actual_df)
+	def test_levenshtein_cluster(self):
+		actual_df =dc.levenshtein_cluster(source_df,'STATE')
+		expected_value ={'Estado de México': {'similar': {'Distrito Federal': 710, 'Estado de México': 290}, 'count': 2, 'sum': 1000}, 'Distrito Federal': {'similar': {'Estado de México': 290, 'Distrito Federal': 710}, 'count': 2, 'sum': 1000}}
 		self.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))
-	@staticmethod
-	def test_levenshtein_matrix():
-		actual_df =dc.levenshtein_matrix(source_df,'STATE')
-		expected_df = op.create.df([('STATE_LEVENSHTEIN_1', StringType(), True),('STATE_LEVENSHTEIN_2', StringType(), True),('STATE***LEVENSHTEIN_DISTANCE', IntegerType(), True)], [('distritofederal', 'distritofederal', 0), ('distritofederal', 'estadodemexico', 11), ('estadodemexico', 'distritofederal', 11), ('estadodemexico', 'estadodemexico', 0)])
-		assert (expected_df.collect() == actual_df.collect())
