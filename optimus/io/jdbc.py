@@ -22,8 +22,7 @@ class JDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None):
-
+                 cassandra_table=None, redis_host=None, redis_port=None, redis_auth=None, redis_dbnum=None):
         """
         Create the JDBC connection object
         :return:
@@ -33,9 +32,19 @@ class JDBC:
             database = ""
 
         self.db_driver = driver
+
+        # Oracle
         self.oracle_sid = oracle_sid
+
+        # Cassandra
         self.cassandra_keyspace = cassandra_keyspace
         self.cassandra_table = cassandra_table
+
+        # Redis
+        self.redis_host = redis_host
+        self.redis_port = redis_port
+        self.redis_auth = redis_auth
+        self.redis_dbNum = redis_dbnum
 
         self.driver_context = DriverContext(DriverFactory.get(self.db_driver))
         self.driver_properties = self.driver_context.properties()
@@ -158,13 +167,25 @@ class JDBC:
         logger.print(query)
         logger.print(self.url)
 
-        conf = Spark.instance.spark.read \
-            .format(
-            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-            DriverProperties.CASSANDRA.value["java_class"]) \
-            .option("url", self.url) \
-            .option("user", self.user) \
-            .option("dbtable", query)
+        conf = Spark.instance.spark.read
+
+        jdbc_string = "jdbc"
+        if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+            jdbc_string = DriverProperties.CASSANDRA.value["java_class"]
+        elif self.db_driver == DriverProperties.REDIS.value["name"]:
+            jdbc_string = DriverProperties.REDIS.value["java_class"]
+
+        conf.format(jdbc_string)
+
+        if self.db_driver == DriverProperties.REDIS.value["name"]:
+            conf.option("host", self.redis_host) \
+                .option("port", self.redis_port) \
+                .option("auth", self.redis_auth) \
+                .option("dbNum", self.redis_dbNum)
+        else:
+            conf.option("url", self.url) \
+                .option("user", self.user) \
+                .option("dbtable", query)
 
         # Password
         if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:

@@ -6,9 +6,9 @@ class DriverProperties(Enum):
     """Enum holding all driver properties."""
 
     REDIS = {
-        "name": "cassandra",
-        "port": 9042,
-        "java_class": "org.apache.spark.sql.cassandra",
+        "name": "redis",
+        "port": 6379,
+        "java_class": "org.apache.spark.sql.redis",
         "table_name": ""
     }
 
