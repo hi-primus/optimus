@@ -946,10 +946,12 @@ t.run()
 
 # ## Keycolision
 
-df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(10)
+
+source_df.table()
 
 # +
-t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+t = Test(op, source_df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",

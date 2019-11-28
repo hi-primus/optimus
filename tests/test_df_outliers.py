@@ -17,7 +17,7 @@ class Test_df_outliers(unittest.TestCase):
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).count()
 		actual_df =json_enconding(actual_df)
 		expected_value =json_enconding(3)
-		assert (expected_value == actual_df)
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_mad_drop():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).drop()
@@ -27,14 +27,14 @@ class Test_df_outliers(unittest.TestCase):
 	def test_outliers_mad_info():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).info()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'count_outliers': 3, 'count_non_outliers': 2, 'lower_bound': 12.5, 'upper_bound': 21.5})
-		assert (expected_value == actual_df)
+		expected_value =json_enconding({'count_outliers': 3, 'count_non_outliers': 5, 'lower_bound': 12.5, 'lower_bound_count': 1, 'upper_bound': 21.5, 'upper_bound_count': 2})
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_mad_non_outliers_count():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).non_outliers_count()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(2)
-		assert (expected_value == actual_df)
+		expected_value =json_enconding(5)
+		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_mad_select():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).select()
