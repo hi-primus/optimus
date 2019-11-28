@@ -74,11 +74,7 @@ class Test_df_outliers(unittest.TestCase):
 		actual_df =json_enconding(actual_df)
 		expected_value =json_enconding(5)
 		assert(expected_value == actual_df)
-	@staticmethod
-	def test_outliers_tukey_drop():
-		actual_df =source_df.outliers.tukey('height(ft)').drop()
-		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('timestamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [])
-		assert (expected_df.collect() == actual_df.collect())
+
 	@staticmethod
 	def test_outliers_tukey_info():
 		actual_df =source_df.outliers.tukey('height(ft)').info()

@@ -880,6 +880,8 @@ array_col = "attributes"
 
 t.create(None, "outliers.tukey", None, "df","select", numeric_col)
 
+source_df.outliers.tukey(numeric_col).drop()
+
 t.create(None, "outliers.tukey", None, "df","drop", numeric_col)
 
 t.create(None, "outliers.tukey", None, "json", "whiskers", numeric_col)
