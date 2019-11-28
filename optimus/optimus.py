@@ -113,7 +113,8 @@ class Optimus:
             elif load_avro == "2.3":
                 self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+            jdbc_jars = ["/jars/spark-redis-2.3.0.jar", "/jars/RedshiftJDBC42-1.2.16.1027.jar",
+                         "/jars/mysql-connector-java-8.0.16.jar",
                          "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
                          "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
                          "/jars/mssql-jdbc-7.4.1.jre8.jar"]
