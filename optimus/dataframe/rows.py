@@ -1,3 +1,4 @@
+import operator
 from functools import reduce
 
 from multipledispatch import dispatch
@@ -6,14 +7,14 @@ from pyspark.sql import functions as F
 
 # Helpers
 import optimus as op
-from optimus.helpers.functions import val_to_list
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.check import is_list_of_str_or_int, is_list_of_tuples, is_list_of_dataframes, is_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names
-from optimus.helpers.constants import Actions
+from optimus.helpers.constants import Actions, PYSPARK_NUMERIC_TYPES
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
+from optimus.helpers.functions import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -54,7 +55,6 @@ def rows(self):
         df_result = df_result.preserve_meta(self, Actions.NEST.value, df.cols.names())
 
         return df_result
-
 
     @add_attr(rows)
     def select_by_dtypes(input_cols, data_type=None):
@@ -162,6 +162,47 @@ def rows(self):
         df = self
         df = df.where(~where)
         df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
+
+    @add_attr(rows)
+    def between(columns, lower_bound, upper_bound, invert=False, equal=False):
+        """
+        Trim values at input thresholds
+        :param columns: Columns to be trimmed
+        :param lower_bound: Lower value bound
+        :param upper_bound: Upper value bound
+        :param invert:
+        :param equal:
+        :return:
+        """
+        # TODO: should process string or dates
+        columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
+
+        def _clip(_col_name):
+
+            if invert is False and equal is False:
+                op1 = operator.gt
+                op2 = operator.lt
+
+            elif invert is False and equal is True:
+                op1 = operator.ge
+                op2 = operator.le
+
+            elif invert is True and equal is False:
+                op1 = operator.lt
+                op2 = operator.gt
+
+            elif invert is True and equal is True:
+                op1 = operator.le
+                op2 = operator.ge
+
+            query = op1(F.col(_col_name), lower_bound) & op2(F.col(_col_name), upper_bound)
+
+            return query
+
+        df = self
+        for col_name in columns:
+            df = df.where(_clip(col_name))
         return df
 
     @add_attr(rows)
