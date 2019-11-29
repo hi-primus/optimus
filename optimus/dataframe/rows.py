@@ -183,21 +183,26 @@ def rows(self):
             if invert is False and equal is False:
                 op1 = operator.gt
                 op2 = operator.lt
+                opb = operator.__and__
 
             elif invert is False and equal is True:
                 op1 = operator.ge
                 op2 = operator.le
+                opb = operator.__and__
 
             elif invert is True and equal is False:
                 op1 = operator.lt
                 op2 = operator.gt
+                opb = operator.__or__
 
             elif invert is True and equal is True:
                 op1 = operator.le
                 op2 = operator.ge
+                opb = operator.__or__
 
-            query = op1(F.col(_col_name), lower_bound) & op2(F.col(_col_name), upper_bound)
+            query = opb(op1(F.col(_col_name), lower_bound), op2(F.col(_col_name), upper_bound))
 
+            print(query)
             return query
 
         df = self
