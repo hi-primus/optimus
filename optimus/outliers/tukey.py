@@ -17,7 +17,7 @@ class Tukey(AbstractOutlierBounds):
         self.df = df
         self.col_name = col_name
 
-        self.upper_bound, self.lower_bound, self.q1, self.median, self.q3, self.iqr = dict_filter(
+        self.lower_bound, self.upper_bound, self.q1, self.median, self.q3, self.iqr = dict_filter(
             self.whiskers(), ["lower_bound", "upper_bound", "q1", "median", "q3", "iqr"]
         )
         # print(self.upper_bound, self.lower_bound, self.q1, self.median, self.q3, self.iqr)

@@ -51,9 +51,9 @@ class AbstractOutlierBounds(ABC):
 
         return self.df.rows.select((F.col(col_name) > upper_bound) | (F.col(col_name) < lower_bound))
 
-    #TODO: Pass a defined division param instead or run 3 separated jobs
+    # TODO: Pass a defined division param instead or run 3 separated jobs
     def hist(self, col_name):
-        # lower bounf
+        # lower bound
         lower_bound_hist = self.df.rows.select(self.df[col_name] < self.lower_bound).cols.hist(col_name, 20)
 
         # upper bound
@@ -61,12 +61,16 @@ class AbstractOutlierBounds(ABC):
 
         # Non outliers
         non_outlier_hist = self.df.rows.select(
-            (F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).cols.hist(col_name, 20)
+            (F.col(col_name) >= self.lower_bound) & (F.col(col_name) <= self.upper_bound)).cols.hist(col_name, 20)
+
 
         result = {}
-        result["lower_bound"] = lower_bound_hist
-        result["non_outlier_hist"] = non_outlier_hist
-        result["upper_bound"] = upper_bound_hist
+        if lower_bound_hist is not None:
+            result.update(lower_bound_hist)
+        if upper_bound_hist is not None:
+            result.update(upper_bound_hist)
+        if non_outlier_hist is not None:
+            result.update(non_outlier_hist)
 
         return dump_json(result)
 
