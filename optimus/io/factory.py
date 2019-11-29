@@ -48,5 +48,7 @@ class DriverFactory:
             return SQLiteDriver()
         elif driver_type == DriverProperties.SQLSERVER.value["name"]:
             return SQLServerDriver()
+        elif driver_type == DriverProperties.REDIS.value["name"]:
+            return SQLServerDriver()
         else:
             RaiseIt.value_error(driver_type, [database["name"] for database in DriverProperties.list()])
