@@ -1,3 +1,6 @@
+# This file need to be send to the cluster via .addpyfile to handle the pickle problem
+# This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
+
 import re
 from ast import literal_eval
 
@@ -5,15 +8,9 @@ import fastnumbers
 from dateutil.parser import parse as dparse
 
 
-class p(object):
-    def exec(self, df, columns):
-        _count = (df.select(columns).rdd
-                  .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: self.parse(x, infer, dtypes, str_funcs, int_funcs))
-                  .reduceByKey(lambda a, b: a + b))
-        return _count
-
-    def parse(self, value, infer, dtypes, str_funcs, int_funcs, mismatch):
+class Infer(object):
+    @staticmethod
+    def parse(value, infer, dtypes, str_funcs, int_funcs, mismatch):
         """
 
         :param value:

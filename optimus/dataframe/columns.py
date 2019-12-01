@@ -43,6 +43,7 @@ from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+from infer import Infer
 
 ENGINE = "spark"
 # Because the monkey patching and the need to call set a function we need to rename the standard python set.
@@ -1739,29 +1740,23 @@ def cols(self):
         :param mismatch: a dict with column names and pattern to check. Pattern can be a predefined or a regex
         :return:
         """
-        from optimus.parse import p
-
-        columns = parse_columns(self, columns)
 
         df = self
-        dtypes = df.cols.dtypes()
 
-        _count = p().exec(df, columns)
+        columns = parse_columns(df, columns)
+        columns_dtypes = df.cols.dtypes()
 
-        # if mismatch:
-        #     _count = (df.select(columns).rdd
-        #               .flatMap(lambda x: x.asDict().items())
-        #               .map(lambda x: p.parse(x, infer, dtypes, str_funcs, int_funcs, mismatch))
-        #               .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))
-        #               )
-        # else:
-        #     _count = (df.select(columns).rdd
-        #               .flatMap(lambda x: x.asDict().items())
-        #               .map(lambda x: p.parse(x, infer, dtypes, str_funcs, int_funcs))
-        #               .reduceByKey(lambda a, b: a + b))
+        if mismatch:
+            m = lambda a, b: (a[0] + b[0], a[1] + b[1])
+        else:
+            m = lambda a, b: (a + b)
+
+        _count = (df.select(columns).rdd
+                  .flatMap(lambda x: x.asDict().items())
+                  .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs, mismatch))
+                  .reduceByKey(m))
 
         result = {}
-
         for c in _count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
@@ -1769,15 +1764,15 @@ def cols(self):
         if mismatch is not None:
             for col_name, result_dtypes in result.items():
                 result[col_name]["mismatch"] = 0
-                for dtype, count in result_dtypes.items():
+                for result_dtype, count in result_dtypes.items():
                     if is_tuple(count):
                         result[col_name]["mismatch"] = result[col_name]["mismatch"] + count[1]
-                        result[col_name][dtype] = count[0]
+                        result[col_name][result_dtype] = count[0]
 
         if infer is True:
-            result = fill_missing_var_types(result, dtypes)
+            result = fill_missing_var_types(result, columns_dtypes)
         else:
-            result = parse_profiler_dtypes(result, dtypes)
+            result = parse_profiler_dtypes(result, columns_dtypes)
         return result
 
     @add_attr(cols)
