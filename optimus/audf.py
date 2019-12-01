@@ -8,6 +8,7 @@ from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_spark_class_dtypes, parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
+from infer import Infer
 
 
 def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
@@ -116,76 +117,13 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
     :param get_type: Value to be returned as string or boolean
     :return: True or False
     """
-    from ast import literal_eval
 
     if data_type is not None:
         data_type = parse_python_dtypes(data_type)
 
     def pandas_udf_func(v):
-        def str_to_boolean(value):
-            """
-            Check if a str can be converted to boolean
-            :param value:
-            :return:
-            """
-            value = value.lower()
-            if value == "true" or value == "false":
-                return True
 
-        def str_to_date(value):
-            try:
-                dateutil.parser.parse(value)
-                return True
-            except (ValueError, OverflowError):
-                pass
-
-        def str_to_array(value):
-            """
-            Check if value can be parsed to a tuple or and array.
-            Because Spark can handle tuples we will try to transform tuples to arrays
-            :param value:
-            :return:
-            """
-            try:
-                if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
-                    return True
-            except (ValueError, SyntaxError):
-                pass
-
-        def func(value):
-            """
-            Check if a value can be casted to a specific
-            :param value: value to be checked
-            :return:
-            """
-            if isinstance(value, bool):
-                _data_type = "bool"
-            elif fastnumbers.isint(value):  # Check if value is integer
-                _data_type = "int"
-            elif fastnumbers.isfloat(value):
-                _data_type = "float"
-            # if string we try to parse it to int, float or bool
-            elif isinstance(value, str):
-                if str_to_boolean(value):
-                    _data_type = "bool"
-                elif str_to_date(value):
-                    _data_type = "date"
-                elif str_to_array(value):
-                    _data_type = "array"
-                else:
-                    _data_type = "string"
-            else:
-                _data_type = "null"
-
-            if get_type is False:
-                if _data_type == data_type:
-                    return True
-                else:
-                    return False
-            else:
-                return _data_type
-
-        return v.apply(func)
+        return v.apply(Infer.parse)
 
     if get_type is True:
         return_data_type = "string"
@@ -193,4 +131,4 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         return_data_type = "boolean"
 
     col_name = one_list_to_val(col_name)
-    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)
+    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name, None, data_type)
