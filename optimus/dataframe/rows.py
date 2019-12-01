@@ -78,15 +78,20 @@ def rows(self):
         return self.where(fbdt(input_cols, data_type))
 
     @add_attr(rows)
-    def select(*args, **kwargs):
+    def select(columns, *args, **kwargs):
         """
         Alias of Spark filter function. Return rows that match a expression
+        :param columns:
         :param args:
         :param kwargs:
         :return: Spark DataFrame
         """
         df = self
         return df.filter(*args, **kwargs)
+
+        df = df.filter(columns, *args, **kwargs)
+        df = df.preserve_meta(self, Actions.SORT_ROW.value, columns)
+        return df
 
     @add_attr(rows)
     def to_list(input_cols):
@@ -304,7 +309,7 @@ def rows(self):
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
         df = df.rows.select(expr)
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, input_cols)
         return df
 
     @add_attr(rows)
@@ -317,7 +322,7 @@ def rows(self):
         input_cols = parse_columns(self, input_cols)[0]
         df = self
         df = df.withColumn(input_cols, F.explode(input_cols))
-        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, input_cols)
         return df
 
     @add_attr(rows)

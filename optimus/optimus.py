@@ -1,3 +1,24 @@
+
+# pyspark_pipes: build Spark ML pipelines easily
+from .ml.pipelines import patch
+
+patch()
+
+# Monkey patch for Spark DataFrames
+from optimus.dataframe import rows, columns, extension
+from optimus.dataframe.plots import plots
+from optimus.io import save
+from optimus.outliers import outliers
+
+
+
+# Handle encoding problem
+# https://stackoverflow.com/questions/39662384/pyspark-unicodeencodeerror-ascii-codec-cant-encode-character
+
+# os.environ["PYTHONIOENCODING"] = "utf8"
+
+
+
 import os
 import platform
 import sys
@@ -40,8 +61,8 @@ class Optimus:
                  server=False,
                  repositories=None,
                  packages=None,
-                 jars=[],
-                 driver_class_path=[],
+                 jars=None,
+                 driver_class_path=None,
                  options=None,
                  additional_options=None,
                  comm=None,
@@ -75,6 +96,7 @@ class Optimus:
         :type jars: (list[str])
 
         """
+
         self.preserve = False
 
         Optimus.cache = cache
@@ -83,6 +105,12 @@ class Optimus:
             Comm.instance = Comm()
         else:
             Comm.instance = comm
+
+        if jars is None:
+            jars = []
+
+        if driver_class_path is None:
+            driver_class_path = []
 
         if session is None:
             # Creating Spark Session
@@ -149,7 +177,9 @@ class Optimus:
         logger.print(STARTING_OPTIMUS)
 
         # Pickling
-        # Spark.instance.sc.addPyFile(absolute_path("/helpers/pickle.py"))
+        # Added parse1.py
+        print(absolute_path("/../infer.py"))
+        Spark.instance.sc.addPyFile(absolute_path("/../infer.py"))
 
         if server:
             logger.print("Starting Optimus Server...")

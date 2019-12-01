@@ -12,7 +12,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
-from optimus import Comm
+from optimus.bumblebee import Comm
+from optimus.helpers.functions import val_to_list
 from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
