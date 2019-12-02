@@ -43,7 +43,7 @@ from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
-from optimus.profiler.functions import fill_missing_var_types
+from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 ENGINE = "spark"
 # Because the monkey patching and the need to call set a function we need to rename the standard python set.
@@ -1809,10 +1809,8 @@ def cols(self):
 
         # Process mismatch
         for col_name, result_dtypes in result.items():
-            result[col_name]["mismatch"] = 0
             for result_dtype, count in result_dtypes.items():
                 if is_tuple(count):
-                    result[col_name]["mismatch"] = result[col_name]["mismatch"] + count[1]
                     result[col_name][result_dtype] = count[0]
 
         if infer is True:
