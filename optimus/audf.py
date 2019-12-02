@@ -122,7 +122,6 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         data_type = parse_python_dtypes(data_type)
 
     def pandas_udf_func(v):
-
         return v.apply(Infer.parse)
 
     if get_type is True:

@@ -73,7 +73,10 @@ def rows(self):
         :param data_type: Datatype use filter values
         :return: Spark DataFrame
         """
+
+
         input_cols = parse_columns(self, input_cols)
+        self.cols.apply()
 
         return self.where(fbdt(input_cols, data_type))
 
@@ -87,7 +90,6 @@ def rows(self):
         :return: Spark DataFrame
         """
         df = self
-        return df.filter(*args, **kwargs)
 
         df = df.filter(columns, *args, **kwargs)
         df = df.preserve_meta(self, Actions.SORT_ROW.value, columns)
