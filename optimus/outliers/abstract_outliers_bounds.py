@@ -128,7 +128,7 @@ class AbstractOutlierBounds(ABC):
         """
         col_name = self.col_name
         return self.df.rows.select(
-            (F.col(col_name) <= self.upper_bound) | (F.col(col_name) >= self.lower_bound)).count()
+            (F.col(col_name) <= self.upper_bound) & (F.col(col_name) >= self.lower_bound)).count()
 
     @abstractmethod
     def info(self, output: str = "dict"):
