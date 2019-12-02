@@ -43,7 +43,7 @@ def str_to_gender(_value):
     _value = _value.lower()
     if _value == "male" or _value == "female":
         return True
-    else
+    else:
         return False
 
 
