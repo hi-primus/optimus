@@ -1,4 +1,4 @@
-cx_Oracle==7.2.3
+cx_Oracle==7.3.0
 mysqlclient==1.4.4
 records==0.5.3
 psycopg2-binary==2.8.4
