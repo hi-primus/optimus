@@ -1,4 +1,3 @@
-
 # pyspark_pipes: build Spark ML pipelines easily
 from .ml.pipelines import patch
 
@@ -9,14 +8,14 @@ from optimus.dataframe import rows, columns, extension
 from optimus.dataframe.plots import plots
 from optimus.io import save
 from optimus.outliers import outliers
-
+# from optimus.profiler.profiler import Profiler
+# from optimus.bumblebee import Comm
 
 
 # Handle encoding problem
 # https://stackoverflow.com/questions/39662384/pyspark-unicodeencodeerror-ascii-codec-cant-encode-character
 
 # os.environ["PYTHONIOENCODING"] = "utf8"
-
 
 
 import os
@@ -178,8 +177,10 @@ class Optimus:
 
         # Pickling
         # Added parse1.py
-        print(absolute_path("/../infer.py"))
+        print(absolute_path("/../parse/infer.py"))
         Spark.instance.sc.addPyFile(absolute_path("/../infer.py"))
+        # Spark.instance.sc.addPyFile(absolute_path("/../parse/constants.py"))
+        # Spark.instance.sc.addPyFile(absolute_path(["/../parse/infer.py", "/../parse/constants.py"]))
 
         if server:
             logger.print("Starting Optimus Server...")

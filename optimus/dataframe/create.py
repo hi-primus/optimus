@@ -1,9 +1,7 @@
 import pandas as pd
 from pyspark.sql.types import StringType, StructField, StructType
 
-from infer import Infer
-from optimus.helpers.check import is_, is_list_of_tuples, is_one_element, is_tuple
-from optimus.helpers.parser import parse_spark_class_dtypes
+from infer import Infer, is_, is_tuple, is_list_of_tuples, is_one_element, parse_spark_class_dtypes
 from optimus.spark import Spark
 
 
@@ -35,7 +33,8 @@ class Create:
                     col_name = c
 
                     if infer_schema is True:
-                        var_type = Infer.parse(r)
+                        var_type = Infer.to_spark(r)
+                        # print(var_type)
                     else:
                         var_type = StringType()
                     nullable = True

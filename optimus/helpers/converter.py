@@ -2,6 +2,8 @@ from ast import literal_eval
 
 import dateutil
 
+from infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
+
 
 def val_to_list(val):
     """
@@ -49,7 +51,6 @@ def format_dict(_dict, tidy=True):
     :return:
     """
 
-    from optimus.helpers.check import is_dict, is_list_of_one_element, is_dict_of_one_element, is_list
     if tidy is True:
         def _format_dict(_dict):
 

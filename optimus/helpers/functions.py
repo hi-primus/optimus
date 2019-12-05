@@ -13,7 +13,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus import ROOT_DIR
-from optimus.helpers.check import is_
+from infer import is_
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt

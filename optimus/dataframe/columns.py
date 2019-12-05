@@ -20,27 +20,26 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
-from infer import Infer
+from infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+    is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, is_dataframe, \
+    parse_spark_class_dtypes, PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
 # Functions
 # from optimus.optimus import Optimus
 # from optimus.optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
-from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str, is_numeric
+from optimus.helpers.check import has_, is_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions import filter_list, collect_as_list, create_buckets
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
-    compress_list, compress_dict
+from optimus.helpers.parser import compress_list, compress_dict, parse_python_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
@@ -844,8 +843,8 @@ def cols(self):
             mode_df = count.join(
                 count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
             )
-            if Optimus.cache:
-                mode_df = mode_df.cache()
+
+            mode_df = mode_df.cache()
             # if none of the values are repeated we not have mode
             mode_list = (mode_df
                          .rows.select(mode_df["count"] > 1)
@@ -1755,10 +1754,10 @@ def cols(self):
         return result
 
     @add_attr(cols)
-    def count_mismatch(columns_mismatch=None):
+    def count_mismatch(columns_mismatch: dict = None):
         """
-        
-        :param columns_mismatch:
+        Return the num of mismatches
+        :param columns_mismatch: dict of {col_name:datatype}
         :return: 
         """
         df = self
@@ -1798,13 +1797,13 @@ def cols(self):
         columns = parse_columns(df, columns)
         columns_dtypes = df.cols.dtypes()
 
-        _count = (df.select(columns).rdd
-                  .flatMap(lambda x: x.asDict().items())
-                  .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
-                  .reduceByKey(lambda a, b: (a + b)))
+        df_count = (df.select(columns).rdd
+                    .flatMap(lambda x: x.asDict().items())
+                    .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
+                    .reduceByKey(lambda a, b: (a + b)))
 
         result = {}
-        for c in _count.collect():
+        for c in df_count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
         # Process mismatch

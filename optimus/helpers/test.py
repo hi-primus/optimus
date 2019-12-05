@@ -4,8 +4,8 @@ from io import UnsupportedOperation
 
 import pyspark
 
-from optimus.helpers.check import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
-    is_list_of_tuples, is_function
+from infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
+    is_numeric, is_str
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
@@ -90,7 +90,7 @@ class Test:
 
     def create(self, obj, method, suffix=None, output="df", additional_method=None, *args, **kwargs):
         """
-        This is a helper function that output python tests for Spark Dataframes.
+        This is a helper function that output python tests for Spark DataFrames.
         :param obj: Object to be tested
         :param method: Method to be tested
         :param suffix: The test name will be create using the method param. suffix will add a string in case you want
@@ -160,7 +160,7 @@ class Test:
             elif is_list(v):
                 if is_list_of_strings(v):
                     lst = ["'" + x + "'" for x in v]
-                elif is_list_of_numeric(v):
+                elif is_list_of_numeric(v) or is_list_of_tuples(v):
                     lst = [str(x) for x in v]
                 elif is_list_of_tuples(v):
                     lst = [str(x) for x in v]

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_dataframe
+from infer import is_dataframe
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.converter import one_list_to_val
 

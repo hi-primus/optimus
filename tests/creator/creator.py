@@ -292,9 +292,12 @@ from pyspark.sql import functions as F
 source_df.select(F.abs("weight(t)"))
 # -
 
-t.create(None, "cols.mode", None, "json", numeric_col)
+t.create(None, "cols.mode", None, "json", None, numeric_col)
 
-t.create(None, "cols.mode", "all_columns", "json", "*")
+# %%time
+t.create(None, "cols.mode", "all_columns", "json", None,"*")
+
+t.run()
 
 t.create(None, "cols.count", None, "json")
 
@@ -418,7 +421,10 @@ t.run()
 
 t.create(None, "cols.impute", None, "df", numeric_col_B)
 
-t.create(None, "cols.impute", "all_columns", "df", "names","categorical")
+# %%time
+t.create(None, "cols.impute", "all_columns","df", None ,"names","categorical")
+
+t.run()
 
 # ## Hist
 
@@ -448,7 +454,7 @@ t.run()
 
 t.create(None, "cols.dtypes", "all_columns", "json", "*")
 
-t.create(None, "cols.select_by_dtypes", "str", "df", "str")
+t.create(None, "cols.select_by_dtypes", "str", "df", None, "str")
 
 t.create(None, "cols.select_by_dtypes", "int", "df", "int")
 
@@ -678,7 +684,13 @@ mismatch_df = op.create.df(
 
 mismatch = {"names":"dd/mm/yyyy","height(ft)":r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',"function":"yyyy-mm-dd"}
 
-t.create(mismatch_df, "cols.count_by_dtypes", "mismatch", "dict", None, "*", infer=False, mismatch=mismatch)
+m = {"names":"int"}
+
+mismatch_df.table()
+
+t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, m)
+
+
 
 t.run()
 

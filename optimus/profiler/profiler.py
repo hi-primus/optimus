@@ -5,18 +5,18 @@ from collections import OrderedDict
 import humanize
 import imgkit
 import jinja2
-import simplejson as json
 from glom import assign
 
 from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
+from infer import is_dict, is_list_of_str, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
+from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, update_dict
-from optimus.helpers.json import json_converter, dump_json
+from optimus.helpers.json import dump_json
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
