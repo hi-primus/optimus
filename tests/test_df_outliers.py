@@ -27,13 +27,13 @@ class Test_df_outliers(unittest.TestCase):
 	def test_outliers_mad_info():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).info()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'count_outliers': 3, 'count_non_outliers': 5, 'lower_bound': 12.5, 'lower_bound_count': 1, 'upper_bound': 21.5, 'upper_bound_count': 2})
+		expected_value =json_enconding({'count_outliers': 3, 'count_non_outliers': 2, 'lower_bound': 12.5, 'lower_bound_count': 1, 'upper_bound': 21.5, 'upper_bound_count': 2})
 		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_mad_non_outliers_count():
 		actual_df =source_df.outliers.mad('height(ft)',0.5,10000).non_outliers_count()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(5)
+		expected_value =json_enconding(2)
 		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_mad_select():
@@ -72,20 +72,24 @@ class Test_df_outliers(unittest.TestCase):
 	def test_outliers_tukey_count():
 		actual_df =source_df.outliers.tukey('height(ft)').count()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(5)
+		expected_value =json_enconding(2)
 		assert(expected_value == actual_df)
-
+	@staticmethod
+	def test_outliers_tukey_drop():
+		actual_df =source_df.outliers.tukey('height(ft)').drop()
+		expected_df = op.create.df([('names', StringType(), True),('height(ft)', ShortType(), True),('function', StringType(), True),('rank', ByteType(), True),('age', IntegerType(), True),('weight(t)', FloatType(), True),('japanese name', ArrayType(StringType(),True), True),('last position seen', StringType(), True),('date arrival', StringType(), True),('last date seen', StringType(), True),('attributes', ArrayType(FloatType(),True), True),('Date Type', DateType(), True),('timestamp', TimestampType(), True),('Cybertronian', BooleanType(), True),('function(binary)', BinaryType(), True),('NullType', NullType(), True)], [])
+		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_outliers_tukey_info():
 		actual_df =source_df.outliers.tukey('height(ft)').info()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding({'count_outliers': 5, 'count_non_outliers': 2, 'lower_bound': 45.5, 'lower_bound_count': 4, 'upper_bound': -6.5, 'upper_bound_count': 4, 'q1': 13, 'median': 17, 'q3': 26, 'iqr': 13})
+		expected_value =json_enconding({'count_outliers': 2, 'count_non_outliers': 3, 'lower_bound': -6.5, 'lower_bound_count': 1, 'upper_bound': 45.5, 'upper_bound_count': 1, 'q1': 13, 'median': 17, 'q3': 26, 'iqr': 13})
 		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_tukey_non_outliers_count():
 		actual_df =source_df.outliers.tukey('height(ft)').non_outliers_count()
 		actual_df =json_enconding(actual_df)
-		expected_value =json_enconding(2)
+		expected_value =json_enconding(3)
 		assert(expected_value == actual_df)
 	@staticmethod
 	def test_outliers_tukey_select():
