@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-import optimus.optimus as op
+import optimus as op
 from infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
     PYSPARK_NUMERIC_TYPES
 from optimus.audf import filter_row_by_data_type as fbdt
