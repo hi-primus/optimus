@@ -248,7 +248,41 @@ class Infer(object):
         return parse_spark_class_dtypes(result)
 
     @staticmethod
-    def parse(value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, mismatch: dict = None):
+    def func(value, data_type, get_type):
+        """
+        Check if a value can be casted to a specific
+        :param value: value to be checked
+        :return:
+        """
+        if isinstance(value, bool):
+            _data_type = "bool"
+        elif fastnumbers.isint(value):  # Check if value is integer
+            _data_type = "int"
+        elif fastnumbers.isfloat(value):
+            _data_type = "float"
+        # if string we try to parse it to int, float or bool
+        elif isinstance(value, str):
+            if str_to_boolean(value):
+                _data_type = "bool"
+            elif str_to_date(value):
+                _data_type = "date"
+            elif str_to_array(value):
+                _data_type = "array"
+            else:
+                _data_type = "string"
+        else:
+            _data_type = "null"
+
+        if get_type is False:
+            if _data_type == data_type:
+                return True
+            else:
+                return False
+        else:
+            return _data_type
+
+    @staticmethod
+    def parse(value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None):
         """
 
         :param value:
@@ -256,7 +290,6 @@ class Infer(object):
         :param dtypes:
         :param str_funcs: Custom string function to infer.
         :param int_funcs: Custom numeric functions to infer.
-        :param mismatch: a dict with a column name and a regular expression that match the datatype defined by the user.
         {col_name: regular_expression}
         :return:
         """
@@ -273,7 +306,7 @@ class Infer(object):
                 (str_to_url, "url"),
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
-
+        print(dtypes)
         if dtypes[col_name] == "string" and infer is True:
 
             if isinstance(value, bool):

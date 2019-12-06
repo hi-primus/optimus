@@ -1,10 +1,10 @@
 from pyspark.sql import functions as F
 
-from infer import Infer, is_column, parse_spark_class_dtypes
-from optimus.helpers.parser import parse_python_dtypes
+from infer import is_column, parse_spark_class_dtypes, Infer
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.logger import logger
+from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -119,7 +119,8 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         data_type = parse_python_dtypes(data_type)
 
     def pandas_udf_func(v):
-        return v.apply(Infer.parse)
+
+        return v.apply(Infer.func, args=(data_type, get_type))
 
     if get_type is True:
         return_data_type = "string"
@@ -127,4 +128,4 @@ def filter_row_by_data_type(col_name, data_type=None, get_type=False):
         return_data_type = "boolean"
 
     col_name = one_list_to_val(col_name)
-    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name, None, data_type)
+    return F.pandas_udf(pandas_udf_func, return_data_type)(col_name)

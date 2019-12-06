@@ -1028,6 +1028,8 @@ df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
 df_model.table()
 
+# ## Row
+
 source_df = op.create.df([
     ("words", "str", True),
     ("num", "int", True),
@@ -1043,9 +1045,48 @@ source_df = op.create.df([
         (None, 3, "eagle", "glass", 8, "c"),
     ])
 
-source_df.show()
+from optimus.audf import abstract_udf as audf
+t = Test(op, source_df, "df_rows", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "from optimus.audf import abstract_udf as audf",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"], path = "df_rows", final_path="..")
 
-actual_df = source_df.rows.append([("this is a word", 2, "this is an animal",
-                                           "this is a thing", 64, "this is a filter",)])
+row =[("this is a word", 2, "this is an animal",
+                                           "this is a thing", 64, "this is a filter",)]
+
+t.create(None, "rows.append", None, "df", None, row)
+
+fil = (source_df["num"] == 1)
+
+t.create(None, "rows.select", None, "df", None, fil)
+
+t.create(None, "rows.select_by_dtypes", None, "df", None, "filter", "integer")
+
+fil = (source_df["num"] == 2) | (source_df["second"] == 5)
+
+t.create(None, "rows.drop", None, "df", None, fil)
+
+t.create(None, "rows.drop_by_dtypes", None, "df", None, "filter", "integer")
+
+
+def func_data_type(value, attr):
+    return value > 1
+a = audf("num", func_data_type, "boolean")
+
+t.create(None, "rows.drop", "audf", "df", None, a)
+
+t.create(None, "rows.sort", None, "df", None, "num", "desc")
+
+t.create(None, "rows.is_in", None, "df", None, "num", 2)
+
+t.create(None, "rows.between", None, "df", None, "second", 6, 8)
+
+t.create(None, "rows.between", "equal", "df", None, "second", 6, 8, equal=True)
+
+t.create(None, "rows.between", "invert_equal", "df", None, "second", 6, 8, invert=True, equal=True)
+
+t.run()
 
 

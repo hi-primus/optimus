@@ -6,10 +6,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-import optimus as op
-from optimus.audf import filter_row_by_data_type as fbdt
+import optimus.optimus as op
 from infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
     PYSPARK_NUMERIC_TYPES
+from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.columns import parse_columns, validate_columns_names
 from optimus.helpers.constants import Actions
 from optimus.helpers.converter import one_list_to_val
@@ -58,6 +58,20 @@ def rows(self):
         return df_result
 
     @add_attr(rows)
+    def select(*args, **kwargs):
+        """
+        Alias of Spark filter function. Return rows that match a expression
+        :param args:
+        :param kwargs:
+        :return: Spark DataFrame
+        """
+        df = self
+        df = df.filter(*args, **kwargs)
+        df = df.preserve_meta(self, Actions.SORT_ROW.value, df.cols.names())
+
+        return df
+
+    @add_attr(rows)
     def select_by_dtypes(input_cols, data_type=None):
         """
         This function has built in order to filter some type of row depending of the var type detected by python
@@ -75,26 +89,10 @@ def rows(self):
         :return: Spark DataFrame
         """
 
-
         input_cols = parse_columns(self, input_cols)
-        self.cols.apply()
+        # self.cols.apply()
 
         return self.where(fbdt(input_cols, data_type))
-
-    @add_attr(rows)
-    def select(columns, *args, **kwargs):
-        """
-        Alias of Spark filter function. Return rows that match a expression
-        :param columns:
-        :param args:
-        :param kwargs:
-        :return: Spark DataFrame
-        """
-        df = self
-
-        df = df.filter(columns, *args, **kwargs)
-        df = df.preserve_meta(self, Actions.SORT_ROW.value, columns)
-        return df
 
     @add_attr(rows)
     def to_list(input_cols):
@@ -222,7 +220,7 @@ def rows(self):
     def drop_by_dtypes(input_cols, data_type=None):
         """
         Drop rows by cell data type
-        :param input_cols: Column in which the filter is going to be apllied
+        :param input_cols: Column in which the filter is going to be applied
         :param data_type: filter by string, integer, float or boolean
         :return: Spark DataFrame
         """
@@ -251,7 +249,7 @@ def rows(self):
         return df
 
     @add_attr(rows)
-    def drop_duplicates(input_cols=None, keep="first"):
+    def drop_duplicates(input_cols=None):
         """
         Drop duplicates values in a dataframe
         :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
