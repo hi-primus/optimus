@@ -1,11 +1,11 @@
 import errno
 import os
 from io import UnsupportedOperation
-
+import json
 import pyspark
 
 from infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
-    is_numeric, is_str
+    is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
@@ -164,13 +164,15 @@ class Test:
                     lst = [str(x) for x in v]
                 elif is_list_of_tuples(v):
                     lst = [str(x) for x in v]
-
                 _args.append('[' + ','.join(lst) + ']')
+            elif is_dict(v):
+                _args.append(json.dumps(v))
             elif is_function(v):
                 _args.append(v.__qualname__)
 
             else:
-                _args.append(get_var_name(v))
+                # _args.append(get_var_name(v))
+                _args.append(str(v))
 
             # else:
             #     import marshal
@@ -180,7 +182,7 @@ class Test:
             #
             # code = marshal.loads(code_string)
             # func = types.FunctionType(code, globals(), "some_func_name")
-
+        print(_args)
         _args = ','.join(_args)
         _kwargs = []
 
