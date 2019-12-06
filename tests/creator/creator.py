@@ -690,8 +690,6 @@ mismatch_df.table()
 
 t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, {"names":"int"})
 
-
-
 t.run()
 
 # ## Unnest String
