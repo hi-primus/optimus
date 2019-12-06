@@ -2,3 +2,4 @@ include optimus/templates/out/*
 include optimus/profiler/templates/out/*
 include optimus/css/*
 include optimus/jars/*
+include infer.py
