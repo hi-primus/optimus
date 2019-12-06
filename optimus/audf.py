@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 
-from infer import is_column, parse_spark_class_dtypes, Infer
+from optimus.infer import is_column, parse_spark_class_dtypes, Infer
 from optimus.helpers.converter import one_list_to_val
 from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.logger import logger

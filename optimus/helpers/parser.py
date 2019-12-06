@@ -1,5 +1,5 @@
 from optimus.helpers.logger import logger
-from infer import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT
+from optimus.infer import PYTHON_SHORT_TYPES, SPARK_SHORT_DTYPES, SPARK_DTYPES_DICT, is_numeric, is_nan
 
 
 def compress_dict(lst, col_name):
@@ -27,9 +27,6 @@ def parse_python_dtypes(value):
 
 
 def parse_col_names_funcs_to_keys(data):
-    from infer import is_numeric
-    from infer import is_nan
-
     """
     Helper function that return a formatted json with function:value inside columns. Transform from
     {'max_antiguedad_anos': 15,

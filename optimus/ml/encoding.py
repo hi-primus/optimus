@@ -1,7 +1,7 @@
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
 
-from infer import is_, is_str, is_dataframe
+from optimus.infer import is_, is_str, is_dataframe
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt

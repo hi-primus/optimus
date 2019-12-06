@@ -4,7 +4,7 @@ from optimus.dataframe.plots.functions import plot_scatterplot, plot_boxplot, pl
     plot_correlation, plot_qqplot
 from optimus.helpers.columns import check_column_numbers
 from optimus.helpers.columns import parse_columns
-from infer import PYSPARK_NUMERIC_TYPES
+from optimus.infer import PYSPARK_NUMERIC_TYPES
 from optimus.helpers.decorators import add_attr
 
 

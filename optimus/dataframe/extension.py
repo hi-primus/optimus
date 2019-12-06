@@ -13,7 +13,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import *
 
 from optimus.bumblebee import Comm
-from infer import is_str
+from optimus.infer import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.decorators import *

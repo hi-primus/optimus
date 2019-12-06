@@ -46,6 +46,7 @@ class Actions(Enum):
     # ROWS
     SELECT_ROW = "select_row"
     DROP_ROW = "drop_row"
+    BETWEEN_ROW = "between_drop"
     SORT_ROW = "sort_row"
 
     @staticmethod

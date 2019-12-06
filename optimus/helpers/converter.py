@@ -2,7 +2,7 @@ from ast import literal_eval
 
 import dateutil
 
-from infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
+from optimus.infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
 
 
 def val_to_list(val):

@@ -7,7 +7,7 @@ from io import BytesIO
 from IPython.core.display import display, HTML
 from matplotlib import pyplot as plt
 
-from infer import is_str
+from optimus.infer import is_str
 
 
 def output_image(fig, path):

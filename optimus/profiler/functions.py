@@ -3,7 +3,7 @@ import json
 import math
 
 from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT
-from infer import PROFILER_COLUMN_TYPES, SPARK_DTYPES_TO_PROFILER
+from optimus.infer import PROFILER_COLUMN_TYPES, SPARK_DTYPES_TO_PROFILER
 from optimus.helpers.json import json_converter
 
 

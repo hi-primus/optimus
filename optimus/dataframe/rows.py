@@ -7,7 +7,7 @@ from pyspark.sql import functions as F
 import functools
 # Helpers
 from optimus.dataframe.create import Create
-from infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
+from optimus.infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
     PYSPARK_NUMERIC_TYPES
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.columns import parse_columns, validate_columns_names
@@ -217,6 +217,7 @@ def rows(self):
         df = self
         for col_name in columns:
             df = df.where(_between(col_name))
+        df = df.preserve_meta(self, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @add_attr(rows)

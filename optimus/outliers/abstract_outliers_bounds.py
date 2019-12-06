@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 
 from pyspark.sql import functions as F
 
-from infer import is_dataframe
+from optimus.infer import is_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.filters import dict_filter
+from optimus.helpers.functions import create_buckets
 from optimus.helpers.json import dump_json
 
 
@@ -53,6 +54,15 @@ class AbstractOutlierBounds(ABC):
 
     # TODO: Pass a defined division param instead or run 3 separated jobs
     def hist(self, col_name):
+        buckets = 20
+        min_value, max_value = self.df.cols.range(col_name)
+
+        create_buckets(min_value, self.lower_bound, buckets)
+
+        create_buckets(self.lower_bound, self.upper_bound, buckets)
+
+        create_buckets(self.upper_bound, max_value, buckets)
+
         # lower bound
         lower_bound_hist = self.df.rows.select(self.df[col_name] < self.lower_bound).cols.hist(col_name, 20)
 

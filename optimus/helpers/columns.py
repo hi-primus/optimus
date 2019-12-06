@@ -2,7 +2,7 @@ import re
 
 from ordered_set import OrderedSet
 
-from infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str, is_dataframe
+from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str, is_dataframe
 from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger

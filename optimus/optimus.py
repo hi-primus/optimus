@@ -176,11 +176,7 @@ class Optimus:
         logger.print(STARTING_OPTIMUS)
 
         # Pickling
-        # Added parse1.py
-        print(absolute_path("/../parse/infer.py"))
-        Spark.instance.sc.addPyFile(absolute_path("/../infer.py"))
-        # Spark.instance.sc.addPyFile(absolute_path("/../parse/constants.py"))
-        # Spark.instance.sc.addPyFile(absolute_path(["/../parse/infer.py", "/../parse/constants.py"]))
+        Spark.instance.sc.addPyFile(absolute_path("/infer.py"))
 
         if server:
             logger.print("Starting Optimus Server...")

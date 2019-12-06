@@ -1,6 +1,8 @@
 import builtins
 import re
 import string
+import sys
+import os
 import unicodedata
 from functools import reduce
 from heapq import nlargest
@@ -20,10 +22,6 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
-from infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
-    is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, is_dataframe, \
-    parse_spark_class_dtypes, PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
-from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import has_, is_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
@@ -40,6 +38,21 @@ from optimus.helpers.parser import compress_list, compress_dict, parse_python_dt
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+
+from optimus import ROOT_DIR
+
+print(os.path.abspath("."))
+# Add the directory containing your module to the Python path (wants absolute paths)
+sys.path.append(os.path.abspath(ROOT_DIR))
+
+# to use this functions as a Spark udf function we need to load it using addPyFile but the file can no be loaded
+# as python module becasuse it generate a pickle error.
+from infer import Infer
+
+from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+    is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, is_dataframe, \
+    parse_spark_class_dtypes, PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 
 ENGINE = "spark"
 # Because the monkey patching and the need to call set a function we need to rename the standard python set.

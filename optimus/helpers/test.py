@@ -4,7 +4,7 @@ from io import UnsupportedOperation
 import json
 import pyspark
 
-from infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
+from optimus.infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
     is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
