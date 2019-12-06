@@ -892,7 +892,7 @@ source_df.table()
 
 t.create(None, "outliers.tukey", None, "df","select", numeric_col)
 
-source_df.outliers.tukey(numeric_col).drop()
+source_df.outliers.tukey(numeric_col).drop().table()
 
 t.create(None, "outliers.tukey", None, "df","drop", numeric_col)
 
