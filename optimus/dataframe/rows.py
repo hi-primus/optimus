@@ -4,7 +4,7 @@ from functools import reduce
 from multipledispatch import dispatch
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-
+import functools
 # Helpers
 from optimus.dataframe.create import Create
 from infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
@@ -171,20 +171,20 @@ def rows(self):
         return df
 
     @add_attr(rows)
-    def between(columns, lower_bound, upper_bound, invert=False, equal=False):
+    @dispatch((str, list), list)
+    def between(columns, bounds, invert=False, equal=False):
         """
-        Trim values at input thresholds
-        :param columns: Columns to be trimmed
-        :param lower_bound: Lower value bound
-        :param upper_bound: Upper value bound
-        :param invert:
-        :param equal:
-        :return:
-        """
+                Trim values at input thresholds
+                :param columns: Columns to be trimmed
+                :param bounds:
+                :param invert:
+                :param equal:
+                :return:
+                """
         # TODO: should process string or dates
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
 
-        def _clip(_col_name):
+        def _between(_col_name):
 
             if invert is False and equal is False:
                 op1 = operator.gt
@@ -206,15 +206,23 @@ def rows(self):
                 op2 = operator.ge
                 opb = operator.__or__
 
-            query = opb(op1(F.col(_col_name), lower_bound), op2(F.col(_col_name), upper_bound))
+            sub_query = []
+            for bound in bounds:
+                lower_bound, upper_bound = bound
+                sub_query.append(opb(op1(F.col(_col_name), lower_bound), op2(F.col(_col_name), upper_bound)))
+            query = functools.reduce(operator.__or__, sub_query)
 
-            print(query)
             return query
 
         df = self
         for col_name in columns:
-            df = df.where(_clip(col_name))
+            df = df.where(_between(col_name))
         return df
+
+    @add_attr(rows)
+    @dispatch((str, list), int, int)
+    def between(columns, lower_bound, upper_bound, invert=False, equal=False):
+        return between(columns, [(lower_bound, upper_bound)], invert, equal)
 
     @add_attr(rows)
     def drop_by_dtypes(input_cols, data_type=None):

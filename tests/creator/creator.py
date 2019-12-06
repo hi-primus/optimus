@@ -1064,8 +1064,6 @@ t.create(None, "rows.select", None, "df", None, fil)
 
 t.create(None, "rows.select_by_dtypes", None, "df", None, "filter", "integer")
 
-
-
 fil = (source_df["num"] == 2) | (source_df["second"] == 5)
 print(str(fil))
 # type(fil)
@@ -1087,9 +1085,13 @@ t.create(None, "rows.is_in", None, "df", None, "num", 2)
 
 t.create(None, "rows.between", None, "df", None, "second", 6, 8)
 
+t.create(None, "rows.between", None, "df", None, "second", 6, 8)
+
 t.create(None, "rows.between", "equal", "df", None, "second", 6, 8, equal=True)
 
 t.create(None, "rows.between", "invert_equal", "df", None, "second", 6, 8, invert=True, equal=True)
+
+t.create(None, "rows.between", "invert_equal", "df", None, "second", [(6,7),(7,8)], invert=True, equal=True)
 
 t.run()
 

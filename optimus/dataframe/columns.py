@@ -23,9 +23,6 @@ from pyspark.sql.types import StringType, ArrayType, StructType
 from infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
     is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, is_dataframe, \
     parse_spark_class_dtypes, PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
-# Functions
-# from optimus.optimus import Optimus
-# from optimus.optimus import Optimus
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
 from optimus.helpers.check import has_, is_column_a

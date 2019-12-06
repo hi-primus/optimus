@@ -20,8 +20,8 @@ class Test_df_rows(unittest.TestCase):
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_rows_between():
-		actual_df =source_df.rows.between('second',6,8,equal=True)
-		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1'), (None, 3, 'eagle', 'glass', 8, 'c')])
+		actual_df =source_df.rows.between('second',6,8)
+		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('simpsons   cat lady', 2, 'frog', 'table', 7, '1')])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_rows_between_equal():
@@ -30,10 +30,9 @@ class Test_df_rows(unittest.TestCase):
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_rows_between_invert_equal():
-		actual_df =source_df.rows.between('second',6,8,invert=True,equal=True)
-		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a'), ('    zombies', 2, 'cat', 'tv', 6, 'b'), (None, 3, 'eagle', 'glass', 8, 'c')])
+		actual_df =source_df.rows.between('second',[(6, 7),(7, 8)],invert=True,equal=True)
+		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a'), ('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1'), (None, 3, 'eagle', 'glass', 8, 'c')])
 		assert (expected_df.collect() == actual_df.collect())
-
 	@staticmethod
 	def test_rows_drop_by_dtypes():
 		actual_df =source_df.rows.drop_by_dtypes('filter','integer')
@@ -43,6 +42,11 @@ class Test_df_rows(unittest.TestCase):
 	def test_rows_is_in():
 		actual_df =source_df.rows.is_in('num',2)
 		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1')])
+		assert (expected_df.collect() == actual_df.collect())
+	@staticmethod
+	def test_rows_select():
+		actual_df =source_df.rows.select(Column<b'(num = 1)'>)
+		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a')])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod
 	def test_rows_select_by_dtypes():
