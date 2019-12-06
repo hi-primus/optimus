@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-from optimus import Optimus as op
+from optimus.dataframe.create import Create
 from infer import is_list_of_str_or_int, is_list_of_dataframes, is_list_of_tuples, is_dataframe, \
     PYSPARK_NUMERIC_TYPES
 from optimus.audf import filter_row_by_data_type as fbdt
@@ -43,7 +43,7 @@ def rows(self):
             columns = [str(i) for i in range(df.cols.count())]
             if not is_list_of_tuples(rows):
                 rows = [tuple(rows)]
-            new_row = op.Create.df(columns, rows)
+            new_row = Create().df(columns, rows)
             df_result = df.union(new_row)
 
         elif is_list_of_dataframes(rows) or is_dataframe(rows):
