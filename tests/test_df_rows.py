@@ -43,11 +43,7 @@ class Test_df_rows(unittest.TestCase):
 		actual_df =source_df.rows.is_in('num',2)
 		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1')])
 		assert (expected_df.collect() == actual_df.collect())
-	@staticmethod
-	def test_rows_select():
-		actual_df =source_df.rows.select(Column<b'(num = 1)'>)
-		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a')])
-		assert (expected_df.collect() == actual_df.collect())
+
 	@staticmethod
 	def test_rows_select_by_dtypes():
 		actual_df =source_df.rows.select_by_dtypes('filter','integer')
