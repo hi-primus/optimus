@@ -171,7 +171,7 @@ def rows(self):
         return df
 
     @add_attr(rows)
-    @dispatch((str, list), list)
+    @dispatch((str, list), list, bool, bool)
     def between(columns, bounds, invert=False, equal=False):
         """
                 Trim values at input thresholds
