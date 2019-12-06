@@ -688,7 +688,7 @@ m = {"names":"int"}
 
 mismatch_df.table()
 
-t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, m)
+t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, {"names":"int"})
 
 
 
@@ -888,6 +888,8 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
+source_df.table()
+
 # ## Tukey
 
 t.create(None, "outliers.tukey", None, "df","select", numeric_col)
@@ -1064,7 +1066,11 @@ t.create(None, "rows.select", None, "df", None, fil)
 
 t.create(None, "rows.select_by_dtypes", None, "df", None, "filter", "integer")
 
+
+
 fil = (source_df["num"] == 2) | (source_df["second"] == 5)
+print(str(fil))
+# type(fil)
 
 t.create(None, "rows.drop", None, "df", None, fil)
 

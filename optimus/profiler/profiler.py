@@ -396,7 +396,7 @@ class Profiler:
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
-        count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer, mismatch=mismatch)
+        count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer)
 
         count_by_data_type_no_mismatch = copy.deepcopy(count_by_data_type)
 
