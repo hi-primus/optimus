@@ -5,6 +5,7 @@ from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str, is_dataframe
+from optimus.ml.contants import STRING_TO_INDEX
 
 
 def n_gram(df, input_col, n=2):
@@ -44,7 +45,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     if columns is None:
         input_cols = parse_columns(df, input_cols)
         if output_cols is None:
-            output_cols = [name_col(input_col, "string_to_index") for input_col in input_cols]
+            output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
         output_cols = get_output_cols(input_cols, output_cols)
     else:
         input_cols, output_cols = zip(*columns)
