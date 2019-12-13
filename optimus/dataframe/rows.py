@@ -186,7 +186,7 @@ def rows(self):
         # TODO: should process string or dates
         columns = parse_columns(self, columns, filter_by_column_dtypes=PYSPARK_NUMERIC_TYPES)
         if bounds is None:
-            bounds = (lower_bound, upper_bound)
+            bounds = [(lower_bound, upper_bound)]
 
         def _between(_col_name):
 
