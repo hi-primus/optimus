@@ -192,9 +192,9 @@ t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "r
 
 source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
 
-source_df_index_to_string.table()
+t.create(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
 
-t.create(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank")
+t.run()
 
 t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
 
