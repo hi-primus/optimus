@@ -192,7 +192,8 @@ t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "r
 
 source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
 
-t.create(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
+# FIX at creation time we los the metadata. Need to find a way to put it on the dataframe creation
+t.delete(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
 
 t.run()
 
