@@ -190,6 +190,12 @@ array_col = "attributes"
 
 t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "rank")
 
+source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
+
+source_df_index_to_string.table()
+
+t.create(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank")
+
 t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
 
 t.run()
@@ -1064,6 +1070,8 @@ t.create(None, "rows.select", None, "df", None, fil)
 
 t.create(None, "rows.select_by_dtypes", None, "df", None, "filter", "integer")
 
+
+
 fil = (source_df["num"] == 2) | (source_df["second"] == 5)
 print(str(fil))
 # type(fil)
@@ -1085,13 +1093,11 @@ t.create(None, "rows.is_in", None, "df", None, "num", 2)
 
 t.create(None, "rows.between", None, "df", None, "second", 6, 8)
 
-t.create(None, "rows.between", None, "df", None, "second", 6, 8)
-
 t.create(None, "rows.between", "equal", "df", None, "second", 6, 8, equal=True)
 
 t.create(None, "rows.between", "invert_equal", "df", None, "second", 6, 8, invert=True, equal=True)
 
-t.create(None, "rows.between", "invert_equal", "df", None, "second", [(6,7),(7,8)], invert=True, equal=True)
+t.create(None, "rows.between", "bounds", "df", None, "second", bounds=[(6,7),(7,8)], invert=True, equal=True)
 
 t.run()
 

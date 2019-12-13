@@ -37,6 +37,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import compress_list, compress_dict, parse_python_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
+from optimus.ml.encoding import index_to_string as ml_index_to_string
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 from optimus import ROOT_DIR
@@ -2089,6 +2090,21 @@ def cols(self):
         df = self
 
         df = ml_string_to_index(df, input_cols, output_cols, columns)
+
+        return df
+
+    @add_attr(cols)
+    def index_to_string(input_cols=None, output_cols=None, columns=None):
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
+        :param output_cols:
+        :param columns:
+        :return:
+        """
+        df = self
+
+        df = ml_index_to_string(df, input_cols, output_cols, columns)
 
         return df
 

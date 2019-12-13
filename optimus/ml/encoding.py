@@ -1,10 +1,10 @@
 from pyspark.ml import feature, Pipeline
-from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
+from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, Normalizer, IndexToString
 
-from optimus.infer import is_, is_str, is_dataframe
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_, is_str, is_dataframe
 
 
 def n_gram(df, input_col, n=2):
@@ -36,6 +36,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
     :param output_cols:Column where the ouput is going to be saved
+    :param columns:
     :return: Dataframe with indexed columns.
     """
     df_actual = df
@@ -43,7 +44,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     if columns is None:
         input_cols = parse_columns(df, input_cols)
         if output_cols is None:
-            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+            output_cols = [name_col(input_col, "string_to_index") for input_col in input_cols]
         output_cols = get_output_cols(input_cols, output_cols)
     else:
         input_cols, output_cols = zip(*columns)
@@ -59,26 +60,33 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     return df
 
 
-def index_to_string(df, input_cols, output_col=None, **kargs):
+def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
     ML attributes).
     :param df: Dataframe to be transformed.
     :param input_cols: Columns to be indexed.
-    :param output_col: Column where the output is going to be saved.
+    :param output_cols: Column where the output is going to be saved.
+    :param columns:
     :return: Dataframe with indexed columns.
     """
+    df_actual = df
 
-    input_cols = parse_columns(df, input_cols)
-    if output_col is None:
-        output_col = name_col(input_cols, "index_to_string")
+    if columns is None:
+        input_cols = parse_columns(df, input_cols)
+        if output_cols is None:
+            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+        output_cols = get_output_cols(input_cols, output_cols)
+    else:
+        input_cols, output_cols = zip(*columns)
 
-    indexers = [IndexToString(inputCol=column, outputCol=output_col, **kargs) for column in
-                list(set(input_cols))]
-
+    indexers = [IndexToString(inputCol=input_col, outputCol=output_col, **kargs) for input_col, output_col
+                in zip(list(set(input_cols)), list(set(output_cols)))]
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
+
+    df = df.preserve_meta(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
 
     return df
 

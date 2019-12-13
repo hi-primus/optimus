@@ -41,6 +41,7 @@ class Actions(Enum):
     VALUES_TO_COLS = "values_to_cols"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
+    INDEX_TO_STRING = "index_to_string"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
     # ROWS
