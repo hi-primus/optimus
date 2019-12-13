@@ -269,9 +269,10 @@ class Test:
 
         # return "".join(buffer)
 
-    def delete(self, func, suffix=None):
+    def delete(self, df, func, suffix=None, *args, **kwargs):
         """
         This is a helper function that delete python tests files used to construct the final Test file.
+        :param df: Do nothing, only for simplicity so you can delete a file test the same way you create it
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
         :param func: Spark dataframe function to be tested
