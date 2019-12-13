@@ -60,7 +60,7 @@ class Load:
         return df
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="null", *args, **kwargs):
+    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
