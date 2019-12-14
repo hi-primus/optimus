@@ -23,7 +23,6 @@ class JDBC:
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
                  cassandra_table=None):
-
         """
         Create the JDBC connection object
         :return:
@@ -33,7 +32,11 @@ class JDBC:
             database = ""
 
         self.db_driver = driver
+
+        # Oracle
         self.oracle_sid = oracle_sid
+
+        # Cassandra
         self.cassandra_keyspace = cassandra_keyspace
         self.cassandra_table = cassandra_table
 
@@ -46,22 +49,29 @@ class JDBC:
         self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
-        self.url = self.driver_context.url(
-            driver=driver,
-            host=host,
-            port=str(self.port),
-            database=database,
-            schema=schema,
-            oracle_tns=oracle_tns,
-            oracle_sid=oracle_sid,
-            oracle_service_name=oracle_service_name,
-            presto_catalog=presto_catalog
-        )
+
+        # We do not need to create the url if using redis
+        if self.db_driver != DriverProperties.REDIS.value["name"]:
+            self.url = self.driver_context.url(
+                driver=driver,
+                host=host,
+                port=str(self.port),
+                database=database,
+                schema=schema,
+                oracle_tns=oracle_tns,
+                oracle_sid=oracle_sid,
+                oracle_service_name=oracle_service_name,
+                presto_catalog=presto_catalog
+            )
+            logger.print(self.url)
+
         self.database = database
         self.user = user
         self.password = password
         self.schema = schema
-        logger.print(self.url)
+
+        # For redis
+        self.host = host
 
     def tables(self, schema=None, database=None, limit=None):
         """
@@ -156,15 +166,28 @@ class JDBC:
             query = "(" + query + ") AS t"
 
         logger.print(query)
-        logger.print(self.url)
 
-        conf = Spark.instance.spark.read \
-            .format(
-            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-            DriverProperties.CASSANDRA.value["java_class"]) \
-            .option("url", self.url) \
-            .option("user", self.user) \
-            .option("dbtable", query)
+        conf = Spark.instance.spark.read
+
+        jdbc_string = "jdbc"
+        if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+            jdbc_string = DriverProperties.CASSANDRA.value["java_class"]
+        elif self.db_driver == DriverProperties.REDIS.value["name"]:
+            jdbc_string = DriverProperties.REDIS.value["java_class"]
+
+        conf.format(jdbc_string)
+
+        if self.db_driver == DriverProperties.REDIS.value["name"]:
+            conf.option("host", self.host) \
+                .option("port", self.port) \
+                .option("auth", self.password) \
+                .option("dbNum", self.database)
+        else:
+            logger.print(self.url)
+
+            conf.option("url", self.url) \
+                .option("user", self.user) \
+                .option("dbtable", query)
 
         # Password
         if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:
@@ -181,27 +204,39 @@ class JDBC:
 
         return self._limit(conf.load(), limit)
 
-    def df_to_table(self, df, table, mode="overwrite"):
+    def df_to_table(self, df, table, mode="overwrite", redis_primary_key=None):
         """
         Send a dataframe to the database
-        :param df:
-        :param table:
+        :param df: Dataframe
+        :param table:Table name. For redis is the used as the key prefix
         :param mode
+        :param redis_primary_key: Dataframe column used as primary keys
         :return:
         """
         # Parse array and vector to string. JDBC can not handle this data types
         columns = df.cols.names("*", filter_by_column_dtypes=["array", "vector"])
         df = df.cols.cast(columns, "str")
+        if self.db_driver == DriverProperties.REDIS.value["name"]:
+            print(table)
 
-        conf = df.write \
-            .format(
-            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-            DriverProperties.CASSANDRA.value["java_class"]) \
-            .mode(mode) \
-            .option("url", self.url) \
-            .option("dbtable", table) \
-            .option("user", self.user) \
-            .option("password", self.password)
+            conf = df.write.format(DriverProperties.REDIS.value["java_class"]).option("table", table).option(
+                "key.column", redis_primary_key)
+            conf.option("host", self.host) \
+                .option("port", self.port) \
+                .option("dbNum", self.database)
+            if self.password != "":
+                conf.option("auth", self.password)
+
+        else:
+            conf = df.write \
+                .format(
+                "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
+                DriverProperties.CASSANDRA.value["java_class"]) \
+                .mode(mode) \
+                .option("url", self.url) \
+                .option("dbtable", table) \
+                .option("user", self.user) \
+                .option("password", self.password)
 
         if self.db_driver == DriverProperties.ORACLE.value["name"]:
             conf.option("driver", self.driver_option)

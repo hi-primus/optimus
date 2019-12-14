@@ -2,7 +2,7 @@
 
 ## Windows
 
-If you want to contribute, hack or play with Optimus you are in the raight place. This is a little guide to
+If you want to contribute, hack or play with Optimus you are in the right place. This is a little guide to
 
 - Install Jupyter Notebooks
 
@@ -12,11 +12,15 @@ Download anaconda from https://www.anaconda.com/download/ and run the file
 
 Go to the folder you want to download de repo and run:
 
-`git clone https://github.com/ironmussa/Optimus.git`
+```
+git clone https://github.com/ironmussa/Optimus.git
+```
 
 The install the requirements
 
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 - Install Spark
 
@@ -36,7 +40,9 @@ Then from the command line
 
 Be sure that the Spark version is the same that you download
 
-`setx SPARK_HOME C:\opt\spark\spark-2.3.1-bin-hadoop2.7`
+```
+setx SPARK_HOME C:\opt\spark\spark-2.3.1-bin-hadoop2.7
+```
 
 Check in the console if python is run as 'python','python3' etc. Use the one you found to set PYSPARK_PYTHON
 `setx PYSPARK_PYTHON python`
@@ -68,20 +74,43 @@ For that we could upload pip package to test.pypi.org so we could test it in the
 
 First create the pip package. A `dist` folder should be create
 
-`python setup.py sdist bdist_wheel`
+```
+python setup.py sdist bdist_wheel
+```
 
 Then upload to test.pypi.org. Be sure to create and account 
-
-`pip install twine`
+```
+pip install twine
+```
 
 This will prompt your test.pypi.org credentials
 
-`python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*`
+```
+python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+```
 
 Now install from test.pypi.org
-
-`!pip install --index-url https://test.pypi.org/simple optimuspyspark`
+```
+!pip install --index-url https://test.pypi.org/simple optimuspyspark
+```
 
 ### Installing from github
 
-` pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop`
+```
+pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop
+```
+
+### Compiling redis .jar file
+This file can not be found to download and must be compiled.
+
+#### Install Maven
+
+Reference https://www.javahelps.com/2017/10/install-apache-maven-on-linux.html
+
+#### Compile the .jar file
+Download spark-redis from GitHub https://github.com/RedisLabs/spark-redis (either git clone or download as a zip), and build it using Maven.
+
+```
+$ cd spark-redis
+$ mvn clean package -DskipTests
+```

@@ -2,12 +2,12 @@ import json
 
 import math
 
-from optimus.helpers.constants import SPARK_DTYPES_TO_PROFILER, ProfilerDataTypes, PROFILER_COLUMN_TYPES, \
-    CONFIDENCE_LEVEL_CONSTANT
+from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT
+from optimus.infer import PROFILER_COLUMN_TYPES, SPARK_DTYPES_TO_PROFILER
 from optimus.helpers.json import json_converter
 
 
-def parse_profiler_dtypes(col_data_type, dtypes):
+def parse_profiler_dtypes(col_data_type):
     """
        Parse a spark data type to a profiler data type
        :return:
@@ -20,8 +20,6 @@ def parse_profiler_dtypes(col_data_type, dtypes):
             for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
                 if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
                     columns[col_name][profiler_data_type] = count
-                if data_type == "mismatch":
-                    columns[col_name][data_type] = count
     return columns
 
 

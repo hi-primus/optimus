@@ -6,6 +6,7 @@ from optimus.io.oracle import OracleDriver
 from optimus.io.postgresql import PostgreSQLDriver
 from optimus.io.presto import PrestoDriver
 from optimus.io.properties import DriverProperties
+from optimus.io.redis import RedisDriver
 from optimus.io.redshift import RedshiftDriver
 from optimus.io.sqlite import SQLiteDriver
 from optimus.io.sqlserver import SQLServerDriver
@@ -48,5 +49,7 @@ class DriverFactory:
             return SQLiteDriver()
         elif driver_type == DriverProperties.SQLSERVER.value["name"]:
             return SQLServerDriver()
+        elif driver_type == DriverProperties.REDIS.value["name"]:
+            return RedisDriver()
         else:
             RaiseIt.value_error(driver_type, [database["name"] for database in DriverProperties.list()])

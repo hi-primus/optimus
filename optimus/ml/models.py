@@ -4,8 +4,9 @@ from pyspark.sql import functions as F
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.helpers.check import is_dataframe, is_str
+from optimus.infer import is_str, is_dataframe
 from optimus.helpers.columns import parse_columns, name_col
+from optimus.ml.contants import STRING_TO_INDEX
 from optimus.ml.encoding import string_to_index, vector_assembler
 from optimus.spark import Spark
 
@@ -50,7 +51,7 @@ class ML:
 
         model = RandomForestClassifier(**kwargs)
         df.table()
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -83,7 +84,7 @@ class ML:
 
         model = DecisionTreeClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
@@ -116,7 +117,7 @@ class ML:
 
         model = GBTClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
@@ -133,7 +134,7 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           labelCol=name_col(label, "index_to_string"),
+                           labelCol=name_col(label, STRING_TO_INDEX),
                            **kwargs)
 
         model = automl.fit(df_va)

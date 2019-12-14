@@ -5,18 +5,18 @@ from collections import OrderedDict
 import humanize
 import imgkit
 import jinja2
-import simplejson as json
 from glom import assign
 
 from optimus.audf import *
 from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
-from optimus.helpers.check import is_column_a, is_dict, is_list_of_str
+from optimus.infer import is_dict, is_list_of_str, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
+from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
-from optimus.helpers.constants import RELATIVE_ERROR, Actions, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, update_dict
-from optimus.helpers.json import json_converter
+from optimus.helpers.json import dump_json
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -348,7 +348,7 @@ class Profiler:
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
-            # TODO: drop, rename and move operation must affect  the sample
+            # TODO: drop, rename and move operation must affect the sample
             sample = {"columns": [{"title": cols} for cols in df.cols.names()],
                       "value": df.sample_n(sample).rows.to_list(columns)}
 
@@ -365,7 +365,7 @@ class Profiler:
 
         # col_names = output_columns["columns"].keys()
         if format == "json":
-            result = json.dumps(output_columns, ignore_nan=True, default=json_converter)
+            result = dump_json(output_columns)
         else:
             result = output_columns
 
@@ -386,6 +386,7 @@ class Profiler:
         0 more precision/slow 1 less precision/faster
         :param approx_count: Use the function approx_count_distinct or countDistinct. approx_count_distinct is faster
         :param mismatch:
+        :param advanced_stats:
         :return: json object
         """
 
@@ -395,7 +396,7 @@ class Profiler:
         logger.print("Processing Stats For columns...")
 
         # Get columns data types. This is necessary to make the pertinent histogram calculations.
-        count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer, mismatch=mismatch)
+        count_by_data_type = df.cols.count_by_dtypes(columns, infer=infer)
 
         count_by_data_type_no_mismatch = copy.deepcopy(count_by_data_type)
 
@@ -584,7 +585,6 @@ class Profiler:
                 result.update(extra_columns_stats(df, col_name, result))
 
         return result
-
 
     @staticmethod
     def missing_values(df, columns):

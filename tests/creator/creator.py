@@ -171,8 +171,6 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "import datetime",
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
-source_df.table()
-
 # +
 from pyspark.sql import functions as F
 
@@ -191,6 +189,13 @@ array_col = "attributes"
 # -
 
 t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "rank")
+
+source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
+
+# FIX at creation time we los the metadata. Need to find a way to put it on the dataframe creation
+t.delete(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
+
+t.run()
 
 t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
 
@@ -294,9 +299,12 @@ from pyspark.sql import functions as F
 source_df.select(F.abs("weight(t)"))
 # -
 
-t.create(None, "cols.mode", None, "json", numeric_col)
+t.create(None, "cols.mode", None, "json", None, numeric_col)
 
-t.create(None, "cols.mode", "all_columns", "json", "*")
+# %%time
+t.create(None, "cols.mode", "all_columns", "json", None,"*")
+
+t.run()
 
 t.create(None, "cols.count", None, "json")
 
@@ -420,7 +428,10 @@ t.run()
 
 t.create(None, "cols.impute", None, "df", numeric_col_B)
 
-t.create(None, "cols.impute", "all_columns", "df", "names","categorical")
+# %%time
+t.create(None, "cols.impute", "all_columns","df", None ,"names","categorical")
+
+t.run()
 
 # ## Hist
 
@@ -450,7 +461,7 @@ t.run()
 
 t.create(None, "cols.dtypes", "all_columns", "json", "*")
 
-t.create(None, "cols.select_by_dtypes", "str", "df", "str")
+t.create(None, "cols.select_by_dtypes", "str", "df", None, "str")
 
 t.create(None, "cols.select_by_dtypes", "int", "df", "int")
 
@@ -468,10 +479,19 @@ t.create(None, "cols.clip", None, "df", numeric_col_B, 3, 5)
 
 t.create(None, "cols.clip", "all_columns", "df", "*", 3, 5)
 
-t.create(None, "cols.replace", None, "df", string_col, ["Security", "Leader"], "Match")
+t.create(None, "cols.replace", "full", "df", None,string_col,["First Lieutenant","Battle"], "Match", search_by="full")
+
+t.create(None, "cols.replace", "words", "df", None,string_col,["Security", "Leader"], "Match", search_by="words")
+t.run()
+
+t.create(None, "cols.replace", "chars", "df", None,string_col,["F", "E"], "Match", search_by="chars")
+
+t.create(None, "cols.replace", "numeric", "df", None,"age",5000000, 5, search_by="numeric")
+
+t.run()
 
 # Assert is failing I can see why
-t.delete(None, "cols.replace", "all_columns", "df", "*", ["Jazz", "Leader"], "Match")
+t.create(None, "cols.replace", "all_columns", "df", None,"*", ["Jazz", "Leader"], "Match")
 t.run()
 
 
@@ -574,6 +594,8 @@ t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B,num
 
 t.create(None, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
 
+t.create(None, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
+
 t.run()
 
 # +
@@ -669,7 +691,11 @@ mismatch_df = op.create.df(
 
 mismatch = {"names":"dd/mm/yyyy","height(ft)":r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',"function":"yyyy-mm-dd"}
 
-t.create(mismatch_df, "cols.count_by_dtypes", "mismatch", "dict", None, "*", infer=False, mismatch=mismatch)
+m = {"names":"int"}
+
+mismatch_df.table()
+
+t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, {"names":"int"})
 
 t.run()
 
@@ -794,6 +820,56 @@ source_df.table()
 
 # # Ouliers
 
+# +
+import pandas as pd
+from pyspark.sql.types import *
+from datetime import date, datetime
+
+
+cols = [
+        ("names", "str"),
+        ("height(ft)", ShortType()),
+        ("function", "str"),
+        ("rank", ByteType()),
+        ("age", "int"),
+        ("weight(t)", "float"),
+        "japanese name",
+        "last position seen",
+        "date arrival",
+        "last date seen",
+        ("attributes", ArrayType(FloatType())),
+        ("Date Type", DateType()),
+        ("timestamp", TimestampType()),
+        ("Cybertronian", BooleanType()),
+        ("function(binary)", BinaryType()),
+        ("NullType", NullType())
+
+    ]
+
+rows = [
+        ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+         "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
+         None),
+        ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
+         "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True, bytearray("Espionage", "utf-8"),
+         None),
+        ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
+         "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True, bytearray("Security", "utf-8"),
+         None),
+        ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
+         "2013/06/10", [3.9624, 1800.0], date(2013, 6, 24), datetime(2014, 6, 24), True,
+         bytearray("First Lieutenant", "utf-8"), None),
+        ("Megatron", None, "None", 10, 5000000, 5.70, ["Megatron"], None, "1980/04/10", "2012/05/10", [None, 5700.0],
+         date(2012, 5, 10), datetime(2014, 6, 24), True, bytearray("None", "utf-8"), None),
+        ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
+         [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, bytearray("Battle Station", "utf-8"), None),
+        (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
+
+    ]
+source_df = op.create.df(cols ,rows)
+source_df.table()
+# -
+
 t = Test(op, source_df, "df_outliers", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
@@ -817,9 +893,13 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
+source_df.table()
+
 # ## Tukey
 
 t.create(None, "outliers.tukey", None, "df","select", numeric_col)
+
+source_df.outliers.tukey(numeric_col).drop().table()
 
 t.create(None, "outliers.tukey", None, "df","drop", numeric_col)
 
@@ -887,10 +967,12 @@ t.run()
 
 # ## Keycolision
 
-source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(100)
+source_df = op.read.csv("../../examples/data/random.csv",header=True, sep=";").limit(10)
+
+source_df.table()
 
 # +
-t = Test(op, df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+t = Test(op, source_df, "df_keycollision", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                         "import numpy as np",
                                         "nan = np.nan",
                                         "import datetime",
@@ -905,13 +987,16 @@ t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
 t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "fingerprint_cluster", None, "df", None, source_df, "STATE")
+t.create(keyCol, "fingerprint_cluster", None, "json", None, source_df, "STATE")
+# -
+
+t.run()
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(keyCol, "n_gram_fingerprint", None, "df", None, source_df, "STATE")
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(keyCol, "n_gram_fingerprint_cluster", None, "df", None, source_df, "STATE", 2)
+t.create(keyCol, "n_gram_fingerprint_cluster", None, "json", None, source_df, "STATE", 2)
 
 # + {"outputHidden": false, "inputHidden": false}
 t.run()
@@ -930,22 +1015,16 @@ t = Test(op, source_df, "df_distance_cluster", imports=["from pyspark.ml.linalg 
                                         "from optimus.ml import distancecluster as dc"], path = "df_distance_cluster", final_path="..")
 
 from optimus.ml import distancecluster as dc
+# -
+
+df.table()
 
 # + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_matrix", None, 'df', None, source_df, "STATE")
+t.create(dc, "levenshtein_cluster", None, 'dict', None, source_df, "STATE")
 # -
 
 t.run()
 
-# + {"outputHidden": false, "inputHidden": false}
-t.create(dc, "levenshtein_filter", None, 'df', None, source_df, "STATE")
-# -
-
-t.create(dc, "levenshtein_json", None, 'dict', None, source_df, "STATE")
-
-# + {"outputHidden": false, "inputHidden": false}
-t.run()
-# -
 df_cancer = op.spark.read.csv('../data_cancer.csv', sep=',', header=True, inferSchema=True)
 
 columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
@@ -955,6 +1034,8 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
 df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
 df_model.table()
+
+# ## Row
 
 source_df = op.create.df([
     ("words", "str", True),
@@ -971,9 +1052,54 @@ source_df = op.create.df([
         (None, 3, "eagle", "glass", 8, "c"),
     ])
 
-source_df.show()
+from optimus.audf import abstract_udf as audf
+t = Test(op, source_df, "df_rows", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
+                                        "import numpy as np",
+                                        "nan = np.nan",
+                                        "from optimus.audf import abstract_udf as audf",
+                                        "import datetime",
+                                        "from pyspark.sql import functions as F"], path = "df_rows", final_path="..")
 
-actual_df = source_df.rows.append([("this is a word", 2, "this is an animal",
-                                           "this is a thing", 64, "this is a filter",)])
+row =[("this is a word", 2, "this is an animal",
+                                           "this is a thing", 64, "this is a filter",)]
+
+t.create(None, "rows.append", None, "df", None, row)
+
+fil = (source_df["num"] == 1)
+
+t.create(None, "rows.select", None, "df", None, fil)
+
+t.create(None, "rows.select_by_dtypes", None, "df", None, "filter", "integer")
+
+
+
+fil = (source_df["num"] == 2) | (source_df["second"] == 5)
+print(str(fil))
+# type(fil)
+
+t.create(None, "rows.drop", None, "df", None, fil)
+
+t.create(None, "rows.drop_by_dtypes", None, "df", None, "filter", "integer")
+
+
+def func_data_type(value, attr):
+    return value > 1
+a = audf("num", func_data_type, "boolean")
+
+t.create(None, "rows.drop", "audf", "df", None, a)
+
+t.create(None, "rows.sort", None, "df", None, "num", "desc")
+
+t.create(None, "rows.is_in", None, "df", None, "num", 2)
+
+t.create(None, "rows.between", None, "df", None, "second", 6, 8)
+
+t.create(None, "rows.between", "equal", "df", None, "second", 6, 8, equal=True)
+
+t.create(None, "rows.between", "invert_equal", "df", None, "second", 6, 8, invert=True, equal=True)
+
+t.create(None, "rows.between", "bounds", "df", None, "second", bounds=[(6,7),(7,8)], invert=True, equal=True)
+
+t.run()
 
 

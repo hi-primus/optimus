@@ -1,11 +1,11 @@
 import errno
 import os
 from io import UnsupportedOperation
-
+import json
 import pyspark
 
-from optimus.helpers.check import is_str, is_list_empty, is_list, is_numeric, is_list_of_numeric, is_list_of_strings, \
-    is_list_of_tuples, is_function
+from optimus.infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
+    is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
@@ -90,7 +90,7 @@ class Test:
 
     def create(self, obj, method, suffix=None, output="df", additional_method=None, *args, **kwargs):
         """
-        This is a helper function that output python tests for Spark Dataframes.
+        This is a helper function that output python tests for Spark DataFrames.
         :param obj: Object to be tested
         :param method: Method to be tested
         :param suffix: The test name will be create using the method param. suffix will add a string in case you want
@@ -160,17 +160,19 @@ class Test:
             elif is_list(v):
                 if is_list_of_strings(v):
                     lst = ["'" + x + "'" for x in v]
-                elif is_list_of_numeric(v):
+                elif is_list_of_numeric(v) or is_list_of_tuples(v):
                     lst = [str(x) for x in v]
                 elif is_list_of_tuples(v):
                     lst = [str(x) for x in v]
-
                 _args.append('[' + ','.join(lst) + ']')
+            elif is_dict(v):
+                _args.append(json.dumps(v))
             elif is_function(v):
                 _args.append(v.__qualname__)
 
             else:
-                _args.append(get_var_name(v))
+                # _args.append(get_var_name(v))
+                _args.append(str(v))
 
             # else:
             #     import marshal
@@ -180,7 +182,7 @@ class Test:
             #
             # code = marshal.loads(code_string)
             # func = types.FunctionType(code, globals(), "some_func_name")
-
+        print(_args)
         _args = ','.join(_args)
         _kwargs = []
 
@@ -267,9 +269,10 @@ class Test:
 
         # return "".join(buffer)
 
-    def delete(self, func, suffix=None):
+    def delete(self, df, func, suffix=None, *args, **kwargs):
         """
         This is a helper function that delete python tests files used to construct the final Test file.
+        :param df: Do nothing, only for simplicity so you can delete a file test the same way you create it
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
         :param func: Spark dataframe function to be tested

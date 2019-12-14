@@ -7,64 +7,16 @@ import sys
 from functools import reduce
 from pathlib import Path
 
-import fastnumbers
 import six
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
-from pyspark.sql.types import ArrayType
 
 from optimus import ROOT_DIR
-from optimus.helpers.check import is_str, is_list, is_, is_bool, is_datetime, \
-    is_date, is_binary
-from optimus.helpers.converter import one_list_to_val, str_to_boolean, str_to_date, str_to_array, val_to_list
+from optimus.infer import is_
+from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_spark_class_dtypes
 from optimus.helpers.raiseit import RaiseIt
-
-
-def infer(value):
-    """
-    Infer a Spark data type from a value
-    :param value: value to be inferred
-    :return: Spark data type
-    """
-    result = None
-    if value is None:
-        result = "null"
-
-    elif is_bool(value):
-        result = "bool"
-
-    elif fastnumbers.isint(value):
-        result = "int"
-
-    elif fastnumbers.isfloat(value):
-        result = "float"
-
-    elif is_list(value):
-        result = ArrayType(infer(value[0]))
-
-    elif is_datetime(value):
-        result = "datetime"
-
-    elif is_date(value):
-        result = "date"
-
-    elif is_binary(value):
-        result = "binary"
-
-    elif is_str(value):
-        if str_to_boolean(value):
-            result = "bool"
-        elif str_to_date(value):
-            result = "string"  # date
-        elif str_to_array(value):
-            result = "string"  # array
-        else:
-            result = "string"
-
-    return parse_spark_class_dtypes(result)
 
 
 def random_int(n=5):
@@ -307,8 +259,8 @@ def create_buckets(lower_bound, upper_bound, bins):
 
 def append(dfs, like="columns"):
     """
-    Concat multiple dataframes columns or rows wise
-    :param dfs: List of Dataframes
+    Concat multiple dataFrames columns or rows wise
+    :param dfs: List of DataFrames
     :param like: concat as columns or rows
     :return:
     """

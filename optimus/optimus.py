@@ -1,3 +1,23 @@
+# pyspark_pipes: build Spark ML pipelines easily
+from .ml.pipelines import patch
+
+patch()
+
+# Monkey patch for Spark DataFrames
+from optimus.dataframe import rows, columns, extension
+from optimus.dataframe.plots import plots
+from optimus.io import save
+from optimus.outliers import outliers
+# from optimus.profiler.profiler import Profiler
+# from optimus.bumblebee import Comm
+
+
+# Handle encoding problem
+# https://stackoverflow.com/questions/39662384/pyspark-unicodeencodeerror-ascii-codec-cant-encode-character
+
+# os.environ["PYTHONIOENCODING"] = "utf8"
+
+
 import os
 import platform
 import sys
@@ -40,8 +60,8 @@ class Optimus:
                  server=False,
                  repositories=None,
                  packages=None,
-                 jars=[],
-                 driver_class_path=[],
+                 jars=None,
+                 driver_class_path=None,
                  options=None,
                  additional_options=None,
                  comm=None,
@@ -75,6 +95,7 @@ class Optimus:
         :type jars: (list[str])
 
         """
+
         self.preserve = False
 
         Optimus.cache = cache
@@ -83,6 +104,12 @@ class Optimus:
             Comm.instance = Comm()
         else:
             Comm.instance = comm
+
+        if jars is None:
+            jars = []
+
+        if driver_class_path is None:
+            driver_class_path = []
 
         if session is None:
             # Creating Spark Session
@@ -113,7 +140,9 @@ class Optimus:
             elif load_avro == "2.3":
                 self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
+            jdbc_jars = ["/jars/spark-redis-2.4.1-SNAPSHOT-jar-with-dependencies.jar",
+                         "/jars/RedshiftJDBC42-1.2.16.1027.jar",
+                         "/jars/mysql-connector-java-8.0.16.jar",
                          "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
                          "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
                          "/jars/mssql-jdbc-7.4.1.jre8.jar"]
@@ -147,7 +176,7 @@ class Optimus:
         logger.print(STARTING_OPTIMUS)
 
         # Pickling
-        # Spark.instance.sc.addPyFile(absolute_path("/helpers/pickle.py"))
+        Spark.instance.sc.addPyFile(absolute_path("/infer.py"))
 
         if server:
             logger.print("Starting Optimus Server...")

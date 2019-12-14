@@ -1,7 +1,3 @@
-from pyspark.ml.linalg import VectorUDT
-from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
-    DateType, LongType, ByteType, ShortType, TimestampType, BinaryType, NullType
-
 from optimus.helpers.logger import logger
 
 # Python to PySpark reference
@@ -18,69 +14,7 @@ from optimus.helpers.logger import logger
 # datetime.time: TimestampType,
 
 
-PYTHON_SHORT_TYPES = {"string": "string",
-                      "str": "string",
-                      "integer": "int",
-                      "int": "int",
-                      "float": "float",
-                      "double": "double",
-                      "bool": "boolean",
-                      "boolean": "boolean",
-                      "array": "array",
-                      "null": "null"
-                      }
-
-PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
-
-PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
-PYSPARK_NOT_ARRAY_TYPES = ["byte", "short", "big", "int", "double", "float", "string", "date", "bool"]
-PYSPARK_STRING_TYPES = ["str"]
-PYSPARK_ARRAY_TYPES = ["array"]
-
-SPARK_SHORT_DTYPES = {"string": "string",
-                      "str": "string",
-                      "integer": "int",
-                      "int": "int",
-                      "bigint": "bigint",
-                      "big": "bigint",
-                      "long": "bigint",
-                      "float": "float",
-                      "double": "double",
-                      "bool": "boolean",
-                      "boolean": "boolean",
-                      "struct": "struct",
-                      "array": "array",
-                      "date": "date",
-                      "datetime": "datetime",
-                      "byte": "byte",
-                      "short": "short",
-                      "binary": "binary",
-                      "null": "null",
-                      "vector": "vector",
-                      "timestamp": "datetime"
-                      }
-
-SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
-                     "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
-                     "bigint": LongType, "date": DateType, "byte": ByteType, "short": ShortType,
-                     "datetime": TimestampType, "binary": BinaryType, "null": NullType, "vector": VectorUDT
-                     }
-
-SPARK_DTYPES_DICT_OBJECTS = \
-    {"string": StringType(), "int": IntegerType(), "float": FloatType(),
-     "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(), "array": ArrayType(StringType()),
-     "bigint": LongType(), "date": DateType(), "byte": ByteType(), "short": ShortType(),
-     "datetime": TimestampType(), "binary": BinaryType(), "null": NullType()
-     }
-
 # Profiler
-PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
-PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "decimal": "numeric",
-                      "date": "date", "array": "array", "binaty": "binary", "null": "null"}
-
-SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
-                            "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
-                            "array": "array", "object": "object", "null": "null", "missing": "missing"}
 
 from enum import Enum
 
@@ -107,9 +41,13 @@ class Actions(Enum):
     VALUES_TO_COLS = "values_to_cols"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
+    INDEX_TO_STRING = "index_to_string"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
+    # ROWS
+    SELECT_ROW = "select_row"
     DROP_ROW = "drop_row"
+    BETWEEN_ROW = "between_drop"
     SORT_ROW = "sort_row"
 
     @staticmethod

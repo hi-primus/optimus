@@ -10,7 +10,7 @@ from pyspark.sql.functions import pandas_udf, PandasUDFType
 from ratelimit import limits, RateLimitException
 from tqdm import tqdm_notebook
 
-from optimus.helpers.check import is_function, is_, is_dataframe
+from optimus.infer import is_, is_function, is_dataframe
 from optimus.helpers.logger import logger
 
 # Temporal col used to create a temporal ID to join the enriched data in mongo with the dataframe.

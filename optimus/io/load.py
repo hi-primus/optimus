@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 import pandas as pd
 from packaging import version
 
-from optimus.helpers.check import is_url
+from optimus.infer import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
 from optimus.spark import Spark
@@ -87,7 +87,7 @@ class Load:
                   .option("charset", charset)
                   .csv(file, *args, **kwargs))
 
-            df.set_meta("file_name", file_name)
+            # df.set_meta("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise

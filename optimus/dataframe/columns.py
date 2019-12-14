@@ -1,15 +1,15 @@
 import builtins
 import re
 import string
+import sys
+import os
 import unicodedata
-from ast import literal_eval
 from functools import reduce
 from heapq import nlargest
 
 import fastnumbers
 import pyspark
 import simplejson as json
-from dateutil.parser import parse as dparse
 from glom import glom, assign
 from multipledispatch import dispatch
 from pypika import MySQLQuery
@@ -22,29 +22,38 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql.types import StringType, ArrayType, StructType
 
-# Functions
-from optimus import Optimus
-from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 # Helpers
-from optimus.helpers.check import is_num_or_str, is_list, is_, is_tuple, is_list_of_dataframes, is_list_of_tuples, \
-    is_function, is_one_element, is_type, is_int, is_str, has_, is_column_a, is_dataframe, is_list_of_str, is_numeric
+from optimus.helpers.check import has_, is_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.columns_expression import match_nulls_strings, match_null, zeros_agg, hist_agg, count_na_agg, \
     percentile_agg, count_uniques_agg, range_agg
-from optimus.helpers.constants import PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, \
-    PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES, RELATIVE_ERROR, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.decorators import add_attr
 from optimus.helpers.functions import append as append_df
-from optimus.helpers.functions \
-    import filter_list, collect_as_list, create_buckets
+from optimus.helpers.functions import filter_list, collect_as_list, create_buckets
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes, parse_spark_class_dtypes, parse_col_names_funcs_to_keys, \
-    compress_list, compress_dict
+from optimus.helpers.parser import compress_list, compress_dict, parse_python_dtypes, parse_col_names_funcs_to_keys
 from optimus.helpers.raiseit import RaiseIt
 from optimus.ml.encoding import string_to_index as ml_string_to_index
+from optimus.ml.encoding import index_to_string as ml_index_to_string
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
+
+from optimus import ROOT_DIR
+
+print(os.path.abspath("."))
+# Add the directory containing your module to the Python path (wants absolute paths)
+sys.path.append(os.path.abspath(ROOT_DIR))
+
+# to use this functions as a Spark udf function we need to load it using addPyFile but the file can no be loaded
+# as python module becasuse it generate a pickle error.
+from infer import Infer
+
+from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+    is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, is_dataframe, \
+    parse_spark_class_dtypes, PYSPARK_NUMERIC_TYPES, PYSPARK_NOT_ARRAY_TYPES, PYSPARK_STRING_TYPES, PYSPARK_ARRAY_TYPES
+from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 
 ENGINE = "spark"
 # Because the monkey patching and the need to call set a function we need to rename the standard python set.
@@ -214,10 +223,8 @@ def cols(self):
         :param meta: Pass metadata transformation to a dataframe
         :return: DataFrame
         """
-
         input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                    accepts_missing_cols=True)
-
         check_column_numbers(input_cols, "*")
 
         if skip_output_cols_processing:
@@ -847,8 +854,8 @@ def cols(self):
             mode_df = count.join(
                 count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
             )
-            if Optimus.cache:
-                mode_df = mode_df.cache()
+
+            mode_df = mode_df.cache()
             # if none of the values are repeated we not have mode
             mode_list = (mode_df
                          .rows.select(mode_df["count"] > 1)
@@ -1057,28 +1064,34 @@ def cols(self):
         :param output_cols:
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one
-        :param search_by: Match substring or words
+        :param search_by: Can be "full","words","chars" or "numeric".
         :return:
         """
 
         # TODO check if .contains can be used instead of regexp
-        def func_chars(_df, _input_col, _output_col, _search, _replace_by):
+        def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             # Create as dict
+            _search_and_replace_by = None
             if is_list(search):
                 _search_and_replace_by = {s: _replace_by for s in search}
             elif is_one_element(search):
                 _search_and_replace_by = {search: _replace_by}
 
             _search_and_replace_by = {str(k): str(v) for k, v in _search_and_replace_by.items()}
+            _regex = re.compile("|".join(map(re.escape, _search_and_replace_by.keys())))
 
             def multiple_replace(_value, __search_and_replace_by):
                 # Create a regular expression from all of the dictionary keys
                 if _value is not None:
+                    __regex = None
+                    if search_by == "chars":
+                        __regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
+                    elif search_by == "words":
+                        __regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, __search_and_replace_by.keys())))
 
-                    _regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
-                    result = _regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
+                    result = __regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
                 else:
                     result = None
                 return result
@@ -1086,7 +1099,7 @@ def cols(self):
             return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
                                   output_cols=_output_col)
 
-        def func_words(_df, _input_col, _output_col, _search, _replace_by):
+        def func_full(_df, _input_col, _output_col, _search, _replace_by):
             _search = val_to_list(search)
 
             if _input_col != output_col:
@@ -1094,23 +1107,33 @@ def cols(self):
 
             return _df.replace(_search, _replace_by, _input_col)
 
-        if search_by is "words":
-            func = func_words
-        elif search_by is "chars":
-            func = func_chars
-        else:
-            RaiseIt.value_error(search_by, ["words", "chars"])
+        def func_numeric(_df, _input_col, _output_col, _search, _replace_by):
+            _df = _df.withColumn(_output_col, F.when(df[_input_col] == _search, _replace_by).otherwise(df[_output_col]))
+            return _df
 
-        input_cols = parse_columns(self, input_cols,
-                                   filter_by_column_dtypes=[PYSPARK_STRING_TYPES, PYSPARK_NUMERIC_TYPES])
+        func = None
+        if search_by == "full":
+            func = func_full
+        elif search_by == "chars" or search_by == "words":
+            func = func_chars_words
+        elif search_by == "numeric":
+            func = func_numeric
+        else:
+            RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
+
+        filter_dtype = None
+        if search_by in ["chars", "words", "full"]:
+            filter_dtype = [PYSPARK_STRING_TYPES]
+        elif search_by == "numeric":
+            filter_dtype = [PYSPARK_NUMERIC_TYPES]
+
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_dtype)
+
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
 
         df = self
         for input_col, output_col in zip(input_cols, output_cols):
-            if is_column_a(df, input_col, "int"):
-                df = df.cols.cast(input_col, "str", output_col)
-
             df = func(df, input_col, output_col, search, replace_by)
 
             df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
@@ -1408,6 +1431,17 @@ def cols(self):
             mean_value = self.cols.mean(col_name)
             stdev_value = self.cols.std(col_name)
             return F.abs((F.col(col_name) - mean_value) / stdev_value)
+
+        df = self
+
+        input_cols = parse_columns(df, input_cols)
+
+        # Hint the user if the column has not the correct data type
+        for input_col in input_cols:
+            if not is_column_a(self, input_col, PYSPARK_NUMERIC_TYPES):
+                print(
+                    "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
+                        input_col))
 
         return apply(input_cols, func=_z_score, filter_col_by_dtypes=PYSPARK_NUMERIC_TYPES, output_cols=output_cols,
                      meta=Actions.Z_SCORE.value)
@@ -1731,218 +1765,68 @@ def cols(self):
         return result
 
     @add_attr(cols)
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_mismatch(columns_mismatch: dict = None):
+        """
+        Return the num of mismatches
+        :param columns_mismatch: dict of {col_name:datatype}
+        :return: 
+        """
+        df = self
+        columns = list(columns_mismatch.keys())
+        columns = parse_columns(df, columns)
+
+        _count = (df.select(columns).rdd
+                  .flatMap(lambda x: x.asDict().items())
+                  .map(lambda x: Infer.mismatch(x, columns_mismatch))
+                  .reduceByKey(lambda a, b: (a + b)))
+
+        result = {}
+        for c in _count.collect():
+            result.setdefault(c[0][0], {})[c[0][1]] = c[1]
+
+        # Be sure that we have the some default keys keys
+        for col_results in result.values():
+            col_results.setdefault("mismatch", 0)
+            col_results.setdefault("null", 0)
+            col_results.setdefault("missing", 0)
+
+        return result
+
+    @add_attr(cols)
+    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
         """
         Use rdd to count the inferred data type in a row
         :param columns: Columns to be processed
         :param str_funcs: list of tuples for create a custom string parsers
         :param int_funcs: list of tuples for create a custom int parsers
         :param infer: Infer data type
-        :param mismatch: a dict with column names and pattern to check. Pattern can be a predefined or a regex
         :return:
         """
-        import fastnumbers
-
-        def parse(value, _infer, _dtypes, _str_funcs, _int_funcs):
-
-            col_name, value = value
-
-            def str_to_boolean(_value):
-                _value = _value.lower()
-                if _value == "true" or _value == "false":
-                    return True
-
-            def str_to_date(_value):
-                try:
-                    dparse(_value)
-                    return True
-                except (ValueError, OverflowError):
-                    pass
-
-            def str_to_null(_value):
-                _value = _value.lower()
-                if _value == "null":
-                    return True
-
-            def is_null(_value):
-                if _value is None:
-                    return True
-
-            def str_to_gender(_value):
-                _value = _value.lower()
-                if _value == "male" or _value == "female":
-                    return True
-
-            def str_to_array(_value):
-                return str_to_data_type(_value, (list, tuple))
-
-            def str_to_object(_value):
-                return str_to_data_type(_value, (dict, python_set))
-
-            def str_to_data_type(_value, _dtypes):
-                """
-                Check if value can be parsed to a tuple or and list.
-                Because Spark can handle tuples we will try to transform tuples to arrays
-                :param _value:
-                :return:
-                """
-                try:
-
-                    if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
-                        return True
-                except (ValueError, SyntaxError):
-                    pass
-
-            def str_to_url(_value):
-                regex = re.compile(
-                    r'^https?://'  # http:// or https://
-                    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-                    r'localhost|'  # localhost...
-                    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-                    r'(?::\d+)?'  # optional port
-                    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-                if regex.match(_value):
-                    return True
-
-            def str_to_ip(_value):
-                regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
-                if regex.match(_value):
-                    return True
-
-            def str_to_email(_value):
-                regex = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
-                if regex.match(_value):
-                    return True
-
-            def str_to_credit_card(_value):
-                # Reference https://www.regular-expressions.info/creditcard.html
-                # https://codereview.stackexchange.com/questions/74797/credit-card-checking
-                regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
-                                   r'|5[1-5]\d{14}'  # Mastercard
-                                   r'|6011\d{12}'  # Discover (incomplete?)
-                                   r'|7\d{15}'  # What's this?
-                                   r'|3[47]\d{13}'  # American Express
-                                   r')$')
-                return bool(regex.match(_value))
-
-            def str_to_zip_code(_value):
-                regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
-                if regex.match(_value):
-                    return True
-                return False
-
-            def str_to_missing(_value):
-                if value == "":
-                    return True
-
-            # Try to order the functions from less to more computational expensive
-            if _int_funcs is None:
-                _int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-
-            if _str_funcs is None:
-                _str_funcs = [
-                    (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
-                    (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"), (str_to_url, "url"),
-                    (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
-                ]
-
-            mismatch_count = 0
-            if _dtypes[col_name] == "string" and mismatch is not None:
-                # Here we can create a list of predefined functions
-                regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
-                              "yyyy-mm-dd": '([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
-                              }
-
-                if col_name in mismatch:
-                    predefined = mismatch[col_name]
-                    if predefined in regex_list:
-                        expr = regex_list[predefined]
-                    else:
-                        expr = mismatch[col_name]
-                    regex = re.compile(expr)
-                    if regex.match(value):
-                        mismatch_count = 0
-                    else:
-                        mismatch_count = 1
-
-            if _dtypes[col_name] == "string" and infer is True:
-
-                if isinstance(value, bool):
-                    _data_type = "boolean"
-
-                elif fastnumbers.isint(value):  # Check if value is integer
-                    _data_type = "int"
-                    for func in _int_funcs:
-                        if func[0](value) is True:
-                            _data_type = func[1]
-                            break
-
-                elif fastnumbers.isfloat(value):
-                    _data_type = "decimal"
-
-                elif isinstance(value, str):
-                    _data_type = "string"
-                    for func in _str_funcs:
-                        if func[0](value) is True:
-                            _data_type = func[1]
-                            break
-                else:
-                    _data_type = "null"
-
-            else:
-                _data_type = _dtypes[col_name]
-                if is_null(value) is True:
-                    _data_type = "null"
-                elif str_to_missing(value) is True:
-                    _data_type = "missing"
-                else:
-                    if _dtypes[col_name].startswith("array"):
-                        _data_type = "array"
-                    else:
-                        _data_type = _dtypes[col_name]
-
-            if mismatch:
-                result = (col_name, _data_type), (1, mismatch_count)
-            else:
-                result = (col_name, _data_type), 1
-
-            return result
-
-        columns = parse_columns(self, columns)
 
         df = self
-        dtypes = df.cols.dtypes()
 
-        if mismatch:
-            _count = (df.select(columns).rdd
-                      .flatMap(lambda x: x.asDict().items())
-                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
-                      .reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1]))
-                      )
-        else:
-            _count = (df.select(columns).rdd
-                      .flatMap(lambda x: x.asDict().items())
-                      .map(lambda x: parse(x, infer, dtypes, str_funcs, int_funcs))
-                      .reduceByKey(lambda a, b: a + b))
+        columns = parse_columns(df, columns)
+        columns_dtypes = df.cols.dtypes()
+
+        df_count = (df.select(columns).rdd
+                    .flatMap(lambda x: x.asDict().items())
+                    .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
+                    .reduceByKey(lambda a, b: (a + b)))
 
         result = {}
-
-        for c in _count.collect():
+        for c in df_count.collect():
             result.setdefault(c[0][0], {})[c[0][1]] = c[1]
 
         # Process mismatch
-        if mismatch is not None:
-            for col_name, result_dtypes in result.items():
-                result[col_name]["mismatch"] = 0
-                for dtype, count in result_dtypes.items():
-                    if is_tuple(count):
-                        result[col_name]["mismatch"] = result[col_name]["mismatch"] + count[1]
-                        result[col_name][dtype] = count[0]
+        for col_name, result_dtypes in result.items():
+            for result_dtype, count in result_dtypes.items():
+                if is_tuple(count):
+                    result[col_name][result_dtype] = count[0]
 
         if infer is True:
-            result = fill_missing_var_types(result, dtypes)
+            result = fill_missing_var_types(result, columns_dtypes)
         else:
-            result = parse_profiler_dtypes(result, dtypes)
+            result = parse_profiler_dtypes(result)
         return result
 
     @add_attr(cols)
@@ -2206,6 +2090,21 @@ def cols(self):
         df = self
 
         df = ml_string_to_index(df, input_cols, output_cols, columns)
+
+        return df
+
+    @add_attr(cols)
+    def index_to_string(input_cols=None, output_cols=None, columns=None):
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
+        :param output_cols:
+        :param columns:
+        :return:
+        """
+        df = self
+
+        df = ml_index_to_string(df, input_cols, output_cols, columns)
 
         return df
 

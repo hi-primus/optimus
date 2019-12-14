@@ -5,6 +5,13 @@ from enum import Enum, unique
 class DriverProperties(Enum):
     """Enum holding all driver properties."""
 
+    REDIS = {
+        "name": "redis",
+        "port": 6379,
+        "java_class": "org.apache.spark.sql.redis",
+        "table_name": ""
+    }
+
     CASSANDRA = {
         "name": "cassandra",
         "port": 9042,

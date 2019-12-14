@@ -151,4 +151,10 @@ print(a)
 import json
 json.dumps("{'name'=a'a}")
 
+from optimus.profiler.profiler import Profiler
+
+op.profiler.run(source_df, "*")
+
+source_df.cols.range("height(ft)")
+
 

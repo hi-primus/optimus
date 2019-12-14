@@ -2,11 +2,10 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_str, is_tuple, is_list_of_tuples, is_list_of_strings, is_list, is_dataframe, \
-    is_list_of_list
+from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str, is_dataframe
+from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -119,6 +118,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     elif cols_args == "*" or cols_args is None:
         cols = df.columns
 
+
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
     # def func(attrs): attrs return (1,2) and (3,4)
@@ -163,7 +163,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         final_columns = cols
 
     cols_params = []
-
     if invert:
         final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
 
