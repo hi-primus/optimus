@@ -35,7 +35,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     numeric, we cast it to string and index the string values.
     :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
-    :param output_cols:Column where the ouput is going to be saved
+    :param output_cols:Column where the output is going to be saved
     :return: Dataframe with indexed columns.
     """
     df_actual = df
