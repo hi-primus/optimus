@@ -1,4 +1,4 @@
-from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.converter import one_list_to_val, val_to_list
 
 
 class RaiseIt:
@@ -8,9 +8,10 @@ class RaiseIt:
         """
         Raise a TypeError exception
         :param var:
-        :param data_types: data types expected as strings
+        :param data_types: data types expected as string or list of strings
         :return:
         """
+        data_types = val_to_list(data_types)
 
         from optimus.helpers.debug import get_var_name
         if len(data_types) == 1:
