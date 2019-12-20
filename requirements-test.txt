@@ -33,7 +33,7 @@ backoff==1.8.0
 pymongo==3.9.0
 h2o_pysparkling_2.4==2.4.12
 ratelimit==2.2.1
-tqdm==4.28.1
+tqdm==4.41.0
 kombu==4.6.1
 packaging==19.1
 ordered-set==3.1.1
