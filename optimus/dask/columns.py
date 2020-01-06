@@ -1,3 +1,4 @@
+import builtins
 import re
 from ast import literal_eval
 
@@ -15,6 +16,7 @@ from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures,
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.constants import Actions
 from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
 
 # Some expression accepts multiple columns at the same time.
@@ -194,6 +196,35 @@ def cols(self: DataFrame):
         @staticmethod
         def names():
             return list(self.columns)
+
+        @staticmethod
+        def fill_na(input_cols, value=None, output_cols=None):
+            """
+            Replace null data with a specified value
+            :param input_cols: '*', list of columns names or a single column name.
+            :param output_cols:
+            :param value: value to replace the nan/None values
+            :return:
+            """
+
+            # def fill_none_numeric(_value):
+            #     if pd.isnan(_value):
+            #         return value
+            #     return _value
+            
+            input_cols = parse_columns(self, input_cols)
+            check_column_numbers(input_cols, "*")
+            output_cols = get_output_cols(input_cols, output_cols)
+            
+            df = self
+
+            for output_col in output_cols:
+                df[output_col].fillna(value=value, axis=1)
+                # df[output_col] = df[output_col].apply(fill_none_numeric, meta=(output_col, "object") )
+                # df[output_col] = df[output_col].mask( df[output_col].isin([0,False,None,[],{}]) , value ) 
+
+            return df
+
 
         @staticmethod
         def count():
@@ -443,9 +474,9 @@ def cols(self: DataFrame):
         @staticmethod
         def parse_profiler_dtypes(col_data_type):
             """
-               Parse a spark data type to a profiler data type
-               :return:
-               """
+            Parse a spark data type to a profiler data type
+            :return:
+            """
 
             columns = {}
             for k, v in col_data_type.items():
@@ -457,6 +488,146 @@ def cols(self: DataFrame):
                 columns[k] = result_default
             return columns
 
+        # TODO: Maybe should be possible to cast and array of integer for example to array of double
+        @staticmethod
+        def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
+            """
+            Cast a column or a list of columns to a specific data type
+            :param input_cols: Columns names to be casted
+            :param output_cols:
+            :param dtype: final data type
+            :param columns: List of tuples of column names and types to be casted. This variable should have the
+                    following structure:
+                    colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+                    The first parameter in each tuple is the column name, the second is the final datatype of column after
+                    the transformation is made.
+            :return: Dask DataFrame
+            """
+
+            df = self
+            _dtypes = []
+
+            def _cast_int(value):
+                try:
+                    return int(value)
+                except ValueError:
+                    return None
+
+            def _cast_float(value):
+                try:
+                    return float(value)
+                except ValueError:
+                    return None
+
+            def _cast_bool(value):
+                return bool(value)
+            
+            def _cast_str(value):
+                return value.astype(str)
+
+            # Parse params
+            if columns is None:
+                input_cols = parse_columns(df, input_cols)
+                if is_list(input_cols) or is_one_element(input_cols):
+                    output_cols = get_output_cols(input_cols, output_cols)
+                    for _ in builtins.range(0, len(input_cols)):
+                        _dtypes.append(dtype)
+            else:
+                input_cols = list([c[0] for c in columns])
+                if len(columns[0]) == 2:
+                    output_cols = get_output_cols(input_cols, output_cols)
+                    _dtypes = list([c[1] for c in columns])
+                elif len(columns[0]) == 3:
+                    output_cols = list([c[1] for c in columns])
+                    _dtypes = list([c[2] for c in columns])
+
+                output_cols = get_output_cols(input_cols, output_cols)
+
+            for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
+                if dtype=='int':
+                    df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
+                elif dtype=='float':
+                    df[output_col] = df[input_col].apply(func=_cast_float, meta=df[input_col])
+                elif dtype=='bool':
+                    df[output_col] = df[input_col].apply(func=_cast_bool, meta=df[input_col])
+                else:
+                    df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+                df[output_col].odtype = dtype
+
+            return df
+            
+        @staticmethod
+        def cast_type(input_cols=None, dtype=None, output_cols=None, columns=None):
+            """
+            Cast a column or a list of columns to a specific data type
+            :param input_cols: Columns names to be casted
+            :param output_cols:
+            :param dtype: final data type
+            :param columns: List of tuples of column names and types to be casted. This variable should have the
+                    following structure:
+                    colsAndTypes = [('columnName1', 'int64'), ('columnName2', 'float'), ('columnName3', 'int32')]
+                    The first parameter in each tuple is the column name, the second is the final datatype of column after
+                    the transformation is made.
+            :return: Dask DataFrame
+            """
+
+            df = self
+            _dtypes = []
+
+            # Parse params
+            if columns is None:
+                input_cols = parse_columns(df, input_cols)
+                if is_list(input_cols) or is_one_element(input_cols):
+                    output_cols = get_output_cols(input_cols, output_cols)
+                    for _ in builtins.range(0, len(input_cols)):
+                        _dtypes.append(dtype)
+            else:
+                input_cols = list([c[0] for c in columns])
+                if len(columns[0]) == 2:
+                    output_cols = get_output_cols(input_cols, output_cols)
+                    _dtypes = list([c[1] for c in columns])
+                elif len(columns[0]) == 3:
+                    output_cols = list([c[1] for c in columns])
+                    _dtypes = list([c[2] for c in columns])
+
+                output_cols = get_output_cols(input_cols, output_cols)
+
+            for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
+                df[output_col] = df[input_col].astype(dtype=dtype)
+
+            return df
+            
+
+        @staticmethod
+        def nest(input_cols, shape="string", separator="", output_col=None):
+            """
+            Concat multiple columns to one with the format specified
+            :param input_cols: columns to be nested
+            :param separator: char to be used as separator at the concat time
+            :param shape: final data type, 'array', 'string' or 'vector'
+            :param output_col:
+            :return: Dask DataFrame
+            """
+
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            output_col = parse_columns(df, output_col, accepts_missing_cols=True)
+            check_column_numbers(output_col, 1)
+
+            def _nest_string(value):
+                v = value[input_cols[0]].astype(str)
+                for i in builtins.range(1, len(input_cols)):
+                    v = v + separator +  value[input_cols[i]].astype(str)
+                return v
+            
+            def _nest_array(value):
+                return [value[ic].astype(str) for ic in input_cols].astype(object)
+
+            # df = df.assign(**{output_col[0]: _nest_string})
+            df = df.assign(**{output_col[0]: _nest_array})
+
+            return df
+
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
             """
@@ -465,67 +636,77 @@ def cols(self: DataFrame):
             :param output_cols:
             :param search: Values to look at to be replaced
             :param replace_by: New value to replace the old one
-            :param search_by: Match substring or words. Can be 'chars' or 'words'
-            :return:
+            :param search_by: Can be "full","words","chars" or "numeric".
+            :return: Dask DataFrame
             """
 
             # TODO check if .contains can be used instead of regexp
-            def func_chars(_df, _input_col, _output_col, _search, _replace_by):
+            def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
                 # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
                 # Create as dict
+                search_and_replace_by = None
                 if is_list(search):
-                    _search_and_replace_by = {s: _replace_by for s in search}
+                    search_and_replace_by = {s: _replace_by for s in search}
                 elif is_one_element(search):
-                    _search_and_replace_by = {search: _replace_by}
+                    search_and_replace_by = {search: _replace_by}
 
-                _search_and_replace_by = {str(k): str(v) for k, v in _search_and_replace_by.items()}
+                search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
 
-                def multiple_replace(_value, __search_and_replace_by):
-                    # Create a regular expression from all of the dictionary keys
+                # Create a regular expression from all of the dictionary keys
+                regex = None
+                if search_by == "chars":
+                    regex = re.compile("|".join(map(re.escape, search_and_replace_by.keys())))
+                elif search_by == "words":
+                    regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, search_and_replace_by.keys())))
+
+                print('search_and_replace_by',search_and_replace_by)
+
+                def multiple_replace(_value):
                     if _value is not None:
-
-                        _regex = re.compile("|".join(map(re.escape, __search_and_replace_by.keys())))
-                        result = _regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
+                        return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(_value))
                     else:
-                        result = None
-                    return result
+                        return None
 
-                return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
-                                      output_cols=_output_col)
+                _df[_output_col] = _df[_output_col].apply(multiple_replace, meta=(_output_col, "object") )
 
-            def func_words(_df, _input_col, _output_col, _search, _replace_by):
-                _search = val_to_list(search)
-                # Convert the value to column data type
-                data_type = self.cols.dtypes(_input_col)
-                _search = [PYTHON_TYPES[data_type](s) for s in _search]
+                return _df
 
-                if _input_col != output_col:
-                    _df = _df.cols.copy(_input_col, _output_col)
+            def func_full(_df, _input_col, _output_col, _search, _replace_by):
+                _search = val_to_list(_search)
 
-                return _df.replace(_search, _replace_by, _input_col)
+                if _input_col != _output_col:
+                    _df[_output_col] = _df[_input_col]
 
-            if search_by is "words":
-                func = func_words
-            elif search_by is "chars":
-                func = func_chars
+                _df[_output_col] = _df[_output_col].mask( _df[_output_col].isin(_search) , _replace_by) 
+                return _df
+
+            func = None
+            if search_by == "full" or search_by == "numeric":
+                func = func_full
+            elif search_by == "chars" or search_by == "words":
+                func = func_chars_words
             else:
-                RaiseIt.value_error(search_by, ["words", "chars"])
+                RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
 
-            input_cols = parse_columns(self, input_cols,
-                                       filter_by_column_dtypes=[
-                                           self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES])
+            filter_dtype = None
+            if search_by in ["chars", "words", "full"]:
+                filter_dtype = self.constants.STRING_TYPES
+            elif search_by == "numeric":
+                filter_dtype = self.constants.NUMERIC_TYPES
+
+            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_dtype)
 
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
-                if is_column_a(df, input_col, "int"):
-                    df = df.cols.cast(input_col, "str", output_col)
-
+                # dtype = df[output_col].dtype
                 df = func(df, input_col, output_col, search, replace_by)
-
+                # df[output_col] = df[output_col].astype(dtype)
+                # df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
+                
             return df
 
         @staticmethod
