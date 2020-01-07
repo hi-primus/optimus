@@ -8,7 +8,7 @@ import jinja2
 from glom import assign
 
 from optimus.infer import is_dict, is_list_of_str, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
-from optimus.helpers.check import is_column_a
+from optimus.helpers.check import is_spark_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
@@ -509,7 +509,7 @@ class Profiler:
 
             for col_name in cols:
                 # Only process histogram for numeric columns. For other data types using frequency
-                if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+                if is_spark_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
                     buckets = result[col_name]["count_uniques"] - 1
                     if buckets > MAX_BUCKETS:
@@ -540,7 +540,7 @@ class Profiler:
             max_value = stats[col_name]["max"]
             min_value = stats[col_name]["min"]
 
-            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+            if is_spark_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 stddev = stats[col_name]['stddev']
                 mean = stats[col_name]['mean']
 

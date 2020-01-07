@@ -3,11 +3,11 @@ import re
 from ordered_set import OrderedSet
 
 from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
-from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str, is_dataframe
-from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
+from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -119,7 +119,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
-
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
     # and the rest as params. We can use the param in a custom function as follow
@@ -242,10 +241,11 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(OrderedSet(col_names) - OrderedSet(colums_names(df)))
+    _col_names = colums_names(df)
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(_col_names))
 
     if len(missing_columns) > 0:
-        RaiseIt.value_error(missing_columns, df.columns)
+        RaiseIt.value_error(missing_columns, _col_names)
     return False
 
 

@@ -24,7 +24,7 @@ from pyspark.sql.types import StringType, ArrayType, StructType
 
 from optimus import ROOT_DIR
 # Helpers
-from optimus.helpers.check import has_, is_column_a
+from optimus.helpers.check import has_, is_spark_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -48,7 +48,7 @@ sys.path.append(os.path.abspath(ROOT_DIR))
 from infer import Infer
 
 from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
-    is_list_of_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
+    is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
     parse_spark_class_dtypes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
 from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
@@ -109,7 +109,7 @@ def cols(self):
                     value = c[1]
                     df_result = df.cols.append(col_name, value)
 
-            elif is_list_of_dataframes(cols_values) or is_spark_dataframe(cols_values):
+            elif is_list_of_spark_dataframes(cols_values) or is_spark_dataframe(cols_values):
                 cols_values = val_to_list(cols_values)
                 cols_values.insert(0, df)
                 df_result = append_df(cols_values, like="columns")
@@ -592,7 +592,7 @@ def cols(self):
             def _filter(_col_name, _func):
                 for data_type, func_filter in filters.items():
                     for f in func_filter:
-                        if (_func == f) and (is_column_a(df, _col_name, data_type)):
+                        if (_func == f) and (is_spark_column_a(df, _col_name, data_type)):
                             return True
                 return False
 
@@ -1225,14 +1225,14 @@ def cols(self):
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
                 func = None
-                if is_column_a(self, input_col, self.constants.NUMERIC_TYPES):
+                if is_spark_column_a(self, input_col, self.constants.NUMERIC_TYPES):
 
                     new_value = fastnumbers.fast_float(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_column_a(self, input_col, self.constants.STRING_TYPES):
+                elif is_spark_column_a(self, input_col, self.constants.STRING_TYPES):
                     new_value = str(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_column_a(self, input_col, self.constants.ARRAY_TYPES):
+                elif is_spark_column_a(self, input_col, self.constants.ARRAY_TYPES):
                     if is_one_element(value):
                         new_value = F.array(F.lit(value))
                     else:
@@ -1446,7 +1446,7 @@ def cols(self):
 
             # Hint the user if the column has not the correct data type
             for input_col in input_cols:
-                if not is_column_a(self, input_col, self.constants.NUMERIC_TYPES):
+                if not is_spark_column_a(self, input_col, self.constants.NUMERIC_TYPES):
                     print(
                         "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
                             input_col))
@@ -1621,16 +1621,16 @@ def cols(self):
             for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
                 # If numeric convert and parse as string.
-                if is_column_a(df, input_col, self.constants.NUMERIC_TYPES):
+                if is_spark_column_a(df, input_col, self.constants.NUMERIC_TYPES):
                     df = df.cols.cast(input_col, "str")
 
                 # Parse depending of data types
-                if is_column_a(df, input_col, StructType):
+                if is_spark_column_a(df, input_col, StructType):
                     # Unnest a data Struct
                     df = df.select(output_col + ".*")
 
                 # Array
-                elif is_column_a(df, input_col, ArrayType):
+                elif is_spark_column_a(df, input_col, ArrayType):
                     # Try to infer the array length using the first row
                     if infer_splits is True:
                         splits = format_dict(df.agg(F.max(F.size(input_col))).ext.to_dict())
@@ -1641,7 +1641,7 @@ def cols(self):
                         df = df.withColumn(col_name, expr.getItem(i))
 
                 # String
-                elif is_column_a(df, input_col, StringType):
+                elif is_spark_column_a(df, input_col, StringType):
                     if separator is None:
                         RaiseIt.value_error(separator, "regular expression")
 
@@ -1656,7 +1656,7 @@ def cols(self):
 
                 # Vector
                 # TODO: Maybe we could implement Pandas UDF for better control columns output
-                elif is_column_a(df, input_col, VectorUDT):
+                elif is_spark_column_a(df, input_col, VectorUDT):
 
                     def _unnest(row):
                         _dict = row.asDict()

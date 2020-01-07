@@ -4,7 +4,7 @@ import itertools
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_column_a
+from optimus.helpers.check import is_spark_column_a
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
 # These function can return a Column Expression or a list of columns expression
@@ -200,13 +200,13 @@ def functions(self):
                 else:
                     exprs = None
             else:
-                if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+                if is_spark_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                     exprs = hist_numeric(min_max, buckets)
 
-                elif is_column_a(df, col_name, "str"):
+                elif is_spark_column_a(df, col_name, "str"):
                     exprs = hist_string(buckets)
 
-                elif is_column_a(df, col_name, "date") or is_column_a(df, col_name, "timestamp"):
+                elif is_spark_column_a(df, col_name, "date") or is_spark_column_a(df, col_name, "timestamp"):
                     exprs = hist_date()
                 else:
                     exprs = None
@@ -221,10 +221,10 @@ def functions(self):
 
             # Select the nan/null rows depending of the columns data type
             # If numeric
-            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+            if is_spark_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 expr = F.count(F.when(Functions.match_nulls_integers(col_name), col_name))
             # If string. Include 'nan' string
-            elif is_column_a(df, col_name, df.constants.STRING_TYPES):
+            elif is_spark_column_a(df, col_name, df.constants.STRING_TYPES):
                 expr = F.count(
                     F.when(Functions.match_nulls_strings(col_name), col_name))
                 # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
@@ -252,7 +252,7 @@ def functions(self):
             values = val_to_list(values)
             values = list(map(str, values))
 
-            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+            if is_spark_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 # Get percentiles
 
                 p = F.expr("percentile_approx(`{COLUMN}`, array({VALUES}), {ERROR})".format(COLUMN=col_name,

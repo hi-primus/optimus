@@ -23,7 +23,27 @@ def has_(value, _type):
     return any(isinstance(elem, _type) for elem in value)
 
 
-def is_column_a(df, column, dtypes):
+def is_dask_column_a(df, column, dtypes):
+    """
+    Check if column match a list of data types
+    :param df: spark
+    :param column: column to be compared with
+    :param dtypes: types to be checked
+    :return:
+    """
+    column = val_to_list(column)
+
+    if len(column) > 1:
+        RaiseIt.length_error(column, 1)
+
+    data_type = tuple(val_to_list(parse_spark_dtypes(df, dtypes)))
+    column = one_list_to_val(column)
+
+    # Filter columns by data type
+    return isinstance(df.schema[column].dataType, data_type)
+
+
+def is_spark_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
     :param df: spark

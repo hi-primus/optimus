@@ -1,22 +1,20 @@
 import re
-from ast import literal_eval
 
 import dask.dataframe as dd
-import fastnumbers
 import numpy as np
 from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
-from dateutil.parser import parse as dparse
+from infer import Infer
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
-from optimus.helpers.check import equal_function, is_column_a
-from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list, \
-    is_one_element, PYTHON_TYPES
+from optimus.helpers.check import equal_function, is_dask_column_a
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list, \
+    is_one_element, PYTHON_TYPES
 from optimus.profiler.functions import fill_missing_var_types
 
 # Some expression accepts multiple columns at the same time.
@@ -203,171 +201,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-            def parse(value, col_name, _infer, _dtypes, _str_funcs, _int_funcs):
-                # print("PARSE", (value, _infer, _dtypes, _str_funcs, _int_funcs))
-
-                # col_name, value = value
-
-                def str_to_boolean(_value):
-                    _value = _value.lower()
-                    if _value == "true" or _value == "false":
-                        return True
-
-                def str_to_date(_value):
-                    try:
-                        dparse(_value)
-                        return True
-                    except (ValueError, OverflowError):
-                        pass
-
-                def str_to_null(_value):
-                    _value = _value.lower()
-                    if _value == "null":
-                        return True
-
-                def is_null(_value):
-                    if _value is None:
-                        return True
-
-                def str_to_gender(_value):
-                    _value = _value.lower()
-                    if _value == "male" or _value == "female":
-                        return True
-
-                def str_to_array(_value):
-                    return str_to_data_type(_value, (list, tuple))
-
-                def str_to_object(_value):
-                    return str_to_data_type(_value, (dict, python_set))
-
-                def str_to_data_type(_value, _dtypes):
-                    """
-                    Check if value can be parsed to a tuple or and list.
-                    Because Spark can handle tuples we will try to transform tuples to arrays
-                    :param _value:
-                    :return:
-                    """
-                    try:
-
-                        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
-                            return True
-                    except (ValueError, SyntaxError):
-                        pass
-
-                def str_to_url(_value):
-                    regex = re.compile(
-                        r'^https?://'  # http:// or https://
-                        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-                        r'localhost|'  # localhost...
-                        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-                        r'(?::\d+)?'  # optional port
-                        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-                    if regex.match(_value):
-                        return True
-
-                def str_to_ip(_value):
-                    regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
-                    if regex.match(_value):
-                        return True
-
-                def str_to_email(_value):
-                    regex = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
-                    if regex.match(_value):
-                        return True
-
-                def str_to_credit_card(_value):
-                    # Reference https://www.regular-expressions.info/creditcard.html
-                    # https://codereview.stackexchange.com/questions/74797/credit-card-checking
-                    regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
-                                       r'|5[1-5]\d{14}'  # Mastercard
-                                       r'|6011\d{12}'  # Discover (incomplete?)
-                                       r'|7\d{15}'  # What's this?
-                                       r'|3[47]\d{13}'  # American Express
-                                       r')$')
-                    return bool(regex.match(_value))
-
-                def str_to_zip_code(_value):
-                    regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
-                    if regex.match(_value):
-                        return True
-                    return False
-
-                def str_to_missing(_value):
-                    if value == "":
-                        return True
-
-                # Try to order the functions from less to more computational expensive
-                if _int_funcs is None:
-                    _int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-
-                if _str_funcs is None:
-                    _str_funcs = [
-                        (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
-                        (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"), (str_to_url, "url"),
-                        (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
-                    ]
-
-                mismatch_count = 0
-                if _dtypes[col_name] == "string" and mismatch is not None:
-                    # Here we can create a list of predefined functions
-                    regex_list = {"dd/mm/yyyy": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
-                                  "yyyy-mm-dd": '([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))'
-                                  }
-
-                    if col_name in mismatch:
-                        predefined = mismatch[col_name]
-                        if predefined in regex_list:
-                            expr = regex_list[predefined]
-                        else:
-                            expr = mismatch[col_name]
-                        regex = re.compile(expr)
-                        if regex.match(value):
-                            mismatch_count = 0
-                        else:
-                            mismatch_count = 1
-
-                if _dtypes[col_name] == "string" and infer is True:
-
-                    if isinstance(value, bool):
-                        _data_type = "boolean"
-
-                    elif fastnumbers.isint(value):  # Check if value is integer
-                        _data_type = "int"
-                        for func in _int_funcs:
-                            if func[0](value) is True:
-                                _data_type = func[1]
-                                break
-
-                    elif fastnumbers.isfloat(value):
-                        _data_type = "decimal"
-
-                    elif isinstance(value, str):
-                        _data_type = "string"
-                        for func in _str_funcs:
-                            if func[0](value) is True:
-                                _data_type = func[1]
-                                break
-                    else:
-                        _data_type = "null"
-
-                else:
-                    _data_type = _dtypes[col_name]
-                    if is_null(value) is True:
-                        _data_type = "null"
-                    elif str_to_missing(value) is True:
-                        _data_type = "missing"
-                    else:
-                        if _dtypes[col_name].startswith("array"):
-                            _data_type = "array"
-                        else:
-                            _data_type = _dtypes[col_name]
-
-                if mismatch:
-                    result = (col_name, _data_type), (1, mismatch_count)
-                else:
-                    result = (col_name, _data_type), 1
-
-                return result
 
             columns = parse_columns(self, columns)
             df = self
@@ -375,18 +208,17 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                # print((col_name, infer, dtypes, str_funcs, int_funcs))
-
-                df_result = df[col_name].apply(parse, args=(col_name, infer, dtypes, str_funcs, int_funcs),
+                df_result = df[col_name].apply(Infer.parse_dask, args=(col_name, infer, dtypes, str_funcs, int_funcs),
                                                meta=str).compute()
 
                 result[col_name] = dict(df_result.value_counts())
-
+            print(result)
             if infer is True:
                 for k in result.keys():
                     result[k] = fill_missing_var_types(result[k])
             else:
                 result = Cols.parse_profiler_dtypes(result)
+
             return result
 
         @staticmethod
@@ -451,6 +283,7 @@ def cols(self: DataFrame):
 
             columns = {}
             for k, v in col_data_type.items():
+                # Initialize values to 0
                 result_default = {data_type: 0 for data_type in self.constants.DTYPES_TO_PROFILER.keys()}
                 for k1, v1 in v.items():
                     for k2, v2 in self.constants.DTYPES_TO_PROFILER.items():
@@ -516,14 +349,14 @@ def cols(self: DataFrame):
 
             input_cols = parse_columns(self, input_cols,
                                        filter_by_column_dtypes=[
-                                           self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES])
+                                           self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES + self.constants.OBJECT_TYPES])
 
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
-                if is_column_a(df, input_col, "int"):
+                if is_dask_column_a(df, input_col, "int"):
                     df = df.cols.cast(input_col, "str", output_col)
 
                 df = func(df, input_col, output_col, search, replace_by)

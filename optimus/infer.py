@@ -8,6 +8,7 @@ from ast import literal_eval
 
 import fastnumbers
 import math
+from dask import distributed
 from dateutil.parser import parse as dparse
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import functions as F, DataFrame
@@ -178,7 +179,8 @@ class Infer(object):
     def mismatch(value: tuple, dtypes: dict):
         """
         UDF function.
-        For example if we have an string column we also need to pass if the column is a credit card or  postal code.
+        For example if we have an string column we also need to pass the column type we want to match.
+        Like credit card or postal code.
         Count the dataType that match, do not match, nulls and missing.
         :param value: tuple(Column/Row, value)
         :param dtypes: dict {col_name:(dataType, mismatch)}
@@ -282,18 +284,23 @@ class Infer(object):
             return _data_type
 
     @staticmethod
-    def parse(value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None):
+    def parse_dask(value, col_name, infer, dtypes, str_funcs, int_funcs):
+        return Infer.parse((col_name, value), infer, dtypes, str_funcs, int_funcs, full=False)
+
+    @staticmethod
+    def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
         """
 
-        :param value:
+        :param col_and_value: Column and value tuple
         :param infer: If 'True' try to infer in all the dataTypes available. See int_func and str_funcs
         :param dtypes:
         :param str_funcs: Custom string function to infer.
         :param int_funcs: Custom numeric functions to infer.
         {col_name: regular_expression}
+        :param full: True return a tuple with (col_name, dtype), count or False return dtype
         :return:
         """
-        col_name, value = value
+        col_name, value = col_and_value
 
         # Try to order the functions from less to more computational expensive
         if int_funcs is None:
@@ -306,7 +313,7 @@ class Infer(object):
                 (str_to_url, "url"),
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
-        print(dtypes)
+
         if dtypes[col_name] == "string" and infer is True:
 
             if isinstance(value, bool):
@@ -343,7 +350,10 @@ class Infer(object):
                 else:
                     _data_type = dtypes[col_name]
 
-        result = (col_name, _data_type), 1
+        if full is True:
+            result = (col_name, _data_type), 1
+        else:
+            result = _data_type
 
         return result
 
@@ -508,7 +518,7 @@ def is_list_of_str_or_num(value):
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
 
 
-def is_list_of_dataframes(value):
+def is_list_of_spark_dataframes(value):
     """
     Check if an object is a Spark DataFrame
     :param value:
@@ -651,6 +661,7 @@ def is_str(value):
     :return:
     """
     return isinstance(value, str)
+
 
 def is_list_of_futures(value):
     """
