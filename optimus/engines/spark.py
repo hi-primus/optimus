@@ -1,3 +1,5 @@
+
+
 import os
 import platform
 import sys
@@ -7,6 +9,7 @@ from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 from optimus.bumblebee import Comm
+from optimus.spark.create import Create
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.converter import val_to_list
@@ -15,12 +18,11 @@ from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.profiler import Profiler
-from optimus.server.server import Server
-from optimus.spark.create import Create
 from optimus.spark.io.jdbc import JDBC
 from optimus.spark.io.load import Load
 from optimus.spark.ml.models import ML
+# from optimus.profiler.profiler import Profiler
+# from optimus.server.server import Server
 from optimus.spark.spark import Spark
 from optimus.version import __version__
 
@@ -32,7 +34,7 @@ Comm.instance = None
 
 class SparkEngine:
     __version__ = __version__
-    cache = False
+
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
@@ -46,7 +48,6 @@ class SparkEngine:
                  additional_options=None,
                  comm=None,
                  load_avro=False,
-                 cache=True
                  ):
 
         """
@@ -75,15 +76,31 @@ class SparkEngine:
         :type jars: (list[str])
 
         """
+
         self.preserve = False
         self.engine = 'spark'
 
-        SparkEngine.cache = cache
+        if comm is True:
+            Comm.instance = Comm()
+        else:
+            Comm.instance = comm
+
+        if jars is None:
+            jars = []
+
+        if driver_class_path is None:
+            driver_class_path = []
 
         if comm is True:
             Comm.instance = Comm()
-        # else:
-        #     Comm.instance = comm
+        else:
+            Comm.instance = comm
+
+        if jars is None:
+            jars = []
+
+        if driver_class_path is None:
+            driver_class_path = []
 
         if session is None:
             # Creating Spark Session
@@ -114,8 +131,12 @@ class SparkEngine:
             elif load_avro == "2.3":
                 self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            jdbc_jars = ["/jars/RedshiftJDBC42-1.2.16.1027.jar", "/jars/mysql-connector-java-8.0.16.jar",
-                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar"]
+            jdbc_jars = ["/jars/spark-redis-2.4.1-SNAPSHOT-jar-with-dependencies.jar",
+                         "/jars/RedshiftJDBC42-1.2.16.1027.jar",
+                         "/jars/mysql-connector-java-8.0.16.jar",
+                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
+                         "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
+                         "/jars/mssql-jdbc-7.4.1.jre8.jar"]
 
             self._add_jars(absolute_path(jdbc_jars, "uri"))
             self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
@@ -135,18 +156,18 @@ class SparkEngine:
 
         # Initialize Spark
         logger.print("""
-                              ____        __  _                     
-                             / __ \____  / /_(_)___ ___  __  _______
-                            / / / / __ \/ __/ / __ `__ \/ / / / ___/
-                           / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
-                           \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
-                               /_/                                  
-                               """)
+                             ____        __  _                     
+                            / __ \____  / /_(_)___ ___  __  _______
+                           / / / / __ \/ __/ / __ `__ \/ / / / ___/
+                          / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
+                          \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
+                              /_/                                  
+                              """)
 
         logger.print(STARTING_OPTIMUS)
 
         # Pickling
-        # Spark.instance.sc.addPyFile(absolute_path("/helpers/pickle.py"))
+        Spark.instance.sc.addPyFile(absolute_path("/infer.py"))
 
         if server:
             logger.print("Starting Optimus Server...")
@@ -169,15 +190,16 @@ class SparkEngine:
         self.output("html")
 
     @staticmethod
-    def connect(db_type="redshift", host=None, database=None, user=None, password=None, port=None, schema="public",
-                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None):
+    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
+                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
+                cassandra_keyspace=None, cassandra_table=None):
         """
         Create the JDBC string connection
         :return: JDBC object
         """
 
-        return JDBC(db_type, host, database, user, password, port, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog)
+        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
+                    presto_catalog, cassandra_keyspace, cassandra_table)
 
     def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
                collection_name="data"):
@@ -397,6 +419,8 @@ class SparkEngine:
         os.environ['PYSPARK_PYTHON'] = sys.executable
 
         # Remove duplicated strings
+        # print(self._setup_jars())
+        # print(os.environ.get('PYSPARK_SUBMIT_ARGS', '').replace(self._setup_jars(), ''))
 
         submit_args = [
             # options that were already defined through PYSPARK_SUBMIT_ARGS
