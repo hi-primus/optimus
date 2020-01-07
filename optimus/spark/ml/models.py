@@ -4,8 +4,9 @@ from pyspark.sql import functions as F
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.helpers.check import is_spark_dataframe, is_str
+from optimus.infer import is_str, is_dataframe
 from optimus.helpers.columns import parse_columns, name_col
+from optimus.spark.ml.contants import STRING_TO_INDEX
 from optimus.spark.ml.encoding import string_to_index, vector_assembler
 from optimus.spark.spark import Spark
 
@@ -15,13 +16,13 @@ class ML:
     def logistic_regression_text(df, input_col):
         """
         Runs a logistic regression for input (text) DataFrame.
-        :param df: Pyspark spark to analyze
+        :param df: Pyspark dataframe to analyze
         :param input_col: Column to predict
         :return: DataFrame with logistic regression and prediction run.
         """
 
-        if not is_spark_dataframe(df):
-            raise TypeError("Spark spark expected")
+        if not is_dataframe(df):
+            raise TypeError("Spark dataframe expected")
 
         pl = feature.Tokenizer().setInputCol(input_col) | feature.CountVectorizer()
         ml = pl | classification.LogisticRegression()
@@ -33,7 +34,7 @@ class ML:
     def random_forest(df, columns, input_col, **kwargs):
         """
         Runs a random forest classifier for input DataFrame.
-        :param df: Pyspark spark to analyze.
+        :param df: Pyspark dataframe to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with random forest and prediction run.
@@ -49,8 +50,8 @@ class ML:
         df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = RandomForestClassifier(**kwargs)
-        df.ext.display()
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df.table()
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         rf_model = model.fit(df)
         df_model = rf_model.transform(df)
@@ -60,14 +61,14 @@ class ML:
     def decision_tree(df, columns, input_col, **kwargs):
         """
         Runs a decision tree classifier for input DataFrame.
-        :param df: Pyspark spark to analyze.
+        :param df: Pyspark dataframe to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with decision tree and prediction run.
         """
 
-        if not is_spark_dataframe(df):
-            raise TypeError("Spark spark expected")
+        if not is_dataframe(df):
+            raise TypeError("Spark dataframe expected")
 
         columns = parse_columns(df, columns)
 
@@ -83,7 +84,7 @@ class ML:
 
         model = DecisionTreeClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         dt_model = model.fit(df)
         df_model = dt_model.transform(df)
@@ -93,14 +94,14 @@ class ML:
     def gbt(df, columns, input_col, **kwargs):
         """
         Runs a gradient boosting tree classifier for input DataFrame.
-        :param df: Pyspark spark to analyze.
+        :param df: Pyspark dataframe to analyze.
         :param columns: List of columns to select for prediction.
         :param input_col: Column to predict.
         :return: DataFrame with gradient boosting tree and prediction run.
         """
 
-        if not is_spark_dataframe(df):
-            raise TypeError("Spark spark expected")
+        if not is_dataframe(df):
+            raise TypeError("Spark dataframe expected")
 
         columns = parse_columns(df, columns)
 
@@ -116,7 +117,7 @@ class ML:
 
         model = GBTClassifier(**kwargs)
 
-        df = df.cols.rename(name_col(input_col, "index_to_string"), "label")
+        df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         gbt_model = model.fit(df)
         df_model = gbt_model.transform(df)
@@ -133,7 +134,7 @@ class ML:
                            maxRuntimeSecs=60,  # 1 minutes
                            seed=1,
                            maxModels=3,
-                           labelCol=name_col(label, "index_to_string"),
+                           labelCol=name_col(label, STRING_TO_INDEX),
                            **kwargs)
 
         model = automl.fit(df_va)

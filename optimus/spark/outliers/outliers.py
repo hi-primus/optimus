@@ -29,3 +29,4 @@ def outliers(self):
 
 
 DataFrame.outliers = property(outliers)
+

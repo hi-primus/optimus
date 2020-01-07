@@ -21,7 +21,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.spark.io.jdbc import JDBC
 from optimus.spark.io.load import Load
 from optimus.spark.ml.models import ML
-# from optimus.profiler.profiler import Profiler
+from optimus.profiler.profiler import Profiler
 # from optimus.server.server import Server
 from optimus.spark.spark import Spark
 from optimus.version import __version__

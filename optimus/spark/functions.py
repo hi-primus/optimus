@@ -4,13 +4,13 @@ import itertools
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_column_a, is_numeric
+from optimus.helpers.check import is_column_a
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
-
-
 # These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
+from optimus.infer import is_numeric
+
 
 def functions(self):
     class Functions:

@@ -7,12 +7,9 @@ import imgkit
 import jinja2
 from glom import assign
 
-from optimus.audf import *
-from optimus.dataframe.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.infer import is_dict, is_list_of_str, PYSPARK_NUMERIC_TYPES, PYTHON_TO_PROFILER
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.columns_expression import zeros_agg, count_na_agg, hist_agg, percentile_agg, count_uniques_agg
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.decorators import time_it
 from optimus.helpers.functions import absolute_path, update_dict

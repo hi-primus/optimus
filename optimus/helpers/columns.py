@@ -2,6 +2,7 @@ import re
 
 from ordered_set import OrderedSet
 
+from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
 from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str, is_dataframe
 from optimus.helpers.parser import parse_spark_dtypes
 from optimus.helpers.converter import one_list_to_val, val_to_list
@@ -273,7 +274,7 @@ def filter_col_name_by_dtypes(df, data_type):
     :return:
     """
 
-    data_type = parse_dtypes(df, data_type)
+    data_type = parse_spark_dtypes(df, data_type)
     # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
     # Filter columns by data type

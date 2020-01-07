@@ -1,4 +1,3 @@
-import collections
 import json
 
 import humanize
@@ -13,14 +12,14 @@ from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
 from optimus.bumblebee import Comm
-from optimus.helpers.check import is_str
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import val_to_list
-from optimus.helpers.functions import random_int, traverse, absolute_path
+from optimus.helpers.functions import random_int, traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_str
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.spark.spark import Spark
@@ -34,80 +33,54 @@ def ext(self):
         @staticmethod
         def roll_out():
             """
-            Just a function to check if the Spark spark has been Monkey Patched
+            Just a function to check if the Spark dataframe has been Monkey Patched
             :return:
             """
-            print(self)
             print("Yes!")
 
         @staticmethod
         def to_json():
             """
             Return a json from a Spark Dataframe
+            
             :return:
             """
-            return json.dumps(Ext.to_dict(), ensure_ascii=False, default=json_converter)
+            return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
+
+        @staticmethod
+        def display(limit=None, columns=None, title=None, truncate=True):
+            Ext.table(limit, columns, title, truncate)
 
         @staticmethod
         def to_dict():
             """
-            Return a dict from a Collect result
-            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
+            Return a Python object from a Spark Dataframe
             :return:
             """
-            # # Explore this approach seems faster
-            # use_unicode = True
-            # from pyspark.serializers import UTF8Deserializer
-            # from pyspark.rdd import RDD
-            # rdd = df._jdf.toJSON()
-            # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
-            # if limit is None:
-            #     r.collect()
-            # else:
-            #     r.take(limit)
-            # return r
-            #
-            df = self
-            dict_result = []
-
-            # if there is only an element in the dict just return the value
-            if len(dict_result) == 1:
-                dict_result = next(iter(dict_result.values()))
-            else:
-                col_names = parse_columns(df, "*")
-
-                # Because asDict can return messed columns names we order
-                for row in df.collect():
-                    _row = row.asDict()
-                    r = collections.OrderedDict()
-                    for col in col_names:
-                        r[col] = _row[col]
-                    dict_result.append(r)
-            return dict_result
+            return collect_as_dict(self)
 
         @staticmethod
         def export():
             """
-            Helper function to export all the spark in text format. Aimed to be used in test functions
+            Helper function to export all the dataframe in text format. Aimed to be used in test functions
             :return:
             """
-            df = self
             dict_result = {}
-
-            value = df.collect()
+            value = self.collect()
             schema = []
-            for col_name in df.cols.names():
+            for col_names in self.cols.names():
+                name = col_names
 
-                data_type = df.cols.schema_dtype(col_name)
+                data_type = self.cols.schema_dtype(col_names)
                 if isinstance(data_type, ArrayType):
                     data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
                 else:
                     data_type = str(data_type) + "()"
 
-                nullable = df.schema[col_name].nullable
+                nullable = self.schema[col_names].nullable
 
                 schema.append(
-                    "('{name}', {dataType}, {nullable})".format(name=col_name, dataType=data_type, nullable=nullable))
+                    "('{name}', {dataType}, {nullable})".format(name=name, dataType=data_type, nullable=nullable))
             schema = ",".join(schema)
             schema = "[" + schema + "]"
 
@@ -132,6 +105,30 @@ def ext(self):
             return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
         @staticmethod
+        def sample(n=10, random=False):
+            """
+            Return a n number of sample from a dataFrame
+            :param n: Number of samples
+            :param random: if true get a semi random sample
+            :return:
+            """
+            if random is True:
+                seed = random_int()
+            elif random is False:
+                seed = 0
+            else:
+                RaiseIt.value_error(random, ["True", "False"])
+
+            rows_count = self.count()
+            if n < rows_count:
+                # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
+                fraction = (n / rows_count) * 1.1
+            else:
+                fraction = 1.0
+
+            return self.sample(False, fraction, seed=seed).limit(n)
+
+        @staticmethod
         def stratified_sample(col_name, seed: int = 1) -> DataFrame:
             """
             Stratified Sampling
@@ -141,39 +138,14 @@ def ext(self):
             """
             df = self
             fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
-            # print(col_name, fractions, seed)
             df = df.stat.sampleBy(col_name, fractions, seed)
             return df
-
-        @staticmethod
-        def sample(n: int = 10, random: bool = False) -> DataFrame:
-            """
-            Return n number of samples from a dataFrame
-            :param n: Number of samples
-            :param random: if true get a semi random sample
-            :return:
-            """
-            df = self
-            if random is True:
-                seed = random_int()
-            elif random is False:
-                seed = 0
-            else:
-                RaiseIt.value_error(random, ["True", "False"])
-
-            rows_count = df.rows.count()
-            if n < rows_count:
-                # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
-                fraction = (n / rows_count) * 1.1
-            else:
-                fraction = 1.0
-            # print(seed, n)
-            return df.sample(False, fraction, seed=seed).limit(n)
 
         @staticmethod
         def pivot(index, column, values):
             """
             Return reshaped DataFrame organized by given index / column values.
+            :param self: Spark Dataframe
             :param index: Column to use to make new frame's index.
             :param column: Column to use to make new frame's columns.
             :param values: Column(s) to use for populating new frame's values.
@@ -210,7 +182,7 @@ def ext(self):
         @staticmethod
         def size():
             """
-            Get the size of a spark in bytes
+            Get the size of a dataframe in bytes
             :return:
             """
 
@@ -227,7 +199,7 @@ def ext(self):
                 java_obj = _to_java_object_rdd(self.rdd)
                 n_bytes = Spark.instance.sc._jvm.org.apache.spark.util.SizeEstimator.estimate(java_obj)
             else:
-                # TODO: Find a way to calculate the spark size in spark 2.4
+                # TODO: Find a way to calculate the dataframe size in spark 2.4
                 n_bytes = -1
 
             return n_bytes
@@ -243,6 +215,7 @@ def ext(self):
             Other important thing is that Apache Spark save task but not result of dataFrame, so tasks are
             accumulated and the same situation happens.
 
+            :param self: Spark Dataframe
             :return:
             """
 
@@ -254,7 +227,8 @@ def ext(self):
             """
             Implements the transformations which are defined by SQL statement. Currently we only support
             SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
-            underlying table of the input spark.
+            underlying table of the input dataframe.
+            :param self: Spark Dataframe
             :param sql_expression: SQL expression.
             :return: Dataframe with columns changed by SQL statement.
             """
@@ -268,7 +242,7 @@ def ext(self):
             :param value:
             :return:
             """
-            self.meta.set("name", value)
+            self._name = value
             if not is_str(value):
                 RaiseIt.type_error(value, ["string"])
 
@@ -280,15 +254,15 @@ def ext(self):
         @staticmethod
         def get_name():
             """
-            Get spark name
+            Get dataframe name
             :return:
             """
-            return Ext.get_meta("name")
+            return self._name
 
         @staticmethod
         def partitions():
             """
-            Return the spark partitions number
+            Return the dataframe partitions number
             :return: Number of partitions
             """
             return self.rdd.getNumPartitions()
@@ -296,21 +270,30 @@ def ext(self):
         @staticmethod
         def partitioner():
             """
-            Return the algorithm used to partition the spark
-
+            Return the algorithm used to partition the dataframe
+            :param self: Spark Dataframe
             :return:
             """
             return self.rdd.partitioner
 
-        @staticmethod
-        def repartition(partitions_number=None, col_name=None):
+        # @add_attr(DataFrame)
+        # def glom(self):
+        #     """
+        #
+        #     :param self: Spark Dataframe
+        #     :return:
+        #     """
+        #     return collect_as_dict(self.rdd.glom().collect()[0])
+
+        def h_repartition(self, partitions_number=None, col_name=None):
             """
             Apply a repartition to a datataframe based in some heuristics. Also you can pass the number of partitions and
-            a column.
+            a column if you need more control.
             See
             https://stackoverflow.com/questions/35800795/number-of-partitions-in-rdd-and-performance-in-spark/35804407#35804407
             https://medium.com/@adrianchang/apache-spark-partitioning-e9faab369d14
             https://umbertogriffo.gitbooks.io/apache-spark-best-practices-and-tuning/content/sparksqlshufflepartitions_draft.html
+            :param self: Spark Dataframe
             :param partitions_number: Number of partitions
             :param col_name: Column to be used to apply the repartition id necessary
             :return:
@@ -328,7 +311,7 @@ def ext(self):
         @staticmethod
         def table_image(path, limit=10):
             """
-            Output table as image
+
             :param limit:
             :param path:
             :return:
@@ -340,29 +323,27 @@ def ext(self):
             print_html("<img src='" + path + "'>")
 
         @staticmethod
-        def table_html(limit=10, columns=None, title=None, full=False, truncate=True, count=True):
+        def table_html(limit=10, columns=None, title=None, full=False, truncate=True):
             """
-            Return a HTML table with the spark cols, data types and values
+            Return a HTML table with the dataframe cols, data types and values
             :param columns: Columns to be printed
             :param limit: How many rows will be printed
             :param title: Table title
             :param full: Include html header and footer
             :param truncate: Truncate the row information
-            :param count:
 
             :return:
             """
 
-            df = self
-            columns = parse_columns(df, columns)
+            columns = parse_columns(self, columns)
 
             if limit is None:
                 limit = 10
 
             if limit == "all":
-                data = df.cols.select(columns).ext.to_dict()
+                data = collect_as_dict(self.cols.select(columns))
             else:
-                data = df.cols.select(columns).limit(limit).ext.to_dict()
+                data = collect_as_dict(self.cols.select(columns).limit(limit))
 
             # Load the Jinja template
             template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
@@ -388,17 +369,14 @@ def ext(self):
                     if i[0] == j:
                         final_columns.append(i)
 
-            if count is True:
-                total_rows = self.rows.approx_count()
+            total_rows = self.rows.count()
 
-                if limit == "all":
-                    limit = total_rows
-                elif total_rows < limit:
-                    limit = total_rows
+            if limit == "all":
+                limit = total_rows
+            elif total_rows < limit:
+                limit = total_rows
 
-                total_rows = humanize.intword(total_rows)
-            else:
-                total_rows = None
+            total_rows = humanize.intcomma(total_rows)
 
             total_cols = self.cols.count()
             total_partitions = Ext.partitions()
@@ -412,29 +390,26 @@ def ext(self):
             return output
 
         @staticmethod
-        def display(limit=None, columns=None, title=None, truncate=True):
-            Ext.table(limit, columns, title, truncate)
+        def isnotebook():
+            """
+            Detect you are in a notebook or in a terminal
+            :return:
+            """
+            try:
+                shell = get_ipython().__class__.__name__
+                if shell == 'ZMQInteractiveShell':
+                    return True  # Jupyter notebook or qtconsole
+                elif shell == 'TerminalInteractiveShell':
+                    return False  # Terminal running IPython
+                else:
+                    return False  # Other type (?)
+            except NameError:
+                return False  # Probably standard Python interpreter
 
         @staticmethod
         def table(limit=None, columns=None, title=None, truncate=True):
-            def isnotebook():
-                """
-                Detect you are in a notebook or in a terminal
-                :return:
-                """
-                try:
-                    shell = get_ipython().__class__.__name__
-                    if shell == 'ZMQInteractiveShell':
-                        return True  # Jupyter notebook or qtconsole
-                    elif shell == 'TerminalInteractiveShell':
-                        return False  # Terminal running IPython
-                    else:
-                        return False  # Other type (?)
-                except NameError:
-                    return False  # Probably standard Python interpreter
-
             try:
-                if isnotebook() and DataFrame.output == "html":
+                if Ext.isnotebook() and DataFrame.output == "html":
                     result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                     print_html(result)
                 else:
@@ -444,17 +419,21 @@ def ext(self):
                 self.show()
 
         @staticmethod
-        def show():
+        def random_split(weights: list = None, seed: int = 1):
             """
-            Print df lineage
+            Create 2 random splited DataFrames
+            :param weights:
+            :param seed:
             :return:
             """
-            self.show()
+            if weights is None:
+                weights = [0.8, 0.2]
+
+            return self.randomSplit(weights, seed)
 
         @staticmethod
         def debug():
             """
-            Print df lineage
             :return:
             """
             print(self.rdd.toDebugString().decode("ascii"))

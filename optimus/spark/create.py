@@ -1,21 +1,19 @@
 import pandas as pd
 from pyspark.sql.types import StringType, StructField, StructType
 
+from optimus.infer import Infer, is_, is_tuple, is_list_of_tuples, is_one_element, parse_spark_class_dtypes
 from optimus.spark.spark import Spark
-from optimus.helpers.check import is_, is_list_of_tuples, is_one_element, is_tuple
-from optimus.helpers.functions import infer
-from optimus.helpers.parser import parse_spark_class_dtypes
 
 
 class Create:
     @staticmethod
     def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
         """
-        Helper to create a Spark spark:
+        Helper to create a Spark dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples with the same number and types that cols
         :param infer_schema: Try to infer the schema data type.
-        :param pdf: a pandas spark
+        :param pdf: a pandas dataframe
         :return: Dataframe
         """
         if is_(pdf, pd.DataFrame):
@@ -35,7 +33,8 @@ class Create:
                     col_name = c
 
                     if infer_schema is True:
-                        var_type = infer(r)
+                        var_type = Infer.to_spark(r)
+                        # print(var_type)
                     else:
                         var_type = StringType()
                     nullable = True
@@ -58,7 +57,7 @@ class Create:
             struct_fields = list(map(lambda x: StructField(*x), specs))
 
             df = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
-            df = df.meta.add_columns(df.cols.names())
+            df = df.meta.columns(df.cols.names())
         return df
 
     df = data_frame

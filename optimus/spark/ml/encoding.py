@@ -1,10 +1,11 @@
 from pyspark.ml import feature, Pipeline
-from pyspark.ml.feature import StringIndexer, IndexToString, OneHotEncoder, VectorAssembler, Normalizer
+from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, Normalizer, IndexToString
 
-from optimus.helpers.check import is_spark_dataframe, is_, is_str
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_, is_str, is_dataframe
+from optimus.spark.ml.contants import STRING_TO_INDEX
 
 
 def n_gram(df, input_col, n=2):
@@ -16,7 +17,7 @@ def n_gram(df, input_col, n=2):
     :return: Spark DataFrame with n-grams calculated.
     """
 
-    is_spark_dataframe(df)
+    is_dataframe(df)
 
     tokenizer = feature.Tokenizer().setInputCol(input_col) | feature.StopWordsRemover()
     count = feature.CountVectorizer()
@@ -36,6 +37,39 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     :param df: Dataframe to be transformed
     :param input_cols: Columns to be indexed.
     :param output_cols:Column where the ouput is going to be saved
+    :param columns:
+    :return: Dataframe with indexed columns.
+    """
+    df_actual = df
+
+    if columns is None:
+        input_cols = parse_columns(df, input_cols)
+        if output_cols is None:
+            output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
+        output_cols = get_output_cols(input_cols, output_cols)
+    else:
+        input_cols, output_cols = zip(*columns)
+
+    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
+                in zip(list(set(input_cols)), list(set(output_cols)))]
+
+    pipeline = Pipeline(stages=indexers)
+    df = pipeline.fit(df).transform(df)
+
+    df = df.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+
+    return df
+
+
+def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
+    """
+    Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
+    either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
+    ML attributes).
+    :param df: Dataframe to be transformed.
+    :param input_cols: Columns to be indexed.
+    :param output_cols: Column where the output is going to be saved.
+    :param columns:
     :return: Dataframe with indexed columns.
     """
     df_actual = df
@@ -48,37 +82,12 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     else:
         input_cols, output_cols = zip(*columns)
 
-    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
+    indexers = [IndexToString(inputCol=input_col, outputCol=output_col, **kargs) for input_col, output_col
                 in zip(list(set(input_cols)), list(set(output_cols)))]
-
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
 
-    df = df.meta.preserve(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
-
-    return df
-
-
-def index_to_string(df, input_cols, output_col=None, **kargs):
-    """
-    Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
-    either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
-    ML attributes).
-    :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be indexed.
-    :param output_col: Column where the output is going to be saved.
-    :return: Dataframe with indexed columns.
-    """
-
-    input_cols = parse_columns(df, input_cols)
-    if output_col is None:
-        output_col = name_col(input_cols, "index_to_string")
-
-    indexers = [IndexToString(inputCol=column, outputCol=output_col, **kargs) for column in
-                list(set(input_cols))]
-
-    pipeline = Pipeline(stages=indexers)
-    df = pipeline.fit(df).transform(df)
+    df = df.preserve_meta(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
 
     return df
 

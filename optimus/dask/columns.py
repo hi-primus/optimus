@@ -10,12 +10,14 @@ from dateutil.parser import parse as dparse
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
-from optimus.helpers.check import is_list_of_tuples, is_int, is_list_of_futures, equal_function, is_column_a, is_list, \
-    is_one_element
+from optimus.helpers.check import equal_function, is_column_a
+from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list, \
+    is_one_element, PYTHON_TYPES
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_var_types, RELATIVE_ERROR
+from optimus.profiler.functions import fill_missing_var_types
 
 # Some expression accepts multiple columns at the same time.
 python_set = set

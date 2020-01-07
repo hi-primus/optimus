@@ -43,7 +43,7 @@ def plot(self):
         @staticmethod
         def box(columns=None, output_format="plot", output_path=None):
             """
-            Plot box plot
+            Plot boxplot
             :param columns: Columns to be printed
             :param output_format:
             :param output_path: path where the image is going to be saved

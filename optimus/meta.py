@@ -12,39 +12,109 @@ def meta(self):
     what should be recalculated in the profiler. For example a copy or rename operation do not need to
     fire a column profiling
     """
+    df_self = self
 
     class Meta:
-        # Basic Operations
         @staticmethod
-        def set(spec=None, value=None, missing=dict):
-            """
-            Set metadata in a dataframe columns
-            :param spec: path to the key to be modified
-            :param value: dict value
-            :param missing:
-            :return:
-            """
-            df = self
-            if spec is not None:
-                target = self.meta.get()
-                data = assign(target, spec, value, missing=missing)
-            else:
-                data = value
-
-            df.schema[-1].metadata = data
+        def reset(self):
+            df = self.meta.set("transformations.actions", {})
+            Profiler.instance.output_columns = {}
             return df
 
         @staticmethod
-        def get(spec=None):
+        def copy(old_new_columns):
             """
-            Get metadata from a dataframe column
-            :param spec: path to the key to be modified
+            Shortcut to add copy transformations to a dataframe
+            :param self:
+            :param old_new_columns:
             :return:
             """
-            data = self.schema[-1].metadata
-            if spec is not None:
-                data = glom(data, spec, skip_exc=KeyError)
-            return data
+
+            key = "transformations.actions.copy"
+
+            df = self
+
+            copy_cols = df.meta.get(key)
+            if copy_cols is None:
+                copy_cols = {}
+            copy_cols.update(old_new_columns)
+
+            df = df.meta.set(key, copy_cols)
+
+            return df
+
+        @staticmethod
+        def rename(old_new_columns):
+            """
+            Shortcut to add rename transformations to a dataframe
+            :param old_new_columns:
+            :return:
+            """
+
+            key = "transformations.actions.rename"
+
+            df = self
+            renamed_cols = df.meta.get(key)
+
+            old, new = old_new_columns
+            if renamed_cols is None or old not in list(renamed_cols.values()):
+                df = df.meta.update(key, {old: new}, dict)
+            else:
+                # This update a key
+                for k, v in renamed_cols.items():
+                    # print(old_new_columns)
+                    n, m = old_new_columns
+                    if v == n:
+                        renamed_cols[k] = m
+
+                df = df.meta.set(key, renamed_cols)
+            return df
+
+        @staticmethod
+        def columns(value):
+            """
+            Shortcut to add transformations to a dataframe
+            :param value:
+            :return:
+            """
+            df = self
+            value = val_to_list(value)
+            for v in value:
+                df = df.meta.update("transformations.columns", v, list)
+            return df
+
+        @staticmethod
+        def action(key, value):
+            """
+            Shortcut to add transformations to a dataframe
+            :param key:
+            :param value:
+            :return:
+            """
+            df = self
+            value = val_to_list(value)
+            for v in value:
+                df = df.meta.update("transformations.actions." + key, v, list)
+            return df
+
+        @staticmethod
+        def preserve(old_df, key=None, value=None):
+            """
+            In some cases we need to preserve metadata actions before a destructive dataframe transformation.
+            :param old_df: The Spark dataframe you want to coyp the metadata
+            :param key:
+            :param value:
+            :return:
+            """
+            old_meta = old_df.meta.get()
+            new_meta = self.meta.get()
+
+            new_meta.update(old_meta)
+            if key is None or value is None:
+                return self.meta.set(value=new_meta)
+            else:
+
+                return self.meta.set(value=new_meta).meta.action(key, value)
 
         @staticmethod
         def update(path, value, default=list):
@@ -55,7 +125,9 @@ def meta(self):
             :param default:
             :return:
             """
-            df = self
+
+            df = df_self
+
             new_meta = df.meta.get()
             if new_meta is None:
                 new_meta = {}
@@ -77,104 +149,36 @@ def meta(self):
             df = df.meta.set(value=new_meta)
             return df
 
-        # Actions
         @staticmethod
-        def add_action(key, value):
+        def set(spec=None, value=None, missing=dict):
             """
-            Shortcut to add transformations to a dataframe
-            :param key:
-            :param value:
+            Set metadata in a dataframe columns
+            :param spec: path to the key to be modified
+            :param value: dict value
+            :param missing:
             :return:
             """
-            df = self
-            value = val_to_list(value)
-            for v in value:
-                df = df.meta.update("transformations.actions." + key, v, list)
-            return df
-
-        @staticmethod
-        def copy_action(old_new_columns):
-            """
-            Shortcut to add transformations to a dataframe
-            :param old_new_columns:
-            :return:
-            """
-
-            key = "transformations.actions.copy"
-
-            copy_cols = self.meta.get(key)
-            if copy_cols is None:
-                copy_cols = {}
-            copy_cols.update(old_new_columns)
-
-            df = self.meta.set(key, copy_cols)
-
-            return df
-
-        @staticmethod
-        def rename_action(old_new_columns):
-            """
-            Shortcut to add rename transformations to a dataframe
-            :param old_new_columns:
-            :return:
-            """
-            key = "transformations.actions.rename"
-
-            renamed_cols = self.meta.get(key)
-            old_col, new_col = old_new_columns
-            if renamed_cols is None or old_col not in list(renamed_cols.values()):
-                df = self.meta.update(key, {old_col: new_col}, dict)
+            if spec is not None:
+                target = self.meta.get()
+                data = assign(target, spec, value, missing=missing)
             else:
-                # This update a key
-                for k, v in renamed_cols.items():
-                    n, m = old_new_columns
-                    if v == n:
-                        renamed_cols[k] = m
+                data = value
 
-                df = self.meta.set(key, renamed_cols)
-            return df
-
-        @staticmethod
-        def add_columns(value):
-            """
-            Shortcut to add transformations to a dataframe
-
-            :param value:
-            :return:
-            """
             df = self
-            value = val_to_list(value)
-            for v in value:
-                df = self.meta.update("transformations.columns", v, list)
+            df.schema[-1].metadata = data
             return df
 
-        # @staticmethod
-        # def append_meta(spec, value):
-        #     target = self.get_meta()
-        #     data = glom(target, (spec, T.append(value)))
-        #
-        #     df = self
-        #     df.schema[-1].metadata = data
-        #     return df
-
         @staticmethod
-        def preserve(old_df, key=None, value=None):
+        def get(spec=None):
             """
-            In some cases we need to preserve metadata actions before a destructive dataframe transformation.
-            :param old_df: The Spark dataframe you want to coyp the metadata
-            :param key:
-            :param value:
+            Get metadata from a dataframe column
+            :param spec: path to the key to be modified
             :return:
             """
-            old_meta = old_df.meta.get()
-            new_meta = Meta.get()
-
-            new_meta.update(old_meta)
-            if key is None or value is None:
-                return Meta.set(value=new_meta)
-            else:
-
-                return Meta.set(value=new_meta).meta.add_action(key, value)
+            data = self.schema[-1].metadata
+            if spec is not None:
+                data = glom(data, spec, skip_exc=KeyError)
+            return data
 
     return Meta()
 

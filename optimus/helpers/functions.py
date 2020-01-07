@@ -1,3 +1,4 @@
+import collections
 import os
 import random
 import re
@@ -12,11 +13,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus import ROOT_DIR
-from optimus.infer import is_
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-import collections
+from optimus.infer import is_
+
 
 def random_int(n=5):
     """
@@ -30,6 +31,41 @@ def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
 
 
+def collect_as_dict(df, limit=None):
+    """
+    Return a dict from a Collect result
+    :param df:
+    :return:
+    """
+    # # Explore this approach seems faster
+    # use_unicode = True
+    # from pyspark.serializers import UTF8Deserializer
+    # from pyspark.rdd import RDD
+    # rdd = df._jdf.toJSON()
+    # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
+    # if limit is None:
+    #     r.collect()
+    # else:
+    #     r.take(limit)
+    # return r
+    #
+    from optimus.helpers.columns import parse_columns
+    dict_result = []
+
+    # if there is only an element in the dict just return the value
+    if len(dict_result) == 1:
+        dict_result = next(iter(dict_result.values()))
+    else:
+        col_names = parse_columns(df, "*")
+
+        # Because asDict can return messed columns names we order
+        for row in df.collect():
+            _row = row.asDict()
+            r = collections.OrderedDict()
+            for col in col_names:
+                r[col] = _row[col]
+            dict_result.append(r)
+    return dict_result
 
 
 def filter_list(val, index=0):
