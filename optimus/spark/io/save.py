@@ -1,12 +1,12 @@
 from kombu import Connection, Exchange, Queue, Producer
 from packaging import version
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.decorators import *
 from optimus.helpers.logger import logger
-from optimus.spark import Spark
+from optimus.spark.spark import Spark
 
 
 def save(self):
@@ -14,7 +14,7 @@ def save(self):
     def json(path, mode="overwrite", num_partitions=1):
         """
         Save data frame in a json file
-        :param path: path where the dataframe will be saved.
+        :param path: path where the spark will be saved.
         :param mode: Specifies the behavior of the save operation when data already exists.
                 "append": Append contents of this DataFrame to existing data.
                 "overwrite" (default case): Overwrite existing data.
@@ -39,7 +39,7 @@ def save(self):
     def csv(path, header="true", mode="overwrite", sep=",", num_partitions=1):
         """
         Save data frame to a CSV file.
-        :param path: path where the dataframe will be saved.
+        :param path: path where the spark will be saved.
         :param header: True or False to include header
         :param mode: Specifies the behavior of the save operation when data already exists.
                     "append": Append contents of this DataFrame to existing data.
@@ -67,7 +67,7 @@ def save(self):
     def parquet(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to a parquet file
-        :param path: path where the dataframe will be saved.
+        :param path: path where the spark will be saved.
         :param mode: Specifies the behavior of the save operation when data already exists.
                     "append": Append contents of this DataFrame to existing data.
                     "overwrite" (default case): Overwrite existing data.
@@ -102,7 +102,7 @@ def save(self):
     def avro(path, mode="overwrite", num_partitions=1):
         """
         Save data frame to an avro file
-        :param path: path where the dataframe will be saved.
+        :param path: path where the spark will be saved.
         :param mode: Specifies the behavior of the save operation when data already exists.
                     "append": Append contents of this DataFrame to existing data.
                     "overwrite" (default case): Overwrite existing data.
@@ -129,7 +129,7 @@ def save(self):
     @add_attr(save)
     def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
         """
-        Send a dataframe to a redis queue
+        Send a spark to a redis queue
         # https://medium.com/python-pandemonium/talking-to-rabbitmq-with-python-and-kombu-6cbee93b1298
         # https://medium.com/python-pandemonium/building-robust-rabbitmq-consumers-with-python-and-kombu-part-1-ccd660d17271
         :return:
@@ -162,7 +162,7 @@ def save(self):
     @add_attr(save)
     def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
         """
-        Send a dataframe to a mongo collection
+        Send a spark to a mongo collection
         :param host:
         :param port:
         :param db_name:

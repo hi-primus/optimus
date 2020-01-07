@@ -82,7 +82,7 @@ source_df = op.create.df(
                                                                                      True, bytearray(b'Battle Station'),
                                                                                      None)])
 
-source_df.table()
+source_df.ext.display()
 
 
 class TestDataFrameCols(object):

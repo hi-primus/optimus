@@ -10,4 +10,4 @@ class TestOptimus(object):
         spark = SparkSession.builder.appName('abc').getOrCreate()
         df = spark.read.csv('examples/data/foo.csv', header=True)
         op = Optimus(spark)
-        df.table()
+        df.ext.display()

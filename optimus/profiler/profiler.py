@@ -20,8 +20,10 @@ from optimus.helpers.json import dump_json
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.functions import fill_missing_col_types, write_json, write_html
+from optimus.profiler.functions import fill_missing_col_types, \
+    write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
+from optimus.spark.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
@@ -58,7 +60,7 @@ class Profiler:
     def run(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
             mismatch=None, advanced_stats=True):
         """
-        Return dataframe statistical information in HTML Format
+        Return spark statistical information in HTML Format
         :param df: Dataframe to be analyzed
         :param columns: Columns to be analyzed
         :param buckets: Number of buckets calculated to print the histogram
@@ -113,7 +115,7 @@ class Profiler:
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        # self.html = html + df.table_html(10)
+        # self.html = html + df.ext.display_html(10)
         self.html = html
 
         # Display HTML
@@ -149,13 +151,13 @@ class Profiler:
             RaiseIt.value_error(path, "str")
 
         # We need to append a some extra html tags to display it correctly in the browser.
-        if output is "html":
+        if output == "html":
             if self.html is None:
                 RaiseIt.not_ready_error(
                     "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
 
             write_html(HEADER + self.html + FOOTER, path)
-        elif output is "json":
+        elif output == "json":
             if self.json is None:
                 RaiseIt.not_ready_error(
                     "You must first run the profiler, then it can be exported. Try op.profiler.run(df, '*')")
@@ -180,7 +182,7 @@ class Profiler:
         # If not empty the profiler already run.
         # So process the dataframe's metadata to be sure which columns need to be profiled
 
-        actions = df.get_meta("transformations.actions")
+        actions = df.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
         # Process actions to check if any column must be processed
@@ -196,7 +198,7 @@ class Profiler:
                     :return:
                     """
 
-                    _actions_json = df.get_meta("transformations.actions")
+                    _actions_json = df.meta.get("transformations.actions")
 
                     modified = []
                     for action in _actions:
@@ -218,7 +220,7 @@ class Profiler:
                     :return:
                     """
                     _renamed_columns = []
-                    _actions = df.get_meta("transformations.actions")
+                    _actions = df.meta.get("transformations.actions")
                     _rename = _actions.get("rename")
 
                     def get_name(_col_name):
@@ -247,14 +249,14 @@ class Profiler:
                 new_columns = []
 
                 current_col_names = df.cols.names()
-                renamed_cols = match_renames(df.get_meta("transformations.columns"))
+                renamed_cols = match_renames(df.meta.get("transformations.columns"))
                 for current_col_name in current_col_names:
                     if current_col_name not in renamed_cols:
                         new_columns.append(current_col_name)
 
                 # Rename keys to match new names
                 profiler_columns = self.output_columns["columns"]
-                actions = df.get_meta("transformations.actions")
+                actions = df.meta.get("transformations.actions")
                 rename = actions.get("rename")
                 if rename:
                     for k, v in actions["rename"].items():
@@ -266,7 +268,7 @@ class Profiler:
                     profiler_columns.pop(col_names)
 
                 # Copy Keys
-                copy_columns = df.get_meta("transformations.actions.copy")
+                copy_columns = df.meta.get("transformations.actions.copy")
                 if copy_columns is not None:
                     for source, target in copy_columns.items():
                         profiler_columns[target] = profiler_columns[source].copy()
@@ -321,7 +323,7 @@ class Profiler:
         if stats is True:
             # Are there column to process?
             if cols_to_profile or not self.is_cached():
-                rows_count = df.count()
+                rows_count = df.rows.count()
                 self.rows_count = rows_count
                 self.cols_count = cols_count = len(df.columns)
                 updated_columns = self.columns_stats(df, cols_to_profile, buckets, infer, relative_error, approx_count,
@@ -330,12 +332,12 @@ class Profiler:
                 output_columns = update_dict(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.get_name(), dict)
-                assign(output_columns, "file_name", df.get_meta("file_name"), dict)
+                assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 # Add the General data summary to the output
                 data_set_info = {'cols_count': cols_count,
                                  'rows_count': rows_count,
-                                 'size': humanize.naturalsize(df.size()),
+                                 'size': humanize.naturalsize(df.ext.size()),
                                  'sample_size': sample}
 
                 assign(output_columns, "summary", data_set_info, dict)
@@ -350,7 +352,7 @@ class Profiler:
 
             # TODO: drop, rename and move operation must affect the sample
             sample = {"columns": [{"title": cols} for cols in df.cols.names()],
-                      "value": df.sample_n(sample).rows.to_list(columns)}
+                      "value": df.ext.sample(sample).rows.to_list(columns)}
 
             assign(output_columns, "sample", sample, dict)
 
@@ -360,17 +362,15 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.set_meta(value={})
-        df = df.columns_meta(df.cols.names())
-
-        # col_names = output_columns["columns"].keys()
         if format == "json":
             result = dump_json(output_columns)
         else:
             result = output_columns
 
         self.output_columns = output_columns
-        df.set_meta("transformations.actions", {})
+
+        df.ext.reset()
+        df.meta.add_columns(df.cols.names())
 
         return result
 
@@ -441,7 +441,7 @@ class Profiler:
         # Calculate Frequency
         logger.print("Processing Frequency ...")
         # print("COLUMNS",columns)
-        df_freq = df.cols.select(columns, data_type=PYSPARK_NUMERIC_TYPES, invert=True)
+        df_freq = df.cols.select(columns, data_type=df.constants.NUMERIC_TYPES, invert=True)
 
         freq = None
         if df_freq is not None:
@@ -479,21 +479,22 @@ class Profiler:
             logger.print("Batch Stats {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
             # Count uniques is necessary for calculate the histogram buckets
-            funcs = [count_uniques_agg]
+            funcs = [df.functions.count_uniques_agg]
             exprs = df.cols.create_exprs(cols, funcs, approx_count)
 
-            funcs = [F.min, F.max]
+            funcs = [df.functions.min, df.functions.max]
             exprs.extend(df.cols.create_exprs(cols, funcs))
 
-            funcs = [count_na_agg]
+            funcs = [df.functions.count_na_agg]
             exprs.extend(df.cols.create_exprs(cols, funcs, df))
 
             if advanced_stats is True:
-                funcs = [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, zeros_agg]
+                funcs = [df.functions.stddev, df.functions.kurtosis, df.functions.mean, df.functions.skewness,
+                         df.functions.sum, df.functions.variance, df.functions.zeros_agg]
                 exprs.extend(df.cols.create_exprs(cols, funcs))
 
                 # TODO: None in basic calculation
-                funcs = [percentile_agg]
+                funcs = [df.functions.percentile_agg]
                 exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
                                                   relative_error))
 
@@ -507,11 +508,11 @@ class Profiler:
             logger.print(
                 "Batch Histogram {BATCH_NUMBER}. Processing columns{COLUMNS}".format(BATCH_NUMBER=i, COLUMNS=cols))
 
-            funcs = [hist_agg]
+            funcs = [df.functions.hist_agg]
 
             for col_name in cols:
                 # Only process histogram for numeric columns. For other data types using frequency
-                if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+                if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                     min_max = {"min": result[col_name]["min"], "max": result[col_name]["max"]}
                     buckets = result[col_name]["count_uniques"] - 1
                     if buckets > MAX_BUCKETS:
@@ -542,7 +543,7 @@ class Profiler:
             max_value = stats[col_name]["max"]
             min_value = stats[col_name]["min"]
 
-            if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+            if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 stddev = stats[col_name]['stddev']
                 mean = stats[col_name]['mean']
 
@@ -574,7 +575,7 @@ class Profiler:
                     col_info['mad'] = None
 
             if self.rows_count is None:
-                self.rows_count = df.count()
+                self.rows_count = df.rows.count()
 
             col_info['p_count_na'] = round((stats[col_name]['count_na'] * 100) / self.rows_count, 2)
             col_info['p_count_uniques'] = round((stats[col_name]['count_uniques'] * 100) / self.rows_count, 2)
@@ -598,7 +599,7 @@ class Profiler:
 
         data = {}
         cols = {}
-        rows_count = df.count()
+        rows_count = df.rows.count()
         for col_name in columns:
             missing_count = df.cols.count_na(col_name)
 

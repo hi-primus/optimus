@@ -484,7 +484,7 @@ db.table.show("*",20)
 ```
 
 ```python
-# # Get a table as dataframe
+spark
 df_ = db.table_to_df("places_interest").table()
 ```
 

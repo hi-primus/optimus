@@ -2,6 +2,12 @@
 Helpers to check if an object match a date type
 """
 
+import math
+import pandas as pd
+from dask import distributed
+from dask.dataframe.core import DataFrame as DaskDataFrame
+from pyspark.sql import DataFrame as SparkDataFrame
+from pyspark.sql import functions as F
 
 # TODO: can be confused with is_type
 from optimus.helpers.parser import parse_spark_dtypes
@@ -22,7 +28,7 @@ def has_(value, _type):
 def is_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
-    :param df: dataframe
+    :param df: spark
     :param column: column to be compared with
     :param dtypes: types to be checked
     :return:
@@ -32,7 +38,7 @@ def is_column_a(df, column, dtypes):
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
 
-    data_type = tuple(val_to_list(parse_spark_dtypes(dtypes)))
+    data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
     # Filter columns by data type

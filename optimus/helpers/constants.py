@@ -18,7 +18,6 @@ from optimus.helpers.logger import logger
 
 from enum import Enum
 
-
 class Actions(Enum):
     """
     Actions that modify a columns.

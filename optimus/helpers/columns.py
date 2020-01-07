@@ -90,33 +90,34 @@ def get_output_cols(input_cols, output_cols):
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False, invert=False):
     """
-    Return a list of columns and check that columns exists in the dataframe
-    Accept '*' as parameter in which case return a list of all columns in the dataframe.
+    Return a list of columns and check that columns exists in the spark
+    Accept '*' as parameter in which case return a list of all columns in the spark.
     Also accept a regex.
     If a list of tuples return to list. The first element is the columns name the others element are params.
     This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
-    :param cols_args: Accepts * as param to return all the string columns in the dataframe
+    :param cols_args: Accepts * as param to return all the string columns in the spark
     :param get_args:
     :param is_regex: Use True is col_attrs is a regex
     :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
-    :param accepts_missing_cols: if true not check if column exist in the dataframe
+    :param accepts_missing_cols: if true not check if column exist in the spark
     :param invert: Invert the final selection. For example if you want to select not integers
 
     :return: A list of columns string names
     """
 
-    if not is_dataframe(df):
-        RaiseIt.type_error(df, "Dataframe")
     attrs = None
 
     # if columns value is * get all dataframes columns
+
+    df_columns = colums_names(df)
+
     if is_regex is True:
         r = re.compile(cols_args[0])
-        cols = list(filter(r.match, df.columns))
+        cols = list(filter(r.match, df_columns))
 
     elif cols_args == "*" or cols_args is None:
-        cols = df.columns
+        cols = df_columns
 
 
     # In case we have a list of tuples we use the first element of the tuple is taken as the column name
@@ -135,7 +136,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         # if not a list convert to list
         cols = val_to_list(cols_args)
         # Get col name from index
-        cols = [c if is_str(c) else df.columns[c] for c in cols]
+        cols = [c if is_str(c) else df_columns[c] for c in cols]
 
     # Check for missing columns
     if accepts_missing_cols is False:
@@ -149,12 +150,14 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     columns_residual = None
 
     # If necessary filter the columns by data type
+
     if filter_by_column_dtypes:
         # Get columns for every data type
+        # print("filter", filter_by_column_dtypes)
 
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
 
-        # Intersect the columns filtered per data type from the whole dataframe with the columns passed to the function
+        # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 
         # This columns match filtered data type
@@ -164,7 +167,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     cols_params = []
     if invert:
-        final_columns = list(OrderedSet(df.cols.names()) - OrderedSet(final_columns))
+        final_columns = list(OrderedSet(df_columns) - OrderedSet(final_columns))
 
     if get_args is True:
         cols_params = final_columns, attrs
@@ -210,7 +213,7 @@ def check_column_numbers(columns, number=0):
 
 def validate_columns_names(df, col_names, index=0):
     """
-    Check if a string or list of string are valid dataframe columns
+    Check if a string or list of string are valid spark columns
     :param df: Data frame to be analyzed
     :param col_names: columns names to be checked
     :param index:
@@ -233,16 +236,32 @@ def validate_columns_names(df, col_names, index=0):
 
 def check_for_missing_columns(df, col_names):
     """
-    Check if the columns you want to select exits in the dataframe
+    Check if the columns you want to select exits in the spark
     :param df: Dataframe to be checked
     :param col_names: cols names to
     :return:
     """
-    missing_columns = list(OrderedSet(col_names) - OrderedSet(df.schema.names))
+    missing_columns = list(OrderedSet(col_names) - OrderedSet(colums_names(df)))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, df.columns)
     return False
+
+
+def colums_names(df):
+    """
+    Helper to get the column names from different dataframes types
+    :param df:
+    :return:
+    """
+    if is_spark_dataframe(df):
+        columns_names = df.columns
+    elif is_pandas_dataframe(df):
+        columns_names = list(df.columns)
+    elif is_dask_dataframe(df):
+        columns_names = list(df.columns)
+
+    return columns_names
 
 
 def filter_col_name_by_dtypes(df, data_type):
@@ -253,13 +272,19 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
-    data_type = parse_spark_dtypes(data_type)
 
-    # isinstace require a tuple
+    data_type = parse_dtypes(df, data_type)
+    # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
-
     # Filter columns by data type
-    return [c for c in df.columns if isinstance(df.schema[c].dataType, data_type)]
+    result = []
+    for col_name in df.cols.names():
+        for dt in data_type:
+            # print("filter", df.cols.schema_dtype(col_name), dt)
+            if (df.cols.schema_dtype(col_name) is dt) or (isinstance(df.cols.schema_dtype(col_name), dt)):
+                result.append(col_name)
+
+    return result
 
 
 def name_col(col_names: str, append: str) -> str:

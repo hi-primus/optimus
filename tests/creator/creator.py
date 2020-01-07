@@ -32,7 +32,6 @@ from optimus.helpers.test import Test
 op = Optimus(master='local', verbose=True)
 
 # +
-import pandas as pd
 from pyspark.sql.types import *
 from datetime import date, datetime
 
@@ -78,7 +77,7 @@ rows = [
 
     ]
 source_df = op.create.df(cols ,rows)
-source_df.table()
+source_df.ext.display()
 
 
 # +
@@ -121,7 +120,7 @@ rows = [
 
     ]
 source_df_string_to_index = op.create.df(cols ,rows)
-source_df_string_to_index.table()
+source_df_string_to_index.ext.display()
 # -
 
 # ### End Init Section
@@ -129,8 +128,6 @@ source_df_string_to_index.table()
 # # Test
 
 # ## Optimus Test
-
-from pyspark.ml.linalg import Vectors
 
 t = Test(op, None, "create_df", imports=["import datetime",
                                 "from pyspark.sql import functions as F"], path = "..", final_path="..")
@@ -172,7 +169,6 @@ t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vecto
                                         "from pyspark.sql import functions as F"], path = "df_cols", final_path="..")
 
 # +
-from pyspark.sql import functions as F
 
 
 def func(col_name, attrs):
@@ -231,7 +227,7 @@ t.create(None, "cols.range", "all_columns", "json",None, "*")
 
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 t.create(None, "cols.median", None, "json", None,numeric_col)
 
@@ -282,7 +278,7 @@ t.create(None, "cols.variance", None, "json", numeric_col)
 t.create(None, "cols.variance", "all_columns", "json", None, "*")
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 from pyspark.sql import functions as F
 source_df.select(F.abs(F.col("age")))
@@ -291,7 +287,7 @@ t.create(None, "cols.abs", None, "df", None,"weight(t)")
 
 t.create(None, "cols.abs", "all_columns", "json", None, "*")
 
-source_df.table()
+source_df.ext.display()
 
 # +
 from pyspark.sql import functions as F
@@ -318,7 +314,8 @@ t.run()
 
 source_df.cols.names("rank",["str","int","float"],True)
 
-t.create(None, "cols.count_zeros", None, "json", numeric_col)
+t.create(None, "cols.count_zeros", None, "json", None, numeric_col)
+t.run()
 
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
 t.run()
@@ -366,6 +363,12 @@ t.create(None, "cols.div", "all_columns", "df", "*")
 
 t.create(None, "cols.z_score", None, "df", numeric_col)
 
+t.create(None, "cols.min_max_scaler", None, "df",None, numeric_col)
+
+t.create(None, "cols.max_abs_scaler", None, "df",None, numeric_col)
+
+t.run()
+
 t.create(None, "cols.z_score", "all_columns", "df", "*")
 
 t.create(None, "cols.iqr", None, "json", None, numeric_col)
@@ -396,7 +399,7 @@ t.create(None, "cols.remove_accents", None, "df", string_col)
 
 t.create(None, "cols.remove_accents", "all_columns", "df", string_col)
 
-source_df.table()
+source_df.ext.display()
 
 t.create(None, "cols.remove_special_chars", None, "df", string_col)
 
@@ -404,7 +407,7 @@ t.create(None, "cols.remove_special_chars", "all_columns","df", None, "*")
 t.run()
 # t.create(None, "cols.value_counts", None, "json", None, numeric_col)
 
-source_df.cols.remove_special_chars("*").table()
+source_df.cols.remove_special_chars("*").ext.display()
 
 t.create(None, "cols.remove_white_spaces", None, "df", string_col)
 
@@ -636,7 +639,7 @@ t.create(source_df, "cols.count_by_dtypes", None, "dict", None, "*", infer=False
 
 t.run()
 
-source_df.table()
+source_df.ext.display()
 
 # +
 import logging
@@ -732,9 +735,6 @@ t.create(None, "cols.is_na", None, "df", numeric_col)
 t.run()
 
 from pyspark.sql.types import *
-from optimus import Optimus
-from optimus.helpers.json import json_enconding
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
 import datetime
@@ -747,10 +747,10 @@ expected_df = op.create.df([('billingId', LongType(), True),('birth', StringType
 
 from deepdiff import DeepDiff  # For Deep Difference of 2 objects
 
-actual_df.table()
-expected_df.table()
+actual_df.ext.display()
+expected_df.ext.display()
 
-# source_df.table()
+# source_df.ext.display()
 # print(actual_df.to_json())
 # print(expected_df.to_json())
 a1 = actual_df.to_json()
@@ -815,7 +815,7 @@ t.create(None, "save.parquet", None, None, "test.parquet")
 t.run()
 
 
-source_df.table()
+source_df.ext.display()
 
 
 # # Ouliers
@@ -980,7 +980,7 @@ t = Test(op, source_df, "df_keycollision", imports=["from pyspark.ml.linalg impo
                                         "from optimus.ml import keycollision as keyCol"], 
          path = "df_keycollision", final_path="..")
 
-from optimus.ml import keycollision as keyCol
+from optimus.spark.ml import keycollision as keyCol, distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")
@@ -1033,7 +1033,7 @@ columns = ['diagnosis', 'radius_mean', 'texture_mean', 'perimeter_mean', 'area_m
 
 df_model, rf_model = op.ml.gbt(df_cancer, columns, "diagnosis")
 
-df_model.table()
+df_model.ext.display()
 
 # ## Row
 

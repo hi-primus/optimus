@@ -68,18 +68,17 @@ def parse_col_names_funcs_to_keys(data):
     return _result
 
 
-def parse_spark_dtypes(value):
+def parse_dtypes(df, value):
     """
     Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
     :param value:
+    :param df:
     :return:
     """
-
     if not isinstance(value, list):
         value = [value]
-
     try:
-        data_type = [SPARK_DTYPES_DICT[SPARK_SHORT_DTYPES[v]] for v in value]
+        data_type = [df.constants.DTYPES_DICT[df.constants.SHORT_DTYPES[v]] for v in value]
     except KeyError:
         data_type = value
 
@@ -88,4 +87,5 @@ def parse_spark_dtypes(value):
     else:
         result = data_type
 
+    # print(type(result))
     return result
