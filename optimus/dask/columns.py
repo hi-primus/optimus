@@ -623,10 +623,15 @@ def cols(self: DataFrame):
                 return v
             
             def _nest_array(value):
-                return [value[ic].astype(str) for ic in input_cols].astype(object)
+                v = value[input_cols[0]].astype(str)
+                for i in builtins.range(1, len(input_cols)):
+                    v += ", " +  value[input_cols[i]].astype(str)
+                return "["+v+"]"
 
-            # df = df.assign(**{output_col[0]: _nest_string})
-            df = df.assign(**{output_col[0]: _nest_array})
+            if shape=="string":
+                df = df.assign(**{output_col[0]: _nest_string})
+            else:
+                df = df.assign(**{output_col[0]: _nest_array})
 
             return df
 
