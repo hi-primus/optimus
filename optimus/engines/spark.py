@@ -42,8 +42,8 @@ class SparkEngine:
                  server=False,
                  repositories=None,
                  packages=None,
-                 jars=[],
-                 driver_class_path=[],
+                 jars=None,
+                 driver_class_path=None,
                  options=None,
                  additional_options=None,
                  comm=None,
@@ -78,7 +78,6 @@ class SparkEngine:
         """
 
         self.preserve = False
-        self.engine = 'spark'
 
         if comm is True:
             Comm.instance = Comm()
