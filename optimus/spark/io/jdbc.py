@@ -7,6 +7,7 @@ from optimus.spark.io.factory import DriverFactory
 from optimus.spark.io.properties import DriverProperties
 from optimus.spark.spark import Spark
 
+
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
 LIMIT = 1000
@@ -98,7 +99,7 @@ class JDBC:
 
     def table_to_df(self, table_name, columns="*", limit=None):
         """
-        Return cols as Spark spark from a specific table
+        Return cols as Spark data frames from a specific table
         :type table_name: object
         :param columns:
         :param limit: how many rows will be retrieved
