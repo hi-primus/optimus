@@ -8,7 +8,7 @@ from infer import Infer
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
-from optimus.helpers.check import equal_function, is_dask_column_a
+from optimus.helpers.check import equal_function, is_column_a
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list

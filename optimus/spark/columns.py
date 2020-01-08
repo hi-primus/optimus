@@ -24,7 +24,7 @@ from pyspark.sql.types import StringType, ArrayType, StructType
 
 from optimus import ROOT_DIR
 # Helpers
-from optimus.helpers.check import has_, is_column_a
+from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
