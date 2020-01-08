@@ -30,6 +30,7 @@ def cols(self: DataFrame):
             :param exprs:
             :return:
             """
+
             agg_list = Dask.instance.compute(exprs)
 
             if len(agg_list) > 0:
@@ -242,10 +243,10 @@ def cols(self: DataFrame):
         @staticmethod
         def trim(input_cols, output_cols=None):
 
-            def _strip(col_name, args):
-                return col_name[args].str.strip()
+            def _trim(_df, args):
+                return _df[args].str.strip()
 
-            return Cols.apply(input_cols, _strip, func_return_type=str, filter_col_by_dtypes=["string", "object"],
+            return Cols.apply(input_cols, _trim, func_return_type=str, filter_col_by_dtypes=["string", "object"],
                               output_cols=output_cols)
 
         @staticmethod
@@ -272,6 +273,7 @@ def cols(self: DataFrame):
                 kwargs = {output_col: self[[input_col]].map_partitions(func, args=(input_col),
                                                                        meta=(input_col, func_return_type))}
                 df = df.assign(**kwargs)
+
             return df
 
         @staticmethod
