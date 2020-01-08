@@ -5,7 +5,7 @@ from dateutil.parser import parse as dparse
 from fastnumbers import isint, isfloat
 from pyspark.sql import functions as F
 
-from optimus.helpers.check import is_spark_column_a
+from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import val_to_list
 from optimus.profiler.functions import fill_missing_var_types
@@ -236,7 +236,7 @@ def cols(self):
             def _filter(_col_name, _func):
                 for data_type, func_filter in filters.items():
                     for f in func_filter:
-                        if (_func == f) and (is_spark_column_a(df, _col_name, data_type)):
+                        if (_func == f) and (is_column_a(df, _col_name, data_type)):
                             return True
                 return False
 

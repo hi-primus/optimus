@@ -9,7 +9,7 @@ from pyspark.sql import DataFrame as SparkDataFrame
 
 from optimus.helpers.converter import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
-from optimus.helpers.parser import parse_spark_dtypes
+from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -23,10 +23,10 @@ def has_(value, _type):
     return any(isinstance(elem, _type) for elem in value)
 
 
-def is_dask_column_a(df, column, dtypes):
+def is_column_a(df, column, dtypes):
     """
     Check if column match a list of data types
-    :param df: spark
+    :param df: spark or dask dataframe
     :param column: column to be compared with
     :param dtypes: types to be checked
     :return:
@@ -36,31 +36,33 @@ def is_dask_column_a(df, column, dtypes):
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
 
-    data_type = tuple(val_to_list(parse_spark_dtypes(df, dtypes)))
+    data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
     # Filter columns by data type
-    return isinstance(df.schema[column].dataType, data_type)
+    (v), = df.cols.dtypes(column).values()
+    # print(v, data_type)
+    return isinstance(v, data_type)
 
-
-def is_spark_column_a(df, column, dtypes):
-    """
-    Check if column match a list of data types
-    :param df: spark
-    :param column: column to be compared with
-    :param dtypes: types to be checked
-    :return:
-    """
-    column = val_to_list(column)
-
-    if len(column) > 1:
-        RaiseIt.length_error(column, 1)
-
-    data_type = tuple(val_to_list(parse_spark_dtypes(df, dtypes)))
-    column = one_list_to_val(column)
-
-    # Filter columns by data type
-    return isinstance(df.schema[column].dataType, data_type)
+#
+# def is_column_a(df, column, dtypes):
+#     """
+#     Check if column match a list of data types
+#     :param df: spark
+#     :param column: column to be compared with
+#     :param dtypes: types to be checked
+#     :return:
+#     """
+#     column = val_to_list(column)
+#
+#     if len(column) > 1:
+#         RaiseIt.length_error(column, 1)
+#
+#     data_type = tuple(val_to_list(parse_spark_dtypes(df, dtypes)))
+#     column = one_list_to_val(column)
+#
+#     # Filter columns by data type
+#     return isinstance(df.schema[column].dataType, data_type)
 
 
 def is_spark_dataframe(value):

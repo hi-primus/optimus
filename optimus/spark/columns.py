@@ -24,7 +24,7 @@ from pyspark.sql.types import StringType, ArrayType, StructType
 
 from optimus import ROOT_DIR
 # Helpers
-from optimus.helpers.check import has_, is_spark_column_a
+from optimus.helpers.check import has_, is_column_a
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -188,7 +188,8 @@ def cols(self):
             return df
 
         @staticmethod
-        def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
+        def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None,
+                       meta=None) -> DataFrame:
             """
             Apply a expression to column.
             :param input_cols: Columns in which the function is going to be applied
@@ -198,7 +199,6 @@ def cols(self):
             :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
             :param output_cols: Columns in which the transformed data will saved
             :param meta: Metadata transformation to a dataframe
-            :return: Dataframe
             """
 
             return Cols.apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
@@ -206,7 +206,8 @@ def cols(self):
 
         @staticmethod
         def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
+                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+                  meta="apply") -> DataFrame:
             """
             Apply a function using pandas udf or udf if apache arrow is not available
             :param input_cols: Columns in which the function is going to be applied
@@ -221,7 +222,6 @@ def cols(self):
             :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
             True or False
             :param meta: Metadata transformation to a dataframe
-            :return: DataFrame
             """
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                        accepts_missing_cols=True)
@@ -592,7 +592,7 @@ def cols(self):
             def _filter(_col_name, _func):
                 for data_type, func_filter in filters.items():
                     for f in func_filter:
-                        if (_func == f) and (is_spark_column_a(df, _col_name, data_type)):
+                        if (_func == f) and (is_column_a(df, _col_name, data_type)):
                             return True
                 return False
 
@@ -1102,7 +1102,7 @@ def cols(self):
                         result = None
                     return result
 
-                return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
+                return _df.cols.apply(_input_col, multiple_replace, "str", _search_and_replace_by,
                                       output_cols=_output_col)
 
             def func_full(_df, _input_col, _output_col, _search, _replace_by):
@@ -1111,7 +1111,7 @@ def cols(self):
                 if _input_col != output_col:
                     _df = _df.cols.copy(_input_col, _output_col)
 
-                return _df.replace(_search, _replace_by, _input_col)
+                return _df.replace(_search, _replace_by, _output_col)
 
             def func_numeric(_df, _input_col, _output_col, _search, _replace_by):
                 _df = _df.withColumn(_output_col,
@@ -1225,14 +1225,14 @@ def cols(self):
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
                 func = None
-                if is_spark_column_a(self, input_col, self.constants.NUMERIC_TYPES):
+                if is_column_a(self, input_col, self.constants.NUMERIC_TYPES):
 
                     new_value = fastnumbers.fast_float(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_spark_column_a(self, input_col, self.constants.STRING_TYPES):
+                elif is_column_a(self, input_col, self.constants.STRING_TYPES):
                     new_value = str(value)
                     func = F.when(self.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-                elif is_spark_column_a(self, input_col, self.constants.ARRAY_TYPES):
+                elif is_column_a(self, input_col, self.constants.ARRAY_TYPES):
                     if is_one_element(value):
                         new_value = F.array(F.lit(value))
                     else:
@@ -1446,7 +1446,7 @@ def cols(self):
 
             # Hint the user if the column has not the correct data type
             for input_col in input_cols:
-                if not is_spark_column_a(self, input_col, self.constants.NUMERIC_TYPES):
+                if not is_column_a(self, input_col, self.constants.NUMERIC_TYPES):
                     print(
                         "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
                             input_col))
@@ -1621,16 +1621,16 @@ def cols(self):
             for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
                 # If numeric convert and parse as string.
-                if is_spark_column_a(df, input_col, self.constants.NUMERIC_TYPES):
+                if is_column_a(df, input_col, self.constants.NUMERIC_TYPES):
                     df = df.cols.cast(input_col, "str")
 
                 # Parse depending of data types
-                if is_spark_column_a(df, input_col, StructType):
+                if is_column_a(df, input_col, StructType):
                     # Unnest a data Struct
                     df = df.select(output_col + ".*")
 
                 # Array
-                elif is_spark_column_a(df, input_col, ArrayType):
+                elif is_column_a(df, input_col, ArrayType):
                     # Try to infer the array length using the first row
                     if infer_splits is True:
                         splits = format_dict(df.agg(F.max(F.size(input_col))).ext.to_dict())
@@ -1641,7 +1641,7 @@ def cols(self):
                         df = df.withColumn(col_name, expr.getItem(i))
 
                 # String
-                elif is_spark_column_a(df, input_col, StringType):
+                elif is_column_a(df, input_col, StringType):
                     if separator is None:
                         RaiseIt.value_error(separator, "regular expression")
 
@@ -1656,7 +1656,7 @@ def cols(self):
 
                 # Vector
                 # TODO: Maybe we could implement Pandas UDF for better control columns output
-                elif is_spark_column_a(df, input_col, VectorUDT):
+                elif is_column_a(df, input_col, VectorUDT):
 
                     def _unnest(row):
                         _dict = row.asDict()

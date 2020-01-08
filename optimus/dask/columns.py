@@ -356,7 +356,7 @@ def cols(self: DataFrame):
 
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
-                if is_dask_column_a(df, input_col, "int"):
+                if is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
                     df = df.cols.cast(input_col, "str", output_col)
 
                 df = func(df, input_col, output_col, search, replace_by)

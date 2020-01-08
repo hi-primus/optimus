@@ -4,7 +4,7 @@ import itertools
 from pyspark.sql import functions as F
 
 from optimus.infer import is_numeric, PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPES
-from optimus.helpers.check import is_spark_column_a
+from optimus.helpers.check import is_column_a
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import create_buckets
 
@@ -166,13 +166,13 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         else:
             exprs = None
     else:
-        if is_spark_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+        if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
             exprs = hist_numeric(min_max, buckets)
 
-        elif is_spark_column_a(df, col_name, "str"):
+        elif is_column_a(df, col_name, "str"):
             exprs = hist_string(buckets)
 
-        elif is_spark_column_a(df, col_name, "date") or is_spark_column_a(df, col_name, "timestamp"):
+        elif is_column_a(df, col_name, "date") or is_column_a(df, col_name, "timestamp"):
             exprs = hist_date()
         else:
             exprs = None
@@ -187,10 +187,10 @@ def count_na_agg(col_name, df):
 
     # Select the nan/null rows depending of the columns data type
     # If numeric
-    if is_spark_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
         expr = F.count(F.when(match_nulls_integers(col_name), col_name))
     # If string. Include 'nan' string
-    elif is_spark_column_a(df, col_name, PYSPARK_STRING_TYPES):
+    elif is_column_a(df, col_name, PYSPARK_STRING_TYPES):
         expr = F.count(
             F.when(match_nulls_strings(col_name), col_name))
         # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
@@ -218,7 +218,7 @@ def percentile_agg(col_name, df, values, relative_error):
     values = val_to_list(values)
     values = list(map(str, values))
 
-    if is_spark_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
+    if is_column_a(df, col_name, PYSPARK_NUMERIC_TYPES):
         # Get percentiles
 
         p = F.expr("percentile_approx(`{COLUMN}`, array({VALUES}), {ERROR})".format(COLUMN=col_name,
