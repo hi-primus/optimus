@@ -30,5 +30,5 @@ class PostgreSQLDriver(AbstractDriver):
             WHERE nspname IN ('""" + kwargs["schema"] + """') AND relkind='r' ORDER BY reltuples DESC
         """
 
-    def count_query(self, *args, **kwarg) -> str:
-        return "SELECT COUNT(*) as COUNT FROM " + kwarg["db_table"]
+    def count_query(self, *args, **kwargs) -> str:
+        return "SELECT COUNT(*) as COUNT FROM " + kwargs["db_table"]

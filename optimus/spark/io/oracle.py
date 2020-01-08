@@ -21,7 +21,7 @@ class OracleDriver(AbstractDriver):
         else:
             return f"""jdbc:oracle+cx_oracle:thin:@//{kwargs["oracle_tns"]}"""
 
-    def table_names_query(self, *args, **kwarg) -> str:
+    def table_names_query(self, *args, **kwargs) -> str:
         return """
             SELECT table_name, extractvalue(xmltype( dbms_xmlgen.getxml('select count(*) c from '||table_name)), '/ROWSET/ROW/C') count
             FROM user_tables ORDER BY table_name
