@@ -13,8 +13,12 @@ class MySQLDriver(AbstractDriver):
     def properties(self) -> Enum:
         return DriverProperties.MYSQL
 
-    def url(self, *args, **kwarg) -> str:
-        return f"""jdbc:{kwarg["driver"]}://{kwarg["host"]}:{kwarg["port"]}/{kwarg["database"]}?currentSchema={kwarg["schema"]}"""
+    def url(self, *args, **kwargs) -> str:
+        # return f"""jdbc:{kwargs["driver"]}://{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?currentSchema={
+        # kwargs["schema"]}"""
+        print(123)
+        return f"""{kwargs["driver"]}://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs[
+            "database"]}"""
 
     def table_names_query(self, *args, **kwargs) -> str:
         return "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + \
