@@ -328,7 +328,7 @@ def cols(self: DataFrame):
                         result = None
                     return result
 
-                return _df.cols.apply(_input_col, multiple_replace, "string", _search_and_replace_by,
+                return _df.cols.apply(_input_col, multiple_replace, "str", _search_and_replace_by,
                                       output_cols=_output_col)
 
             def func_words(_df, _input_col, _output_col, _search, _replace_by):
