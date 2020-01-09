@@ -297,12 +297,26 @@ def cols(self: DataFrame):
 
             df = self
 
+            args = val_to_list(args)
+
             for input_col, output_col in zip(input_cols, output_cols):
-                # df = df.withColumn(output_col, expr(when))
-                # print(input_col, output_col, args, func_return_type)
-                kwargs = {output_col: self[[input_col]].map_partitions(func, args=(input_col),
-                                                                       meta=(input_col, func_return_type))}
-                df = df.assign(**kwargs)
+                print("func_return_type", func_return_type)
+                if func_return_type==None:
+                    _meta = df[input_col]
+                else:
+                    if "int" in func_return_type:
+                        return_type = int
+                    elif "float" in func_return_type:
+                        return_type = float
+                    elif "bool" in func_return_type:
+                        return_type = bool
+                    else:
+                        return_type = object
+                    _meta = df[input_col].astype(return_type)
+                    # _meta = df[input_col].astype(return_type)
+
+
+                df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
             return df
 
@@ -359,7 +373,10 @@ def cols(self: DataFrame):
                 return bool(value)
             
             def _cast_str(value):
-                return value.astype(str)
+                try:
+                    return value.astype(str)
+                except:
+                    return str(value)
 
             # Parse params
             if columns is None:
@@ -381,13 +398,17 @@ def cols(self: DataFrame):
 
             for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
                 if dtype=='int':
-                    df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_int, func_return_type="int", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
                 elif dtype=='float':
-                    df[output_col] = df[input_col].apply(func=_cast_float, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_float, func_return_type="float", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 elif dtype=='bool':
-                    df[output_col] = df[input_col].apply(func=_cast_bool, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_bool, func_return_type="bool", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 else:
-                    df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_str, func_return_type="object", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
                 df[output_col].odtype = dtype
 
             return df
@@ -503,13 +524,19 @@ def cols(self: DataFrame):
 
                 print('search_and_replace_by',search_and_replace_by)
 
-                def multiple_replace(_value):
+                def partition_replace(dfp, __input_col, _search_and_replace_by):
+                    # if dfp[__input_col] is not None:
+                    #     df[__input_col] = regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(dfp[__input_col]))
+                    
+                    return 'a'
+                
+                def multiple_replace(_value, _search_and_replace_by):
                     if _value is not None:
-                        return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(_value))
+                        return regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(_value))
                     else:
                         return None
 
-                return _df.cols.apply(_input_col, multiple_replace, "str", _search_and_replace_by,
+                return _df.cols.apply(_input_col, multiple_replace, "str", search_and_replace_by,
                                       output_cols=_output_col)
 
                 return _df
