@@ -18,6 +18,10 @@ from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list
     is_one_element, PYTHON_TYPES
 from optimus.profiler.functions import fill_missing_var_types
 
+from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+    is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
+    parse_spark_class_dtypes
+
 # Some expression accepts multiple columns at the same time.
 python_set = set
 
@@ -313,8 +317,6 @@ def cols(self: DataFrame):
                     else:
                         return_type = object
                     _meta = df[input_col].astype(return_type)
-                    # _meta = df[input_col].astype(return_type)
-
 
                 df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
@@ -370,7 +372,10 @@ def cols(self: DataFrame):
                     return None
 
             def _cast_bool(value):
-                return bool(value)
+                if value is None:
+                    return None
+                else:
+                    return bool(value)
             
             def _cast_str(value):
                 try:
@@ -404,7 +409,7 @@ def cols(self: DataFrame):
                     df.cols.apply(input_col, func=_cast_float, func_return_type="float", output_cols=output_col)
                     # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 elif dtype=='bool':
-                    df.cols.apply(input_col, func=_cast_bool, func_return_type="bool", output_cols=output_col)
+                    df.cols.apply(input_col, func=_cast_bool, output_cols=output_col)
                     # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 else:
                     df.cols.apply(input_col, func=_cast_str, func_return_type="object", output_cols=output_col)
@@ -489,6 +494,104 @@ def cols(self: DataFrame):
                 df = df.assign(**{output_col[0]: _nest_array})
 
             return df
+
+        
+        @staticmethod
+        def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None):
+            """
+            Split an array or string in different columns
+            :param input_cols: Columns to be un-nested
+            :param output_cols: Resulted on or multiple columns  after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
+            :param separator: char or regex
+            :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
+            :param index: Return a specific index per columns. [{1,2},()]
+            """
+
+            # Special case. A dot must be escaped
+            if separator == ".":
+                separator = "\\."
+            
+            df = self
+
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+            final_columns = None
+
+            def _final_columns(_index, _splits, _output_col):
+
+                if _index is None:
+                    actual_index = builtins.range(0, _splits)
+                else:
+                    _index = val_to_list(_index)
+
+                    if is_list_of_tuples(_index):
+                        _index = [(i - 1, j - 1) for i, j in _index]
+                    elif is_list(_index):
+                        _index = [i - 1 for i in _index]
+
+                    actual_index = _index
+
+                # Create final output columns
+                if is_tuple(_output_col):
+                    columns = zip(actual_index, _output_col)
+                else:
+                    columns = [(i, _output_col + "_" + str(i)) for i in actual_index]
+                return columns
+
+            def _split(_v, _separator, _splits, _output_col):
+                _v = _v.split(separator)
+                for i, (_split, _v.size) in enumerate(zip(_splits
+
+
+            for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
+
+                # If numeric convert and parse as string.
+                if is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
+                    df = df.cols.cast(input_col, "str")
+
+                # String
+                if is_column_a(df, input_col, df.constants.STRING_TYPES):
+                    if separator is None:
+                        RaiseIt.value_error(separator, "regular expression")
+
+
+                    data = df[input_col].str.apply()
+
+                    data = df[input_col].str.extract(separator,n=splits, expand=True)  # , expand=(splits>=0)
+
+
+                    # print("df[input_col]",df[input_col])
+                    # print("df[input_col].str",df[input_col].str)
+                    # print("data",data)
+                    print(data)
+
+                    data.compute()
+
+                    return df
+                    # print("data.columns",data.columns)
+
+                    if splits < 0:
+                        splits = data.columns
+
+                    final_columns = _final_columns(index, splits, output_col)
+
+                    # for i, col_name in final_columns:
+                        # df.cols.apply(input_col, )
+                        # df[col_name] = data[i]
+                    
+                    # mat_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).ext.to_dict())
+
+                    # expr = F.split(F.col(input_col), separator)
+                    # final_columns = _final_columns(index, splits, output_col)
+                    # for i, col_name in final_columns:
+                        # df = df.withColumn(col_name, expr.getItem(i))
+
+                else:
+                    RaiseIt.type_error(input_col, ["int", "bool", "float", "object"])
+                # df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
+            
+            return df
+
 
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
