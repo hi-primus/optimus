@@ -18,6 +18,10 @@ from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list
     is_one_element, PYTHON_TYPES
 from optimus.profiler.functions import fill_missing_var_types
 
+from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+    is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
+    parse_spark_class_dtypes
+
 # Some expression accepts multiple columns at the same time.
 python_set = set
 
@@ -297,12 +301,24 @@ def cols(self: DataFrame):
 
             df = self
 
+            args = val_to_list(args)
+
             for input_col, output_col in zip(input_cols, output_cols):
-                # df = df.withColumn(output_col, expr(when))
-                # print(input_col, output_col, args, func_return_type)
-                kwargs = {output_col: self[[input_col]].map_partitions(func, args=(input_col),
-                                                                       meta=(input_col, func_return_type))}
-                df = df.assign(**kwargs)
+                print("func_return_type", func_return_type)
+                if func_return_type==None:
+                    _meta = df[input_col]
+                else:
+                    if "int" in func_return_type:
+                        return_type = int
+                    elif "float" in func_return_type:
+                        return_type = float
+                    elif "bool" in func_return_type:
+                        return_type = bool
+                    else:
+                        return_type = object
+                    _meta = df[input_col].astype(return_type)
+
+                df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
             return df
 
@@ -356,10 +372,16 @@ def cols(self: DataFrame):
                     return None
 
             def _cast_bool(value):
-                return bool(value)
+                if value is None:
+                    return None
+                else:
+                    return bool(value)
             
             def _cast_str(value):
-                return value.astype(str)
+                try:
+                    return value.astype(str)
+                except:
+                    return str(value)
 
             # Parse params
             if columns is None:
@@ -381,13 +403,17 @@ def cols(self: DataFrame):
 
             for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
                 if dtype=='int':
-                    df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_int, func_return_type="int", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
                 elif dtype=='float':
-                    df[output_col] = df[input_col].apply(func=_cast_float, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_float, func_return_type="float", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 elif dtype=='bool':
-                    df[output_col] = df[input_col].apply(func=_cast_bool, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_bool, output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 else:
-                    df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+                    df.cols.apply(input_col, func=_cast_str, func_return_type="object", output_cols=output_col)
+                    # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
                 df[output_col].odtype = dtype
 
             return df
@@ -469,6 +495,51 @@ def cols(self: DataFrame):
 
             return df
 
+        
+        @staticmethod
+        def unnest(input_cols, separator=None, splits=0, index=None, output_cols=None):
+            """
+            Split an array or string in different columns
+            :param input_cols: Columns to be un-nested
+            :param output_cols: Resulted on or multiple columns  after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
+            :param separator: char or regex
+            :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
+            :param index: Return a specific index per columns. [{1,2},()]
+            """
+
+            # Special case. A dot must be escaped
+            if separator == ".":
+                separator = "\\."
+            
+            df = self
+
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            def spread_split(row, output_col, splits):
+
+                for i in range(splits):
+                    try:
+                        value = row[output_col+"_"+str(splits-1)][i]
+                    except IndexError:
+                        value = None
+                    except TypeError:
+                        value = None
+                    row[output_col+"_"+str(i)] = value
+                return row
+
+            for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
+
+                if separator is None:
+                    RaiseIt.value_error(separator, "regular expression")
+
+                df = df.assign( **{ output_col+"_"+str(i) : "" for i in range(splits-1) } )
+                df[output_col+'_'+str(splits-1)] = df[input_col].astype(str).str.split(separator,splits-1)
+                df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
+
+            return df
+
+
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
             """
@@ -482,15 +553,15 @@ def cols(self: DataFrame):
             """
 
             # TODO check if .contains can be used instead of regexp
-            def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
+            def func_chars_words(_df, input_col, output_col, search, replace_by):
                 # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
                 # Create as dict
                 search_and_replace_by = None
                 if is_list(search):
-                    search_and_replace_by = {s: _replace_by for s in search}
+                    search_and_replace_by = {s: replace_by for s in search}
                 elif is_one_element(search):
-                    search_and_replace_by = {search: _replace_by}
+                    search_and_replace_by = {search: replace_by}
 
                 search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
 
@@ -500,28 +571,26 @@ def cols(self: DataFrame):
                     regex = re.compile("|".join(map(re.escape, search_and_replace_by.keys())))
                 elif search_by == "words":
                     regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, search_and_replace_by.keys())))
-
-                print('search_and_replace_by',search_and_replace_by)
-
-                def multiple_replace(_value):
-                    if _value is not None:
-                        return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(_value))
+                
+                def multiple_replace(value, search_and_replace_by):
+                    if value is not None:
+                        return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(value))
                     else:
                         return None
 
-                return _df.cols.apply(_input_col, multiple_replace, "str", _search_and_replace_by,
-                                      output_cols=_output_col)
+                return _df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
+                                      output_cols=output_col)
 
                 return _df
 
-            def func_full(_df, _input_col, _output_col, _search, _replace_by):
-                _search = val_to_list(_search)
+            def func_full(df, input_col, output_col, search, replace_by):
+                search = val_to_list(search)
 
-                if _input_col != _output_col:
-                    _df[_output_col] = _df[_input_col]
+                if input_col != output_col:
+                    df[output_col] = df[input_col]
 
-                _df[_output_col] = _df[_output_col].mask( _df[_output_col].isin(_search) , _replace_by) 
-                return _df
+                df[output_col] = df[output_col].mask( df[output_col].isin(search) , replace_by) 
+                return df
 
             func = None
             if search_by == "full" or search_by == "numeric":
@@ -544,10 +613,7 @@ def cols(self: DataFrame):
 
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
-                # dtype = df[output_col].dtype
                 df = func(df, input_col, output_col, search, replace_by)
-                # df[output_col] = df[output_col].astype(dtype)
-                # df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
                 
             return df
 
