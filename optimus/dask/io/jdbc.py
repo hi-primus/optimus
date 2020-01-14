@@ -3,6 +3,7 @@ import pandas as pd
 from dask.dataframe import from_delayed, from_pandas
 from dask.delayed import delayed
 from pyspark.sql import DataFrame
+from sqlalchemy import create_engine
 
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
@@ -71,14 +72,17 @@ class JDBC:
         """
 
         # Override the schema used in the constructor
-        if database is None:
-            database = self.database
+        # if database is None:
+        #     database = self.database
+        #
+        # if schema is None:
+        #     schema = self.schema
+        # query = self.driver_context.table_names_query(schema=schema, database=database)
+        # df = self.execute(query, limit)
+        # return df.ext.display(limit)
 
-        if schema is None:
-            schema = self.schema
-        query = self.driver_context.table_names_query(schema=schema, database=database)
-        df = self.execute(query, limit)
-        return df.ext.display(limit)
+        engine = create_engine(self.url)
+        print(engine.table_names())
 
     def tables_names_to_json(self, schema=None):
         """
@@ -155,7 +159,6 @@ class JDBC:
         print(self.url)
 
         # df = dd.read_sql_table(table='test_data', uri=self.url, index_col='id')
-        print(1)
         # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
         df = JDBC.read_sql_table(table='test_data', uri=self.url, index_col=None,
                                  query="SELECT * FROM test_data")
@@ -289,7 +292,6 @@ class JDBC:
             head = pd.read_sql(q, engine, **kwargs)
             print("META", head.iloc[:0])
             if head.empty:
-
                 # no results at all
                 name = table.name
                 schema = table.schema
