@@ -2,7 +2,7 @@ from enum import Enum
 
 from singleton_decorator import singleton
 
-from optimus.spark.io.abstract_driver import AbstractDriver
+from optimus.spark.io.drivers.abstract_driver import AbstractDriver
 from optimus.spark.io.properties import DriverProperties
 
 
@@ -14,7 +14,8 @@ class RedshiftDriver(AbstractDriver):
         return DriverProperties.REDSHIFT
 
     def url(self, *args, **kwargs) -> str:
-        return f"""jdbc:{kwargs["driver"]}://{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?currentSchema={kwargs["schema"]}"""
+        return f"""jdbc:{kwargs["driver"]}://{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?currentSchema={
+        kwargs["schema"]}"""
 
     def table_names_query(self, *args, **kwargs) -> str:
         return """
@@ -32,3 +33,10 @@ class RedshiftDriver(AbstractDriver):
 
     def count_query(self, *args, **kwargs) -> str:
         return "SELECT COUNT(*) as COUNT FROM " + kwargs["db_table"]
+
+    def primary_key_query(self, *args, **kwargs) -> str:
+        pass
+
+    def min_max_query(self, *args, **kwargs) -> str:
+        return f"""SELECT min({kwargs["partition_column"]}) AS min, max({kwargs["partition_column"]}) AS max FROM {
+        kwargs["table_name"]} """

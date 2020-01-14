@@ -1,6 +1,6 @@
 from enum import Enum
 
-from optimus.spark.io.abstract_driver import AbstractDriver
+from optimus.spark.io.drivers.abstract_driver import AbstractDriver
 
 
 class DriverContext:
@@ -31,3 +31,9 @@ class DriverContext:
 
     def count_query(self, *args, **kwargs) -> str:
         return self._driver.count_query(*args, **kwargs)
+
+    def primary_key_query(self, *args, **kwargs) -> str:
+        return self._driver.primary_key_query(*args, **kwargs)
+
+    def min_max_query(self, *args, **kwargs) -> str:
+        return self._driver.min_max_query(*args, **kwargs)

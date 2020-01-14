@@ -2,7 +2,7 @@ from enum import Enum
 
 from singleton_decorator import singleton
 
-from optimus.spark.io.abstract_driver import AbstractDriver
+from optimus.spark.io.drivers.abstract_driver import AbstractDriver
 from optimus.spark.io.properties import DriverProperties
 
 
@@ -17,7 +17,8 @@ class OracleDriver(AbstractDriver):
         if kwargs["oracle_sid"] is not None:
             return f"""jdbc:oracle+cx_oracle:thin:@{kwargs["host"]}:{kwargs["port"]}/{kwargs["oracle_sid"]}"""
         elif kwargs["oracle_service_name"] is not None:
-            return f"""jdbc:oracle+cx_oracle:thin:@//{kwargs["host"]}:{kwargs["port"]}/{kwargs["oracle_service_name"]}"""
+            return f"""jdbc:oracle+cx_oracle:thin:@//{kwargs["host"]}:{kwargs["port"]}/{kwargs[
+                "oracle_service_name"]}"""
         else:
             return f"""jdbc:oracle+cx_oracle:thin:@//{kwargs["oracle_tns"]}"""
 
@@ -32,3 +33,10 @@ class OracleDriver(AbstractDriver):
 
     def count_query(self, *args, **kwargs) -> str:
         return "SELECT COUNT(*) COUNT FROM " + kwargs["db_table"]
+
+    def primary_key_query(self, *args, **kwargs) -> str:
+        pass
+
+    def min_max_query(self, *args, **kwargs) -> str:
+        return f"""SELECT min({kwargs["partition_column"]}) AS min, max({kwargs["partition_column"]}) AS max FROM {
+        kwargs["table_name"]} """

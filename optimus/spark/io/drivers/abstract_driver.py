@@ -54,3 +54,21 @@ class AbstractDriver(ABC):
         :return: a query to count the number of rows in a table
         """
         pass
+
+    @abstractmethod
+    def primary_key_query(self, *args, **kwargs) -> str:
+        """
+        Returns the query for counting the rows in a given table.
+        :param kwargs: query parameters
+        :return: a query to count the number of rows in a table
+        """
+        pass
+
+    @abstractmethod
+    def min_max_query(self, *args, **kwargs) -> str:
+        """
+        Returns the query for counting the rows in a given table.
+        :param kwargs: query parameters
+        :return: a query to count the number of rows in a table
+        """
+        pass

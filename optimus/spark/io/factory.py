@@ -1,14 +1,14 @@
 from optimus.helpers.raiseit import RaiseIt
-from optimus.spark.io.abstract_driver import AbstractDriver
-from optimus.spark.io.cassandra import CassandraDriver
-from optimus.spark.io.mysql import MySQLDriver
-from optimus.spark.io.oracle import OracleDriver
-from optimus.spark.io.postgresql import PostgreSQLDriver
-from optimus.spark.io.presto import PrestoDriver
+from optimus.spark.io.drivers.abstract_driver import AbstractDriver
+from optimus.spark.io.drivers.cassandra import CassandraDriver
+from optimus.spark.io.drivers.mysql import MySQLDriver
+from optimus.spark.io.drivers.oracle import OracleDriver
+from optimus.spark.io.drivers.postgresql import PostgreSQLDriver
+from optimus.spark.io.drivers.presto import PrestoDriver
 from optimus.spark.io.properties import DriverProperties
-from optimus.spark.io.redshift import RedshiftDriver
-from optimus.spark.io.sqlite import SQLiteDriver
-from optimus.spark.io.sqlserver import SQLServerDriver
+from optimus.spark.io.drivers.redshift import RedshiftDriver
+from optimus.spark.io.drivers.sqlite import SQLiteDriver
+from optimus.spark.io.drivers.sqlserver import SQLServerDriver
 
 
 class DriverFactory:

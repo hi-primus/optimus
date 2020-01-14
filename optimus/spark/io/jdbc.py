@@ -1,17 +1,16 @@
-from pyspark.sql import DataFrame
-
 from optimus.helpers.converter import val_to_list
+from optimus.helpers.functions import collect_as_list
 from optimus.helpers.logger import logger
 from optimus.spark.io.driver_context import DriverContext
 from optimus.spark.io.factory import DriverFactory
 from optimus.spark.io.properties import DriverProperties
 from optimus.spark.spark import Spark
 
-
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
 LIMIT = 1000
 LIMIT_TABLE = 10
+NUM_PARTITIONS = 10
 
 
 class JDBC:
@@ -97,16 +96,23 @@ class JDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name, columns="*", limit=None):
+    def table_to_df(self, table_name, schema="public", columns="*", limit=None, partition_column=None,
+                    num_partition=NUM_PARTITIONS):
         """
         Return cols as Spark data frames from a specific table
-        :type table_name: object
+        :param partition_column:
+        :param table_name:
+        :param schema:
         :param columns:
         :param limit: how many rows will be retrieved
         """
 
-        db_table = table_name
-        query = self.driver_context.count_query(db_table=db_table)
+        if schema is None:
+            schema = self.schema
+
+        # db_table = table_name
+
+        query = self.driver_context.count_query(db_table=table_name)
         if limit == "all":
             count = self.execute(query, "all").first()[0]
 
@@ -119,46 +125,52 @@ class JDBC:
             columns = val_to_list(columns)
             columns_sql = ",".join(columns)
 
-        query = "SELECT " + columns_sql + " FROM " + db_table
+        # min, max = self.execute(query, limit)
+
+        query = "SELECT " + columns_sql + " FROM " + table_name
 
         logger.print(query)
-        df = self.execute(query, limit)
+        df = self.execute(query, limit, partition_column=partition_column, table_name=table_name,
+                          num_partitions=num_partition)
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        df = df.run()
+        df = df.ext.run()
         return df
 
-    def execute(self, query, limit=None):
+    def _build_conf(self, query=None, limit=None):
         """
-        Execute a SQL query
-        :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
-        :param query: SQL query string
+        Build a conf Spark object to make a single SQL query
+        :param query:
         :return:
         """
-
-        # play defensive with a select clause
-        if self.db_driver == DriverProperties.ORACLE.value["name"]:
-            query = "(" + query + ") t"
-        elif self.db_driver == DriverProperties.PRESTO.value["name"]:
-            query = "(" + query + ")"
-        elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-            query = query
+        if limit is None:
+            limit = "LIMIT " + str(LIMIT_TABLE)
+        elif limit == "all":
+            limit = ""
         else:
-            query = "(" + query + ") AS t"
-
-        logger.print(query)
-        logger.print(self.url)
+            limit = "LIMIT " + (str(limit))
 
         conf = Spark.instance.spark.read \
             .format(
             "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
             DriverProperties.CASSANDRA.value["java_class"]) \
             .option("url", self.url) \
-            .option("user", self.user) \
-            .option("dbtable", query)
+            .option("user", self.user)
 
-        # Password
+        if query:
+            # play defensive with a select clause
+            if self.db_driver == DriverProperties.ORACLE.value["name"]:
+                query = "(" + query + ") t"
+            elif self.db_driver == DriverProperties.PRESTO.value["name"]:
+                query = "(" + query + ")"
+            elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+                query = query
+            else:
+                query = f"""({query} {limit} ) AS t"""
+
+            conf.option("dbtable", query)
+
         if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:
             conf.option("password", self.password)
 
@@ -171,7 +183,39 @@ class JDBC:
         if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
             conf.options(table=self.cassandra_table, keyspace=self.cassandra_keyspace)
 
-        return self._limit(conf.load(), limit)
+        logger.print(query)
+        logger.print(self.url)
+        return conf
+
+    def execute(self, query: str, limit: str = None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
+                table_name=None):
+
+        """
+        Execute a SQL query
+        :param query: SQL query string
+        :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
+        :param num_partitions:
+        :param partition_column:
+        :param table_name: Aimed to be used to with table_to_df() to optimize data big data loading
+        :return:
+        """
+
+        conf = self._build_conf(query, limit)
+
+        if partition_column:
+            min_max_query = self.driver_context.min_max_query(partition_column=partition_column, table_name=table_name)
+            min_value, max_value = collect_as_list(self._build_conf(min_max_query).load())
+
+            conf \
+                .option("partitionColumn", partition_column) \
+                .option("lowerBound", min_value) \
+                .option("upperBound", max_value)
+
+        if num_partitions:
+            conf \
+                .option("numPartitions", num_partitions)
+
+        return conf.load()
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
@@ -198,22 +242,6 @@ class JDBC:
         if self.db_driver == DriverProperties.ORACLE.value["name"]:
             conf.option("driver", self.driver_option)
         conf.save()
-
-    @staticmethod
-    def _limit(df: DataFrame, limit=None):
-        """
-        Handle limit defensive so we do not retrieve the whole at we explicit want
-        :param limit:
-        :param df:
-        :return a limited DataFrame if specified
-        """
-        # we use a default limit here in case the query will return a huge chunk of data
-        if limit is None:
-            return df.limit(LIMIT_TABLE)
-        elif limit == "all":
-            return df
-        else:
-            return df.limit(int(limit))
 
 
 class Table:
