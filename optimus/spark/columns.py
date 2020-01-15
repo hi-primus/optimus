@@ -12,7 +12,6 @@ import pyspark
 import simplejson as json
 from glom import glom, assign
 from multipledispatch import dispatch
-from pypika import MySQLQuery
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.linalg import Vectors, VectorUDT
