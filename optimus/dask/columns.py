@@ -497,7 +497,7 @@ def cols(self: DataFrame):
 
         
         @staticmethod
-        def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None):
+        def unnest(input_cols, separator=None, splits=0, index=None, output_cols=None):
             """
             Split an array or string in different columns
             :param input_cols: Columns to be un-nested
@@ -515,81 +515,28 @@ def cols(self: DataFrame):
 
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
-            final_columns = None
 
-            def _final_columns(_index, _splits, _output_col):
+            def spread_split(row, output_col, splits):
 
-                if _index is None:
-                    actual_index = builtins.range(0, _splits)
-                else:
-                    _index = val_to_list(_index)
-
-                    if is_list_of_tuples(_index):
-                        _index = [(i - 1, j - 1) for i, j in _index]
-                    elif is_list(_index):
-                        _index = [i - 1 for i in _index]
-
-                    actual_index = _index
-
-                # Create final output columns
-                if is_tuple(_output_col):
-                    columns = zip(actual_index, _output_col)
-                else:
-                    columns = [(i, _output_col + "_" + str(i)) for i in actual_index]
-                return columns
-
-            def _split(_v, _separator, _splits, _output_col):
-                _v = _v.split(separator)
-                for i, (_split, _v.size) in enumerate(zip(_splits
-
+                for i in range(splits):
+                    try:
+                        value = row[output_col+"_"+str(splits-1)][i]
+                    except IndexError:
+                        value = None
+                    except TypeError:
+                        value = None
+                    row[output_col+"_"+str(i)] = value
+                return row
 
             for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
-                # If numeric convert and parse as string.
-                if is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
-                    df = df.cols.cast(input_col, "str")
+                if separator is None:
+                    RaiseIt.value_error(separator, "regular expression")
 
-                # String
-                if is_column_a(df, input_col, df.constants.STRING_TYPES):
-                    if separator is None:
-                        RaiseIt.value_error(separator, "regular expression")
+                df = df.assign( **{ output_col+"_"+str(i) : "" for i in range(splits-1) } )
+                df[output_col+'_'+str(splits-1)] = df[input_col].astype(str).str.split(separator,splits-1)
+                df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
 
-
-                    data = df[input_col].str.apply()
-
-                    data = df[input_col].str.extract(separator,n=splits, expand=True)  # , expand=(splits>=0)
-
-
-                    # print("df[input_col]",df[input_col])
-                    # print("df[input_col].str",df[input_col].str)
-                    # print("data",data)
-                    print(data)
-
-                    data.compute()
-
-                    return df
-                    # print("data.columns",data.columns)
-
-                    if splits < 0:
-                        splits = data.columns
-
-                    final_columns = _final_columns(index, splits, output_col)
-
-                    # for i, col_name in final_columns:
-                        # df.cols.apply(input_col, )
-                        # df[col_name] = data[i]
-                    
-                    # mat_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).ext.to_dict())
-
-                    # expr = F.split(F.col(input_col), separator)
-                    # final_columns = _final_columns(index, splits, output_col)
-                    # for i, col_name in final_columns:
-                        # df = df.withColumn(col_name, expr.getItem(i))
-
-                else:
-                    RaiseIt.type_error(input_col, ["int", "bool", "float", "object"])
-                # df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
-            
             return df
 
 
@@ -606,15 +553,15 @@ def cols(self: DataFrame):
             """
 
             # TODO check if .contains can be used instead of regexp
-            def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
+            def func_chars_words(_df, input_col, output_col, search, replace_by):
                 # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
                 # Create as dict
                 search_and_replace_by = None
                 if is_list(search):
-                    search_and_replace_by = {s: _replace_by for s in search}
+                    search_and_replace_by = {s: replace_by for s in search}
                 elif is_one_element(search):
-                    search_and_replace_by = {search: _replace_by}
+                    search_and_replace_by = {search: replace_by}
 
                 search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
 
@@ -624,34 +571,26 @@ def cols(self: DataFrame):
                     regex = re.compile("|".join(map(re.escape, search_and_replace_by.keys())))
                 elif search_by == "words":
                     regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, search_and_replace_by.keys())))
-
-                print('search_and_replace_by',search_and_replace_by)
-
-                def partition_replace(dfp, __input_col, _search_and_replace_by):
-                    # if dfp[__input_col] is not None:
-                    #     df[__input_col] = regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(dfp[__input_col]))
-                    
-                    return 'a'
                 
-                def multiple_replace(_value, _search_and_replace_by):
-                    if _value is not None:
-                        return regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(_value))
+                def multiple_replace(value, search_and_replace_by):
+                    if value is not None:
+                        return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(value))
                     else:
                         return None
 
-                return _df.cols.apply(_input_col, multiple_replace, "str", search_and_replace_by,
-                                      output_cols=_output_col)
+                return _df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
+                                      output_cols=output_col)
 
                 return _df
 
-            def func_full(_df, _input_col, _output_col, _search, _replace_by):
-                _search = val_to_list(_search)
+            def func_full(df, input_col, output_col, search, replace_by):
+                search = val_to_list(search)
 
-                if _input_col != _output_col:
-                    _df[_output_col] = _df[_input_col]
+                if input_col != output_col:
+                    df[output_col] = df[input_col]
 
-                _df[_output_col] = _df[_output_col].mask( _df[_output_col].isin(_search) , _replace_by) 
-                return _df
+                df[output_col] = df[output_col].mask( df[output_col].isin(search) , replace_by) 
+                return df
 
             func = None
             if search_by == "full" or search_by == "numeric":
@@ -674,10 +613,7 @@ def cols(self: DataFrame):
 
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
-                # dtype = df[output_col].dtype
                 df = func(df, input_col, output_col, search, replace_by)
-                # df[output_col] = df[output_col].astype(dtype)
-                # df = df.preserve_meta(self, Actions.REPLACE.value, output_col)
                 
             return df
 
