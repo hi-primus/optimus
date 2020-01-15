@@ -9,18 +9,14 @@ from infer import Infer
 from multipledispatch import dispatch
 
 from optimus.dask.dask import Dask
-from optimus.helpers.check import equal_function, is_column_a
+from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_tuples, is_int, is_list_of_futures, is_list, \
-    is_one_element, PYTHON_TYPES
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
+from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
-
-from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
-    is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
-    parse_spark_class_dtypes
 
 # Some expression accepts multiple columns at the same time.
 python_set = set
@@ -215,11 +211,11 @@ def cols(self: DataFrame):
             #     if pd.isnan(_value):
             #         return value
             #     return _value
-            
+
             input_cols = parse_columns(self, input_cols)
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
-            
+
             df = self
 
             for output_col in output_cols:
@@ -228,7 +224,6 @@ def cols(self: DataFrame):
                 # df[output_col] = df[output_col].mask( df[output_col].isin([0,False,None,[],{}]) , value ) 
 
             return df
-
 
         @staticmethod
         def count():
@@ -305,7 +300,7 @@ def cols(self: DataFrame):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 print("func_return_type", func_return_type)
-                if func_return_type==None:
+                if func_return_type == None:
                     _meta = df[input_col]
                 else:
                     if "int" in func_return_type:
@@ -376,7 +371,7 @@ def cols(self: DataFrame):
                     return None
                 else:
                     return bool(value)
-            
+
             def _cast_str(value):
                 try:
                     return value.astype(str)
@@ -402,13 +397,13 @@ def cols(self: DataFrame):
                 output_cols = get_output_cols(input_cols, output_cols)
 
             for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
-                if dtype=='int':
+                if dtype == 'int':
                     df.cols.apply(input_col, func=_cast_int, func_return_type="int", output_cols=output_col)
                     # df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
-                elif dtype=='float':
+                elif dtype == 'float':
                     df.cols.apply(input_col, func=_cast_float, func_return_type="float", output_cols=output_col)
                     # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
-                elif dtype=='bool':
+                elif dtype == 'bool':
                     df.cols.apply(input_col, func=_cast_bool, output_cols=output_col)
                     # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
                 else:
@@ -417,7 +412,7 @@ def cols(self: DataFrame):
                 df[output_col].odtype = dtype
 
             return df
-            
+
         @staticmethod
         def cast_type(input_cols=None, dtype=None, output_cols=None, columns=None):
             """
@@ -458,7 +453,6 @@ def cols(self: DataFrame):
                 df[output_col] = df[input_col].astype(dtype=dtype)
 
             return df
-            
 
         @staticmethod
         def nest(input_cols, shape="string", separator="", output_col=None):
@@ -479,23 +473,22 @@ def cols(self: DataFrame):
             def _nest_string(value):
                 v = value[input_cols[0]].astype(str)
                 for i in builtins.range(1, len(input_cols)):
-                    v = v + separator +  value[input_cols[i]].astype(str)
+                    v = v + separator + value[input_cols[i]].astype(str)
                 return v
-            
+
             def _nest_array(value):
                 v = value[input_cols[0]].astype(str)
                 for i in builtins.range(1, len(input_cols)):
-                    v += ", " +  value[input_cols[i]].astype(str)
-                return "["+v+"]"
+                    v += ", " + value[input_cols[i]].astype(str)
+                return "[" + v + "]"
 
-            if shape=="string":
+            if shape == "string":
                 df = df.assign(**{output_col[0]: _nest_string})
             else:
                 df = df.assign(**{output_col[0]: _nest_array})
 
             return df
 
-        
         @staticmethod
         def unnest(input_cols, separator=None, splits=0, index=None, output_cols=None):
             """
@@ -510,7 +503,7 @@ def cols(self: DataFrame):
             # Special case. A dot must be escaped
             if separator == ".":
                 separator = "\\."
-            
+
             df = self
 
             input_cols = parse_columns(df, input_cols)
@@ -520,12 +513,12 @@ def cols(self: DataFrame):
 
                 for i in range(splits):
                     try:
-                        value = row[output_col+"_"+str(splits-1)][i]
+                        value = row[output_col + "_" + str(splits - 1)][i]
                     except IndexError:
                         value = None
                     except TypeError:
                         value = None
-                    row[output_col+"_"+str(i)] = value
+                    row[output_col + "_" + str(i)] = value
                 return row
 
             for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
@@ -533,12 +526,11 @@ def cols(self: DataFrame):
                 if separator is None:
                     RaiseIt.value_error(separator, "regular expression")
 
-                df = df.assign( **{ output_col+"_"+str(i) : "" for i in range(splits-1) } )
-                df[output_col+'_'+str(splits-1)] = df[input_col].astype(str).str.split(separator,splits-1)
+                df = df.assign(**{output_col + "_" + str(i): "" for i in range(splits - 1)})
+                df[output_col + '_' + str(splits - 1)] = df[input_col].astype(str).str.split(separator, splits - 1)
                 df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
 
             return df
-
 
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -571,7 +563,7 @@ def cols(self: DataFrame):
                     regex = re.compile("|".join(map(re.escape, search_and_replace_by.keys())))
                 elif search_by == "words":
                     regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, search_and_replace_by.keys())))
-                
+
                 def multiple_replace(value, search_and_replace_by):
                     if value is not None:
                         return regex.sub(lambda match: search_and_replace_by[match.group(0)], str(value))
@@ -589,7 +581,7 @@ def cols(self: DataFrame):
                 if input_col != output_col:
                     df[output_col] = df[input_col]
 
-                df[output_col] = df[output_col].mask( df[output_col].isin(search) , replace_by) 
+                df[output_col] = df[output_col].mask(df[output_col].isin(search), replace_by)
                 return df
 
             func = None
@@ -614,7 +606,7 @@ def cols(self: DataFrame):
             df = self
             for input_col, output_col in zip(input_cols, output_cols):
                 df = func(df, input_col, output_col, search, replace_by)
-                
+
             return df
 
         @staticmethod
