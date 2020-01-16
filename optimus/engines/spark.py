@@ -22,7 +22,6 @@ from optimus.spark.io.jdbc import JDBC
 from optimus.spark.io.load import Load
 from optimus.spark.ml.models import ML
 from optimus.profiler.profiler import Profiler
-# from optimus.server.server import Server
 from optimus.spark.spark import Spark
 from optimus.version import __version__
 
@@ -39,7 +38,6 @@ class SparkEngine:
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
                  verbose=False,
-                 server=False,
                  repositories=None,
                  packages=None,
                  jars=None,
@@ -167,12 +165,6 @@ class SparkEngine:
 
         # Pickling
         Spark.instance.sc.addPyFile(absolute_path("/infer.py"))
-
-        if server:
-            logger.print("Starting Optimus Server...")
-            s = Server()
-            s.start()
-            self.server_instance = s
 
         logger.print(SUCCESS)
 

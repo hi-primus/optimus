@@ -641,22 +641,13 @@ def cols(self):
         @staticmethod
         def exec_agg(exprs):
             """
-            Execute and aggregation
+            Execute an aggregation function
             :param exprs:
             :return:
             """
 
             if len(exprs) > 0:
-                df = self
-                if ENGINE == "sql":
-                    def clean(c):
-                        return c.get_sql().replace("'", "`")
-
-                    exprs = clean(MySQLQuery.from_("df").select(*exprs))
-                    df = self.query(exprs)
-                elif ENGINE == "spark":
-                    df = self.agg(*exprs)
-
+                df = self.agg(*exprs)
                 result = parse_col_names_funcs_to_keys(df.to_dict())
             else:
                 result = None
