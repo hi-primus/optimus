@@ -331,7 +331,7 @@ def cols(self):
                         df = df.withColumnRenamed(old_col_name, new_col_name)
 
                     # df = df.rename_meta([(old_col_name, new_col_name)])
-                    df = df.meta.preserve(value=current_meta)
+                    df = df.meta.preserve(self, value=current_meta)
 
                     df = df.meta.rename((old_col_name, new_col_name))
 

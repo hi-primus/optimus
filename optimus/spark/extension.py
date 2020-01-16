@@ -30,6 +30,12 @@ DataFrame.output = "html"
 def ext(self):
     class Ext:
 
+    
+        @staticmethod
+        def cache():
+            return self.cache()
+
+
         @staticmethod
         def roll_out():
             """

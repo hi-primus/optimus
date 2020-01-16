@@ -34,6 +34,12 @@ def ext(self):
                     df = df.cols.set_meta(col_name, "optimus.transformations", [])
             return df
 
+
+        @staticmethod
+        def cache():
+            return self
+
+
         @staticmethod
         def to_json():
             """
@@ -295,7 +301,8 @@ def ext(self):
 
         @staticmethod
         def display(limit=None, columns=None, title=None, truncate=True):
-            Ext.table(limit, columns, title, truncate)
+            # TODO: limit, columns, title, truncate
+            return self.compute()
 
         @staticmethod
         def table(limit=None, columns=None, title=None, truncate=True):
