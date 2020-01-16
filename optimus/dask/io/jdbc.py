@@ -15,6 +15,7 @@ from optimus.spark.io.properties import DriverProperties
 # only will retrieve the LIMIT value
 LIMIT = 1000
 LIMIT_TABLE = 10
+NUM_PARTITIONS = 10
 
 
 class JDBC:
@@ -46,7 +47,7 @@ class JDBC:
             self.port = self.driver_properties.value["port"]
 
         self.driver_option = self.driver_properties.value["java_class"]
-        self.url = self.driver_context.url(
+        self.uri = self.driver_context.uri(
             user=user,
             password=password,
             driver=driver,
@@ -63,7 +64,8 @@ class JDBC:
         self.user = user
         self.password = password
         self.schema = schema
-        logger.print(self.url)
+        print(self.uri)
+        logger.print(self.uri)
 
     def tables(self, schema=None, database=None, limit=None):
         """
@@ -81,7 +83,7 @@ class JDBC:
         # df = self.execute(query, limit)
         # return df.ext.display(limit)
 
-        engine = create_engine(self.url)
+        engine = create_engine(self.uri)
         print(engine.table_names())
 
     def tables_names_to_json(self, schema=None):
@@ -114,8 +116,9 @@ class JDBC:
         """
 
         db_table = table_name
-        query = self.driver_context.count_query(db_table=db_table)
+
         if limit == "all":
+            query = self.driver_context.count_query(db_table=db_table)
             count = self.execute(query, "all").first()[0]
 
             # We want to count the number of rows to warn the users how much it can take to bring the whole data
@@ -134,34 +137,33 @@ class JDBC:
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        df = df.run()
+        # df = df.ext.run()
         return df
 
-    def execute(self, query, limit=None):
+    def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
+                table_name=None):
         """
         Execute a SQL query
         :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
+        :param partition_column:
         :param query: SQL query string
         :return:
         """
 
         # play defensive with a select clause
-        if self.db_driver == DriverProperties.ORACLE.value["name"]:
-            query = "(" + query + ") t"
-        elif self.db_driver == DriverProperties.PRESTO.value["name"]:
-            query = "(" + query + ")"
-        elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-            query = query
-        else:
-            query = "(" + query + ") AS t"
-
-        print(query)
-        print(self.url)
+        # if self.db_driver == DriverProperties.ORACLE.value["name"]:
+        #     query = "(" + query + ") t"
+        # elif self.db_driver == DriverProperties.PRESTO.value["name"]:
+        #     query = "(" + query + ")"
+        # elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
+        #     query = query
+        # else:
+        #     query = "(" + query + ") AS t"
 
         # df = dd.read_sql_table(table='test_data', uri=self.url, index_col='id')
         # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
-        df = JDBC.read_sql_table(table='test_data', uri=self.url, index_col=None,
-                                 query="SELECT * FROM test_data")
+        df = JDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
+                                 npartitions=num_partitions, query=query)
 
         # print(len(df))
 
@@ -189,6 +191,178 @@ class JDBC:
         # return self._limit(conf.load(), limit)
         return df
 
+    @staticmethod
+    def read_sql_table(
+            table_name,
+            uri,
+            index_col=None,
+            divisions=None,
+            npartitions=None,
+            limits=None,
+            columns=None,
+            bytes_per_chunk=256 * 2 ** 20,
+            head_rows=5,
+            schema=None,
+            meta=None,
+            engine_kwargs=None,
+            query=None,
+            **kwargs
+    ):
+        import sqlalchemy as sa
+        from sqlalchemy import sql
+        from sqlalchemy.sql import elements
+
+        engine_kwargs = {} if engine_kwargs is None else engine_kwargs
+        engine = sa.create_engine(uri, **engine_kwargs)
+        m = sa.MetaData()
+
+        # print("table", table)
+        if isinstance(table_name, str):
+            table_name = sa.Table(table_name, m, autoload=True, autoload_with=engine, schema=schema)
+
+            columns = (
+                [(table_name.columns[c] if isinstance(c, str) else c) for c in columns]
+                if columns
+                else list(table_name.columns)
+            )
+
+        if index_col is not None:
+            # raise ValueError("Must specify index column to partition on")
+            # else:
+
+            index = table_name.columns[index_col] if isinstance(index_col, str) else index_col
+            if not isinstance(index_col, (str, elements.Label)):
+                raise ValueError(
+                    "Use label when passing an SQLAlchemy instance as the index (%s)" % index
+                )
+            if divisions and npartitions:
+                raise TypeError("Must supply either divisions or npartitions, not both")
+
+            if index_col not in columns:
+                columns.append(
+                    table_name.columns[index_col] if isinstance(index_col, str) else index_col
+                )
+
+            if isinstance(index_col, str):
+                kwargs["index_col"] = index_col
+            else:
+                # function names get pandas auto-named
+                kwargs["index_col"] = index_col.name
+        parts = []
+
+        if meta is None:
+            # derive metadata from first few rows
+            # q = sql.select(columns).limit(head_rows).select_from(table)
+            head = pd.read_sql(query, engine, **kwargs)
+            # print("META", head.iloc[:0])
+            if head.empty:
+                # no results at all
+                name = table_name.name
+                schema = table_name.schema
+                head = pd.read_sql_table(name, uri, schema=schema, index_col=index_col)
+                return from_pandas(head, npartitions=1)
+
+            bytes_per_row = (head.memory_usage(deep=True, index=True)).sum() / head_rows
+            meta = head.iloc[:0]
+        else:
+            if divisions is None and npartitions is None:
+                raise ValueError(
+                    "Must provide divisions or npartitions when using explicit meta."
+                )
+
+        # if divisions is None and index_col is not None:
+        if divisions is None:
+            if limits is None and index_col:
+                # calculate max and min for given index
+                q = sql.select([sql.func.max(index), sql.func.min(index)]).select_from(
+                    table_name
+                )
+                minmax = pd.read_sql(q, engine)
+                maxi, mini = minmax.iloc[0]
+                dtype = minmax.dtypes["max_1"]
+            elif not index_col and npartitions:
+                mini = 0
+                q = f"SELECT COUNT(*) AS count FROM {table_name}"
+                maxi = pd.read_sql(q, engine)["count"][0]
+                limit = maxi / npartitions
+                dtype = pd.Series((mini, maxi,)).dtype
+            else:
+                mini, maxi = limits
+                dtype = pd.Series(limits).dtype
+
+            if npartitions is None:
+                q = sql.select([sql.func.count(index)]).select_from(table_name)
+                count = pd.read_sql(q, engine)["count_1"][0]
+                npartitions = int(round(count * bytes_per_row / bytes_per_chunk)) or 1
+
+            if dtype.kind == "M":
+                divisions = pd.date_range(
+                    start=mini,
+                    end=maxi,
+                    freq="%iS" % ((maxi - mini).total_seconds() / npartitions),
+                ).tolist()
+                divisions[0] = mini
+                divisions[-1] = maxi
+            elif dtype.kind in ["i", "u", "f"]:
+                divisions = np.linspace(mini, maxi, npartitions + 1).tolist()
+            else:
+                raise TypeError(
+                    'Provided index column is of type "{}".  If divisions is not provided the '
+                    "index column type must be numeric or datetime.".format(dtype)
+                )
+
+            lowers, uppers = divisions[:-1], divisions[1:]
+            for i, (lower, upper) in enumerate(zip(lowers, uppers)):
+
+                if index_col:
+                    if i == len(lowers) - 1:
+                        where = f" WHERE {index} > {lower} AND {index} <= {upper}"
+                    else:
+                        where = f" WHERE {index} >= {lower} AND {index} < {upper}"
+                else:
+                    if i == len(lowers) - 1:
+                        where = f" LIMIT {int(upper) - int(lower)} OFFSET {int(lower)}"
+                    else:
+
+                        where = f" LIMIT {int(limit)} OFFSET {int(lower)}"
+
+                q = query + where
+                # When we do not have and index
+                # "SELECT * FROM test_data LIMIT 5 OFFSET 3"
+                parts.append(
+                    delayed(JDBC._read_sql_chunk)(
+                        q, uri, meta, engine_kwargs=engine_kwargs, **kwargs
+                    )
+                )
+        else:
+
+            # JDBC._read_sql_chunk(q, uri, meta, engine_kwargs=engine_kwargs, **kwargs)
+
+            parts.append(
+                delayed(JDBC._read_sql_chunk)(
+                    query, uri, meta, engine_kwargs=engine_kwargs, **kwargs
+                )
+            )
+
+        engine.dispose()
+
+        return from_delayed(parts, meta, divisions=divisions)
+
+    @staticmethod
+    def _read_sql_chunk(q, uri, meta, engine_kwargs=None, **kwargs):
+        import sqlalchemy as sa
+
+        engine_kwargs = engine_kwargs or {}
+        engine = sa.create_engine(uri, **engine_kwargs)
+        df = pd.read_sql(q, engine, **kwargs)
+        engine.dispose()
+
+        if df.empty:
+            return meta
+        else:
+            # df.reset_index()
+            return df.astype(meta.dtypes.to_dict(), copy=False)
+
     def df_to_table(self, df, table, mode="overwrite"):
         """
         Send a spark to the database
@@ -206,7 +380,7 @@ class JDBC:
             "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
             DriverProperties.CASSANDRA.value["java_class"]) \
             .mode(mode) \
-            .option("url", self.url) \
+            .option("url", self.uri) \
             .option("dbtable", table) \
             .option("user", self.user) \
             .option("password", self.password)
@@ -230,154 +404,6 @@ class JDBC:
             return df
         else:
             return df.limit(int(limit))
-
-    @staticmethod
-    def read_sql_table(
-            table,
-            uri,
-            index_col,
-            divisions=None,
-            npartitions=None,
-            limits=None,
-            columns=None,
-            bytes_per_chunk=256 * 2 ** 20,
-            head_rows=5,
-            schema=None,
-            meta=None,
-            engine_kwargs=None,
-            query=None,
-            **kwargs
-    ):
-        import sqlalchemy as sa
-        from sqlalchemy import sql
-        from sqlalchemy.sql import elements
-
-        engine_kwargs = {} if engine_kwargs is None else engine_kwargs
-        engine = sa.create_engine(uri, **engine_kwargs)
-        m = sa.MetaData()
-        if isinstance(table, str):
-            table = sa.Table(table, m, autoload=True, autoload_with=engine, schema=schema)
-
-        columns = (
-            [(table.columns[c] if isinstance(c, str) else c) for c in columns]
-            if columns
-            else list(table.columns)
-        )
-        if index_col is not None:
-            # raise ValueError("Must specify index column to partition on")
-            # else:
-
-            index = table.columns[index_col] if isinstance(index_col, str) else index_col
-            if not isinstance(index_col, (str, elements.Label)):
-                raise ValueError(
-                    "Use label when passing an SQLAlchemy instance as the index (%s)" % index
-                )
-            if divisions and npartitions:
-                raise TypeError("Must supply either divisions or npartitions, not both")
-
-            if index_col not in columns:
-                columns.append(
-                    table.columns[index_col] if isinstance(index_col, str) else index_col
-                )
-
-            if isinstance(index_col, str):
-                kwargs["index_col"] = index_col
-            else:
-                # function names get pandas auto-named
-                kwargs["index_col"] = index_col.name
-
-        if meta is None:
-            # derive metadata from first few rows
-            q = sql.select(columns).limit(head_rows).select_from(table)
-            head = pd.read_sql(q, engine, **kwargs)
-            print("META", head.iloc[:0])
-            if head.empty:
-                # no results at all
-                name = table.name
-                schema = table.schema
-                head = pd.read_sql_table(name, uri, schema=schema, index_col=index_col)
-                return from_pandas(head, npartitions=1)
-
-            bytes_per_row = (head.memory_usage(deep=True, index=True)).sum() / head_rows
-            meta = head.iloc[:0]
-        else:
-            if divisions is None and npartitions is None:
-                raise ValueError(
-                    "Must provide divisions or npartitions when using explicit meta."
-                )
-
-        if divisions is None and index_col is not None:
-            if limits is None:
-                # calculate max and min for given index
-                q = sql.select([sql.func.max(index), sql.func.min(index)]).select_from(
-                    table
-                )
-                minmax = pd.read_sql(q, engine)
-                maxi, mini = minmax.iloc[0]
-                dtype = minmax.dtypes["max_1"]
-            else:
-                mini, maxi = limits
-                dtype = pd.Series(limits).dtype
-
-            if npartitions is None:
-                q = sql.select([sql.func.count(index)]).select_from(table)
-                count = pd.read_sql(q, engine)["count_1"][0]
-                npartitions = int(round(count * bytes_per_row / bytes_per_chunk)) or 1
-
-            if dtype.kind == "M":
-                divisions = pd.date_range(
-                    start=mini,
-                    end=maxi,
-                    freq="%iS" % ((maxi - mini).total_seconds() / npartitions),
-                ).tolist()
-                divisions[0] = mini
-                divisions[-1] = maxi
-            elif dtype.kind in ["i", "u", "f"]:
-                divisions = np.linspace(mini, maxi, npartitions + 1).tolist()
-            else:
-                raise TypeError(
-                    'Provided index column is of type "{}".  If divisions is not provided the '
-                    "index column type must be numeric or datetime.".format(dtype)
-                )
-
-            parts = []
-            lowers, uppers = divisions[:-1], divisions[1:]
-            for i, (lower, upper) in enumerate(zip(lowers, uppers)):
-                cond = index <= upper if i == len(lowers) - 1 else index < upper
-
-                q = sql.select(columns).where(sql.and_(index >= lower, cond)).select_from(table)
-                parts.append(
-                    delayed(JDBC._read_sql_chunk)(
-                        q, uri, meta, engine_kwargs=engine_kwargs, **kwargs
-                    )
-                )
-        else:
-            # kwargs["index_col"] = 'id'
-            parts = []
-            q = query
-            print(q, uri, meta, kwargs)
-            parts.append(
-                delayed(JDBC._read_sql_chunk)(
-                    q, uri, meta, engine_kwargs=engine_kwargs, **kwargs
-                )
-            )
-
-        engine.dispose()
-
-        return from_delayed(parts, meta, divisions=divisions)
-
-    @staticmethod
-    def _read_sql_chunk(q, uri, meta, engine_kwargs=None, **kwargs):
-        import sqlalchemy as sa
-
-        engine_kwargs = engine_kwargs or {}
-        engine = sa.create_engine(uri, **engine_kwargs)
-        df = pd.read_sql(q, engine, **kwargs)
-        engine.dispose()
-        if df.empty:
-            return meta
-        else:
-            return df.astype(meta.dtypes.to_dict(), copy=False)
 
 
 class Table:

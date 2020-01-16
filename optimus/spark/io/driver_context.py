@@ -20,6 +20,9 @@ class DriverContext:
     def properties(self) -> Enum:
         return self._driver.properties()
 
+    def uri(self, *args, **kwargs) -> str:
+        return self._driver.uri(*args, **kwargs)
+
     def url(self, *args, **kwargs) -> str:
         return self._driver.url(*args, **kwargs)
 
