@@ -328,7 +328,7 @@ class Profiler:
 
                 output_columns = update_dict(output_columns, updated_columns)
 
-                assign(output_columns, "name", df.get_name(), dict)
+                assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 # Add the General data summary to the output
@@ -359,15 +359,17 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
+        df = df.meta.set(value={})
+        df = df.meta.columns(df.cols.names())
+
+        # col_names = output_columns["columns"].keys()
         if format == "json":
             result = dump_json(output_columns)
         else:
             result = output_columns
 
         self.output_columns = output_columns
-
-        df.ext.reset()
-        df.meta.add_columns(df.cols.names())
+        df.meta.set("transformations.actions", {})
 
         return result
 

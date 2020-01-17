@@ -85,7 +85,7 @@ source_df = op.create.df(
 class Testdf_sql(object):
     @staticmethod
     def test_query():
-        source_df.set_name('temp_name')
-        actual_df = source_df.query('SELECT * FROM temp_name')
+        source_df.ext.set_name('temp_name')
+        actual_df = source_df.ext.query('SELECT * FROM temp_name')
         expected_value = source_df
         assert (expected_value.collect() == actual_df.collect())

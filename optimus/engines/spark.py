@@ -470,7 +470,7 @@ class SparkEngine:
         :return:
         """
         if method is "json":
-            diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
+            diff = DeepDiff(df1.ext.to_json(), df2.ext.to_json(), ignore_order=False)
             print_json(diff)
         elif method is "collect":
             if df1.collect() == df2.collect():

@@ -5,6 +5,7 @@ from optimus.dask.dask import Dask
 from optimus.dask.io.load import Load
 from optimus.profiler.profiler import Profiler
 from optimus.dask.io.jdbc import JDBC
+from optimus.version import __version__
 
 Dask.instance = None
 Profiler.instance = None
@@ -12,6 +13,9 @@ Comm.instance = None
 
 
 class DaskEngine:
+    __version__ = __version__
+
+
     def __init__(self, *args, **kwargs):
         self.engine = 'dask'
         # self.create = Create()

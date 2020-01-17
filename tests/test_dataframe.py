@@ -13,7 +13,7 @@ source_df = op.create.df(
 class TestDataFrameExtensions(object):
     @staticmethod
     def test_melt():
-        actual_df = source_df.melt(id_vars=['names'], value_vars=['height', 'function', 'rank'])
+        actual_df = source_df.ext.melt(id_vars=['names'], value_vars=['height', 'function', 'rank'])
 
         expected_df = op.create.df(
             [('names', StringType(), True), ('variable', StringType(), False), ('value', StringType(), True)],

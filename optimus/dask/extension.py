@@ -24,15 +24,25 @@ DataFrame.output = "html"
 
 def ext(self):
     class Ext:
+
+        _name = None
+
+
         @staticmethod
         def init():
             df = self
-            if Ext.get_meta("optimus.init") is None:
+            if df.meta.get("optimus.init") is None:
                 # Save columns as the data set original name
                 for col_name in df.cols.names():
                     df = df.cols.set_meta(col_name, "optimus.name", col_name)
                     df = df.cols.set_meta(col_name, "optimus.transformations", [])
             return df
+
+
+        @staticmethod
+        def cache():
+            return self
+
 
         @staticmethod
         def to_json():
@@ -198,11 +208,27 @@ def ext(self):
 
         @staticmethod
         def set_name(value=None):
-            return "Not implemented"
+            """
+            Create a temp view for a data frame also used in the json output profiling
+            :param value:
+            :return:
+            """
+            self.ext._name = value
+            # if not is_str(value):
+            #     RaiseIt.type_error(value, ["string"])
+
+            # if len(value) == 0:
+            #     RaiseIt.value_error(value, ["> 0"])
+
+            # self.createOrReplaceTempView(value)
 
         @staticmethod
         def get_name():
-            return "Not implemented"
+            """
+            Get dataframe name
+            :return:
+            """
+            return self.ext._name
 
         @staticmethod
         def partitions():
@@ -295,7 +321,8 @@ def ext(self):
 
         @staticmethod
         def display(limit=None, columns=None, title=None, truncate=True):
-            Ext.table(limit, columns, title, truncate)
+            # TODO: limit, columns, title, truncate
+            return self.compute()
 
         @staticmethod
         def table(limit=None, columns=None, title=None, truncate=True):
@@ -345,7 +372,7 @@ def ext(self):
             """
             df = self
             if name is not None:
-                df.set_name(name)
+                df.ext.set_name(name)
 
             result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                                approx_count=True,

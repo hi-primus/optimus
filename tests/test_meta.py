@@ -100,7 +100,7 @@ class Test_meta(object):
 
     @staticmethod
     def test_df_set_meta():
-        actual_df = source_df.set_meta(value=meta_value)
+        actual_df = source_df.meta.set(value=meta_value)
         actual_json = actual_df.schema[-1].metadata
         expected_json = meta_value
         assert (actual_json == expected_json)
@@ -108,6 +108,6 @@ class Test_meta(object):
     @staticmethod
     def test_df_get_meta():
         source_df.schema[-1].metadata = meta_value
-        actual_value = source_df.get_meta()
+        actual_value = source_df.meta.get()
         expected_value = meta_value
         assert (actual_value == expected_value)

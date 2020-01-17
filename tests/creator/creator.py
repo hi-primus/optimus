@@ -751,10 +751,10 @@ actual_df.ext.display()
 expected_df.ext.display()
 
 # source_df.ext.display()
-# print(actual_df.to_json())
-# print(expected_df.to_json())
-a1 = actual_df.to_json()
-e1 = expected_df.to_json()
+# print(actual_df.ext.to_json())
+# print(expected_df.ext.to_json())
+a1 = actual_df.ext.to_json()
+e1 = expected_df.ext.to_json()
 
 
 # -

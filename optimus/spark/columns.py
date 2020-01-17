@@ -162,7 +162,7 @@ def cols(self):
                 columns = list(zip(input_cols, output_cols))
 
             for input_col, output_col in columns:
-                current_meta = self.get_meta()
+                current_meta = self.meta.get()
                 df = df.withColumn(output_col, F.col(input_col))
                 df = df.meta.set(value=current_meta)
                 df = df.meta.copy({input_col: output_col})
@@ -331,7 +331,7 @@ def cols(self):
                         df = df.withColumnRenamed(old_col_name, new_col_name)
 
                     # df = df.rename_meta([(old_col_name, new_col_name)])
-                    df = df.meta.preserve(value=current_meta)
+                    df = df.meta.preserve(self, value=current_meta)
 
                     df = df.meta.rename((old_col_name, new_col_name))
 
@@ -1623,7 +1623,7 @@ def cols(self):
                 elif is_column_a(df, input_col, "array"):
                     # Try to infer the array length using the first row
                     if infer_splits is True:
-                        splits = format_dict(df.agg(F.max(F.size(input_col))).ext.to_dict())
+                        splits = format_dict(df.ext.agg(F.max(F.size(input_col))).ext.to_dict())
 
                     expr = F.col(input_col)
                     final_columns = _final_columns(index, splits, output_col)

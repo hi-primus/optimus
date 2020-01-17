@@ -26,9 +26,16 @@ from optimus.spark.spark import Spark
 
 DataFrame.output = "html"
 
-
 def ext(self):
     class Ext:
+
+        _name = None
+
+    
+        @staticmethod
+        def cache():
+            return self.cache()
+
 
         @staticmethod
         def roll_out():
@@ -242,7 +249,7 @@ def ext(self):
             :param value:
             :return:
             """
-            self._name = value
+            self.ext._name = value
             if not is_str(value):
                 RaiseIt.type_error(value, ["string"])
 
@@ -257,7 +264,7 @@ def ext(self):
             Get dataframe name
             :return:
             """
-            return self._name
+            return self.ext._name
 
         @staticmethod
         def partitions():
@@ -452,7 +459,7 @@ def ext(self):
             """
             df = self
             if name is not None:
-                df.set_name(name)
+                df.ext.set_name(name)
 
             message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
                                                 approx_count=True,
