@@ -162,7 +162,7 @@ def cols(self):
                 columns = list(zip(input_cols, output_cols))
 
             for input_col, output_col in columns:
-                current_meta = self.get_meta()
+                current_meta = self.meta.get()
                 df = df.withColumn(output_col, F.col(input_col))
                 df = df.meta.set(value=current_meta)
                 df = df.meta.copy({input_col: output_col})

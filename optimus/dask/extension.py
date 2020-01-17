@@ -31,7 +31,7 @@ def ext(self):
         @staticmethod
         def init():
             df = self
-            if Ext.get_meta("optimus.init") is None:
+            if df.meta.get("optimus.init") is None:
                 # Save columns as the data set original name
                 for col_name in df.cols.names():
                     df = df.cols.set_meta(col_name, "optimus.name", col_name)
