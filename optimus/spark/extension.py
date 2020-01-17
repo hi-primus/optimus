@@ -26,9 +26,10 @@ from optimus.spark.spark import Spark
 
 DataFrame.output = "html"
 
-
 def ext(self):
     class Ext:
+
+        _name = None
 
     
         @staticmethod

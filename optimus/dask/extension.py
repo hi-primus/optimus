@@ -24,6 +24,10 @@ DataFrame.output = "html"
 
 def ext(self):
     class Ext:
+
+        _name = None
+        
+
         @staticmethod
         def init():
             df = self
