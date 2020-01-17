@@ -36,13 +36,13 @@ class Load:
         return df
 
     @staticmethod
-    def tsv(path, header=0, infer_schema='true', *args, **kwargs):
+    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
         """
         Return a spark from a tsv file.
         :param path: path or location of the file.
-        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
-        It requires one extra pass over the data. 'true' default.
+        It requires one extra pass over the data. True default.
 
         :return:
         """
@@ -50,25 +50,25 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=0, infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
-        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param null_value:
         :param charset:
-        It requires one extra pass over the data. 'true' default.
+        It requires one extra pass over the data. True default.
 
         :return dataFrame
         """
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = dd.read_csv(path, sep=sep, header=header, encoding=charset, na_values=null_value, *args, **kwargs)
+            df = dd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args, **kwargs)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
