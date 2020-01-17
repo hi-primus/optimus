@@ -657,7 +657,7 @@ def cols(self):
                 elif ENGINE == "spark":
                     df = self.agg(*exprs)
 
-                result = parse_col_names_funcs_to_keys(df.to_dict())
+                result = parse_col_names_funcs_to_keys(df.ext.to_dict())
             else:
                 result = None
 

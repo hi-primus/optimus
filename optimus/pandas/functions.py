@@ -130,7 +130,7 @@ def functions(self):
         #
         #     def hist_numeric(_min_max, _buckets):
         #         if _min_max is None:
-        #             _min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).to_dict()[0]
+        #             _min_max = df.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).ext.to_dict()[0]
         #
         #         if _min_max["min"] is not None and _min_max["max"] is not None:
         #             _buckets = create_buckets(_min_max["min"], _min_max["max"], _buckets)
