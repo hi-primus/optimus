@@ -40,9 +40,12 @@ def is_column_a(df, column, dtypes):
     column = one_list_to_val(column)
 
     # Filter columns by data type
-    (v), = df.cols.dtypes(column).values()
+    v = df.cols.schema_dtype(column)
     # print(v, data_type)
+    print(v, data_type)
+
     return isinstance(v, data_type)
+
 
 #
 # def is_column_a(df, column, dtypes):

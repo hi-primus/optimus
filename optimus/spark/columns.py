@@ -1615,12 +1615,12 @@ def cols(self):
                     df = df.cols.cast(input_col, "str")
 
                 # Parse depending of data types
-                if is_column_a(df, input_col, StructType):
+                if is_column_a(df, input_col, "struct"):
                     # Unnest a data Struct
                     df = df.select(output_col + ".*")
 
                 # Array
-                elif is_column_a(df, input_col, ArrayType):
+                elif is_column_a(df, input_col, "array"):
                     # Try to infer the array length using the first row
                     if infer_splits is True:
                         splits = format_dict(df.agg(F.max(F.size(input_col))).ext.to_dict())
@@ -1631,7 +1631,7 @@ def cols(self):
                         df = df.withColumn(col_name, expr.getItem(i))
 
                 # String
-                elif is_column_a(df, input_col, StringType):
+                elif is_column_a(df, input_col, "str"):
                     if separator is None:
                         RaiseIt.value_error(separator, "regular expression")
 
@@ -1646,7 +1646,7 @@ def cols(self):
 
                 # Vector
                 # TODO: Maybe we could implement Pandas UDF for better control columns output
-                elif is_column_a(df, input_col, VectorUDT):
+                elif is_column_a(df, input_col, "vector"):
 
                     def _unnest(row):
                         _dict = row.asDict()
