@@ -161,7 +161,7 @@ df = op.create.df(
         ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
          [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, None),
 
-    ], infer_schema = True).h_repartition(1)
+    ], infer_schema = True).ext.h_repartition(1)
 ```
 
 With .table() you have a beautifull way to show your data. You have extra information like column number, column data type and marked white spaces 
@@ -322,7 +322,7 @@ Just run `df.profile("*")` to profile all the columns. For more info about the p
 Let's load a "big" dataset
 
 ```python
-df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").h_repartition()
+df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").ext.h_repartition()
 ```
 
 ### Numeric

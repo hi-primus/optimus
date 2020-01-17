@@ -294,7 +294,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <h3>Reshaping Data</h3>
 
             <!-- Melt -->
-            <pre><code class="python">df = df.melt(
+            <pre><code class="python">df = df.ext.melt(
         "names",
         ["height", "function","rank"])</code></pre>
             <span class="commentary">Gather columns into rows.</span>
@@ -401,7 +401,7 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
 
 
             <!-- Pivot -->
-            <pre><code class="python">df = df.pivot("names","variable","value")</code></pre>
+            <pre><code class="python">df = df.ext.pivot("names","variable","value")</code></pre>
             <span class="commentary">Spread rows into columns.</span>
             <div class="flex-row d-flex">
                 <div>
@@ -816,10 +816,10 @@ df = op.load.url("http://./f.avro", "avro")</code></pre>
             <pre><code class="python">df.rows.drop_duplicates()</code></pre>
             <span class="commentary">Remove duplicates rows (only considers columns).</span>
 
-            <pre><code class="python">df.table(n)</code></pre>
+            <pre><code class="python">df.ext.display(n)</code></pre>
             <span class="commentary">Show first n rows</span>
 
-            <pre><code class="python">df.sample_n(n)</code></pre>
+            <pre><code class="python">df.ext.sample(n)</code></pre>
             <span class="commentary">Randomly select n rows</span>
             <h4>Logic in Python</h4>
             <table class="table-info">

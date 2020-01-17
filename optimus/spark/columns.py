@@ -1632,7 +1632,7 @@ def cols(self):
                 elif is_column_a(df, input_col, ArrayType):
                     # Try to infer the array length using the first row
                     if infer_splits is True:
-                        splits = format_dict(df.agg(F.max(F.size(input_col))).ext.to_dict())
+                        splits = format_dict(df.ext.agg(F.max(F.size(input_col))).ext.to_dict())
 
                     expr = F.col(input_col)
                     final_columns = _final_columns(index, splits, output_col)

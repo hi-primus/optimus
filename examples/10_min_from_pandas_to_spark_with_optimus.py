@@ -316,11 +316,11 @@ op.append([df, df_new], "rows").table()
 # Operations like `join` and `group` are handle using Spark directly
 
 # + {"inputHidden": false, "outputHidden": false}
-df_melt = df.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
+df_melt = df.ext.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
 df.ext.display()
 # -
 
-df_melt.pivot("names", "variable", "value").table()
+df_melt.ext.pivot("names", "variable", "value").table()
 
 # ## Ploting
 
@@ -334,7 +334,7 @@ df.plot.frequency("*", 10)
 df.cols.names()
 
 # + {"inputHidden": false, "outputHidden": false}
-df.to_json()
+df.ext.to_json()
 
 # + {"inputHidden": false, "outputHidden": false}
 df.schema

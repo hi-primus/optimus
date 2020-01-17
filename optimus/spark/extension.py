@@ -458,7 +458,7 @@ def ext(self):
             """
             df = self
             if name is not None:
-                df.set_name(name)
+                df.ext.set_name(name)
 
             message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
                                                 approx_count=True,

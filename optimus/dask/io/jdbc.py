@@ -134,7 +134,7 @@ class JDBC:
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        df = df.run()
+        df = df.ext.run()
         return df
 
     def execute(self, query, limit=None):

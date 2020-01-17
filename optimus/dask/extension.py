@@ -352,7 +352,7 @@ def ext(self):
             """
             df = self
             if name is not None:
-                df.set_name(name)
+                df.ext.set_name(name)
 
             result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                                approx_count=True,

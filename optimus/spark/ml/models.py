@@ -50,7 +50,7 @@ class ML:
         df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = RandomForestClassifier(**kwargs)
-        df.table()
+        df.ext.table()
         df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         rf_model = model.fit(df)

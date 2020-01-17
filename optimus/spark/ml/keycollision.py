@@ -113,7 +113,7 @@ def base_clustering_function(df, input_cols, output, func=None, args=None):
               .groupBy(input_col)
               .agg(F.count(input_col).alias(count_col))
               .select(count_col, input_col)
-              ).h_repartition(1)
+              ).ext.h_repartition(1)
 
         # Calculate the fingerprint
         recommended_col = name_col(input_col, RECOMMENDED_COL)
