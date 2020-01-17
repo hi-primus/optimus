@@ -359,7 +359,7 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.set_meta(value={})
+        df = df.meta.set(value={})
         df = df.columns_meta(df.cols.names())
 
         # col_names = output_columns["columns"].keys()
@@ -369,7 +369,7 @@ class Profiler:
             result = output_columns
 
         self.output_columns = output_columns
-        df.set_meta("transformations.actions", {})
+        df.meta.set("transformations.actions", {})
 
         return result
 
