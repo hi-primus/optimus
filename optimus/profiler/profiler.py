@@ -359,15 +359,17 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
+        df = df.set_meta(value={})
+        df = df.columns_meta(df.cols.names())
+
+        # col_names = output_columns["columns"].keys()
         if format == "json":
             result = dump_json(output_columns)
         else:
             result = output_columns
 
         self.output_columns = output_columns
-
-        df.ext.reset()
-        df.meta.add_columns(df.cols.names())
+        df.set_meta("transformations.actions", {})
 
         return result
 
