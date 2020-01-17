@@ -360,7 +360,7 @@ class Profiler:
              _cols_name in list(actual_columns.keys())}))
 
         df = df.meta.set(value={})
-        df = df.columns_meta(df.cols.names())
+        df = df.meta.columns(df.cols.names())
 
         # col_names = output_columns["columns"].keys()
         if format == "json":
