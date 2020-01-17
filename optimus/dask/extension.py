@@ -26,7 +26,7 @@ def ext(self):
     class Ext:
 
         _name = None
-        
+
 
         @staticmethod
         def init():
@@ -208,11 +208,27 @@ def ext(self):
 
         @staticmethod
         def set_name(value=None):
-            return "Not implemented"
+            """
+            Create a temp view for a data frame also used in the json output profiling
+            :param value:
+            :return:
+            """
+            self.ext._name = value
+            # if not is_str(value):
+            #     RaiseIt.type_error(value, ["string"])
+
+            # if len(value) == 0:
+            #     RaiseIt.value_error(value, ["> 0"])
+
+            # self.createOrReplaceTempView(value)
 
         @staticmethod
         def get_name():
-            return "Not implemented"
+            """
+            Get dataframe name
+            :return:
+            """
+            return self.ext._name
 
         @staticmethod
         def partitions():

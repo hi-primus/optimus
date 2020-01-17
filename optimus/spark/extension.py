@@ -249,7 +249,7 @@ def ext(self):
             :param value:
             :return:
             """
-            self._name = value
+            self.ext._name = value
             if not is_str(value):
                 RaiseIt.type_error(value, ["string"])
 
@@ -264,7 +264,7 @@ def ext(self):
             Get dataframe name
             :return:
             """
-            return self._name
+            return self.ext._name
 
         @staticmethod
         def partitions():
