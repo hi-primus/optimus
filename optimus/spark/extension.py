@@ -26,16 +26,15 @@ from optimus.spark.spark import Spark
 
 DataFrame.output = "html"
 
+
 def ext(self):
     class Ext:
 
         _name = None
 
-    
         @staticmethod
         def cache():
             return self.cache()
-
 
         @staticmethod
         def roll_out():
@@ -420,10 +419,14 @@ def ext(self):
                     result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                     print_html(result)
                 else:
-                    self.show()
+                    self.ext.show()
             except NameError:
 
-                self.show()
+                self.ext.show()
+
+        @staticmethod
+        def show():
+            self.show()
 
         @staticmethod
         def random_split(weights: list = None, seed: int = 1):
