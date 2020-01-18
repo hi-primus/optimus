@@ -648,7 +648,7 @@ def cols(self):
 
             if len(exprs) > 0:
                 df = self.agg(*exprs)
-                result = parse_col_names_funcs_to_keys(df.to_dict())
+                result = parse_col_names_funcs_to_keys(df.ext.to_dict())
             else:
                 result = None
 

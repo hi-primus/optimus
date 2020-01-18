@@ -44,34 +44,34 @@ class Load:
         return df
 
     @staticmethod
-    def tsv(path, header='true', infer_schema='true', charset="UTF-8", *args, **kwargs):
+    def tsv(path, header=True, infer_schema=True, charset="UTF-8", *args, **kwargs):
         """
         Return a spark from a tsv file.
         :param path: path or location of the file.
-        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param charset: Charset file encoding
-        It requires one extra pass over the data. 'true' default.
+        It requires one extra pass over the data. True default.
 
         :return:
         """
-        df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
+        df = Load.csv(path, sep='\t', header='true' if header else 'false', infer_schema='true' if infer_schema else 'false', charset=charset, *args, **kwargs)
         df.ext.reset()
         return df
 
     @staticmethod
-    def csv(path, sep=',', header='true', infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
-        :param header: tell the function whether dataset has a header row. 'true' default.
+        :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param charset: Charset file encoding
         :param null_value: value to convert the string to a None value
-        It requires one extra pass over the data. 'true' default.
+        It requires one extra pass over the data. True default.
 
         :return dataFrame
         """
@@ -79,10 +79,10 @@ class Load:
 
         try:
             df = (Spark.instance.spark.read
-                  .options(header=header)
+                  .options(header='true' if header else 'false')
                   .options(mode="DROPMALFORMED")
                   .options(delimiter=sep)
-                  .options(inferSchema=infer_schema)
+                  .options(inferSchema='true' if infer_schema else 'false')
                   .options(nullValue=null_value)
                   .option("charset", charset)
                   .csv(file, *args, **kwargs))
