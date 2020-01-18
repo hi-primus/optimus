@@ -23,10 +23,7 @@ from optimus.spark.io import save
 
 os.environ["PYTHONIOENCODING"] = "utf8"
 
-# PANDAS MONKEY PATCH
-from .pandas import columns, functions
-
 # DASK MONKEY PATCH
 from .dask import columns, rows, constants, extension, functions
-
+from .dask.io import save
 # Preserve compatibility with <3.x brach
