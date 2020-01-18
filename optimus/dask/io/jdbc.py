@@ -145,8 +145,10 @@ class JDBC:
         """
         Execute a SQL query
         :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
+        :param num_partitions:
         :param partition_column:
         :param query: SQL query string
+        :param table_name:
         :return:
         """
 
@@ -225,8 +227,8 @@ class JDBC:
                 if columns
                 else list(table_name.columns)
             )
-
-        if index_col is not None:
+        index = None
+        if index_col:
             # raise ValueError("Must specify index column to partition on")
             # else:
 
@@ -264,6 +266,7 @@ class JDBC:
 
             bytes_per_row = (head.memory_usage(deep=True, index=True)).sum() / head_rows
             meta = head.iloc[:0]
+            print(list(head.columns.values))
         else:
             if divisions is None and npartitions is None:
                 raise ValueError(
@@ -272,7 +275,7 @@ class JDBC:
 
         # if divisions is None and index_col is not None:
         if divisions is None:
-            if limits is None and index_col:
+            if limits is None and index:
                 # calculate max and min for given index
                 q = sql.select([sql.func.max(index), sql.func.min(index)]).select_from(
                     table_name
@@ -280,12 +283,18 @@ class JDBC:
                 minmax = pd.read_sql(q, engine)
                 maxi, mini = minmax.iloc[0]
                 dtype = minmax.dtypes["max_1"]
-            elif not index_col and npartitions:
+            elif not index and npartitions:
+                # mini = 0
+                # q = f"SELECT COUNT(*) AS count FROM ({query}) AS query"
+                # maxi = pd.read_sql(q, engine)["count"][0]
+                # limit = maxi / npartitions
+                # dtype = pd.Series((mini, maxi,)).dtype
+
                 mini = 0
-                q = f"SELECT COUNT(*) AS count FROM {table_name}"
-                maxi = pd.read_sql(q, engine)["count"][0]
-                limit = maxi / npartitions
+                maxi = npartitions
                 dtype = pd.Series((mini, maxi,)).dtype
+                ntile_columns = ", ".join(list(head.columns.values))
+
             else:
                 mini, maxi = limits
                 dtype = pd.Series(limits).dtype
@@ -319,16 +328,33 @@ class JDBC:
                         where = f" WHERE {index} > {lower} AND {index} <= {upper}"
                     else:
                         where = f" WHERE {index} >= {lower} AND {index} < {upper}"
+                    q = query + where
                 else:
+                    # if i == len(lowers) - 1:
+                    #     where = f" LIMIT {int(upper) - int(lower)} OFFSET {int(lower)}"
+                    # else:
+                    #     where = f" LIMIT {int(limit)} OFFSET {int(lower)}"
+                    # q = query + where
+
+                    # Ntile calculation
+                    ntile_column = "temp"
+                    ntile_sql = f"SELECT *, NTILE({npartitions}) OVER(ORDER BY id DESC) AS {ntile_column} FROM ({query}) AS t";
+                    q = f"SELECT {ntile_columns} FROM ({ntile_sql}) AS r"
                     if i == len(lowers) - 1:
-                        where = f" LIMIT {int(upper) - int(lower)} OFFSET {int(lower)}"
+                        where = f" WHERE {ntile_column} > {lower} AND {ntile_column} <= {upper}"
                     else:
+                        where = f" WHERE {ntile_column} >= {lower} AND {ntile_column} < {upper}"
+                    q = q + where
 
-                        where = f" LIMIT {int(limit)} OFFSET {int(lower)}"
+                    # table = "test_data"
+                    # q = f'SELECT {ntile_columns} FROM {table} WHERE  NTILE({npartitions}) OVER (ORDER BY {ntile_column}) = i'
 
-                q = query + where
+
+
+
+
+
                 # When we do not have and index
-                # "SELECT * FROM test_data LIMIT 5 OFFSET 3"
                 parts.append(
                     delayed(JDBC._read_sql_chunk)(
                         q, uri, meta, engine_kwargs=engine_kwargs, **kwargs
