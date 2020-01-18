@@ -159,13 +159,16 @@ def cols(self: DataFrame):
                     if func:
                         old_col_name = func(old_col_name)
 
+                    current_meta = self.meta.get()
                     # Cols.set_meta(col_name, "optimus.transformations", "rename", append=True)
                     # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
 
                     if old_col_name != col_name:
                         df = df.rename({old_col_name: col_name[1]})
 
-            df.ext.meta = self.ext.meta
+                    df = df.meta.preserve(self, value=current_meta)
+
+                    df = df.meta.rename((old_col_name, new_col_name))
 
             return df
 
