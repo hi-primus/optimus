@@ -8,12 +8,14 @@ from pyspark.sql import functions as F
 
 # Helpers
 from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.helpers.check import is_spark_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_spark_dataframes, is_list_of_tuples, is_list_of_str_or_int
+from optimus.spark.create import Create
 
 
 def rows(self):
@@ -56,15 +58,14 @@ def rows(self):
             return df_result
 
         @staticmethod
-        def select(*args, **kwargs) -> DataFrame:
+        def select(condition) -> DataFrame:
             """
             Alias of Spark filter function. Return rows that match a expression
-            :param args:
-            :param kwargs:
+            :param condition:
             :return: Spark DataFrame
             """
             df = self
-            df = df.filter(*args, **kwargs)
+            df = df.filter(condition)
             df = df.meta.preserve(self, Actions.SORT_ROW.value, df.cols.names())
 
             return df
@@ -141,7 +142,7 @@ def rows(self):
         @dispatch(list)
         def sort(col_sort) -> DataFrame:
             """
-            Sort rows taking in account multiple columns
+            Sort rows taking into account multiple columns
             :param col_sort: column and sort type combination (col_name, "asc")
             :type col_sort: list of tuples
             """
