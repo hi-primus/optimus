@@ -7,7 +7,6 @@ import jinja2
 import math
 import numpy as np
 from dask.dataframe.core import DataFrame
-from glom import glom, assign, T
 
 from optimus.bumblebee import Comm
 from optimus.helpers.columns import parse_columns
@@ -27,7 +26,6 @@ def ext(self):
 
         _name = None
 
-
         @staticmethod
         def init():
             df = self
@@ -38,11 +36,9 @@ def ext(self):
                     df = df.cols.set_meta(col_name, "optimus.transformations", [])
             return df
 
-
         @staticmethod
         def cache():
             return self
-
 
         @staticmethod
         def to_json():
@@ -269,6 +265,7 @@ def ext(self):
 
             :return:
             """
+            print(limit)
 
             df = self
             columns = parse_columns(df, columns)
@@ -307,7 +304,6 @@ def ext(self):
                 limit = total_rows
 
             total_rows = humanize.intword(total_rows)
-
             total_cols = self.cols.count()
             total_partitions = Ext.partitions()
 
@@ -322,7 +318,7 @@ def ext(self):
         @staticmethod
         def display(limit=None, columns=None, title=None, truncate=True):
             # TODO: limit, columns, title, truncate
-            return self.compute()
+            Ext.table(limit, columns, title, truncate)
 
         @staticmethod
         def table(limit=None, columns=None, title=None, truncate=True):
@@ -342,7 +338,8 @@ def ext(self):
             Print df lineage
             :return:
             """
-            self.head()
+            return self.compute()
+            # self.head()
 
         @staticmethod
         def debug():
@@ -386,7 +383,6 @@ def ext(self):
             df = self.meta.set("transformations.actions", {})
             Profiler.instance.output_columns = {}
             return df
-
 
     return Ext()
 
