@@ -144,10 +144,6 @@ def ext(self):
             return self.sample(frac=fraction, random_state=seed)
 
         @staticmethod
-        def limit(n):
-            return self[:10]
-
-        @staticmethod
         def pivot(index, column, values):
             """
             Return reshaped DataFrame organized by given index / column values.
@@ -265,7 +261,6 @@ def ext(self):
 
             :return:
             """
-            print(limit)
 
             df = self
             columns = parse_columns(df, columns)
@@ -276,7 +271,7 @@ def ext(self):
             if limit == "all":
                 data = df.cols.select(columns).ext.to_dict()
             else:
-                data = df.cols.select(columns).ext.limit(limit).ext.to_dict()
+                data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
 
             # Load the Jinja template
             template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))

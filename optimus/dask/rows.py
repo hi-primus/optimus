@@ -151,8 +151,12 @@ def rows(self):
 
         @staticmethod
         def limit(count) -> DataFrame:
-            df = self
-            return df
+            """
+            Limit the number of rows
+            :param count:
+            :return:
+            """
+            return self[:count]
 
         @staticmethod
         def is_in(input_cols, values) -> DataFrame:
