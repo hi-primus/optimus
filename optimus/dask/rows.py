@@ -24,7 +24,33 @@ def rows(self):
 
         @staticmethod
         def append(rows) -> DataFrame:
+            """
+            Append a row or dataframe at the end of a dataframe
+            :param rows: List of tuples or dataframes to be appended
+            :return:
+            """
+            if is_list_of_tuples(rows):
+                df = pd.DataFrame(rows)
+                rows = dd.from_pandas(df, npartitions=2)
+
+            elif is_list_of_dask_dataframes(rows) or is_dask_dataframe(rows):
+                rows = val_to_list(rows)
+
+            else:
+                RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
+            df = dd.concat([self] + rows, axis=0)
+            return df
+
+        @staticmethod
+        def append(rows) -> DataFrame:
+            """
+
+            :param rows:
+            :return:
+            """
             df = self
+            df = dd.concat([self, rows], axis=0)
+
             return df
 
         @staticmethod

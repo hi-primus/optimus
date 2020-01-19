@@ -25,6 +25,17 @@ python_set = set
 def cols(self: DataFrame):
     class Cols:
         @staticmethod
+        def append(dfs) -> DataFrame:
+            """
+
+            :param dfs:
+            :return:
+            """
+            # df = dd.concat([self, dfs], axis=1)
+            raise NotImplementedError
+            return df
+
+        @staticmethod
         def exec_agg(exprs):
             """
             Execute and aggregation
