@@ -1,14 +1,18 @@
+import functools
+import operator
+
 import dask.array as da
 import dask.dataframe as  dd
+import pandas as pd
 from dask.dataframe.core import DataFrame
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int
+from optimus.infer import is_list_of_str_or_int, is_list_of_dask_dataframes, is_dask_dataframe, is_list_of_tuples
 
 
 def rows(self):
@@ -220,13 +224,30 @@ def rows(self):
             return df
 
         @staticmethod
-        def drop_na(input_cols, how="any") -> DataFrame:
+        def drop_na(input_cols, how="any", *args, **kwargs) -> DataFrame:
+            """
+            Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
+            'any' of the values is null.
+            :param input_cols:
+            :param how:
+            :return:
+            """
             df = self
+            df = df.dropna(how=how, subset=input_cols, *args, **kwargs)
             return df
 
         @staticmethod
         def drop_duplicates(input_cols=None) -> DataFrame:
+            """
+            Drop duplicates values in a dataframe
+            :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
+            :return: Return a new DataFrame with duplicate rows removed
+            :param input_cols:
+            :return:
+            """
             df = self
+            input_cols = parse_columns(df, input_cols)
+            df.drop_duplicates([input_cols])
             return df
 
         @staticmethod

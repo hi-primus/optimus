@@ -9,9 +9,10 @@ from ast import literal_eval
 import fastnumbers
 import math
 from dask import distributed
+from dask.dataframe.core import DataFrame as DaskDataFrame
 from dateutil.parser import parse as dparse
 from pyspark.ml.linalg import VectorUDT
-from pyspark.sql import functions as F, DataFrame
+from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
@@ -524,7 +525,16 @@ def is_list_of_spark_dataframes(value):
     :param value:
     :return:
     """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, DataFrame) for elem in value)
+    return bool(value) and isinstance(value, list) and all(isinstance(elem, SparkDataFrame) for elem in value)
+
+
+def is_list_of_dask_dataframes(value):
+    """
+    Check if an object is a Spark DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, list) and all(isinstance(elem, DaskDataFrame) for elem in value)
 
 
 def is_filepath(file_path):
@@ -703,13 +713,22 @@ def is_float(value):
     return isinstance(value, float)
 
 
-def is_dataframe(value):
+def is_dask_dataframe(value):
     """
     Check if an object is a Spark DataFrame
     :param value:
     :return:
     """
-    return isinstance(value, DataFrame)
+    return isinstance(value, DaskDataFrame)
+
+
+def is_spark_dataframe(value):
+    """
+    Check if an object is a Spark DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, SparkDataFrame)
 
 
 def is_bool(value):
