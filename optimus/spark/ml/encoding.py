@@ -4,7 +4,7 @@ from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, No
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_, is_str, is_dataframe
+from optimus.infer import is_, is_str, is_spark_dataframe
 from optimus.spark.ml.contants import STRING_TO_INDEX
 
 
@@ -17,7 +17,7 @@ def n_gram(df, input_col, n=2):
     :return: Spark DataFrame with n-grams calculated.
     """
 
-    is_dataframe(df)
+    is_spark_dataframe(df)
 
     tokenizer = feature.Tokenizer().setInputCol(input_col) | feature.StopWordsRemover()
     count = feature.CountVectorizer()

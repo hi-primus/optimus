@@ -6,7 +6,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.filters import dict_filter
 from optimus.helpers.json import dump_json
-from optimus.infer import is_dataframe
+from optimus.infer import is_spark_dataframe
 
 
 # LOWER_BOUND =
@@ -26,7 +26,7 @@ class AbstractOutlierBounds(ABC):
         :param df: Spark Dataframe
         :param col_name: column name
         """
-        if not is_dataframe(df):
+        if not is_spark_dataframe(df):
             raise TypeError("Spark Dataframe expected")
 
         self.df = df

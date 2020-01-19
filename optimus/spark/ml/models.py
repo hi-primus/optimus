@@ -4,7 +4,7 @@ from pyspark.sql import functions as F
 from pysparkling import *
 from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
-from optimus.infer import is_str, is_dataframe
+from optimus.infer import is_str, is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.spark.ml.contants import STRING_TO_INDEX
 from optimus.spark.ml.encoding import string_to_index, vector_assembler
@@ -21,7 +21,7 @@ class ML:
         :return: DataFrame with logistic regression and prediction run.
         """
 
-        if not is_dataframe(df):
+        if not is_spark_dataframe(df):
             raise TypeError("Spark dataframe expected")
 
         pl = feature.Tokenizer().setInputCol(input_col) | feature.CountVectorizer()
@@ -67,7 +67,7 @@ class ML:
         :return: DataFrame with decision tree and prediction run.
         """
 
-        if not is_dataframe(df):
+        if not is_spark_dataframe(df):
             raise TypeError("Spark dataframe expected")
 
         columns = parse_columns(df, columns)
@@ -100,7 +100,7 @@ class ML:
         :return: DataFrame with gradient boosting tree and prediction run.
         """
 
-        if not is_dataframe(df):
+        if not is_spark_dataframe(df):
             raise TypeError("Spark dataframe expected")
 
         columns = parse_columns(df, columns)
