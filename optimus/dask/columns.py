@@ -48,6 +48,7 @@ def cols(self: DataFrame):
             if len(agg_list) > 0:
                 agg_results = []
                 # Distributed mode return a list of Futures objects, Single mode not.
+                # TODO: Maybe use .gather
                 if is_list_of_futures(agg_list):
                     for future in as_completed(agg_list):
                         agg_results.append(future.result())
@@ -174,12 +175,13 @@ def cols(self: DataFrame):
                     # Cols.set_meta(col_name, "optimus.transformations", "rename", append=True)
                     # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
 
+                    new_column = col_name[1]
                     if old_col_name != col_name:
-                        df = df.rename({old_col_name: col_name[1]})
+                        df = df.rename({old_col_name: new_column})
 
                     df = df.meta.preserve(self, value=current_meta)
 
-                    df = df.meta.rename((old_col_name, new_col_name))
+                    df = df.meta.rename((old_col_name, new_column))
 
             return df
 
@@ -960,7 +962,6 @@ def cols(self: DataFrame):
             :param args:
             :return:
             """
-            # print(args)
             return Cols.exec_agg(Cols.create_exprs(columns, funcs, *args))
 
     return Cols()
