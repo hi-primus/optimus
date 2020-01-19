@@ -668,41 +668,6 @@ def cols(self: DataFrame):
             return result
 
         @staticmethod
-        def test_agg(columns):
-            def chunk(s):
-                # for the comments, assume only a single grouping column, the
-                # implementation can handle multiple group columns.
-                #
-                # s is a grouped series. value_counts creates a multi-series like
-                # (group, value): count
-                return s.value_counts()
-
-            def agg(s):
-                # s is a grouped multi-index series. In .apply the full sub-df will passed
-                # multi-index and all. Group on the value level and sum the counts. The
-                # result of the lambda function is a series. Therefore, the result of the
-                # apply is a multi-index series like (group, value): count
-                return s.apply(lambda s: s.groupby(level=-1).sum())
-
-                # faster version using pandas internals
-                s = s._selected_obj
-                return s.groupby(level=list(range(s.index.nlevels))).sum()
-
-            def finalize(s):
-                # s is a multi-index series of the form (group, value): count. First
-                # manually group on the group part of the index. The lambda will receive a
-                # sub-series with multi index. Next, drop the group part from the index.
-                # Finally, determine the index with the maximum value, i.e., the mode.
-                level = list(range(s.index.nlevels - 1))
-                return (
-                    s.groupby(level=level)
-                        .apply(lambda s: s.reset_index(level=level, drop=True).argmax())
-                )
-
-            mode = dd.Aggregation('mode', chunk, agg, finalize)
-            res = ddf.groupby(['g0', 'g1']).agg({'col': mode}).compute()
-
-        @staticmethod
         def median(columns, relative_error=RELATIVE_ERROR):
             """
             Return the median of a column spark
@@ -948,24 +913,42 @@ def cols(self: DataFrame):
             :return:
             """
 
-            columns = parse_columns(self, columns)
-            mode_result = []
+            # Reference https://stackoverflow.com/questions/46080171/constructing-mode-and-corresponding-count-functions-using-custom-aggregation-fun
+            def chunk(s):
+                # for the comments, assume only a single grouping column, the
+                # implementation can handle multiple group columns.
+                #
+                # s is a grouped series. value_counts creates a multi-series like
+                # (group, value): count
+                return s.value_counts()
 
-            for col_name in columns:
-                count = self.groupBy(col_name).count()
-                mode_df = count.join(
-                    count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
+            def agg(s):
+                # s is a grouped multi-index series. In .apply the full sub-df will passed
+                # multi-index and all. Group on the value level and sum the counts. The
+                # result of the lambda function is a series. Therefore, the result of the
+                # apply is a multi-index series like (group, value): count
+                # return s.apply(lambda s: s.groupby(level=-1).sum())
+
+                # faster version using pandas internals
+                s = s._selected_obj
+                return s.groupby(level=list(range(s.index.nlevels))).sum()
+
+            def finalize(s):
+                # s is a multi-index series of the form (group, value): count. First
+                # manually group on the group part of the index. The lambda will receive a
+                # sub-series with multi index. Next, drop the group part from the index.
+                # Finally, determine the index with the maximum value, i.e., the mode.
+                level = list(range(s.index.nlevels - 1))
+                return (
+                    s.groupby(level=level)
+                        .apply(lambda s: s.reset_index(level=level, drop=True).idxmax())
                 )
-                if SparkEngine.cache:
-                    mode_df = mode_df.cache()
-                # if none of the values are repeated we not have mode
-                mode_list = (mode_df
-                             .rows.select(mode_df["count"] > 1)
-                             .cols.select(col_name)
-                             .collect())
 
-                mode_result.append({col_name: filter_list(mode_list)})
+            mode = dd.Aggregation('mode', chunk, agg, finalize)
 
+            df = self
+
+            mode_result = df.groupby(['price']).agg({'price': mode}).compute()
             return format_dict(mode_result)
 
         @staticmethod
