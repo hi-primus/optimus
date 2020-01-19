@@ -1,6 +1,6 @@
 from enum import Enum
 
-from optimus.spark.io.drivers.abstract_driver import AbstractDriver
+from optimus.engines.spark.io.drivers.abstract_driver import AbstractDriver
 
 
 class DriverContext:

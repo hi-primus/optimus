@@ -6,9 +6,9 @@ from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 from optimus.infer import is_str, is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col
-from optimus.spark.ml.contants import STRING_TO_INDEX
-from optimus.spark.ml.encoding import string_to_index, vector_assembler
-from optimus.spark.spark import Spark
+from optimus.engines.spark.ml.contants import STRING_TO_INDEX
+from optimus.engines.spark.ml.encoding import string_to_index, vector_assembler
+from optimus.engines.spark.spark import Spark
 
 
 class ML:

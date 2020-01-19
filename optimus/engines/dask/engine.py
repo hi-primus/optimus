@@ -1,10 +1,10 @@
 from dask.distributed import Client
 
 from optimus.bumblebee import Comm
-from optimus.dask.dask import Dask
-from optimus.dask.io.load import Load
+from optimus.engines.dask.dask import Dask
+from optimus.engines.dask.io.jdbc import JDBC
+from optimus.engines.dask.io.load import Load
 from optimus.profiler.profiler import Profiler
-from optimus.dask.io.jdbc import JDBC
 from optimus.version import __version__
 
 Dask.instance = None
@@ -15,17 +15,32 @@ Comm.instance = None
 class DaskEngine:
     __version__ = __version__
 
+    def __init__(self, verbose=False, comm=None, *args, **kwargs):
+        if comm is True:
+            Comm.instance = Comm()
+        else:
+            Comm.instance = comm
 
-    def __init__(self, *args, **kwargs):
         self.engine = 'dask'
         # self.create = Create()
         self.load = Load()
         # self.read = self.spark.read
+        self.verbose(verbose)
 
         Dask.instance = Client(n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB')
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
+
+    @staticmethod
+    def verbose(verbose):
+        """
+        Enable verbose mode
+        :param verbose:
+        :return:
+        """
+
+        logger.active(verbose)
 
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",

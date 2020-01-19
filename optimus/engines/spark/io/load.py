@@ -11,7 +11,7 @@ from packaging import version
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
-from optimus.spark.spark import Spark
+from optimus.engines.spark.spark import Spark
 
 
 class Load:

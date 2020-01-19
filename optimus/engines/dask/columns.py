@@ -7,8 +7,8 @@ from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
 from infer import Infer
 from multipledispatch import dispatch
+from optimus.engines.dask.dask import Dask
 
-from optimus.dask.dask import Dask
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -903,8 +903,8 @@ def cols(self: DataFrame):
 
             # TODO: make this in one pass.
 
-            for col_name in output_cols:
-                df = df.withColumn(col_name, F.abs(F.col(col_name)))
+            for input_col, output_col in zip(input_cols, output_cols):
+                df[output_col] = df.compute(np.abs(df[input_col]))
             return df
 
         @staticmethod

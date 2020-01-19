@@ -1,5 +1,5 @@
 from optimus import Optimus
-from optimus.spark.dl.models import DL
+from optimus.engines.spark.dl.models import DL
 import pyspark
 from pyspark.sql.functions import lit
 

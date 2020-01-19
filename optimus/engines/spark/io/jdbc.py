@@ -1,10 +1,10 @@
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import collect_as_list
 from optimus.helpers.logger import logger
-from optimus.spark.io.driver_context import DriverContext
-from optimus.spark.io.factory import DriverFactory
-from optimus.spark.io.properties import DriverProperties
-from optimus.spark.spark import Spark
+from optimus.engines.spark.io.driver_context import DriverContext
+from optimus.engines.spark.io.factory import DriverFactory
+from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.spark.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value

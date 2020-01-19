@@ -22,7 +22,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
-from optimus.spark.spark import Spark
+from optimus.engines.spark.spark import Spark
 
 DataFrame.output = "html"
 

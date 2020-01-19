@@ -5,7 +5,7 @@ from pyspark.sql import DataFrame
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.logger import logger
-from optimus.spark.spark import Spark
+from optimus.engines.spark.spark import Spark
 
 
 def save(self: DataFrame):

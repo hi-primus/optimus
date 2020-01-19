@@ -980,7 +980,7 @@ t = Test(op, source_df, "df_keycollision", imports=["from pyspark.ml.linalg impo
                                         "from optimus.ml import keycollision as keyCol"], 
          path = "df_keycollision", final_path="..")
 
-from optimus.spark.ml import keycollision as keyCol, distancecluster as dc
+from optimus.engines.spark.ml import keycollision as keyCol, distancecluster as dc
 
 # + {"outputHidden": false, "inputHidden": false}
 t.create(keyCol, "fingerprint",  None, "df",None, source_df, "STATE")

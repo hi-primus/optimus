@@ -1,5 +1,3 @@
-
-
 import os
 import platform
 import sys
@@ -9,7 +7,11 @@ from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 from optimus.bumblebee import Comm
-from optimus.spark.create import Create
+from optimus.engines.spark.create import Create
+from optimus.engines.spark.io.jdbc import JDBC
+from optimus.engines.spark.io.load import Load
+from optimus.engines.spark.ml.models import ML
+from optimus.engines.spark.spark import Spark
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.converter import val_to_list
@@ -18,11 +20,7 @@ from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.spark.io.jdbc import JDBC
-from optimus.spark.io.load import Load
-from optimus.spark.ml.models import ML
 from optimus.profiler.profiler import Profiler
-from optimus.spark.spark import Spark
 from optimus.version import __version__
 
 # Singletons
@@ -33,7 +31,6 @@ Comm.instance = None
 
 class SparkEngine:
     __version__ = __version__
-
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
                  file_system="local",
@@ -76,17 +73,6 @@ class SparkEngine:
         """
 
         self.preserve = False
-
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
-
-        if jars is None:
-            jars = []
-
-        if driver_class_path is None:
-            driver_class_path = []
 
         if comm is True:
             Comm.instance = Comm()

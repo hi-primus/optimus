@@ -2,7 +2,7 @@ import pandas as pd
 from pyspark.sql.types import StringType, StructField, StructType
 
 from optimus.infer import Infer, is_, is_tuple, is_list_of_tuples, is_one_element, parse_spark_class_dtypes
-from optimus.spark.spark import Spark
+from optimus.engines.spark.spark import Spark
 
 
 class Create:

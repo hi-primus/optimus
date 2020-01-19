@@ -5,7 +5,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))  # This is your Project Ro
 
 # SPARK MONKEY PATCH
 # pyspark_pipes: build Spark ML pipelines easily
-from optimus.spark.ml.pipelines import patch
+from optimus.engines.spark.ml.pipelines import patch
 # from .optimus import *
 from .optimus import optimus as Optimus
 

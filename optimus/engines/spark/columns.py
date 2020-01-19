@@ -19,10 +19,12 @@ from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
-from pyspark.sql.types import StringType, ArrayType, StructType
 
 from optimus import ROOT_DIR
 # Helpers
+from optimus.engines.abstracts.columns import AbstractColumns
+from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
+from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
@@ -36,8 +38,6 @@ from optimus.helpers.parser import parse_python_dtypes, parse_col_names_funcs_to
     compress_list, compress_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
-from optimus.spark.ml.encoding import index_to_string as ml_index_to_string
-from optimus.spark.ml.encoding import string_to_index as ml_string_to_index
 
 # Add the directory containing your module to the Python path (wants absolute paths)
 sys.path.append(os.path.abspath(ROOT_DIR))
@@ -59,7 +59,7 @@ python_set = set
 
 
 def cols(self):
-    class Cols:
+    class Cols(AbstractColumns):
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -275,7 +275,7 @@ def cols(self):
         def set(output_col, value=None):
             """
             Execute a hive expression. Also handle ints and list in columns
-            :param output_col:
+            :param output_col: Output columns
             :param value: numeric, list or hive expression
             :return:
             """

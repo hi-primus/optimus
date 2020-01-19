@@ -20,7 +20,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
-from optimus.plots import plot_frequency, plot_missing_values, plot_hist
+from optimus.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
