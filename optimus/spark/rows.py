@@ -53,7 +53,7 @@ def rows(self):
             else:
                 RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
 
-            df_result = df_result.meta.preserve(self, Actions.NEST.value, df.cols.names())
+            df_result = df_result.meta.preserve(self, Actions.APPEND.value, df.cols.names())
 
             return df_result
 
