@@ -34,7 +34,7 @@ def rows(self):
         def append(rows) -> DataFrame:
             """
             Append a row at the end of a dataframe
-            :param rows: List of values or tuples to be appended
+            :param rows: List of tuples or dataframes to be appended
             :return: Spark DataFrame
             """
             df = self
@@ -235,7 +235,7 @@ def rows(self):
 
             df = self
             for col_name in columns:
-                df = df.where(_between(col_name))
+                df = df.rows.select(_between(col_name))
             df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
             return df
 
@@ -276,8 +276,6 @@ def rows(self):
             """
             Drop duplicates values in a dataframe
             :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
-            :param keep: keep or delete the duplicated row
-            for dropping duplicates. The default behavior will only drop the whole identical rows.
             :return: Return a new DataFrame with duplicate rows removed
             """
             # TODO:
