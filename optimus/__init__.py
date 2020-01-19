@@ -11,11 +11,11 @@ from .optimus import optimus as Optimus
 
 patch()
 
-from .spark import rows, columns, extension, constants, functions, outliers
+from .engines.spark import rows, columns, extension, constants, functions
 
 from optimus import meta
-from .spark.plots import plots
-from optimus.spark.io import save
+from .plots import plots
+from .engines.spark.io import save
 
 
 # Handle encoding problem
@@ -24,6 +24,6 @@ from optimus.spark.io import save
 os.environ["PYTHONIOENCODING"] = "utf8"
 
 # DASK MONKEY PATCH
-from .dask import columns, rows, constants, extension, functions
-from .dask.io import save
+from .engines.dask import columns, rows, constants, extension, functions
+from .engines.dask.io import save
 # Preserve compatibility with <3.x brach

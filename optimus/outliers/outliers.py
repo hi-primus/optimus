@@ -1,9 +1,9 @@
 from pyspark.sql import DataFrame
 
-from optimus.spark.outliers.tukey import Tukey
-from optimus.spark.outliers.mad import MAD
-from optimus.spark.outliers.modified_z_score import ModifiedZScore
-from optimus.spark.outliers.z_score import ZScore
+from optimus.outliers.tukey import Tukey
+from optimus.outliers.mad import MAD
+from optimus.outliers import ModifiedZScore
+from optimus.outliers.z_score import ZScore
 from optimus.helpers.constants import RELATIVE_ERROR
 
 
