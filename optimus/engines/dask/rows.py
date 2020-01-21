@@ -261,7 +261,7 @@ def rows(self):
             :param count:
             :return:
             """
-            return self[:count]
+            return self # [:count]
 
         @staticmethod
         def is_in(input_cols, values) -> DataFrame:

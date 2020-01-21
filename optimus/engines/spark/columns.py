@@ -1349,8 +1349,9 @@ def cols(self):
             return self.select(columns)
 
         # Operations between columns
-        # @staticmethod
-        # def _math(columns, operator, new_column):
+        @staticmethod
+        def _math(columns, operator, new_column):
+            pass
         #     """
         #     Helper to process arithmetic operation between columns. If a
         #     :param columns: Columns to be used to make the calculation
@@ -1938,7 +1939,9 @@ def cols(self):
 
             return {"cols": input_cols, "data": result}
 
-
+        @staticmethod
+        def boxplot(columns):
+            pass
 
         @staticmethod
         def schema_dtype(columns="*"):
@@ -2167,7 +2170,7 @@ def cols(self):
                 data = {}
             return data
 
-    return Cols()
+    return Cols(self)
 
 
 DataFrame.cols = property(cols)

@@ -36,4 +36,4 @@ def cols(self: DataFrame):
         def abs(columns):
             pass
 
-    return Cols()
+    return Cols(self)
