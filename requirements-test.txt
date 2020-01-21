@@ -30,7 +30,6 @@ humanize==0.5.1
 psutil==5.6.3
 pytest-cov==2.7.1
 backoff==1.8.0
-pymongo==3.9.0
 h2o_pysparkling_2.4==2.4.12
 ratelimit==2.2.1
 tqdm==4.28.1
