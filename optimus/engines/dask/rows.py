@@ -233,6 +233,8 @@ def rows(self):
             :return:
             """
             df = self
+
+            input_cols = val_to_list(input_cols)
             df = df.dropna(how=how, subset=input_cols, *args, **kwargs)
             return df
 
@@ -247,7 +249,9 @@ def rows(self):
             """
             df = self
             input_cols = parse_columns(df, input_cols)
-            df.drop_duplicates([input_cols])
+            input_cols = val_to_list(input_cols)
+            df = df.drop_duplicates(subset=input_cols)
+
             return df
 
         @staticmethod
@@ -276,6 +280,8 @@ def rows(self):
             :return:
             """
             return Rows.count()
+
+
 
     return Rows()
 

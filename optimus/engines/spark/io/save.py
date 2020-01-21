@@ -1,6 +1,5 @@
 from kombu import Connection, Exchange, Queue, Producer
 from packaging import version
-from pymongo import MongoClient
 from pyspark.sql import DataFrame
 
 from optimus.helpers.columns import parse_columns
@@ -160,34 +159,6 @@ def save(self: DataFrame):
                 return messages
 
             self.rdd.mapPartitions(_rabbit_mq).count()
-
-        @staticmethod
-        def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
-            """
-            Send a spark to a mongo collection
-            :param host:
-            :param port:
-            :param db_name:
-            :param collection_name:
-            :param parallelism:
-            :return:
-            """
-            df = self
-            if parallelism:
-                df = df.coalesce(parallelism)
-
-            def _mongo(messages):
-                client = MongoClient(host, port)
-                db = client[db_name]
-                collection = db[collection_name]
-
-                for message in messages:
-                    as_dict = message.asDict(recursive=True)
-                    collection.insert_one(as_dict)
-                client.close()
-                return messages
-
-            df.rdd.mapPartitions(_mongo).count()
 
     return Save()
 

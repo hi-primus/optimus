@@ -4,7 +4,6 @@ import re
 import string
 import sys
 import unicodedata
-from functools import reduce
 from heapq import nlargest
 
 import fastnumbers
@@ -22,7 +21,7 @@ from pyspark.sql.functions import when
 
 from optimus import ROOT_DIR
 # Helpers
-from optimus.engines.abstracts.columns import AbstractColumns
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
@@ -32,7 +31,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
-    import filter_list, collect_as_list, create_buckets
+    import filter_list, create_buckets
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_col_names_funcs_to_keys, \
     compress_list, compress_dict
@@ -59,7 +58,7 @@ python_set = set
 
 
 def cols(self):
-    class Cols(AbstractColumns):
+    class Cols(BaseColumns):
         @staticmethod
         @dispatch(str, object)
         def append(col_name=None, value=None):
@@ -509,7 +508,7 @@ def cols(self):
         # TODO: Create a function to sort by datatype?
         def sort(order="asc", columns=None):
             """
-            Sort dataframes columns asc or desc
+            Sort data frames columns asc or desc
             :param order: 'asc' or 'desc' accepted
             :param columns:
             :return: Spark DataFrame
@@ -527,7 +526,7 @@ def cols(self):
                 columns = df.cols.names()
                 columns.sort(key=lambda v: v.upper(), reverse=_reverse)
 
-            return df.select(columns)
+            return df.cols.select(columns)
 
         @staticmethod
         def drop(columns=None, regex=None, data_type=None):
@@ -1350,70 +1349,70 @@ def cols(self):
             return self.select(columns)
 
         # Operations between columns
-        @staticmethod
-        def _math(columns, operator, new_column):
-            """
-            Helper to process arithmetic operation between columns. If a
-            :param columns: Columns to be used to make the calculation
-            :param operator: A lambda function
-            :return:
-            """
+        # @staticmethod
+        # def _math(columns, operator, new_column):
+        #     """
+        #     Helper to process arithmetic operation between columns. If a
+        #     :param columns: Columns to be used to make the calculation
+        #     :param operator: A lambda function
+        #     :return:
+        #     """
+        #
+        #     columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+        #     check_column_numbers(columns, "*")
+        #
+        #     df = self
+        #     for col_name in columns:
+        #         df = df.cols.cast(col_name, "float")
+        #
+        #     if len(columns) < 2:
+        #         raise Exception("Error: 2 or more columns needed")
+        #
+        #     columns = list(map(lambda x: F.col(x), columns))
+        #     expr = reduce(operator, columns)
+        #
+        #     return df.withColumn(new_column, expr)
 
-            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
-            check_column_numbers(columns, "*")
-
-            df = self
-            for col_name in columns:
-                df = df.cols.cast(col_name, "float")
-
-            if len(columns) < 2:
-                raise Exception("Error: 2 or more columns needed")
-
-            columns = list(map(lambda x: F.col(x), columns))
-            expr = reduce(operator, columns)
-
-            return df.withColumn(new_column, expr)
-
-        @staticmethod
-        def add(columns, col_name="sum"):
-            """
-            Add two or more columns
-            :param columns: '*', list of columns names or a single column name
-            :param col_name:
-            :return:
-            """
-
-            return Cols._math(columns, lambda x, y: x + y, col_name)
-
-        @staticmethod
-        def sub(columns, col_name="sub"):
-            """
-            Subs two or more columns
-            :param columns: '*', list of columns names or a single column name
-            :param col_name:
-            :return:
-            """
-            return Cols._math(columns, lambda x, y: x - y, col_name)
-
-        @staticmethod
-        def mul(columns, col_name="mul"):
-            """
-            Multiply two or more columns
-            :param columns: '*', list of columns names or a single column name
-            :param col_name:
-            :return:
-            """
-            return Cols._math(columns, lambda x, y: x * y, col_name)
-
-        @staticmethod
-        def div(columns, col_name="div"):
-            """
-            Divide two or more columns
-            :param columns: '*', list of columns names or a single column name
-            :param col_name:
-            :return:
-            """
-            return Cols._math(columns, lambda x, y: x / y, col_name)
+        # @staticmethod
+        # def add(columns, col_name="sum"):
+        #     """
+        #     Add two or more columns
+        #     :param columns: '*', list of columns names or a single column name
+        #     :param col_name:
+        #     :return:
+        #     """
+        #
+        #     return Cols._math(columns, lambda x, y: x + y, col_name)
+        #
+        # @staticmethod
+        # def sub(columns, col_name="sub"):
+        #     """
+        #     Subs two or more columns
+        #     :param columns: '*', list of columns names or a single column name
+        #     :param col_name:
+        #     :return:
+        #     """
+        #     return Cols._math(columns, lambda x, y: x - y, col_name)
+        #
+        # @staticmethod
+        # def mul(columns, col_name="mul"):
+        #     """
+        #     Multiply two or more columns
+        #     :param columns: '*', list of columns names or a single column name
+        #     :param col_name:
+        #     :return:
+        #     """
+        #     return Cols._math(columns, lambda x, y: x * y, col_name)
+        #
+        # @staticmethod
+        # def div(columns, col_name="div"):
+        #     """
+        #     Divide two or more columns
+        #     :param columns: '*', list of columns names or a single column name
+        #     :param col_name:
+        #     :return:
+        #     """
+        #     return Cols._math(columns, lambda x, y: x / y, col_name)
 
         # Stats
         @staticmethod
@@ -1939,29 +1938,7 @@ def cols(self):
 
             return {"cols": input_cols, "data": result}
 
-        @staticmethod
-        def boxplot(columns):
-            """
-            Output values frequency in json format
-            :param columns: Columns to be processed
-            :return:
-            """
-            columns = parse_columns(self, columns)
-            df = self
 
-            for col_name in columns:
-                iqr = df.cols.iqr(col_name, more=True)
-                lb = iqr["q1"] - (iqr["iqr"] * 1.5)
-                ub = iqr["q3"] + (iqr["iqr"] * 1.5)
-
-                _mean = df.cols.mean(columns)
-
-                query = ((F.col(col_name) < lb) | (F.col(col_name) > ub))
-                fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
-                stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
-                          'fliers': fliers, 'label': one_list_to_val(col_name)}]
-
-                return stats
 
         @staticmethod
         def schema_dtype(columns="*"):

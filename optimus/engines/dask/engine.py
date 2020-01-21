@@ -4,6 +4,7 @@ from optimus.bumblebee import Comm
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.io.jdbc import JDBC
 from optimus.engines.dask.io.load import Load
+from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
