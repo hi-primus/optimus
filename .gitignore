@@ -5,6 +5,9 @@
 # Directory-based project format:
 .idea/
 
+# Visual Studio Code:
+.vscode/
+
 # Optimus
 
 examples/checkPointFolder
