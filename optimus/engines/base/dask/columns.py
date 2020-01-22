@@ -770,7 +770,7 @@ class DaskBaseColumns(BaseColumns):
         elif search_by == "numeric":
             filter_dtype = df.constants.NUMERIC_TYPES
 
-        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_dtype)
+        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_dtype)
 
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
@@ -834,7 +834,7 @@ class DaskBaseColumns(BaseColumns):
         # if np.dtype(self[col_name]).type in [np.int64, np.int32, np.float64]:
         #     result = True
         #
-        columns = parse_columns(self, columns)
+        columns = parse_columns(df, columns)
         return format_dict([np.dtype(df[col_name]).type for col_name in columns])
 
     def select(self, columns="*", regex=None, data_type=None, invert=False):

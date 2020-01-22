@@ -233,7 +233,7 @@ df.cols.sort(order="desc").table()
 
 # ## Drop columns
 # ### Spark 
-# * You can not delete multiple colums
+# * You can not delete multiple columns
 #
 # ### Pandas
 # * Almost the same as pandas

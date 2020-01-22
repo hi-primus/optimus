@@ -88,6 +88,24 @@ def get_output_cols(input_cols, output_cols):
     return output_cols
 
 
+def columns_names(df):
+    """
+    Helper to get the column names from different dataframes types
+    :param df:
+    :return:
+    """
+    if is_spark_dataframe(df):
+        columns_names = df.columns
+    elif is_pandas_dataframe(df):
+        columns_names = list(df.columns)
+    elif is_dask_dataframe(df):
+        columns_names = list(df.columns)
+    else:
+        columns_names = list(df.columns)
+
+    return columns_names
+
+
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                   accepts_missing_cols=False, invert=False):
     """
@@ -111,7 +129,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     # if columns value is * get all dataframes columns
 
-    df_columns = colums_names(df)
+    df_columns = columns_names(df)
 
     if is_regex is True:
         r = re.compile(cols_args[0])
@@ -241,28 +259,12 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    _col_names = colums_names(df)
+    _col_names = columns_names(df)
     missing_columns = list(OrderedSet(col_names) - OrderedSet(_col_names))
 
     if len(missing_columns) > 0:
         RaiseIt.value_error(missing_columns, _col_names)
     return False
-
-
-def colums_names(df):
-    """
-    Helper to get the column names from different dataframes types
-    :param df:
-    :return:
-    """
-    if is_spark_dataframe(df):
-        columns_names = df.columns
-    elif is_pandas_dataframe(df):
-        columns_names = list(df.columns)
-    elif is_dask_dataframe(df):
-        columns_names = list(df.columns)
-
-    return columns_names
 
 
 def filter_col_name_by_dtypes(df, data_type):
