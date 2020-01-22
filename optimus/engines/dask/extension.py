@@ -355,23 +355,31 @@ def ext(self):
             raise NotImplementedError
 
         @staticmethod
-        def send(name: str = None, stats: bool = True):
+        def send(name: str = None, infer: bool = True, mismatch=None, stats: bool = True, advanced_stats: bool = True,
+                 output: str = "http"):
             """
             Profile and send the data to the queue
             :param name: Specified a name for the view/spark
+            :param infer:
+            :param mismatch:
             :param stats:
+            :param advanced_stats:
+            :param output:
             :return:
             """
             df = self
             if name is not None:
                 df.ext.set_name(name)
 
-            result = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
+            message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                                approx_count=True,
                                                sample=10000,
                                                stats=stats)
 
-            Comm.instance.send(result)
+            if Comm.instance:
+                return Comm.instance.send(message, output=output)
+            else:
+                raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
         @staticmethod
         def reset():
