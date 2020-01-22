@@ -41,7 +41,7 @@ deepdiff==4.0.6
 papermill==1.0.1
 cryptography==2.7
 pypika==0.32.0
-statsmodels==0.10.1
+statsmodels==0.11.0
 glom==19.10.0
 singleton-decorator==1.0.0
 nltk==3.4.5
