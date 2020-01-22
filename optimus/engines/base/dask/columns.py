@@ -200,9 +200,52 @@ class DaskBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    @staticmethod
-    def set(output_col, value=None):
-        pass
+    def set(self, output_col, value=None):
+        """
+        Execute a hive expression. Also handle ints and list in columns
+        :param output_col: Output columns
+        :param value: numeric, list or hive expression
+        :return:
+        """
+
+        df = self.df
+
+        columns = parse_columns(df, output_col, accepts_missing_cols=True)
+        check_column_numbers(columns, 1)
+
+        if is_list(value):
+            df = df.assign( **{output_col: value} )
+        else:
+            df = df.assign( **{output_col: value} )
+
+
+
+        return df
+
+    
+    def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
+        """
+        Copy one or multiple columns
+        :param input_cols: Source column to be copied
+        :param output_cols: Destination column
+        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
+        :return:
+        """
+        df = self.df
+
+        if columns is None:
+            input_cols = parse_columns(df, input_cols)
+            if is_list(input_cols) or is_one_element(input_cols):
+                output_cols = get_output_cols(input_cols, output_cols)
+        else:
+            input_cols = list([c[0] for c in columns])
+            output_cols = list([c[1] for c in columns])
+            output_cols = get_output_cols(input_cols, output_cols)
+
+        df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
+        
+        return df
+        
 
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -214,10 +257,6 @@ class DaskBaseColumns(BaseColumns):
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
-
-    @staticmethod
-    def copy(input_cols, output_cols=None, columns=None):
         pass
 
     @staticmethod
@@ -356,24 +395,24 @@ class DaskBaseColumns(BaseColumns):
 
         # Apply a transformation function
         if is_list_of_tuples(columns_old_new):
-            validate_columns_names(self, columns_old_new)
+            validate_columns_names(df, columns_old_new)
             for col_name in columns_old_new:
 
                 old_col_name = col_name[0]
                 if is_int(old_col_name):
-                    old_col_name = self.df.schema.names[old_col_name]
+                    old_col_name = df.schema.names[old_col_name]
                 if func:
                     old_col_name = func(old_col_name)
 
-                current_meta = self.df.meta.get()
+                current_meta = df.meta.get()
                 # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
                 # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
 
                 new_column = col_name[1]
                 if old_col_name != col_name:
-                    df = df.rename({old_col_name: new_column})
+                    df = df.rename(columns={old_col_name: new_column})
 
-                df = df.meta.preserve(self.df, value=current_meta)
+                df = df.meta.preserve(df, value=current_meta)
 
                 df = df.meta.rename((old_col_name, new_column))
 
