@@ -374,7 +374,9 @@ def ext(self):
             message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
                                                approx_count=True,
                                                sample=10000,
-                                               stats=stats)
+                                               stats=stats,
+                                               format="json"
+                                               )
 
             if Comm.instance:
                 return Comm.instance.send(message, output=output)
