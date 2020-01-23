@@ -180,17 +180,57 @@ class DaskBaseColumns(BaseColumns):
     def reverse(input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def drop(columns=None, regex=None, data_type=None):
-        pass
+    def drop(self, columns=None, regex=None, data_type=None):
+        """
+        Drop a list of columns
+        :param columns: Columns to be dropped
+        :param regex: Regex expression to select the columns
+        :param data_type:
+        :return:
+        """
+        df = self.df
+        if regex:
+            r = re.compile(regex)
+            columns = [c for c in list(df.columns) if re.match(regex, c)]
+
+        print(columns)
+
+        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
+        check_column_numbers(columns, "*")
+        
+        df = df.drop(columns=columns)
+
+        df = df.meta.preserve(df, "drop", columns)
+        
+        return df
 
     @staticmethod
     def sort(order="asc", columns=None):
         pass
 
-    @staticmethod
-    def keep(columns=None, regex=None):
-        pass
+
+    def keep(self, columns=None, regex=None):
+        """
+        Drop a list of columns
+        :param columns: Columns to be dropped
+        :param regex: Regex expression to select the columns
+        :param data_type:
+        :return:
+        """
+        df = self.df
+        if regex:
+            r = re.compile(regex)
+            columns = [c for c in list(df.columns) if re.match(regex, c)]
+
+        columns = parse_columns(df, columns)
+        check_column_numbers(columns, "*")
+        
+        df = df.drop(columns=list( set(df.columns) - set(columns) ) )
+
+        df = df.meta.action("keep", columns)
+        
+        return df
+
 
     @staticmethod
     def move(column, position, ref_col=None):
@@ -214,13 +254,18 @@ class DaskBaseColumns(BaseColumns):
         check_column_numbers(columns, 1)
 
         if is_list(value):
-            df = df.assign( **{output_col: value} )
+            df = df.assign( **{output_col: np.array(value)} )
         else:
             df = df.assign( **{output_col: value} )
 
 
 
         return df
+
+    
+    @dispatch(list)
+    def copy(self, columns) -> DataFrame:
+        return self.copy(columns=columns)
 
     
     def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
@@ -447,21 +492,14 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        # def fill_none_numeric(_value):
-        #     if pd.isnan(_value):
-        #         return value
-        #     return _value
-
         df = self.df
 
         input_cols = parse_columns(df, input_cols)
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
 
-        for output_col in output_cols:
-            df[output_col].fillna(value=value, axis=1)
-            # df[output_col] = df[output_col].apply(fill_none_numeric, meta=(output_col, "object") )
-            # df[output_col] = df[output_col].mask( df[output_col].isin([0,False,None,[],{}]) , value ) 
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].fillna(value=value, axis=0)
 
         return df
 
@@ -684,16 +722,16 @@ class DaskBaseColumns(BaseColumns):
         output_col = parse_columns(df, output_col, accepts_missing_cols=True)
         check_column_numbers(output_col, 1)
 
-        def _nest_string(value):
-            v = value[input_cols[0]].astype(str)
+        def _nest_string(row):
+            v = row[input_cols[0]].astype(str)
             for i in builtins.range(1, len(input_cols)):
-                v = v + separator + value[input_cols[i]].astype(str)
+                v = v + separator + row[input_cols[i]].astype(str)
             return v
 
-        def _nest_array(value):
-            v = value[input_cols[0]].astype(str)
+        def _nest_array(row):
+            v = row[input_cols[0]].astype(str)
             for i in builtins.range(1, len(input_cols)):
-                v += ", " + value[input_cols[i]].astype(str)
+                v += ", " + row[input_cols[i]].astype(str)
             return "[" + v + "]"
 
         if shape == "string":
@@ -722,26 +760,44 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        def spread_split(_row, _output_col, _splits):
 
-            for i in range(_splits):
+        def spread_split(row, output_col, splits):
+
+            for i in range(splits):
                 try:
-                    value = _row[_output_col + "_" + str(_splits - 1)][i]
+                    value = row[output_col + "_" + str(splits - 1)][i]
                 except IndexError:
                     value = None
                 except TypeError:
                     value = None
-                _row[_output_col + "_" + str(i)] = value
-            return _row
+                row[output_col + "_" + str(i)] = value
+            return row
+
+
+        def split_single_index(row, output_col, index):
+            try:
+                value = row[output_col][index]
+            except IndexError:
+                value = None
+            except TypeError:
+                value = None
+            row[output_col] = value
+            return row
+
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
             if separator is None:
                 RaiseIt.value_error(separator, "regular expression")
 
-            df = df.assign(**{output_col + "_" + str(i): "" for i in range(splits - 1)})
-            df[output_col + '_' + str(splits - 1)] = df[input_col].astype(str).str.split(separator, splits - 1)
-            df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
+            if index is None:
+                df = df.assign(**{output_col + "_" + str(i): "" for i in range(splits - 1)})
+                df[output_col + '_' + str(splits - 1)] = df[input_col].astype(str).str.split(separator, splits - 1)
+                df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
+            else:
+                df = df.assign(**{output_col: ""})
+                df[output_col] = df[input_col].astype(str).str.split(separator, index + 1)
+                df = df.apply(split_single_index, axis=1, output_col=output_col, index=index, meta=df)
 
         return df
 
@@ -758,15 +814,15 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
 
         # TODO check if .contains can be used instead of regexp
-        def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
+        def func_chars_words(df, input_col, output_col, search, replace_by):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             # Create as dict
             search_and_replace_by = None
-            if is_list(_search):
-                search_and_replace_by = {s: _replace_by for s in _search}
-            elif is_one_element(_search):
-                search_and_replace_by = {_search: _replace_by}
+            if is_list(search):
+                search_and_replace_by = {s: replace_by for s in search}
+            elif is_one_element(search):
+                search_and_replace_by = {search: replace_by}
 
             search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
 
@@ -783,17 +839,17 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return None
 
-            return _df.cols.apply(_input_col, multiple_replace, "str", search_and_replace_by,
-                                  output_cols=_output_col)
+            return df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
+                                  output_cols=output_col)
 
-        def func_full(_df, _input_col, _output_col, _search, _replace_by):
-            _search = val_to_list(_search)
+        def func_full(df, input_col, output_col, search, replace_by):
+            search = val_to_list(search)
 
-            if _input_col != _output_col:
-                _df[_output_col] = _df[_input_col]
+            if input_col != output_col:
+                df[output_col] = df[input_col]
 
-            _df[_output_col] = _df[_output_col].mask(_df[_output_col].isin(_search), _replace_by)
-            return _df
+            df[output_col] = df[output_col].mask(df[output_col].isin(search), replace_by)
+            return df
 
         func = None
         if search_by == "full" or search_by == "numeric":
