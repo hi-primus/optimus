@@ -197,17 +197,16 @@ class DaskBaseColumns(BaseColumns):
 
         columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
-        
+
         df = df.drop(columns=columns)
 
         df = df.meta.preserve(df, "drop", columns)
-        
+
         return df
 
     @staticmethod
     def sort(order="asc", columns=None):
         pass
-
 
     def keep(self, columns=None, regex=None):
         """
@@ -224,13 +223,12 @@ class DaskBaseColumns(BaseColumns):
 
         columns = parse_columns(df, columns)
         check_column_numbers(columns, "*")
-        
-        df = df.drop(columns=list( set(df.columns) - set(columns) ) )
+
+        df = df.drop(columns=list(set(df.columns) - set(columns)))
 
         df = df.meta.action("keep", columns)
-        
-        return df
 
+        return df
 
     @staticmethod
     def move(column, position, ref_col=None):
@@ -254,20 +252,16 @@ class DaskBaseColumns(BaseColumns):
         check_column_numbers(columns, 1)
 
         if is_list(value):
-            df = df.assign( **{output_col: np.array(value)} )
+            df = df.assign(**{output_col: np.array(value)})
         else:
-            df = df.assign( **{output_col: value} )
-
-
+            df = df.assign(**{output_col: value})
 
         return df
 
-    
     @dispatch(list)
     def copy(self, columns) -> DataFrame:
         return self.copy(columns=columns)
 
-    
     def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
         """
         Copy one or multiple columns
@@ -288,9 +282,8 @@ class DaskBaseColumns(BaseColumns):
             output_cols = get_output_cols(input_cols, output_cols)
 
         df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
-        
+
         return df
-        
 
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -323,7 +316,11 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        agg_list = Dask.instance.compute(exprs)
+        # 'scheduler' param values
+        # "threads": a scheduler backed by a thread pool
+        # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
+        # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
+        agg_list = Dask.instance.compute(exprs, scheduler="processes")
 
         if len(agg_list) > 0:
             agg_results = []
@@ -523,34 +520,35 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    @staticmethod
-    def lower(input_cols, output_cols=None):
+    def lower(self, input_cols, output_cols=None):
 
-        def _lower(col_name, args):
-            return col_name[args].str.lower()
+        def _lower(value):
+            return value.lower()
 
-        return DaskBaseColumns.apply(input_cols, _lower, func_return_type=str,
-                                     filter_col_by_dtypes=["string", "object"],
-                                     output_cols=output_cols)
+        df = self.df
+        return df.cols.apply(input_cols, _lower, func_return_type=str,
+                             filter_col_by_dtypes=["string", "object"],
+                             output_cols=output_cols)
 
-    @staticmethod
-    def upper(input_cols, output_cols=None):
+    def upper(self, input_cols, output_cols=None):
 
-        def _upper(col_name, args):
-            return col_name[args].str.upper()
+        def _upper(value):
+            return value.lower()
 
-        return DaskBaseColumns.apply(input_cols, _upper, func_return_type=str,
-                                     filter_col_by_dtypes=["string", "object"],
-                                     output_cols=output_cols)
+        df = self.df
+        return df.cols.apply(input_cols, _upper, func_return_type=str,
+                             filter_col_by_dtypes=["string", "object"],
+                             output_cols=output_cols)
 
-    @staticmethod
-    def trim(input_cols, output_cols=None):
+    def trim(self, input_cols, output_cols=None):
 
-        def _trim(_df, args):
-            return _df[args].str.strip()
+        def _trim(value):
+            return value.lower()
 
-        return DaskBaseColumns.apply(input_cols, _trim, func_return_type=str, filter_col_by_dtypes=["string", "object"],
-                                     output_cols=output_cols)
+        df = self.df
+        return df.cols.apply(input_cols, _trim, func_return_type=str,
+                             filter_col_by_dtypes=["string", "object"],
+                             output_cols=output_cols)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
@@ -571,8 +569,9 @@ class DaskBaseColumns(BaseColumns):
 
         args = val_to_list(args)
 
+        func_return_type = val_to_list(func_return_type)
         for input_col, output_col in zip(input_cols, output_cols):
-            print("func_return_type", func_return_type)
+
             if func_return_type is None:
                 _meta = df[input_col]
             else:
@@ -760,7 +759,6 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-
         def spread_split(row, output_col, splits):
 
             for i in range(splits):
@@ -773,7 +771,6 @@ class DaskBaseColumns(BaseColumns):
                 row[output_col + "_" + str(i)] = value
             return row
 
-
         def split_single_index(row, output_col, index):
             try:
                 value = row[output_col][index]
@@ -783,7 +780,6 @@ class DaskBaseColumns(BaseColumns):
                 value = None
             row[output_col] = value
             return row
-
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
@@ -840,7 +836,7 @@ class DaskBaseColumns(BaseColumns):
                     return None
 
             return df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
-                                  output_cols=output_col)
+                                 output_cols=output_col)
 
         def func_full(df, input_col, output_col, search, replace_by):
             search = val_to_list(search)
@@ -952,5 +948,3 @@ class DaskBaseColumns(BaseColumns):
             result = None
 
         return result
-
-
