@@ -9,6 +9,7 @@ import numpy as np
 from dask.dataframe.core import DataFrame
 
 from optimus.bumblebee import Comm
+from optimus.engines.dask.dask import Dask
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import random_int, traverse, absolute_path
@@ -38,7 +39,7 @@ def ext(self):
 
         @staticmethod
         def cache():
-            return self
+            return self # Dask.instance.persist(self)
 
         @staticmethod
         def to_json():

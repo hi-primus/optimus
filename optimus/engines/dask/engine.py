@@ -30,6 +30,8 @@ class DaskEngine:
 
         Dask.instance = Client(n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB')
 
+        self.client = Dask.instance
+
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
