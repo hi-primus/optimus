@@ -5,7 +5,9 @@ import dask.dataframe as dd
 import numpy as np
 from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
+from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
+from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.dask import Dask
@@ -101,12 +103,27 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def max_abs_scaler(input_cols, output_cols=None):
+    def standard_scaler():
         pass
 
     @staticmethod
-    def min_max_scaler(input_cols, output_cols=None):
+    def max_abs_scaler(input_cols, output_cols=None):
         pass
+
+    def min_max_scaler(self, input_cols, output_cols=None):
+        # https://github.com/dask/dask/issues/2690
+
+        df = self.df
+
+        scaler = MinMaxScaler()
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        _df = df[input_cols]
+        scaler.fit(_df)
+        scaler.transform(_df)[input_cols]
+        return df
 
     @staticmethod
     def z_score(input_cols, output_cols=None):
@@ -218,8 +235,6 @@ class DaskBaseColumns(BaseColumns):
         if regex:
             r = re.compile(regex)
             columns = [c for c in list(df.columns) if re.match(regex, c)]
-
-        print(columns)
 
         columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
