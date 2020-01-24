@@ -35,3 +35,4 @@ singleton-decorator==1.0.0
 nltk==3.4.5
 fastavro==0.22.7
 dask[complete]==2.9.2
+dask-ml[complete]==1.2.0
