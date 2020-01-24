@@ -4,6 +4,7 @@ import unicodedata
 
 import dask.dataframe as dd
 import numpy as np
+import pandas as pd
 from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
 from dask_ml.impute import SimpleImputer
@@ -14,6 +15,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.dask import Dask
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
@@ -63,12 +65,19 @@ class DaskBaseColumns(BaseColumns):
     def values_to_cols(input_cols):
         pass
 
-    @staticmethod
-    def clip(columns, lower_bound, upper_bound):
-        pass
+    def clip(self, columns, lower_bound, upper_bound):
+        df = self.df
+        columns = parse_columns(df, columns)
+        df[columns] = df[columns].clip(lower_bound, upper_bound)
 
-    @staticmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
+        return df
+
+    def qcut(self, columns, num_buckets, handle_invalid="skip"):
+        #
+        # df = self.df
+        # columns = parse_columns(df, columns)
+        # df[columns] = df[columns].map_partitions(pd.cut, num_buckets)
+        # return df
         pass
 
     @staticmethod
@@ -99,9 +108,36 @@ class DaskBaseColumns(BaseColumns):
     def cell(column):
         pass
 
-    @staticmethod
-    def iqr(columns, more=None, relative_error=None):
-        pass
+
+    def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
+        """
+        Return the column Inter Quartile Range
+        :param columns:
+        :param more: Return info about q1 and q3
+        :param relative_error:
+        :return:
+        """
+        df = self.df
+        iqr_result = {}
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
+        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
+        print(quartile)
+        for col_name in columns:
+
+            q1 = quartile[col_name]["percentile"]["0.25"]
+            q2 = quartile[col_name]["percentile"]["0.5"]
+            q3 = quartile[col_name]["percentile"]["0.75"]
+
+            iqr_value = q3 - q1
+            if more:
+                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            else:
+                result = iqr_value
+            iqr_result[col_name] = result
+
+        return format_dict(iqr_result)
 
     @staticmethod
     def standard_scaler():
@@ -142,25 +178,42 @@ class DaskBaseColumns(BaseColumns):
     def nunique(*args, **kwargs):
         pass
 
-    @staticmethod
-    def unique(columns):
-        pass
+    def unique(self, columns):
+        df = self.df
+        return df.drop_duplicates()
 
     @staticmethod
     def value_counts(columns):
         pass
 
-    @staticmethod
-    def count_uniques(columns, estimate=True):
-        pass
+    def count_na(self, columns):
+        """
+        Return the NAN and Null count in a Column
+        :param columns: '*', list of columns names or a single column name.
+        :return:
+        """
+        df = self.df
+        return format_dict(self.agg_exprs(columns, df.functions.count_na_agg, self))
 
-    @staticmethod
-    def count_zeros(columns):
-        pass
+    def count_zeros(self, columns):
+        """
+        Count zeros in a column
+        :param columns: '*', list of columns names or a single column name.
+        :return:
+        """
+        df = self.df
+        return format_dict(self.agg_exprs(columns, df.functions.zeros_agg))
 
-    @staticmethod
-    def count_na(columns):
-        pass
+    def count_uniques(self, columns, estimate=True):
+        """
+        Return how many unique items exist in a columns
+        :param columns: '*', list of columns names or a single column name.
+        :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
+        :type estimate: bool
+        :return:
+        """
+        df = self.df
+        return format_dict(self.agg_exprs(columns, df.functions.count_uniques_agg, estimate))
 
     def is_na(self, input_cols, output_cols=None):
             """
