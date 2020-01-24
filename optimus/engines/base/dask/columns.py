@@ -148,9 +148,35 @@ class DaskBaseColumns(BaseColumns):
     def is_na(input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        pass
+    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+        """
+
+        :param input_cols:
+        :param data_type:
+        :param strategy:
+        # - If "mean", then replace missing values using the mean along
+        #   each column. Can only be used with numeric data.
+        # - If "median", then replace missing values using the median along
+        #   each column. Can only be used with numeric data.
+        # - If "most_frequent", then replace missing using the most frequent
+        #   value along each column. Can be used with strings or numeric data.
+        # - If "constant", then replace missing values with fill_value. Can be
+        #   used with strings or numeric data.
+        :param output_cols:
+        :return:
+        """
+
+        df = self.df
+        imputer = SimpleImputer(strategy=strategy, copy=False)
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        _df = df[input_cols]
+        imputer.fit(_df)
+        # df[output_cols] = imputer.transform(_df)[input_cols]
+        df[output_cols] = imputer.transform(_df)[input_cols]
+        return df
 
     @staticmethod
     def replace_regex(input_cols, regex=None, value=None, output_cols=None):
