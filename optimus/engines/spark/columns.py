@@ -1169,7 +1169,7 @@ def cols(self):
             """
             df = self
 
-            if data_type is "continuous":
+            if data_type == "continuous":
                 input_cols = parse_columns(self, input_cols,
                                            filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
                 check_column_numbers(input_cols, "*")
@@ -1184,7 +1184,7 @@ def cols(self):
 
                 df = model.transform(df)
 
-            elif data_type is "categorical":
+            elif data_type == "categorical":
 
                 input_cols = parse_columns(self, input_cols,
                                            filter_by_column_dtypes=self.constants.STRING_TYPES)
@@ -1352,6 +1352,7 @@ def cols(self):
         @staticmethod
         def _math(columns, operator, new_column):
             pass
+
         #     """
         #     Helper to process arithmetic operation between columns. If a
         #     :param columns: Columns to be used to make the calculation
@@ -1446,6 +1447,10 @@ def cols(self):
                               meta=Actions.Z_SCORE.value)
 
         @staticmethod
+        def standard_scaler(input_cols, output_cols=None):
+            return 1
+
+        @staticmethod
         def min_max_scaler(input_cols, output_cols=None):
             """
             Return the column min max scaler result
@@ -1454,6 +1459,7 @@ def cols(self):
             :return:
             """
 
+            # Spark suuport this by default. But this implemntation support multiple columns
             def _min_max(col_name, attr):
                 range_value = self.cols.range(col_name)
                 min_value = range_value[col_name]["range"]["min"]
@@ -1473,6 +1479,7 @@ def cols(self):
             :return:
             """
 
+            # Spark suuport this by default. But this implemntation support multiple columns
             def _result(col_name, attr):
                 def max_abs(col_name):
                     return F.max(F.abs(F.col(col_name)))
