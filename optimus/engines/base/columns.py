@@ -422,6 +422,11 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
+    def standard_scaler(input_cols, output_cols=None):
+        pass
+
+    @staticmethod
+    @abstractmethod
     def max_abs_scaler(input_cols, output_cols=None):
         pass
 
