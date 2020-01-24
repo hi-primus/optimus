@@ -223,16 +223,12 @@ class DaskBaseColumns(BaseColumns):
             :return:
             """
 
+            def _is_na(value):
+                return value is np.NaN
+
             df = self.df
 
-            input_cols = parse_columns(df, input_cols)
-            check_column_numbers(input_cols, "*")
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df[input_col].isna()
-
-            return df
+            return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -622,16 +618,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
+        def _fill_na(value, new_value):
+            return new_value if value is np.NaN else value
+
         df = self.df
 
-        input_cols = parse_columns(df, input_cols)
-        check_column_numbers(input_cols, "*")
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].fillna(value=value, axis=0)
-
-        return df
+        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols)
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.df
@@ -970,8 +962,10 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return None
 
-            return df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
+            df = df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
                                  output_cols=output_col)
+
+            return df
 
         def func_full(df, input_col, output_col, search, replace_by):
             search = val_to_list(search)
