@@ -303,13 +303,17 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
-    @staticmethod
-    def remove(columns, search=None, search_by="chars", output_cols=None):
-        pass
+    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
+        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by, output_cols=output_cols )
 
-    @staticmethod
-    def reverse(input_cols, output_cols=None):
-        pass
+    def reverse(self, input_cols, output_cols=None):
+        def _reverse(value):
+            return str(value)[::-1]
+        
+        df = self.df
+        return df.cols.apply(input_cols, _reverse, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
