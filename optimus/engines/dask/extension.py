@@ -144,6 +144,20 @@ def ext(self):
             return self.sample(frac=fraction, random_state=seed)
 
         @staticmethod
+        def stratified_sample(col_name, seed: int = 1) -> DataFrame:
+            """
+            Stratified Sampling
+            :param col_name:
+            :param seed:
+            :return:
+            """
+            df = self
+            n = min(5, df[col_name].value_counts().min())
+            df = df.groupby(col_name).apply(lambda x: x.sample(2))
+            # df_.index = df_.index.droplevel(0)
+            return df
+
+        @staticmethod
         def pivot(index, column, values):
             """
             Return reshaped DataFrame organized by given index / column values.
