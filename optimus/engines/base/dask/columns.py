@@ -260,9 +260,29 @@ class DaskBaseColumns(BaseColumns):
         df[output_cols] = imputer.transform(_df)[input_cols]
         return df
 
-    @staticmethod
-    def replace_regex(input_cols, regex=None, value=None, output_cols=None):
-        pass
+
+    def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
+        """
+        Use a Regex to replace values
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :param regex: values to look at to be replaced
+        :param value: new value to replace the old one
+        :return:
+        """
+
+        df = self.df
+
+        def _replace_regex(value, regex, replace):
+            try:
+                value = value.astype(str)
+            except:
+                value = str(value)
+
+            return re.sub(regex, replace, value)
+
+        return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
+                            filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     @staticmethod
     def years_between(input_cols, date_format=None, output_cols=None):
