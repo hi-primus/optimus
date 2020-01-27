@@ -23,5 +23,7 @@ class DaskCUDFEngine:
 
         Dask.instance = client
 
+        self.client = Dask.instance
+
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance

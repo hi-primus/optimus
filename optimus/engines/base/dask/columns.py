@@ -1,5 +1,6 @@
 import builtins
 import re
+import unicodedata
 
 import dask.dataframe as dd
 import numpy as np
@@ -214,9 +215,20 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return format_dict(self.agg_exprs(columns, df.functions.count_uniques_agg, estimate))
 
-    @staticmethod
-    def is_na(input_cols, output_cols=None):
-        pass
+    def is_na(self, input_cols, output_cols=None):
+            """
+            Replace null values with True and non null with False
+            :param input_cols: '*', list of columns names or a single column name.
+            :param output_cols:
+            :return:
+            """
+
+            def _is_na(value):
+                return value is np.NaN
+
+            df = self.df
+
+            return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -256,25 +268,52 @@ class DaskBaseColumns(BaseColumns):
     def years_between(input_cols, date_format=None, output_cols=None):
         pass
 
-    @staticmethod
-    def remove_white_spaces(input_cols, output_cols=None):
-        pass
+    def remove_white_spaces(self, input_cols, output_cols=None):
+    
+        def _remove_white_spaces(value):
+            return value.replace(" ","")
 
-    @staticmethod
-    def remove_special_chars(input_cols, output_cols=None):
-        pass
+        df = self.df
+        return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
-    @staticmethod
-    def remove_accents(input_cols, output_cols=None):
-        pass
+    def remove_special_chars(self, input_cols, output_cols=None):
+        def _remove_special_chars(value):
+            return re.sub('[^A-Za-z0-9]+', '', value)
 
-    @staticmethod
-    def remove(columns, search=None, search_by="chars", output_cols=None):
-        pass
+        df = self.df
+        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
-    @staticmethod
-    def reverse(input_cols, output_cols=None):
-        pass
+    def remove_accents(self, input_cols, output_cols=None):
+        def _remove_accents(value):
+            cell_str = str(value)
+
+            # first, normalize strings:
+            nfkd_str = unicodedata.normalize('NFKD', cell_str)
+
+            # Keep chars that has no other char combined (i.e. accents chars)
+            with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+            return with_out_accents
+        
+        df = self.df
+        return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
+
+    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
+        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by, output_cols=output_cols )
+
+    def reverse(self, input_cols, output_cols=None):
+        def _reverse(value):
+            return str(value)[::-1]
+        
+        df = self.df
+        return df.cols.apply(input_cols, _reverse, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -577,16 +616,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
+        def _fill_na(value, new_value):
+            return new_value if value is np.NaN else value
+
         df = self.df
 
-        input_cols = parse_columns(df, input_cols)
-        check_column_numbers(input_cols, "*")
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].fillna(value=value, axis=0)
-
-        return df
+        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols)
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.df
@@ -615,17 +650,17 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         return df.cols.apply(input_cols, _lower, func_return_type=str,
-                             filter_col_by_dtypes=["string", "object"],
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
     def upper(self, input_cols, output_cols=None):
 
         def _upper(value):
-            return value.lower()
+            return value.upper()
 
         df = self.df
         return df.cols.apply(input_cols, _upper, func_return_type=str,
-                             filter_col_by_dtypes=["string", "object"],
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
     def trim(self, input_cols, output_cols=None):
@@ -635,7 +670,7 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         return df.cols.apply(input_cols, _trim, func_return_type=str,
-                             filter_col_by_dtypes=["string", "object"],
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
@@ -651,6 +686,7 @@ class DaskBaseColumns(BaseColumns):
             output_cols = val_to_list(output_cols)
         else:
             output_cols = get_output_cols(input_cols, output_cols)
+
 
         if output_cols is None:
             output_cols = input_cols
@@ -895,6 +931,7 @@ class DaskBaseColumns(BaseColumns):
         :param search_by: Can be "full","words","chars" or "numeric".
         :return: Dask DataFrame
         """
+
         df = self.df
 
         # TODO check if .contains can be used instead of regexp
@@ -923,8 +960,10 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return None
 
-            return df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
+            df = df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
                                  output_cols=output_col)
+
+            return df
 
         def func_full(df, input_col, output_col, search, replace_by):
             search = val_to_list(search)
@@ -933,6 +972,7 @@ class DaskBaseColumns(BaseColumns):
                 df[output_col] = df[input_col]
 
             df[output_col] = df[output_col].mask(df[output_col].isin(search), replace_by)
+            
             return df
 
         func = None
@@ -944,6 +984,7 @@ class DaskBaseColumns(BaseColumns):
             RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
 
         filter_dtype = None
+
         if search_by in ["chars", "words", "full"]:
             filter_dtype = df.constants.STRING_TYPES
         elif search_by == "numeric":
@@ -954,7 +995,6 @@ class DaskBaseColumns(BaseColumns):
         check_column_numbers(input_cols, "*")
         output_cols = get_output_cols(input_cols, output_cols)
 
-        df = self
         for input_col, output_col in zip(input_cols, output_cols):
             df = func(df, input_col, output_col, search, replace_by)
 
