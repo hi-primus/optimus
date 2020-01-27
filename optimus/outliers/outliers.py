@@ -1,10 +1,11 @@
-from pyspark.sql import DataFrame
+from dask.dataframe.core import DataFrame as DaskDataFrame
+from pyspark.sql import DataFrame as SparkDataFrame
 
-from optimus.outliers.tukey import Tukey
-from optimus.outliers.mad import MAD
-from optimus.outliers import ModifiedZScore
-from optimus.outliers.z_score import ZScore
 from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.outliers.mad import MAD
+from optimus.outliers.modified_z_score import ModifiedZScore
+from optimus.outliers.tukey import Tukey
+from optimus.outliers.z_score import ZScore
 
 
 class Outliers:
@@ -28,5 +29,5 @@ def outliers(self):
     return Outliers(self)
 
 
-DataFrame.outliers = property(outliers)
-
+SparkDataFrame.outliers = property(outliers)
+DaskDataFrame.outliers = property(outliers)

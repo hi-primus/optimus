@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 
-from pyspark.sql import functions as F
-
-from optimus.infer import is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.converter import one_list_to_val
+from optimus.infer import is_spark_dataframe
 
 
 class AbstractOutlierThreshold(ABC):
@@ -13,7 +11,7 @@ class AbstractOutlierThreshold(ABC):
      Also you need to add the function to outliers.py
      """
 
-    def __init__(self, df, col_name, prefix):
+    def __init__(self, df, col_name: str, prefix: str):
         """
 
         :param df: Spark Dataframe
@@ -33,7 +31,7 @@ class AbstractOutlierThreshold(ABC):
         """
 
         df = self.df
-        return df.rows.select(F.col(self.tmp_col) > self.threshold).cols.drop(self.tmp_col)
+        return df.rows.select(df[self.tmp_col] > self.threshold).cols.drop(self.tmp_col)
 
     def drop(self):
         """
@@ -42,9 +40,9 @@ class AbstractOutlierThreshold(ABC):
         """
 
         df = self.df
-        return df.rows.drop(F.col(self.tmp_col) >= self.threshold).cols.drop(self.tmp_col)
+        return df.rows.drop(df[self.tmp_col] >= self.threshold).cols.drop(self.tmp_col)
 
-    def count_lower_bound(self, bound):
+    def count_lower_bound(self, bound: int):
         """
         Count outlier in the lower bound
         :return:
@@ -52,7 +50,7 @@ class AbstractOutlierThreshold(ABC):
         col_name = self.col_name
         return self.df.rows.select(self.df[col_name] < bound).count()
 
-    def count_upper_bound(self, bound):
+    def count_upper_bound(self, bound: int):
         """
         Count outliers in the upper bound
         :return:
@@ -73,7 +71,7 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
         df = self.df
-        return df.rows.select(F.col(self.tmp_col) < self.threshold).cols.drop(self.tmp_col).count()
+        return df.rows.select(df[self.tmp_col] < self.threshold).cols.drop(self.tmp_col).count()
 
     @abstractmethod
     def info(self, output: str = "dict"):

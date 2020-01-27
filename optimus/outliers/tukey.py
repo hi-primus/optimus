@@ -20,8 +20,8 @@ class Tukey(AbstractOutlierBounds):
         self.lower_bound, self.upper_bound, self.q1, self.median, self.q3, self.iqr = dict_filter(
             self.whiskers(), ["lower_bound", "upper_bound", "q1", "median", "q3", "iqr"]
         )
-        # print(self.upper_bound, self.lower_bound, self.q1, self.median, self.q3, self.iqr)
-        super().__init__(df, col_name)
+        print(self.lower_bound, self.upper_bound)
+        super().__init__(df, col_name, self.lower_bound, self.upper_bound)
 
     def whiskers(self):
         """
@@ -29,12 +29,15 @@ class Tukey(AbstractOutlierBounds):
         :return:
         """
         iqr = self.df.cols.iqr(self.col_name, more=True)
+        print(iqr)
 
         lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
         upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-        return {"lower_bound": lower_bound, "upper_bound": upper_bound, "q1": iqr["q1"], "median": iqr["q2"],
-                "q3": iqr["q3"], "iqr": iqr["iqr"]}
+        result = {"lower_bound": lower_bound, "upper_bound": upper_bound, "q1": iqr["q1"], "median": iqr["q2"],
+                  "q3": iqr["q3"], "iqr": iqr["iqr"]}
+
+        return result
 
     def info(self, output: str = "dict"):
         """

@@ -13,10 +13,10 @@ patch()
 
 from .engines.spark import rows, columns, extension, constants, functions
 
-from optimus import meta
+from . import meta
 from .plots import plots
+from .outliers import outliers
 from .engines.spark.io import save
-
 
 # Handle encoding problem
 # https://stackoverflow.com/questions/39662384/pyspark-unicodeencodeerror-ascii-codec-cant-encode-character

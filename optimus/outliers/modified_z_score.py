@@ -1,9 +1,9 @@
-from pyspark.sql import functions as F
+# from pyspark.sql import functions as F
 
-from optimus.infer import is_numeric, is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import one_list_to_val
+from optimus.infer import is_numeric, is_spark_dataframe
 from optimus.outliers.abstract_outliers_threshold import AbstractOutlierThreshold
 
 
@@ -44,13 +44,13 @@ class ModifiedZScore(AbstractOutlierThreshold):
         mad = df.cols.mad(col_name, self.relative_error, True)
         m_z_col_name = name_col(col_name, "modified_z_score")
 
-        return df.withColumn(m_z_col_name, F.abs(0.6745 * (F.col(col_name) - mad["median"]) / mad["mad"]))
+        return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))
 
-    def info(self):
+    def info(self, output: str = "dict"):
         m_z_col_name = name_col(self.col_name, "modified_z_score")
 
         df = self._m_z_score()
-        max_m_z_score = df.rows.select(F.col(m_z_col_name) > self.threshold).cols.max(m_z_col_name)
+        max_m_z_score = df.rows.select(df[m_z_col_name] > self.threshold).cols.max(m_z_col_name)
 
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                 "max_m_z_score": max_m_z_score}
