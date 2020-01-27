@@ -19,6 +19,7 @@ from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
+from optimus.infer import is_
 from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -107,7 +108,6 @@ class DaskBaseColumns(BaseColumns):
     @staticmethod
     def cell(column):
         pass
-
 
     def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
         """
@@ -486,20 +486,17 @@ class DaskBaseColumns(BaseColumns):
                 agg_results = agg_list[0]
 
             result = {}
-            # print("AGG_RESULT", agg_result)
-            for agg_element in agg_results:
-                agg_col_name, agg_element_result = agg_element
-                if agg_col_name not in result:
-                    result[agg_col_name] = {}
-
-                result[agg_col_name].update(agg_element_result)
 
             # Parsing results
             def parse_percentile(value):
                 _result = {}
-
-                for (p_value, p_result) in value.iteritems():
-                    _result.setdefault(p_value, p_result)
+                if is_(value, pd.core.series.Series):
+                    _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
+                else:
+                    for (p_col_name, p_result) in value.iteritems():
+                        if is_(p_result, pd.core.series.Series):
+                            p_result = dict(p_result)
+                        _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
                 return _result
 
             def parse_hist(value):
@@ -511,18 +508,14 @@ class DaskBaseColumns(BaseColumns):
                         _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
                 return _result
 
-            for columns in result.values():
-                for agg_name, agg_results in columns.items():
-                    if agg_name == "percentile":
-                        agg_parsed = parse_percentile(agg_results)
-                    elif agg_name == "hist":
-                        agg_parsed = parse_hist(agg_results)
-                    # elif agg_name in ["min", "max", "stddev", "mean", "variance"]:
-                    #     agg_parsed = parse_single(agg_results)
-                    else:
-                        agg_parsed = agg_results
-                    columns[agg_name] = agg_parsed
+            for agg_name, col_name_result in agg_results:
+                if agg_name == "percentile":
+                    col_name_result = parse_percentile(col_name_result)
+                elif agg_name == "hist":
+                    col_name_result = parse_hist(col_name_result)
 
+                for i, j in col_name_result.items():
+                    result[i] = {agg_name: j}
         else:
             result = None
 
@@ -556,6 +549,7 @@ class DaskBaseColumns(BaseColumns):
             # If not process by column
             else:
                 for col_name in columns:
+
                     # If the key exist update it
                     if not _filter(col_name, func):
                         if col_name in exprs:
@@ -573,7 +567,7 @@ class DaskBaseColumns(BaseColumns):
                 result[k] = v
 
         # Convert to list
-        result = [r for r in result.items()]
+        result = list(result.items())
 
         return result
 
