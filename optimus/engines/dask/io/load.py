@@ -8,7 +8,6 @@ import pandas as pd
 from dask import dataframe as dd
 
 from optimus.helpers.check import is_url
-from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
 
 
@@ -68,7 +67,8 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = dd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args, **kwargs)
+            df = dd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args,
+                             **kwargs)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)

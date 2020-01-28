@@ -8,6 +8,7 @@ from pyspark.sql import functions as F
 
 # Helpers
 from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.engines.spark.create import Create
 from optimus.helpers.check import is_spark_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
@@ -15,7 +16,6 @@ from optimus.helpers.converter import one_list_to_val, val_to_list
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_spark_dataframes, is_list_of_tuples, is_list_of_str_or_int
-from optimus.engines.spark.create import Create
 
 
 def rows(self):

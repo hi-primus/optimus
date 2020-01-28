@@ -44,7 +44,6 @@ class AbstractOutlierBounds(ABC):
         df = self.df
         col_name = self.col_name
         upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-        
         return df.rows.select((df[col_name] > upper_bound) | (df[col_name] < lower_bound))
 
     # TODO: Pass a defined division param instead or run 3 separated jobs

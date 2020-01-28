@@ -278,6 +278,7 @@ def ext(self):
             """
 
             df = self
+
             columns = parse_columns(df, columns)
 
             if limit is None:
@@ -316,6 +317,8 @@ def ext(self):
             total_rows = humanize.intword(total_rows)
             total_cols = self.cols.count()
             total_partitions = Ext.partitions()
+
+            # print(data)
 
             output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                      total_cols=total_cols,

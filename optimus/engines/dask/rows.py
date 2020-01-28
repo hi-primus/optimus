@@ -21,7 +21,7 @@ def rows(self):
         def create_id(column="id") -> DataFrame:
             # Reference https://github.com/dask/dask/issues/1426
             df = self
-            print(df)
+            # print(df)
             a = da.arange(df.divisions[-1] + 1, chunks=df.divisions[1:])
             df[column] = dd.from_dask_array(a)
             return df
@@ -67,7 +67,7 @@ def rows(self):
             df = self
 
             df = df[condition]
-            df = df.meta.preserve(self, Actions.SORT_ROW.value, df.cols.names())
+            df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
 
             return df
 
@@ -261,6 +261,7 @@ def rows(self):
             :param count:
             :return:
             """
+
             return self[:count-1]
 
         @staticmethod
