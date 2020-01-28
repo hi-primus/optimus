@@ -1,5 +1,3 @@
-from dask.dataframe.core import DataFrame as DaskDataFrame
-from pyspark.sql import DataFrame as SparkDataFrame
 
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.outliers.mad import MAD
@@ -29,5 +27,4 @@ def outliers(self):
     return Outliers(self)
 
 
-SparkDataFrame.outliers = property(outliers)
-DaskDataFrame.outliers = property(outliers)
+

@@ -183,23 +183,4 @@ def meta(self):
     return Meta()
 
 
-SparkDataFrame.meta = property(meta)
 
-
-# This class emulate how spark metadata handling works.
-class MetadataDask:
-    def __init__(self):
-        self._metadata = {}
-
-    @property
-    def metadata(self):
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, value):
-        self._metadata = value
-
-
-DaskDataFrame.schema = [MetadataDask()]
-
-DaskDataFrame.meta = property(meta)
