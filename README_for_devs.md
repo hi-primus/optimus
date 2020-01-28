@@ -114,3 +114,30 @@ Download spark-redis from GitHub https://github.com/RedisLabs/spark-redis (eithe
 $ cd spark-redis
 $ mvn clean package -DskipTests
 ```
+## Developing Optimus 3.0
+Because GPUs are not very commons you may want to use some external server like AWS or GCP.
+Here the workflow.
+
+```
+https://github.com/ironmussa/Optimus.git
+cd Optimus
+git checkout develop-3.0
+```
+From PyCharm create a Deployment using a private key and point it to you Optimus folder in the server
+Be sure to create a mapping so you can sync the local files with the remote server
+More info about Mappings here https://www.jetbrains.com/help/pycharm/accessing-files-on-remote-hosts.html
+Also click Tools-> Deployment -> Automatic uploads 
+When you press press Ctrl + S the file will be uploaded
+
+In the server be sure to install in the conda environment 
+
+```
+conda install pip
+cd Optimus 
+pip install -r requirements.txt
+```
+ 
+
+
+
+
