@@ -1,11 +1,12 @@
 # import cudf as DataFrame
-import dask_cudf as DataFrame
+from dask_cudf.core import DataFrame
 
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.converter import val_to_list
 
 
 def cols(self: DataFrame):
+
     class Cols(DaskBaseColumns):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
@@ -31,9 +32,11 @@ def cols(self: DataFrame):
             # See https://github.com/rapidsai/cudf/issues/3677
             raise NotImplementedError
 
-
         @staticmethod
         def abs(columns):
             pass
 
     return Cols(self)
+
+
+DataFrame.cols = property(cols)

@@ -2,12 +2,12 @@ from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 
 from optimus.bumblebee import Comm
-from optimus.engines.dask.dask import Dask
-from optimus.engines.dask.io.load import Load
+from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
+from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 
-Dask.instance = None
+DaskCUDF.instance = None
 Profiler.instance = None
 Comm.instance = None
 
@@ -28,9 +28,9 @@ class DaskCUDFEngine:
         # self.read = self.spark.read
         self.verbose(verbose)
 
-        Dask.instance = client
+        DaskCUDF.instance = client
 
-        self.client = Dask.instance
+        self.client = DaskCUDF.instance
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance

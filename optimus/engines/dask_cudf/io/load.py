@@ -65,12 +65,13 @@ class Load:
 
         :return dataFrame
         """
+
         file, file_name = prepare_path(path, "csv")
 
         try:
 
-            df = dask_cudf.read_csv(path, sep=sep, header=header, encoding=charset, na_values=null_value, *args,
-                                    **kwargs)
+            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
+                                    *args, **kwargs)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
@@ -165,7 +166,6 @@ def prepare_path(path, file_format):
     :param file_format: format file
     :return:
     """
-    print(path)
     file_name = ntpath.basename(path)
     if is_url(path):
         file = downloader(path, file_format)
