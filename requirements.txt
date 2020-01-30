@@ -28,7 +28,7 @@ psutil==5.6.3
 backoff==1.8.0
 pymongo==3.9.0
 kombu==4.6.1
-pandas==0.24.2
+pandas==1.0.0
 ordered-set==3.1.1
 deepdiff==4.0.6
 pypika==0.32.0
