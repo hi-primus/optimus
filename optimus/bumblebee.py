@@ -99,7 +99,7 @@ class Comm:
         self.token = self._encrypt(self._compress(message)).decode()
 
         logger.print(self.token)
-        data = json.dumps({"username": self.queue_name, "data": self.token})
+        data = json.dumps({"queue_name": self.queue_name, "data": self.token})
 
         if output == "http":
             try:
