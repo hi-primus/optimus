@@ -176,45 +176,46 @@ class BaseColumns(ABC):
 
             result[col_name] = self.agg_exprs(columns, funcs, more)
 
-        return format_dict(result)
+        return result
 
     def std(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
-        return format_dict(self.agg_exprs(columns, df.functions.stddev))
+        return self.agg_exprs(columns, df.functions.stddev)
 
     def kurt(self, columns):
         df = self.df
-        columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return format_dict(self.agg_exprs(columns, df.functions.kurtosis))
+        return self.agg_exprs(columns, df.functions.kurtosis)
 
     def mean(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return format_dict(self.agg_exprs(columns, df.functions.mean))
+        return self.agg_exprs(columns, df.functions.mean)
 
     def skewness(self, columns):
         df = self.df
-        columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return format_dict(self.agg_exprs(columns, df.functions.skewness))
+        return self.agg_exprs(columns, df.functions.skewness)
 
     def sum(self, columns):
         df = self.df
-        columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(self.agg_exprs(columns, df.functions.sum))
 
     def variance(self, columns):
         df = self.df
-        columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(self.agg_exprs(columns, df.functions.variance))
