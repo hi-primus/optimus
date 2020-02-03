@@ -14,7 +14,6 @@ Comm.instance = None
 
 class DaskCUDFEngine:
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
-        self.engine = 'dask_cudf'
         # self.create = Create()
         self.load = Load()
         # self.read = self.spark.read
@@ -28,9 +27,9 @@ class DaskCUDFEngine:
         # self.read = self.spark.read
         self.verbose(verbose)
 
-        DaskCUDF.instance = client
 
-        self.client = DaskCUDF.instance
+        DaskCUDF.instance = client
+        self.client = client
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
