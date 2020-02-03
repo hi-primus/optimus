@@ -1,7 +1,7 @@
-from optimus.outliers.outliers import outliers
-from optimus.meta import meta
-from optimus.plots import plots
 from optimus.helpers.raiseit import RaiseIt
+from optimus.meta import meta
+from optimus.outliers.outliers import outliers
+
 
 # This class emulate how spark metadata handling works.
 class MetadataDask:
@@ -15,6 +15,7 @@ class MetadataDask:
     @metadata.setter
     def metadata(self, value):
         self._metadata = value
+
 
 def optimus(engine="spark", *args, **kwargs):
     if engine == "spark":
@@ -44,11 +45,10 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.dask.engine import DaskEngine
         from optimus.engines.dask import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
+        a = columns, rows, constants, extension, functions, save
 
         DaskDataFrame.outliers = property(outliers)
         DaskDataFrame.meta = property(meta)
-
-
 
         DaskDataFrame.schema = [MetadataDask()]
 
@@ -58,7 +58,10 @@ def optimus(engine="spark", *args, **kwargs):
 
         # Monkey Patch
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
-        # from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
+        from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
+        from optimus.engines.dask.io import save
+        a = columns, rows, constants, extension, functions, save
+
         # from optimus.engines.dask_cudf.io import save
         DaskDataFrame.outliers = property(outliers)
         DaskDataFrame.meta = property(meta)

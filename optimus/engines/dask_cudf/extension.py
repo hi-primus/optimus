@@ -1,6 +1,6 @@
 import collections
 import json
-import dask_cudf
+
 import humanize
 import imgkit
 import jinja2
@@ -9,7 +9,6 @@ import numpy as np
 from dask_cudf.core import DataFrame
 
 from optimus.bumblebee import Comm
-from optimus.engines.dask.dask import Dask
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import random_int, traverse, absolute_path
@@ -39,7 +38,7 @@ def ext(self):
 
         @staticmethod
         def cache():
-            return self # Dask.instance.persist(self)
+            return self  # Dask.instance.persist(self)
 
         @staticmethod
         def to_json():
@@ -59,6 +58,9 @@ def ext(self):
             df = self
             dict_result = []
 
+            # Dask cudf to pandas
+            df = df.map_partitions(lambda df: df.to_pandas())
+
             # if there is only an element in the dict just return the value
             if len(dict_result) == 1:
                 dict_result = next(iter(dict_result.values()))
@@ -66,13 +68,13 @@ def ext(self):
                 col_names = parse_columns(df, "*")
 
                 # Because asDict can return messed columns names we order
-                for index, row in df.asDict():
+                for index, row in df.iterrows():
                     # _row = row.asDict()
-                    ordered_dict = collections.OrderedDict()
+                    r = collections.OrderedDict()
                     # for col_name, value in row.iteritems():
                     for col_name in col_names:
-                        ordered_dict[col_name] = row[col_name]
-                    dict_result.append(ordered_dict)
+                        r[col_name] = row[col_name]
+                    dict_result.append(r)
             return dict_result
 
         @staticmethod
@@ -390,11 +392,11 @@ def ext(self):
                 df.ext.set_name(name)
 
             message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
-                                               approx_count=True,
-                                               sample=10000,
-                                               stats=stats,
-                                               format="json"
-                                               )
+                                                approx_count=True,
+                                                sample=10000,
+                                                stats=stats,
+                                                format="json"
+                                                )
 
             if Comm.instance:
                 return Comm.instance.send(message, output=output)
