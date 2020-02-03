@@ -137,7 +137,14 @@ cd Optimus
 pip install -r requirements.txt
 ```
  
+ ## Working with databases in Dask
+For Dask you need to install some additional libraries to interact with databases
 
+### Mysql
+```
+>> sudo apt install default-libmysqlclient-dev
+>> pip install mysqlclient
+```
 
 
 
