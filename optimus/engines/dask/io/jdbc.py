@@ -5,11 +5,11 @@ from dask.delayed import delayed
 from pyspark.sql import DataFrame
 from sqlalchemy import create_engine
 
-from optimus.helpers.converter import val_to_list
-from optimus.helpers.logger import logger
 from optimus.engines.spark.io.driver_context import DriverContext
 from optimus.engines.spark.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
+from optimus.helpers.converter import val_to_list
+from optimus.helpers.logger import logger
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -348,11 +348,6 @@ class JDBC:
 
                     # table = "test_data"
                     # q = f'SELECT {ntile_columns} FROM {table} WHERE  NTILE({npartitions}) OVER (ORDER BY {ntile_column}) = i'
-
-
-
-
-
 
                 # When we do not have and index
                 parts.append(

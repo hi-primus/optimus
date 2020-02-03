@@ -682,6 +682,13 @@ def is_list_of_futures(value):
     return bool(value) and isinstance(value, list) and all(
         isinstance(elem, distributed.client.Future) for elem in value)
 
+def is_future(value):
+    """
+    Check if an object is a list of strings
+    :param value:
+    :return:
+    """
+    return isinstance(value, distributed.client.Future)
 
 def is_int(value):
     """
