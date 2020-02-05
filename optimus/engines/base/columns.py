@@ -146,7 +146,7 @@ class BaseColumns(ABC):
 
     def max(self, columns):
         df = self.df
-        return self.agg_exprs(columns, df.functions.min)
+        return self.agg_exprs(columns, df.functions.max)
 
     def range(self, columns):
         df = self.df

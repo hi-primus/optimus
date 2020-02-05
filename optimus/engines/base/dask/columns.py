@@ -18,7 +18,7 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, is_future
 from optimus.infer import is_
 from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
@@ -193,7 +193,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return format_dict(self.agg_exprs(columns, df.functions.count_na_agg, self))
+        return self.agg_exprs(columns, df.functions.count_na_agg, self)
 
     def count_zeros(self, columns):
         """
@@ -202,7 +202,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return format_dict(self.agg_exprs(columns, df.functions.zeros_agg))
+        return self.agg_exprs(columns, df.functions.zeros_agg)
 
     def count_uniques(self, columns, estimate=True):
         """
@@ -213,22 +213,22 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return format_dict(self.agg_exprs(columns, df.functions.count_uniques_agg, estimate))
+        return self.agg_exprs(columns, df.functions.count_uniques_agg, estimate)
 
     def is_na(self, input_cols, output_cols=None):
-            """
-            Replace null values with True and non null with False
-            :param input_cols: '*', list of columns names or a single column name.
-            :param output_cols:
-            :return:
-            """
+        """
+        Replace null values with True and non null with False
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :return:
+        """
 
-            def _is_na(value):
-                return value is np.NaN
+        def _is_na(value):
+            return value is np.NaN
 
-            df = self.df
+        df = self.df
 
-            return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
+        return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -260,7 +260,6 @@ class DaskBaseColumns(BaseColumns):
         df[output_cols] = imputer.transform(_df)[input_cols]
         return df
 
-
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
         """
         Use a Regex to replace values
@@ -282,16 +281,16 @@ class DaskBaseColumns(BaseColumns):
             return re.sub(regex, replace, value)
 
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
-                            filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     @staticmethod
     def years_between(input_cols, date_format=None, output_cols=None):
         pass
 
     def remove_white_spaces(self, input_cols, output_cols=None):
-    
+
         def _remove_white_spaces(value):
-            return value.replace(" ","")
+            return value.replace(" ", "")
 
         df = self.df
         return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
@@ -317,19 +316,20 @@ class DaskBaseColumns(BaseColumns):
             # Keep chars that has no other char combined (i.e. accents chars)
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
-        
+
         df = self.df
         return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
     def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
-        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by, output_cols=output_cols )
+        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
+                            output_cols=output_cols)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
-        
+
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
@@ -474,50 +474,55 @@ class DaskBaseColumns(BaseColumns):
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
         agg_list = Dask.instance.compute(exprs, scheduler="processes")
-
-        if len(agg_list) > 0:
-            agg_results = []
-            # Distributed mode return a list of Futures objects, Single mode not.
-            # TODO: Maybe use .gather
-            if is_list_of_futures(agg_list):
-                for future in as_completed(agg_list):
-                    agg_results.append(future.result())
-            else:
-                agg_results = agg_list[0]
-
-            result = {}
-
-            # Parsing results
-            def parse_percentile(value):
-                _result = {}
-                if is_(value, pd.core.series.Series):
-                    _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
-                else:
-                    for (p_col_name, p_result) in value.iteritems():
-                        if is_(p_result, pd.core.series.Series):
-                            p_result = dict(p_result)
-                        _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
-                return _result
-
-            def parse_hist(value):
-                x = value["count"]
-                y = value["bins"]
-                _result = []
-                for idx, v in enumerate(y):
-                    if idx < len(y) - 1:
-                        _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
-                return _result
-
-            for agg_name, col_name_result in agg_results:
-                if agg_name == "percentile":
-                    col_name_result = parse_percentile(col_name_result)
-                elif agg_name == "hist":
-                    col_name_result = parse_hist(col_name_result)
-
-                for i, j in col_name_result.items():
-                    result[i] = {agg_name: j}
+        # print("AGG LIST", agg_list)
+        # if len(agg_list) > 0:
+        agg_results = []
+        # Distributed mode return a list of Futures objects, Single mode not.
+        # TODO: Maybe use .gather
+        if is_list_of_futures(agg_list):
+            for future in as_completed(agg_list):
+                agg_results.append(future.result())
+        elif is_future(agg_list):
+            agg_results = agg_list.result()
         else:
-            result = None
+            agg_results = agg_list[0]
+        # print("AGG RESULT", agg_results)
+        result = {}
+
+        # print("EXEC AGG", exprs)
+
+        # Parsing results
+        def parse_percentile(value):
+            _result = {}
+            if is_(value, pd.core.series.Series):
+                _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
+            else:
+                for (p_col_name, p_result) in value.iteritems():
+                    if is_(p_result, pd.core.series.Series):
+                        p_result = dict(p_result)
+                    _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
+            return _result
+
+        def parse_hist(value):
+            x = value["count"]
+            y = value["bins"]
+            _result = []
+            for idx, v in enumerate(y):
+                if idx < len(y) - 1:
+                    _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
+            return _result
+
+        for agg_name, col_name_result in agg_results:
+            if agg_name == "percentile":
+                col_name_result = parse_percentile(col_name_result)
+            elif agg_name == "hist":
+                col_name_result = parse_hist(col_name_result)
+            if is_(col_name_result, pd.core.series.Series) is False:
+                col_name_result_1 = pd.Series(col_name_result)
+            else:
+                col_name_result_1 = col_name_result
+            for cols_name in col_name_result_1.index:
+                result.setdefault(cols_name, {}).update({agg_name: col_name_result_1[cols_name]})
 
         return result
 
@@ -539,36 +544,41 @@ class DaskBaseColumns(BaseColumns):
         funcs = val_to_list(funcs)
         exprs = {}
 
+        # This functions can process all the series at the same time
         multi = [df.functions.min, df.functions.max, df.functions.stddev,
-                 df.functions.mean, df.functions.variance, df.functions.percentile_agg]
+                 df.functions.mean, df.functions.variance, df.functions.percentile_agg,
+                 df.functions.kurtosis, df.functions.count_na_agg, df.functions.count_uniques_agg]
 
+        result = {}
+        # print("FUNCS0", funcs)
         for func in funcs:
+            # print("FUNC", func)
             # Create expression for functions that accepts multiple columns
             if equal_function(func, multi):
                 exprs.update(func(columns, args)(df))
+                for k, v in exprs.items():
+                    # if k in result:
+                    #     result[k].update(v)
+                    # else:
+                    result[k] = {}
+                    result[k] = v
+                # result[k] = {}
+                # result[k] = v
+                # print(result)
             # If not process by column
             else:
                 for col_name in columns:
-
                     # If the key exist update it
                     if not _filter(col_name, func):
                         if col_name in exprs:
-                            exprs[col_name].update(func(col_name, args)(df))
+                            result[col_name].update(func(col_name, args)(df))
                         else:
-                            exprs[col_name] = func(col_name, args)(df)
-
-        result = {}
-
-        for k, v in exprs.items():
-            if k in result:
-                result[k].update(v)
-            else:
-                result[k] = {}
-                result[k] = v
+                            # print("COL_NAME", col_name)
+                            result[col_name] = func(col_name, args)(df)
+        result = list(result.items())
+        # print("FUNCS2", result)
 
         # Convert to list
-        result = list(result.items())
-
         return result
 
     # TODO: Check if we must use * to select all the columns
@@ -706,7 +716,6 @@ class DaskBaseColumns(BaseColumns):
             output_cols = val_to_list(output_cols)
         else:
             output_cols = get_output_cols(input_cols, output_cols)
-
 
         if output_cols is None:
             output_cols = input_cols
@@ -981,7 +990,7 @@ class DaskBaseColumns(BaseColumns):
                     return None
 
             df = df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
-                                 output_cols=output_col)
+                               output_cols=output_col)
 
             return df
 
@@ -992,7 +1001,7 @@ class DaskBaseColumns(BaseColumns):
                 df[output_col] = df[input_col]
 
             df[output_col] = df[output_col].mask(df[output_col].isin(search), replace_by)
-            
+
             return df
 
         func = None

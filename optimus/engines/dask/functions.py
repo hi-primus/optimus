@@ -12,6 +12,7 @@ def functions(self):
         @staticmethod
         def min(columns, args):
             def dataframe_min_(df):
+                print(df[columns].min())
                 return {"min": df[columns].min()}
 
             return dataframe_min_
@@ -56,10 +57,10 @@ def functions(self):
 
         @staticmethod
         def stddev(col_name, args):
-            def std_(serie):
+            def _stddev(serie):
                 return {"stddev": serie[col_name].std()}
 
-            return std_
+            return _stddev
 
         # @staticmethod
         # def stddev(columns, args):
@@ -99,14 +100,12 @@ def functions(self):
             return zeros_
 
         @staticmethod
-        def count_na_agg(col_name, args):
-            # estimate = args[0]
+        def count_na_agg(columns, args):
 
-            def count_na_(serie):
-                result = {"count_na": serie[col_name].isnull().sum()}
-                return result
+            def _count_na_agg(df):
+                return {"count_na": df[columns].isnull().sum()}
 
-            return count_na_
+            return _count_na_agg
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
@@ -144,15 +143,28 @@ def functions(self):
 
             return _skewness
 
+        # @staticmethod
+        # def count_uniques_agg(columns, args):
+        #
+        #     def _count_uniques_agg(df):
+        #         return {"count_uniques": df[columns].nunique()}
+        #
+        #     return _count_uniques_agg
+
         @staticmethod
         def count_uniques_agg(col_name, args):
             estimate = args[0]
 
-            def _count_uniques_agg(serie):
+            def _count_uniques_agg(df):
+
                 if estimate is True:
-                    result = {"count_uniques": serie[col_name].nunique_approx()}
+                    # result = {"count_uniques": df[col_name].nunique_approx()}
+                    ps = {col: df[col].nunique_approx() for col in df.cols.names()}
+                    # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:
-                    result = {"count_uniques": serie[col_name].nunique()}
+                    ps = {col: df[col].nunique() for col in df.cols.names()}
+                result = {"count_uniques": ps}
+
                 return result
 
             return _count_uniques_agg
