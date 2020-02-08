@@ -5,7 +5,7 @@
 	"main": "inlinecss.js",
 	"dependencies": {
 		"juice": "^5.2.0",
-		"web-resource-inliner": "^4.3.3"
+		"web-resource-inliner": "^4.3.4"
 	},
 	"devDependencies": {},
 	"scripts": {
