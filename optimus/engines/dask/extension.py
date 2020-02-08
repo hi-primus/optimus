@@ -1,15 +1,14 @@
 import collections
 import json
+import math
 
 import humanize
 import imgkit
 import jinja2
-import math
 import numpy as np
 from dask.dataframe.core import DataFrame
 
 from optimus.bumblebee import Comm
-from optimus.engines.dask.dask import Dask
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import random_int, traverse, absolute_path
@@ -39,7 +38,7 @@ def ext(self):
 
         @staticmethod
         def cache():
-            return self # Dask.instance.persist(self)
+            return self  # Dask.instance.persist(self)
 
         @staticmethod
         def to_json():
@@ -390,12 +389,12 @@ def ext(self):
                 df.ext.set_name(name)
 
             message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
-                                               approx_count=True,
-                                               sample=10000,
-                                               stats=stats,
-                                               format="json"
-                                               )
-
+                                                approx_count=True,
+                                                sample=10000,
+                                                stats=stats,
+                                                format="json"
+                                                )
+            print("SEND", message)
             if Comm.instance:
                 return Comm.instance.send(message, output=output)
             else:

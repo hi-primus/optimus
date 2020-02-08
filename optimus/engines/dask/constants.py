@@ -35,7 +35,7 @@ def constants(self):
                         }
 
         NUMERIC_TYPES = ["int32", "int64", "float64"]
-        DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "float": ["float64"], "object": ["object"]}
+        DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "float": ["float64", "float"], "object": ["object"]}
 
         STRING_TYPES = ["string", "object"]
         OBJECT_TYPES = ["object"]

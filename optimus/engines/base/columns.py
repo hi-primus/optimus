@@ -171,12 +171,9 @@ class BaseColumns(ABC):
         check_column_numbers(columns, "*")
 
         result = {}
-        for col_name in columns:
-            funcs = [df.functions.mad_agg]
+        funcs = [df.functions.mad_agg]
 
-            result[col_name] = self.agg_exprs(columns, funcs, more)
-
-        return result
+        return self.agg_exprs(columns, funcs, more)
 
     def std(self, columns):
         df = self.df
@@ -459,6 +456,7 @@ class BaseColumns(ABC):
     def hist(self, columns, buckets=20):
         df = self.df
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
+        # print("HIST", result)
         return result
 
     @staticmethod

@@ -123,7 +123,7 @@ class DaskBaseColumns(BaseColumns):
         check_column_numbers(columns, "*")
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
-        print(quartile)
+        # print(quartile)
         for col_name in columns:
 
             q1 = quartile[col_name]["percentile"]["0.25"]
@@ -493,6 +493,7 @@ class DaskBaseColumns(BaseColumns):
 
         # Parsing results
         def parse_percentile(value):
+            print("PERCENTILE", value)
             _result = {}
             if is_(value, pd.core.series.Series):
                 _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
@@ -504,26 +505,45 @@ class DaskBaseColumns(BaseColumns):
             return _result
 
         def parse_hist(value):
+            key = list(value.keys())[0]
+            value = list(value.values())[0]
             x = value["count"]
             y = value["bins"]
-            _result = []
+            _result = {}
+            _hist = []
             for idx, v in enumerate(y):
                 if idx < len(y) - 1:
-                    _result.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
+                    _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
+            _result[key] = {}
+            _result[key]["hist"] = _hist
             return _result
 
         for agg_name, col_name_result in agg_results:
+            print("COL_NAME",col_name_result)
+            # print("AGG NAME",agg_name)
+
             if agg_name == "percentile":
+                print("PERCENTILE 1", col_name_result)
                 col_name_result = parse_percentile(col_name_result)
             elif agg_name == "hist":
                 col_name_result = parse_hist(col_name_result)
-            if is_(col_name_result, pd.core.series.Series) is False:
-                col_name_result_1 = pd.Series(col_name_result)
-            else:
-                col_name_result_1 = col_name_result
-            for cols_name in col_name_result_1.index:
-                result.setdefault(cols_name, {}).update({agg_name: col_name_result_1[cols_name]})
 
+            # Process by datatype
+            print(type(col_name_result))
+            if is_(col_name_result, pd.core.series.Series):
+                # col_name_result = pd.Series(col_name_result)
+                # print("COL NAME RESULT",col_name_result)
+                index = col_name_result.index
+                for cols_name in index:
+                    result.setdefault(cols_name, {}).update({agg_name: col_name_result[cols_name]})
+            else:
+                index = col_name_result
+                for col_name, value in index.items():
+                    result.setdefault(col_name, {}).update({agg_name: col_name_result[col_name]})
+
+            print("RESULT", result)
+
+        # print("RESULT1", result)
         return result
 
     def create_exprs(self, columns, funcs, *args):
@@ -536,47 +556,47 @@ class DaskBaseColumns(BaseColumns):
             for data_type, func_filter in filters.items():
                 for f in func_filter:
                     if equal_function(func, f) and \
-                            df.cols.dtypes(col_name)[col_name] == data_type:
+                            df.cols.dtypes(_col_name)[_col_name] == data_type:
                         return True
             return False
 
         columns = parse_columns(df, columns)
         funcs = val_to_list(funcs)
-        exprs = {}
 
         # This functions can process all the series at the same time
-        multi = [df.functions.min, df.functions.max, df.functions.stddev,
-                 df.functions.mean, df.functions.variance, df.functions.percentile_agg,
-                 df.functions.kurtosis, df.functions.count_na_agg, df.functions.count_uniques_agg]
+        # multi = [df.functions.min, df.functions.max, df.functions.stddev,
+        #          df.functions.mean, df.functions.variance, df.functions.percentile_agg,
+        #          df.functions.count_na_agg, df.functions.count_uniques_agg, df.functions.sum]
 
         result = {}
         # print("FUNCS0", funcs)
         for func in funcs:
             # print("FUNC", func)
             # Create expression for functions that accepts multiple columns
-            if equal_function(func, multi):
-                exprs.update(func(columns, args)(df))
-                for k, v in exprs.items():
-                    # if k in result:
-                    #     result[k].update(v)
-                    # else:
-                    result[k] = {}
-                    result[k] = v
-                # result[k] = {}
-                # result[k] = v
-                # print(result)
+            a = func(columns, args)(df)
+            # if equal_function(func, multi):
+            # print("AAA", a)
+            for k, v in a.items():
+                result[k] = {}
+                result[k] = v
             # If not process by column
-            else:
-                for col_name in columns:
-                    # If the key exist update it
-                    if not _filter(col_name, func):
-                        if col_name in exprs:
-                            result[col_name].update(func(col_name, args)(df))
-                        else:
-                            # print("COL_NAME", col_name)
-                            result[col_name] = func(col_name, args)(df)
+            # else:
+            #     for col_name in columns:
+            #         # If the key exist update it
+            #         if not _filter(col_name, func):
+            #
+            #             # print (func(col_name, args)(df))
+            #             # col_name = val_to_list(col_name)
+            #             # print("COL NAME", col_name)
+            #             # print("RESULT",result)
+            #             print("aaa", a)
+            #             if col_name in result:
+            #                 print(a)
+            #                 col_name.update(a)
+            #                 # print("a")
+            #             else:
+            #                 result[col_name] = a
         result = list(result.items())
-        # print("FUNCS2", result)
 
         # Convert to list
         return result
@@ -1043,11 +1063,6 @@ class DaskBaseColumns(BaseColumns):
             result = False
         return result
 
-    # @staticmethod
-    # def hist(columns, buckets=20):
-    #     result = DaskColumns.agg_exprs(columns, self.functions.hist_agg, self, buckets, None)
-    #     return result
-
     def frequency(self, columns, n=10, percentage=False, total_rows=None):
         df = self.df
         columns = parse_columns(df, columns)
@@ -1063,7 +1078,7 @@ class DaskBaseColumns(BaseColumns):
             for x, y in i.items():
                 final_result[x] = y
 
-        print(result)
+        # print(result)
         if percentage is True:
             if total_rows is None:
                 total_rows = df.rows.count()

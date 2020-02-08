@@ -35,16 +35,15 @@ def is_column_a(df, column, dtypes):
 
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
-
+    # print("DTYPES", dtypes)
     data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
     # Filter columns by data type
     v = df.cols.schema_dtype(column)
-    # print(v, data_type)
-    print(v, data_type)
 
-    return isinstance(v, data_type)
+    return v in data_type
+    # return isinstance(v, data_type)
 
 
 #

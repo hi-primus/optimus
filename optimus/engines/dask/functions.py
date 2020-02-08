@@ -1,9 +1,11 @@
-# These function can return and Column Expression or a list of columns expression
+# This functions must handle one or multiple columns
 # Must return None if the data type can not be handle
 
 import dask.array as da
 from dask.array import stats
 from dask.dataframe.core import DataFrame
+
+from optimus.helpers.converter import val_to_list
 
 
 def functions(self):
@@ -12,7 +14,6 @@ def functions(self):
         @staticmethod
         def min(columns, args):
             def dataframe_min_(df):
-                print(df[columns].min())
                 return {"min": df[columns].min()}
 
             return dataframe_min_
@@ -34,7 +35,7 @@ def functions(self):
         @staticmethod
         def variance(columns, args):
             def dataframe_var_(df):
-                return {"var": df[columns].var()}
+                return {"variance": df[columns].var()}
 
             return dataframe_var_
 
@@ -58,7 +59,8 @@ def functions(self):
         @staticmethod
         def stddev(col_name, args):
             def _stddev(serie):
-                return {"stddev": serie[col_name].std()}
+
+                return {"stddev": {col: serie[col].std() for col in col_name}}
 
             return _stddev
 
@@ -92,9 +94,11 @@ def functions(self):
 
         @staticmethod
         def zeros_agg(col_name, args):
+            col_name = val_to_list(col_name)
 
-            def zeros_(serie):
-                result = {"zeros": (serie[col_name].values == 0).sum()}
+            def zeros_(df):
+                result = {"zeros": {col: (df[col].values == 0).sum() for col in col_name}}
+                # result = {"zeros": (df[col_name].values == 0).sum()}
                 return result
 
             return zeros_
@@ -112,33 +116,41 @@ def functions(self):
         def hist_agg(col_name, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-            df = args[0]
-            bins = args[1]
-            min_max = args[2]
-
-            if min_max is None:
-                min_max = df.cols.range(col_name)[col_name]
 
             def hist_agg_(serie):
-                # print(serie, bins, min_max)
-                h, b = da.histogram(serie[col_name], bins=bins, range=[min_max["min"], min_max["max"]])
-                return {
-                    "hist": {"count": h, "bins": b}}
+                df = args[0]
+                bins = args[1]
+                min_max = args[2]
+
+                result = {}
+                for col in col_name:
+                    if min_max is None:
+                        # print("HIST AGG", df.cols.range(col_name))
+                        min_max = df.cols.range(col_name)[col]
+
+                    i, j = (da.histogram(serie[col], bins=bins, range=[min_max["min"], min_max["max"]]))
+                    result = {"hist": {col: {"count": list(i), "bins": list(j)}}}
+                return result
 
             return hist_agg_
 
         @staticmethod
-        def kurtosis(col_name, args):
-            def _kurtoris(serie):
-                result = {"kurtosis": float(stats.kurtosis(serie[col_name]))}
+        def kurtosis(columns, args):
+            # Maybe we could contribute with this
+            # `nan_policy` other than 'propagate' have not been implemented.
+
+            def _kurtosis(serie):
+                result = {"kurtosis": {col: float(stats.kurtosis(serie[col])) for col in columns}}
+                # result = {"kurtosis": float(stats.kurtosis(serie[col_name], nan_policy="propagate"))}
                 return result
 
-            return _kurtoris
+            return _kurtosis
 
         @staticmethod
-        def skewness(col_name, args):
+        def skewness(columns, args):
             def _skewness(serie):
-                result = {"skewness": float(stats.skew(serie[col_name]))}
+                result = {"skewness": {col: float(stats.skew(serie[col])) for col in columns}}
+                # result = {"skewness": float(stats.skew(serie[col_name], nan_policy="propagate"))}
                 return result
 
             return _skewness
@@ -159,7 +171,7 @@ def functions(self):
 
                 if estimate is True:
                     # result = {"count_uniques": df[col_name].nunique_approx()}
-                    ps = {col: df[col].nunique_approx() for col in df.cols.names()}
+                    ps = {col: df[col].nunique_approx() for col in col_name}
                     # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:
                     ps = {col: df[col].nunique() for col in df.cols.names()}

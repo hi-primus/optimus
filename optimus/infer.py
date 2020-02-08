@@ -2,12 +2,12 @@
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
 # This can not import any optimus file unless it's imported via addPyFile
 import datetime
+import math
 import os
 import re
 from ast import literal_eval
 
 import fastnumbers
-import math
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 from dateutil.parser import parse as dparse
@@ -682,6 +682,7 @@ def is_list_of_futures(value):
     return bool(value) and isinstance(value, list) and all(
         isinstance(elem, distributed.client.Future) for elem in value)
 
+
 def is_future(value):
     """
     Check if an object is a list of strings
@@ -689,6 +690,7 @@ def is_future(value):
     :return:
     """
     return isinstance(value, distributed.client.Future)
+
 
 def is_int(value):
     """
@@ -821,8 +823,10 @@ SPARK_DTYPES_DICT_OBJECTS = \
      "datetime": TimestampType(), "binary": BinaryType(), "null": NullType()
      }
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
-PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "decimal": "numeric",
-                      "date": "date", "array": "array", "binaty": "binary", "null": "null"}
+
+PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
+                      "decimal": "numeric", "date": "date", "array": "array", "binaty": "binary", "null": "null"}
+
 SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
                             "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
                             "array": "array", "object": "object", "null": "null", "missing": "missing"}

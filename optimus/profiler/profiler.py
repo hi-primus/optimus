@@ -7,7 +7,6 @@ import imgkit
 import jinja2
 from glom import assign
 
-from optimus.infer import is_dict, is_list_of_str, PYTHON_TO_PROFILER
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -17,10 +16,11 @@ from optimus.helpers.json import dump_json
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_dict, is_list_of_str, PYTHON_TO_PROFILER
+from optimus.plots.functions import plot_frequency, plot_missing_values, plot_hist
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
-from optimus.plots.functions import plot_frequency, plot_missing_values, plot_hist
 
 MAX_BUCKETS = 33
 BATCH_SIZE = 20
@@ -82,7 +82,6 @@ class Profiler:
         html = ""
         general_template = template_env.get_template("general_info.html")
         html = html + general_template.render(data=output)
-
         template = template_env.get_template("one_column.html")
         # Create every column stats
         for col_name in columns:
@@ -415,7 +414,6 @@ class Profiler:
             assign(type_details, col_name + ".dtype", greatest_data_type_count, dict)
             assign(type_details, col_name + ".type", cat, dict)
             assign(type_details, col_name + ".stats", count_by_data_type[col_name], dict)
-
         # Count the categorical, numerical, boolean and date columns
         count_types = {}
         for value in type_details.values():
@@ -436,33 +434,28 @@ class Profiler:
 
         # Aggregation
         stats = self.columns_agg(df, columns, buckets, relative_error, approx_count, advanced_stats)
-
         # Calculate Frequency
         logger.print("Processing Frequency ...")
-        # print("COLUMNS",columns)
         df_freq = df.cols.select(columns, data_type=df.constants.NUMERIC_TYPES, invert=True)
 
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
-            # print("FREQUENCY1", freq)
         for col_name in columns:
             col_info = {}
             assign(col_info, "stats", stats[col_name], dict)
 
             if freq is not None:
                 if col_name in freq:
-                    # print("ASSIGN")
                     assign(col_info, "frequency", freq[col_name])
 
             assign(col_info, "name", col_name)
             assign(col_info, "column_dtype", columns_info["columns"][col_name]['dtype'])
+
             assign(col_info, "dtypes_stats", columns_info["columns"][col_name]['stats'])
             assign(col_info, "column_type", columns_info["columns"][col_name]['type'])
             assign(columns_info, "columns." + col_name, col_info, dict)
-
             assign(col_info, "id", df.cols.get_meta(col_name, "id"))
-
         return columns_info
 
     def columns_agg(self, df, columns, buckets=10, relative_error=RELATIVE_ERROR, approx_count=True,
@@ -542,6 +535,7 @@ class Profiler:
             max_value = stats[col_name]["max"]
             min_value = stats[col_name]["min"]
 
+
             if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 stddev = stats[col_name]['stddev']
                 mean = stats[col_name]['mean']
@@ -569,7 +563,7 @@ class Profiler:
 
                 mad = df.cols.mad(col_name)
                 if mad is not None:
-                    col_info['mad'] = round(df.cols.mad(col_name), 5)
+                    col_info['mad'] = round(df.cols.mad(col_name)[col_name]["mad"], 5)
                 else:
                     col_info['mad'] = None
 
@@ -582,7 +576,7 @@ class Profiler:
 
         if advanced_stats is True:
             for col_name in columns:
-                result.update(extra_columns_stats(df, col_name, result))
+                result[col_name].update(extra_columns_stats(df, col_name, result))
 
         return result
 
