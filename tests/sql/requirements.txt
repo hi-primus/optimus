@@ -2,6 +2,6 @@ cx_Oracle==7.2.3
 mysqlclient==1.4.4
 records==0.5.3
 psycopg2-binary==2.8.4
-pyodbc==4.0.27
+pyodbc==4.0.30
 pymssql==2.1.4
 redshift-sqlalchemy==0.4
