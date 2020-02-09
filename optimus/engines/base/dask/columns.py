@@ -17,6 +17,7 @@ from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, val_to_list
+from optimus.helpers.parser import compress_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, is_future
 from optimus.infer import is_
@@ -157,14 +158,25 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        _df = df[input_cols]
-        scaler.fit(_df)
-        scaler.transform(_df)[input_cols]
+        # _df = df[input_cols]
+        scaler.fit(df[input_cols])
+        # print(type(scaler.transform(_df)))
+        arr = scaler.transform(df[input_cols])
+        darr = dd.from_array(arr)
+        print(type(darr))
+        darr.name = 'z'
+        df = df.merge(darr)
+
         return df
 
-    @staticmethod
-    def z_score(input_cols, output_cols=None):
-        pass
+    def z_score(self, input_cols, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = (df[input_col] - df[input_col].mean()) / df[input_col].std(ddof=0)
+        return df
 
     @staticmethod
     def _math(columns, operator, new_column):
@@ -182,9 +194,20 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.drop_duplicates()
 
-    @staticmethod
-    def value_counts(columns):
-        pass
+    def value_counts(self, columns):
+        """
+        Return the counts of uniques values
+        :param columns:
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+        # .value(columns, 1)
+
+        result = {}
+        for col_name in columns:
+            result.update(compress_dict(df[col_name].value_counts().ext.to_dict(), col_name))
+        return result
 
     def count_na(self, columns):
         """
@@ -493,7 +516,6 @@ class DaskBaseColumns(BaseColumns):
 
         # Parsing results
         def parse_percentile(value):
-            print("PERCENTILE", value)
             _result = {}
             if is_(value, pd.core.series.Series):
                 _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
@@ -519,17 +541,14 @@ class DaskBaseColumns(BaseColumns):
             return _result
 
         for agg_name, col_name_result in agg_results:
-            print("COL_NAME",col_name_result)
             # print("AGG NAME",agg_name)
 
             if agg_name == "percentile":
-                print("PERCENTILE 1", col_name_result)
                 col_name_result = parse_percentile(col_name_result)
             elif agg_name == "hist":
                 col_name_result = parse_hist(col_name_result)
 
             # Process by datatype
-            print(type(col_name_result))
             if is_(col_name_result, pd.core.series.Series):
                 # col_name_result = pd.Series(col_name_result)
                 # print("COL NAME RESULT",col_name_result)
