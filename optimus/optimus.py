@@ -31,6 +31,8 @@ def optimus(engine="spark", *args, **kwargs):
 
         from optimus.engines.spark import rows, columns, extension, constants, functions
         from optimus.engines.spark.io import save
+        from optimus.plots import plots
+        a = columns, rows, constants, extension, functions, save, plots
 
         SparkDataFrame.outliers = property(outliers)
         SparkDataFrame.meta = property(meta)
@@ -45,7 +47,8 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.dask.engine import DaskEngine
         from optimus.engines.dask import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
-        a = columns, rows, constants, extension, functions, save
+        from optimus.plots import plots
+        a = columns, rows, constants, extension, functions, save, plots
 
         DaskDataFrame.outliers = property(outliers)
         DaskDataFrame.meta = property(meta)
@@ -60,7 +63,8 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
-        a = columns, rows, constants, extension, functions, save
+        from optimus.plots import plots
+        a = columns, rows, constants, extension, functions, save, plots
 
         # from optimus.engines.dask_cudf.io import save
         DaskDataFrame.outliers = property(outliers)

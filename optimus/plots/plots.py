@@ -1,13 +1,15 @@
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame as SparkDataFrame
+from dask.dataframe.core import DataFrame as DaskDataFrame
 
-
-from optimus.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
-    plot_correlation, plot_qqplot
 from optimus.helpers.columns import check_column_numbers
 from optimus.helpers.columns import parse_columns
+from optimus.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
+    plot_correlation, plot_qqplot
 
 
 def plot(self):
+    df = self
+
     class Plot:
         @staticmethod
         def hist(columns=None, buckets=10, output_format="plot", output_path=None):
@@ -35,7 +37,7 @@ def plot(self):
             :param output_path: path where the image is going to be saved
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             data = self.cols.scatter(columns, buckets)
@@ -50,7 +52,7 @@ def plot(self):
             :param output_path: path where the image is going to be saved
             :return:
             """
-            columns = parse_columns(self, columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             check_column_numbers(columns, "*")
 
             for col_name in columns:
@@ -100,7 +102,7 @@ def plot(self):
             """
             df = self
 
-            columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=DataFrame.constants.NUMERIC_TYPES)
+            columns = parse_columns(self, cols_args=columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
             if columns is not None:
                 sample_data = df.ext.sample(n=n, random=True)
@@ -110,4 +112,5 @@ def plot(self):
     return Plot()
 
 
-DataFrame.plot = property(plot)
+SparkDataFrame.plot = property(plot)
+DaskDataFrame.plot = property(plot)
