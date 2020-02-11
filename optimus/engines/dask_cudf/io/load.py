@@ -69,7 +69,7 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-
+            print(charset)
             df = dask_cudf.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
                                     *args, **kwargs)
             df.meta.set("file_name", file_name)

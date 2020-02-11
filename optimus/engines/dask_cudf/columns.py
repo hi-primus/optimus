@@ -10,8 +10,9 @@ from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import val_to_list
-from optimus.infer import is_, is_future
+from optimus.infer import is_, is_future, Infer
 from optimus.infer import is_list_of_futures
+from optimus.profiler.functions import fill_missing_var_types
 
 
 def cols(self: DataFrame):
@@ -169,6 +170,26 @@ def cols(self: DataFrame):
                 print("FUNCS", result)
 
             # Convert to list
+            return result
+
+        def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+            df = self.df
+            columns = parse_columns(df, columns)
+            dtypes = df.cols.dtypes()
+
+            result = {}
+            for col_name in columns:
+                df_result = df[col_name].map_partitions(Infer.parse_dask, col_name, infer, dtypes, str_funcs,
+                                                        int_funcs, meta=str).compute()
+
+                result[col_name] = dict(df_result.value_counts())
+
+            if infer is True:
+                for k in result.keys():
+                    result[k] = fill_missing_var_types(result[k])
+            else:
+                result = self.parse_profiler_dtypes(result)
+
             return result
 
     return Cols(self)

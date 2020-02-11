@@ -17,6 +17,8 @@ class MetadataDask:
         self._metadata = value
 
 
+from optimus.plots import plots
+
 def optimus(engine="spark", *args, **kwargs):
     if engine == "spark":
 
@@ -31,7 +33,7 @@ def optimus(engine="spark", *args, **kwargs):
 
         from optimus.engines.spark import rows, columns, extension, constants, functions
         from optimus.engines.spark.io import save
-        from optimus.plots import plots
+
         a = columns, rows, constants, extension, functions, save, plots
 
         SparkDataFrame.outliers = property(outliers)
@@ -39,6 +41,7 @@ def optimus(engine="spark", *args, **kwargs):
 
         return SparkEngine(*args, **kwargs)
 
+    # elif engine == "dask" or engine == "dask-cudf":
     elif engine == "dask":
         from dask.dataframe.core import DataFrame as DaskDataFrame
 
@@ -47,29 +50,26 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.dask.engine import DaskEngine
         from optimus.engines.dask import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
-        from optimus.plots import plots
         a = columns, rows, constants, extension, functions, save, plots
 
         DaskDataFrame.outliers = property(outliers)
         DaskDataFrame.meta = property(meta)
-
         DaskDataFrame.schema = [MetadataDask()]
 
         return DaskEngine(*args, **kwargs)
     elif engine == "dask-cudf":
-        from dask.dataframe.core import DataFrame as DaskDataFrame
+        from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
         # Monkey Patch
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
-        from optimus.plots import plots
         a = columns, rows, constants, extension, functions, save, plots
 
         # from optimus.engines.dask_cudf.io import save
-        DaskDataFrame.outliers = property(outliers)
-        DaskDataFrame.meta = property(meta)
-        DaskDataFrame.schema = [MetadataDask()]
+        DaskCUDFDataFrame.outliers = property(outliers)
+        DaskCUDFDataFrame.meta = property(meta)
+        DaskCUDFDataFrame.schema = [MetadataDask()]
 
         return DaskCUDFEngine(*args, **kwargs)
     else:

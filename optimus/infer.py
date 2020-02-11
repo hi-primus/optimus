@@ -301,62 +301,7 @@ class Infer(object):
         :param full: True return a tuple with (col_name, dtype), count or False return dtype
         :return:
         """
-        col_name, value = col_and_value
-
-        # Try to order the functions from less to more computational expensive
-        if int_funcs is None:
-            int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-
-        if str_funcs is None:
-            str_funcs = [
-                (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
-                (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
-                (str_to_url, "url"),
-                (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
-            ]
-
-        if dtypes[col_name] == "string" and infer is True:
-
-            if isinstance(value, bool):
-                _data_type = "boolean"
-
-            elif fastnumbers.isint(value):  # Check if value is integer
-                _data_type = "int"
-                for func in int_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-
-            elif fastnumbers.isfloat(value):
-                _data_type = "decimal"
-
-            elif isinstance(value, str):
-                _data_type = "string"
-                for func in str_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-            else:
-                _data_type = "null"
-
-        else:
-            _data_type = dtypes[col_name]
-            if is_null(value) is True:
-                _data_type = "null"
-            elif str_to_missing(value) is True:
-                _data_type = "missing"
-            else:
-                if dtypes[col_name].startswith("array"):
-                    _data_type = "array"
-                else:
-                    _data_type = dtypes[col_name]
-
-        if full is True:
-            result = (col_name, _data_type), 1
-        else:
-            result = _data_type
-
-        return result
+        return col_and_value
 
 
 def is_nan(value):

@@ -145,6 +145,9 @@ For Dask you need to install some additional libraries to interact with database
 >> sudo apt install default-libmysqlclient-dev
 >> pip install mysqlclient
 ```
-
+### Postgres
+```
+pip install --user psycopg2-binary
+```
 
 
