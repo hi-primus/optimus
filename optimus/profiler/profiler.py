@@ -437,7 +437,6 @@ class Profiler:
         # Calculate Frequency
         logger.print("Processing Frequency ...")
         df_freq = df.cols.select(columns, data_type=df.constants.NUMERIC_TYPES, invert=True)
-
         freq = None
         if df_freq is not None:
             freq = df_freq.cols.frequency("*", buckets, True, self.rows_count)
@@ -483,6 +482,7 @@ class Profiler:
             if advanced_stats is True:
                 funcs = [df.functions.stddev, df.functions.kurtosis, df.functions.mean, df.functions.skewness,
                          df.functions.sum, df.functions.variance, df.functions.zeros_agg]
+
                 exprs.extend(df.cols.create_exprs(cols, funcs))
 
                 # TODO: None in basic calculation
@@ -534,7 +534,6 @@ class Profiler:
 
             max_value = stats[col_name]["max"]
             min_value = stats[col_name]["min"]
-
 
             if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
                 stddev = stats[col_name]['stddev']

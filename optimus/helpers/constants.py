@@ -1,4 +1,7 @@
+from enum import Enum
+
 from optimus.helpers.logger import logger
+
 
 # Python to PySpark reference
 #
@@ -12,11 +15,8 @@ from optimus.helpers.logger import logger
 # datetime.date: DateType,
 # datetime.datetime: TimestampType,
 # datetime.time: TimestampType,
-
-
 # Profiler
 
-from enum import Enum
 
 class Actions(Enum):
     """

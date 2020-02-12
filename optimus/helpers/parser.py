@@ -70,7 +70,7 @@ def parse_col_names_funcs_to_keys(data):
 
 def parse_dtypes(df, value):
     """
-    Get a pyspark data type from a string data type representation. for example 'StringType' from 'string'
+    Get the data type from a string data type representation. for example 'StringType' from 'string'
     :param value:
     :param df:
     :return:

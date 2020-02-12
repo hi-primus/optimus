@@ -163,7 +163,7 @@ def prepare_path(path, file_format):
     :param file_format: format file
     :return:
     """
-    print(path)
+    # print(path)
     file_name = ntpath.basename(path)
     if is_url(path):
         file = downloader(path, file_format)

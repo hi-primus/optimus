@@ -1,11 +1,15 @@
 # This functions must handle one or multiple columns
 # Must return None if the data type can not be handle
-
+import dask
 import dask.array as da
+from dask import dataframe as dd
 from dask.array import stats
+from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 
+from optimus.helpers.check import is_column_a
 from optimus.helpers.converter import val_to_list
+from optimus.helpers.raiseit import RaiseIt
 
 
 def functions(self):
@@ -59,7 +63,6 @@ def functions(self):
         @staticmethod
         def stddev(col_name, args):
             def _stddev(serie):
-
                 return {"stddev": {col: serie[col].std() for col in col_name}}
 
             return _stddev
@@ -116,20 +119,39 @@ def functions(self):
         def hist_agg(col_name, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-
             def hist_agg_(serie):
                 df = args[0]
-                bins = args[1]
+                buckets = args[1]
                 min_max = args[2]
 
-                result = {}
+                result_hist = {}
                 for col in col_name:
-                    if min_max is None:
-                        # print("HIST AGG", df.cols.range(col_name))
-                        min_max = df.cols.range(col_name)[col]
+                    if is_column_a(df, col, df.constants.STRING_TYPES):
+                        if min_max is None:
+                            def func(val):
+                                return val.str.len()
 
-                    i, j = (da.histogram(serie[col], bins=bins, range=[min_max["min"], min_max["max"]]))
-                    result = {"hist": {col: {"count": list(i), "bins": list(j)}}}
+                            partitions = df[col].to_delayed()
+                            delayed_values = [dask.delayed(func)(part)
+                                              for part in partitions]
+                            df_len = from_delayed(delayed_values)
+                            df_len = df_len.value_counts()
+                            min, max = dd.compute(df_len.min(), df_len.max())
+                            min_max = {"min": min, "max": max}
+                        df_hist = df_len
+
+                    elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
+                        if min_max is None:
+                            min_max = df.cols.range(col_name)[col]
+                        df_hist = serie[col]
+                    else:
+                        RaiseIt.type_error("column", ["numeric", "string"])
+
+                    i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
+                    result_hist.update({col: {"count": list(i), "bins": list(j)}})
+
+                result = {}
+                result['hist'] = result_hist
                 return result
 
             return hist_agg_

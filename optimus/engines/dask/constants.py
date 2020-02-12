@@ -6,7 +6,7 @@ def constants(self):
     class Constants:
         DTYPES_DICT = {"string": np.str, "int32": np.int32, "int64": np.int64, "float": np.float, "float64": np.float64,
                        "boolean": np.bool, "array": np.array,
-                       "bigint": np.int64, "object": np.object}
+                       "bigint": np.int64, "object": np.object_}
 
         SHORT_DTYPES = {"string": "string",
                         "str": "string",

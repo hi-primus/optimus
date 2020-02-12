@@ -41,11 +41,11 @@ from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dt
 # Add the directory containing your module to the Python path (wants absolute paths)
 sys.path.append(os.path.abspath(ROOT_DIR))
 
-# to use this functions as a Spark udf function we need to load it using addPyFile but the file can no be loaded
-# as python module becasuse it generate a pickle error.
+# To use this functions as a Spark udf function we need to load it using addPyFile because the file can not be loaded
+# as python module because it generate a pickle error.
 from infer import Infer
 
-from optimus.infer import Infer, is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+from optimus.infer import is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
     is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
     parse_spark_class_dtypes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
@@ -615,10 +615,7 @@ def cols(self):
                         agg = _func(*_args)
                         if agg is not None:
                             func_name = _beautify_col_names(_func)
-                            if ENGINE == "spark":
-                                _exprs.append(agg.alias(func_name + "_" + _col_name))
-                            elif ENGINE == "sql":
-                                _exprs.append(agg.as_(func_name + "_" + _col_name))
+                            _exprs.append(agg.alias(func_name + "_" + _col_name))
 
                 return _exprs
 

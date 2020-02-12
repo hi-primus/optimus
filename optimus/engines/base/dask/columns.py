@@ -163,7 +163,7 @@ class DaskBaseColumns(BaseColumns):
         # print(type(scaler.transform(_df)))
         arr = scaler.transform(df[input_cols])
         darr = dd.from_array(arr)
-        print(type(darr))
+        # print(type(darr))
         darr.name = 'z'
         df = df.merge(darr)
 
@@ -497,7 +497,6 @@ class DaskBaseColumns(BaseColumns):
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
         agg_list = Dask.instance.compute(exprs, scheduler="processes")
-        # print("AGG LIST", agg_list)
         # if len(agg_list) > 0:
         agg_results = []
         # Distributed mode return a list of Futures objects, Single mode not.
@@ -509,10 +508,7 @@ class DaskBaseColumns(BaseColumns):
             agg_results = agg_list.result()
         else:
             agg_results = agg_list[0]
-        # print("AGG RESULT", agg_results)
         result = {}
-
-        # print("EXEC AGG", exprs)
 
         # Parsing results
         def parse_percentile(value):
@@ -527,17 +523,15 @@ class DaskBaseColumns(BaseColumns):
             return _result
 
         def parse_hist(value):
-            key = list(value.keys())[0]
-            value = list(value.values())[0]
-            x = value["count"]
-            y = value["bins"]
             _result = {}
-            _hist = []
-            for idx, v in enumerate(y):
-                if idx < len(y) - 1:
-                    _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
-            _result[key] = {}
-            _result[key]["hist"] = _hist
+            for col_name, values in value.items():
+                _hist = []
+                x = values["count"]
+                y = values["bins"]
+                for idx, v in enumerate(y):
+                    if idx < len(y) - 1:
+                        _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
+                _result.setdefault(col_name, _hist)
             return _result
 
         for agg_name, col_name_result in agg_results:
@@ -560,15 +554,12 @@ class DaskBaseColumns(BaseColumns):
                 for col_name, value in index.items():
                     result.setdefault(col_name, {}).update({agg_name: col_name_result[col_name]})
 
-            print("RESULT", result)
-
-        # print("RESULT1", result)
         return result
 
     def create_exprs(self, columns, funcs, *args):
         df = self.df
         # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-        filters = {"object": [df.functions.min],
+        filters = {"object": [df.functions.min, df.functions.stddev],
                    }
 
         def _filter(_col_name, _func):
@@ -582,39 +573,22 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
         funcs = val_to_list(funcs)
 
-        # This functions can process all the series at the same time
-        # multi = [df.functions.min, df.functions.max, df.functions.stddev,
-        #          df.functions.mean, df.functions.variance, df.functions.percentile_agg,
-        #          df.functions.count_na_agg, df.functions.count_uniques_agg, df.functions.sum]
-
         result = {}
         # print("FUNCS0", funcs)
         for func in funcs:
             # print("FUNC", func)
             # Create expression for functions that accepts multiple columns
-            a = func(columns, args)(df)
-            # if equal_function(func, multi):
-            # print("AAA", a)
-            for k, v in a.items():
-                result[k] = {}
-                result[k] = v
-            # If not process by column
-            # else:
-            #     for col_name in columns:
-            #         # If the key exist update it
-            #         if not _filter(col_name, func):
-            #
-            #             # print (func(col_name, args)(df))
-            #             # col_name = val_to_list(col_name)
-            #             # print("COL NAME", col_name)
-            #             # print("RESULT",result)
-            #             print("aaa", a)
-            #             if col_name in result:
-            #                 print(a)
-            #                 col_name.update(a)
-            #                 # print("a")
-            #             else:
-            #                 result[col_name] = a
+            filtered_column = []
+            for col_name in columns:
+                # If the key exist update it
+                if not _filter(col_name, func):
+                    filtered_column.append(col_name)
+                if len(filtered_column) > 0:
+                    func_result = func(columns, args)(df)
+                    for k, v in func_result.items():
+                        result[k] = {}
+                        result[k] = v
+
         result = list(result.items())
 
         # Convert to list
@@ -1085,24 +1059,20 @@ class DaskBaseColumns(BaseColumns):
     def frequency(self, columns, n=10, percentage=False, total_rows=None):
         df = self.df
         columns = parse_columns(df, columns)
-        q = []
+        q = {}
         for col_name in columns:
-            q.append({col_name: [{"value": k, "count": v} for k, v in
-                                 df[col_name].value_counts().nlargest(n).iteritems()]})
+            q[col_name] = [{"value": k, "count": v} for k, v in
+                           df[col_name].value_counts().nlargest(n).iteritems()]
 
-        result = dd.compute(*q)
-        # From list of tuples to dict
-        final_result = {}
-        for i in result:
-            for x, y in i.items():
-                final_result[x] = y
+        result = dd.compute(q)[0]
 
-        # print(result)
+        final_result = result
         if percentage is True:
             if total_rows is None:
                 total_rows = df.rows.count()
-                for c in final_result:
-                    c["percentage"] = round((c["count"] * 100 / total_rows), 2)
+            for value_counts in final_result.values():
+                for value_count in value_counts:
+                    value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
 
         return result
 
@@ -1113,9 +1083,6 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        # if np.dtype(self[col_name]).type in [np.int64, np.int32, np.float64]:
-        #     result = True
-        #
         columns = parse_columns(df, columns)
         return format_dict([np.dtype(df[col_name]).type for col_name in columns])
 

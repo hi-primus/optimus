@@ -394,7 +394,6 @@ def ext(self):
                                                 stats=stats,
                                                 format="json"
                                                 )
-            print("SEND", message)
             if Comm.instance:
                 return Comm.instance.send(message, output=output)
             else:

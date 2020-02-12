@@ -42,10 +42,14 @@ def is_column_a(df, column, dtypes):
 
     # Filter columns by data type
     v = df.cols.schema_dtype(column)
-    # print("VVV", v)
-    # print("DATA", data_type)
-    # return v in data_type
-    return isinstance(v, data_type)
+
+    if is_spark_dataframe(df):
+        result = isinstance(v, data_type)
+    elif is_dask_dataframe(df):
+        result = v in data_type
+    else:
+        result = None
+    return result
 
 
 #
