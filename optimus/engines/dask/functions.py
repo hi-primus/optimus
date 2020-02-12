@@ -193,6 +193,7 @@ def functions(self):
 
                 if estimate is True:
                     # result = {"count_uniques": df[col_name].nunique_approx()}
+
                     ps = {col: df[col].nunique_approx() for col in col_name}
                     # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:

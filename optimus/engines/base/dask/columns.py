@@ -534,13 +534,19 @@ class DaskBaseColumns(BaseColumns):
                 _result.setdefault(col_name, _hist)
             return _result
 
-        for agg_name, col_name_result in agg_results:
-            # print("AGG NAME",agg_name)
+        def parse_count_uniques(value):
+            # Because count_uniques() return and Scalar and not support casting we need to make
+            # the cast to int after compute()
+            # Reference https://github.com/dask/dask/issues/1445
+            return {col_name: int(values) for col_name, values in value.items()}
 
+        for agg_name, col_name_result in agg_results:
             if agg_name == "percentile":
                 col_name_result = parse_percentile(col_name_result)
             elif agg_name == "hist":
                 col_name_result = parse_hist(col_name_result)
+            elif agg_name == "count_uniques":
+                col_name_result = parse_count_uniques(col_name_result)
 
             # Process by datatype
             if is_(col_name_result, pd.core.series.Series):
