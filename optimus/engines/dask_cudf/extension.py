@@ -409,6 +409,7 @@ def ext(self):
             Profiler.instance.output_columns = {}
             return df
 
+
     return Ext()
 
 

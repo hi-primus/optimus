@@ -1,10 +1,10 @@
 # from pyspark.sql import DataFrame
-from dask.dataframe.core import DataFrame
-
+# from dask.dataframe.core import DataFrame
+from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 from optimus.helpers.logger import logger
 
 
-def save(self: DataFrame):
+def save(self: DaskCUDFDataFrame):
     class Save:
         @staticmethod
         def json(path, *args, **kwargs):
@@ -53,7 +53,7 @@ def save(self: DataFrame):
                 raise
 
         @staticmethod
-        def parquet(path, mode="overwrite", num_partitions=1):
+        def parquet(path, compression="snappy", mode="overwrite", num_partitions=1):
             """
             Save data frame to a parquet file
             :param path: path where the spark will be saved.
@@ -77,7 +77,8 @@ def save(self: DataFrame):
             df = self.cols.rename(func)
 
             try:
-                df.to_parquet(path, num_partitions=num_partitions)
+                df.to_parquet(path, compression='snappy')
+                print(path)
             except IOError as e:
                 logger.print(e)
                 raise
@@ -97,4 +98,5 @@ def save(self: DataFrame):
     return Save()
 
 
-DataFrame.save = property(save)
+DaskCUDFDataFrame.save = property(save)
+

@@ -133,6 +133,7 @@ class BaseColumns(ABC):
         :param args:
         :return:
         """
+        print("FUNCS", funcs)
         return self.exec_agg(self.create_exprs(columns, funcs, *args))
 
     @staticmethod

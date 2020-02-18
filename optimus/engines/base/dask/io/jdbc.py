@@ -4,15 +4,14 @@ from dask.dataframe import from_delayed, from_pandas
 from dask.delayed import delayed
 from sqlalchemy import create_engine
 
+# Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
+# only will retrieve the LIMIT value
+from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.logger import logger
-
-# Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
-# only will retrieve the LIMIT value
-from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 
 
 class DaskBaseJDBC:
@@ -81,7 +80,7 @@ class DaskBaseJDBC:
         # return df.ext.display(limit)
 
         engine = create_engine(self.uri)
-        print(engine.table_names())
+        return engine.table_names()
 
     def tables_names_to_json(self, schema=None):
         """
@@ -129,8 +128,8 @@ class DaskBaseJDBC:
         query = "SELECT " + columns_sql + " FROM " + db_table
 
         logger.print(query)
-        df = self.execute(query, limit)
 
+        df = self.execute(query, limit)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         # df = df.ext.run()
@@ -163,7 +162,6 @@ class DaskBaseJDBC:
         # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
         df = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
                                          npartitions=num_partitions, query=query)
-
         # print(len(df))
 
         # conf = Spark.instance.spark.read \
@@ -272,7 +270,9 @@ class DaskBaseJDBC:
 
         # if divisions is None and index_col is not None:
         if divisions is None:
-            if index and limits is None:
+            # print(index)
+            # print("LIMITS",limits)
+            if index is not None and limits is None:
                 # calculate max and min for given index
                 q = sql.select([sql.func.max(index), sql.func.min(index)]).select_from(
                     table_name

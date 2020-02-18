@@ -580,7 +580,6 @@ class DaskBaseColumns(BaseColumns):
         funcs = val_to_list(funcs)
 
         result = {}
-        # print("FUNCS0", funcs)
         for func in funcs:
             # print("FUNC", func)
             # Create expression for functions that accepts multiple columns
@@ -596,8 +595,6 @@ class DaskBaseColumns(BaseColumns):
                         result[k] = v
 
         result = list(result.items())
-
-        # Convert to list
         return result
 
     # TODO: Check if we must use * to select all the columns
@@ -1060,26 +1057,6 @@ class DaskBaseColumns(BaseColumns):
             result = True
         else:
             result = False
-        return result
-
-    def frequency(self, columns, n=10, percentage=False, total_rows=None):
-        df = self.df
-        columns = parse_columns(df, columns)
-        q = {}
-        for col_name in columns:
-            q[col_name] = [{"value": k, "count": v} for k, v in
-                           df[col_name].value_counts().nlargest(n).iteritems()]
-
-        result = dd.compute(q)[0]
-
-        final_result = result
-        if percentage is True:
-            if total_rows is None:
-                total_rows = df.rows.count()
-            for value_counts in final_result.values():
-                for value_count in value_counts:
-                    value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
-
         return result
 
     def schema_dtype(self, columns="*"):

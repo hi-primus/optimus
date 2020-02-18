@@ -177,14 +177,6 @@ def functions(self):
 
             return _skewness
 
-        # @staticmethod
-        # def count_uniques_agg(columns, args):
-        #
-        #     def _count_uniques_agg(df):
-        #         return {"count_uniques": df[columns].nunique()}
-        #
-        #     return _count_uniques_agg
-
         @staticmethod
         def count_uniques_agg(col_name, args):
             estimate = args[0]
@@ -192,8 +184,6 @@ def functions(self):
             def _count_uniques_agg(df):
 
                 if estimate is True:
-                    # result = {"count_uniques": df[col_name].nunique_approx()}
-
                     ps = {col: df[col].nunique_approx() for col in col_name}
                     # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:

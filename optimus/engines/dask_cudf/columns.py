@@ -1,9 +1,11 @@
 # import cudf as DataFrame
 
 import cudf
+import dask.dataframe as dd
 import pandas as pd
-from dask.dataframe.core import DataFrame
+# from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
+from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
@@ -15,7 +17,7 @@ from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
 
 
-def cols(self: DataFrame):
+def cols(self: DaskCUDFDataFrame):
     class Cols(DaskBaseColumns):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
@@ -56,6 +58,8 @@ def cols(self: DataFrame):
             # "threads": a scheduler backed by a thread pool
             # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
             # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
+            # print("EXPRS", exprs)
+
             agg_list = DaskCUDF.instance.compute(exprs, scheduler="processes")
 
             # agg_list = val_to_list(agg_list)
@@ -89,6 +93,7 @@ def cols(self: DataFrame):
                 return _result
 
             def parse_hist(value):
+                print("VALUE", value)
                 x = value["count"]
                 y = value["bins"]
                 _result = []
@@ -98,7 +103,7 @@ def cols(self: DataFrame):
                 return _result
 
             # print("AGG_RESULTS", agg_results)
-            print("RESULTS", type(agg_results))
+            # print("RESULTS", type(agg_results))
             for agg_name, col_name_result in agg_results:
                 if agg_name == "percentile":
                     col_name_result = parse_percentile(col_name_result)
@@ -106,13 +111,14 @@ def cols(self: DataFrame):
                     col_name_result = parse_hist(col_name_result)
                 # if is_(col_name_result, cudf.core.series.Series):
                 #     print(col_name_result)
-                # print("RESULT",type(col_name_result))
+                # print("RESULT 111",type(col_name_result))
                 if is_(col_name_result, cudf.core.series.Series):
                     # print("*****", col_name_result)
                     for cols_name in col_name_result.index:
-                        # print("-----COL_NAME", col_name_result)
-                        # print("-----cols_name", cols_name)
-                        result[cols_name] = {agg_name: col_name_result[col_name_result.index == cols_name][0]}
+                        print("-----COL_NAME", col_name_result)
+                        print("-----cols_name", cols_name)
+                        result.setdefault(cols_name, {})
+                        result[cols_name].update({agg_name: col_name_result[col_name_result.index == cols_name][0]})
 
                 elif is_(col_name_result, dict):
                     print(col_name_result)
@@ -125,51 +131,36 @@ def cols(self: DataFrame):
         def create_exprs(self, columns, funcs, *args):
             df = self.df
             # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-            filters = {"object": [df.functions.min],
+            filters = {"object": [df.functions.min, df.functions.stddev],
                        }
 
             def _filter(_col_name, _func):
                 for data_type, func_filter in filters.items():
                     for f in func_filter:
                         if equal_function(func, f) and \
-                                df.cols.dtypes(col_name)[col_name] == data_type:
+                                df.cols.dtypes(_col_name)[_col_name] == data_type:
                             return True
                 return False
 
             columns = parse_columns(df, columns)
             funcs = val_to_list(funcs)
-            exprs = {}
 
-            # This functions can process all the series at the same time
-            multi = [df.functions.min, df.functions.max, df.functions.stddev,
-                     df.functions.mean, df.functions.variance, df.functions.percentile_agg, df.functions.kurtosis]
             result = {}
-            print("FUNCS", funcs)
             for func in funcs:
+                # print("FUNC", func)
                 # Create expression for functions that accepts multiple columns
-                if equal_function(func, multi):
-                    exprs.update(func(columns, args)(df))
-                    for k, v in exprs.items():
-                        if k in result:
-                            result[k].update(v)
-                        else:
+                filtered_column = []
+                for col_name in columns:
+                    # If the key exist update it
+                    if not _filter(col_name, func):
+                        filtered_column.append(col_name)
+                    if len(filtered_column) > 0:
+                        func_result = func(columns, args)(df)
+                        for k, v in func_result.items():
                             result[k] = {}
                             result[k] = v
-                    result = list(result.items())
-                # If not process by column
-                else:
-                    for col_name in columns:
-                        # If the key exist update it
-                        if not _filter(col_name, func):
 
-                            if col_name in exprs:
-                                result[col_name].update(func(col_name, args)(df))
-                            else:
-                                print("COL_NAME", col_name)
-                                result[col_name] = func(col_name, args)(df)
-                print("FUNCS", result)
-
-            # Convert to list
+            result = list(result.items())
             return result
 
         def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
@@ -192,7 +183,32 @@ def cols(self: DataFrame):
 
             return result
 
+        @staticmethod
+        def frequency(columns, n=10, percentage=False, total_rows=None):
+            df = self
+            columns = parse_columns(df, columns)
+            q = {}
+            for col_name in columns:
+                q[col_name] = df[col_name].value_counts().nlargest(n)
+
+            compute_result = dd.compute(q)[0]
+            result = {}
+            for col_name, values in compute_result.items():
+                result[col_name] = []
+                for x, y in zip(list(values.index), values.values):
+                    result[col_name].append({"value": x, "count": int(y)})
+
+            final_result = result
+            if percentage is True:
+                if total_rows is None:
+                    total_rows = df.rows.count()
+                for value_counts in final_result.values():
+                    for value_count in value_counts:
+                        value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
+
+            return final_result
+
     return Cols(self)
 
 
-DataFrame.cols = property(cols)
+DaskCUDFDataFrame.cols = property(cols)

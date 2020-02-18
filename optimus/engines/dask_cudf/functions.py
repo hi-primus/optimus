@@ -1,9 +1,16 @@
 # These function can return and Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
 
-import dask.array as da
+import cudf
+import dask
+import numpy as np
+from dask import dataframe as dd
 from dask.array import stats
-from dask.dataframe.core import DataFrame
+from dask.dataframe import from_delayed
+from dask_cudf.core import DataFrame as DaskCUDFDataFrame
+
+from optimus.helpers.check import is_column_a
+from optimus.helpers.raiseit import RaiseIt
 
 
 def functions(self):
@@ -47,6 +54,7 @@ def functions(self):
 
         @staticmethod
         def percentile_agg(columns, args):
+            print("PERCENTILE")
             values = args[1]
 
             def _percentile(df):
@@ -113,18 +121,63 @@ def functions(self):
         def hist_agg(col_name, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-            df = args[0]
-            bins = args[1]
-            min_max = args[2]
-
-            if min_max is None:
-                min_max = df.cols.range(col_name)[col_name]
-
             def hist_agg_(serie):
-                # print(serie, bins, min_max)
-                h, b = da.histogram(serie[col_name], bins=bins, range=[min_max["min"], min_max["max"]])
-                return {
-                    "hist": {"count": h, "bins": b}}
+                df = args[0]
+                buckets = args[1]
+                min_max = args[2]
+
+                result_hist = {}
+                for col in col_name:
+                    print("COLANEM", col)
+                    if is_column_a(df, col, df.constants.STRING_TYPES):
+                        if min_max is None:
+                            def func(val):
+                                return val.str.len()
+
+                            partitions = df[col].to_delayed()
+                            delayed_values = [dask.delayed(func)(part)
+                                              for part in partitions]
+                            df_len = from_delayed(delayed_values)
+                            df_len = df_len.value_counts()
+                            min, max = dd.compute(df_len.min(), df_len.max())
+                            min_max_col = {"min": min, "max": max}
+                        df_hist = df_len
+
+                    elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
+                        if min_max is None:
+                            print("888888888888888888 COL_NAME", col)
+                            min_max_col = df.cols.range(col)[col]
+                        df_hist = serie[col]
+                    else:
+                        RaiseIt.type_error("column", ["numeric", "string"])
+
+                    if min_max:
+                        min_max_col = min_max
+
+                    def histogram(_df, _col, _bins):
+
+                        binned = _df[_col].digitize(_bins, right=False)
+                        vc = binned.value_counts().sort_index()
+                        return vc, cudf.Series(_bins)
+
+                    # bins = [-30, 0, 3, 6, 9, 10, 19, 50]
+                    bins = np.linspace(min_max_col["min"], min_max_col["max"], buckets - 1, dtype=int)
+                    print("BINS", min_max)
+                    # r = serie.map_partitions(histogram, col, bins, meta=tuple).compute()
+
+                    partitions = df.to_delayed()
+                    delayed_values = [dask.delayed(histogram)(part, col, bins)
+                                      for part in partitions]
+                    result = from_delayed(delayed_values)
+                    print(result)
+                    # i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
+                    result_hist.update({col: {"count": [i for i in r[0][0]], "bins": [i for i in r[0][1]]}})
+
+                result = {}
+                result['hist'] = result_hist
+
+                print("RESULT", result)
+                return result
 
             return hist_agg_
 
@@ -185,4 +238,4 @@ def functions(self):
     return Functions()
 
 
-DataFrame.functions = property(functions)
+DaskCUDFDataFrame.functions = property(functions)

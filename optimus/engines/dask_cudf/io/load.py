@@ -93,7 +93,7 @@ class Load:
         file, file_name = prepare_path(path, "parquet")
 
         try:
-            df = dd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
+            df = dask_cudf.read_parquet(path, columns=columns, *args, **kwargs)
             df.meta.set("file_name", file_name)
 
         except IOError as error:

@@ -1,3 +1,4 @@
+import dask.dataframe as dd
 import numpy as np
 from dask.dataframe.core import DataFrame
 
@@ -79,6 +80,27 @@ def cols(self: DataFrame):
 
             mode_result = df.groupby(['price']).agg({'price': mode}).compute()
             return format_dict(mode_result)
+
+        @staticmethod
+        def frequency(columns, n=10, percentage=False, total_rows=None):
+            df = self
+            columns = parse_columns(df, columns)
+            q = {}
+            for col_name in columns:
+                q[col_name] = [{"value": k, "count": v} for k, v in
+                               df[col_name].value_counts().nlargest(n).iteritems()]
+
+            result = dd.compute(q)[0]
+
+            final_result = result
+            if percentage is True:
+                if total_rows is None:
+                    total_rows = df.rows.count()
+                for value_counts in final_result.values():
+                    for value_count in value_counts:
+                        value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
+
+            return result
 
     return Cols(self)
 

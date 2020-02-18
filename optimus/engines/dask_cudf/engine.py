@@ -55,3 +55,11 @@ class DaskCUDFEngine:
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                         presto_catalog, cassandra_keyspace, cassandra_table)
+
+    @property
+    def spark(self):
+        """
+        Return a Spark session object
+        :return:
+        """
+        return Spark.instance.spark
