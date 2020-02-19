@@ -1,4 +1,3 @@
-from optimus.helpers.raiseit import RaiseIt
 from optimus.meta import meta
 from optimus.outliers.outliers import outliers
 
@@ -23,8 +22,18 @@ from optimus.plots import plots
 def optimus(engine="spark", *args, **kwargs):
     print("ENGINE", engine)
     # Monkey Patching
-    if engine == "spark":
 
+    if engine == "pandas":
+        from pandas.core import DataFrame as PandasDataFrame
+        from optimus.engines.pandas import rows, columns, extension, constants, functions
+        from optimus.engines.pandas.io import save
+
+        a = columns, rows, constants, extension, functions, save, plots
+
+        PandasDataFrame.outliers = property(outliers)
+        PandasDataFrame.meta = property(meta)
+
+    if engine == "spark":
         from pyspark.sql import DataFrame as SparkDataFrame
 
         # pyspark_pipes: build Spark ML pipelines easily
@@ -65,7 +74,11 @@ def optimus(engine="spark", *args, **kwargs):
     #     RaiseIt.value_error(engine, ["spark", "cudf", "dask-cudf"])
 
     # Init engine
-    if engine == "spark":
+    if engine == "pandas":
+
+        from optimus.engines.pandas.engine import PandasEngine
+        return PandasEngine(*args, **kwargs)
+    elif engine == "spark":
 
         from optimus.engines.spark.engine import SparkEngine
         return SparkEngine(*args, **kwargs)
@@ -79,6 +92,3 @@ def optimus(engine="spark", *args, **kwargs):
 
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         return DaskCUDFEngine(*args, **kwargs)
-    # elif engine == "pandas":
-    #     from optimus.engines.pandas import PandasEngine
-    #     return PandasEngine(*args, **kwargs)
