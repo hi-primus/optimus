@@ -149,5 +149,17 @@ For Dask you need to install some additional libraries to interact with database
 ```
 pip install --user psycopg2-binary
 ```
+## Build conda recipe
+### From windows
 
+Install Visual Studio Build Tools. Look at this SO post
+https://stackoverflow.com/questions/41724445/python-pip-on-windows-command-cl-exe-failed
 
+Add this to the path var env
+ 
+```
+C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.24.28314\bin\Hostx86\x86
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt
+```
+
+From Anaconda Prompt
