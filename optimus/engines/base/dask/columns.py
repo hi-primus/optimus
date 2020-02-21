@@ -32,6 +32,9 @@ from optimus.profiler.functions import fill_missing_var_types
 
 class DaskBaseColumns(BaseColumns):
 
+    def __init__(self, df):
+        super(DaskBaseColumns, self).__init__(df)
+
     @staticmethod
     def mode(columns):
         pass
@@ -39,9 +42,6 @@ class DaskBaseColumns(BaseColumns):
     @staticmethod
     def abs(columns):
         pass
-
-    def __init__(self, df):
-        super(DaskBaseColumns, self).__init__(df)
 
     @staticmethod
     def get_meta(col_name, spec=None):
@@ -496,6 +496,8 @@ class DaskBaseColumns(BaseColumns):
         # "threads": a scheduler backed by a thread pool
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
+
+
         agg_list = Dask.instance.compute(exprs, scheduler="processes")
         # if len(agg_list) > 0:
         agg_results = []
@@ -580,6 +582,7 @@ class DaskBaseColumns(BaseColumns):
         funcs = val_to_list(funcs)
 
         result = {}
+
         for func in funcs:
             # print("FUNC", func)
             # Create expression for functions that accepts multiple columns
@@ -588,13 +591,14 @@ class DaskBaseColumns(BaseColumns):
                 # If the key exist update it
                 if not _filter(col_name, func):
                     filtered_column.append(col_name)
-                if len(filtered_column) > 0:
-                    func_result = func(columns, args)(df)
-                    for k, v in func_result.items():
-                        result[k] = {}
-                        result[k] = v
-
+            if len(filtered_column) > 0:
+                # print("ITER", col_name)
+                func_result = func(columns, args)(df)
+                for k, v in func_result.items():
+                    result[k] = {}
+                    result[k] = v
         result = list(result.items())
+
         return result
 
     # TODO: Check if we must use * to select all the columns
