@@ -16,7 +16,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def append(*args, **kwarsg):
+    def append(*args, **kwargs):
         pass
 
     @staticmethod
