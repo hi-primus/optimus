@@ -61,39 +61,11 @@ def functions(self):
             return _percentile
 
         @staticmethod
-        def stddev(col_name, args):
-            def _stddev(serie):
-                return {"stddev": {col: serie[col].std() for col in col_name}}
+        def stddev(columns, args):
+            def _stddev(df):
+                return {"stddev": df[columns].std()}
 
             return _stddev
-
-        # @staticmethod
-        # def stddev(columns, args):
-        #     def dataframe_stddev_(df):
-        #         return {"stddev": df[columns].std()}
-        #
-        #     return dataframe_stddev_
-
-        # @staticmethod
-        # def mean(col_name, args):
-        #     def _mean(serie):
-        #         return {"mean": serie[col_name].mean()}
-        #
-        #     return _mean
-        #
-        # @staticmethod
-        # def sum(col_name, args):
-        #     def std_(serie):
-        #         return {"sum": serie[col_name].sum()}
-        #
-        #     return std_
-        #
-        # @staticmethod
-        # def variance(col_name, args):
-        #     def var_(serie):
-        #         return {"variance": serie[col_name].var()}
-        #
-        #     return var_
 
         @staticmethod
         def zeros_agg(col_name, args):
@@ -119,6 +91,8 @@ def functions(self):
         def hist_agg(col_name, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
+
+            # TODO: Calculate mina max in one pass.
             def hist_agg_(serie):
                 df = args[0]
                 buckets = args[1]
@@ -148,12 +122,11 @@ def functions(self):
                         RaiseIt.type_error("column", ["numeric", "string"])
 
                     i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
-                    result_hist.update({col: {"count": list(i), "bins": list(j)}})
-
+                    r = i.compute()
+                    result_hist.update({col: {"count": list(r), "bins": list(j)}})
                 result = {}
                 result['hist'] = result_hist
                 return result
-
             return hist_agg_
 
         @staticmethod
@@ -178,16 +151,16 @@ def functions(self):
             return _skewness
 
         @staticmethod
-        def count_uniques_agg(col_name, args):
+        def count_uniques_agg(columns, args):
             estimate = args[0]
 
             def _count_uniques_agg(df):
 
                 if estimate is True:
-                    ps = {col: df[col].nunique_approx() for col in col_name}
+                    ps = {col_name: df[col_name].nunique_approx() for col_name in columns}
                     # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:
-                    ps = {col: df[col].nunique() for col in df.cols.names()}
+                    ps = {col_name: df[col_name].nunique() for col_name in columns}
                 result = {"count_uniques": ps}
 
                 return result
