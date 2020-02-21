@@ -1,3 +1,4 @@
+from optimus.helpers.logger import logger
 from optimus.meta import meta
 from optimus.outliers.outliers import outliers
 
@@ -20,11 +21,12 @@ from optimus.plots import plots
 
 
 def optimus(engine="spark", *args, **kwargs):
-    print("ENGINE", engine)
+    logger.print("ENGINE", engine)
     # Monkey Patching
 
     if engine == "pandas":
-        from pandas.core import DataFrame as PandasDataFrame
+        from pandas import DataFrame as PandasDataFrame
+        # import pandas as pd
         from optimus.engines.pandas import rows, columns, extension, constants, functions
         from optimus.engines.pandas.io import save
 
@@ -32,6 +34,7 @@ def optimus(engine="spark", *args, **kwargs):
 
         PandasDataFrame.outliers = property(outliers)
         PandasDataFrame.meta = property(meta)
+        PandasDataFrame.schema = [MetadataDask()]
 
     if engine == "spark":
         from pyspark.sql import DataFrame as SparkDataFrame
@@ -75,20 +78,17 @@ def optimus(engine="spark", *args, **kwargs):
 
     # Init engine
     if engine == "pandas":
-
         from optimus.engines.pandas.engine import PandasEngine
         return PandasEngine(*args, **kwargs)
-    elif engine == "spark":
 
+    elif engine == "spark":
         from optimus.engines.spark.engine import SparkEngine
         return SparkEngine(*args, **kwargs)
 
     elif engine == "dask":
-
         from optimus.engines.dask.engine import DaskEngine
         return DaskEngine(*args, **kwargs)
 
     elif engine == "dask-cudf":
-
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         return DaskCUDFEngine(*args, **kwargs)

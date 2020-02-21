@@ -1,19 +1,19 @@
-from dask.distributed import Client
+import pandas as pd
 
 from optimus.bumblebee import Comm
-from optimus.engines.dask.dask import Dask
-from optimus.engines.dask.io.jdbc import JDBC
-from optimus.engines.dask.io.load import Load
+from optimus.engines.pandas.io.jdbc import JDBC
+from optimus.engines.pandas.io.load import Load
+from optimus.engines.pandas.pandas import Pandas
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
-Dask.instance = None
+Pandas.instance = None
 Profiler.instance = None
 Comm.instance = None
 
 
-class DaskEngine:
+class PandasEngine:
     __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
@@ -22,15 +22,15 @@ class DaskEngine:
         else:
             Comm.instance = comm
 
-        self.engine = 'dask'
+        self.engine = 'pandas'
         # self.create = Create()
         self.load = Load()
         # self.read = self.spark.read
         self.verbose(verbose)
 
-        Dask.instance = Client(n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB')
+        Pandas.instance = pd
 
-        self.client = Dask.instance
+        self.client = Pandas.instance
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
@@ -55,7 +55,7 @@ class DaskEngine:
         """
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                        presto_catalog, cassandra_keyspace, cassandra_table)
+                    presto_catalog, cassandra_keyspace, cassandra_table)
     # def create(self, data):
     #     import dask.dataframe as dd
     #     return dd.DataFrame(data)

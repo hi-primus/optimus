@@ -5,7 +5,7 @@ from urllib.request import Request, urlopen
 
 import dask.bag as db
 import pandas as pd
-from dask import dataframe as dd
+# from dask import dataframe as dd
 
 from optimus.helpers.check import is_url
 from optimus.helpers.logger import logger
@@ -26,7 +26,7 @@ class Load:
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dd.read_json(path, lines=multiline, *args, **kwargs)
+            df = pd.read_json(path, lines=multiline, *args, **kwargs)
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -67,7 +67,7 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = dd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args,
+            df = pd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args,
                              **kwargs)
             df.meta.set("file_name", file_name)
         except IOError as error:
@@ -90,7 +90,7 @@ class Load:
         file, file_name = prepare_path(path, "parquet")
 
         try:
-            df = dd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
+            df = pd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -147,7 +147,7 @@ class Load:
             pdf = pdf.astype(column_dtype)
 
             # Create spark data frame
-            df = dd.from_pandas(pdf, npartitions=3)
+            df = pd.from_pandas(pdf, npartitions=3)
             df.meta.set("file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)

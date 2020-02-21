@@ -6,7 +6,7 @@ import humanize
 import imgkit
 import jinja2
 import numpy as np
-from dask.dataframe.core import DataFrame
+from pandas import DataFrame
 
 from optimus.bumblebee import Comm
 from optimus.helpers.columns import parse_columns

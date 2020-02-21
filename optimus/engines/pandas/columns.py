@@ -2,7 +2,7 @@ import dask.dataframe as dd
 import numpy as np
 from dask.dataframe.core import DataFrame
 
-from optimus.engines.base.dask.columns import DaskBaseColumns
+from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.converter import format_dict
 
@@ -10,9 +10,9 @@ from optimus.helpers.converter import format_dict
 # This implementation works for Dask
 
 def cols(self: DataFrame):
-    class Cols(DaskBaseColumns):
+    class Cols(BaseColumns):
         def __init__(self, df):
-            super(DaskBaseColumns, self).__init__(df)
+            super(BaseColumns, self).__init__(df)
 
         @staticmethod
         def abs(input_cols, output_cols=None):
