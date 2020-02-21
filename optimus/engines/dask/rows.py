@@ -93,14 +93,10 @@ def rows(self):
             :return:
             """
             input_cols = parse_columns(self, input_cols)
-            df_list = []
-            row_list = []
-            for index, row in self[input_cols].iterrows():
-                for col_name, value in row.iteritems():
-                    row_list.append(value)
-                df_list.append(row_list)
+            df = self
+            df = df[input_cols].compute().values.tolist()
 
-            return df_list
+            return df
 
         @staticmethod
         @dispatch(str, str)
@@ -262,7 +258,7 @@ def rows(self):
             :return:
             """
 
-            return self[:count-1]
+            return self[:count - 1]
 
         @staticmethod
         def is_in(input_cols, values) -> DataFrame:
@@ -281,8 +277,6 @@ def rows(self):
             :return:
             """
             return Rows.count()
-
-
 
     return Rows()
 
