@@ -288,16 +288,17 @@ class BaseExt(ABC):
             output = HEADER + output + FOOTER
         return output
 
-    @staticmethod
-    def display(limit=None, columns=None, title=None, truncate=True):
+    def display(self, limit=None, columns=None, title=None, truncate=True):
         # TODO: limit, columns, title, truncate
-        BaseExt.table(limit, columns, title, truncate)
+
+        self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
         df = self.df
+        print(type(df))
         try:
             if __IPYTHON__ and DataFrame.output is "html":
-                result = BaseExt.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                result = df.ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:
                 df.ext.show()

@@ -43,4 +43,5 @@ def constants(self):
     return Constants()
 
 
+STARTING_DASK = "Starting or setting Dask Client..."
 DataFrame.constants = property(constants)

@@ -74,7 +74,6 @@ class ProfilerDataTypes(Enum):
 
 # Strings and Function Messages
 JUST_CHECKING = "Just check that Spark and all necessary environments vars are present..."
-STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
 STARTING_OPTIMUS = "Transform and Roll out..."
 
 SUCCESS = "Optimus successfully imported. Have fun :)."
@@ -88,16 +87,6 @@ def print_check_point_config(filesystem):
         filesystem)
 
 
-SPARK_VERSION = "2.4.1"
-HADOOP_VERSION = "2.7"
-
-SPARK_FILE = "spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}.tgz".format(SPARK_VERSION=SPARK_VERSION,
-                                                                           HADOOP_VERSION=HADOOP_VERSION)
-SPARK_URL = "https://archive.apache.org/dist/spark/spark-{SPARK_VERSION}//{SPARK_FILE}".format(
-    SPARK_VERSION=SPARK_VERSION, SPARK_FILE=SPARK_FILE)
-
 # For Google Colab
-SPARK_PATH_COLAB = "/content/spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}".format(SPARK_VERSION=SPARK_VERSION,
-                                                                                      HADOOP_VERSION=HADOOP_VERSION)
 JAVA_PATH_COLAB = "/usr/lib/jvm/java-8-openjdk-amd64"
 RELATIVE_ERROR = 10000

@@ -15,6 +15,14 @@ def cols(self: DataFrame):
             super(DaskBaseColumns, self).__init__(df)
 
         @staticmethod
+        def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+            pass
+
+        @staticmethod
+        def append(dfs) -> DataFrame:
+            pass
+
+        @staticmethod
         def abs(input_cols, output_cols=None):
             """
             Apply abs to the values in a column

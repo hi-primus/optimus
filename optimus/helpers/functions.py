@@ -129,7 +129,10 @@ def setup_google_colab():
     Check if we are in Google Colab and setup it up
     :return:
     """
-    from optimus.helpers.constants import JAVA_PATH_COLAB, SPARK_PATH_COLAB, SPARK_URL, SPARK_FILE
+    from optimus.helpers.constants import JAVA_PATH_COLAB
+    from optimus.engines.spark.constants import SPARK_PATH_COLAB
+    from optimus.engines.spark.constants import SPARK_URL
+    from optimus.engines.spark.constants import SPARK_FILE
 
     IN_COLAB = 'google.colab' in sys.modules
 

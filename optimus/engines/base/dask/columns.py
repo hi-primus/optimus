@@ -497,9 +497,7 @@ class DaskBaseColumns(BaseColumns):
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
 
-
         agg_list = Dask.instance.compute(exprs, scheduler="processes")
-        # if len(agg_list) > 0:
         agg_results = []
         # Distributed mode return a list of Futures objects, Single mode not.
         # TODO: Maybe use .gather
@@ -679,11 +677,21 @@ class DaskBaseColumns(BaseColumns):
         dtypes = df.cols.dtypes()
 
         result = {}
+
+        # partitions = df[columns].to_delayed()
+        # import dask
+        # from dask.dataframe import from_delayed
+        # for col_name in columns:
+        #     delayed_values = [dask.delayed(Infer.parse_dask)(part, col_name, infer, dtypes, str_funcs, int_funcs) for part in partitions]
+        # a = from_delayed(delayed_values)
+        # print(a)
+
         for col_name in columns:
+
             df_result = df[col_name].apply(Infer.parse_dask, args=(col_name, infer, dtypes, str_funcs, int_funcs),
                                            meta=str).compute()
 
-            result[col_name] = dict(df_result.value_counts())
+            result[str(col_name)] = dict(df_result.value_counts())
 
         if infer is True:
             for k in result.keys():

@@ -48,6 +48,17 @@ SHORT_DTYPES = {"string": "string",
                 }
 
 
+SPARK_VERSION = "2.4.1"
+HADOOP_VERSION = "2.7"
+SPARK_FILE = "spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}.tgz".format(SPARK_VERSION=SPARK_VERSION,
+                                                                           HADOOP_VERSION=HADOOP_VERSION)
+SPARK_URL = "https://archive.apache.org/dist/spark/spark-{SPARK_VERSION}//{SPARK_FILE}".format(
+    SPARK_VERSION=SPARK_VERSION, SPARK_FILE=SPARK_FILE)
+SPARK_PATH_COLAB = "/content/spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}".format(SPARK_VERSION=SPARK_VERSION,
+                                                                                      HADOOP_VERSION=HADOOP_VERSION)
+STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
+
+
 def constants(self):
     class Constants:
         SHORT_DTYPES = SHORT_DTYPES
