@@ -8,10 +8,10 @@ from urllib.request import Request, urlopen
 import pandas as pd
 from packaging import version
 
+from optimus.engines.spark.spark import Spark
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.logger import logger
-from optimus.engines.spark.spark import Spark
 
 
 class Load:
@@ -35,7 +35,7 @@ class Load:
             df.meta.set("file_name", file_name)
 
         except IOError as error:
-            logger.print(error)
+            print(error)
             raise
         df = replace_columns_special_characters(df)
 
@@ -55,12 +55,14 @@ class Load:
 
         :return:
         """
-        df = Load.csv(path, sep='\t', header='true' if header else 'false', infer_schema='true' if infer_schema else 'false', charset=charset, *args, **kwargs)
+        df = Load.csv(path, sep='\t', header='true' if header else 'false',
+                      infer_schema='true' if infer_schema else 'false', charset=charset, *args, **kwargs)
         df.ext.reset()
         return df
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
+            error_bad_lines=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -70,6 +72,7 @@ class Load:
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param charset: Charset file encoding
+        :param error_bad_lines:
         :param null_value: value to convert the string to a None value
         It requires one extra pass over the data. True default.
 
@@ -78,18 +81,26 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = (Spark.instance.spark.read
-                  .options(header='true' if header else 'false')
-                  .options(mode="DROPMALFORMED")
-                  .options(delimiter=sep)
-                  .options(inferSchema='true' if infer_schema else 'false')
-                  .options(nullValue=null_value)
-                  .option("charset", charset)
-                  .csv(file, *args, **kwargs))
+            read = (Spark.instance.spark.read
+                    .options(header='true' if header else 'false')
+                    .options(delimiter=sep)
+                    .options(inferSchema='true' if infer_schema else 'false')
+                    .options(nullValue=null_value)
+                    .option("charset", charset))
+
+            if error_bad_lines is True:
+                read.options(mode="FAILFAST")
+            else:
+                read.options(mode="DROPMALFORMED")
+
+            df = read.csv(file, *args, **kwargs)
+
+            if n_rows > -1:
+                df = df.limit(n_rows)
 
             df.meta.set("file_name", file_name)
         except IOError as error:
-            logger.print(error)
+            print(error)
             raise
         df = replace_columns_special_characters(df)
         df.ext.reset()
@@ -112,7 +123,7 @@ class Load:
             df.meta.set("file_name", file_name)
 
         except IOError as error:
-            logger.print(error)
+            print(error)
             raise
         df.ext.reset()
         return df
@@ -137,7 +148,7 @@ class Load:
 
             df.meta.set("file_name", file_name)
         except IOError as error:
-            logger.print(error)
+            print(error)
             raise
         df.ext.reset()
         return df
@@ -172,7 +183,7 @@ class Load:
             df = Spark.instance.spark.createDataFrame(pdf)
             df.meta.set("file_name", ntpath.basename(file_name))
         except IOError as error:
-            logger.print(error)
+            print(error)
             raise
 
         df = replace_columns_special_characters(df)
