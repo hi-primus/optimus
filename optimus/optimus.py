@@ -24,13 +24,22 @@ def optimus(engine="spark", *args, **kwargs):
     logger.print("ENGINE", engine)
     # Monkey Patching
 
+    if engine == "vaex":
+        from vaex import DataFrame as VaexDataFrame
+        # import pandas as pd
+        from optimus.engines.vaex import rows, columns, extension, constants, functions
+        from optimus.engines.vaex.io import save
+
+        VaexDataFrame.outliers = property(outliers)
+        VaexDataFrame.meta = property(meta)
+        VaexDataFrame.schema = [MetadataDask()]
+
     if engine == "pandas":
         from pandas import DataFrame as PandasDataFrame
         # import pandas as pd
         from optimus.engines.pandas import rows, columns, extension, constants, functions
         from optimus.engines.pandas.io import save
 
-        a = columns, rows, constants, extension, functions, save, plots
 
         PandasDataFrame.outliers = property(outliers)
         PandasDataFrame.meta = property(meta)
@@ -46,7 +55,6 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.spark import rows, columns, extension, constants, functions
         from optimus.engines.spark.io import save
 
-        a = columns, rows, constants, extension, functions, save, plots
 
         SparkDataFrame.outliers = property(outliers)
         SparkDataFrame.meta = property(meta)
@@ -56,7 +64,6 @@ def optimus(engine="spark", *args, **kwargs):
 
         from optimus.engines.dask import columns, rows, constants, extension, functions
         from optimus.engines.dask.io import save
-        a = columns, rows, constants, extension, functions, save, plots
 
         DaskDataFrame.outliers = property(outliers)
         DaskDataFrame.meta = property(meta)
@@ -67,12 +74,13 @@ def optimus(engine="spark", *args, **kwargs):
 
         from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
         from optimus.engines.dask_cudf.io import save
-        a = columns, rows, constants, extension, functions, save, plots
 
         DaskCUDFDataFrame.outliers = property(outliers)
         DaskCUDFDataFrame.meta = property(meta)
         DaskCUDFDataFrame.schema = [MetadataDask()]
 
+    # Dummy so pycharm not complain about not used imports
+    columns, rows, constants, extension, functions, save, plots
     # else:
     #     RaiseIt.value_error(engine, ["spark", "cudf", "dask-cudf"])
 
