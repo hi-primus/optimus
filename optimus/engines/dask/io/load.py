@@ -49,7 +49,8 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, *args,
+            **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -67,8 +68,14 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            df = dd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args,
+            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
                              **kwargs)
+            partitions = df.ext.partitions()
+            if n_rows > -1:
+                df = df.head(n_rows)
+                df = dd.from_pandas(df, npartitions=partitions)
+                # print(type(df))
+
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
