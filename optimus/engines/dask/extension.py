@@ -143,15 +143,18 @@ def ext(self: DataFrame):
 
         @staticmethod
         def partitions():
-            return self.npartitions
+            df = self
+            return df.npartitions
 
         @staticmethod
         def partitioner():
+            print("Dask not support custom partitiones")
             raise NotImplementedError
 
         @staticmethod
         def repartition(partitions_number=None, col_name=None):
-            raise NotImplementedError
+            df = self
+            return df.repartition(npartitions=df.npartitions)
 
         @staticmethod
         def show():
@@ -159,7 +162,8 @@ def ext(self: DataFrame):
             Print df lineage
             :return:
             """
-            return self.compute()
+            df = self
+            return df.compute()
 
         @staticmethod
         def debug():
