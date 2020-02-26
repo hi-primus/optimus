@@ -675,7 +675,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         columns = parse_columns(df, columns)
         dtypes = df.cols.dtypes()
-
+        print("DTYPES", dtypes)
         result = {}
 
         # partitions = df[columns].to_delayed()
@@ -687,7 +687,6 @@ class DaskBaseColumns(BaseColumns):
         # print(a)
 
         for col_name in columns:
-
             df_result = df[col_name].apply(Infer.parse_dask, args=(col_name, infer, dtypes, str_funcs, int_funcs),
                                            meta=str).compute()
 
@@ -695,7 +694,7 @@ class DaskBaseColumns(BaseColumns):
 
         if infer is True:
             for k in result.keys():
-                result[k] = fill_missing_var_types(result[k])
+                result[k] = fill_missing_var_types(result[k], dtypes)
         else:
             result = self.parse_profiler_dtypes(result)
 
@@ -730,6 +729,20 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _trim, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
+    @staticmethod
+    def map_delayed(df, func, *args, **kwargs):
+        """
+        In this way we can partition the data and delayed the function call
+
+        :return:
+        """
+        import dask
+        from dask.dataframe import from_delayed
+
+        partitions = df.to_delayed()
+        delayed_values = [dask.delayed(func)(part, *args, **kwargs)
+                          for part in partitions]
+        return from_delayed(delayed_values)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
@@ -765,10 +778,11 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return_type = object
                 _meta = df[input_col].astype(return_type)
-
-            df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
+            df[output_col] = DaskBaseColumns.map_delayed(df[input_col], func)
+            # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
         return df
+        # return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -841,8 +855,9 @@ class DaskBaseColumns(BaseColumns):
             else:
                 func = _cast_str
 
-            df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
+            # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
             # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+            df[output_col] = df[input_col].astype(dtype)
 
             df[output_col].odtype = dtype
 
