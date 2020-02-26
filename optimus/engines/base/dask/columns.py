@@ -831,59 +831,20 @@ class DaskBaseColumns(BaseColumns):
             output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
+
             if dtype == 'int':
-                df.cols.apply(input_col, func=_cast_int, func_return_type="int", output_cols=output_col)
-                # df[output_col] = df[input_col].apply(func=_cast_int, meta=df[input_col])
+                func = _cast_int
             elif dtype == 'float':
-                df.cols.apply(input_col, func=_cast_float, func_return_type="float", output_cols=output_col)
-                # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
+                func = _cast_float
             elif dtype == 'bool':
-                df.cols.apply(input_col, func=_cast_bool, output_cols=output_col)
-                # df[output_col] = df[input_col].apply(func=, meta=df[input_col])
+                func = _cast_bool
             else:
-                df.cols.apply(input_col, func=_cast_str, func_return_type="object", output_cols=output_col)
-                # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+                func = _cast_str
+
+            df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
+            # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
+
             df[output_col].odtype = dtype
-
-        return df
-
-    def cast_type(self, input_cols=None, dtype=None, output_cols=None, columns=None):
-        """
-        Cast a column or a list of columns to a specific data type
-        :param input_cols: Columns names to be casted
-        :param output_cols:
-        :param dtype: final data type
-        :param columns: List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-                colsAndTypes = [('columnName1', 'int64'), ('columnName2', 'float'), ('columnName3', 'int32')]
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-        :return: Dask DataFrame
-        """
-
-        df = self.df
-        _dtypes = []
-
-        # Parse params
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
-                output_cols = get_output_cols(input_cols, output_cols)
-                for _ in builtins.range(0, len(input_cols)):
-                    _dtypes.append(dtype)
-        else:
-            input_cols = list([c[0] for c in columns])
-            if len(columns[0]) == 2:
-                output_cols = get_output_cols(input_cols, output_cols)
-                _dtypes = list([c[1] for c in columns])
-            elif len(columns[0]) == 3:
-                output_cols = list([c[1] for c in columns])
-                _dtypes = list([c[2] for c in columns])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
-            df[output_col] = df[input_col].astype(dtype=dtype)
 
         return df
 
