@@ -703,6 +703,7 @@ class DaskBaseColumns(BaseColumns):
     def lower(self, input_cols, output_cols=None):
 
         def _lower(value):
+            # print(type(value))
             return value.lower()
 
         df = self.df
@@ -779,8 +780,8 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return_type = object
                 _meta = df[input_col].astype(return_type)
-            df[output_col] = DaskBaseColumns.map_delayed(df[input_col], func)
-            # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
+            # df[output_col] = DaskBaseColumns.map_delayed(df[input_col], func)
+            df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
         return df
         # return df
