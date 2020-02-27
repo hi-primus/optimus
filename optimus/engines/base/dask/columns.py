@@ -674,8 +674,8 @@ class DaskBaseColumns(BaseColumns):
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.df
         columns = parse_columns(df, columns)
-        dtypes = df.cols.dtypes()
-        print("DTYPES", dtypes)
+        columns_dtypes = df.cols.dtypes()
+        # print("DTYPES", dtypes)
         result = {}
 
         # partitions = df[columns].to_delayed()
@@ -687,14 +687,14 @@ class DaskBaseColumns(BaseColumns):
         # print(a)
 
         for col_name in columns:
-            df_result = df[col_name].apply(Infer.parse_dask, args=(col_name, infer, dtypes, str_funcs, int_funcs),
-                                           meta=str).compute()
-
-            result[str(col_name)] = dict(df_result.value_counts())
+            df_result = df[col_name].apply(Infer.parse_dask,
+                                           args=(col_name, infer, columns_dtypes, str_funcs, int_funcs),
+                                           meta=str)
+            r = df_result.value_counts().compute()
+            result[str(col_name)] = {r.index[0]: r[0]}
 
         if infer is True:
-            for k in result.keys():
-                result[k] = fill_missing_var_types(result[k], dtypes)
+            result = fill_missing_var_types(result, columns_dtypes)
         else:
             result = self.parse_profiler_dtypes(result)
 
@@ -729,6 +729,7 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _trim, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
+
     @staticmethod
     def map_delayed(df, func, *args, **kwargs):
         """

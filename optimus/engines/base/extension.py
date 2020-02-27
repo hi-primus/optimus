@@ -1,10 +1,10 @@
 import json
+import math
 from abc import abstractmethod, ABC
 
 import humanize
 import imgkit
 import jinja2
-import math
 import numpy as np
 from dask.dataframe.core import DataFrame
 

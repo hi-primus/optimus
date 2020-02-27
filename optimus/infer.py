@@ -353,9 +353,10 @@ class Infer(object):
 
         result = (col_name, _data_type), 1
 
-        return result
-
-        # return col_and_value
+        if full:
+            return result
+        else:
+            return _data_type
 
 
 def is_nan(value):

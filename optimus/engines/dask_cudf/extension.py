@@ -9,6 +9,7 @@ import numpy as np
 from dask_cudf.core import DataFrame
 
 from optimus.bumblebee import Comm
+from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import random_int, traverse, absolute_path
@@ -22,7 +23,7 @@ DataFrame.output = "html"
 
 
 def ext(self):
-    class Ext:
+    class Ext(BaseExt):
 
         _name = None
 
