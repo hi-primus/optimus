@@ -1,9 +1,7 @@
 import json
-
-import humanize
-import imgkit
-import jinja2
 import math
+
+import imgkit
 from packaging import version
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import PickleSerializer, AutoBatchedSerializer
@@ -11,9 +9,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
-from optimus.bumblebee import Comm
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.engines.base.extension import BaseExt
+from optimus.engines.spark.spark import Spark
 from optimus.helpers.converter import val_to_list
 from optimus.helpers.functions import random_int, traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
@@ -21,14 +18,10 @@ from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 from optimus.profiler.profiler import Profiler
-from optimus.profiler.templates.html import HEADER, FOOTER
-from optimus.engines.spark.spark import Spark
-
-DataFrame.output = "html"
 
 
 def ext(self):
-    class Ext:
+    class Ext(BaseExt):
 
         _name = None
 
@@ -329,73 +322,6 @@ def ext(self):
             print_html("<img src='" + path + "'>")
 
         @staticmethod
-        def table_html(limit=10, columns=None, title=None, full=False, truncate=True):
-            """
-            Return a HTML table with the dataframe cols, data types and values
-            :param columns: Columns to be printed
-            :param limit: How many rows will be printed
-            :param title: Table title
-            :param full: Include html header and footer
-            :param truncate: Truncate the row information
-
-            :return:
-            """
-
-            columns = parse_columns(self, columns)
-
-            if limit is None:
-                limit = 10
-
-            if limit == "all":
-                data = collect_as_dict(self.cols.select(columns))
-            else:
-                data = collect_as_dict(self.cols.select(columns).limit(limit))
-
-            # Load the Jinja template
-            template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
-            template_env = jinja2.Environment(loader=template_loader, autoescape=True)
-            template = template_env.get_template("table.html")
-
-            # Filter only the columns and data type info need it
-            dtypes = []
-            for i, j in zip(self.dtypes, self.schema):
-                if i[1].startswith("array<struct"):
-                    dtype = "array<struct>"
-                elif i[1].startswith("struct"):
-                    dtype = "struct"
-                else:
-                    dtype = i[1]
-
-                dtypes.append((i[0], dtype, j.nullable))
-
-            # Remove not selected columns
-            final_columns = []
-            for i in dtypes:
-                for j in columns:
-                    if i[0] == j:
-                        final_columns.append(i)
-
-            total_rows = self.rows.count()
-
-            if limit == "all":
-                limit = total_rows
-            elif total_rows < limit:
-                limit = total_rows
-
-            total_rows = humanize.intcomma(total_rows)
-
-            total_cols = self.cols.count()
-            total_partitions = Ext.partitions()
-
-            output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
-                                     total_cols=total_cols,
-                                     partitions=total_partitions, title=title, truncate=truncate)
-
-            if full is True:
-                output = HEADER + output + FOOTER
-            return output
-
-        @staticmethod
         def isnotebook():
             """
             Detect you are in a notebook or in a terminal
@@ -411,18 +337,6 @@ def ext(self):
                     return False  # Other type (?)
             except NameError:
                 return False  # Probably standard Python interpreter
-
-        @staticmethod
-        def table(limit=None, columns=None, title=None, truncate=True):
-            try:
-                if Ext.isnotebook() and DataFrame.output == "html":
-                    result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
-                    print_html(result)
-                else:
-                    self.ext.show()
-            except NameError:
-
-                self.ext.show()
 
         @staticmethod
         def show():
@@ -449,36 +363,6 @@ def ext(self):
             print(self.rdd.toDebugString().decode("ascii"))
 
         @staticmethod
-        def send(name: str = None, infer: bool = True, mismatch=None, stats: bool = True, advanced_stats: bool = True,
-                 output: str = "http"):
-            """
-            Profile and send the data to the queue
-            :param infer: infer datatypes
-            :param mismatch: a dict with the column name or regular expression to identify correct values.
-            :param name: Specified a name for the view/dataframe
-            :param stats: calculate stats or only vales
-            :param output:
-            :return:
-            """
-            df = self
-            if name is not None:
-                df.ext.set_name(name)
-
-            message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                                approx_count=True,
-                                                sample=10000,
-                                                stats=stats,
-                                                format="json",
-                                                mismatch=mismatch,
-                                                advanced_stats=advanced_stats
-                                                )
-
-            if Comm.instance:
-                return Comm.instance.send(message, output=output)
-            else:
-                raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
-
-        @staticmethod
         def reset():
             """
             Reset actions metadata and the profiler cache
@@ -488,7 +372,7 @@ def ext(self):
             Profiler.instance.output_columns = {}
             return df
 
-    return Ext()
+    return Ext(self)
 
 
 DataFrame.ext = property(ext)

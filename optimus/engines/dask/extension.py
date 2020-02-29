@@ -4,8 +4,6 @@ from optimus.engines.base.extension import BaseExt
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 
-DataFrame.output = "html"
-
 
 def ext(self: DataFrame):
     class Ext(BaseExt):

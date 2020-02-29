@@ -1,10 +1,11 @@
 {% if title is not none %}
 <h1>{{title}}</h1>
 {%endif%}
-{% macro header_footer(limit, total_rows, total_cols, partitions) %}
 
+{% macro header_footer(limit, total_rows, total_cols, partitions, df_type) %}
 <div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing {{limit}} of {{total_rows}} rows / {{total_cols}} columns</div>
-<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">{{partitions}} partition(s)</div>
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">{{partitions}} partition(s) {{df_type}}</div>
+
 {% endmacro %}
 
 {{header_footer(limit, total_rows, total_cols, partitions)}}
@@ -45,4 +46,4 @@
     {% endfor %}
     </tbody>
 </table>
-{{header_footer(limit, total_rows, total_cols,partitions)}}
+{{header_footer(limit, total_rows, total_cols,partitions, df_type)}}

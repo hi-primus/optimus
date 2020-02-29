@@ -9,11 +9,8 @@ from dask_cudf.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.functions import random_int, traverse, absolute_path
-from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-
-DataFrame.output = "html"
 
 
 def ext(self):

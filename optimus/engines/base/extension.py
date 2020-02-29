@@ -6,7 +6,6 @@ import humanize
 import imgkit
 import jinja2
 import numpy as np
-from dask.dataframe.core import DataFrame
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
@@ -17,8 +16,6 @@ from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
-
-DataFrame.output = "html"
 
 
 class BaseExt(ABC):
@@ -108,7 +105,7 @@ class BaseExt(ABC):
     def sample(n=10, random=False):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1) -> DataFrame:
+    def stratified_sample(self, col_name, seed: int = 1):
         """
         Stratified Sampling
         :param col_name:
@@ -244,14 +241,13 @@ class BaseExt(ABC):
         df = self.df
 
         columns = parse_columns(df, columns)
-
         if limit is None:
             limit = 10
 
         if limit == "all":
             data = df.cols.select(columns).ext.to_dict()
         else:
-            data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
+            data = collect_as_dict(df.cols.select(columns).rows.limit(limit))
 
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
@@ -280,11 +276,11 @@ class BaseExt(ABC):
 
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
-        total_partitions = BaseExt.partitions()
+        total_partitions = df.ext.partitions()
 
         # print(data)
-
-        output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
+        df_type = type(df)
+        output = template.render(df_type=df_type, cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                  total_cols=total_cols,
                                  partitions=total_partitions, title=title, truncate=truncate)
 
@@ -299,9 +295,9 @@ class BaseExt(ABC):
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
         df = self.df
-        print(type(df))
         try:
-            if __IPYTHON__ and DataFrame.output is "html":
+            if __IPYTHON__:
+            # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
                 result = df.ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:

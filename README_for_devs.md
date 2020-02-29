@@ -62,7 +62,7 @@ To recreate the templates you need to inline the CSS.
 
 First go to https://nodejs.org and download and install nodejs
 
-From the optimus repo in the terminal:
+From the Optimus repo folder, in the terminal:
 
 - Run `npm install`
 - Run `node inlinecss.js`

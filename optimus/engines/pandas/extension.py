@@ -17,9 +17,6 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 
-DataFrame.output = "html"
-
-
 def ext(self):
     class Ext:
 
@@ -245,87 +242,11 @@ def ext(self):
             imgkit.from_string(Ext.table_html(limit=limit, full=True), path, css=css)
             print_html("<img src='" + path + "'>")
 
-        @staticmethod
-        def table_html(limit=10, columns=None, title=None, full=False, truncate=True, count=True):
-            """
-            Return a HTML table with the spark cols, data types and values
-            :param columns: Columns to be printed
-            :param limit: How many rows will be printed
-            :param title: Table title
-            :param full: Include html header and footer
-            :param truncate: Truncate the row information
-            :param count:
-
-            :return:
-            """
-
-            df = self
-
-            columns = parse_columns(df, columns)
-
-            if limit is None:
-                limit = 10
-
-            if limit == "all":
-                data = df.cols.select(columns).ext.to_dict()
-            else:
-                data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
-
-            # Load the Jinja template
-            template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
-            template_env = jinja2.Environment(loader=template_loader, autoescape=True)
-            template = template_env.get_template("table.html")
-
-            # Filter only the columns and data type info need it
-            dtypes = [(k, v) for k, v in df.cols.dtypes().items()]
-
-            # Remove not selected columns
-            final_columns = []
-            for i in dtypes:
-                for j in columns:
-                    if i[0] == j:
-                        final_columns.append(i)
-
-            if count is True:
-                total_rows = self.rows.approx_count()
-            else:
-                count = None
-
-            if limit == "all":
-                limit = total_rows
-            elif total_rows < limit:
-                limit = total_rows
-
-            total_rows = humanize.intword(total_rows)
-            total_cols = self.cols.count()
-            total_partitions = Ext.partitions()
-
-            # print(data)
-
-            output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
-                                     total_cols=total_cols,
-                                     partitions=total_partitions, title=title, truncate=truncate)
-
-            if full is True:
-                output = HEADER + output + FOOTER
-            return output
 
         @staticmethod
         def display(limit=None, columns=None, title=None, truncate=True):
             # TODO: limit, columns, title, truncate
             Ext.table(limit, columns, title, truncate)
-
-        @staticmethod
-        def table(limit=None, columns=None, title=None, truncate=True):
-            try:
-                if __IPYTHON__ and DataFrame.output is "html":
-                    result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
-                    print_html(result)
-                else:
-                    self.ext.show()
-            except NameError:
-
-                self.show()
 
         @staticmethod
         def show():
