@@ -1,6 +1,6 @@
 from dask.distributed import Client
 
-from optimus.engines.dask.constants import STARTING_DASK
+from optimus.engines.base.dask.constants import STARTING_DASK
 from optimus.helpers.constants import JUST_CHECKING
 from optimus.helpers.logger import logger
 

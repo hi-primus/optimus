@@ -1,23 +1,17 @@
-import collections
 import json
+import math
 
 import humanize
 import imgkit
 import jinja2
-import math
 import numpy as np
 from dask_cudf.core import DataFrame
 
-from optimus.bumblebee import Comm
 from optimus.engines.base.extension import BaseExt
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import random_int, traverse, absolute_path
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.profiler import Profiler
-from optimus.profiler.templates.html import HEADER, FOOTER
 
 DataFrame.output = "html"
 
@@ -28,55 +22,8 @@ def ext(self):
         _name = None
 
         @staticmethod
-        def init():
-            df = self
-            if df.meta.get("optimus.init") is None:
-                # Save columns as the data set original name
-                for col_name in df.cols.names():
-                    df = df.cols.set_meta(col_name, "optimus.name", col_name)
-                    df = df.cols.set_meta(col_name, "optimus.transformations", [])
-            return df
-
-        @staticmethod
         def cache():
             return self  # Dask.instance.persist(self)
-
-        @staticmethod
-        def to_json():
-            """
-            Return a json from a Spark Dataframe
-            :return:
-            """
-            return json.dumps(Ext.to_dict(self), ensure_ascii=False, default=json_converter)
-
-        @staticmethod
-        def to_dict():
-            """
-            Return a dict from a Collect result
-            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-            :return:
-            """
-            df = self
-            dict_result = []
-
-            # Dask cudf to pandas
-            df = df.map_partitions(lambda df: df.to_pandas())
-
-            # if there is only an element in the dict just return the value
-            if len(dict_result) == 1:
-                dict_result = next(iter(dict_result.values()))
-            else:
-                col_names = parse_columns(df, "*")
-
-                # Because asDict can return messed columns names we order
-                for index, row in df.iterrows():
-                    # _row = row.asDict()
-                    r = collections.OrderedDict()
-                    # for col_name, value in row.iteritems():
-                    for col_name in col_names:
-                        r[col_name] = row[col_name]
-                    dict_result.append(r)
-            return dict_result
 
         @staticmethod
         def export():
@@ -267,88 +214,6 @@ def ext(self):
             print_html("<img src='" + path + "'>")
 
         @staticmethod
-        def table_html(limit=10, columns=None, title=None, full=False, truncate=True, count=True):
-            """
-            Return a HTML table with the spark cols, data types and values
-            :param columns: Columns to be printed
-            :param limit: How many rows will be printed
-            :param title: Table title
-            :param full: Include html header and footer
-            :param truncate: Truncate the row information
-            :param count:
-
-            :return:
-            """
-
-            df = self
-
-            columns = parse_columns(df, columns)
-
-            if limit is None:
-                limit = 10
-
-            if limit == "all":
-                data = df.cols.select(columns).ext.to_dict()
-            else:
-                data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
-
-            # Load the Jinja template
-            template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
-            template_env = jinja2.Environment(loader=template_loader, autoescape=True)
-            template = template_env.get_template("table.html")
-
-            # Filter only the columns and data type info need it
-            dtypes = [(k, v) for k, v in df.cols.dtypes().items()]
-
-            # Remove not selected columns
-            final_columns = []
-            for i in dtypes:
-                for j in columns:
-                    if i[0] == j:
-                        final_columns.append(i)
-
-            if count is True:
-                total_rows = self.rows.approx_count()
-            else:
-                count = None
-
-            if limit == "all":
-                limit = total_rows
-            elif total_rows < limit:
-                limit = total_rows
-
-            total_rows = humanize.intword(total_rows)
-            total_cols = self.cols.count()
-            total_partitions = Ext.partitions()
-
-            # print(data)
-
-            output = template.render(cols=final_columns, data=data, limit=limit, total_rows=total_rows,
-                                     total_cols=total_cols,
-                                     partitions=total_partitions, title=title, truncate=truncate)
-
-            if full is True:
-                output = HEADER + output + FOOTER
-            return output
-
-        @staticmethod
-        def display(limit=None, columns=None, title=None, truncate=True):
-            # TODO: limit, columns, title, truncate
-            Ext.table(limit, columns, title, truncate)
-
-        @staticmethod
-        def table(limit=None, columns=None, title=None, truncate=True):
-            try:
-                if __IPYTHON__ and DataFrame.output is "html":
-                    result = Ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
-                    print_html(result)
-                else:
-                    self.ext.show()
-            except NameError:
-
-                self.show()
-
-        @staticmethod
         def show():
             """
             Print df lineage
@@ -375,43 +240,7 @@ def ext(self):
 
             raise NotImplementedError
 
-        @staticmethod
-        def send(name: str = None, infer: bool = True, mismatch=None, stats: bool = True, advanced_stats: bool = True,
-                 output: str = "http"):
-            """
-            Profile and send the data to the queue
-            :param name: Specified a name for the view/spark
-            :param infer:
-            :param mismatch:
-            :param stats:
-            :param advanced_stats:
-            :param output:
-            :return:
-            """
-            df = self
-            if name is not None:
-                df.ext.set_name(name)
-
-            message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=False, relative_error=RELATIVE_ERROR,
-                                                approx_count=True,
-                                                sample=10000,
-                                                stats=stats,
-                                                format="json"
-                                                )
-
-            if Comm.instance:
-                return Comm.instance.send(message, output=output)
-            else:
-                raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
-
-        @staticmethod
-        def reset():
-            df = self.meta.set("transformations.actions", {})
-            Profiler.instance.output_columns = {}
-            return df
-
-
-    return Ext()
+    return Ext(self)
 
 
 DataFrame.ext = property(ext)

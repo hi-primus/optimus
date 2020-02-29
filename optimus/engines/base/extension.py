@@ -12,7 +12,7 @@ from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.functions import traverse, absolute_path
+from optimus.helpers.functions import traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.profiler.profiler import Profiler
@@ -49,10 +49,14 @@ class BaseExt(ABC):
         df = self.df
         return json.dumps(df.ext.to_dict(df), ensure_ascii=False, default=json_converter)
 
-    @staticmethod
-    @abstractmethod
-    def to_dict():
-        pass
+    def to_dict(self):
+        """
+        Return a dict from a Collect result
+        [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
+        :return:
+        """
+        df = self.df
+        return collect_as_dict(df)
 
     def export(self):
         """

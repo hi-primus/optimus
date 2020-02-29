@@ -1,4 +1,3 @@
-import collections
 import json
 import math
 
@@ -11,7 +10,7 @@ from pandas import DataFrame
 from optimus.bumblebee import Comm
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.functions import random_int, traverse, absolute_path
+from optimus.helpers.functions import random_int, traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -56,23 +55,7 @@ def ext(self):
             :return:
             """
             df = self
-            dict_result = []
-
-            # if there is only an element in the dict just return the value
-            if len(dict_result) == 1:
-                dict_result = next(iter(dict_result.values()))
-            else:
-                col_names = parse_columns(df, "*")
-
-                # Because asDict can return messed columns names we order
-                for index, row in df.iterrows():
-                    # _row = row.asDict()
-                    r = collections.OrderedDict()
-                    # for col_name, value in row.iteritems():
-                    for col_name in col_names:
-                        r[col_name] = row[col_name]
-                    dict_result.append(r)
-            return dict_result
+            return collect_as_dict(df)
 
         @staticmethod
         def export():

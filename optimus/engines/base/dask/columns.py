@@ -32,6 +32,10 @@ from optimus.profiler.functions import fill_missing_var_types
 
 class DaskBaseColumns(BaseColumns):
 
+    @staticmethod
+    def frequency(columns, n=10, percentage=False, total_rows=None):
+        pass
+
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
@@ -296,12 +300,13 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
 
         def _replace_regex(value, regex, replace):
-            try:
-                value = value.astype(str)
-            except:
-                value = str(value)
-
-            return re.sub(regex, replace, value)
+            # try:
+            #     value = value.astype(str)
+            # except:
+            #     value = str(value)
+            print(value.replace(regex, replace))
+            return value.replace(regex, replace)
+            # return re.sub(regex, replace, value)
 
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
@@ -313,7 +318,7 @@ class DaskBaseColumns(BaseColumns):
     def remove_white_spaces(self, input_cols, output_cols=None):
 
         def _remove_white_spaces(value):
-            return value.replace(" ", "")
+            return value.str.replace(" ", "")
 
         df = self.df
         return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
@@ -322,7 +327,8 @@ class DaskBaseColumns(BaseColumns):
 
     def remove_special_chars(self, input_cols, output_cols=None):
         def _remove_special_chars(value):
-            return re.sub('[^A-Za-z0-9]+', '', value)
+            return value.str.replace('[^A-Za-z0-9]+', '')
+            # return re.sub('[^A-Za-z0-9]+', '', value)
 
         df = self.df
         return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
@@ -703,8 +709,10 @@ class DaskBaseColumns(BaseColumns):
     def lower(self, input_cols, output_cols=None):
 
         def _lower(value):
-            # print(type(value))
-            return value.lower()
+            print("bbb")
+            print(type(value))
+            print("aaa")
+            return value.str.lower()
 
         df = self.df
         return df.cols.apply(input_cols, _lower, func_return_type=str,
@@ -714,7 +722,7 @@ class DaskBaseColumns(BaseColumns):
     def upper(self, input_cols, output_cols=None):
 
         def _upper(value):
-            return value.upper()
+            return value.str.upper()
 
         df = self.df
         return df.cols.apply(input_cols, _upper, func_return_type=str,
@@ -724,7 +732,7 @@ class DaskBaseColumns(BaseColumns):
     def trim(self, input_cols, output_cols=None):
 
         def _trim(value):
-            return value.lower()
+            return value.str.strip()
 
         df = self.df
         return df.cols.apply(input_cols, _trim, func_return_type=str,
@@ -744,7 +752,8 @@ class DaskBaseColumns(BaseColumns):
         partitions = df.to_delayed()
         delayed_values = [dask.delayed(func)(part, *args, **kwargs)
                           for part in partitions]
-        return from_delayed(delayed_values)
+        return delayed_values
+        # return from_delayed(delayed_values)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
@@ -780,10 +789,12 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return_type = object
                 _meta = df[input_col].astype(return_type)
-            # df[output_col] = DaskBaseColumns.map_delayed(df[input_col], func)
-            df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
+            if args is None: args = []
+            a = DaskBaseColumns.map_delayed(df[input_col], func, *args)
+            # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
-        return df
+        # print(df.head())
+        return a
         # return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
@@ -970,15 +981,15 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
 
         # TODO check if .contains can be used instead of regexp
-        def func_chars_words(df, input_col, output_col, search, replace_by):
+        def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
             # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
 
             # Create as dict
             search_and_replace_by = None
-            if is_list(search):
-                search_and_replace_by = {s: replace_by for s in search}
-            elif is_one_element(search):
-                search_and_replace_by = {search: replace_by}
+            if is_list(_search):
+                search_and_replace_by = {s: _replace_by for s in _search}
+            elif is_one_element(_search):
+                search_and_replace_by = {_search: _replace_by}
 
             search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
 
@@ -995,18 +1006,18 @@ class DaskBaseColumns(BaseColumns):
                 else:
                     return None
 
-            df = df.cols.apply(input_col, multiple_replace, "str", search_and_replace_by,
-                               output_cols=output_col)
+            _df = _df.cols.apply(_input_col, multiple_replace, "str", search_and_replace_by,
+                                 output_cols=_output_col)
 
-            return df
+            return _df
 
-        def func_full(df, input_col, output_col, search, replace_by):
-            search = val_to_list(search)
+        def func_full(df, _input_col, _output_col, _search, _replace_by):
+            _search = val_to_list(_search)
 
-            if input_col != output_col:
-                df[output_col] = df[input_col]
+            if _input_col != _output_col:
+                df[_output_col] = df[_input_col]
 
-            df[output_col] = df[output_col].mask(df[output_col].isin(search), replace_by)
+            df[_output_col] = df[_output_col].mask(df[_output_col].isin(_search), _replace_by)
 
             return df
 

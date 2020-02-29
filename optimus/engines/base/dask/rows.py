@@ -1,6 +1,7 @@
 import functools
 import operator
 
+import dask
 import dask.array as da
 import dask.dataframe as  dd
 # from dask_cudf.core import DataFrame
@@ -41,14 +42,29 @@ class DaskBaseRows(BaseRows):
 
         return df
 
+    def limit(self, count):
+        """
+        Limit the number of rows
+        :param count:
+        :return:
+        """
+
+        # @dask.delayed
+        # def _limit(df, count):
+        #     return df.head(count)
+        #
+        # df = self.df
+        # return _limit(df, count)
+        df = self.df
+        return df.head(count)
+
     def select(self, condition):
         """
 
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self
-
+        df = self.df
         df = df[condition]
         df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
 
@@ -139,6 +155,13 @@ class DaskBaseRows(BaseRows):
         return df
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
+        """
+
+        :param columns:
+        :param lower_bound:
+        :param upper_bound:
+        :return:
+        """
         df = self.df
         columns = parse_columns(df, columns)
         return df[lower_bound: upper_bound][columns]
@@ -230,14 +253,13 @@ class DaskBaseRows(BaseRows):
 
         return df
 
-    def limit(self, count):
-        """
-        Limit the number of rows
-        :param count:
-        :return:
-        """
-        df = self.df
-        return df[:count - 1]
+    # def limit(self, count):
+    #     """
+    #     Limit the number of rows
+    #     :param count:
+    #     :return:
+    #     """
+    #     pass
 
     def is_in(self, input_cols, values):
         df = self.df

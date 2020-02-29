@@ -40,7 +40,6 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.pandas import rows, columns, extension, constants, functions
         from optimus.engines.pandas.io import save
 
-
         PandasDataFrame.outliers = property(outliers)
         PandasDataFrame.meta = property(meta)
         PandasDataFrame.schema = [MetadataDask()]
@@ -55,14 +54,14 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.spark import rows, columns, extension, constants, functions
         from optimus.engines.spark.io import save
 
-
         SparkDataFrame.outliers = property(outliers)
         SparkDataFrame.meta = property(meta)
 
     if engine == "dask" or engine == "dask-cudf":
         from dask.dataframe.core import DataFrame as DaskDataFrame
 
-        from optimus.engines.dask import columns, rows, constants, extension, functions
+        from optimus.engines.dask import columns, rows, extension, functions
+        from optimus.engines.base.dask import constants
         from optimus.engines.dask.io import save
 
         DaskDataFrame.outliers = property(outliers)
@@ -72,7 +71,8 @@ def optimus(engine="spark", *args, **kwargs):
     if engine == "dask-cudf":
         from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
-        from optimus.engines.dask_cudf import columns, rows, constants, extension, functions
+        from optimus.engines.dask_cudf import columns, rows, extension, functions
+        from optimus.engines.base.dask import constants
         from optimus.engines.dask_cudf.io import save
 
         DaskCUDFDataFrame.outliers = property(outliers)

@@ -25,18 +25,15 @@ class DaskEngine:
 
         # self.create = Create()
         self.load = Load()
-        # self.read = self.spark.read
         self.verbose(verbose)
 
         if session is None:
             Dask.instance = Dask().create(n_workers=n_workers, threads_per_worker=threads_per_worker,
                                           processes=processes, memory_limit=memory_limit, *args, **kwargs)
-            # Spark.instance = Spark().create(self.master, self.app_name)
         else:
             Dask.instance = Dask().load(session)
 
         # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
-
         self.client = Dask.instance
 
         Profiler.instance = Profiler()

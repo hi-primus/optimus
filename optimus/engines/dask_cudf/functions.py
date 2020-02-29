@@ -128,7 +128,8 @@ def functions(self):
 
                 result_hist = {}
                 for col in col_name:
-                    print("COLANEM", col)
+                    print("COLANEM", is_column_a(df, col, df.constants.STRING_TYPES))
+                    print("STRNIG",df.constants.STRING_TYPES)
                     if is_column_a(df, col, df.constants.STRING_TYPES):
                         if min_max is None:
                             def func(val):

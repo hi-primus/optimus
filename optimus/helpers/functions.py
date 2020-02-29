@@ -13,7 +13,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus import ROOT_DIR
-from optimus.helpers.converter import one_list_to_val, val_to_list
+from optimus.helpers.check import is_cudf_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, is_dask_dataframe
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.converter import one_list_to_val, val_to_list, spark_to_pandas, cudf_to_pandas, \
+    dask_cudf_to_pandas, dask_pandas_to_pandas
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
@@ -34,23 +37,22 @@ def collect_as_list(df):
 def collect_as_dict(df, limit=None):
     """
     Return a dict from a Collect result
-    :param df:
+    [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
     :return:
     """
-    # # Explore this approach seems faster
-    # use_unicode = True
-    # from pyspark.serializers import UTF8Deserializer
-    # from pyspark.rdd import RDD
-    # rdd = df._jdf.toJSON()
-    # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
-    # if limit is None:
-    #     r.collect()
-    # else:
-    #     r.take(limit)
-    # return r
-    #
-    from optimus.helpers.columns import parse_columns
+
     dict_result = []
+    # check the dataframe type and convert it to pandas dataframe
+    # from optimus.helpers.check import is_spark_dataframe
+
+    if is_spark_dataframe(df):
+        df = spark_to_pandas(df)
+    elif is_cudf_dataframe(df):
+        df = cudf_to_pandas(df)
+    elif is_dask_cudf_dataframe(df):
+        df = dask_cudf_to_pandas(df)
+    elif is_dask_dataframe(df):
+        df = dask_pandas_to_pandas(df)
 
     # if there is only an element in the dict just return the value
     if len(dict_result) == 1:
@@ -59,13 +61,51 @@ def collect_as_dict(df, limit=None):
         col_names = parse_columns(df, "*")
 
         # Because asDict can return messed columns names we order
-        for row in df.collect():
-            _row = row.asDict()
+        for index, row in df.iterrows():
+            # _row = row.asDict()
             r = collections.OrderedDict()
-            for col in col_names:
-                r[col] = _row[col]
+            # for col_name, value in row.iteritems():
+            for col_name in col_names:
+                r[col_name] = row[col_name]
             dict_result.append(r)
     return dict_result
+
+
+# def collect_as_dict(df, limit=None):
+#     """
+#     Return a dict from a Collect result
+#     :param df:
+#     :return:
+#     """
+#     # # Explore this approach seems faster
+#     # use_unicode = True
+#     # from pyspark.serializers import UTF8Deserializer
+#     # from pyspark.rdd import RDD
+#     # rdd = df._jdf.toJSON()
+#     # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
+#     # if limit is None:
+#     #     r.collect()
+#     # else:
+#     #     r.take(limit)
+#     # return r
+#     #
+#     from optimus.helpers.columns import parse_columns
+#     dict_result = []
+#
+#     # if there is only an element in the dict just return the value
+#     if len(dict_result) == 1:
+#         dict_result = next(iter(dict_result.values()))
+#     else:
+#         col_names = parse_columns(df, "*")
+#
+#         # Because asDict can return messed columns names we order
+#         for row in df.collect():
+#             _row = row.asDict()
+#             r = collections.OrderedDict()
+#             for col in col_names:
+#                 r[col] = _row[col]
+#             dict_result.append(r)
+#     return dict_result
 
 
 def filter_list(val, index=0):

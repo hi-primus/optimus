@@ -155,6 +155,7 @@ def cols(self: DaskCUDFDataFrame):
                     if not _filter(col_name, func):
                         filtered_column.append(col_name)
                     if len(filtered_column) > 0:
+                        print("func",func)
                         func_result = func(columns, args)(df)
                         for k, v in func_result.items():
                             result[k] = {}
@@ -188,16 +189,26 @@ def cols(self: DaskCUDFDataFrame):
             df = self
             columns = parse_columns(df, columns)
             q = {}
+
             for col_name in columns:
-                q[col_name] = df[col_name].value_counts().nlargest(n)
+                df_temp = df[col_name].value_counts()
+
+                # We need to calculate the value count length to pass it lo nlargest()
+                # nlargest trigger and exception if n greater than the dataframe
+                df_length = len(df_temp)
+                _n = df_length if df_length < n else n
+
+                q[col_name] = df_temp.nlargest(_n)
 
             compute_result = dd.compute(q)[0]
+
             result = {}
             for col_name, values in compute_result.items():
                 result[col_name] = []
                 for x, y in zip(list(values.index), values.values):
                     result[col_name].append({"value": x, "count": int(y)})
 
+            # print("1111")
             final_result = result
             if percentage is True:
                 if total_rows is None:

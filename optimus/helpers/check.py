@@ -4,8 +4,6 @@ Helpers to check if an object match a date type
 import re
 
 import pandas as pd
-from dask.dataframe.core import DataFrame as DaskDataFrame
-from pyspark.sql import DataFrame as SparkDataFrame
 
 from optimus.helpers.converter import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
@@ -46,7 +44,10 @@ def is_column_a(df, column, dtypes):
     if is_spark_dataframe(df):
         result = isinstance(v, data_type)
     elif is_dask_dataframe(df):
+
         result = v in data_type
+        print("--V", v)
+        print("DATA TYPE", data_type)
     else:
         result = None
     return result
@@ -72,6 +73,25 @@ def is_column_a(df, column, dtypes):
 #     # Filter columns by data type
 #     return isinstance(df.schema[column].dataType, data_type)
 
+def is_cudf_dataframe(value):
+    from cudf.core import DataFrame as CUDFDataFrame
+    return isinstance(value, CUDFDataFrame)
+
+
+def is_dask_cudf_dataframe(value):
+    from dask_cudf.core import DataFrame as DaskCUDFDataFrame
+    return isinstance(value, DaskCUDFDataFrame)
+
+
+def is_dask_dataframe(value):
+    """
+    Check if an object is a Dask DataFrame
+    :param value:
+    :return:
+    """
+    from dask.dataframe.core import DataFrame as DaskDataFrame
+    return isinstance(value, DaskDataFrame)
+
 
 def is_spark_dataframe(value):
     """
@@ -79,6 +99,8 @@ def is_spark_dataframe(value):
     :param value:
     :return:
     """
+
+    from pyspark.sql import DataFrame as SparkDataFrame
     return isinstance(value, SparkDataFrame)
 
 
@@ -89,15 +111,6 @@ def is_pandas_dataframe(value):
     :return:
     """
     return isinstance(value, pd.DataFrame)
-
-
-def is_dask_dataframe(value):
-    """
-    Check if an object is a Dask DataFrame
-    :param value:
-    :return:
-    """
-    return isinstance(value, DaskDataFrame)
 
 
 def equal_function(f1, f2):

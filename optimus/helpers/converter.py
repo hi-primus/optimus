@@ -123,3 +123,36 @@ def str_to_array(value):
             return True
     except (ValueError, SyntaxError,):
         pass
+
+
+# Functions to convert dataframe between engines
+def dask_pandas_to_dask_cudf(df):
+    import cudf
+    return df.map_partitions(cudf.DataFrame.from_pandas)
+
+
+# To cudf
+def dask_pandas_to_cudf(df):
+    import cudf
+    return cudf.DataFrame.from_pandas(df)
+
+
+def dask_cudf_to_cudf(df):
+    return df.compute()
+
+
+# To Pandas
+def spark_to_pandas(df):
+    return df.toPandas()
+
+
+def dask_cudf_to_pandas(df):
+    return df.map_partitions(lambda df: df.to_pandas())
+
+
+def dask_pandas_to_pandas(df):
+    return df.compute()
+
+
+def cudf_to_pandas(df):
+    return df.to_pandas()

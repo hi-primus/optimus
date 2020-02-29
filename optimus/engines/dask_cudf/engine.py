@@ -1,5 +1,3 @@
-from dask.distributed import Client
-from dask_cuda import LocalCUDACluster
 
 from optimus.bumblebee import Comm
 from optimus.engines.dask_cudf.io.jdbc import JDBC
@@ -14,25 +12,33 @@ Comm.instance = None
 
 
 class DaskCUDFEngine:
-    def __init__(self, verbose=False, comm=None, *args, **kwargs):
+    def __init__(self, session=None, n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB',
+                 verbose=False, comm=None, *args, **kwargs):
+        if comm is True:
+            Comm.instance = Comm()
+        else:
+            Comm.instance = comm
+
+        self.engine = 'dask-cudf'
+
         # self.create = Create()
         self.load = Load()
-        # self.read = self.spark.read
-
-        cluster = LocalCUDACluster()
-        client = Client(cluster)
-
-        self.engine = 'dask_cudf'
-        # self.create = Create()
-        self.load = Load()
-        # self.read = self.spark.read
         self.verbose(verbose)
 
-        DaskCUDF.instance = client
-        self.client = client
+        if session is None:
+            DaskCUDF.instance = DaskCUDF().create(*args, **kwargs)
+            # n_workers = n_workers, threads_per_worker = threads_per_worker,
+            # processes = processes, memory_limit = memory_limit
+        else:
+            DaskCUDF.instance = DaskCUDF().load(session)
+
+        # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
+        self.client = DaskCUDF.instance
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
+
+
 
     @staticmethod
     def verbose(verbose):

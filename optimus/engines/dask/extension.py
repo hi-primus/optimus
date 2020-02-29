@@ -1,9 +1,6 @@
-import collections
-
 from dask.dataframe.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
-from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 
@@ -22,32 +19,6 @@ def ext(self: DataFrame):
         def cache():
             df = self
             return df.persist()
-
-        @staticmethod
-        def to_dict():
-            """
-            Return a dict from a Collect result
-            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-            :return:
-            """
-            df = self
-            dict_result = []
-
-            # if there is only an element in the dict just return the value
-            if len(dict_result) == 1:
-                dict_result = next(iter(dict_result.values()))
-            else:
-                col_names = parse_columns(df, "*")
-
-                # Because asDict can return messed columns names we order
-                for index, row in df.iterrows():
-                    # _row = row.asDict()
-                    r = collections.OrderedDict()
-                    # for col_name, value in row.iteritems():
-                    for col_name in col_names:
-                        r[col_name] = row[col_name]
-                    dict_result.append(r)
-            return dict_result
 
         @staticmethod
         def sample(n=10, random=False):
