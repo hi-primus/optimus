@@ -5,7 +5,7 @@ import re
 
 import pandas as pd
 
-from optimus.helpers.converter import val_to_list, one_list_to_val
+from optimus.helpers.core import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
@@ -34,7 +34,6 @@ def is_column_a(df, column, dtypes):
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
     # print("DTYPES", dtypes)
-    # data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
@@ -46,8 +45,6 @@ def is_column_a(df, column, dtypes):
     elif is_dask_dataframe(df):
 
         result = v in data_type
-        print("--V", v)
-        print("DATA TYPE", data_type)
     else:
         result = None
     return result
@@ -113,12 +110,13 @@ def is_pandas_dataframe(value):
     return isinstance(value, pd.DataFrame)
 
 
-def equal_function(f1, f2):
-    f2 = val_to_list(f2)
-    for func in f2:
-        if f1.__name__ == func.__name__:
-            return True
-    return False
+def is_pandas_series(value):
+    """
+    Check if an object is a Pandas DataFrame
+    :param value:
+    :return:
+    """
+    return isinstance(value, pd.Series)
 
 
 def is_url(value):
@@ -131,3 +129,11 @@ def is_url(value):
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
     return re.match(regex, value)
+
+
+def equal_function(f1, f2):
+    f2 = val_to_list(f2)
+    for func in f2:
+        if f1.__name__ == func.__name__:
+            return True
+    return False

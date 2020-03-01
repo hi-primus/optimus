@@ -2,8 +2,8 @@
 
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.converter import one_list_to_val
-from optimus.infer import is_numeric, is_spark_dataframe
+from optimus.helpers.core import one_list_to_val
+from optimus.infer import is_numeric
 from optimus.outliers.abstract_outliers_threshold import AbstractOutlierThreshold
 
 
@@ -21,8 +21,6 @@ class ModifiedZScore(AbstractOutlierThreshold):
         :param col_name:
         :param threshold:
         """
-        if not is_spark_dataframe(df):
-            raise TypeError("Spark Dataframe expected")
 
         if not is_numeric(threshold):
             raise TypeError("Numeric expected")

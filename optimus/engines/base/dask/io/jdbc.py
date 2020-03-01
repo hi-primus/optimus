@@ -10,7 +10,7 @@ from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
 
 

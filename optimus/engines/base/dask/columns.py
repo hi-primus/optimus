@@ -13,10 +13,11 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.dask import Dask
-from optimus.helpers.check import equal_function
+from optimus.helpers.check import equal_function, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.converter import format_dict, val_to_list
+from optimus.helpers.converter import format_dict, cudf_series_to_pandas
+from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import compress_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, is_future
@@ -32,12 +33,32 @@ from optimus.profiler.functions import fill_missing_var_types
 
 class DaskBaseColumns(BaseColumns):
 
-    @staticmethod
-    def frequency(columns, n=10, percentage=False, total_rows=None):
-        pass
-
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
+
+    def frequency(self, columns, n=10, percentage=False, total_rows=None):
+        df = self.df
+        columns = parse_columns(df, columns)
+        result = {}
+        lazy_results = [df[col_name].value_counts().nlargest(n) for col_name in columns]
+        temp_result = dd.compute(*lazy_results)
+
+        print(type(temp_result))
+        for temp_result_col in temp_result:
+            # temp_result_col = any_dataframe_to_pandas(temp_result_col)
+            if not is_pandas_series(temp_result_col):
+                temp_result_col = cudf_series_to_pandas(temp_result_col)
+            for i, j in temp_result_col.iteritems():
+                result.setdefault(temp_result_col.name, []).append({"value": i, "count": j})
+
+        if percentage is True:
+            if total_rows is None:
+                total_rows = df.rows.count()
+            for value_counts in result.values():
+                for value_count in value_counts:
+                    value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
+
+        return result
 
     @staticmethod
     def mode(columns):
@@ -747,7 +768,6 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         import dask
-        from dask.dataframe import from_delayed
 
         partitions = df.to_delayed()
         delayed_values = [dask.delayed(func)(part, *args, **kwargs)

@@ -14,7 +14,7 @@ from optimus.engines.spark.ml.models import ML
 from optimus.engines.spark.spark import Spark
 from optimus.enricher import Enricher
 from optimus.helpers.constants import *
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.logger import logger

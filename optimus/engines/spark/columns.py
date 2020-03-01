@@ -28,7 +28,8 @@ from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
     name_col
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
-from optimus.helpers.converter import one_list_to_val, tuple_to_dict, format_dict, val_to_list
+from optimus.helpers.converter import tuple_to_dict, format_dict
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import append as append_df
 from optimus.helpers.functions \
     import filter_list, create_buckets

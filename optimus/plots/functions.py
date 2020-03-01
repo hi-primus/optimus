@@ -4,7 +4,7 @@ import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
-from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.core import one_list_to_val
 from optimus.helpers.functions import ellipsis
 from optimus.helpers.output import output_image, output_base64, print_html
 

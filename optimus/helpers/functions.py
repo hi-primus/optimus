@@ -15,8 +15,9 @@ from pyspark.sql import functions as F
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_cudf_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, is_dask_dataframe
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import one_list_to_val, val_to_list, spark_to_pandas, cudf_to_pandas, \
-    dask_cudf_to_pandas, dask_pandas_to_pandas
+from optimus.helpers.converter import spark_to_pandas, cudf_to_pandas, \
+    dask_cudf_to_pandas, dask_pandas_to_pandas, any_dataframe_to_pandas
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
@@ -45,14 +46,8 @@ def collect_as_dict(df, limit=None):
     # check the dataframe type and convert it to pandas dataframe
     # from optimus.helpers.check import is_spark_dataframe
 
-    if is_spark_dataframe(df):
-        df = spark_to_pandas(df)
-    elif is_cudf_dataframe(df):
-        df = cudf_to_pandas(df)
-    elif is_dask_cudf_dataframe(df):
-        df = dask_cudf_to_pandas(df)
-    elif is_dask_dataframe(df):
-        df = dask_pandas_to_pandas(df)
+    df = any_dataframe_to_pandas(df)
+
 
     # if there is only an element in the dict just return the value
     if len(dict_result) == 1:

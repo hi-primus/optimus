@@ -1,7 +1,6 @@
 # import cudf as DataFrame
 
 import cudf
-import dask.dataframe as dd
 import pandas as pd
 # from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
@@ -11,7 +10,7 @@ from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.infer import is_, is_future, Infer
 from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
@@ -155,7 +154,7 @@ def cols(self: DaskCUDFDataFrame):
                     if not _filter(col_name, func):
                         filtered_column.append(col_name)
                     if len(filtered_column) > 0:
-                        print("func",func)
+                        print("func", func)
                         func_result = func(columns, args)(df)
                         for k, v in func_result.items():
                             result[k] = {}
@@ -183,41 +182,6 @@ def cols(self: DaskCUDFDataFrame):
                 result = self.parse_profiler_dtypes(result)
 
             return result
-
-        @staticmethod
-        def frequency(columns, n=10, percentage=False, total_rows=None):
-            df = self
-            columns = parse_columns(df, columns)
-            q = {}
-
-            for col_name in columns:
-                df_temp = df[col_name].value_counts()
-
-                # We need to calculate the value count length to pass it lo nlargest()
-                # nlargest trigger and exception if n greater than the dataframe
-                df_length = len(df_temp)
-                _n = df_length if df_length < n else n
-
-                q[col_name] = df_temp.nlargest(_n)
-
-            compute_result = dd.compute(q)[0]
-
-            result = {}
-            for col_name, values in compute_result.items():
-                result[col_name] = []
-                for x, y in zip(list(values.index), values.values):
-                    result[col_name].append({"value": x, "count": int(y)})
-
-            # print("1111")
-            final_result = result
-            if percentage is True:
-                if total_rows is None:
-                    total_rows = df.rows.count()
-                for value_counts in final_result.values():
-                    for value_count in value_counts:
-                        value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
-
-            return final_result
 
     return Cols(self)
 

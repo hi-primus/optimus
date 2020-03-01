@@ -8,7 +8,7 @@ from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 
 from optimus.helpers.check import is_column_a
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 
 

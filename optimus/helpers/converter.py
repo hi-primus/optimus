@@ -2,34 +2,9 @@ from ast import literal_eval
 
 import dateutil
 
+from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
+    is_pandas_dataframe
 from optimus.infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
-
-
-def val_to_list(val):
-    """
-    Convert a single value string or number to a list
-    :param val:
-    :return:
-    """
-    if val is not None:
-        if not isinstance(val, list):
-            val = [val]
-
-    return val
-
-
-def one_list_to_val(val):
-    """
-    Convert a single list element to val
-    :param val:
-    :return:
-    """
-    if isinstance(val, list) and len(val) == 1:
-        result = val[0]
-    else:
-        result = val
-
-    return result
 
 
 def tuple_to_dict(value):
@@ -126,6 +101,27 @@ def str_to_array(value):
 
 
 # Functions to convert dataframe between engines
+
+def any_dataframe_to_pandas(df):
+    # print(type(df))
+    if is_pandas_dataframe(df):
+        result = df
+    elif is_spark_dataframe(df):
+        result = spark_to_pandas(df)
+    elif is_dask_dataframe(df):
+        result = dask_pandas_to_pandas(df)
+    elif is_cudf_dataframe(df):
+        result = cudf_to_pandas(df)
+    elif is_dask_cudf_dataframe(df):
+        result = dask_cudf_to_pandas(df)
+
+    return result
+
+
+def cudf_series_to_pandas(serie):
+    return serie.to_pandas()
+
+
 def dask_pandas_to_dask_cudf(df):
     import cudf
     return df.map_partitions(cudf.DataFrame.from_pandas)

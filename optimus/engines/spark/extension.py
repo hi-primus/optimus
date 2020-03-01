@@ -11,7 +11,7 @@ from pyspark.sql.types import ArrayType
 
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.spark.spark import Spark
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html

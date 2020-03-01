@@ -1,14 +1,12 @@
 # This functions must handle one or multiple columns
 # Must return None if the data type can not be handle
 import dask
-import dask.array as da
-from dask import dataframe as dd
 from dask.array import stats
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 
 from optimus.helpers.check import is_column_a
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -68,11 +66,11 @@ def functions(self):
             return _stddev
 
         @staticmethod
-        def zeros_agg(col_name, args):
-            col_name = val_to_list(col_name)
+        def zeros_agg(columns, args):
+            columns = val_to_list(columns)
 
             def zeros_(df):
-                result = {"zeros": {col: (df[col].values == 0).sum() for col in col_name}}
+                result = {"zeros": {col_name: (df[col_name].values == 0).sum() for col_name in columns}}
                 # result = {"zeros": (df[col_name].values == 0).sum()}
                 return result
 
@@ -88,7 +86,7 @@ def functions(self):
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
-        def hist_agg(col_name, args):
+        def hist_agg(columns, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
 
@@ -97,36 +95,54 @@ def functions(self):
                 df = args[0]
                 buckets = args[1]
                 min_max = args[2]
-
                 result_hist = {}
-                for col in col_name:
-                    if is_column_a(df, col, df.constants.STRING_TYPES):
-                        if min_max is None:
+                result_min_max = {}
+                for col_name in columns:
+                    calc= None
+                    if min_max is not None:
+                        calc = min_max.get(col_name)
+
+                    if calc is None or min_max is None:
+                        if is_column_a(df, col_name, df.constants.STRING_TYPES):
+                            print("1")
                             def func(val):
                                 return val.str.len()
 
-                            partitions = df[col].to_delayed()
+                            partitions = df[col_name].to_delayed()
                             delayed_values = [dask.delayed(func)(part)
                                               for part in partitions]
+                            print(delayed_values)
                             df_len = from_delayed(delayed_values)
-                            df_len = df_len.value_counts()
-                            min, max = dd.compute(df_len.min(), df_len.max())
-                            min_max = {"min": min, "max": max}
-                        df_hist = df_len
+                            # df_len = df_len.value_counts()
+                            # min_max = {"min": df_len.min(), "max": df_len.max()}
+                            # df_hist = df_len
 
-                    elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
-                        if min_max is None:
-                            min_max = df.cols.range(col_name)[col]
-                        df_hist = serie[col]
-                    else:
-                        RaiseIt.type_error("column", ["numeric", "string"])
+                        elif is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
 
-                    i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
-                    r = i.compute()
-                    result_hist.update({col: {"count": list(r), "bins": list(j)}})
+                            print("2")
+                            min_max = {"min": df[col_name].min(), "max": df[col_name].max()}
+                            # df_hist = serie[col_name]
+                            print("3")
+                        else:
+                            RaiseIt.type_error("column", ["numeric", "string"])
+                        # print(min_max)
+                    result_min_max[col_name] = min_max
+
+                import dask.dataframe as dd
+                print(dd.compute(result_min_max))
+
+                # import dask.array as da
+                # for col_name in columns:
+                #     min_1, max_1 = result_min_max[col_name]["min"], result_min_max[col_name]["max"]
+                #     i, j = (da.histogram(df_hist, bins=buckets, range=[min_1, max_1]))
+                #     print(col_name)
+                #     # r = i.compute()
+                #     # result_hist.update({col: {"count": list(r), "bins": list(j)}})
+
                 result = {}
                 result['hist'] = result_hist
                 return result
+
             return hist_agg_
 
         @staticmethod

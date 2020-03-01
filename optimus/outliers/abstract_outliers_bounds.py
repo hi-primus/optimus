@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import one_list_to_val, val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.filters import dict_filter
 from optimus.helpers.json import dump_json
 

@@ -10,7 +10,7 @@ from multipledispatch import dispatch
 from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.converter import one_list_to_val, val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list_of_dask_dataframes, is_dask_dataframe, is_list_of_tuples
 

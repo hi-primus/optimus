@@ -721,23 +721,23 @@ def is_float(value):
     """
     return isinstance(value, float)
 
-
-def is_dask_dataframe(value):
-    """
-    Check if an object is a Spark DataFrame
-    :param value:
-    :return:
-    """
-    return isinstance(value, DaskDataFrame)
-
-
-def is_spark_dataframe(value):
-    """
-    Check if an object is a Spark DataFrame
-    :param value:
-    :return:
-    """
-    return isinstance(value, SparkDataFrame)
+#
+# def is_dask_dataframe(value):
+#     """
+#     Check if an object is a Spark DataFrame
+#     :param value:
+#     :return:
+#     """
+#     return isinstance(value, DaskDataFrame)
+#
+#
+# def is_spark_dataframe(value):
+#     """
+#     Check if an object is a Spark DataFrame
+#     :param value:
+#     :return:
+#     """
+#     return isinstance(value, SparkDataFrame)
 
 
 def is_bool(value):

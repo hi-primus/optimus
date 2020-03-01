@@ -3,7 +3,7 @@ import re
 from ordered_set import OrderedSet
 
 from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
-from optimus.helpers.converter import one_list_to_val, val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt

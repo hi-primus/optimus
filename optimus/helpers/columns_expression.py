@@ -5,7 +5,7 @@ from pyspark.sql import functions as F
 
 from optimus.infer import is_numeric, PYSPARK_NUMERIC_TYPES, PYSPARK_STRING_TYPES
 from optimus.helpers.check import is_column_a
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import create_buckets
 
 

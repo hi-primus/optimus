@@ -1,8 +1,7 @@
-from dask.dataframe.core import DataFrame as DaskDataFrame
 from glom import glom, assign
-from pyspark.sql import DataFrame as SparkDataFrame
 
-from optimus.helpers.converter import val_to_list
+from optimus.helpers.core import val_to_list
+from optimus.profiler.profiler import Profiler
 
 
 def meta(self):
@@ -181,6 +180,3 @@ def meta(self):
             return data
 
     return Meta()
-
-
-

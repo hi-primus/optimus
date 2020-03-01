@@ -1,4 +1,4 @@
-from optimus.helpers.converter import one_list_to_val
+from optimus.helpers.core import one_list_to_val
 
 
 class RaiseIt:
