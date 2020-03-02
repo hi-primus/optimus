@@ -152,3 +152,8 @@ def dask_pandas_to_pandas(df):
 
 def cudf_to_pandas(df):
     return df.to_pandas()
+
+
+def cudf_to_cupy_arr(df):
+    import cupy as cp
+    return cp.fromDlpack(df.to_dlpack())
