@@ -73,10 +73,13 @@ class BaseColumns(ABC):
             # Initialize values to 0
             result_default = {data_type: 0 for data_type in df.constants.DTYPES_TO_PROFILER.keys()}
             for k1, v1 in v.items():
+                # print(k1, v1)
                 for k2, v2 in df.constants.DTYPES_TO_PROFILER.items():
+                    # print(k1 ,k2)
                     if k1 in df.constants.DTYPES_TO_PROFILER[k2]:
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
+        # print("AAAA",columns)
         return columns
 
     @staticmethod

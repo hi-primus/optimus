@@ -284,12 +284,14 @@ class Infer(object):
         else:
             return _data_type
 
-    @staticmethod
-    def parse_dask(value, col_name, infer, dtypes, str_funcs, int_funcs):
-        return Infer.parse((col_name, value), infer, dtypes, str_funcs, int_funcs, full=False)
+    # @staticmethod
+    # def parse_dask(value, infer, dtypes, str_funcs, int_funcs):
+    #     # print(type(value))
+    #     return value.apply(lambda row: Infer.parse((value.name, row), infer, dtypes, str_funcs, int_funcs, full=False))
+    #     # return value.apply(Infer.parse((value.name, value), infer, dtypes, str_funcs, int_funcs, full=False))
 
     @staticmethod
-    def parse(value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
+    def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
         """
 
         :param col_and_value: Column and value tuple
@@ -301,7 +303,10 @@ class Infer(object):
         :param full: True return a tuple with (col_name, dtype), count or False return dtype
         :return:
         """
-        col_name, value = value
+        # return 1
+        col_name, value = col_and_value
+        # print("VALUE*---", value)
+        # print("COL_NAME", col_name)
 
         # Try to order the functions from less to more computational expensive
         if int_funcs is None:
@@ -314,8 +319,9 @@ class Infer(object):
                 (str_to_url, "url"),
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
-        # print(dtypes)
-        if dtypes[col_name] == "string" and infer is True:
+        # print(dtypes[col_name])
+        # Cehck 'string' for Spark, 'object' for Dask
+        if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
 
             if isinstance(value, bool):
                 _data_type = "boolean"
@@ -350,12 +356,14 @@ class Infer(object):
                     _data_type = "array"
                 else:
                     _data_type = dtypes[col_name]
+                    # print(_data_type)
 
         result = (col_name, _data_type), 1
 
         if full:
             return result
         else:
+            # print(_data_type)
             return _data_type
 
 
@@ -720,6 +728,7 @@ def is_float(value):
     :return:
     """
     return isinstance(value, float)
+
 
 #
 # def is_dask_dataframe(value):

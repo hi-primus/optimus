@@ -699,12 +699,13 @@ class DaskBaseColumns(BaseColumns):
 
         for col_name in columns:
             a = df.map_partitions(lambda df: df[col_name].apply(
-                lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs, full=False)))
+                lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
+                                        full=False))).compute()
 
             # f = a.value_counts()
             # f = a.value_counts()
             f = df.functions.map_delayed(a, value_counts)
-            print(type(f))
+            # print(type(f))
             delayed_results.append({col_name: f.to_dict()})
 
         # return dask.visualize(delayed_results)
@@ -714,7 +715,6 @@ class DaskBaseColumns(BaseColumns):
 
         for i in results_compute:
             result.update(i)
-        print("ASDAF",results_compute)
 
         if infer is True:
             result = fill_missing_var_types(result, columns_dtypes)
@@ -726,9 +726,6 @@ class DaskBaseColumns(BaseColumns):
     def lower(self, input_cols, output_cols=None):
 
         def _lower(value):
-            print("bbb")
-            print(type(value))
-            print("aaa")
             return value.str.lower()
 
         df = self.df
