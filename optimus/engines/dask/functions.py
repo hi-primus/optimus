@@ -6,7 +6,7 @@ from dask.array import stats
 from dask.dataframe.core import DataFrame
 
 from optimus.helpers.check import is_column_a
-from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -15,39 +15,39 @@ def functions(self):
 
         @staticmethod
         def min(columns, args):
-            def dataframe_min_(df):
+            def _dataframe_min(df):
                 return {"min": df[columns].min()}
 
-            return dataframe_min_
+            return _dataframe_min
 
         @staticmethod
         def max(columns, args):
-            def dataframe_max_(df):
+            def _dataframe_max(df):
                 return {"max": df[columns].max()}
 
-            return dataframe_max_
+            return _dataframe_max
 
         @staticmethod
         def mean(columns, args):
-            def dataframe_mean_(df):
+            def _dataframe_mean(df):
                 return {"mean": df[columns].mean()}
 
-            return dataframe_mean_
+            return _dataframe_mean
 
         @staticmethod
         def variance(columns, args):
-            def dataframe_var_(df):
+            def _dataframe_var(df):
                 return {"variance": df[columns].var()}
 
-            return dataframe_var_
+            return _dataframe_var
 
         @staticmethod
         def sum(columns, args):
 
-            def dataframe_sum_(df):
+            def _dataframe_sum(df):
                 return {"sum": df[columns].sum()}
 
-            return dataframe_sum_
+            return _dataframe_sum
 
         @staticmethod
         def percentile_agg(columns, args):
@@ -84,36 +84,24 @@ def functions(self):
 
             return _count_na_agg
 
-        # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
         def hist_agg(columns, args):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-            def str_len(serie):
-                return serie.str.len()
+            def str_len(series):
+                return series.str.len()
 
-            def value_counts(serie):
-                return serie.value_counts().sort_index().reset_index(level=0)
+            def value_counts(series):
+                return series.value_counts().sort_index().reset_index(level=0)
 
-            def min_max_string_func(serie):
-                return [serie.min()[0], serie.max()[0]]
+            def min_max_string_func(series):
+                return [series.min()[0], series.max()[0]]
 
-            def min_max_func(serie):
-                return [serie.min(), serie.max()]
+            def min_max_func(series):
+                return [series.min(), series.max()]
 
-            def map_delayed(df, func, *args, **kwargs):
-                if isinstance(df, dask.dataframe.core.Series):
-
-                    partitions = df.to_delayed()
-                    delayed_values = [dask.delayed(func)(part, *args, **kwargs)
-                                      for part in partitions][0]
-                else:
-                    delayed_values = dask.delayed(func)(df, *args, **kwargs)
-
-                return delayed_values
-
-            def hist_serie(serie, buckets, min_max):
-                i, j = numpy.histogram(serie, bins=buckets, range=min_max)
+            def hist_serie(series, buckets, min_max):
+                i, j = numpy.histogram(series, bins=buckets, range=min_max)
                 return {"count": list(i), "bins": list(j)}
 
             # TODO: Calculate mina max in one pass.
@@ -132,22 +120,22 @@ def functions(self):
 
                     if calc is None or min_max is None:
                         if is_column_a(df, col_name, df.constants.STRING_TYPES):
-                            a = map_delayed(df[col_name], str_len)
-                            b = map_delayed(a, value_counts)
+                            a = Functions.map_delayed(df[col_name], str_len)
+                            b = Functions.map_delayed(a, value_counts)
                             c = dask.delayed(min_max_string_func)(b)
-                            f = map_delayed(b["index"], hist_serie, buckets, c)
+                            f = Functions.map_delayed(b["index"], hist_serie, buckets, c)
                         #
                         elif is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
-                            a = map_delayed(df[col_name], min_max_func)
-                            f = map_delayed(df[col_name], hist_serie, buckets, a)
+                            a = Functions.map_delayed(df[col_name], min_max_func)
+                            f = Functions.map_delayed(df[col_name], hist_serie, buckets, a)
                         else:
                             RaiseIt.type_error("column", ["numeric", "string"])
                         delayed_results.append({col_name: f})
-                a = dask.compute(*delayed_results)
+                results_compute = dask.compute(*delayed_results)
 
                 r = {}
                 # Convert list to dict
-                for i in a:
+                for i in results_compute:
                     r.update(i)
                 result = {"hist": r}
 
@@ -217,6 +205,18 @@ def functions(self):
                 return result
 
             return _mad_agg
+
+        @staticmethod
+        def map_delayed(df, func, *args, **kwargs):
+            if isinstance(df, dask.dataframe.core.Series):
+
+                partitions = df.to_delayed()
+                delayed_values = [dask.delayed(func)(part, *args, **kwargs)
+                                  for part in partitions][0]
+            else:
+                delayed_values = dask.delayed(func)(df, *args, **kwargs)
+
+            return delayed_values
 
     return Functions()
 

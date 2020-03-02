@@ -6,15 +6,12 @@ import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
-from dask.distributed import as_completed
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.engines.dask.dask import Dask
 from optimus.helpers.check import equal_function, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -22,11 +19,12 @@ from optimus.helpers.converter import format_dict, cudf_series_to_pandas
 from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import compress_dict
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, is_future
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
-from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
-import dask
+
+
+# from optimus.engines.dask.functions import map_delayed
 
 # Some expression accepts multiple columns at the same time.
 # python_set = set
@@ -693,23 +691,30 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         columns = parse_columns(df, columns)
         columns_dtypes = df.cols.dtypes()
-        # print("DTYPES", dtypes)
-        result = {}
 
-        # partitions = df[columns].to_delayed()
-        # import dask
-        # from dask.dataframe import from_delayed
-        # for col_name in columns:
-        #     delayed_values = [dask.delayed(Infer.parse_dask)(part, col_name, infer, dtypes, str_funcs, int_funcs) for part in partitions]
-        # a = from_delayed(delayed_values)
-        # print(a)
+        def value_counts(series):
+            return series.value_counts()
+
+        delayed_results = []
 
         for col_name in columns:
-            df_result = df[col_name].apply(Infer.parse_dask,
-                                           args=(col_name, infer, columns_dtypes, str_funcs, int_funcs),
-                                           meta=str)
-            r = df_result.value_counts().compute()
-            result[str(col_name)] = {r.index[0]: r[0]}
+            a = df.map_partitions(lambda df: df[col_name].apply(
+                lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs, full=False)))
+
+            # f = a.value_counts()
+            # f = a.value_counts()
+            f = df.functions.map_delayed(a, value_counts)
+            print(type(f))
+            delayed_results.append({col_name: f.to_dict()})
+
+        # return dask.visualize(delayed_results)
+        results_compute = dask.compute(*delayed_results)
+        result = {}
+        # Convert list to dict
+
+        for i in results_compute:
+            result.update(i)
+        print("ASDAF",results_compute)
 
         if infer is True:
             result = fill_missing_var_types(result, columns_dtypes)
@@ -751,19 +756,6 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols)
 
-    @staticmethod
-    def map_delayed(df, func, *args, **kwargs):
-        """
-        In this way we can partition the data and delayed the function call
-
-        :return:
-        """
-        partitions = df.to_delayed()
-        delayed_values = [dask.delayed(func)(part, *args, **kwargs)
-                          for part in partitions]
-        return from_delayed(delayed_values)
-        # return from_delayed(delayed_values)
-
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
 
@@ -799,7 +791,7 @@ class DaskBaseColumns(BaseColumns):
                     return_type = object
                 _meta = df[input_col].astype(return_type)
             if args is None: args = []
-            a = DaskBaseColumns.map_delayed(df[input_col], func, *args)
+            a = map_delayed(df[input_col], func, *args)
             # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
 
         # print(df.head())
