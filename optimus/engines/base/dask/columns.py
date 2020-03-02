@@ -2,9 +2,11 @@ import builtins
 import re
 import unicodedata
 
+import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask.distributed import as_completed
 from dask_ml.impute import SimpleImputer
@@ -24,7 +26,7 @@ from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_
 from optimus.infer import is_
 from optimus.infer import is_list_of_futures
 from optimus.profiler.functions import fill_missing_var_types
-
+import dask
 
 # Some expression accepts multiple columns at the same time.
 # python_set = set
@@ -43,9 +45,7 @@ class DaskBaseColumns(BaseColumns):
         lazy_results = [df[col_name].value_counts().nlargest(n) for col_name in columns]
         temp_result = dd.compute(*lazy_results)
 
-        print(type(temp_result))
         for temp_result_col in temp_result:
-            # temp_result_col = any_dataframe_to_pandas(temp_result_col)
             if not is_pandas_series(temp_result_col):
                 temp_result_col = cudf_series_to_pandas(temp_result_col)
             for i, j in temp_result_col.iteritems():
@@ -524,48 +524,39 @@ class DaskBaseColumns(BaseColumns):
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
 
-        agg_list = Dask.instance.compute(exprs, scheduler="processes")
-        agg_results = []
-        # Distributed mode return a list of Futures objects, Single mode not.
-        # TODO: Maybe use .gather
-        if is_list_of_futures(agg_list):
-            for future in as_completed(agg_list):
-                agg_results.append(future.result())
-        elif is_future(agg_list):
-            agg_results = agg_list.result()
-        else:
-            agg_results = agg_list[0]
+        agg_results = dask.compute(*exprs)
         result = {}
 
         # Parsing results
-        def parse_percentile(value):
+        def parse_percentile(_value):
             _result = {}
-            if is_(value, pd.core.series.Series):
-                _result.setdefault(value.name, {str(i): j for i, j in dict(value).items()})
+            if is_(_value, pd.core.series.Series):
+                _result.setdefault(_value.name, {str(i): j for i, j in dict(_value).items()})
             else:
-                for (p_col_name, p_result) in value.iteritems():
+                for (p_col_name, p_result) in _value.iteritems():
                     if is_(p_result, pd.core.series.Series):
                         p_result = dict(p_result)
                     _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
             return _result
 
-        def parse_hist(value):
+        def parse_hist(_value):
             _result = {}
-            for col_name, values in value.items():
+            for _col_name, values in _value.items():
                 _hist = []
+
                 x = values["count"]
                 y = values["bins"]
                 for idx, v in enumerate(y):
                     if idx < len(y) - 1:
                         _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
-                _result.setdefault(col_name, _hist)
+                _result.setdefault(_col_name, _hist)
             return _result
 
-        def parse_count_uniques(value):
+        def parse_count_uniques(_value):
             # Because count_uniques() return and Scalar and not support casting we need to make
             # the cast to int after compute()
             # Reference https://github.com/dask/dask/issues/1445
-            return {col_name: int(values) for col_name, values in value.items()}
+            return {_col_name: int(values) for _col_name, values in _value.items()}
 
         for agg_name, col_name_result in agg_results:
             if agg_name == "percentile":
@@ -767,12 +758,10 @@ class DaskBaseColumns(BaseColumns):
 
         :return:
         """
-        import dask
-
         partitions = df.to_delayed()
         delayed_values = [dask.delayed(func)(part, *args, **kwargs)
                           for part in partitions]
-        return delayed_values
+        return from_delayed(delayed_values)
         # return from_delayed(delayed_values)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
