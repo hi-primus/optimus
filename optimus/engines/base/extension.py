@@ -150,7 +150,11 @@ class BaseExt(ABC):
         df = self.df
         df._buffer = df.head(n)
 
-    def window(self, lower_bound, upper_bound):
+    def get_buffer(self):
+        # return self.df._buffer.values.tolist()
+        return self.df._buffer
+
+    def buffer_window(self, lower_bound, upper_bound):
         df = self.df._buffer
         return df[lower_bound: upper_bound]
 
