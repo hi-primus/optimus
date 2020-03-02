@@ -1,18 +1,9 @@
-# import cudf as DataFrame
-
-import cudf
-import pandas as pd
-# from dask.dataframe.core import DataFrame
-from dask.distributed import as_completed
 from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-import dask
 
 from optimus.engines.base.dask.columns import DaskBaseColumns
-from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_, is_future, Infer
-from optimus.infer import is_list_of_futures
+from optimus.infer import Infer
 from optimus.profiler.functions import fill_missing_var_types
 
 

@@ -73,7 +73,7 @@ class ProfilerDataTypes(Enum):
 
 
 # Strings and Function Messages
-JUST_CHECKING = "Just check that Spark and all necessary environments vars are present..."
+JUST_CHECKING = "Just check that all necessary environments vars are present..."
 STARTING_OPTIMUS = "Transform and Roll out..."
 
 SUCCESS = "Optimus successfully imported. Have fun :)."
@@ -90,3 +90,6 @@ def print_check_point_config(filesystem):
 # For Google Colab
 JAVA_PATH_COLAB = "/usr/lib/jvm/java-8-openjdk-amd64"
 RELATIVE_ERROR = 10000
+
+# Buffer size in rows
+BUFFER_SIZE = 500000

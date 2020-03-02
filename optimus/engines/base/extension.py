@@ -10,7 +10,7 @@ import numpy as np
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
 from optimus.helpers.functions import traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -23,6 +23,7 @@ class BaseExt(ABC):
 
     def __init__(self, df):
         self.df = df
+        self.buffer_a = None
 
     def init(self):
         df = self.df
@@ -144,6 +145,14 @@ class BaseExt(ABC):
         """
 
         pass
+
+    def set_buffer(self, n=BUFFER_SIZE):
+        df = self.df
+        df._buffer = df.head(n)
+
+    def window(self, lower_bound, upper_bound):
+        df = self.df._buffer
+        return df[lower_bound: upper_bound]
 
     def size(self):
         """
@@ -297,7 +306,7 @@ class BaseExt(ABC):
         df = self.df
         try:
             if __IPYTHON__:
-            # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
+                # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
                 result = df.ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:

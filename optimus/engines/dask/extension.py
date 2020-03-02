@@ -83,7 +83,7 @@ def ext(self: DataFrame):
         @staticmethod
         def size():
             """
-            Get the size of a spark in bytes
+            Get the size of a dask in bytes
             :return:
             """
 
