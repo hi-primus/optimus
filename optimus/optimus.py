@@ -1,6 +1,7 @@
 from optimus.helpers.logger import logger
 from optimus.meta import meta
 from optimus.outliers.outliers import outliers
+from optimus.plots import plots
 
 
 # This class emulate how spark metadata handling works.
@@ -17,9 +18,6 @@ class MetadataDask:
         self._metadata = value
 
 
-from optimus.plots import plots
-
-
 def optimus(engine="spark", *args, **kwargs):
     logger.print("ENGINE", engine)
     # Monkey Patching
@@ -34,15 +32,18 @@ def optimus(engine="spark", *args, **kwargs):
         VaexDataFrame.meta = property(meta)
         VaexDataFrame.schema = [MetadataDask()]
 
-    if engine == "pandas":
-        from pandas import DataFrame as PandasDataFrame
-        # import pandas as pd
-        from optimus.engines.pandas import rows, columns, extension, constants, functions
-        from optimus.engines.pandas.io import save
+    # if engine == "pandas":
 
-        PandasDataFrame.outliers = property(outliers)
-        PandasDataFrame.meta = property(meta)
-        PandasDataFrame.schema = [MetadataDask()]
+    import pandas as pd
+    PandasDataFrame = pd.DataFrame
+
+    # from optimus.engines.pandas import rows, columns, extension, constants, functions
+    from optimus.engines.pandas import columns, extension, rows
+    from optimus.engines.pandas.io import save
+
+    PandasDataFrame.outliers = property(outliers)
+    PandasDataFrame.meta = property(meta)
+    PandasDataFrame.schema = [MetadataDask()]
 
     if engine == "spark":
         from pyspark.sql import DataFrame as SparkDataFrame

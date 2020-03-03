@@ -1,10 +1,7 @@
 import functools
 import operator
 
-import dask.array as da
-import dask.dataframe as  dd
 import pandas as pd
-from dask.dataframe.core import DataFrame
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
@@ -12,19 +9,16 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_list_of_dask_dataframes, is_dask_dataframe, is_list_of_tuples
+from optimus.infer import is_list_of_str_or_int
+
+DataFrame = pd.DataFrame
 
 
 def rows(self):
     class Rows:
         @staticmethod
         def create_id(column="id") -> DataFrame:
-            # Reference https://github.com/dask/dask/issues/1426
-            df = self
-            # print(df)
-            a = da.arange(df.divisions[-1] + 1, chunks=df.divisions[1:])
-            df[column] = dd.from_dask_array(a)
-            return df
+            pass
 
         @staticmethod
         def append(rows) -> DataFrame:
@@ -33,29 +27,11 @@ def rows(self):
             :param rows: List of tuples or dataframes to be appended
             :return:
             """
-            if is_list_of_tuples(rows):
-                df = pd.DataFrame(rows)
-                rows = dd.from_pandas(df, npartitions=2)
-
-            elif is_list_of_dask_dataframes(rows) or is_dask_dataframe(rows):
-                rows = val_to_list(rows)
-
-            else:
-                RaiseIt.type_error(rows, ["list of tuples", "list of dataframes"])
-            df = dd.concat([self] + rows, axis=0)
-            return df
+            pass
 
         @staticmethod
         def append(rows) -> DataFrame:
-            """
-
-            :param rows:
-            :return:
-            """
-            df = self
-            df = dd.concat([self, rows], axis=0)
-
-            return df
+            pass
 
         @staticmethod
         def select(condition) -> DataFrame:
@@ -93,12 +69,7 @@ def rows(self):
             :return:
             """
             input_cols = parse_columns(self, input_cols)
-            df_list = []
-            row_list = []
-            for index, row in self[input_cols].iterrows():
-                for col_name, value in row.iteritems():
-                    row_list.append(value)
-                df_list.append(row_list)
+            df_list = self[input_cols].values.tolist()
 
             return df_list
 
@@ -262,7 +233,7 @@ def rows(self):
             :return:
             """
 
-            return self[:count-1]
+            return self[:count - 1]
 
         @staticmethod
         def is_in(input_cols, values) -> DataFrame:
@@ -281,8 +252,6 @@ def rows(self):
             :return:
             """
             return Rows.count()
-
-
 
     return Rows()
 
