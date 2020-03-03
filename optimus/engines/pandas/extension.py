@@ -10,6 +10,16 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
+        
+        @staticmethod
+        def to_json(columns):
+            df = self
+
+            # input_columns = parse_columns(df, columns)
+
+            return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                    "value": df.rows.to_list(columns)}
+
         @staticmethod
         def cache():
             pass
@@ -55,8 +65,7 @@ def ext(self: DataFrame):
         def create_id(column="id"):
             pass
 
-
-
     return Ext(self)
+
 
 DataFrame.ext = property(ext)

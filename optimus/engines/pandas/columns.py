@@ -207,8 +207,21 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None):
-            pass
+        def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False):
+            df = self
+
+            # new data frame with split value columns
+            new = df[input_cols].str.split(separator, n=splits, expand=True)
+
+            for i in range(splits):
+                # making separate first name column from new data frame
+                df["new name" + str(i)] = new[i]
+
+            # Dropping old Name columns
+            if drop is True:
+                df.drop(columns=[input_cols], inplace=True)
+
+            return df
 
         @staticmethod
         def cell(column):
