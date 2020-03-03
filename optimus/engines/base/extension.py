@@ -146,17 +146,19 @@ class BaseExt(ABC):
 
         pass
 
-    def set_buffer(self, n=BUFFER_SIZE):
+    def set_buffer(self, columns, n=BUFFER_SIZE):
         df = self.df
-        df._buffer = df.head(n)
+        input_columns = parse_columns(df, columns)
+        df._buffer = df[input_columns].head(n)
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
         return self.df._buffer
 
-    def buffer_window(self, lower_bound, upper_bound):
+    def buffer_window(self, columns, lower_bound, upper_bound):
         df = self.df._buffer
-        return df[lower_bound: upper_bound]
+        input_columns = parse_columns(df, columns)
+        return df[input_columns][lower_bound: upper_bound]
 
     def size(self):
         """
