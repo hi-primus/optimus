@@ -7,6 +7,9 @@ from optimus.engines.base.extension import BaseExt
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
+
+        def __init__(self, df):
+            super().__init__(df)
         @staticmethod
         def cache():
             pass
@@ -52,10 +55,8 @@ def ext(self: DataFrame):
         def create_id(column="id"):
             pass
 
-        def __init__(self, df):
-            super().__init__(df)
+
 
     return Ext(self)
 
-print("ASDFasldkjfah")
 DataFrame.ext = property(ext)

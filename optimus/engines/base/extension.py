@@ -160,6 +160,13 @@ class BaseExt(ABC):
         input_columns = parse_columns(df, columns)
         return df[input_columns][lower_bound: upper_bound]
 
+    def buffer_json(self, columns, lower_bound, upper_bound):
+        df = self.df._buffer
+        input_columns = parse_columns(df, columns)
+        
+        return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                "value": df[input_columns][lower_bound: upper_bound].rows.to_list(columns)}
+
     def size(self):
         """
         Get the size of a spark in bytes

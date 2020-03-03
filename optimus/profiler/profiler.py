@@ -347,7 +347,7 @@ class Profiler:
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
             # TODO: drop, rename and move operation must affect the sample
-            sample = {"columns": [{"title": cols} for cols in columns],
+            sample = {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                       "value": df.ext.sample(sample).rows.to_list(columns)}
 
             assign(output_columns, "sample", sample, dict)
