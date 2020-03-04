@@ -14,6 +14,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
 from optimus.helpers.functions import traverse, absolute_path, collect_as_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 
@@ -157,6 +158,15 @@ class BaseExt(ABC):
 
     def buffer_window(self, columns, lower_bound, upper_bound):
         df = self.df._buffer
+
+        df_length = len(df)
+
+        if upper_bound > df_length:
+            upper_bound = df_length
+
+        if lower_bound >= df_length:
+            RaiseIt.value_error(df_length, str(df_length-1))
+
         input_columns = parse_columns(df, columns)
         return df[input_columns][lower_bound: upper_bound]
 

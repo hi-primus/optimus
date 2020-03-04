@@ -213,7 +213,9 @@ def cols(self: DataFrame):
             # new data frame with split value columns
             new = df[input_cols].str.split(separator, n=splits, expand=True)
 
-            for i in range(len(new.columns)-1):
+            # Maybe the split do not generate new columns, We need to recalculate the splits
+            splits = len(new.columns)-1
+            for i in range(splits):
                 # making separate first name column from new data frame
                 df["new name" + str(i)] = new[i]
 
@@ -221,7 +223,7 @@ def cols(self: DataFrame):
             if drop is True:
                 df.drop(columns=[input_cols], inplace=True)
 
-            
+
             return df
 
         @staticmethod
