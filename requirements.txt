@@ -22,7 +22,7 @@ pygments>=2.2.0
 flask==1.0.2
 ipython==7.5.0
 ratelimit==2.2.1
-humanize==0.5.1
+humanize==2.0.0
 h2o-pysparkling-2.4==2.4.13
 psutil==5.6.3
 backoff==1.8.0
