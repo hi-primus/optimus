@@ -46,9 +46,9 @@ def ext(self):
             """
             return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
 
-        @staticmethod
-        def display(limit=None, columns=None, title=None, truncate=True):
-            Ext.table(limit, columns, title, truncate)
+        # @staticmethod
+        # def display(limit=None, columns=None, title=None, truncate=True):
+        #     Ext.table(limit, columns, title, truncate)
 
         @staticmethod
         def to_dict():
