@@ -49,14 +49,12 @@ class RaiseIt:
         raise NotReady(message)
 
     @staticmethod
-    def value_error(var=None, data_values=None):
+    def value_error(var=None, data_values=None, extra_text=""):
         """
         Raise a ValueError exception
         :param var:
-
-
-        :param data_values: values accepted by the variable
-        :type data_values: str/list
+        :param data_values: values accepted by the variable. str/list
+        :param extra_text: Additional final info about the error
         :return:
         """
         from optimus.helpers.debug import get_var_name
@@ -71,11 +69,11 @@ class RaiseIt:
         elif len(data_values) > 2:
             divisor = ", "
 
-        raise ValueError("'{var_name}' must be {type}, received '{var_type}'"
+        raise ValueError("'{var_name}' must be {type}, received '{var_type}'. {extra_text}"
                          .format(var_name=get_var_name(var),
                                  type=divisor.join(map(
                                      lambda x: "'" + x + "'",
-                                     data_values)), var_type=one_list_to_val(var)))
+                                     data_values)), var_type=one_list_to_val(var), extra_text=extra_text))
 
     @staticmethod
     def type(cls, var):
