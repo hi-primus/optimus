@@ -1,16 +1,20 @@
+import re
 from enum import Enum
 
 import numpy as np
 import pandas as pd
 
 from optimus.engines.base.columns import BaseColumns
+from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
+from optimus.helpers.core import val_to_list
 
 DataFrame = pd.DataFrame
 
 
 def cols(self: DataFrame):
     class Cols(BaseColumns):
+
         @staticmethod
         def append(*args, **kwargs):
             pass
@@ -84,11 +88,40 @@ def cols(self: DataFrame):
 
         @staticmethod
         def create_exprs(columns, funcs, *args):
-            pass
+            df = self
+            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
+            filters = {"object": [df.functions.min, df.functions.stddev],
+                       }
+
+            def _filter(_col_name, _func):
+                for data_type, func_filter in filters.items():
+                    for f in func_filter:
+                        if equal_function(func, f) and \
+                                df.cols.dtypes(_col_name)[_col_name] == data_type:
+                            return True
+                return False
+
+            columns = parse_columns(df, columns)
+            funcs = val_to_list(funcs)
+
+            result = {}
+
+            for func in funcs:
+                # Create expression for functions that accepts multiple columns
+                filtered_column = []
+                for col_name in columns:
+                    # If the key exist update it
+                    if not _filter(col_name, func):
+                        filtered_column.append(col_name)
+                if len(filtered_column) > 0:
+                    result = func(columns, args)(df)
+
+
+            return result
 
         @staticmethod
         def exec_agg(exprs):
-            pass
+            return exprs
 
         @staticmethod
         def lower(input_cols, output_cols=None):
@@ -218,14 +251,30 @@ def cols(self: DataFrame):
             for i in range(splits):
                 # Making separate first name column from new data frame
                 if i < num_columns:
-                    df["new name" + str(i)] = df_new[i]
+                    df["new_name" + str(i)] = df_new[i]
                 else:
-                    df["new name" + str(i)] = None
+                    df["new_name" + str(i)] = None
 
             # Dropping old Name columns
             if drop is True:
                 df.drop(columns=[input_cols], inplace=True)
+            return df
 
+        @staticmethod
+        def find(input_cols, sub):
+            """
+            Find the position for a char or substring
+            :param input_cols:
+            :param sub:
+            :return:
+            """
+            df = self
+
+            def get_match_positions(_func, _separator):
+                length = [[match.start(), match.end()] for match in re.finditer(_separator, _func)]
+                return length if len(length) > 0 else None
+
+            df["__march_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
             return df
 
         @staticmethod

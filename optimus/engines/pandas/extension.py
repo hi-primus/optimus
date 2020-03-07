@@ -1,5 +1,6 @@
-import pandas as pd
 import json
+
+import pandas as pd
 
 from optimus.helpers.json import json_converter
 
@@ -21,7 +22,7 @@ def ext(self: DataFrame):
             # input_columns = parse_columns(df, columns)
             print(df)
             result = {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                    "value": df.rows.to_list(columns)}
+                      "value": df.rows.to_list(columns)}
             return json.dumps(result, ensure_ascii=False, default=json_converter)
 
         @staticmethod
