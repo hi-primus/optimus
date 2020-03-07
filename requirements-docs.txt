@@ -2,5 +2,5 @@ findspark==1.3.0
 numpy==1.17.2
 pytest==4.6.2
 matplotlib==3.0.3
-setuptools==41.6.0
+setuptools==45.3.0
 ipython==7.5.0
