@@ -207,22 +207,24 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False):
+        def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
             df = self
 
             # new data frame with split value columns
-            new = df[input_cols].str.split(separator, n=splits, expand=True)
+            df_new = df[input_cols].str.split(separator, n=splits, expand=True)
 
-            # Maybe the split do not generate new columns, We need to recalculate the splits
-            splits = len(new.columns)-1
+            # Maybe the split do not generate new columns, We need to recalculate it
+            num_columns = len(df_new.columns)
             for i in range(splits):
-                # making separate first name column from new data frame
-                df["new name" + str(i)] = new[i]
+                # Making separate first name column from new data frame
+                if i < num_columns:
+                    df["new name" + str(i)] = df_new[i]
+                else:
+                    df["new name" + str(i)] = None
 
             # Dropping old Name columns
             if drop is True:
                 df.drop(columns=[input_cols], inplace=True)
-
 
             return df
 
