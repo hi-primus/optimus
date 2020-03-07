@@ -172,14 +172,13 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     if filter_by_column_dtypes:
         # Get columns for every data type
         # print("filter", filter_by_column_dtypes)
-
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
-
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 
         # This columns match filtered data type
         columns_residual = list(OrderedSet(cols) - OrderedSet(columns_filtered))
+
     else:
         final_columns = cols
 
@@ -215,7 +214,8 @@ def check_column_numbers(columns, number=0):
     :return:
     """
     if columns is None:
-        RaiseIt.value_error(columns, "not None")
+        RaiseIt.value_error(columns, ["str", "list"],
+                            extra_text="Maybe the columns selected do not match a specified datatype filter.")
 
     count = len(columns)
 
@@ -275,8 +275,9 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
-
+    # print(data_type)
     data_type = parse_dtypes(df, data_type)
+    # print("BBB",data_type)
     # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
     # Filter columns by data type
@@ -284,9 +285,9 @@ def filter_col_name_by_dtypes(df, data_type):
     for col_name in df.cols.names():
         for dt in data_type:
             # print("filter", df.cols.schema_dtype(col_name), dt)
+            # print(isinstance(df.cols.schema_dtype(col_name), dt))
             if (df.cols.schema_dtype(col_name) is dt) or (isinstance(df.cols.schema_dtype(col_name), dt)):
                 result.append(col_name)
-
     return result
 
 
