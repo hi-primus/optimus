@@ -116,7 +116,6 @@ def cols(self: DataFrame):
                 if len(filtered_column) > 0:
                     result = func(columns, args)(df)
 
-
             return result
 
         @staticmethod
@@ -369,7 +368,19 @@ def cols(self: DataFrame):
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):
-            return False
+            # https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
+            df = self
+            columns = parse_columns(df, columns)
+
+            result = {}
+            for col_name in columns:
+                # i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
+
+                i = np.bincount(df[col_name].to_numpy())
+                j = np.nonzero(i)[0]
+
+                result[col_name] = {"values": list(j), "count": list(i[j])}
+            return result
 
     return Cols(self)
 
