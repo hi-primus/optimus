@@ -1,13 +1,13 @@
 # This functions must handle one or multiple columns
 # Must return None if the data type can not be handle
 import dask
-import numpy
 from dask.array import stats
 from dask.dataframe.core import DataFrame
-
+import numpy as np
 from optimus.helpers.check import is_column_a
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from fast_histogram import histogram1d
 
 
 def functions(self):
@@ -86,8 +86,6 @@ def functions(self):
 
         @staticmethod
         def hist_agg(columns, args):
-            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
-            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
             def str_len(series):
                 return series.str.len()
 
@@ -101,7 +99,12 @@ def functions(self):
                 return [series.min(), series.max()]
 
             def hist_serie(series, buckets, min_max):
-                i, j = numpy.histogram(series, bins=buckets, range=min_max)
+                _min= min_max[0]
+                _max = min_max[1]
+
+                i = histogram1d(series, range=(_min,_max), bins=buckets)
+                j = np.linspace(_min, _max, num=buckets)
+                # i, j = numpy.histogram(series, bins=buckets, range=min_max)
                 return {"count": list(i), "bins": list(j)}
 
             # TODO: Calculate mina max in one pass.
