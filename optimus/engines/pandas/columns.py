@@ -427,16 +427,16 @@ def cols(self: DataFrame):
                     j = np.nonzero(i)[0]
                     result[col_name] = {"values": list(j), "count": list(i[j])}
                 else:
-                    # print("frequency BBBBB", col_name)
-                    i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
-                    count_sort_ind = np.argsort(-j)
-                    result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
+                    print("frequency BBBBB", col_name)
+                    # i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
+                    # count_sort_ind = np.argsort(-j)
+                    # result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
 
                     # Value counts
-                    # r = df[col_name].value_counts().nlargest(n)
-                    # i = r.index.tolist()
-                    # j = r.tolist()
-                    # result[col_name]= ({"values":i, "count":j})
+                    r = df[col_name].value_counts().nlargest(n)
+                    i = r.index.tolist()
+                    j = r.tolist()
+                    result[col_name]= ({"values":i, "count":j})
 
             return result
 
