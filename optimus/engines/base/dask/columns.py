@@ -522,6 +522,12 @@ class DaskBaseColumns(BaseColumns):
         # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
         # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
 
+        # import dask.multiprocessing
+        # import dask.threaded
+        #
+        # >> > dmaster.compute(get=dask.threaded.get)  # this is default for dask.dataframe
+        # >> > dmaster.compute(get=dask.multiprocessing.get)  # try processes instead
+        #
         agg_results = dask.compute(*exprs)
         result = {}
 
@@ -702,17 +708,13 @@ class DaskBaseColumns(BaseColumns):
                 lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
                                         full=False))).compute()
 
-            # f = a.value_counts()
-            # f = a.value_counts()
             f = df.functions.map_delayed(a, value_counts)
-            # print(type(f))
             delayed_results.append({col_name: f.to_dict()})
 
-        # return dask.visualize(delayed_results)
         results_compute = dask.compute(*delayed_results)
         result = {}
-        # Convert list to dict
 
+        # Convert list to dict
         for i in results_compute:
             result.update(i)
 
@@ -908,7 +910,7 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-    def unnest(self, input_cols, separator=None, splits=0, index=None, output_cols=None):
+    def unnest(self, input_cols, separator=None, splits=0, index=None, output_cols=None, drop=False):
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
@@ -927,26 +929,26 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        def spread_split(row, output_col, splits):
+        def spread_split(row, _output_col, _splits):
 
-            for i in range(splits):
+            for i in range(_splits):
                 try:
-                    value = row[output_col + "_" + str(splits - 1)][i]
+                    value = row[_output_col + "_" + str(_splits - 1)][i]
                 except IndexError:
                     value = None
                 except TypeError:
                     value = None
-                row[output_col + "_" + str(i)] = value
+                row[_output_col + "_" + str(i)] = value
             return row
 
-        def split_single_index(row, output_col, index):
+        def split_single_index(row, _output_col, index):
             try:
-                value = row[output_col][index]
+                value = row[_output_col][index]
             except IndexError:
                 value = None
             except TypeError:
                 value = None
-            row[output_col] = value
+            row[_output_col] = value
             return row
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):

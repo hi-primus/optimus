@@ -443,7 +443,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None):
+    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False):
         pass
 
     @staticmethod

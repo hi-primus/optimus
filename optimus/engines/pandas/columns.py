@@ -114,7 +114,8 @@ def cols(self: DataFrame):
                     if not _filter(col_name, func):
                         filtered_column.append(col_name)
                 if len(filtered_column) > 0:
-                    result = func(columns, args)(df)
+                    # print("AAA",func, args, df)
+                    result = func(columns, args, df=df)
 
             return result
 
@@ -184,7 +185,21 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_na(columns):
-            pass
+            df = self
+            columns = parse_columns(df, columns)
+            result = {}
+
+            # from numba import njit
+            # @njit
+            def _count_na(_df, _serie):
+                return np.count_nonzero(_df[_serie].isnull().values.ravel())
+
+            for col_name in columns:
+                # np is 2x faster than df[columns].isnull().sum().to_dict()
+                # Reference https://stackoverflow.com/questions/28663856/how-to-count-the-occurrence-of-certain-item-in-an-ndarray-in-python
+                result[col_name] = _count_na(df, col_name)
+                # np.count_nonzero(df[col_name].isnull().values.ravel())
+            return result
 
         @staticmethod
         def count_zeros(columns):
@@ -203,8 +218,9 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def nunique(*args, **kwargs):
-            pass
+        def nunique_approx(columns):
+            df = self
+            return df.cols.nunique(columns)
 
         @staticmethod
         def select_by_dtypes(data_type):
@@ -247,12 +263,17 @@ def cols(self: DataFrame):
 
             # Maybe the split do not generate new columns, We need to recalculate it
             num_columns = len(df_new.columns)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
+
             for i in range(splits):
                 # Making separate first name column from new data frame
+                # print("iiiii",i)
                 if i < num_columns:
-                    df["new_name" + str(i)] = df_new[i]
+                    df[output_cols[0] + "_" + str(i)] = df_new[i]
                 else:
-                    df["new_name" + str(i)] = None
+                    df[output_cols[0] + "_" + str(i)] = None
 
             # Dropping old Name columns
             if drop is True:
@@ -273,7 +294,7 @@ def cols(self: DataFrame):
                 length = [[match.start(), match.end()] for match in re.finditer(_separator, _func)]
                 return length if len(length) > 0 else None
 
-            df["__march_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
+            df["__match_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
             return df
 
         @staticmethod
@@ -294,7 +315,14 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
-            pass
+            df = self
+            result = {}
+            df_len = len(df)
+            for col_name, na in df.cols.count_na(columns).items():
+                result[col_name] = {"no_missing": df_len - na, "missing": na, "mismatches": 0}
+            return result
+
+            # return np.count_nonzero(df.isnull().values.ravel())
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
@@ -367,6 +395,24 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
+        def nunique(columns):
+            df = self
+            columns = parse_columns(df, columns)
+            result = {}
+            # def _nunique(_df, _serie_name):
+            #     return np.unique(_df[_serie_name].values.ravel())
+
+            for col_name in columns:
+                result[col_name] = df[col_name].nunique()
+
+                # result[col_name] = _nunique(df,col_name)
+            return result
+
+        def count(self):
+            df = self.df
+            return len(df)
+
+        @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):
             # https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
             df = self
@@ -374,12 +420,24 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                # i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
 
-                i = np.bincount(df[col_name].to_numpy())
-                j = np.nonzero(i)[0]
+                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+                    print("frequency AAA", col_name)
+                    i = np.bincount(df[col_name].to_numpy())
+                    j = np.nonzero(i)[0]
+                    result[col_name] = {"values": list(j), "count": list(i[j])}
+                else:
+                    # print("frequency BBBBB", col_name)
+                    i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
+                    count_sort_ind = np.argsort(-j)
+                    result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
 
-                result[col_name] = {"values": list(j), "count": list(i[j])}
+                    # Value counts
+                    # r = df[col_name].value_counts().nlargest(n)
+                    # i = r.index.tolist()
+                    # j = r.tolist()
+                    # result[col_name]= ({"values":i, "count":j})
+
             return result
 
     return Cols(self)

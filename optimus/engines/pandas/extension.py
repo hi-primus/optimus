@@ -1,12 +1,13 @@
 import json
 
+import numpy as np
 import pandas as pd
 
+from optimus.engines.base.extension import BaseExt
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import json_converter
 
 DataFrame = pd.DataFrame
-
-from optimus.engines.base.extension import BaseExt
 
 
 def ext(self: DataFrame):
@@ -19,11 +20,46 @@ def ext(self: DataFrame):
         def to_json(columns):
             df = self
 
-            # input_columns = parse_columns(df, columns)
-            print(df)
-            result = {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                      "value": df.rows.to_list(columns)}
+            columns = parse_columns(df, columns)
+            # print(df)
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                                 "value": df.rows.to_list(columns)}}
+
+            # for col_name in columns:
+            #     print("to_json AAAAAA",col_name)
+            #     if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+            #         result.update(df.cols.hist(col_name))
+            #     else:
+            #         result.update(df.cols.frequency(col_name))
+            # print("ASDFASdf", len(df))
             return json.dumps(result, ensure_ascii=False, default=json_converter)
+
+        @staticmethod
+        def profile(columns, lower_bound,upper_bound):
+            """
+
+            :param columns:
+            :return:
+            """
+            df = self[lower_bound:upper_bound]
+            # columns = parse_columns(df, columns)
+            # result = {}
+
+            columns = parse_columns(df, columns)
+            # print(df)
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                                 "value": df.rows.to_list(columns)}}
+
+            # df = df.dropna()
+            df = self
+            for col_name in columns:
+                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+                    result.update(df.cols.hist(col_name))
+                else:
+                    # df[col_name] = df[col_name].astype("str").dropna()
+                    # print("asdfakshdf")
+                    result.update(df.cols.frequency(col_name))
+            return result
 
         @staticmethod
         def cache():

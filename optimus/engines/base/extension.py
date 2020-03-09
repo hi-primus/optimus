@@ -156,16 +156,21 @@ class BaseExt(ABC):
         # return self.df._buffer.values.tolist()
         return self.df._buffer
 
-    def buffer_window(self, columns, lower_bound, upper_bound):
+    def buffer_window(self, columns, lower_bound=None, upper_bound=None):
         df = self.df._buffer
 
         df_length = len(df)
+        if lower_bound is None:
+            lower_bound = 0
+
+        if upper_bound is None:
+            upper_bound= df_length
 
         if upper_bound > df_length:
             upper_bound = df_length
 
         if lower_bound >= df_length:
-            RaiseIt.value_error(df_length, str(df_length-1))
+            RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(df, columns)
         return df[input_columns][lower_bound: upper_bound]
@@ -348,16 +353,16 @@ class BaseExt(ABC):
     def debug():
         pass
 
-    @staticmethod
-    @abstractmethod
-    def create_id(column="id"):
-        """
-        Create a unique id for every row.
-        :param column: Columns to be processed
-        :return:
-        """
-
-        pass
+    # @staticmethod
+    # @abstractmethod
+    # def create_id(column="id"):
+    #     """
+    #     Create a unique id for every row.
+    #     :param column: Columns to be processed
+    #     :return:
+    #     """
+    #
+    #     pass
 
     def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
              advanced_stats: bool = True,
@@ -384,7 +389,6 @@ class BaseExt(ABC):
                                             format="json",
                                             advanced_stats=advanced_stats,
                                             mismatch=mismatch
-
                                             )
         if Comm.instance:
             return Comm.instance.send(message, output=output)

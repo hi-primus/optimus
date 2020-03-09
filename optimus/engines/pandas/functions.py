@@ -13,18 +13,14 @@ def functions(self):
     class Functions:
 
         @staticmethod
-        def min(columns, args):
-            def dataframe_min_(df):
-                return {"min": df[columns].min()}
-
-            return dataframe_min_
+        def min(columns, args, df):
+            # columns = args
+            return [{"min": df[columns].min()}]
 
         @staticmethod
-        def max(columns, args):
-            def dataframe_max_(df):
-                return {"max": df[columns].max()}
-
-            return dataframe_max_
+        def max(columns, args, df):
+            # columns = args
+            return [{"max": df[columns].max()}]
 
         @staticmethod
         def mean(columns, args):
@@ -76,79 +72,76 @@ def functions(self):
             return zeros_
 
         @staticmethod
-        def count_na_agg(columns, args):
+        def count_na_agg(columns, args,df):
 
-            def _count_na_agg(df):
-                return {"count_na": df[columns].isnull().sum()}
-
-            return _count_na_agg
+            return [{"count_na": df.cols.count_na(columns)}]
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
-        def hist_agg(columns, args):
+        def hist_agg(columns, args, df):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-            def hist_agg_(serie):
-                df = args[0]
-                buckets = args[1]
-                min_max = args[2]
-                _serie = df[columns].to_numpy()
-                # print("aaaaa",df[columns],buckets, min_max)
 
-                _min, _max = _serie.min(), _serie.max()
+            df = args[0]
+            buckets = args[1]
+            min_max = args[2]
+            _serie = df[columns].to_numpy()
+            # print("aaaaa",df[columns],buckets, min_max)
 
-                # https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
-                # Fast histograms library https://github.com/astrofrog/fast-histogram
+            _min, _max = _serie.min(), _serie.max()
 
-                # @numba.njit
-                # def histogram1d(v, bins, range):
-                #     return np.histogram(v, bins, range)
+            # https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
+            # Fast histograms library https://github.com/astrofrog/fast-histogram
 
-                i = histogram1d(_serie, bins=buckets, range=(_min, _max))
-                j = np.linspace(_min, _max, num=buckets)
+            # @numba.njit
+            # def histogram1d(v, bins, range):
+            #     return np.histogram(v, bins, range)
 
-                # i, j = np.histogram(_serie, range=(_min, _max), bins=buckets)
-                # print(i,j)
+            i = histogram1d(_serie, bins=buckets, range=(_min, _max))
+            j = np.linspace(_min, _max, num=buckets)
 
-                result_hist = {}
-                for col in columns:
-                    result_hist.update({col: {"count": list(i), "bins": list(j)}})
+            # i, j = np.histogram(_serie, range=(_min, _max), bins=buckets)
+            # print(i,j)
 
-                    r = []
-                    for idx, v in enumerate(j):
-                        if idx < len(j) - 1:
-                            r.append({"count": i[idx], "lower": j[idx], "upper": j[idx + 1]})
+            result_hist = {}
+            for col in columns:
+                result_hist.update({col: {"count": list(i), "bins": list(j)}})
 
-                    f = {col: r}
+                r = []
+                for idx, v in enumerate(j):
+                    if idx < len(j) - 1:
+                        r.append({"count": i[idx], "lower": j[idx], "upper": j[idx + 1]})
 
-                result = {"hist": f}
-                return result
+                f = {col: r}
 
-                # result_hist = {}
-                # for col in col_name:
-                #     if is_column_a(df, col, df.constants.STRING_TYPES):
-                #         if min_max is None:
-                #             def func(val):
-                #                 return val.str.len()
-                #
-                #             partitions = df[col].to_delayed()
-                #             delayed_values = [dask.delayed(func)(part)
-                #                               for part in partitions]
-                #             df_len = from_delayed(delayed_values)
-                #             df_len = df_len.value_counts()
-                #             min, max = dd.compute(df_len.min(), df_len.max())
-                #             min_max = {"min": min, "max": max}
-                #         df_hist = df_len
-                #
-                #     elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
-                #         if min_max is None:
-                #             min_max = df.cols.range(col_name)[col]
-                #         df_hist = serie[col]
-                #     else:
-                #         RaiseIt.type_error("column", ["numeric", "string"])
-                #
-                #     i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
-                #     result_hist.update({col: {"count": list(i), "bins": list(j)}})
+            result = {"hist": f}
+            return result
+
+            # result_hist = {}
+            # for col in col_name:
+            #     if is_column_a(df, col, df.constants.STRING_TYPES):
+            #         if min_max is None:
+            #             def func(val):
+            #                 return val.str.len()
+            #
+            #             partitions = df[col].to_delayed()
+            #             delayed_values = [dask.delayed(func)(part)
+            #                               for part in partitions]
+            #             df_len = from_delayed(delayed_values)
+            #             df_len = df_len.value_counts()
+            #             min, max = dd.compute(df_len.min(), df_len.max())
+            #             min_max = {"min": min, "max": max}
+            #         df_hist = df_len
+            #
+            #     elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
+            #         if min_max is None:
+            #             min_max = df.cols.range(col_name)[col]
+            #         df_hist = serie[col]
+            #     else:
+            #         RaiseIt.type_error("column", ["numeric", "string"])
+            #
+            #     i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
+            #     result_hist.update({col: {"count": list(i), "bins": list(j)}})
 
             return hist_agg_
 
@@ -174,21 +167,18 @@ def functions(self):
             return _skewness
 
         @staticmethod
-        def count_uniques_agg(col_name, args):
+        def count_uniques_agg(col_name, args, df):
+            print("ARGS", args)
             estimate = args[0]
 
-            def _count_uniques_agg(df):
-
-                if estimate is True:
-                    ps = {col: df[col].nunique_approx() for col in col_name}
-                    # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
-                else:
-                    ps = {col: df[col].nunique() for col in df.cols.names()}
-                result = {"count_uniques": ps}
-
-                return result
-
-            return _count_uniques_agg
+            if estimate is True:
+                ps = df.cols.nunique_approx(col_name)
+                # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
+            else:
+                ps = df.cols.nunique(col_name)
+            result = [{"count_uniques": ps}]
+            print("ASDFASDF", result)
+            return result
 
         @staticmethod
         def range_agg(columns, args):
