@@ -4,8 +4,11 @@ import random
 import re
 import subprocess
 import sys
+import tempfile
 from functools import reduce
+from os import path
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 import six
 from pyspark.ml.linalg import DenseVector
@@ -13,13 +16,15 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 from optimus import ROOT_DIR
+from optimus.helpers.check import is_url
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
-
+import numpy as np
+import ntpath
 
 def random_int(n=5):
     """
@@ -360,3 +365,140 @@ def update_dict(d, u):
         else:
             d[k] = v
     return d
+
+
+def reduce_mem_usage(props):
+    # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
+    start_mem_usg = props.memory_usage().sum() / 1024 ** 2
+    print("Memory usage of properties dataframe is :", start_mem_usg, " MB")
+    NAlist = []  # Keeps track of columns that have missing values filled in.
+    for col in props.columns:
+        if props[col].dtype != object:  # Exclude strings
+
+            # Print current column type
+            print("******************************")
+            print("Column: ", col)
+            print("dtype before: ", props[col].dtype)
+
+            # make variables for Int, max and min
+            IsInt = False
+            mx = props[col].max()
+            mn = props[col].min()
+
+            # Integer does not support NA, therefore, NA needs to be filled
+            if not np.isfinite(props[col]).all():
+                NAlist.append(col)
+                props[col].fillna(mn - 1, inplace=True)
+
+                # test if column can be converted to an integer
+            asint = props[col].fillna(0).astype(np.int64)
+            result = (props[col] - asint)
+            result = result.sum()
+            if result > -0.01 and result < 0.01:
+                IsInt = True
+
+            # Make Integer/unsigned Integer datatypes
+            if IsInt:
+                if mn >= 0:
+                    if mx < 255:
+                        props[col] = props[col].astype(np.uint8)
+                    elif mx < 65535:
+                        props[col] = props[col].astype(np.uint16)
+                    elif mx < 4294967295:
+                        props[col] = props[col].astype(np.uint32)
+                    else:
+                        props[col] = props[col].astype(np.uint64)
+                else:
+                    if mn > np.iinfo(np.int8).min and mx < np.iinfo(np.int8).max:
+                        props[col] = props[col].astype(np.int8)
+                    elif mn > np.iinfo(np.int16).min and mx < np.iinfo(np.int16).max:
+                        props[col] = props[col].astype(np.int16)
+                    elif mn > np.iinfo(np.int32).min and mx < np.iinfo(np.int32).max:
+                        props[col] = props[col].astype(np.int32)
+                    elif mn > np.iinfo(np.int64).min and mx < np.iinfo(np.int64).max:
+                        props[col] = props[col].astype(np.int64)
+
+                        # Make float datatypes 32 bit
+            else:
+                props[col] = props[col].astype(np.float32)
+
+            # Print new column type
+            print("dtype after: ", props[col].dtype)
+            print("******************************")
+
+    # Print final result
+    print("___MEMORY USAGE AFTER COMPLETION:___")
+    mem_usg = props.memory_usage().sum() / 1024 ** 2
+    print("Memory usage is: ", mem_usg, " MB")
+    print("This is ", 100 * mem_usg/start_mem_usg,"% of the initial size")
+    return props, NAlist
+
+
+def downloader(url, file_format):
+    """
+    Send the request to download a file
+    """
+
+    def write_file(response, file, chunk_size=8192):
+        """
+        Load the data from the http request and save it to disk
+        :param response: data returned from the server
+        :param file:
+        :param chunk_size: size chunk size of the data
+        :return:
+        """
+        total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100
+        total_size = int(total_size)
+        bytes_so_far = 0
+
+        while 1:
+            chunk = response.read(chunk_size)
+            bytes_so_far += len(chunk)
+            if not chunk:
+                break
+            file.write(chunk)
+            total_size = bytes_so_far if bytes_so_far > total_size else total_size
+
+        return bytes_so_far
+
+    # try to infer the file format using the file extension
+    if file_format is None:
+        filename, file_format = os.path.splitext(url)
+        file_format = file_format.replace('.', '')
+
+    i = url.rfind('/')
+    data_name = url[(i + 1):]
+
+    headers = {"User-Agent": "Optimus Data Downloader/1.0"}
+
+    req = Request(url, None, headers)
+
+    logger.print("Downloading %s from %s", data_name, url)
+
+    # It seems that avro need a .avro extension file
+    with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
+        bytes_downloaded = write_file(urlopen(req), f)
+        path = f.name
+
+    if bytes_downloaded > 0:
+        logger.print("Downloaded %s bytes", bytes_downloaded)
+
+    logger.print("Creating DataFrame for %s. Please wait...", data_name)
+
+    return path
+
+
+def prepare_path(path, file_format):
+    """
+    Helper to return the file to be loaded and the file name
+    :param path: Path to the file to be loaded
+    :param file_format: format file
+    :return:
+    """
+    # print(path)
+    file_name = ntpath.basename(path)
+    if is_url(path):
+        file = downloader(path, file_format)
+    else:
+        file = path
+    return file, file_name
