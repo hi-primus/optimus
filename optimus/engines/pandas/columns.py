@@ -277,16 +277,20 @@ def cols(self: DataFrame):
 
             # new data frame with split value columns
             df_new = df[input_cols].str.split(separator, n=splits, expand=True)
+            if splits == -1:
+                splits = len(df_new.columns)
+            print(df_new)
+            # print("asdf", len(df.columns))
 
             # Maybe the split do not generate new columns, We need to recalculate it
             num_columns = len(df_new.columns)
+            input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
 
             # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
             for i in range(splits):
                 # Making separate first name column from new data frame
-                # print("iiiii",i)
                 if i < num_columns:
                     df[output_cols[0] + "_" + str(i)] = df_new[i]
                 else:
