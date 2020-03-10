@@ -281,7 +281,7 @@ def cols(self: DataFrame):
             df_new = df[input_cols].str.split(separator, n=splits, expand=True)
             if splits == -1:
                 splits = len(df_new.columns)
-            print(df_new)
+            # print(df_new)
             # print("asdf", len(df.columns))
 
             # Maybe the split do not generate new columns, We need to recalculate it
@@ -304,7 +304,7 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def find(input_cols, sub):
+        def find(columns, sub):
             """
             Find the position for a char or substring
             :param input_cols:
@@ -312,13 +312,15 @@ def cols(self: DataFrame):
             :return:
             """
             df = self
+            columns = parse_columns(df, columns)
 
             def get_match_positions(_value, _separator):
-                print("AAAAAA", _value)
+                # print("AAAAAA", _value)
                 length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                 return length if len(length) > 0 else None
 
-            df["__match_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
+            for col_name in columns:
+                df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
             return df
 
         @staticmethod
