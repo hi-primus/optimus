@@ -165,7 +165,24 @@ def cols(self: DataFrame):
 
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-            pass
+
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            search = val_to_list(search)
+            if search_by == "chars":
+                _regex = re.compile("|".join(map(re.escape, search)))
+            elif search_by == "words":
+                _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+            else:
+                _regex = search
+
+            for input_col in input_cols:
+                if search_by == "chars" or search_by == "words":
+                    df[input_col] = df[input_col].str.replace(_regex, replace_by)
+                elif search_by == "full":
+                    df[input_col] = df[input_col].replace(search, replace_by)
+
+            return df
 
         @staticmethod
         def replace_regex(input_cols, regex=None, value=None, output_cols=None):
