@@ -35,12 +35,21 @@ def ext(self: DataFrame):
             return json.dumps(result, ensure_ascii=False, default=json_converter)
 
         @staticmethod
-        def profile(columns, lower_bound,upper_bound):
+        def profile(columns, lower_bound=None, upper_bound=None):
             """
 
+            :param lower_bound:
+            :param upper_bound:
             :param columns:
             :return:
             """
+
+            df = self
+            if lower_bound is None:
+                lower_bound = 0
+            if upper_bound is None:
+                upper_bound = len(df)
+
             df = self[lower_bound:upper_bound]
             # columns = parse_columns(df, columns)
             # result = {}
