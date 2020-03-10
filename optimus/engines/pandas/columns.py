@@ -145,7 +145,9 @@ def cols(self: DataFrame):
 
         @staticmethod
         def remove_accents(input_cols, output_cols=None):
-            pass
+            cols = df.select_dtypes(include=[np.object]).columns
+            df[cols] = df[cols].apply(
+                lambda x: x.str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8'))
 
         @staticmethod
         def remove_special_chars(input_cols, output_cols=None):
@@ -311,8 +313,9 @@ def cols(self: DataFrame):
             """
             df = self
 
-            def get_match_positions(_func, _separator):
-                length = [[match.start(), match.end()] for match in re.finditer(_separator, _func)]
+            def get_match_positions(_value, _separator):
+                print("AAAAAA", _value)
+                length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                 return length if len(length) > 0 else None
 
             df["__match_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
@@ -469,8 +472,9 @@ def cols(self: DataFrame):
                     r = df[col_name].value_counts().nlargest(n)
                     i = r.index.tolist()
                     j = r.tolist()
-                    result[col_name]= ({"values":i, "count":j})
-
+                    # print("rrrrrrr",i)
+                    result[col_name] = ({"values": i, "count": j})
+            # print("RESULT",result)
             return result
 
     return Cols(self)
