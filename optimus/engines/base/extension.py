@@ -156,7 +156,7 @@ class BaseExt(ABC):
         # return self.df._buffer.values.tolist()
         return self.df._buffer
 
-    def buffer_window(self, columns, lower_bound=None, upper_bound=None):
+    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None):
         df = self.df._buffer
 
         df_length = len(df)
