@@ -5,7 +5,7 @@ import dask
 from dask.array import stats
 from dask.dataframe import from_delayed
 from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-
+import cupy as cp
 from optimus.helpers.check import is_column_a
 from optimus.helpers.decorators import time_it
 from optimus.helpers.raiseit import RaiseIt
@@ -115,7 +115,7 @@ def functions(self):
 
                 return delayed_values
 
-            import cupy as cp
+
             def hist_serie(serie, buckets):
 
                 arr = cp.fromDlpack(serie.to_dlpack())
