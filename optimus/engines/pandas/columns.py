@@ -298,7 +298,7 @@ def cols(self: DataFrame):
 
             # Dropping old Name columns
             if drop is True:
-                df.drop(columns=[input_cols], inplace=True)
+                df.drop(columns=input_cols, inplace=True)
             return df
 
         @staticmethod
