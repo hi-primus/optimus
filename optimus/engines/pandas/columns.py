@@ -442,13 +442,25 @@ def cols(self: DataFrame):
             result = {}
             for col_name in columns:
 
-                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-                    print("frequency AAA", col_name)
-                    i = np.bincount(df[col_name].to_numpy())
-                    j = np.nonzero(i)[0]
-                    result[col_name] = {"values": list(j), "count": list(i[j])}
+                if df[col_name].dtype == np.int64 or df[col_name].dtype == np.float64:
+                    # i = np.bincount(df[col_name].to_numpy())
+                    # j = np.argpartition(i, -4)[-4:]
+                    # print("asdasdads",i)
+                    # print("asdasdads",j)
+                    # # j = np.nonzero(i)[0]
+                    # result[col_name] = {"values": list(i), "count": list(j)}
+                    i, j = np.unique(df[col_name], return_counts=True)
+                    count_sort_ind = np.argsort(-j)
+                    result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
+                # elif df[col_name].dtype == np.float64:
+                #
+                #     uniqw, inverse = np.unique(df[col_name],return_counts=True)
+                #     i = np.bincount(inverse)
+                #     j = np.nonzero(i)[0]
+                #     result[col_name] = {"values": list(j[:n]), "count": list(i[j][:n])}
+
                 else:
-                    print("frequency BBBBB", col_name)
+                    # print("frequency BBBBB", col_name)
                     # i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
                     # count_sort_ind = np.argsort(-j)
                     # result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
