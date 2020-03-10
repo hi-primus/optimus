@@ -929,26 +929,26 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        def spread_split(row, _output_col, _splits):
+        def spread_split(row, output_col, splits):
 
-            for i in range(_splits):
+            for i in range(splits):
                 try:
-                    value = row[_output_col + "_" + str(_splits - 1)][i]
+                    value = row[output_col + "_" + str(splits - 1)][i]
                 except IndexError:
                     value = None
                 except TypeError:
                     value = None
-                row[_output_col + "_" + str(i)] = value
+                row[output_col + "_" + str(i)] = value
             return row
 
-        def split_single_index(row, _output_col, index):
+        def split_single_index(row, output_col, index):
             try:
-                value = row[_output_col][index]
+                value = row[output_col][index]
             except IndexError:
                 value = None
             except TypeError:
                 value = None
-            row[_output_col] = value
+            row[output_col] = value
             return row
 
         for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
