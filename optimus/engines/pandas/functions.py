@@ -72,7 +72,7 @@ def functions(self):
             return zeros_
 
         @staticmethod
-        def count_na_agg(columns, args,df):
+        def count_na_agg(columns, args, df):
 
             return [{"count_na": df.cols.count_na(columns)}]
 
@@ -85,10 +85,8 @@ def functions(self):
             df = args[0]
             buckets = args[1]
             min_max = args[2]
-            _serie = df[columns].to_numpy()
-            # print("aaaaa",df[columns],buckets, min_max)
 
-            _min, _max = _serie.min(), _serie.max()
+            # print("aaaaa",df[columns],buckets, min_max)
 
             # https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
             # Fast histograms library https://github.com/astrofrog/fast-histogram
@@ -97,24 +95,34 @@ def functions(self):
             # def histogram1d(v, bins, range):
             #     return np.histogram(v, bins, range)
 
-            i = histogram1d(_serie, bins=buckets, range=(_min, _max))
-            j = np.linspace(_min, _max, num=buckets)
+            # _serie = df[columns].to_numpy()
+            result = {}
+            for col_name in columns:
+                _serie = df[col_name].to_numpy()
+                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
 
-            # i, j = np.histogram(_serie, range=(_min, _max), bins=buckets)
-            # print(i,j)
+                    _min, _max = np.nanmin(_serie), np.nanmax(_serie)
+                    i = histogram1d(_serie, bins=buckets, range=(_min, _max), )
+                    j = np.linspace(_min, _max, num=buckets)
 
-            result_hist = {}
-            for col in columns:
-                result_hist.update({col: {"count": list(i), "bins": list(j)}})
+                    # i, j = np.histogram(_serie, range=(_min, _max), bins=buckets)
+                    # print(i,j)
 
-                r = []
-                for idx, v in enumerate(j):
-                    if idx < len(j) - 1:
-                        r.append({"count": i[idx], "lower": j[idx], "upper": j[idx + 1]})
+                    result_hist = {}
 
-                f = {col: r}
+                    result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
 
-            result = {"hist": f}
+                    r = []
+                    for idx, v in enumerate(j):
+                        if idx < len(j) - 1:
+                            r.append({"count": i[idx], "lower": j[idx], "upper": j[idx + 1]})
+
+                    f = {col_name: {"hist": r}}
+                    result.update(f)
+                else:
+                    pass
+
+
             return result
 
             # result_hist = {}
