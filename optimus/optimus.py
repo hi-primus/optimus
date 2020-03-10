@@ -21,19 +21,6 @@ class MetadataDask:
 def optimus(engine="spark", *args, **kwargs):
     logger.print("ENGINE", engine)
     # Monkey Patching
-
-    if engine == "vaex":
-        from vaex import DataFrame as VaexDataFrame
-        # import pandas as pd
-        from optimus.engines.vaex import rows, columns, extension, constants, functions
-        from optimus.engines.vaex.io import save
-
-        VaexDataFrame.outliers = property(outliers)
-        VaexDataFrame.meta = property(meta)
-        VaexDataFrame.schema = [MetadataDask()]
-
-    # if engine == "pandas":
-
     import pandas as pd
     PandasDataFrame = pd.DataFrame
 
@@ -69,6 +56,17 @@ def optimus(engine="spark", *args, **kwargs):
         DaskDataFrame.meta = property(meta)
         DaskDataFrame.schema = [MetadataDask()]
 
+    if engine == "cudf":
+        from cudf.core import DataFrame as CUDFDataFrame
+
+        from optimus.engines.cudf import columns, rows, extension, functions, constants
+
+        from optimus.engines.cudf.io import save
+
+        CUDFDataFrame.outliers = property(outliers)
+        CUDFDataFrame.meta = property(meta)
+        CUDFDataFrame.schema = [MetadataDask()]
+
     if engine == "dask-cudf":
         from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
@@ -79,6 +77,16 @@ def optimus(engine="spark", *args, **kwargs):
         DaskCUDFDataFrame.outliers = property(outliers)
         DaskCUDFDataFrame.meta = property(meta)
         DaskCUDFDataFrame.schema = [MetadataDask()]
+
+    if engine == "vaex":
+        from vaex import DataFrame as VaexDataFrame
+        # import pandas as pd
+        from optimus.engines.vaex import rows, columns, extension, constants, functions
+        from optimus.engines.vaex.io import save
+
+        VaexDataFrame.outliers = property(outliers)
+        VaexDataFrame.meta = property(meta)
+        VaexDataFrame.schema = [MetadataDask()]
 
     # Dummy so pycharm not complain about not used imports
     columns, rows, constants, extension, functions, save, plots
@@ -97,6 +105,10 @@ def optimus(engine="spark", *args, **kwargs):
     elif engine == "dask":
         from optimus.engines.dask.engine import DaskEngine
         return DaskEngine(*args, **kwargs)
+
+    elif engine == "cudf":
+        from optimus.engines.cudf.engine import CUDFEngine
+        return CUDFEngine(*args, **kwargs)
 
     elif engine == "dask-cudf":
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
