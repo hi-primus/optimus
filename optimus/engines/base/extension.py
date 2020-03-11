@@ -154,7 +154,8 @@ class BaseExt(ABC):
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
-        return self.df._buffer
+        df = self.df
+        return df._buffer
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None):
         df = self.df._buffer
