@@ -52,7 +52,7 @@ examples/test\.parquet/
 examples/test\.csv/
 examples/test\.json/
 examples/temp
-
+examples/data/mortage/
 
 node_modules
 
@@ -67,3 +67,13 @@ examples/many-columns.parquet/
 examples/sandbox.ipynb
 
 examples/dask-worker-space/
+
+examples/data/HIGGS.csv
+
+examples/data/Performance_2000Q4.csv
+
+examples/data/star0000-1.csv
+
+examples/yellow_tripdata_2009-01.csv
+
+examples/yellow_tripdata_2009-02.csv
