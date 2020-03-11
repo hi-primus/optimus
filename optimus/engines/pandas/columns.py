@@ -125,15 +125,37 @@ def cols(self: DataFrame):
 
         @staticmethod
         def lower(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            # df.select_dtypes(exclude=['string', 'object'])
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.lower()
+            return df
 
         @staticmethod
         def upper(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.upper()
+            return df
 
         @staticmethod
         def trim(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.strip()
+            return df
 
         @staticmethod
         def reverse(input_cols, output_cols=None):
@@ -145,9 +167,15 @@ def cols(self: DataFrame):
 
         @staticmethod
         def remove_accents(input_cols, output_cols=None):
-            cols = df.select_dtypes(include=[np.object]).columns
-            df[cols] = df[cols].apply(
-                lambda x: x.str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8'))
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+            # cols = df.select_dtypes(include=[np.object]).columns
+
+            for input_col, output_col in zip(input_cols,output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+            return df
 
         @staticmethod
         def remove_special_chars(input_cols, output_cols=None):
@@ -271,7 +299,20 @@ def cols(self: DataFrame):
 
         @staticmethod
         def nest(input_cols, shape="string", separator="", output_col=None):
-            pass
+
+            df = self
+            if output_col is None:
+                output_col = "_".join(input_cols)
+            else:
+                output_col = parse_columns(df, output_col, accepts_missing_cols=True)
+            # print("ASSAD    ",output_col)
+            # check_column_numbers(output_col, 1)
+
+            import operator
+            if shape == "string":
+                df[output_col] = df[input_cols].agg(separator.join, axis=1)
+
+            return df
 
         @staticmethod
         def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
