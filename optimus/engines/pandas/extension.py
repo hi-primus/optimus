@@ -43,7 +43,7 @@ def ext(self: DataFrame):
             :param upper_bound:
             :param columns:
             :param bins:
-            :param output: 
+            :param output:
             :return:
             """
 
@@ -63,17 +63,28 @@ def ext(self: DataFrame):
                                  "value": df.rows.to_list(columns)}}
 
             # df = df.dropna()
-            stats = {}
             df = self
+            result["columns"] = {}
             for col_name in columns:
+                stats = {}
                 if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-                    stats.update(df.cols.hist(col_name, buckets=bins))
+                    # stats.update()
+                    stats = {"hist": df.cols.hist(col_name, buckets=bins)}
+                    r = {col_name: stats}
+
                 else:
                     # df[col_name] = df[col_name].astype("str").dropna()
-                    # print("asdfakshdf")
-                    result.update(df.cols.frequency(col_name))
+                    stats["stats"] = {"frequency": df.cols.frequency(col_name, n=bins),
+                                      "count_uniques": len(df[col_name].value_counts())}
+
+                    r = {col_name: stats}
+
+                result["columns"].update(r)
+
+            result["stats"] = {"rows_count": len(df)}
             if output == "json":
                 result = dump_json(result)
+
             return result
 
         @staticmethod
