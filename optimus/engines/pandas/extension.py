@@ -35,12 +35,13 @@ def ext(self: DataFrame):
             return json.dumps(result, ensure_ascii=False, default=json_converter)
 
         @staticmethod
-        def profile(columns, lower_bound=None, upper_bound=None):
+        def profile(columns, lower_bound=None, upper_bound=None, bins=10):
             """
 
             :param lower_bound:
             :param upper_bound:
             :param columns:
+            :param bins:
             :return:
             """
 
@@ -60,14 +61,15 @@ def ext(self: DataFrame):
                                  "value": df.rows.to_list(columns)}}
 
             # df = df.dropna()
+            stats = {}
             df = self
             for col_name in columns:
                 if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-                    result.update(df.cols.hist(col_name))
+                    stats.update(df.cols.hist(col_name, buckets=bins))
                 else:
                     # df[col_name] = df[col_name].astype("str").dropna()
-                    # print("asdfakshdf")
-                    result.update(df.cols.frequency(col_name))
+                    stats.update(df.cols.frequency(col_name, n=bins))
+            result["columns"] = stats
             return result
 
         @staticmethod
