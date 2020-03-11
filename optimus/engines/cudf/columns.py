@@ -331,7 +331,7 @@ def cols(self: DataFrame):
 
             df = df
             # cudf do nor support apply or agg join for this operation
-            df[output_col] = reduce((lambda x, y: df[x] + " " +df[y]), input_cols)
+            df[output_col] = reduce((lambda x, y: df[x] + " " + df[y]), input_cols)
             return df
 
         @staticmethod
