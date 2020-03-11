@@ -5,6 +5,7 @@ import pandas as pd
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.json import dump_json
 from optimus.helpers.json import json_converter
 
 DataFrame = pd.DataFrame
@@ -35,7 +36,7 @@ def ext(self: DataFrame):
             return json.dumps(result, ensure_ascii=False, default=json_converter)
 
         @staticmethod
-        def profile(columns, lower_bound=None, upper_bound=None):
+        def profile(columns, lower_bound=None, upper_bound=None, output=None):
             """
 
             :param lower_bound:
@@ -68,6 +69,8 @@ def ext(self: DataFrame):
                     # df[col_name] = df[col_name].astype("str").dropna()
                     # print("asdfakshdf")
                     result.update(df.cols.frequency(col_name))
+            if output == "json":
+                result = dump_json(result)
             return result
 
         @staticmethod
