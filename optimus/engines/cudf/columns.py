@@ -1,10 +1,12 @@
 import re
 import string
+import unicodedata
 from enum import Enum
+from functools import reduce
 
 import numpy as np
 from cudf.core import DataFrame
-import unicodedata
+
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
@@ -127,15 +129,39 @@ def cols(self: DataFrame):
 
         @staticmethod
         def lower(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            # df.select_dtypes(exclude=['string', 'object'])
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.lower()
+            return df
 
         @staticmethod
         def upper(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            # df.select_dtypes(exclude=['string', 'object'])
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.upper()
+            return df
 
         @staticmethod
         def trim(input_cols, output_cols=None):
-            pass
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            # df.select_dtypes(exclude=['string', 'object'])
+
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if df[input_col].dtype == "object":
+                    df[output_col] = df[input_col].str.strip()
+            return df
 
         @staticmethod
         def reverse(input_cols, output_cols=None):
@@ -154,7 +180,8 @@ def cols(self: DataFrame):
             :return:
             """
 
-            print( unicodedata.normalize('NFKD', "cell_str"))
+            print(unicodedata.normalize('NFKD', "cell_str"))
+
             def _remove_accents(value, attr):
                 cell_str = str(value)
 
@@ -300,7 +327,12 @@ def cols(self: DataFrame):
 
         @staticmethod
         def nest(input_cols, shape="string", separator="", output_col=None):
-            pass
+            df = self
+
+            df = df
+            # cudf do nor support apply or agg join for this operation
+            df[output_col] = reduce((lambda x, y: df[x] + " " +df[y]), input_cols)
+            return df
 
         @staticmethod
         def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
