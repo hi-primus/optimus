@@ -68,13 +68,14 @@ def ext(self: DataFrame):
             for col_name in columns:
                 stats = {}
 
-                stats["stats"] = {"missing": 3, "mismatch": 4, "null": 5}
+                stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
 
                 if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
                     stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)})
                     r = {col_name: stats}
 
-                else:
+                elif df[col_name].dtype == "object":
+
                     # df[col_name] = df[col_name].astype("str").dropna()
                     stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins),
                                            "count_uniques": len(df[col_name].value_counts())})
