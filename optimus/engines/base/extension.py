@@ -164,6 +164,9 @@ class BaseExt(ABC):
         if lower_bound is None:
             lower_bound = 0
 
+        if lower_bound < 0:
+            lower_bound = 0
+
         if upper_bound is None:
             upper_bound= df_length
 

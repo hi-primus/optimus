@@ -48,10 +48,19 @@ def ext(self: DataFrame):
             """
 
             df = self
+            df_length = len(df)
+
             if lower_bound is None:
                 lower_bound = 0
+
+            if lower_bound < 0:
+                lower_bound = 0
+
             if upper_bound is None:
                 upper_bound = len(df)
+
+            if upper_bound > df_length:
+                upper_bound = df_length
 
             df = self[lower_bound:upper_bound]
             # columns = parse_columns(df, columns)
