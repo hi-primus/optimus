@@ -1,5 +1,7 @@
 import numpy as np
-from dask.dataframe.core import DataFrame
+import pandas as pd
+
+DataFrame = pd.DataFrame
 
 
 def constants(self):

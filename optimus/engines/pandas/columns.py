@@ -4,7 +4,7 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 
-from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
@@ -13,28 +13,12 @@ DataFrame = pd.DataFrame
 
 
 def cols(self: DataFrame):
-    class Cols(BaseColumns):
+    class Cols(DataFrameBaseColumns):
+        def __init__(self, df):
+            super(DataFrameBaseColumns, self).__init__(df)
 
         @staticmethod
         def append(*args, **kwargs):
-            pass
-
-        @staticmethod
-        def select(columns="*", regex=None, data_type=None, invert=False) -> str:
-            df = self
-            columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
-            if columns is not None:
-                df = df[columns]
-                # Metadata get lost when using select(). So we copy here again.
-                df = df.meta.preserve(self)
-
-            else:
-                df = None
-            # print(type(df))
-            return df
-
-        @staticmethod
-        def copy(input_cols, output_cols=None, columns=None):
             pass
 
         @staticmethod
@@ -58,13 +42,14 @@ def cols(self: DataFrame):
         def set(output_col, value=None):
             pass
 
-        @staticmethod
-        def rename(*args, **kwargs) -> Enum:
-            pass
 
-        @staticmethod
-        def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
-            pass
+        # @staticmethod
+        # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
+        #     df = self
+        #     input_cols = parse_columns(df, input_cols)
+        #     df[input_cols] = df[input_cols].astype(dtype)
+        #
+        #     return df
 
         @staticmethod
         def astype(*args, **kwargs):
@@ -72,10 +57,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def move(column, position, ref_col=None):
-            pass
-
-        @staticmethod
-        def keep(columns=None, regex=None):
             pass
 
         @staticmethod
@@ -124,40 +105,6 @@ def cols(self: DataFrame):
             return exprs
 
         @staticmethod
-        def lower(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            # df.select_dtypes(exclude=['string', 'object'])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.lower()
-            return df
-
-        @staticmethod
-        def upper(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.upper()
-            return df
-
-        @staticmethod
-        def trim(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.strip()
-            return df
-
-        @staticmethod
         def reverse(input_cols, output_cols=None):
             pass
 
@@ -172,18 +119,11 @@ def cols(self: DataFrame):
             output_cols = get_output_cols(input_cols, output_cols)
             # cols = df.select_dtypes(include=[np.object]).columns
 
-            for input_col, output_col in zip(input_cols,output_cols):
+            for input_col, output_col in zip(input_cols, output_cols):
                 if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8')
+                    df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
+                                                                                    errors='ignore').str.decode('utf-8')
             return df
-
-        @staticmethod
-        def remove_special_chars(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
-        def remove_white_spaces(input_cols, output_cols=None):
-            pass
 
         @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
@@ -206,6 +146,8 @@ def cols(self: DataFrame):
             else:
                 _regex = search
 
+            df = df.cols.cast(input_cols, "str")
+            # print(df)
             for input_col in input_cols:
                 if search_by == "chars" or search_by == "words":
                     df[input_col] = df[input_col].str.replace(_regex, replace_by)
@@ -252,13 +194,6 @@ def cols(self: DataFrame):
         def count_zeros(columns):
             pass
 
-        @staticmethod
-        def count_uniques(columns, estimate=True):
-            pass
-
-        @staticmethod
-        def value_counts(columns):
-            pass
 
         @staticmethod
         def unique(columns):
@@ -296,53 +231,6 @@ def cols(self: DataFrame):
         @staticmethod
         def iqr(columns, more=None, relative_error=None):
             pass
-
-        @staticmethod
-        def nest(input_cols, shape="string", separator="", output_col=None):
-
-            df = self
-            if output_col is None:
-                output_col = "_".join(input_cols)
-            else:
-                output_col = parse_columns(df, output_col, accepts_missing_cols=True)
-            # print("ASSAD    ",output_col)
-            # check_column_numbers(output_col, 1)
-
-            import operator
-            if shape == "string":
-                df[output_col] = df[input_cols].agg(separator.join, axis=1)
-
-            return df
-
-        @staticmethod
-        def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
-            df = self
-
-            # new data frame with split value columns
-            df_new = df[input_cols].str.split(separator, n=splits, expand=True)
-            if splits == -1:
-                splits = len(df_new.columns)
-            # print(df_new)
-            # print("asdf", len(df.columns))
-
-            # Maybe the split do not generate new columns, We need to recalculate it
-            num_columns = len(df_new.columns)
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
-
-            for i in range(splits):
-                # Making separate first name column from new data frame
-                if i < num_columns:
-                    df[output_cols[0] + "_" + str(i)] = df_new[i]
-                else:
-                    df[output_cols[0] + "_" + str(i)] = None
-
-            # Dropping old Name columns
-            if drop is True:
-                df.drop(columns=input_cols, inplace=True)
-            return df
 
         @staticmethod
         def find(columns, sub):
@@ -397,10 +285,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def boxplot(columns):
-            pass
-
-        @staticmethod
-        def schema_dtype(columns="*"):
             pass
 
         @staticmethod
@@ -459,7 +343,11 @@ def cols(self: DataFrame):
         @staticmethod
         def mode(columns):
             df = self
-            return df
+            columns = parse_columns(df, columns)
+            result = {}
+            for col_name in columns:
+                result[col_name] = df[col_name].mode(col_name).to_dict()
+            return result
 
         @staticmethod
         def nunique(columns):

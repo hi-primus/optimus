@@ -1,5 +1,5 @@
 import numpy as np
-from dask.dataframe.core import DataFrame
+from cudf.core import DataFrame
 
 
 def constants(self):

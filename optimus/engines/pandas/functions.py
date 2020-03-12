@@ -61,7 +61,7 @@ def functions(self):
             return _stddev
 
         @staticmethod
-        def zeros_agg(col_name, args):
+        def zeros_agg(col_name, args, df):
             col_name = val_to_list(col_name)
 
             def zeros_(df):
@@ -180,12 +180,12 @@ def functions(self):
             estimate = args[0]
 
             if estimate is True:
-                ps = df.cols.nunique_approx(col_name)
+                ps = df.cols.nunique(col_name)
                 # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
             else:
                 ps = df.cols.nunique(col_name)
             result = [{"count_uniques": ps}]
-            print("ASDFASDF", result)
+
             return result
 
         @staticmethod

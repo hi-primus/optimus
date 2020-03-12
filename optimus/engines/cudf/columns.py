@@ -1,24 +1,24 @@
 import re
-import string
 import unicodedata
 from enum import Enum
-from functools import reduce
 
 import numpy as np
 from cudf.core import DataFrame
 
-from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
-
-
 # DataFrame = pd.DataFrame
+from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_str
 
 
 def cols(self: DataFrame):
-    class Cols(BaseColumns):
+    class Cols(DataFrameBaseColumns):
+        def __init__(self, df):
+            super(DataFrameBaseColumns, self).__init__(df)
 
         @staticmethod
         def append(*args, **kwargs):
@@ -36,10 +36,6 @@ def cols(self: DataFrame):
             else:
                 df = None
             return df
-
-        @staticmethod
-        def copy(input_cols, output_cols=None, columns=None):
-            pass
 
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -62,13 +58,15 @@ def cols(self: DataFrame):
         def set(output_col, value=None):
             pass
 
-        @staticmethod
-        def rename(*args, **kwargs) -> Enum:
-            pass
 
-        @staticmethod
-        def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
-            pass
+        # @staticmethod
+        # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
+        #     df = self
+        #     input_cols = parse_columns(df, input_cols)
+        #     df[input_cols] = df[input_cols].astype("str")
+        #
+        #     return df
+        #     # return df
 
         @staticmethod
         def astype(*args, **kwargs):
@@ -76,10 +74,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def move(column, position, ref_col=None):
-            pass
-
-        @staticmethod
-        def keep(columns=None, regex=None):
             pass
 
         @staticmethod
@@ -128,42 +122,6 @@ def cols(self: DataFrame):
             return exprs
 
         @staticmethod
-        def lower(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            # df.select_dtypes(exclude=['string', 'object'])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.lower()
-            return df
-
-        @staticmethod
-        def upper(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            # df.select_dtypes(exclude=['string', 'object'])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.upper()
-            return df
-
-        @staticmethod
-        def trim(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            # df.select_dtypes(exclude=['string', 'object'])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.strip()
-            return df
-
-        @staticmethod
         def reverse(input_cols, output_cols=None):
             pass
 
@@ -197,22 +155,6 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def remove_special_chars(input_cols, output_cols=None):
-            input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.constants.STRING_TYPES)
-            check_column_numbers(input_cols, "*")
-
-            df = self.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
-            return df
-
-        @staticmethod
-        def remove_white_spaces(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
-
-        @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
             pass
 
@@ -221,10 +163,18 @@ def cols(self: DataFrame):
             pass
 
         # https://github.com/rapidsai/cudf/issues/3177
-        @staticmethod
-        def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+        def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+            """
+            Replace a value, list of values by a specified string
+            :param input_cols: '*', list of columns names or a single column name.
+            :param output_cols:
+            :param search: Values to look at to be replaced
+            :param replace_by: New value to replace the old one
+            :param search_by: Can be "full","words","chars" or "numeric".
+            :return: Dask DataFrame
+            """
 
-            df = self
+            df = self.df
             input_cols = parse_columns(df, input_cols)
             search = val_to_list(search)
             if search_by == "chars":
@@ -235,9 +185,16 @@ def cols(self: DataFrame):
             else:
                 _regex = search
 
+            df = df.cols.cast(input_cols, "str")
+
+            if not is_str(replace_by):
+                RaiseIt.type_error(replace_by, ["str"])
+
             for input_col in input_cols:
                 if search_by == "chars" or search_by == "words":
+                    # This is only implemented in Cudf
                     df[input_col] = df[input_col].str.replace_multi(search, replace_by, regex=False)
+                    # df[input_col] = df[input_col].str.replace(_regex, replace_by)
                     # df[input_col] = df[input_col].str.replace(search, replace_by)
                 elif search_by == "full":
                     df[input_col] = df[input_col].replace(search, replace_by)
@@ -276,9 +233,6 @@ def cols(self: DataFrame):
                 # np.count_nonzero(df[col_name].isnull().values.ravel())
             return result
 
-        @staticmethod
-        def count_zeros(columns):
-            pass
 
         @staticmethod
         def count_uniques(columns, estimate=True):
@@ -324,45 +278,6 @@ def cols(self: DataFrame):
         @staticmethod
         def iqr(columns, more=None, relative_error=None):
             pass
-
-        @staticmethod
-        def nest(input_cols, shape="string", separator="", output_col=None):
-            df = self
-
-            df = df
-            # cudf do nor support apply or agg join for this operation
-            df[output_col] = reduce((lambda x, y: df[x] + " " + df[y]), input_cols)
-            return df
-
-        @staticmethod
-        def unnest(input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
-
-            df = self
-
-            # new data frame with split value columns
-            df_new = df[input_cols].str.split(separator, n=splits, expand=True)
-            if splits == -1:
-                splits = len(df_new.columns)
-            print("asdf", len(df.columns))
-
-            # Maybe the split do not generate new columns, We need to recalculate it
-            num_columns = len(df_new.columns)
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
-
-            for i in range(splits):
-                # Making separate first name column from new data frame
-                if i < num_columns:
-                    df[output_cols[0] + "_" + str(i)] = df_new[i]
-                else:
-                    df[output_cols[0] + "_" + str(i)] = None
-
-            # Dropping old Name columns
-            if drop is True:
-                df.drop(columns=input_cols, inplace=True)
-            return df
 
         @staticmethod
         def find(input_cols, sub):
@@ -415,10 +330,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def boxplot(columns):
-            pass
-
-        @staticmethod
-        def schema_dtype(columns="*"):
             pass
 
         @staticmethod

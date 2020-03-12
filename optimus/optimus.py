@@ -25,7 +25,7 @@ def optimus(engine="spark", *args, **kwargs):
     PandasDataFrame = pd.DataFrame
 
     # from optimus.engines.pandas import rows, columns, extension, constants, functions
-    from optimus.engines.pandas import columns, extension, rows, functions
+    from optimus.engines.pandas import rows, columns, extension, constants, functions
     from optimus.engines.pandas.io import save
 
     PandasDataFrame.outliers = property(outliers)
