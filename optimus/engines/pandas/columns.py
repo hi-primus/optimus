@@ -63,9 +63,14 @@ def cols(self: DataFrame):
         def sort(order="asc", columns=None):
             pass
 
-        @staticmethod
-        def drop(columns=None, regex=None, data_type=None):
-            pass
+
+        def mode(self, columns):
+            df = self.df
+            columns = parse_columns(df, columns)
+            result = {}
+            for col_name in columns:
+                result[col_name] = df[col_name].mode(col_name)[0]
+            return result
 
         @staticmethod
         def create_exprs(columns, funcs, *args):
@@ -212,9 +217,7 @@ def cols(self: DataFrame):
         def _math(columns, operator, new_column):
             pass
 
-        @staticmethod
-        def z_score(input_cols, output_cols=None):
-            pass
+
 
         @staticmethod
         def min_max_scaler(input_cols, output_cols=None):
@@ -244,7 +247,7 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns)
 
             def get_match_positions(_value, _separator):
-                print("AAAAAA", _value)
+                # print("AAAAAA", _value)
                 # print("BBBB", _separator)
                 result = None
                 if _value is not np.nan:
@@ -344,14 +347,7 @@ def cols(self: DataFrame):
                 df[output_col] = df.compute(np.abs(df[input_col]))
             return df
 
-        @staticmethod
-        def mode(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                result[col_name] = df[col_name].mode(col_name).to_dict()
-            return result
+
 
         @staticmethod
         def nunique(columns):

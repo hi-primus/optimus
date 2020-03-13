@@ -293,7 +293,7 @@ def filter_col_name_by_dtypes(df, data_type):
 
 def name_col(col_names: str, append: str) -> str:
     """
-    Whenever you want to name and output user this function. This ensure that we manage and Standard when naming
+    Whenever you want to name and output use this function. This ensure that we use and Standard when naming
     :param col_names: Column name
     :param append: string to be appended
     :return:

@@ -59,9 +59,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         return result
 
-    @staticmethod
-    def mode(columns):
-        pass
+
 
     @staticmethod
     def abs(columns):
@@ -194,7 +192,9 @@ class DataFrameBaseColumns(BaseColumns):
         return df
 
     def z_score(self, input_cols, output_cols=None):
+
         df = self.df
+        input_cols = parse_columns(df, input_cols)
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
@@ -230,7 +230,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         result = {}
         for col_name in columns:
-            result.update(compress_dict(df[col_name].value_counts().ext.to_dict(), col_name))
+            result.update(collect_to_dict(df[col_name].value_counts(), col_name))
         return result
 
     def count_na(self, columns):
@@ -339,10 +339,12 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
+        df = df.cols.replace(input_cols, " ", "", output_cols= output_cols)
+        # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
 
-        df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
+        # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
 
-        return
+        return df
 
     def remove_special_chars(self, input_cols, output_cols=None):
         df = self.df
@@ -456,7 +458,6 @@ class DataFrameBaseColumns(BaseColumns):
             df = df.assign(**{output_col: value})
 
         return df
-
 
     def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
         """

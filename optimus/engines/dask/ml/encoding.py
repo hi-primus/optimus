@@ -2,10 +2,11 @@ from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, VectorAssembler, Normalizer, IndexToString
 from dask_ml.preprocessing import DummyEncoder
 from optimus.engines.spark.ml.contants import STRING_TO_INDEX
+from optimus.helpers.check import is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_, is_str, is_spark_dataframe
+from optimus.infer import is_, is_str
 
 
 def n_gram(df, input_col, n=2):

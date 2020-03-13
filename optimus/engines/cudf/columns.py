@@ -1,6 +1,5 @@
 import re
 import unicodedata
-from enum import Enum
 
 import numpy as np
 from cudf.core import DataFrame
@@ -25,19 +24,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def select(columns="*", regex=None, data_type=None, invert=False) -> str:
-            df = self
-            columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
-            if columns is not None:
-                df = df[columns]
-                # Metadata get lost when using select(). So we copy here again.
-                df = df.meta.preserve(self)
-
-            else:
-                df = None
-            return df
-
-        @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
@@ -57,7 +43,6 @@ def cols(self: DataFrame):
         @staticmethod
         def set(output_col, value=None):
             pass
-
 
         # @staticmethod
         # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -162,6 +147,16 @@ def cols(self: DataFrame):
         def years_between(input_cols, date_format=None, output_cols=None):
             pass
 
+        def mode(self, columns):
+            df = self.df
+            columns = parse_columns(df, columns)
+            result = {}
+            for col_name in columns:
+                # print(col_name)
+                result[col_name] = df[col_name].value_counts().index[0]
+
+            return result
+
         # https://github.com/rapidsai/cudf/issues/3177
         def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
             """
@@ -233,14 +228,11 @@ def cols(self: DataFrame):
                 # np.count_nonzero(df[col_name].isnull().values.ravel())
             return result
 
-
         @staticmethod
         def count_uniques(columns, estimate=True):
             pass
 
-        @staticmethod
-        def value_counts(columns):
-            pass
+
 
         @staticmethod
         def unique(columns):
@@ -257,10 +249,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def _math(columns, operator, new_column):
-            pass
-
-        @staticmethod
-        def z_score(input_cols, output_cols=None):
             pass
 
         @staticmethod
@@ -324,6 +312,24 @@ def cols(self: DataFrame):
 
             # return np.count_nonzero(df.isnull().values.ravel())
 
+        def remove_accents(self, input_cols, output_cols=None):
+            # pandas_to_cudf()
+            # cudf_to_pandas
+            def _remove_accents(value):
+                cell_str = str(value)
+
+                # first, normalize strings:
+                nfkd_str = unicodedata.normalize('NFKD', cell_str)
+
+                # Keep chars that has no other char combined (i.e. accents chars)
+                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+                return with_out_accents
+
+            df = self.df
+            return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
+                                 filter_col_by_dtypes=df.constants.STRING_TYPES,
+                                 output_cols=output_cols)
+
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
             pass
@@ -383,11 +389,6 @@ def cols(self: DataFrame):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col] = df.compute(np.abs(df[input_col]))
-            return df
-
-        @staticmethod
-        def mode(columns):
-            df = self
             return df
 
         @staticmethod

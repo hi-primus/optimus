@@ -1,4 +1,5 @@
 import json
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -7,6 +8,7 @@ from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import dump_json
 from optimus.helpers.json import json_converter
+from optimus.helpers.raiseit import RaiseIt
 
 DataFrame = pd.DataFrame
 
@@ -78,17 +80,20 @@ def ext(self: DataFrame):
                 stats = {}
 
                 stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
-
-                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+                col_dtype = df[col_name].dtype
+                if col_dtype == np.float64 or df[col_name].dtype == np.int64:
                     stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)})
                     r = {col_name: stats}
 
-                elif df[col_name].dtype == "object":
+                elif col_dtype == "object":
 
                     # df[col_name] = df[col_name].astype("str").dropna()
                     stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name],
                                            "count_uniques": len(df[col_name].value_counts())})
                     r = {col_name: stats}
+                else:
+                    
+                    RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
 
                 result["columns"].update(r)
 
@@ -114,6 +119,22 @@ def ext(self: DataFrame):
         @staticmethod
         def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
             pass
+
+        def remove_accents(self, input_cols, output_cols=None):
+            def _remove_accents(value):
+                cell_str = str(value)
+
+                # first, normalize strings:
+                nfkd_str = unicodedata.normalize('NFKD', cell_str)
+
+                # Keep chars that has no other char combined (i.e. accents chars)
+                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+                return with_out_accents
+
+            df = self.df
+            return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
+                                 filter_col_by_dtypes=df.constants.STRING_TYPES,
+                                 output_cols=output_cols)
 
         @staticmethod
         def query(sql_expression):
