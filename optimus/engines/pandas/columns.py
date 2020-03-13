@@ -244,9 +244,13 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns)
 
             def get_match_positions(_value, _separator):
-                # print("AAAAAA", _value)
-                length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
-                return length if len(length) > 0 else None
+                print("AAAAAA", _value)
+                # print("BBBB", _separator)
+                result = None
+                if _value is not np.nan:
+                    length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
+                    result = length if len(length) > 0 else None
+                return result
 
             for col_name in columns:
                 df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
