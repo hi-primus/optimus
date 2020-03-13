@@ -157,3 +157,8 @@ def cudf_to_pandas(df):
 def cudf_to_cupy_arr(df):
     import cupy as cp
     return cp.fromDlpack(df.to_dlpack())
+
+
+def pandas_to_cudf(df):
+    import cudf
+    return cudf.form_pandas(df)

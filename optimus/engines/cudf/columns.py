@@ -8,6 +8,7 @@ from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.constants import Actions
+from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
 from optimus.helpers.raiseit import RaiseIt
@@ -232,7 +233,15 @@ def cols(self: DataFrame):
         def count_uniques(columns, estimate=True):
             pass
 
-
+        @staticmethod
+        def extract(input_cols, output_cols, regex):
+            # Cudf no support regex to we convert this to pandas, operate and the convert back to cudf
+            df = self
+            from optimus.engines.base.dataframe.commons import extract
+            df = cudf_to_pandas(df)
+            df = extract(df, input_cols, output_cols, regex)
+            df = pandas_to_cudf(df)
+            return df
 
         @staticmethod
         def unique(columns):

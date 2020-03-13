@@ -19,7 +19,6 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, cudf_series_to_pandas
 from optimus.helpers.core import val_to_list
-from optimus.helpers.parser import compress_dict
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
@@ -58,8 +57,6 @@ class DataFrameBaseColumns(BaseColumns):
                     value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
 
         return result
-
-
 
     @staticmethod
     def abs(columns):
@@ -339,7 +336,7 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
-        df = df.cols.replace(input_cols, " ", "", output_cols= output_cols)
+        df = df.cols.replace(input_cols, " ", "", output_cols=output_cols)
         # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
 
         # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
@@ -891,6 +888,16 @@ class DataFrameBaseColumns(BaseColumns):
         df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
         return df
 
+    def slice(self, input_cols, output_cols, start, stop, step):
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].str.slice(start, stop, step)
+        return df
+
     def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
 
         df = self.df
@@ -923,28 +930,28 @@ class DataFrameBaseColumns(BaseColumns):
                 df.drop(columns=input_cols, inplace=True)
         return df
 
-    @staticmethod
-    def replace11(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-
-        df = self
-        input_cols = parse_columns(df, input_cols)
-        search = val_to_list(search)
-        if search_by == "chars":
-            _regex = re.compile("|".join(map(re.escape, search)))
-        elif search_by == "words":
-            _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        else:
-            _regex = search
-
-        df = df.cols.cast(input_cols, "str")
-        # print(df)
-        for input_col in input_cols:
-            if search_by == "chars" or search_by == "words":
-                df[input_col] = df[input_col].str.replace(_regex, replace_by)
-            elif search_by == "full":
-                df[input_col] = df[input_col].replace(search, replace_by)
-
-        return df
+    # @staticmethod
+    # def replace11(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+    #
+    #     df = self
+    #     input_cols = parse_columns(df, input_cols)
+    #     search = val_to_list(search)
+    #     if search_by == "chars":
+    #         _regex = re.compile("|".join(map(re.escape, search)))
+    #     elif search_by == "words":
+    #         _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+    #     else:
+    #         _regex = search
+    #
+    #     df = df.cols.cast(input_cols, "str")
+    #     # print(df)
+    #     for input_col in input_cols:
+    #         if search_by == "chars" or search_by == "words":
+    #             df[input_col] = df[input_col].str.replace(_regex, replace_by)
+    #         elif search_by == "full":
+    #             df[input_col] = df[input_col].replace(search, replace_by)
+    #
+    #     return df
 
     @staticmethod
     def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):

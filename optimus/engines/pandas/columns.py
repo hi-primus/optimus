@@ -1,5 +1,4 @@
 import re
-from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -42,7 +41,6 @@ def cols(self: DataFrame):
         def set(output_col, value=None):
             pass
 
-
         # @staticmethod
         # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
         #     df = self
@@ -62,7 +60,6 @@ def cols(self: DataFrame):
         @staticmethod
         def sort(order="asc", columns=None):
             pass
-
 
         def mode(self, columns):
             df = self.df
@@ -139,29 +136,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            search = val_to_list(search)
-            if search_by == "chars":
-                _regex = re.compile("|".join(map(re.escape, search)))
-            elif search_by == "words":
-                _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-            else:
-                _regex = search
-
-            df = df.cols.cast(input_cols, "str")
-            # print(df)
-            for input_col in input_cols:
-                if search_by == "chars" or search_by == "words":
-                    df[input_col] = df[input_col].str.replace(_regex, replace_by)
-                elif search_by == "full":
-                    df[input_col] = df[input_col].replace(search, replace_by)
-
-            return df
-
-        @staticmethod
         def replace_regex(input_cols, regex=None, value=None, output_cols=None):
             pass
 
@@ -176,6 +150,13 @@ def cols(self: DataFrame):
         @staticmethod
         def is_na(input_cols, output_cols=None):
             pass
+
+        @staticmethod
+        def extract(input_cols, output_cols, regex):
+            df = self
+            from optimus.engines.base.dataframe.commons import extract
+            extract(df, input_cols, output_cols, regex)
+            return df
 
         @staticmethod
         def count_na(columns):
@@ -199,7 +180,6 @@ def cols(self: DataFrame):
         def count_zeros(columns):
             pass
 
-
         @staticmethod
         def unique(columns):
             pass
@@ -216,8 +196,6 @@ def cols(self: DataFrame):
         @staticmethod
         def _math(columns, operator, new_column):
             pass
-
-
 
         @staticmethod
         def min_max_scaler(input_cols, output_cols=None):
@@ -346,8 +324,6 @@ def cols(self: DataFrame):
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col] = df.compute(np.abs(df[input_col]))
             return df
-
-
 
         @staticmethod
         def nunique(columns):
