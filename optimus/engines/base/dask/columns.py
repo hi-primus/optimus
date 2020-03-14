@@ -232,6 +232,22 @@ class DaskBaseColumns(BaseColumns):
             result.update(compress_dict(df[col_name].value_counts().ext.to_dict(), col_name))
         return result
 
+    def extract(self, input_cols, output_cols, regex):
+        df = self.df
+        from optimus.engines.base.dataframe.commons import extract
+        df = extract(df, input_cols, output_cols, regex)
+        return df
+
+    def slice(self, input_cols, output_cols, start, stop, step):
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].str.slice(start, stop, step)
+        return df
+
     def count_na(self, columns):
         """
         Return the NAN and Null count in a Column

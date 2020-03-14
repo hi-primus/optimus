@@ -59,6 +59,16 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
+    def slice(input_cols, output_cols, start, stop, step):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def extract(input_cols, output_cols, regex):
+        pass
+
+    @staticmethod
+    @abstractmethod
     def rename(*args, **kwargs) -> Enum:
         pass
 
@@ -450,6 +460,7 @@ class BaseColumns(ABC):
     @abstractmethod
     def cell(column):
         pass
+
 
     @staticmethod
     @abstractmethod

@@ -155,7 +155,7 @@ def cols(self: DataFrame):
         def extract(input_cols, output_cols, regex):
             df = self
             from optimus.engines.base.dataframe.commons import extract
-            extract(df, input_cols, output_cols, regex)
+            df = extract(df, input_cols, output_cols, regex)
             return df
 
         @staticmethod
