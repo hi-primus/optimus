@@ -967,19 +967,14 @@ class DaskBaseColumns(BaseColumns):
             row[output_col] = value
             return row
 
-        for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
-
-            if separator is None:
-                RaiseIt.value_error(separator, "regular expression")
-
-            if index is None:
-                df = df.assign(**{output_col + "_" + str(i): "" for i in range(splits - 1)})
-                df[output_col + '_' + str(splits - 1)] = df[input_col].astype(str).str.split(separator, splits - 1)
-                df = df.apply(spread_split, axis=1, output_col=output_col, splits=splits, meta=df)
-            else:
-                df = df.assign(**{output_col: ""})
-                df[output_col] = df[input_col].astype(str).str.split(separator, index + 1)
-                df = df.apply(split_single_index, axis=1, output_col=output_col, index=index, meta=df)
+        # new data frame with split value columns
+        c = {}
+        for input_col in input_cols:
+            df_new = df[input_col].str.split(separator, n=splits)
+            c = {output_cols[0] + "*" + str(i): df_new.map(lambda x, i=i: x[i]) for i in range(splits)}
+        df = df.assign(**c)
+        if drop is True:
+            df.drop(columns=input_cols, inplace=True)
 
         return df
 
