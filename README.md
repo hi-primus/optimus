@@ -11,7 +11,7 @@
 [![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
 
 
-NOTE: We are working hard in version 3.0 https://github.com/ironmussa/Optimus/tree/develop-3.0. in which you could use Dask, Dask/cudf as backend using a unified API.
+**NOTE: We are working hard in version 3.0 https://github.com/ironmussa/Optimus/tree/develop-3.0. in which you could use pandas, cudf, Dask, Dask/cudf as backend using a unified API.**
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
@@ -651,19 +651,13 @@ including:
 [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)  
   
 ## Core Team
-Argenis Leon and Favio Vazquez
+Argenis Leon
 
 ## Contributors:
-Here is the amazing people that make Optimus possible:
-  
-[![0](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/0)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/0)[![1](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/1)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/1)[![2](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/2)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/2)[![3](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/3)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/3)[![4](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/4)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/4)[![5](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/5)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/5)[![6](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/6)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/6)[![7](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/7)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/7)    
+https://github.com/ironmussa/Optimus/graphs/contributors
    
 ## License:  
   
-Apache 2.0 © [Iron](https://github.com/ironmussa)  
-  
-[![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
-  
-<a href="https://twitter.com/optimus_data"><img src="https://www.shareicon.net/data/256x256/2015/09/01/94063_circle_512x512.png" alt="Optimus twitter" border="0" height="60"></a>
+Apache 2.0 ©
 
 
