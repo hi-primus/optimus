@@ -92,11 +92,10 @@ def ext(self: DataFrame):
                                            "count_uniques": len(df[col_name].value_counts())})
                     r = {col_name: stats}
                 else:
-                    
+
                     RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
 
                 result["columns"].update(r)
-
             result["stats"] = {"rows_count": len(df)}
 
             if output == "json":
@@ -104,9 +103,8 @@ def ext(self: DataFrame):
 
             return result
 
-        @staticmethod
-        def cache():
-            pass
+        def cache(self):
+            return self.df
 
         @staticmethod
         def sample(n=10, random=False):
