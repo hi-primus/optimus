@@ -1,7 +1,6 @@
 import builtins
 import re
 import unicodedata
-
 import dask
 import dask.dataframe as dd
 import numpy as np
@@ -23,11 +22,6 @@ from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
-
-# from optimus.engines.dask.functions import map_delayed
-
-# Some expression accepts multiple columns at the same time.
-# python_set = set
 
 # This implementation works for Dask and dask_cudf
 
@@ -945,34 +939,13 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        def spread_split(row, output_col, splits):
-
-            for i in range(splits):
-                try:
-                    value = row[output_col + "_" + str(splits - 1)][i]
-                except IndexError:
-                    value = None
-                except TypeError:
-                    value = None
-                row[output_col + "_" + str(i)] = value
-            return row
-
-        def split_single_index(row, output_col, index):
-            try:
-                value = row[output_col][index]
-            except IndexError:
-                value = None
-            except TypeError:
-                value = None
-            row[output_col] = value
-            return row
-
         # new data frame with split value columns
-        c = {}
+        kw_columns = {}
         for input_col in input_cols:
             df_new = df[input_col].str.split(separator, n=splits)
-            c = {output_cols[0] + "*" + str(i): df_new.map(lambda x, i=i: x[i]) for i in range(splits)}
-        df = df.assign(**c)
+            kw_columns = {output_cols[0] + "_" + str(i): df_new.map(lambda x, i=i: x[i]) for i in range(splits)}
+            df = df.assign(**kw_columns)
+            del df_new
         if drop is True:
             df.drop(columns=input_cols, inplace=True)
 
