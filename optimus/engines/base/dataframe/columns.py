@@ -14,14 +14,13 @@ from multipledispatch import dispatch
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.check import equal_function, is_pandas_series
+from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.converter import format_dict, cudf_series_to_pandas
+from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
-from optimus.profiler.functions import fill_missing_var_types
+from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
 
 
 # from optimus.engines.dask.functions import map_delayed
@@ -36,27 +35,9 @@ class DataFrameBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
-    def frequency(self, columns, n=10, percentage=False, total_rows=None):
-        df = self.df
-        columns = parse_columns(df, columns)
-        result = {}
-        lazy_results = [df[col_name].value_counts().nlargest(n) for col_name in columns]
-        temp_result = dd.compute(*lazy_results)
-
-        for temp_result_col in temp_result:
-            if not is_pandas_series(temp_result_col):
-                temp_result_col = cudf_series_to_pandas(temp_result_col)
-            for i, j in temp_result_col.iteritems():
-                result.setdefault(temp_result_col.name, []).append({"value": i, "count": j})
-
-        if percentage is True:
-            if total_rows is None:
-                total_rows = df.rows.count()
-            for value_counts in result.values():
-                for value_count in value_counts:
-                    value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
-
-        return result
+    @staticmethod
+    def frequency(columns, n=10, percentage=False, total_rows=None):
+        pass
 
     @staticmethod
     def abs(columns):
@@ -344,11 +325,13 @@ class DataFrameBaseColumns(BaseColumns):
         return df
 
     def remove_special_chars(self, input_cols, output_cols=None):
+
         df = self.df
         input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
         df = df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
+
         return df
 
     def remove_accents(self, input_cols, output_cols=None):
@@ -438,7 +421,7 @@ class DataFrameBaseColumns(BaseColumns):
 
     def set(self, output_col, value=None):
         """
-        Execute a hive expression. Also handle ints and list in columns
+
         :param output_col: Output columns
         :param value: numeric, list or hive expression
         :return:
@@ -687,37 +670,9 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols)
 
-    def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-        df = self.df
-        columns = parse_columns(df, columns)
-        columns_dtypes = df.cols.dtypes()
-
-        def value_counts(series):
-            return series.value_counts()
-
-        delayed_results = []
-
-        for col_name in columns:
-            a = df.map_partitions(lambda df: df[col_name].apply(
-                lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
-                                        full=False))).compute()
-
-            f = df.functions.map_delayed(a, value_counts)
-            delayed_results.append({col_name: f.to_dict()})
-
-        results_compute = dask.compute(*delayed_results)
-        result = {}
-
-        # Convert list to dict
-        for i in results_compute:
-            result.update(i)
-
-        if infer is True:
-            result = fill_missing_var_types(result, columns_dtypes)
-        else:
-            result = self.parse_profiler_dtypes(result)
-
-        return result
+    #
+    # def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    #     pass
 
     def lower(self, input_cols, output_cols=None):
         df = self.df
@@ -930,32 +885,13 @@ class DataFrameBaseColumns(BaseColumns):
                 df.drop(columns=input_cols, inplace=True)
         return df
 
-    # @staticmethod
-    # def replace11(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-    #
-    #     df = self
-    #     input_cols = parse_columns(df, input_cols)
-    #     search = val_to_list(search)
-    #     if search_by == "chars":
-    #         _regex = re.compile("|".join(map(re.escape, search)))
-    #     elif search_by == "words":
-    #         _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-    #     else:
-    #         _regex = search
-    #
-    #     df = df.cols.cast(input_cols, "str")
-    #     # print(df)
-    #     for input_col in input_cols:
-    #         if search_by == "chars" or search_by == "words":
-    #             df[input_col] = df[input_col].str.replace(_regex, replace_by)
-    #         elif search_by == "full":
-    #             df[input_col] = df[input_col].replace(search, replace_by)
-    #
-    #     return df
-
     @staticmethod
     def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
         pass
+
+    # @staticmethod
+    # def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+    #     pass
 
     def is_numeric(self, col_name):
         """
