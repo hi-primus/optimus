@@ -23,26 +23,28 @@ def fingerprint(df, input_cols):
         Helper function to split, remove duplicates, sort and join back together
         """
         # Split into whitespace-separated token
-        split_key = value.split()
-
-        # Sort and remove duplicated items
-        split_key = sorted(set(split_key))
+        split_key = value.str.split()
 
         # join the tokens back together
-        return "".join(split_key)
+        # return "".join(split_key)
+        return split_key
 
-    print("ASDFasdfa", input_cols)
-    print("asldfkjahsfd", df)
     input_cols = parse_columns(df, input_cols)
     for input_col in input_cols:
         output_col = name_col(input_col, FINGERPRINT_COL)
-        df[output_col] = (df
-                          .cols.trim(output_col)
-                          .cols.lower(output_col)
-                          .cols.remove_special_chars(output_col)
-                          .cols.remove_accents(output_col)
-                          .cols.apply(output_col, _split_sort_remove_join, "string")
-                          )
+        df = (df
+              .cols.copy(input_col, output_col)
+              .cols.trim(output_col)
+              .cols.lower(output_col)
+              .cols.remove_special_chars(output_col)
+              .cols.remove_accents(output_col)
+              .cols.apply(output_col, _split_sort_remove_join, "string"))
+        # TODO: I could not find a way to execute 'set' inside apply. Check for another function
+        df[output_col] = df[[output_col]].applymap(set)
+        df[output_col] = df[output_col].str.join("")
+
+
+
     return df
 
 
