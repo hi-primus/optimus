@@ -1,3 +1,5 @@
+from dask.distributed import Client
+
 from optimus.bumblebee import Comm
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.io.jdbc import JDBC
@@ -28,8 +30,11 @@ class DaskEngine:
         self.verbose(verbose)
 
         if session is None:
-            Dask.instance = Dask().create(n_workers=n_workers, threads_per_worker=threads_per_worker,
-                                          processes=processes, memory_limit=memory_limit, *args, **kwargs)
+            Dask.instance = Client(*args, **kwargs)
+            # a = Dask()
+            # b = a.create(n_workers=n_workers, threads_per_worker=threads_per_worker,
+            #              processes=processes, memory_limit=memory_limit, *args, **kwargs)
+            Dask.instance = b
         else:
             Dask.instance = Dask().load(session)
 
