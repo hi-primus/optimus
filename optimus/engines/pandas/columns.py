@@ -28,10 +28,28 @@ def cols(self: DataFrame):
         def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
             pass
 
-        @staticmethod
-        def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+        def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
                   filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
-            pass
+            df = self.df
+
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            # for input_col, output_col in zip(input_cols, output_cols):
+            def func(value, _func, _args):
+                # print(input_cols, output_cols)
+                # print(value)
+                # for input_col, output_col in zip(input_cols, _output_cols):
+                # print("output_co", output_col)
+                # print("input_col", input_col)
+                # row[output_cols[0]] = row[input_cols[0]] + 1
+                return _func(value, _args)
+
+            # apply numpy vectorization
+            for input_col, output_col in zip(input_cols, output_cols):
+                df[output_col] = df[input_cols].apply(func, args=(func, args))
+
+            return df
 
         @staticmethod
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -97,10 +115,31 @@ def cols(self: DataFrame):
                     if not _filter(col_name, func):
                         filtered_column.append(col_name)
                 if len(filtered_column) > 0:
-                    # print("AAA",func, args, df)
                     result = func(columns, args, df=df)
 
             return result
+
+        @staticmethod
+        def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+            df = self
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+            search = val_to_list(search)
+            if search_by == "chars":
+                _regex = re.compile("|".join(map(re.escape, search)))
+            elif search_by == "words":
+                _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+            else:
+                _regex = search
+
+            df = df.cols.cast(input_cols, "str")
+            for input_col, output_col in zip(input_cols, output_cols):
+                if search_by == "chars" or search_by == "words":
+                    df[output_col] = df[input_col].str.replace(_regex, replace_by)
+                elif search_by == "full":
+                    df[output_col] = df[input_col].replace(search, replace_by)
+
+            return df
 
         @staticmethod
         def exec_agg(exprs):
