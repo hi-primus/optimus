@@ -163,3 +163,22 @@ C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt
 ```
 
 From Anaconda Prompt
+
+## About apply
+
+Process 
+1 input column/1 output column
+1 input column/multiple output columns
+multiple input columns/1 output column
+multiple input columns/multiple output column
+
+Every engine seems to have multiple implementation and capabilities for handling UDF.
+
+Pandas
+https://stackoverflow.com/questions/19798153/difference-between-map-applymap-and-apply-methods-in-pandas
+
+Cudf
+https://rapidsai.github.io/projects/cudf/en/0.10.0/guide-to-udfs.html
+
+Spark
+https://spark.apache.org/docs/latest/sql-pyspark-pandas-with-arrow.html
