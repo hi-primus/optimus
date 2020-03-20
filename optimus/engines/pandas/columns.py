@@ -37,7 +37,7 @@ def cols(self: DataFrame):
 
             # for input_col, output_col in zip(input_cols, output_cols):
             def func(value, _func, _args):
-                # print(input_cols, output_cols)
+                # print(input_cols, output_cols),.
                 # print(value)
                 # for input_col, output_col in zip(input_cols, _output_cols):
                 # print("output_co", output_col)
@@ -73,10 +73,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def move(column, position, ref_col=None):
-            pass
-
-        @staticmethod
-        def sort(order="asc", columns=None):
             pass
 
         def mode(self, columns):
@@ -165,6 +161,8 @@ def cols(self: DataFrame):
                     df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
                                                                                     errors='ignore').str.decode('utf-8')
             return df
+
+
 
         @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):

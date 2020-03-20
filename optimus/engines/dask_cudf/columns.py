@@ -24,7 +24,6 @@ def cols(self: DaskCUDFDataFrame):
             """
             df = self
             columns = val_to_list(columns)
-
             df.sort_values(by=columns, ascending=True if order == "asc" else False)
             return df
 

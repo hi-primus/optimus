@@ -63,10 +63,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def sort(order="asc", columns=None):
-            pass
-
-        @staticmethod
         def drop(columns=None, regex=None, data_type=None):
             pass
 
@@ -115,30 +111,30 @@ def cols(self: DataFrame):
         def remove(columns, search=None, search_by="chars", output_cols=None):
             pass
 
-        @staticmethod
-        def remove_accents(input_cols, output_cols=None):
-            """
-            Remove accents in specific columns
-            :param input_cols: '*', list of columns names or a single column name.
-            :param output_cols:
-            :return:
-            """
-
-            print(unicodedata.normalize('NFKD', "cell_str"))
-
-            def _remove_accents(value, attr):
-                cell_str = str(value)
-
-                # first, normalize strings:
-                nfkd_str = unicodedata.normalize('NFKD', cell_str)
-
-                # Keep chars that has no other char combined (i.e. accents chars)
-                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-                return with_out_accents
-
-            df = Cols.apply(input_cols, _remove_accents, "string", output_cols=output_cols,
-                            meta=Actions.REMOVE_ACCENTS.value)
-            return df
+        # @staticmethod
+        # def remove_accents(input_cols, output_cols=None):
+        #     """
+        #     Remove accents in specific columns
+        #     :param input_cols: '*', list of columns names or a single column name.
+        #     :param output_cols:
+        #     :return:
+        #     """
+        #
+        #     print(unicodedata.normalize('NFKD', "cell_str"))
+        #
+        #     def _remove_accents(value, attr):
+        #         cell_str = str(value)
+        #
+        #         # first, normalize strings:
+        #         nfkd_str = unicodedata.normalize('NFKD', cell_str)
+        #
+        #         # Keep chars that has no other char combined (i.e. accents chars)
+        #         with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+        #         return with_out_accents
+        #
+        #     df = Cols.apply(input_cols, _remove_accents, "string", output_cols=output_cols,
+        #                     meta=Actions.REMOVE_ACCENTS.value)
+        #     return df
 
         @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
@@ -172,6 +168,7 @@ def cols(self: DataFrame):
 
             df = self.df
             input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
             search = val_to_list(search)
             if search_by == "chars":
                 _regex = search
@@ -186,20 +183,24 @@ def cols(self: DataFrame):
             if not is_str(replace_by):
                 RaiseIt.type_error(replace_by, ["str"])
 
-            for input_col in input_cols:
+            for input_col, output_col in zip(input_cols, output_cols):
                 if search_by == "chars" or search_by == "words":
                     # This is only implemented in Cudf
-                    df[input_col] = df[input_col].str.replace_multi(search, replace_by, regex=False)
+                    df[output_col] = df[input_col].str.replace_multi(search, replace_by, regex=False)
                     # df[input_col] = df[input_col].str.replace(_regex, replace_by)
                     # df[input_col] = df[input_col].str.replace(search, replace_by)
                 elif search_by == "full":
-                    df[input_col] = df[input_col].replace(search, replace_by)
+                    df[output_col] = df[input_col].replace(search, replace_by)
 
             return df
 
-        @staticmethod
-        def replace_regex(input_cols, regex=None, value=None, output_cols=None):
-            pass
+        def replace_regex(self, input_cols, regex=None, replace_by=None, output_cols=None):
+            df = self.df
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+            for input_col, output_col in zip(input_cols, output_cols):
+                df[output_col] = df[input_col].str.replace_multi(regex, replace_by, regex=True)
+            return df
 
         @staticmethod
         def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -322,6 +323,7 @@ def cols(self: DataFrame):
             # return np.count_nonzero(df.isnull().values.ravel())
 
         def remove_accents(self, input_cols, output_cols=None):
+
             # pandas_to_cudf()
             # cudf_to_pandas
             def _remove_accents(value):
@@ -338,6 +340,16 @@ def cols(self: DataFrame):
             return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
                                  filter_col_by_dtypes=df.constants.STRING_TYPES,
                                  output_cols=output_cols)
+
+        def remove_special_chars(self, input_cols, output_cols=None):
+            df = self.df
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
+
+            df = df.cols.cast(input_cols, "str")
+            for input_col, output_col in zip(input_cols, output_cols):
+                df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
+            return df
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):

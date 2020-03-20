@@ -19,6 +19,7 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
+from optimus.helpers.functions import collect_as_dict
 from optimus.infer import is_
 from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
 
@@ -208,7 +209,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         result = {}
         for col_name in columns:
-            result.update(collect_to_dict(df[col_name].value_counts(), col_name))
+            result.update(collect_as_dict(df[col_name].value_counts(), col_name))
         return result
 
     def count_na(self, columns):
@@ -334,21 +335,10 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df
 
-    def remove_accents(self, input_cols, output_cols=None):
-        def _remove_accents(value):
-            cell_str = str(value)
+    @staticmethod
+    def remove_accents(input_cols, output_cols=None):
+        pass
 
-            # first, normalize strings:
-            nfkd_str = unicodedata.normalize('NFKD', cell_str)
-
-            # Keep chars that has no other char combined (i.e. accents chars)
-            with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-            return with_out_accents
-
-        df = self.df
-        return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
 
     def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
@@ -385,9 +375,11 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df
 
-    @staticmethod
-    def sort(order="asc", columns=None):
-        pass
+    def sort(self, order="asc", columns=None):
+        df = self.df
+        columns = val_to_list(columns)
+        df.sort_values(by=columns, ascending=True if order == "asc" else False)
+        return df
 
     def keep(self, columns=None, regex=None):
         """
