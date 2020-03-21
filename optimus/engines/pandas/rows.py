@@ -34,6 +34,17 @@ def rows(self):
             pass
 
         @staticmethod
+        def find(condition) -> DataFrame:
+            """
+
+            :param condition: a condition like (df.A > 0) & (df.B <= 10)
+            :return:
+            """
+            df = self
+            df["__match__"] = condition
+            return df
+
+        @staticmethod
         def select(condition) -> DataFrame:
             """
 
