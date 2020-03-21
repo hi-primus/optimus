@@ -1,7 +1,6 @@
 import builtins
 import re
 import string
-import unicodedata
 from functools import reduce
 
 import dask
@@ -24,12 +23,10 @@ from optimus.infer import is_
 from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
 
 
-# from optimus.engines.dask.functions import map_delayed
-
 # Some expression accepts multiple columns at the same time.
 # python_set = set
 
-# This implementation works for Dask and dask_cudf
+# This implementation works for pandas asd cudf
 
 class DataFrameBaseColumns(BaseColumns):
 
@@ -319,9 +316,6 @@ class DataFrameBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
         df = df.cols.replace(input_cols, " ", "", output_cols=output_cols)
-        # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
-
-        # df[output_cols] = df[input_cols].str.replace(r"\s+", '', regex=True)
 
         return df
 
@@ -330,7 +324,6 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.STRING_TYPES)
         check_column_numbers(input_cols, "*")
-
         df = df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
         return df
@@ -338,7 +331,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def remove_accents(input_cols, output_cols=None):
         pass
-
 
     def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
@@ -391,7 +383,7 @@ class DataFrameBaseColumns(BaseColumns):
         """
         df = self.df
         if regex:
-            r = re.compile(regex)
+            # r = re.compile(regex)
             columns = [c for c in list(df.columns) if re.match(regex, c)]
 
         columns = parse_columns(df, columns)
@@ -868,9 +860,9 @@ class DataFrameBaseColumns(BaseColumns):
             for i in range(splits):
                 # Making separate first name column from new data frame
                 if i < num_columns:
-                    df[output_cols[0] + "_" + str(i)] = df_new[i]
+                    df[output_cols + "_" + str(i)] = df_new[i]
                 else:
-                    df[output_cols[0] + "_" + str(i)] = None
+                    df[output_cols + "_" + str(i)] = None
 
             # Dropping old Name columns
             if drop is True:
