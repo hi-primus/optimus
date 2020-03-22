@@ -1,6 +1,7 @@
 import pandas as pd
 
 from optimus.bumblebee import Comm
+from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.jdbc import JDBC
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas
@@ -25,6 +26,8 @@ class PandasEngine:
         self.engine = 'pandas'
         # self.create = Create()
         self.load = Load()
+        self.extract = Extract()
+
         # self.read = self.spark.read
         self.verbose(verbose)
 
