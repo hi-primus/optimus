@@ -844,7 +844,7 @@ class DataFrameBaseColumns(BaseColumns):
         # new data frame with split value columns
         input_cols = parse_columns(df, input_cols)
 
-        for input_col in input_cols:
+        for input_col, output_col in zip(input_cols, output_cols):
             df_new = df[input_col].str.split(separator, n=splits, expand=True)
 
             if splits == -1:
@@ -853,16 +853,16 @@ class DataFrameBaseColumns(BaseColumns):
             # Maybe the split do not generate new columns, We need to recalculate it
             num_columns = len(df_new.columns)
 
-            output_cols = get_output_cols(input_col, output_cols)
-
+            # output_col = get_output_cols(input_col, output_col)
             # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
 
             for i in range(splits):
                 # Making separate first name column from new data frame
                 if i < num_columns:
-                    df[output_cols + "_" + str(i)] = df_new[i]
+                    # print(output_cols)
+                    df[output_col + "_" + str(i)] = df_new[i]
                 else:
-                    df[output_cols + "_" + str(i)] = None
+                    df[output_col + "_" + str(i)] = None
 
             # Dropping old Name columns
             if drop is True:
