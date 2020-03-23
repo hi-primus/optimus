@@ -1,10 +1,11 @@
+import glob
 import ntpath
-
 
 import dask.bag as db
 import pandas as pd
-from optimus.helpers.logger import logger
+
 from optimus.helpers.functions import prepare_path
+from optimus.helpers.logger import logger
 
 
 class Load:
@@ -18,12 +19,18 @@ class Load:
 
         :return:
         """
-        file, file_name = prepare_path(path, "json")
+        file_names = glob.glob(path, recursive=True)
+        local_file_names = [prepare_path(file_name, "json") for file_name in file_names]
 
         try:
-            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = pd.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df_list = []
+
+            for file_name, j in local_file_names:
+                df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
+                df_list.append(df)
+
+            df = pd.concat(df_list, axis=0, ignore_index=True)
+            df.meta.set("file_name", local_file_names[0])
 
         except IOError as error:
             logger.print(error)
@@ -60,12 +67,22 @@ class Load:
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")
+
+        file_names = glob.glob(path, recursive=True)
+        local_file_names = [prepare_path(file_name, "csv") for file_name in file_names]
 
         try:
-            df = pd.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value, *args,
-                             **kwargs)
-            df.meta.set("file_name", file_name)
+            df_list = []
+
+            for file_name, j in local_file_names:
+                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
+                                 *args,
+                                 **kwargs)
+                df_list.append(df)
+
+            df = pd.concat(df_list, axis=0, ignore_index=True)
+            df.meta.set("file_name", local_file_names[0])
+
         except IOError as error:
             logger.print(error)
             raise
@@ -150,4 +167,3 @@ class Load:
             raise
 
         return df
-
