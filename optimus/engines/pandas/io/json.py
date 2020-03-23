@@ -121,7 +121,7 @@ class JSON:
                 result.append((_flatten_json(i)))
         elif is_dict(value):
             for i, j in value.items():
-                a = {"col": i}
+                a = {path: i}
                 a.update(_flatten_json(j))
                 result.append(a)
         return result
