@@ -10,6 +10,8 @@ META = "_meta"
 PROPERTIES = "_properties"
 ITEMS = "_items"
 
+COL_DEPTH = "depth"
+
 
 class JSON:
     def __init__(self):
@@ -82,8 +84,8 @@ class JSON:
 
         data = []
         _profile(self.schema(), [], data)
-        df = pd.DataFrame(data, columns=['key', 'count', 'dtype', 'path', 'len'])
-        df = df.sort_values(by=["count", "len"], ascending=[False, True]).head(n).to_dict(orient='row')
+        df = pd.DataFrame(data, columns=['key', 'count', 'dtype', 'path', COL_DEPTH])
+        df = df.sort_values(by=["count", COL_DEPTH], ascending=[False, True]).head(n).to_dict(orient='row')
         return df
 
     def flatten(self, path):
@@ -101,10 +103,11 @@ class JSON:
                     for a in x:
                         flatten(x[a], name + a + '_')
                 elif type(x) is list:
-                    i = 0
+                    # i = 0
                     for a in x:
-                        flatten(a, name + str(i) + '_')
-                        i += 1
+                        # flatten(a, name + str(i) + '_')
+                        flatten(a, name + '_')
+                        # i += 1
                 else:
                     out[name[:-1]] = x
 
