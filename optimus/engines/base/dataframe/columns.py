@@ -865,6 +865,20 @@ class DataFrameBaseColumns(BaseColumns):
                 df.drop(columns=input_cols, inplace=True)
         return df
 
+    def word_count(self, input_cols, output_cols=None):
+        """
+        Count words in a column
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].str.strip().str.split().str.len()
+        return df
+
     @staticmethod
     def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
         pass
