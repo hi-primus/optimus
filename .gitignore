@@ -77,3 +77,15 @@ examples/data/star0000-1.csv
 examples/yellow_tripdata_2009-01.csv
 
 examples/yellow_tripdata_2009-02.csv
+
+examples/noncomm_use_subset/
+
+examples/data/noncomm_use_subset/
+
+examples/scheduling/dask-worker-space/
+
+examples/data/metadata.csv
+
+examples/data/noncomm_use_subset.tar.gz
+
+examples/corona.ipynb
