@@ -1,7 +1,7 @@
 import errno
 import os
 from io import UnsupportedOperation
-import json
+import ujson as json
 import pyspark
 
 from optimus.infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \

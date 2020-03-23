@@ -1,9 +1,8 @@
-import json
 import unicodedata
 
 import numpy as np
 import pandas as pd
-
+import ujson as json
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import dump_json

@@ -1,6 +1,6 @@
 import base64
 import configparser
-import json
+import ujson as json
 import os
 import uuid
 import zlib

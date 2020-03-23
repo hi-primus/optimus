@@ -1,7 +1,7 @@
 import glob
 
 import pandas as pd
-import ujson
+import ujson as json
 from glom import glom
 
 from optimus.infer import is_dict, is_list, is_str, is_int
