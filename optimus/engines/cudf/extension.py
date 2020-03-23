@@ -1,13 +1,8 @@
-import json
-
 import numpy as np
-import pandas as pd
+from cudf.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.json import json_converter
-from cudf.core import DataFrame
-
 
 
 def ext(self: DataFrame):
@@ -15,24 +10,6 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
-
-        @staticmethod
-        def to_json(columns):
-            df = self
-
-            columns = parse_columns(df, columns)
-            # print(df)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
-
-            # for col_name in columns:
-            #     print("to_json AAAAAA",col_name)
-            #     if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-            #         result.update(df.cols.hist(col_name))
-            #     else:
-            #         result.update(df.cols.frequency(col_name))
-            # print("ASDFASdf", len(df))
-            return json.dumps(result, ensure_ascii=False, default=json_converter)
 
         @staticmethod
         def profile(columns, lower_bound, upper_bound):

@@ -1,4 +1,3 @@
-import json
 import math
 from abc import abstractmethod, ABC
 
@@ -6,6 +5,7 @@ import humanize
 import imgkit
 import jinja2
 import numpy as np
+import ujson as json
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
@@ -39,6 +39,15 @@ class BaseExt(ABC):
     @abstractmethod
     def cache():
         pass
+
+    def to_json(self, columns):
+        df = self.df
+
+        columns = parse_columns(df, columns)
+        result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                             "value": df.rows.to_list(columns)}}
+
+        return json.dumps(result, ensure_ascii=False, default=json_converter)
 
     def to_json(self):
         """
@@ -168,7 +177,7 @@ class BaseExt(ABC):
             lower_bound = 0
 
         if upper_bound is None:
-            upper_bound= df_length
+            upper_bound = df_length
 
         if upper_bound > df_length:
             upper_bound = df_length
