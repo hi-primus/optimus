@@ -254,7 +254,7 @@ def cols(self: DataFrame):
         def find(columns, sub):
             """
             Find the position for a char or substring
-            :param input_cols:
+            :param columns:
             :param sub:
             :return:
             """
@@ -262,8 +262,6 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns)
 
             def get_match_positions(_value, _separator):
-                # print("AAAAAA", _value)
-                # print("BBBB", _separator)
                 result = None
                 if _value is not np.nan:
                     length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]

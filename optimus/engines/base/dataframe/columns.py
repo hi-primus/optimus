@@ -853,13 +853,9 @@ class DataFrameBaseColumns(BaseColumns):
             # Maybe the split do not generate new columns, We need to recalculate it
             num_columns = len(df_new.columns)
 
-            # output_col = get_output_cols(input_col, output_col)
-            # for idx, (input_col, output_col) in enumerate(zip(input_cols, output_cols)):
-
             for i in range(splits):
                 # Making separate first name column from new data frame
                 if i < num_columns:
-                    # print(output_cols)
                     df[output_col + "_" + str(i)] = df_new[i]
                 else:
                     df[output_col + "_" + str(i)] = None

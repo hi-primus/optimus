@@ -1,6 +1,7 @@
 import builtins
 import re
 import unicodedata
+
 import dask
 import dask.dataframe as dd
 import numpy as np
@@ -402,14 +403,15 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        if regex:
-            r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(regex, c)]
+        # if regex:
+        #     r = re.compile(regex)
+        #     columns = [c for c in list(df.columns) if re.match(regex, c)]
+        #
+        # columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
+        # check_column_numbers(columns, "*")
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
-        check_column_numbers(columns, "*")
-
-        df = df.drop(columns=columns)
+        names = df.cols.names(columns, regex, data_type)
+        df = df.drop(names, axis=1)
 
         df = df.meta.preserve(df, "drop", columns)
 
