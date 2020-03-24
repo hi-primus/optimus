@@ -118,7 +118,6 @@ def functions(self):
                 arr = cp.fromDlpack(serie.to_dlpack())
                 i, j = cp.histogram(arr, buckets)
                 # We need to convert from array to numeric
-                # return {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
                 return {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
 
             # TODO: Calculate mina max in one pass.

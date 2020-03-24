@@ -1,8 +1,13 @@
+import ujson
+
 import numpy as np
-from cudf.core import DataFrame
+import pandas as pd
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.json import json_converter
+from cudf.core import DataFrame
+
 
 
 def ext(self: DataFrame):
@@ -10,6 +15,8 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
+
+
 
         @staticmethod
         def profile(columns, lower_bound, upper_bound):

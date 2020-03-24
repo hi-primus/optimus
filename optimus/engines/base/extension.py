@@ -40,22 +40,29 @@ class BaseExt(ABC):
     def cache():
         pass
 
-    def to_json(self, columns):
-        df = self.df
+    # def to_bumblebee(self, columns):
+    #     df = self.df
+    #
+    #     columns = parse_columns(df, columns)
+    #     result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+    #                          "value": df.rows.to_list(columns)}}
+    #
+    #     return json.dumps(result, ensure_ascii=False, default=json_converter)
 
-        columns = parse_columns(df, columns)
-        result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                             "value": df.rows.to_list(columns)}}
-
-        return json.dumps(result, ensure_ascii=False, default=json_converter)
-
-    def to_json(self):
+    def to_json(self, columns="*", format="bumblebee"):
         """
         Return a json from a Spark Dataframe
         :return:
         """
         df = self.df
-        return json.dumps(df.ext.to_dict(df), ensure_ascii=False, default=json_converter)
+        if format == "bumblebee":
+            columns = parse_columns(df, columns)
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                                 "value": df.rows.to_list(columns)}}
+        else:
+            result = json.dumps(df.ext.to_dict(df), ensure_ascii=False, default=json_converter)
+
+        return result
 
     def to_dict(self):
         """

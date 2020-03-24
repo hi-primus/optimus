@@ -37,14 +37,14 @@ def ext(self):
             """
             print("Yes!")
 
-        @staticmethod
-        def to_json():
-            """
-            Return a json from a Spark Dataframe
-            
-            :return:
-            """
-            return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
+        # @staticmethod
+        # def to_json():
+        #     """
+        #     Return a json from a Spark Dataframe
+        #
+        #     :return:
+        #     """
+        #     return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
 
         # @staticmethod
         # def display(limit=None, columns=None, title=None, truncate=True):
