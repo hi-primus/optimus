@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.jit import min_max
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
@@ -142,10 +143,6 @@ def cols(self: DataFrame):
             return exprs
 
         @staticmethod
-        def reverse(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
         def remove(columns, search=None, search_by="chars", output_cols=None):
             pass
 
@@ -161,8 +158,6 @@ def cols(self: DataFrame):
                     df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
                                                                                     errors='ignore').str.decode('utf-8')
             return df
-
-
 
         @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
@@ -181,10 +176,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def fill_na(input_cols, value=None, output_cols=None):
-            pass
-
-        @staticmethod
         def is_na(input_cols, output_cols=None):
             pass
 
@@ -196,13 +187,27 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
+        def min_max(columns):
+            """
+            Calculate min max in one pass.
+            :param columns:
+            :return:
+            """
+
+            df = self
+            columns = parse_columns(df, columns)
+            result = {}
+            for col_name in columns:
+                _min, _max = min_max(df[col_name].to_numpy())
+                result[col_name] = {"min": _min, "max": _max}
+            return result
+
+        @staticmethod
         def count_na(columns):
             df = self
             columns = parse_columns(df, columns)
             result = {}
 
-            # from numba import njit
-            # @njit
             def _count_na(_df, _serie):
                 return np.count_nonzero(_df[_serie].isnull().values.ravel())
 
@@ -210,7 +215,6 @@ def cols(self: DataFrame):
                 # np is 2x faster than df[columns].isnull().sum().to_dict()
                 # Reference https://stackoverflow.com/questions/28663856/how-to-count-the-occurrence-of-certain-item-in-an-ndarray-in-python
                 result[col_name] = _count_na(df, col_name)
-                # np.count_nonzero(df[col_name].isnull().values.ravel())
             return result
 
         @staticmethod
@@ -244,10 +248,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
-        def iqr(columns, more=None, relative_error=None):
             pass
 
         @staticmethod
@@ -388,35 +388,15 @@ def cols(self: DataFrame):
             for col_name in columns:
 
                 if df[col_name].dtype == np.int64 or df[col_name].dtype == np.float64:
-                    # i = np.bincount(df[col_name].to_numpy())
-                    # j = np.argpartition(i, -4)[-4:]
-                    # print("asdasdads",i)
-                    # print("asdasdads",j)
-                    # # j = np.nonzero(i)[0]
-                    # result[col_name] = {"values": list(i), "count": list(j)}
                     i, j = np.unique(df[col_name], return_counts=True)
                     count_sort_ind = np.argsort(-j)
                     result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
-                # elif df[col_name].dtype == np.float64:
-                #
-                #     uniqw, inverse = np.unique(df[col_name],return_counts=True)
-                #     i = np.bincount(inverse)
-                #     j = np.nonzero(i)[0]
-                #     result[col_name] = {"values": list(j[:n]), "count": list(i[j][:n])}
-
                 else:
-                    # print("frequency BBBBB", col_name)
-                    # i, j = np.unique(df[col_name].to_numpy(), return_counts=True)
-                    # count_sort_ind = np.argsort(-j)
-                    # result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
-
                     # Value counts
                     r = df[col_name].value_counts().nlargest(n)
                     i = r.index.tolist()
                     j = r.tolist()
-                    # print("rrrrrrr",i)
                     result[col_name] = ({"values": i, "count": j})
-            # print("RESULT",result)
             return result
 
     return Cols(self)

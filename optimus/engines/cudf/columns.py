@@ -1,13 +1,13 @@
 import re
 import unicodedata
 
+import cupy
 import numpy as np
 from cudf.core import DataFrame
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
-from optimus.helpers.constants import Actions
 from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
@@ -207,10 +207,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def fill_na(input_cols, value=None, output_cols=None):
-            pass
-
-        @staticmethod
         def is_na(input_cols, output_cols=None):
             pass
 
@@ -220,12 +216,10 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns)
             result = {}
 
-            def _count_na(_df, _serie):
-                return np.count_nonzero(_df[_serie].isnull().values.ravel())
+            def _count_na(_df, _series):
+                return cupy.count_nonzero(_df[_series].isnull().values.ravel())
 
             for col_name in columns:
-                # np is 2x faster than df[columns].isnull().sum().to_dict()
-                # Reference https://stackoverflow.com/questions/28663856/how-to-count-the-occurrence-of-certain-item-in-an-ndarray-in-python
                 result[col_name] = _count_na(df, col_name)
                 # np.count_nonzero(df[col_name].isnull().values.ravel())
             return result
@@ -288,7 +282,6 @@ def cols(self: DataFrame):
             df = self
 
             def get_match_positions(_value, _separator):
-                # print("AAAAAA", _value)
                 length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                 return length if len(length) > 0 else None
 
