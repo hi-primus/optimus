@@ -2,9 +2,10 @@ import numpy as np
 from numba import njit
 
 
+# Reference https://stackoverflow.com/questions/12200580/numpy-function-for-simultaneous-max-and-min
+
 @njit(fastmath=True)
 def min_max(arr):
-    # Reference https://stackoverflow.com/questions/12200580/numpy-function-for-simultaneous-max-and-min
     n = arr.size
     odd = n % 2
     if not odd:
@@ -23,15 +24,80 @@ def min_max(arr):
         x = arr[n]
         min_val = min(x, min_val)
         max_val = max(y, max_val)
-    return max_val, min_val
+    return min_val, max_val
 
 
-@njit(fastmath=True)
+# Histogram Implementation
+# Reference https://numba.pydata.org/numba-examples/examples/density_estimation/histogram/results.html
+# Reference https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
+
+# Numpy
 def histogram1d(v, bins, range):
-    # Reference https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
     return np.histogram(v, bins, range)
 
 
-@njit(fastmath=True)
+# Numba
+@njit(nopython=True, fastmath=True)
+def get_bin_edges(a, bins):
+    bin_edges = np.zeros((bins + 1,), dtype=np.float64)
+    a_min, a_max = min_max(a)
+    # a_min = a.min()
+    # a_max = a.max()
+    delta = (a_max - a_min) / bins
+    for i in range(bin_edges.shape[0]):
+        bin_edges[i] = a_min + i * delta
+
+    bin_edges[-1] = a_max  # Avoid roundoff error on last point
+    return bin_edges
+
+
+@njit(nopython=True, fastmath=True)
+def compute_bin(x, bin_edges):
+    # assuming uniform bins for now
+    n = bin_edges.shape[0] - 1
+    a_min = bin_edges[0]
+    a_max = bin_edges[-1]
+
+    # special case to mirror NumPy behavior for last bin
+    if x == a_max:
+        return n - 1  # a_max always in last bin
+
+    bin = int(n * (x - a_min) / (a_max - a_min))
+
+    if bin < 0 or bin >= n:
+        return None
+    else:
+        return bin
+
+
+@njit(nopython=True, fastmath=True)
+def numba_histogram(a, bins):
+    hist = np.zeros((bins,), dtype=np.intp)
+    bin_edges = get_bin_edges(a, bins)
+
+    for x in a.flat:
+        bin = compute_bin(x, bin_edges)
+        if bin is not None:
+            hist[int(bin)] += 1
+
+    return hist, bin_edges
+
+
 def count_na_j(df, series):
     return np.count_nonzero(df[series].isnull().values.ravel())
+
+
+# Refenrece https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
+def bincount(a, n):
+    y = np.bincount(a)
+    ii = np.nonzero(y)[0]
+    r = np.vstack((ii, y[ii])).T
+    r = r[r[:, 1].argsort()[::-1]][:n]
+    i, j = np.hsplit(r, 2)
+    i, j = np.concatenate(i), np.concatenate(j)
+
+    return i, j
+
+    # Old implementation
+    # i, j = np.unique(df[col_name], return_counts=True)
+    # count_sort_ind = np.argsort(-j)

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.jit import min_max
+from optimus.engines.jit import min_max, bincount
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
@@ -199,6 +199,7 @@ def cols(self: DataFrame):
             result = {}
             for col_name in columns:
                 _min, _max = min_max(df[col_name].to_numpy())
+
                 result[col_name] = {"min": _min, "max": _max}
             return result
 
@@ -388,9 +389,9 @@ def cols(self: DataFrame):
             for col_name in columns:
 
                 if df[col_name].dtype == np.int64 or df[col_name].dtype == np.float64:
-                    i, j = np.unique(df[col_name], return_counts=True)
-                    count_sort_ind = np.argsort(-j)
-                    result[col_name] = {"values": list(i[count_sort_ind])[:n], "count": list(j[count_sort_ind])[:n]}
+                    i, j = bincount(df[col_name], n)
+
+                    result[col_name] = {"values": list(i), "count": list(j)}
                 else:
                     # Value counts
                     r = df[col_name].value_counts().nlargest(n)
