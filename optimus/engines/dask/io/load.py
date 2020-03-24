@@ -1,13 +1,10 @@
 import ntpath
-import os
-import tempfile
-from urllib.request import Request, urlopen
 
 import dask.bag as db
 import pandas as pd
 from dask import dataframe as dd
 
-from optimus.helpers.check import is_url
+from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 
 
@@ -66,9 +63,9 @@ class Load:
         :return dataFrame
         """
         file, file_name = prepare_path(path, "csv")
-
+        # print("---",path, file, file_name)
         try:
-            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
+            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
                              **kwargs)
             partitions = df.ext.partitions()
             if n_rows > -1:
@@ -161,73 +158,3 @@ class Load:
             raise
 
         return df
-
-
-def prepare_path(path, file_format):
-    """
-    Helper to return the file to be loaded and the file name
-    :param path: Path to the file to be loaded
-    :param file_format: format file
-    :return:
-    """
-    # print(path)
-    file_name = ntpath.basename(path)
-    if is_url(path):
-        file = downloader(path, file_format)
-    else:
-        file = path
-    return file, file_name
-
-
-def downloader(url, file_format):
-    """
-    Send the request to download a file
-    """
-
-    def write_file(response, file, chunk_size=8192):
-        """
-        Load the data from the http request and save it to disk
-        :param response: data returned from the server
-        :param file:
-        :param chunk_size: size chunk size of the data
-        :return:
-        """
-        total_size = response.headers['Content-Length'].strip() if 'Content-Length' in response.headers else 100
-        total_size = int(total_size)
-        bytes_so_far = 0
-
-        while 1:
-            chunk = response.read(chunk_size)
-            bytes_so_far += len(chunk)
-            if not chunk:
-                break
-            file.write(chunk)
-            total_size = bytes_so_far if bytes_so_far > total_size else total_size
-
-        return bytes_so_far
-
-    # try to infer the file format using the file extension
-    if file_format is None:
-        filename, file_format = os.path.splitext(url)
-        file_format = file_format.replace('.', '')
-
-    i = url.rfind('/')
-    data_name = url[(i + 1):]
-
-    headers = {"User-Agent": "Optimus Data Downloader/1.0"}
-
-    req = Request(url, None, headers)
-
-    logger.print("Downloading %s from %s", data_name, url)
-
-    # It seems that avro need a .avro extension file
-    with tempfile.NamedTemporaryFile(suffix="." + file_format, delete=False) as f:
-        bytes_downloaded = write_file(urlopen(req), f)
-        path = f.name
-
-    if bytes_downloaded > 0:
-        logger.print("Downloaded %s bytes", bytes_downloaded)
-
-    logger.print("Creating DataFrame for %s. Please wait...", data_name)
-
-    return path

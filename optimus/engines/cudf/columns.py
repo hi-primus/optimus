@@ -4,6 +4,7 @@ import unicodedata
 import cupy
 import numpy as np
 from cudf.core import DataFrame
+from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
@@ -261,14 +262,18 @@ def cols(self: DataFrame):
 
         @staticmethod
         def standard_scaler(input_cols, output_cols=None):
-            pass
+
+            df = self
+            scaler = StandardScaler()
+            for input_col, output_col in zip(input_cols, output_cols):
+                data = df[input_col]
+                scaler.fit(data)
+                df[output_col] = scaler.transform(data)
+
+            return df
 
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
-        def iqr(columns, more=None, relative_error=None):
             pass
 
         @staticmethod
