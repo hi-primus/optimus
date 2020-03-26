@@ -135,7 +135,7 @@ class DaskBaseRows(BaseRows):
             df = df.meta.preserve(self.df, Actions.SORT_ROW.value, col_name)
 
             c = df.cols.names()
-            # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
+            # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
             # We should fins a way to make it work desc and form multiple columns
             df = df.set_index(col_name).reset_index()[c]
 
