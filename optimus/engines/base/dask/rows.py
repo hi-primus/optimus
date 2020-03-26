@@ -1,7 +1,6 @@
 import functools
 import operator
 
-import dask
 import dask.array as da
 import dask.dataframe as  dd
 # from dask_cudf.core import DataFrame
@@ -133,12 +132,12 @@ class DaskBaseRows(BaseRows):
             if order != "asc" and order != "asc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df = df.meta.preserve(self, Actions.SORT_ROW.value, col_name)
+            df = df.meta.preserve(self.df, Actions.SORT_ROW.value, col_name)
 
             c = df.cols.names()
             # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
             # We should fins a way to make it work desc and form multiple columns
-            df.set_index(col_name).reset_index()[c].head()
+            df = df.set_index(col_name).reset_index()[c]
 
         return df
 

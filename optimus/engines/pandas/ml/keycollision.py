@@ -1,7 +1,7 @@
 from nltk.util import ngrams
 from pyspark.sql import functions as F
 
-from optimus.engines.spark.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_COUNT_COL, \
+from optimus.engines.base.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_COUNT_COL, \
     FINGERPRINT_COL, \
     CLUSTER_SUM_COL
 from optimus.helpers.columns import parse_columns, name_col

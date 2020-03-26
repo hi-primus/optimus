@@ -64,26 +64,52 @@ def escape_columns(columns):
     return escaped_columns
 
 
-def get_output_cols(input_cols, output_cols):
+def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     """
-    Construct output columns
+    Construct output columns base on the in put columns.
+    If it receive a list of input columns and on output column the function will append the output_col name to the input cols list
+
+    If
+    intput_cols = ['col1'] to output_cols = None
+    intput_cols = ['col1'] to output_cols = ['col1']
+
+
+    If merge is True
+
+    For 1 column
+    intput_cols = ['col1'] to output_cols = 'new'
+    Result:
+    intput_cols = ['col1'] to output_cols = ['col1_new']
+
+    intput_cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
+    Result:
+    intput_cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
+
+    else append is False
+    For 1 column
+    intput_cols = ['col1'] to output_cols = 'new'
+    intput_cols = ['col1'] to output_cols = ['new']
+
+    out
+    intput_cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
+    intput_cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
+
+
     :param input_cols:
     :param output_cols:
+    :param merge:
     :return:
     """
-
     if is_list(input_cols) and is_list(output_cols):
         if len(input_cols) != len(output_cols):
             RaiseIt.length_error(input_cols, output_cols)
-    elif is_list(input_cols) and is_str(output_cols):
-        if len(input_cols) > 1:
-            output_cols = list([i + output_cols for i in input_cols])
-        else:
+
+    if output_cols is None:
+        output_cols = val_to_list(input_cols)
+    else:
+        if merge is True:
             output_cols = val_to_list(output_cols)
-    elif is_str(input_cols) and is_str(output_cols):
-        output_cols = val_to_list(output_cols)
-    elif output_cols is None:
-        output_cols = input_cols
+            output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
 
     return output_cols
 
@@ -204,6 +230,14 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
         logger.print("Outputting 0 columns after filtering. Is this expected?")
 
     return cols_params
+
+
+def prepare_columns(df, input_cols, output_cols, get_args=False, is_regex=None, filter_by_column_dtypes=None,
+                    accepts_missing_cols=False, invert=False):
+    input_cols = parse_columns(df, input_cols, get_args, is_regex, filter_by_column_dtypes,
+                               accepts_missing_cols, invert)
+    output_cols = get_output_cols(input_cols, output_cols)
+    return input_cols, output_cols
 
 
 def check_column_numbers(columns, number=0):

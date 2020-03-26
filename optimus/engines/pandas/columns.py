@@ -5,6 +5,7 @@ import pandas as pd
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.jit import min_max, bincount
+from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
@@ -320,9 +321,12 @@ def cols(self: DataFrame):
         def values_to_cols(input_cols):
             pass
 
-        @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
-            pass
+            df = self
+            print("asdfajkhslkjdhf")
+            df = ml_string_to_index(df, input_cols, output_cols, columns)
+
+            return df
 
         @staticmethod
         def index_to_string(input_cols=None, output_cols=None, columns=None):

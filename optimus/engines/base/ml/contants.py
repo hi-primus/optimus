@@ -10,3 +10,4 @@ NGRAM_FINGERPRINT_COL = "ngram_fingerprint"
 
 LEVENSHTEIN_DISTANCE = "LEVENSHTEIN_DISTANCE"
 STRING_TO_INDEX = "string_to_index"
+INDEX_TO_STRING = "index_to_string"

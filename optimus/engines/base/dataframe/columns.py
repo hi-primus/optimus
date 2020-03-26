@@ -10,8 +10,9 @@ import pandas as pd
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
-from sklearn.preprocessing import MinMaxScaler
+# from sklearn.preprocessing import MinMaxScaler
 
+from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
@@ -57,9 +58,7 @@ class DataFrameBaseColumns(BaseColumns):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-    @staticmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
-        pass
+
 
     @staticmethod
     def values_to_cols(input_cols):

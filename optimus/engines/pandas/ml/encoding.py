@@ -1,9 +1,8 @@
-from pyspark.ml import feature, Pipeline
-from pyspark.ml.feature import StringIndexer, VectorAssembler, Normalizer, IndexToString
-from dask_ml.preprocessing import DummyEncoder
-from optimus.engines.spark.ml.contants import STRING_TO_INDEX
-from optimus.helpers.check import is_spark_dataframe
-from optimus.helpers.columns import parse_columns, name_col, get_output_cols
+# from dask_ml.preprocessing import DummyEncoder
+from sklearn import preprocessing
+
+from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
+from optimus.helpers.columns import parse_columns, name_col, get_output_cols, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
@@ -33,22 +32,24 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     df_actual = df
 
-    if columns is None:
-        input_cols = parse_columns(df, input_cols)
-        if output_cols is None:
-            output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
-        output_cols = get_output_cols(input_cols, output_cols)
-    else:
-        input_cols, output_cols = zip(*columns)
+    # if columns is None:
+    #     input_cols = parse_columns(df, input_cols)
+    #     if output_cols is None:
+    #         output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
+    #     output_cols = get_output_cols(input_cols, STRING_TO_INDEX, merge = True)
+    # else:
+    #     input_cols, output_cols = zip(*columns)
 
-    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
-                in zip(list(set(input_cols)), list(set(output_cols)))]
+    intput_cols, output_cols = prepare_columns(df, input_cols, output_cols)
 
-    pipeline = Pipeline(stages=indexers)
-    df = pipeline.fit(df).transform(df)
+    print(input_cols, output_cols)
+    le = preprocessing.LabelEncoder()
+
+    for input_col, output_col in zip(input_cols, output_cols):
+        le.fit(df[input_col])
+        df[output_col] = le.transform(df[input_col])
 
     df = df.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
-
     return df
 
 
@@ -68,15 +69,12 @@ def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     if columns is None:
         input_cols = parse_columns(df, input_cols)
         if output_cols is None:
-            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+            output_cols = [name_col(input_col, INDEX_TO_STRING) for input_col in input_cols]
         output_cols = get_output_cols(input_cols, output_cols)
     else:
         input_cols, output_cols = zip(*columns)
 
-    indexers = [IndexToString(inputCol=input_col, outputCol=output_col, **kargs) for input_col, output_col
-                in zip(list(set(input_cols)), list(set(output_cols)))]
-    pipeline = Pipeline(stages=indexers)
-    df = pipeline.fit(df).transform(df)
+
 
     df = df.preserve_meta(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
 
@@ -97,8 +95,8 @@ def one_hot_encoder(df, input_cols, output_col=None, **kargs):
     if output_col is None:
         output_col = name_col(input_cols, "one_hot_encoder")
 
-    de = DummyEncoder()
-    df[output_col] = de.fit_transform(df[input_cols])
+    # de = DummyEncoder()
+    # df[output_col] = de.fit_transform(df[input_cols])
 
     return df
 
@@ -118,10 +116,8 @@ def vector_assembler(df, input_cols, output_col=None):
     if output_col is None:
         output_col = name_col(input_cols, "vector_assembler")
 
-    assembler = [VectorAssembler(inputCols=input_cols, outputCol=output_col)]
 
-    pipeline = Pipeline(stages=assembler)
-    df = pipeline.fit(df).transform(df)
+    # df = pipeline.fit(df).transform(df)
 
     return df
 
@@ -155,11 +151,8 @@ def normalizer(df, input_cols, output_col=None, p=2.0):
         output_col = name_col(input_cols, "normalizer")
 
     # TODO https://developer.ibm.com/code/2018/04/10/improve-performance-ml-pipelines-wide-dataframes-apache-spark-2-3/
-    normal = [Normalizer(inputCol=col_name, outputCol=output_col, p=p) for col_name in
-              list(set(input_cols))]
 
-    pipeline = Pipeline(stages=normal)
 
-    df = pipeline.fit(df).transform(df)
+    # df = pipeline.fit(df).transform(df)
 
     return df

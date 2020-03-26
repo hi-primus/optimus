@@ -6,7 +6,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 from optimus.helpers.check import is_spark_dataframe
-from optimus.engines.spark.ml.contants import STRING_TO_INDEX
+from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
 
 
 def n_gram(df, input_col, n=2):
@@ -78,7 +78,7 @@ def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     if columns is None:
         input_cols = parse_columns(df, input_cols)
         if output_cols is None:
-            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
+            output_cols = [name_col(input_col, INDEX_TO_STRING) for input_col in input_cols]
         output_cols = get_output_cols(input_cols, output_cols)
     else:
         input_cols, output_cols = zip(*columns)

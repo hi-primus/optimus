@@ -13,6 +13,7 @@ from multipledispatch import dispatch
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
+from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -78,9 +79,20 @@ class DaskBaseColumns(BaseColumns):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-    @staticmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
-        pass
+    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+
+        """
+        Encodes a string column of labels to a column of label indices
+        :param input_cols:
+        :param output_cols:
+        :param columns:
+        :return:
+        """
+        df = self.df
+
+        df = ml_string_to_index(df, input_cols, output_cols, columns)
+
+        return df
 
     @staticmethod
     def values_to_cols(input_cols):
@@ -792,7 +804,7 @@ class DaskBaseColumns(BaseColumns):
         result = {}
 
         for input_col, output_col in zip(input_cols, output_cols):
-            temp = [dask.delayed(func)(part[input_col])
+            temp = [dask.delayed(func)(part[input_col], args)
                     for part in partitions]
             result[output_col] = from_delayed(temp)
 
@@ -912,6 +924,7 @@ class DaskBaseColumns(BaseColumns):
         return df
 
     def unnest(self, input_cols, separator=None, splits=0, index=None, output_cols=None, drop=False):
+
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
@@ -919,8 +932,8 @@ class DaskBaseColumns(BaseColumns):
         :param separator: char or regex
         :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
         :param index: Return a specific index per columns. [{1,2},()]
+        :param drop:
         """
-
         # Special case. A dot must be escaped
         if separator == ".":
             separator = "\\."

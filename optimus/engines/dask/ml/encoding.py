@@ -1,7 +1,7 @@
+# from dask_ml.preprocessing import DummyEncoder
 from pyspark.ml import feature, Pipeline
 from pyspark.ml.feature import StringIndexer, VectorAssembler, Normalizer, IndexToString
-from dask_ml.preprocessing import DummyEncoder
-from optimus.engines.spark.ml.contants import STRING_TO_INDEX
+
 from optimus.helpers.check import is_spark_dataframe
 from optimus.helpers.columns import parse_columns, name_col, get_output_cols
 from optimus.helpers.constants import Actions
@@ -43,13 +43,17 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     df_actual = df
 
-    if columns is None:
-        input_cols = parse_columns(df, input_cols)
-        if output_cols is None:
-            output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
-        output_cols = get_output_cols(input_cols, output_cols)
-    else:
-        input_cols, output_cols = zip(*columns)
+    # input_cols = parse_columns(df, input_cols)
+    # output_cols = get_output_cols(input_cols, output_cols)
+    #
+
+    # if columns is None:
+    #     input_cols = parse_columns(df, input_cols)
+    #     if output_cols is None:
+    #         output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
+    #     output_cols = get_output_cols(input_cols, output_cols)
+    # else:
+    #     input_cols, output_cols = zip(*columns)
 
     indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
                 in zip(list(set(input_cols)), list(set(output_cols)))]

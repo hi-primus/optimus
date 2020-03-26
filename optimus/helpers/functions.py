@@ -1,4 +1,5 @@
 import collections
+import ntpath
 import os
 import random
 import re
@@ -6,10 +7,10 @@ import subprocess
 import sys
 import tempfile
 from functools import reduce
-from os import path
 from pathlib import Path
 from urllib.request import Request, urlopen
 
+import numpy as np
 import six
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
@@ -23,8 +24,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
-import numpy as np
-import ntpath
+
 
 def random_int(n=5):
     """
@@ -430,7 +430,7 @@ def reduce_mem_usage(props):
     print("___MEMORY USAGE AFTER COMPLETION:___")
     mem_usg = props.memory_usage().sum() / 1024 ** 2
     print("Memory usage is: ", mem_usg, " MB")
-    print("This is ", 100 * mem_usg/start_mem_usg,"% of the initial size")
+    print("This is ", 100 * mem_usg / start_mem_usg, "% of the initial size")
     return props, NAlist
 
 
@@ -502,3 +502,126 @@ def prepare_path(path, file_format):
     else:
         file = path
     return file, file_name
+
+
+# value = "dd/MM/yyyy hh:mm:ss-sss MA"
+
+
+def match_date(value):
+    """
+    Returns True if the string match and specific format
+    :param value:
+    :return:
+    """
+    formats = ["d", "dd", "M", "MM", "yy", "yyyy", "h", "hh", "H", "HH", "kk", "k", "m", "mm", "s", "ss", "sss", "/",
+               ":", "-", " ", "+", "|", "mi"]
+    formats.sort(key=len, reverse=True)
+
+    result = []
+
+    start = 0
+
+    end = len(value)
+    found = False
+
+    while start < end:
+        found = False
+        for f in formats:
+            if value.startswith(f, start):
+                start = start + len(f)
+                result.append(f)
+                found = True
+                break
+        if found is False:
+            raise ValueError('{} is not a valid date format'.format(value[start]))
+    exprs = []
+    for f in result:
+        # Separators
+        if f in ["/", ":", "-", " ", "|", "+"]:
+            exprs.append("\\" + f)
+        # elif f == ":":
+        #     exprs.append("\\:")
+        # elif f == "-":
+        #     exprs.append("\\-")
+        # elif f == " ":
+        #     exprs.append(" ")
+        # elif f == "|":
+        #     exprs.append("\\|")
+        # elif f == "+":
+        #     exprs.append("\\+")
+
+            # Day
+        # d  -> 1 ... 31
+        # dd -> 01 ... 31
+
+        elif f == "d":
+            exprs.append("(3[01]|[12][0-9]|0?[1-9])")
+        elif f == "dd":
+            exprs.append("(3[01]|[12][0-9]|0[1-9])")
+
+            # Month
+        # M  -> 1 ... 12
+        # MM -> 01 ... 12
+        elif f == "M":
+            exprs.append("(1[0-2]|0?[1-9])")
+        elif f == "MM":
+            exprs.append("(1[0-2]|0[1-9])")
+
+        # Year
+        # yy   -> 00 ... 99
+        # yyyy -> 0000 ... 9999
+        elif f == "yy":
+            exprs.append("[0-9]{2}")
+        elif f == "yyyy":
+            exprs.append("[0-9]{4}")
+
+            # Hours
+        # h  -> 1,2 ... 12
+        # hh -> 01,02 ... 12
+        # H  -> 0,1 ... 23
+        # HH -> 00,01 ... 23
+        # k  -> 1,2 ... 24
+        # kk -> 01,02 ... 24
+        elif f == "h":
+            exprs.append("(1[0-2]|0?[1-9])")
+        elif f == "hh":
+            exprs.append("(1[0-2]|0[1-9])")
+        elif f == "H":
+            exprs.append("(0?[0-9]|1[0-9]|2[0-3]|[0-9])")
+        elif f == "HH":
+            exprs.append("(0[0-9]|1[0-9]|2[0-3]|[0-9])")
+        elif f == "k":
+            exprs.append("(0?[1-9]|1[0-9]|2[0-4]|[1-9])")
+        elif f == "kk":
+            exprs.append("(0[1-9]|1[0-9]|2[0-4])")
+
+        # Minutes
+        # m  -> 0 ... 59
+        # mm -> 00 .. 59
+        elif f == "m":
+            exprs.append("[1-5]?[0-9]")
+        elif f == "mm":
+            exprs.append("[0-5][0-9]")
+
+        # Seconds
+        # s  -> 0 ... 59
+        # ss -> 00 .. 59
+        elif f == "s":
+            exprs.append("[1-5]?[0-9]")
+        elif f == "ss":
+            exprs.append("[0-5][0-9]")
+
+        # Milliseconds
+        # sss -> 0 ... 999
+        elif f == "sss":
+            exprs.append("[0-9]{3}")
+
+        # Extras
+        # mi -> Meridian indicator (AM am Am) (PM pm Pm) (m M)
+        elif f == "mi":
+            exprs.append("([AaPp][Mm]|[Mm]).?")
+
+    return "".join(exprs)
+
+
+# print("^" + match_date(value) + "$")

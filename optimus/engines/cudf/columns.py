@@ -371,7 +371,39 @@ def cols(self: DataFrame):
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
-            pass
+            # from cudf import DataFrame, Series
+            #
+            # data = DataFrame({'category': ['a', 'b', 'c', 'd']})
+            #
+            # # There are two functionally equivalent ways to do this
+            # le = LabelEncoder()
+            # le.fit(data.category)  # le = le.fit(data.category) also works
+            # encoded = le.transform(data.category)
+            #
+            # print(encoded)
+            #
+            # # This method is preferred
+            # le = LabelEncoder()
+            # encoded = le.fit_transform(data.category)
+            #
+            # print(encoded)
+            #
+            # # We can assign this to a new column
+            # data = data.assign(encoded=encoded)
+            # print(data.head())
+            #
+            # # We can also encode more data
+            # test_data = Series(['c', 'a'])
+            # encoded = le.transform(test_data)
+            # print(encoded)
+            #
+            # # After train, ordinal label can be inverse_transform() back to
+            # # string labels
+            # ord_label = cudf.Series([0, 0, 1, 2, 1])
+            # ord_label = dask_cudf.from_cudf(data, npartitions=2)
+            # str_label = le.inverse_transform(ord_label)
+            # print(str_label)
+            #
 
         @staticmethod
         def index_to_string(input_cols=None, output_cols=None, columns=None):
