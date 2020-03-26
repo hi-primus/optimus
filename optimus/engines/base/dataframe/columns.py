@@ -843,6 +843,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         # new data frame with split value columns
         input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col in zip(input_cols, output_cols):
             df_new = df[input_col].str.split(separator, n=splits, expand=True)
