@@ -9,6 +9,7 @@ from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_i
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
+from optimus.infer import is_list
 
 DataFrame = pd.DataFrame
 
@@ -57,9 +58,25 @@ def cols(self: DataFrame):
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
             pass
 
-        @staticmethod
-        def set(output_col, value=None):
-            pass
+        def set(self, output_col, value=None):
+            """
+            Execute a hive expression. Also handle ints and list in columns
+            :param output_col: Output columns
+            :param value: numeric, list or hive expression
+            :return:
+            """
+
+            df = self.df
+
+            columns = parse_columns(df, output_col, accepts_missing_cols=True)
+            check_column_numbers(columns, 1)
+
+            if is_list(value):
+                df = df.assign(**{output_col: np.array(value)})
+            else:
+                df = df.assign(**{output_col: value})
+
+            return df
 
         # @staticmethod
         # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
