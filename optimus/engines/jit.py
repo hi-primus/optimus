@@ -37,7 +37,7 @@ def histogram1d(v, bins, range):
 
 
 # Numba
-@njit(nopython=True, fastmath=True)
+@njit(fastmath=True)
 def get_bin_edges(a, bins):
     bin_edges = np.zeros((bins + 1,), dtype=np.float64)
     a_min, a_max = min_max(a)
@@ -51,7 +51,7 @@ def get_bin_edges(a, bins):
     return bin_edges
 
 
-@njit(nopython=True, fastmath=True)
+@njit(fastmath=True)
 def compute_bin(x, bin_edges):
     # assuming uniform bins for now
     n = bin_edges.shape[0] - 1
@@ -70,7 +70,12 @@ def compute_bin(x, bin_edges):
         return bin
 
 
-@njit(nopython=True, fastmath=True)
+# Dask. This NOT work faster than histogram1 library. Require more testing
+# numba_histogram1 = delayed(numba_histogram)
+# # print(func(df["OFFENSE_CODE"],10).compute())
+# %timeit numba_histogram1(np.array(df["OFFENSE_CODE"]),10).compute()
+
+@njit(fastmath=True)
 def numba_histogram(a, bins):
     hist = np.zeros((bins,), dtype=np.intp)
     bin_edges = get_bin_edges(a, bins)
