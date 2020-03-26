@@ -6,6 +6,7 @@ import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
@@ -738,7 +739,6 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def lower(self, input_cols, output_cols=None):
-
         def _lower(value):
             return value.str.lower()
 
@@ -748,7 +748,6 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols)
 
     def upper(self, input_cols, output_cols=None):
-
         def _upper(value):
             return value.str.upper()
 
@@ -786,28 +785,18 @@ class DaskBaseColumns(BaseColumns):
 
         args = val_to_list(args)
 
-        func_return_type = val_to_list(func_return_type)
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        partitions = df.to_delayed()
+        result = {}
+
         for input_col, output_col in zip(input_cols, output_cols):
+            temp = [dask.delayed(func)(part[input_col])
+                    for part in partitions]
+            result[output_col] = from_delayed(temp)
 
-            if func_return_type is None:
-                _meta = df[input_col]
-            else:
-                if "int" in func_return_type:
-                    return_type = int
-                elif "float" in func_return_type:
-                    return_type = float
-                elif "bool" in func_return_type:
-                    return_type = bool
-                else:
-                    return_type = object
-                _meta = df[input_col].astype(return_type)
-            if args is None: args = []
-            a = map_delayed(df[input_col], func, *args)
-            # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
-
-        # print(df.head())
-        return a
-        # return df
+        return df.assign(**result)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -916,10 +905,10 @@ class DaskBaseColumns(BaseColumns):
             return "[" + v + "]"
 
         if shape == "string":
-            df = df.assign(**{output_col[0]: _nest_string})
+            kw_columns = {output_col[0]: _nest_string}
         else:
-            df = df.assign(**{output_col[0]: _nest_array})
-
+            kw_columns = {output_col[0]: _nest_array}
+        df = df.assign(**kw_columns)
         return df
 
     def unnest(self, input_cols, separator=None, splits=0, index=None, output_cols=None, drop=False):

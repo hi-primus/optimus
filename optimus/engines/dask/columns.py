@@ -14,8 +14,6 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
-
-
         @staticmethod
         def abs(input_cols, output_cols=None):
             """
