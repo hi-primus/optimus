@@ -321,9 +321,10 @@ def cols(self: DataFrame):
         def values_to_cols(input_cols):
             pass
 
+        @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
             df = self
-            print("asdfajkhslkjdhf")
+            # print("asdfajkhslkjdhf")
             df = ml_string_to_index(df, input_cols, output_cols, columns)
 
             return df
