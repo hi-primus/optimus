@@ -108,13 +108,14 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
             RaiseIt.length_error(input_cols, output_cols)
 
     if output_cols is None:
+        print("1111")
         output_cols = val_to_list(input_cols)
     else:
         output_cols = val_to_list(output_cols)
     if merge is True:
         output_cols = val_to_list(output_cols)
         output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
-
+    print("222", output_cols)
     return output_cols
 
 
@@ -237,9 +238,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
 
 def prepare_columns(df, input_cols, output_cols, get_args=False, is_regex=None, filter_by_column_dtypes=None,
-                    accepts_missing_cols=False, invert=False):
+                    accepts_missing_cols=False, invert=False, default=None, columns=None):
     """
-
+    Return an iterator that prepare the input and output columns
     :param df:
     :param input_cols:
     :param output_cols:
@@ -247,13 +248,25 @@ def prepare_columns(df, input_cols, output_cols, get_args=False, is_regex=None, 
     :param is_regex:
     :param filter_by_column_dtypes:
     :param accepts_missing_cols:
-    :param invert:
+    :param invert: Invert Selection
+    :param default: Default column name if output_cols is not provider
+    :param columns: {incol:outcol1 , incol2:outcol2}
     :return:
     """
-    input_cols = parse_columns(df, input_cols, get_args, is_regex, filter_by_column_dtypes,
-                               accepts_missing_cols, invert)
-    output_cols = get_output_cols(input_cols, output_cols)
-    return (input_cols, output_cols)
+    if columns:
+        result = zip(*columns)
+    else:
+        input_cols = parse_columns(df, input_cols, get_args, is_regex, filter_by_column_dtypes,
+                                   accepts_missing_cols, invert)
+
+        merge = False
+        if output_cols is None and default is not None:
+            output_cols = default
+            merge = True
+
+        output_cols = get_output_cols(input_cols, output_cols, merge=merge)
+        result = zip(input_cols, output_cols)
+    return result
 
 
 def check_column_numbers(columns, number=0):
@@ -325,17 +338,12 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
-    # print(data_type)
     data_type = parse_dtypes(df, data_type)
-    # print("BBB",data_type)
-    # isinstance require a tuple
     data_type = tuple(val_to_list(data_type))
     # Filter columns by data type
     result = []
     for col_name in df.cols.names():
         for dt in data_type:
-            # print("filter", df.cols.schema_dtype(col_name), dt)
-            # print(isinstance(df.cols.schema_dtype(col_name), dt))
             if (df.cols.schema_dtype(col_name) is dt) or (isinstance(df.cols.schema_dtype(col_name), dt)):
                 result.append(col_name)
     return result
@@ -349,7 +357,7 @@ def name_col(col_names: str, append: str) -> str:
     :return:
     """
     separator = "***"
-    append = str(append)
+    append = str(one_list_to_val(append))
     col_names = val_to_list(col_names)
     if len(col_names) > 1:
         output_col = ('_'.join(str(elem) for elem in col_names))[:10] + separator

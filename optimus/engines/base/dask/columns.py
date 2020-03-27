@@ -14,6 +14,8 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
+from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
+
 from optimus.helpers.check import equal_function, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
@@ -75,9 +77,12 @@ class DaskBaseColumns(BaseColumns):
     def bucketizer(input_cols, splits, output_cols=None):
         pass
 
-    @staticmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
-        pass
+    def index_to_string(self, input_cols=None, output_cols=None, columns=None):
+        df = self.df
+
+        df = ml_index_to_string(df, input_cols, output_cols, columns)
+
+        return df
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):
 

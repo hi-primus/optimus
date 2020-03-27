@@ -2,7 +2,7 @@
 from sklearn import preprocessing
 
 from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
-from optimus.helpers.columns import parse_columns, name_col, get_output_cols, prepare_columns
+from optimus.helpers.columns import parse_columns, name_col, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
@@ -20,7 +20,7 @@ def n_gram(df, input_col, n=2):
     pass
 
 
-def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
+def string_to_index(df, input_cols, output_cols=None, columns=None, **kwargs):
     """
     Maps a string column of labels to an ML column of label indices. If the input column is
     numeric, we cast it to string and index the string values.
@@ -32,24 +32,14 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     df_actual = df
 
-    # if columns is None:
-    #     input_cols = parse_columns(df, input_cols)
-    #     if output_cols is None:
-    #         output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
-    #     output_cols = get_output_cols(input_cols, STRING_TO_INDEX, merge = True)
-    # else:
-    #     input_cols, output_cols = zip(*columns)
+    columns = prepare_columns(df, input_cols, output_cols, default=STRING_TO_INDEX)
 
-    intput_cols, output_cols = prepare_columns(df, input_cols, output_cols)
-
-    print(input_cols, output_cols)
     le = preprocessing.LabelEncoder()
-
-    for input_col, output_col in zip(input_cols, output_cols):
+    for input_col, output_col in columns:
         le.fit(df[input_col])
         df[output_col] = le.transform(df[input_col])
 
-    df = df.preserve_meta(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+    df = df.meta.preserve(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
     return df
 
 
@@ -66,17 +56,13 @@ def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     """
     df_actual = df
 
-    if columns is None:
-        input_cols = parse_columns(df, input_cols)
-        if output_cols is None:
-            output_cols = [name_col(input_col, INDEX_TO_STRING) for input_col in input_cols]
-        output_cols = get_output_cols(input_cols, output_cols)
-    else:
-        input_cols, output_cols = zip(*columns)
+    columns = prepare_columns(df, input_cols, output_cols, default=INDEX_TO_STRING)
+    le = preprocessing.LabelEncoder()
+    for input_col, output_col in columns:
+        le.fit(df[input_col])
+        df[output_col] = le.inverse_transform(df[input_col])
 
-
-
-    df = df.preserve_meta(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
+    df = df.meta.preserve(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
 
     return df
 
@@ -116,7 +102,6 @@ def vector_assembler(df, input_cols, output_col=None):
     if output_col is None:
         output_col = name_col(input_cols, "vector_assembler")
 
-
     # df = pipeline.fit(df).transform(df)
 
     return df
@@ -151,7 +136,6 @@ def normalizer(df, input_cols, output_col=None, p=2.0):
         output_col = name_col(input_cols, "normalizer")
 
     # TODO https://developer.ibm.com/code/2018/04/10/improve-performance-ml-pipelines-wide-dataframes-apache-spark-2-3/
-
 
     # df = pipeline.fit(df).transform(df)
 
