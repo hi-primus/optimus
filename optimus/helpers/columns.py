@@ -100,6 +100,9 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     :param merge:
     :return:
     """
+
+    output_cols = val_to_list(output_cols)
+
     if is_list(input_cols) and is_list(output_cols):
         if len(input_cols) != len(output_cols):
             RaiseIt.length_error(input_cols, output_cols)
@@ -107,9 +110,10 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     if output_cols is None:
         output_cols = val_to_list(input_cols)
     else:
-        if merge is True:
-            output_cols = val_to_list(output_cols)
-            output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
+        output_cols = val_to_list(output_cols)
+    if merge is True:
+        output_cols = val_to_list(output_cols)
+        output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
 
     return output_cols
 
@@ -234,10 +238,22 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
 def prepare_columns(df, input_cols, output_cols, get_args=False, is_regex=None, filter_by_column_dtypes=None,
                     accepts_missing_cols=False, invert=False):
+    """
+
+    :param df:
+    :param input_cols:
+    :param output_cols:
+    :param get_args:
+    :param is_regex:
+    :param filter_by_column_dtypes:
+    :param accepts_missing_cols:
+    :param invert:
+    :return:
+    """
     input_cols = parse_columns(df, input_cols, get_args, is_regex, filter_by_column_dtypes,
                                accepts_missing_cols, invert)
     output_cols = get_output_cols(input_cols, output_cols)
-    return input_cols, output_cols
+    return (input_cols, output_cols)
 
 
 def check_column_numbers(columns, number=0):
