@@ -13,16 +13,14 @@ from multipledispatch import dispatch
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
-
+from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, cudf_series_to_pandas
 from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import compress_dict
-from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
@@ -348,13 +346,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
 
         def _replace_regex(value, regex, replace):
-            # try:
-            #     value = value.astype(str)
-            # except:
-            #     value = str(value)
-            print(value.replace(regex, replace))
             return value.replace(regex, replace)
-            # return re.sub(regex, replace, value)
 
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
@@ -384,7 +376,7 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols)
 
     def remove_accents(self, input_cols, output_cols=None):
-        def _remove_accents(value):
+        def _remove_accents(value, args):
             cell_str = str(value)
 
             # first, normalize strings:
@@ -757,7 +749,7 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def lower(self, input_cols, output_cols=None):
-        def _lower(value):
+        def _lower(value, args):
             return value.str.lower()
 
         df = self.df
@@ -766,7 +758,7 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols)
 
     def upper(self, input_cols, output_cols=None):
-        def _upper(value):
+        def _upper(value, args):
             return value.str.upper()
 
         df = self.df
@@ -776,7 +768,7 @@ class DaskBaseColumns(BaseColumns):
 
     def trim(self, input_cols, output_cols=None):
 
-        def _trim(value):
+        def _trim(value, args):
             return value.str.strip()
 
         df = self.df
@@ -810,6 +802,7 @@ class DaskBaseColumns(BaseColumns):
 
         for input_col, output_col in zip(input_cols, output_cols):
             partitions = df[input_col].to_delayed()
+            # print("aAA3", args)
             temp = [dask.delayed(func)(part, args)
                     for part in partitions]
             result[output_col] = from_delayed(temp)
