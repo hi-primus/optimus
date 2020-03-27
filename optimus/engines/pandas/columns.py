@@ -5,12 +5,12 @@ import pandas as pd
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.jit import min_max, bincount
-from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
+from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_list
+from optimus.infer import is_list, is_str
 
 DataFrame = pd.DataFrame
 
@@ -54,7 +54,6 @@ def cols(self: DataFrame):
                 df[output_col] = df[input_cols].apply(func, args=(func, args))
 
             return df
-
 
         @staticmethod
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -284,7 +283,7 @@ def cols(self: DataFrame):
 
             def get_match_positions(_value, _separator):
                 result = None
-                if _value is not np.nan:
+                if is_str(_value):
                     length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                     result = length if len(length) > 0 else None
                 return result
