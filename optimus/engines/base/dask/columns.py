@@ -360,7 +360,7 @@ class DaskBaseColumns(BaseColumns):
 
     def remove_white_spaces(self, input_cols, output_cols=None):
 
-        def _remove_white_spaces(value):
+        def _remove_white_spaces(value, args):
             return value.str.replace(" ", "")
 
         df = self.df
@@ -369,7 +369,7 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols)
 
     def remove_special_chars(self, input_cols, output_cols=None):
-        def _remove_special_chars(value):
+        def _remove_special_chars(value, args):
             return value.str.replace('[^A-Za-z0-9]+', '')
             # return re.sub('[^A-Za-z0-9]+', '', value)
 
@@ -610,6 +610,7 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def create_exprs(self, columns, funcs, *args):
+
         df = self.df
         # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
         filters = {"object": [df.functions.min, df.functions.stddev],
@@ -990,7 +991,8 @@ class DaskBaseColumns(BaseColumns):
 
             def multiple_replace(value, _search_and_replace_by):
                 if value is not None:
-                    return regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(value))
+                    return value.replace(_search_and_replace_by)
+                    # return regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(value))
                 else:
                     return None
 

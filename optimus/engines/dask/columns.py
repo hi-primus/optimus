@@ -27,9 +27,6 @@ def cols(self: DataFrame):
             output_cols = get_output_cols(input_cols, output_cols)
 
             check_column_numbers(output_cols, "*")
-            # Abs not accepts column's string names. Convert to Spark Column
-
-            # TODO: make this in one pass.
 
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col] = df.compute(np.abs(df[input_col]))
