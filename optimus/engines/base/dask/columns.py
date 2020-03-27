@@ -795,16 +795,16 @@ class DaskBaseColumns(BaseColumns):
         if output_cols is None:
             output_cols = input_cols
 
-        args = val_to_list(args)
+        # args = val_to_list(args)
 
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
-        partitions = df.to_delayed()
         result = {}
 
         for input_col, output_col in zip(input_cols, output_cols):
-            temp = [dask.delayed(func)(part[input_col], args)
+            partitions = df[input_col].to_delayed()
+            temp = [dask.delayed(func)(part, args)
                     for part in partitions]
             result[output_col] = from_delayed(temp)
 
