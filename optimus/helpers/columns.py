@@ -108,14 +108,13 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
             RaiseIt.length_error(input_cols, output_cols)
 
     if output_cols is None:
-        print("1111")
         output_cols = val_to_list(input_cols)
     else:
         output_cols = val_to_list(output_cols)
     if merge is True:
         output_cols = val_to_list(output_cols)
         output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
-    print("222", output_cols)
+
     return output_cols
 
 
