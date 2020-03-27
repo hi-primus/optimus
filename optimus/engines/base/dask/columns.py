@@ -974,70 +974,22 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
 
-        # TODO check if .contains can be used instead of regexp
-        def func_chars_words(_df, _input_col, _output_col, _search, _replace_by):
-            # Reference https://www.oreilly.com/library/view/python-cookbook/0596001673/ch03s15.html
-
-            # Create as dict
-            search_and_replace_by = None
-            if is_list(_search):
-                search_and_replace_by = {s: _replace_by for s in _search}
-            elif is_one_element(_search):
-                search_and_replace_by = {_search: _replace_by}
-
-            search_and_replace_by = {str(k): str(v) for k, v in search_and_replace_by.items()}
-
-            # Create a regular expression from all of the dictionary keys
-            regex = None
-            if search_by == "chars":
-                regex = re.compile("|".join(map(re.escape, search_and_replace_by.keys())))
-            elif search_by == "words":
-                regex = re.compile(r'\b%s\b' % r'\b|\b'.join(map(re.escape, search_and_replace_by.keys())))
-
-            def multiple_replace(value, _search_and_replace_by):
-                if value is not None:
-                    return value.replace(_search_and_replace_by)
-                    # return regex.sub(lambda match: _search_and_replace_by[match.group(0)], str(value))
-                else:
-                    return None
-
-            _df = _df.cols.apply(_input_col, multiple_replace, "str", search_and_replace_by,
-                                 output_cols=_output_col)
-
-            return _df
-
-        def func_full(df, _input_col, _output_col, _search, _replace_by):
-            _search = val_to_list(_search)
-
-            if _input_col != _output_col:
-                df[_output_col] = df[_input_col]
-
-            df[_output_col] = df[_output_col].mask(df[_output_col].isin(_search), _replace_by)
-
-            return df
-
-        func = None
-        if search_by == "full" or search_by == "numeric":
-            func = func_full
-        elif search_by == "chars" or search_by == "words":
-            func = func_chars_words
-        else:
-            RaiseIt.value_error(search_by, ["chars", "words", "full", "numeric"])
-
-        filter_dtype = None
-
-        if search_by in ["chars", "words", "full"]:
-            filter_dtype = df.constants.STRING_TYPES
-        elif search_by == "numeric":
-            filter_dtype = df.constants.NUMERIC_TYPES
-
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_dtype)
-
-        check_column_numbers(input_cols, "*")
+        input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
+        search = val_to_list(search)
+        if search_by == "chars":
+            regex = re.compile("|".join(map(re.escape, search)))
+        elif search_by == "words":
+            regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        else:
+            regex = search
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = func(df, input_col, output_col, search, replace_by)
+        def _remove_white_spaces(value, args):
+            return value.str.replace(args[0], args[1])
+
+        df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
+                      filter_col_by_dtypes=df.constants.STRING_TYPES,
+                      output_cols=output_cols, args=(regex, replace_by))
 
         return df
 
