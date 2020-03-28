@@ -100,14 +100,14 @@ Now install from test.pypi.org
 pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop
 ```
 
-### Compiling redis .jar file
+## Compiling redis .jar file
 This file can not be found to download and must be compiled.
 
-#### Install Maven
+### Install Maven
 
 Reference https://www.javahelps.com/2017/10/install-apache-maven-on-linux.html
 
-#### Compile the .jar file
+### Compile the .jar file
 Download spark-redis from GitHub https://github.com/RedisLabs/spark-redis (either git clone or download as a zip), and build it using Maven.
 
 ```
@@ -115,7 +115,7 @@ $ cd spark-redis
 $ mvn clean package -DskipTests
 ```
 
-### Create a new database driver
+## Create a new database driver
 
 To add a new database driver to Optimus follow this steps: 
 
