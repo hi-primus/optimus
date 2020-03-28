@@ -64,3 +64,25 @@ examples/many-columns.parquet/
 examples/sandbox.ipynb
 
 examples/dask-worker-space/
+
+examples/data/noncomm_use_subset/
+
+examples/scheduling/dask-worker-space/
+
+examples/data/HIGGS.csv
+
+examples/data/mortage/
+
+examples/corona.ipynb
+
+examples/data/metadata.csv
+
+examples/data/noncomm_use_subset.tar.gz
+
+examples/data/Performance_2000Q4.csv
+
+examples/data/star0000-1.csv
+
+examples/yellow_tripdata_2009-01.csv
+
+examples/yellow_tripdata_2009-02.csv
