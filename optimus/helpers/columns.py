@@ -117,7 +117,10 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     if auto_increment is not None:
         # input_cols = input_cols * auto_increment
         output_cols = val_to_list(output_cols)
-        output_cols = [col_name + "_"+str(i) for i, col_name in enumerate(input_cols)]
+        # print("LEAN @", len(input_cols)/auto_increment)
+        # r = int(len(input_cols) / auto_increment)
+        r = list(range(auto_increment)) * 2
+        output_cols = [col_name + "_" + str(i) for i, col_name in zip(r, input_cols)]
     elif merge is True:
         output_cols = val_to_list(output_cols)
         output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
@@ -272,10 +275,10 @@ def prepare_columns(df, input_cols, output_cols=None, get_args=False, is_regex=N
             merge = True
         if auto_increment is not None:
             input_cols = input_cols * auto_increment
-            print(input_cols)
+            # print("AAA",input_cols)
 
         output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
-        # print("DDD", input_cols, output_cols)
+        print("DDD", input_cols, output_cols)
         result = zip(input_cols, output_cols)
     return result
 

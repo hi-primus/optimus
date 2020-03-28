@@ -941,7 +941,7 @@ class DaskBaseColumns(BaseColumns):
 
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
-
+        # columns = prepare_columns(df, input_cols, output_cols)
         # new data frame with split value columns
 
         for input_col in input_cols:
