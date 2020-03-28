@@ -943,12 +943,14 @@ class DaskBaseColumns(BaseColumns):
         output_cols = get_output_cols(input_cols, output_cols)
 
         # new data frame with split value columns
-        kw_columns = {}
+
         for input_col in input_cols:
-            df_new = df[input_col].str.split(separator, n=splits)
-            kw_columns = {output_cols[0] + "_" + str(i): df_new.map(lambda x, i=i: x[i]) for i in range(splits)}
+            df_new = df[input_col].astype("str").str.split(separator, n=splits)
+            # Sometime when split the result are less parts that the split param. We handle this returning Null
+            kw_columns = {output_cols[0] + "_" + str(i): df_new.map(lambda x, i=i: x[i] if i < len(x) else None) for i
+                          in range(splits)}
             df = df.assign(**kw_columns)
-            del df_new
+
         if drop is True:
             df.drop(columns=input_cols, inplace=True)
 
