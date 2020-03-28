@@ -979,10 +979,10 @@ class DaskBaseColumns(BaseColumns):
         else:
             regex = search
 
-        def _remove_white_spaces(value, args):
+        def _replace(value, args):
             return value.str.replace(args[0], args[1])
 
-        df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
+        df.cols.apply(input_cols, _replace, func_return_type=str,
                       filter_col_by_dtypes=df.constants.STRING_TYPES,
                       output_cols=output_cols, args=(regex, replace_by))
 
