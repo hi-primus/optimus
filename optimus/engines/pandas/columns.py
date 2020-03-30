@@ -218,7 +218,6 @@ def cols(self: DataFrame):
             result = {}
             for col_name in columns:
                 _min, _max = min_max(df[col_name].to_numpy())
-
                 result[col_name] = {"min": _min, "max": _max}
             return result
 

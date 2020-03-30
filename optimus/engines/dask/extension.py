@@ -120,10 +120,6 @@ def ext(self: DataFrame):
             print("Dask not support custom partitiones")
             raise NotImplementedError
 
-        @staticmethod
-        def repartition(partitions_number=None, col_name=None):
-            df = self
-            return df.repartition(npartitions=df.npartitions)
 
         @staticmethod
         def show():

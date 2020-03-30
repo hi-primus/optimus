@@ -1,5 +1,5 @@
 import csv
-import ujson as json
+import simplejson as json
 
 import pandas as pd
 import requests

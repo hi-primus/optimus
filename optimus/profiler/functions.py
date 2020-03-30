@@ -1,4 +1,4 @@
-import ujson as json
+import simplejson as json
 
 import math
 

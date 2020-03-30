@@ -1,7 +1,7 @@
 import glob
 
 import pandas as pd
-import ujson as json
+import simplejson as json
 from glom import glom
 
 from optimus.infer import is_dict, is_list, is_str, is_int
@@ -26,7 +26,7 @@ class JSON:
         all_json = glob.glob(path, recursive=True)
         # pd.read_json("data/corona.json")
         with open(all_json[0]) as f:
-            self.data = ujson.load(f)
+            self.data = simplejson.load(f)
 
     def schema(self):
         """

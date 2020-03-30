@@ -1,6 +1,6 @@
 import base64
 import configparser
-import ujson as json
+import simplejson as json
 import os
 import uuid
 import zlib
@@ -25,6 +25,7 @@ END_POINT = "/dataset"
 # APP
 DOMAIN_APP = "app.hi-bumblebee.com"
 FULL_APP_URL = PROTOCOL_SSL + DOMAIN_APP
+
 
 
 class Comm:

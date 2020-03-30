@@ -1,9 +1,7 @@
-import ujson as json
+import simplejson as json
 import math
 
-import humanize
 import imgkit
-import jinja2
 import numpy as np
 from dask_cudf.core import DataFrame
 
@@ -191,10 +189,10 @@ def ext(self):
         @staticmethod
         def partitioner():
             raise NotImplementedError
-
-        @staticmethod
-        def repartition(partitions_number=None, col_name=None):
-            raise NotImplementedError
+        #
+        # @staticmethod
+        # def repartition(n=0, col_name=None):
+        #     return df.repartition(n)
 
         @staticmethod
         def table_image(path, limit=10):

@@ -95,11 +95,9 @@ def cols(self: DataFrame):
                     if not _filter(col_name, func):
                         filtered_column.append(col_name)
                 if len(filtered_column) > 0:
-                    # print("AAA",func, args, df)
                     result = func(columns, args, df=df)
 
             return result
-
         @staticmethod
         def exec_agg(exprs):
             return exprs
@@ -371,6 +369,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
+            pass
             # from cudf import DataFrame, Series
             #
             # data = DataFrame({'category': ['a', 'b', 'c', 'd']})

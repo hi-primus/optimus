@@ -1,7 +1,10 @@
+import GPUtil
+from dask.distributed import Client
+from dask_cuda import LocalCUDACluster
 
 from optimus.bumblebee import Comm
-from optimus.engines.dask_cudf.io.jdbc import JDBC
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
+from optimus.engines.dask_cudf.io.jdbc import JDBC
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
@@ -10,10 +13,23 @@ DaskCUDF.instance = None
 Profiler.instance = None
 Comm.instance = None
 
+GREAT_NUMBER = 100000
 
 class DaskCUDFEngine:
-    def __init__(self, session=None, n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB',
+    def __init__(self, session=None, n_workers=2, threads_per_worker=4, memory_limit='2GB',
                  verbose=False, comm=None, *args, **kwargs):
+        """
+
+        :param session:
+        :param n_workers:
+        :param threads_per_worker:
+        :param memory_limit:
+        :param verbose:
+        :param comm:
+        :param args:
+        :param kwargs:
+        """
+
         if comm is True:
             Comm.instance = Comm()
         else:
@@ -26,7 +42,19 @@ class DaskCUDFEngine:
         self.verbose(verbose)
 
         if session is None:
-            DaskCUDF.instance = DaskCUDF().create(*args, **kwargs)
+            # Processes are necessary in order to use multiple GPUs with Dask
+
+            n_gpus = len(GPUtil.getAvailable(order='first', limit=GREAT_NUMBER))
+
+            if n_workers > n_gpus:
+                logger.print(f"n_workers should equal or less than the number of GPUs. n_workers is now {n_gpus}")
+                n_workers = n_gpus
+
+            cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
+                                       memory_limit=memory_limit)
+            DaskCUDF.instance = Client(cluster, *args, **kwargs)
+            # self._cluster = cluster
+            # DaskCUDF.instance = DaskCUDF().create(*args, **kwargs)
             # n_workers = n_workers, threads_per_worker = threads_per_worker,
             # processes = processes, memory_limit = memory_limit
         else:
@@ -37,8 +65,6 @@ class DaskCUDFEngine:
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
-
-
 
     @staticmethod
     def verbose(verbose):
@@ -60,7 +86,7 @@ class DaskCUDFEngine:
         """
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                        presto_catalog, cassandra_keyspace, cassandra_table)
+                    presto_catalog, cassandra_keyspace, cassandra_table)
 
     @property
     def spark(self):

@@ -1,11 +1,11 @@
-import math
 from abc import abstractmethod, ABC
 
 import humanize
 import imgkit
 import jinja2
+import math
 import numpy as np
-import ujson as json
+import simplejson as json
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER

@@ -1,5 +1,5 @@
 import base64
-import ujson as json
+import simplejson as json
 import os
 import pprint
 from io import BytesIO
