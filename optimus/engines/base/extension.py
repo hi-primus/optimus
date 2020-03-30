@@ -264,9 +264,10 @@ class BaseExt(ABC):
     def partitioner():
         raise NotImplementedError
 
-    @staticmethod
-    def repartition(partitions_number=None, col_name=None):
-        raise NotImplementedError
+    def repartition(self, n=None, *args, **kwargs):
+        df = self.df
+        df = df.repartition(npartitions=n, *args, **kwargs)
+        return df
 
     @staticmethod
     def table_image(path, limit=10):
