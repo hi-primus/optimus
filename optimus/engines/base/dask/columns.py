@@ -20,6 +20,7 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, cudf_series_to_pandas
 from optimus.helpers.core import val_to_list
+from optimus.helpers.functions import collect_as_dict
 from optimus.helpers.parser import compress_dict
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
@@ -240,7 +241,7 @@ class DaskBaseColumns(BaseColumns):
 
         result = {}
         for col_name in columns:
-            result.update(compress_dict(df[col_name].value_counts().ext.to_dict(), col_name))
+            result.update(df[col_name].value_counts().compute().to_frame().to_dict())
         return result
 
     def extract(self, input_cols, output_cols, regex):
@@ -1025,8 +1026,6 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
         if columns is not None:
             df = df[columns]
-            # Metadata get lost when using select(). So we copy here again.
-            # df.ext.meta = self.ext.meta
             result = df
         else:
             result = None
