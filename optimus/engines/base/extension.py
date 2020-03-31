@@ -11,7 +11,7 @@ from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
-from optimus.helpers.functions import traverse, absolute_path, collect_as_dict
+from optimus.helpers.functions import traverse, absolute_path, collect_as_dict, reduce_mem_usage
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -24,7 +24,7 @@ class BaseExt(ABC):
 
     def __init__(self, df):
         self.df = df
-        self.buffer_a = None
+        # self.buffer_a = None
 
     def init(self):
         df = self.df
@@ -196,8 +196,8 @@ class BaseExt(ABC):
         return df[input_columns][lower_bound: upper_bound]
 
     def buffer_json(self, columns):
-        # df = self.df._buffer
-        # input_columns = parse_columns(df, columns)
+        df = self.df._buffer
+        columns = parse_columns(df, columns)
 
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                 "value": df.rows.to_list(columns)}
@@ -209,6 +209,10 @@ class BaseExt(ABC):
         """
 
         return 0
+
+    def optimize(self):
+        df = self.df
+        return reduce_mem_usage(df)
 
     def run(self):
         """
