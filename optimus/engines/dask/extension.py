@@ -81,13 +81,14 @@ def ext(self: DataFrame):
             raise NotImplementedError
 
         @staticmethod
-        def size():
+        def size(deep=False):
             """
             Get the size of a dask in bytes
             :return:
             """
-
-            return 0
+            df = self
+            result = df.memory_usage(index=True, deep=deep).sum().compute()
+            return result
 
         @staticmethod
         def run():
@@ -119,7 +120,6 @@ def ext(self: DataFrame):
         def partitioner():
             print("Dask not support custom partitiones")
             raise NotImplementedError
-
 
         @staticmethod
         def show():

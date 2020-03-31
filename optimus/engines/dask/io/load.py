@@ -56,8 +56,9 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
-        :param null_value:
         :param charset:
+        :param null_value:
+        :param n_rows:
         It requires one extra pass over the data. True default.
 
         :return dataFrame
@@ -67,11 +68,9 @@ class Load:
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
                              **kwargs)
-            partitions = df.ext.partitions()
+
             if n_rows > -1:
                 df = df.head(n_rows)
-                df = dd.from_pandas(df, npartitions=partitions)
-                # print(type(df))
 
             df.meta.set("file_name", file_name)
         except IOError as error:

@@ -2,11 +2,10 @@ import unicodedata
 
 import numpy as np
 import pandas as pd
-import simplejson as json
+
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import dump_json
-from optimus.helpers.json import json_converter
 from optimus.helpers.raiseit import RaiseIt
 
 DataFrame = pd.DataFrame
@@ -17,7 +16,6 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
-
 
         @staticmethod
         def profile(columns, lower_bound=None, upper_bound=None, bins=10, output=None):
@@ -87,6 +85,12 @@ def ext(self: DataFrame):
 
         def cache(self):
             return self.df
+
+        @staticmethod
+        def size(deep=True):
+            df = self
+            result = df.memory_usage(index=True, deep=deep).sum()
+            return result
 
         @staticmethod
         def sample(n=10, random=False):
