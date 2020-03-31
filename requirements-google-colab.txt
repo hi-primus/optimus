@@ -29,7 +29,7 @@ kombu==4.6.1
 pandas==0.24.2
 ordered-set==3.1.1
 deepdiff==4.0.6
-pypika==0.32.0
+pypika==0.36.1
 statsmodels==0.10.1
 glom==19.10.0
 singleton-decorator==1.0.0
