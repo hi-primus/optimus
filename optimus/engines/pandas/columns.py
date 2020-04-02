@@ -1,5 +1,6 @@
 import re
 
+import fastnumbers
 import numpy as np
 import pandas as pd
 
@@ -270,9 +271,54 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
+        def nulls(columns):
+            """
+            Find the rows that have null values
+            :param columns:
+            :return:
+            """
+            df = self
+            columns = parse_columns(df, columns)
+
+            for col_name in columns:
+                # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
+                df["__nulls__"] = df[col_name].isnull()
+            return df
+
+        @staticmethod
+        def mismatchs(columns, dtype):
+            """
+            Find the rows that have null values
+            :param columns:
+            :return:
+            """
+            df = self
+            columns = parse_columns(df, columns)
+
+            from optimus.infer import is_bool, is_list, is_null
+
+            def func(dtype):
+                if dtype == "bool":
+                    return is_bool
+                elif dtype == "int":
+                    return fastnumbers.isint
+                elif dtype == "float":
+                    return fastnumbers.isfloat
+                elif dtype == "list":
+                    return is_list
+                elif dtype == "str":
+                    return is_null
+
+            f = func(dtype)
+            for col_name in columns:
+                # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
+                df["__match_dtype__"] = df[col_name].apply(f)
+            return df
+
+        @staticmethod
         def find(columns, sub):
             """
-            Find the position for a char or substring
+            Find the position start and end position for a char or substring
             :param columns:
             :param sub:
             :return:
