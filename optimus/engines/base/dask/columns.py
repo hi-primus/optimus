@@ -923,7 +923,7 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**kw_columns)
         return df
 
-    def unnest(self, input_cols, separator=None, splits=0, index=None, output_cols=None, drop=False):
+    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False):
 
         """
         Split an array or string in different columns
