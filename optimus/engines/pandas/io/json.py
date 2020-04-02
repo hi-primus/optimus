@@ -26,11 +26,11 @@ class JSON:
         all_json = glob.glob(path, recursive=True)
         # pd.read_json("data/corona.json")
         with open(all_json[0]) as f:
-            self.data = simplejson.load(f)
+            self.data = json.load(f)
 
-    def schema(self):
+    def schema(self) -> dict:
         """
-        Return a JSON with the count, dtype and nested structure
+        Return a dict with the count, dtype and nested structure
         :return:
         """
 
@@ -62,7 +62,7 @@ class JSON:
         _schema(self.data, keys)
         return keys
 
-    def freq(self, n=100):
+    def freq(self, n: int = 100):
         """
         Calculate the count on every dict or list in the json
         :param n:
@@ -90,7 +90,7 @@ class JSON:
 
     def flatten(self, path):
         """
-        Flatten a JSON from a json path
+        Flatten a dict from a dict path
         :param path:
         :return:
         """
