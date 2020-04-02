@@ -1,13 +1,8 @@
-import simplejson
-
 import numpy as np
-import pandas as pd
+from cudf.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.json import json_converter
-from cudf.core import DataFrame
-
 
 
 def ext(self: DataFrame):
@@ -15,8 +10,6 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
-
-
 
         @staticmethod
         def profile(columns, lower_bound, upper_bound):
@@ -33,8 +26,7 @@ def ext(self: DataFrame):
 
             columns = parse_columns(df, columns)
             # print(df)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
 
             # df = df.dropna()
             df = self
@@ -43,7 +35,6 @@ def ext(self: DataFrame):
                     result.update(df.cols.hist(col_name))
                 else:
                     # df[col_name] = df[col_name].astype("str").dropna()
-                    # print("asdfakshdf")
                     result.update(df.cols.frequency(col_name))
             return result
 

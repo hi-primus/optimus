@@ -45,15 +45,10 @@ def ext(self: DataFrame):
                 upper_bound = df_length
 
             df = self[lower_bound:upper_bound]
-            # columns = parse_columns(df, columns)
-            # result = {}
 
             columns = parse_columns(df, columns)
-            # print(df)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
 
-            # df = df.dropna()
             df = self
             result["columns"] = {}
             for col_name in columns:
