@@ -379,7 +379,7 @@ def reduce_mem_usage(df, categorical_threshold=50):
     # rows_count = df.rows.count()
 
     start_mem_usg = df.ext.size()
-    print("Memory usage of properties dataframe is :", start_mem_usg, " MB")
+    print("Memory usage after optimization:", start_mem_usg, " MB")
     NA_list = []  # Keeps track of columns that have missing values filled in.
     columns_dtype = {}
 
@@ -431,16 +431,14 @@ def reduce_mem_usage(df, categorical_threshold=50):
             else:
                 columns_dtype[col_name] = np.float32
 
-
-
     df = df.astype(columns_dtype)
     # Print final result
-    print("___MEMORY USAGE AFTER COMPLETION:___")
+    # print("___MEMORY USAGE AFTER COMPLETION:___")
     # mem_usg = df.memory_usage().sum() / 1024 ** 2
     mem_usg = df.ext.size()
 
-    print("Memory usage is: ", mem_usg, " MB")
-    print("This is ", 100 * mem_usg / start_mem_usg, "% of the initial size")
+    print("Memory usage before optimization is: ", mem_usg, " MB")
+    print(100 * mem_usg / start_mem_usg, "% of the initial size")
     # return props, NA_list
     return df
 
