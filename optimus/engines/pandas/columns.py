@@ -289,6 +289,7 @@ def cols(self: DataFrame):
         def mismatchs(columns, dtype):
             """
             Find the rows that have null values
+            :param dtype:
             :param columns:
             :return:
             """
@@ -332,6 +333,8 @@ def cols(self: DataFrame):
                     length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                     result = length if len(length) > 0 else None
                 return result
+
+            sub = ["\\." if ele == "." else ele for ele in sub]
 
             for col_name in columns:
                 df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
