@@ -680,6 +680,13 @@ def is_str(value):
     """
     return isinstance(value, str)
 
+def is_object(value):
+    """
+    Check if an object is a string
+    :param value:
+    :return:
+    """
+    return isinstance(value, str)
 
 def is_list_of_futures(value):
     """

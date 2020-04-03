@@ -11,7 +11,7 @@ from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_i
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_list, is_str
+from optimus.infer import is_list, is_str, is_object
 
 DataFrame = pd.DataFrame
 
@@ -285,8 +285,42 @@ def cols(self: DataFrame):
                 df["__nulls__"] = df[col_name].isnull()
             return df
 
+        # @staticmethod
+        # def mismatches_1(columns, dtype):
+        #     """
+        #     Find the rows that have null values
+        #     :param dtype:
+        #     :param columns:
+        #     :return:
+        #     """
+        #     df = self
+        #     columns = parse_columns(df, columns)
+        #
+        #     from optimus.infer import is_bool, is_list
+        #
+        #     def func(d_type):
+        #         if d_type == "bool":
+        #             return is_bool
+        #         elif d_type == "int":
+        #             return fastnumbers.isint
+        #         elif d_type == "float":
+        #             return fastnumbers.isfloat
+        #         elif d_type == "list":
+        #             return is_list
+        #         elif d_type == "str":
+        #             return None
+        #         elif d_type == "object":
+        #             return None
+        #
+        #     f = func(dtype)
+        #     if f is None:
+        #         for col_name in columns:
+        #             # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
+        #             df = df[df[col_name].apply(f)]
+        #         return df
+
         @staticmethod
-        def mismatchs(columns, dtype):
+        def is_match(columns, dtype):
             """
             Find the rows that have null values
             :param dtype:
@@ -296,25 +330,29 @@ def cols(self: DataFrame):
             df = self
             columns = parse_columns(df, columns)
 
-            from optimus.infer import is_bool, is_list, is_null
+            from optimus.infer import is_bool, is_list
 
-            def func(dtype):
-                if dtype == "bool":
+            def func(d_type):
+                if d_type == "bool":
                     return is_bool
-                elif dtype == "int":
+                elif d_type == "int":
                     return fastnumbers.isint
-                elif dtype == "float":
+                elif d_type == "float":
                     return fastnumbers.isfloat
-                elif dtype == "list":
+                elif d_type == "list":
                     return is_list
-                elif dtype == "str":
-                    return is_null
+                elif d_type == "str":
+                    return is_str
+                elif d_type == "object":
+                    return is_object
 
             f = func(dtype)
-            for col_name in columns:
-                # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
-                df["__match_dtype__"] = df[col_name].apply(f)
-            return df
+            print(f)
+            if f is not None:
+                for col_name in columns:
+                    # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
+                    df = df[col_name].apply(f)
+                return df
 
         @staticmethod
         def find(columns, sub):
