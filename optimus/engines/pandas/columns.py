@@ -320,11 +320,12 @@ def cols(self: DataFrame):
         #         return df
 
         @staticmethod
-        def is_match(columns, dtype):
+        def is_match(columns, dtype, invert=False):
             """
-            Find the rows that have null values
-            :param dtype:
+            Find the rows that match a data type
             :param columns:
+            :param dtype: data type to match
+            :param invert: Invert the match
             :return:
             """
             df = self
@@ -347,11 +348,10 @@ def cols(self: DataFrame):
                     return is_object
 
             f = func(dtype)
-            print(f)
             if f is not None:
                 for col_name in columns:
-                    # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
                     df = df[col_name].apply(f)
+                    df = ~df if invert is True else df
                 return df
 
         @staticmethod
