@@ -3,13 +3,14 @@ import re
 import fastnumbers
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import KBinsDiscretizer
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.jit import min_max, bincount
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
+from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_list, is_str, is_object
 
@@ -441,7 +442,17 @@ def cols(self: DataFrame):
 
         @staticmethod
         def bucketizer(input_cols, splits, output_cols=None):
-            pass
+            df = self
+
+            columns = prepare_columns(df, input_cols, output_cols, merge=True)
+
+            for input_col, output_col in columns:
+                print("ASDfads")
+                x = df[[input_col]]
+                est = KBinsDiscretizer(n_bins=splits, encode='ordinal', strategy='uniform')
+                est.fit(input_col)
+                df[output_col] = est.transform(x)
+            return df
 
         @staticmethod
         def set_meta(col_name, spec=None, value=None, missing=dict):
