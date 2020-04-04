@@ -81,19 +81,15 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     Result:
     intput_cols = ['col1'] to output_cols = ['col1_new']
 
+    For multiple columns
     intput_cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
     Result:
     intput_cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
 
-    else append is False
+    else merge is False
     For 1 column
     intput_cols = ['col1'] to output_cols = 'new'
     intput_cols = ['col1'] to output_cols = ['new']
-
-    out
-    intput_cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
-    intput_cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
-
 
     :param input_cols:
     :param output_cols:
@@ -103,9 +99,9 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
 
     output_cols = val_to_list(output_cols)
 
-    if is_list(input_cols) and is_list(output_cols):
-        if len(input_cols) != len(output_cols):
-            RaiseIt.length_error(input_cols, output_cols)
+    # if is_list(input_cols) and is_list(output_cols):
+    #     if len(input_cols) != len(output_cols):
+    #         RaiseIt.length_error(input_cols, output_cols)
 
     if output_cols is None:
         output_cols = val_to_list(input_cols)
@@ -246,39 +242,48 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     return cols_params
 
 
-def prepare_columns(df, input_cols, output_cols=None, get_args=False, is_regex=None, filter_by_column_dtypes=None,
-                    accepts_missing_cols=False, invert=False, default=None, columns=None, auto_increment=False):
+def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None, is_regex=None,
+                    filter_by_column_dtypes=None,
+                    accepts_missing_cols=False, invert: bool = False, default=None, columns=None, auto_increment=False,
+                    merge=False):
     """
-    Return an iterator that prepare the input and output columns
-    :param df:
-    :param input_cols:
-    :param output_cols:
-    :param get_args:
-    :param is_regex:
-    :param filter_by_column_dtypes:
-    :param accepts_missing_cols:
-    :param invert: Invert Selection
+    One input columns- > Same output column. lower(), upper()
+    One input column -> One output column. copy()
+    One input column -> Multiple output column. unnest()
+    Multiple input columns -> One output column. nest()
+    Multiple input columns -> Multiple output columns. lower(), upper()
+
+    For multiple output we can pass a string, a list o columns or just enumerate de output column.
+    See get_output_cols() for more info
+
+    Accepts Return an iterator with input and output columns
+    :param df: dataframe against to check that the input columns are valid
+    :param input_cols: intput columns names
+    :param output_cols: output columns names
+    :param is_regex: input columns is a regex
+    :param filter_by_column_dtypes: filter column selection by data type
+    :param accepts_missing_cols: dont check the input columns exist
+    :param invert: Invert selection
     :param default: Default column name if output_cols is not provider
-    :param columns: {incol:outcol1 , incol2:outcol2}
+    :param columns: In case you have a input output dictionary already defined. {incol:outcol1 , incol2:outcol2}
     :param auto_increment:
+    :param merge:
     :return:
     """
     if columns:
         result = zip(*columns)
     else:
-        input_cols = parse_columns(df, input_cols, get_args, is_regex, filter_by_column_dtypes,
+        input_cols = parse_columns(df, input_cols, False, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
 
-        merge = False
         if output_cols is None and default is not None:
             output_cols = default
             merge = True
-        if auto_increment is not None:
+        if auto_increment is not False:
             input_cols = input_cols * auto_increment
-            # print("AAA",input_cols)
 
+        # output_cols = val_to_list(output_cols)
         output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
-        print("DDD", input_cols, output_cols)
         result = zip(input_cols, output_cols)
     return result
 

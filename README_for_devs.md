@@ -136,6 +136,30 @@ conda install pip
 cd Optimus 
 pip install -r requirements.txt
 ```
+### Adding functions
+The main way to work in Optimus is using .cols and .rows
+`.cols` is going to get and process data in a vertical way `.rows` in vertical.
+The new functions need to be added to all the engines. pandas, cudf, dask, dask_cudf to the cols and rows classes.
+
+`.remove_stop_words()`
+needs to be added to 
+optimus/engines/pandas/columns.py
+optimus/engines/cudf/columns.py
+optimus/engines/dask/columns.py
+optimus/engines/dask_cudf/columns.py
+
+In some cases the same code can be used for multiple engines. We organize Optimus to extend from: 
+* Base. Common to all the implementations
+* Dataframe. Common to pandas and cudf
+* Dask. Common to Dask and Dask Cudf.
+
+### Implementing functions
+One common job inside a function is handling what columns are going to be processed and where we are going to put the output data.
+For this, we create `optimus/helpers/columns/ prepare_columns` which give tools to developer to crete the output cols.
+See `prepare_columns` for more info 
+
+Always try to use the same Optimus functions to write the functions so it can be reused for all the engines.
+
  
  ## Working with databases in Dask
 For Dask you need to install some additional libraries to interact with databases
@@ -164,6 +188,15 @@ C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt
 
 From Anaconda Prompt
 
+## About Optimus and Bumblebee
+Bumblebee is just the frontend that interacts with Optimus via Jupyter Kernel Gateway.
+Bumblebee just sends python code that is executed by Jupyter.
+Bumblebee does not do any operation over the data. Just receive data a present it to the user.
+Optimus is the python library that connects to Dask, cudf, Spark to process data.
+Bumblebee is a frontend interface to present data in a way that can be easily handled by the user.
+
+
+ 
 ## About apply
 
 Process 
