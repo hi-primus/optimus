@@ -104,6 +104,30 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
+    def count_mismatch(columns_mismatch: dict = None):
+        pass
+
+    def join(self, df_right, *args, **kwargs):
+        """
+
+        :param df_right:
+        :param args:
+        :param kwargs:
+        how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :return:
+        """
+        df = self.df
+        col_on = kwargs.get("on")
+        # print(col_on)
+        if col_on:
+            ## Create a index using the join column to speed up the join in big datasets
+            df = df.set_index(col_on).join(df_right.set_index(col_on), *args, **kwargs).reset_index()
+        else:
+            df = df.join(df_right, *args, **kwargs)
+        return df
+
+    @staticmethod
+    @abstractmethod
     def move(column, position, ref_col=None):
         pass
 
@@ -460,7 +484,6 @@ class BaseColumns(ABC):
     @abstractmethod
     def cell(column):
         pass
-
 
     @staticmethod
     @abstractmethod
