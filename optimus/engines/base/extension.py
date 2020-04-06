@@ -208,7 +208,7 @@ class BaseExt(ABC):
         :return:
         """
 
-        return 0
+        pass
 
     def optimize(self):
         df = self.df
