@@ -64,7 +64,7 @@ def escape_columns(columns):
     return escaped_columns
 
 
-def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
+def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
     """
     Construct output columns base on the in put columns.
     If it receive a list of input columns and on output column the function will append the output_col name to the input cols list
@@ -94,6 +94,7 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
     :param input_cols:
     :param output_cols:
     :param merge:
+    :param auto_increment:
     :return:
     """
 
@@ -110,7 +111,7 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=None):
 
         # if auto_increment is not None:
 
-    if auto_increment is not None:
+    if auto_increment is True:
         # input_cols = input_cols * auto_increment
         output_cols = val_to_list(output_cols)
         # print("LEAN @", len(input_cols)/auto_increment)
@@ -275,7 +276,6 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
     else:
         input_cols = parse_columns(df, input_cols, False, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
-
         if output_cols is None and default is not None:
             output_cols = default
             merge = True
