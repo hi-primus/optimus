@@ -166,7 +166,7 @@ class BaseExt(ABC):
     def set_buffer(self, columns, n=BUFFER_SIZE):
         df = self.df
         input_columns = parse_columns(df, columns)
-        df._buffer = df[input_columns].head(n)
+        df._buffer = df[input_columns].head(n, npartitions=-1)
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
