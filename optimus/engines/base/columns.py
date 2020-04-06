@@ -1,7 +1,8 @@
+import string
 from abc import abstractmethod, ABC
 from enum import Enum
 
-from optimus.helpers.columns import parse_columns, check_column_numbers
+from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
 
@@ -106,6 +107,55 @@ class BaseColumns(ABC):
     @abstractmethod
     def count_mismatch(columns_mismatch: dict = None):
         pass
+
+    def patterns(self, input_cols, output_cols=None, mode=0):
+        """
+        Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
+        c = Any alpha char in lower or upper case form
+        l = Any alpha char in lower case
+        U = Any alpha char in upper case
+        * = Any alphanumeric in lower or upper case
+        ! = Any punctuation
+
+        :param input_cols:
+        :param output_cols:
+        :param mode:
+        0: Identify lower, upper, digits. Except spaces and special chars.
+        1: Identify chars, digits. Except spaces and special chars
+        2: Identify Any alphanumeric. Except spaces and special chars
+        3: Identify alphanumeric and special chars. Except white spaces
+        :return:
+        """
+        df = self.df
+
+        def split(word):
+            return [char for char in word]
+
+        alpha_lower = split(string.ascii_lowercase)
+        alpha_upper = split(string.ascii_uppercase)
+        digits = split(string.digits)
+        punctuation = split(string.punctuation)
+
+        if mode == 0:
+            search_by = alpha_lower + alpha_upper + digits
+            replace_by = ["l"] * len(alpha_lower) + ["U"] * len(alpha_upper) + ["#"] * len(digits)
+        elif mode == 1:
+            search_by = alpha_lower + alpha_upper + digits
+            replace_by = ["c"] * len(alpha_lower) + ["c"] * len(alpha_upper) + ["#"] * len(digits)
+        elif mode == 2:
+            search_by = alpha_lower + alpha_upper + digits
+            replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
+        elif mode == 3:
+            search_by = alpha_lower + alpha_upper + digits + punctuation
+            replace_by = ["*"] * len(alpha_lower + alpha_upper + digits + punctuation)
+
+        result = {}
+        columns = prepare_columns(df, input_cols, output_cols)
+
+        for input_col, output_col in columns:
+            result[input_col] = df[input_col].str.replace(search_by,
+                                                          replace_by).value_counts().to_pandas().to_dict()
+        return result
 
     def join(self, df_right, *args, **kwargs):
         """
