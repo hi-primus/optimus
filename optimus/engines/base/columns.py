@@ -9,6 +9,7 @@ from optimus.helpers.converter import format_dict
 
 # This implementation works for Spark, Dask, dask_cudf
 
+
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
 
@@ -107,6 +108,47 @@ class BaseColumns(ABC):
     @abstractmethod
     def count_mismatch(columns_mismatch: dict = None):
         pass
+
+    def round(self, input_cols, decimals, output_cols=None):
+        """
+
+        :param input_cols:
+        :param decimals:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        columns = prepare_columns(df, input_cols, output_cols)
+        for input_col, output_col in columns:
+            df[input_col] = df[output_col].round(decimals)
+        return df
+
+    def ceil(self, input_cols, output_cols=None):
+        """
+
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        columns = prepare_columns(df, input_cols, output_cols)
+        for input_col, output_col in columns:
+            df[input_col] = df[output_col].round()
+        return df
+
+    def floor(self, input_cols, output_cols=None):
+        """
+
+        :param input_cols:
+        :param decimals:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        columns = prepare_columns(df, input_cols, output_cols)
+        for input_col, output_col in columns:
+            df[input_col] = df[output_col].floor()
+        return df
 
     def patterns(self, input_cols, output_cols=None, mode=0):
         """
