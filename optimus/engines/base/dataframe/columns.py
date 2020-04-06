@@ -10,9 +10,7 @@ import pandas as pd
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
-# from sklearn.preprocessing import MinMaxScaler
 
-from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
@@ -22,6 +20,9 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import collect_as_dict
 from optimus.infer import is_
 from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
+
+
+# from sklearn.preprocessing import MinMaxScaler
 
 
 # Some expression accepts multiple columns at the same time.
@@ -57,8 +58,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
-
-
 
     @staticmethod
     def values_to_cols(input_cols):
@@ -364,12 +363,6 @@ class DataFrameBaseColumns(BaseColumns):
 
         df = df.meta.preserve(df, "drop", columns)
 
-        return df
-
-    def sort(self, order="asc", columns=None):
-        df = self.df
-        columns = val_to_list(columns)
-        df.sort_values(by=columns, ascending=True if order == "asc" else False)
         return df
 
     def keep(self, columns=None, regex=None):

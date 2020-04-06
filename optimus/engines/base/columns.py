@@ -5,9 +5,8 @@ from enum import Enum
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
-
-
 # This implementation works for Spark, Dask, dask_cudf
+from optimus.helpers.core import val_to_list
 
 
 class BaseColumns(ABC):
@@ -228,10 +227,21 @@ class BaseColumns(ABC):
     def keep(columns=None, regex=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def sort(order="asc", columns=None):
-        pass
+    def sort(self, input_cols=None, order: [str, list] = "asc"):
+        """
+
+        :param input_cols:
+        :param order:
+        :return:
+        """
+        df = self.df
+
+        columns = parse_columns(df, input_cols, )
+        order = val_to_list(order)
+        ascending = [True if _order == "asc" else False for _order in order]
+
+        df = df.sort_values(by=columns, ascending=ascending)
+        return df
 
     @staticmethod
     @abstractmethod

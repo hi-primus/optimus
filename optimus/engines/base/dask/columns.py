@@ -20,8 +20,6 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict, cudf_series_to_pandas
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import collect_as_dict
-from optimus.helpers.parser import compress_dict
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
@@ -427,10 +425,6 @@ class DaskBaseColumns(BaseColumns):
         df = df.meta.preserve(df, "drop", columns)
 
         return df
-
-    @staticmethod
-    def sort(order="asc", columns=None):
-        pass
 
     def keep(self, columns=None, regex=None):
         """

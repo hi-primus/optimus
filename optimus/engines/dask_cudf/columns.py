@@ -2,7 +2,6 @@ from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.core import val_to_list
 from optimus.infer import Infer
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -14,18 +13,6 @@ def cols(self: DaskCUDFDataFrame):
 
         def append(*args, **kwargs):
             return self
-
-        @staticmethod
-        def sort(order="asc", columns=None):
-            """
-            :param order:
-            :param columns:
-            :return:
-            """
-            df = self
-            columns = val_to_list(columns)
-            df.sort_values(by=columns, ascending=True if order == "asc" else False)
-            return df
 
         @staticmethod
         def mode(columns):
