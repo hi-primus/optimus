@@ -40,7 +40,7 @@ def ext(self: DataFrame):
 
         @staticmethod
         def cache():
-            pass
+            return self
 
         @staticmethod
         def sample(n=10, random=False):
