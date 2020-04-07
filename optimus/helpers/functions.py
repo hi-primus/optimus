@@ -632,4 +632,32 @@ def match_date(value):
 
     return "".join(exprs)
 
+
 # print("^" + match_date(value) + "$")
+
+def ipython_vars(globals_vars, dtype=None):
+    """
+    Return the list of data frames depending on the type
+    :param globals_vars: globals() from the notebook
+    :param dtype: 'pandas', 'cudf', 'dask' or 'dask_cudf'
+    :return:
+    """
+    tmp = globals_vars.copy()
+    vars = [(k, v, type(v)) for k, v in tmp.items() if
+            not k.startswith('_') and k != 'tmp' and k != 'In' and k != 'Out' and not hasattr(v, '__call__')]
+
+    if dtype == "dask_cudf":
+        from dask_cudf.core import DataFrame as DaskCUDFDataFrame
+        _dtype = DaskCUDFDataFrame
+    elif dtype == "cudf":
+        from cudf.core import DataFrame as CUDFDataFrame
+        _dtype = CUDFDataFrame
+    elif dtype == "dask":
+        from dask.dataframe.core import DataFrame
+        _dtype = DataFrame
+    elif dtype == "pandas":
+        import pandas as pd
+        PandasDataFrame = pd.DataFrame
+        _dtype = PandasDataFrame
+
+    return [name for name, instance, aa in vars if is_(instance, _dtype)]
