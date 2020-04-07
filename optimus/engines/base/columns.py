@@ -209,12 +209,29 @@ class BaseColumns(ABC):
         """
         df = self.df
         col_on = kwargs.get("on")
+        col_left = kwargs.get("left_on")
+        col_right = kwargs.get("right_on")
+
         # print(col_on)
+
+        col_index_left = None
+        col_index_right = None
+
         if col_on:
-            ## Create a index using the join column to speed up the join in big datasets
-            df = df.set_index(col_on).join(df_right.set_index(col_on), *args, **kwargs).reset_index()
-        else:
-            df = df.join(df_right, *args, **kwargs)
+            col_index_left = col_on
+            col_index_right = col_on
+
+        elif col_left and col_right:
+            col_index_left = col_left
+            col_index_right = col_right
+
+        df = df.set_index(col_index_left)
+        df_right.set_index(col_index_right)
+
+        ## Create a index using the join column to speed up the join in big datasets
+        df = df.merge(df_right, *args, **kwargs).reset_index()
+        # else:
+        #     df = df.merge(df_right, *args, **kwargs)
         return df
 
     @staticmethod
