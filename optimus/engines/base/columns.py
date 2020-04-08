@@ -225,13 +225,13 @@ class BaseColumns(ABC):
             col_index_left = col_left
             col_index_right = col_right
 
+        # print(col_index_right, col_index_left)
         df = df.set_index(col_index_left)
         df_right.set_index(col_index_right)
 
+        # print(df.index.name)
         ## Create a index using the join column to speed up the join in big datasets
-        df = df.merge(df_right, *args, **kwargs).reset_index()
-        # else:
-        #     df = df.merge(df_right, *args, **kwargs)
+        df = df.merge(df_right, *args, **kwargs)
         return df
 
     @staticmethod
