@@ -46,7 +46,8 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, *args,
+    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, cache=False,
+            *args,
             **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -59,16 +60,17 @@ class Load:
         :param charset:
         :param null_value:
         :param n_rows:
-        It requires one extra pass over the data. True default.
+        :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
-        :return dataFrame
         """
+
+        if cache is False:
+            prepare_path.cache_clear()
+
         file, file_name = prepare_path(path, "csv")
-        # print("---",path, file, file_name)
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
                              **kwargs)
-
             if n_rows > -1:
                 df = df.head(n_rows)
 
@@ -100,6 +102,46 @@ class Load:
             logger.print(error)
             raise
 
+        return df
+
+    @staticmethod
+    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, *args,
+            **kwargs):
+        file, file_name = prepare_path(path, "zip")
+
+        from zipfile import ZipFile
+        import dask.dataframe as dd
+        import os
+
+        wd = '/path/to/zip/files'
+        file_list = os.listdir(wd)
+        destdir = '/extracted/destination/'
+
+        ddf = dd.from_pandas(pd.DataFrame())
+
+        for f in file_list:
+            with ZipFile(wd + f, "r") as zip:
+                print(zip.namelist())
+                zip.extractall(destdir, None, None)
+                df = dd.read_csv(zip.namelist(), usecols=['Enter', 'Columns', 'Here'], parse_dates=['Date'])
+                ddf = ddf.append(df)
+
+        ddf.compute()
+
+        # print("---",path, file, file_name)
+        try:
+            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
+                             compression="gzip", *args,
+                             **kwargs)
+
+            if n_rows > -1:
+                df = df.head(n_rows)
+
+            df.meta.set("file_name", file_name)
+        except IOError as error:
+            logger.print(error)
+            raise
+        df.ext.reset()
         return df
 
     @staticmethod

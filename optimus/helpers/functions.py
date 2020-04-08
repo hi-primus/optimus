@@ -1,3 +1,4 @@
+import functools
 import collections
 import ntpath
 import os
@@ -497,9 +498,14 @@ def downloader(url, file_format):
     return path
 
 
+
+
+
+@functools.lru_cache(maxsize=128)
 def prepare_path(path, file_format):
     """
-    Helper to return the file to be loaded and the file name
+    Helper to return the file to be loaded and the file name.
+    This will memoise
     :param path: Path to the file to be loaded
     :param file_format: format file
     :return:
