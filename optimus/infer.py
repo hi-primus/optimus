@@ -320,7 +320,7 @@ class Infer(object):
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
         # print(dtypes[col_name])
-        # Cehck 'string' for Spark, 'object' for Dask
+        # Check 'string' for Spark, 'object' for Dask
         if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
 
             if isinstance(value, bool):

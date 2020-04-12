@@ -1,5 +1,5 @@
-import functools
 import collections
+import functools
 import ntpath
 import os
 import random
@@ -496,9 +496,6 @@ def downloader(url, file_format):
     logger.print("Creating DataFrame for %s. Please wait...", data_name)
 
     return path
-
-
-
 
 
 @functools.lru_cache(maxsize=128)

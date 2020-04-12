@@ -98,6 +98,7 @@ def cols(self: DataFrame):
                     result = func(columns, args, df=df)
 
             return result
+
         @staticmethod
         def exec_agg(exprs):
             return exprs
@@ -168,6 +169,7 @@ def cols(self: DataFrame):
             df = self.df
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
+
             search = val_to_list(search)
             if search_by == "chars":
                 _regex = search
@@ -184,9 +186,8 @@ def cols(self: DataFrame):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 if search_by == "chars" or search_by == "words":
-                    # This is only implemented in Cudf
+                    # This is only implemented in cudf
                     df[output_col] = df[input_col].str.replace_multi(search, replace_by, regex=False)
-                    # df[input_col] = df[input_col].str.replace(_regex, replace_by)
                     # df[input_col] = df[input_col].str.replace(search, replace_by)
                 elif search_by == "full":
                     df[output_col] = df[input_col].replace(search, replace_by)

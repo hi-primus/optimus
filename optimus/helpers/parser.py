@@ -79,7 +79,6 @@ def parse_dtypes(df, value):
         value = [value]
     try:
         data_type = [df.constants.DTYPES_DICT[df.constants.SHORT_DTYPES[v]] for v in value]
-        # print(data_type)
     except KeyError:
         data_type = value
 
@@ -87,6 +86,4 @@ def parse_dtypes(df, value):
         result = data_type[0]
     else:
         result = data_type
-
-    # print(type(result))
     return result
