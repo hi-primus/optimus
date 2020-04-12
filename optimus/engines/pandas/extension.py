@@ -54,7 +54,9 @@ def ext(self: DataFrame):
             for col_name in columns:
                 stats = {}
 
-                stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
+                # stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
+                stats["stats"] = df.cols.count_by_dtypes(col_name)[col_name]
+
                 col_dtype = df[col_name].dtype
                 if col_dtype == np.float64 or df[col_name].dtype == np.int64:
                     stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)})

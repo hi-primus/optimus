@@ -12,6 +12,7 @@ from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_i
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.core import val_to_list
+from optimus.helpers.parser import parse_dtypes
 from optimus.infer import is_list, is_str, is_object
 
 DataFrame = pd.DataFrame
@@ -348,6 +349,8 @@ def cols(self: DataFrame):
                 elif d_type == "object":
                     return is_object
 
+            dtype = parse_dtypes(df, dtype)
+            # print("aAAsdf",dtype)
             f = func(dtype)
             if f is not None:
                 for col_name in columns:
@@ -396,15 +399,22 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+        def count_by_dtypes(columns, dtype):
             df = self
             result = {}
             df_len = len(df)
-            for col_name, na in df.cols.count_na(columns).items():
-                result[col_name] = {"no_missing": df_len - na, "missing": na, "mismatches": 0}
-            return result
+            for col_name, na_count in df.cols.count_na(columns).items():
+                # for i, j in df.constants.DTYPES_DICT.items():
+                #     if j == df[col_name].dtype.type:
+                #         _dtype = df.constants.SHORT_DTYPES[i]
 
-            # return np.count_nonzero(df.isnull().values.ravel())
+                # _dtype = df.cols.dtypes(col_name)[col_name]
+
+                mismatches_count = df.cols.is_match(col_name, dtype).value_counts().to_dict().get(False)
+                mismatches_count = 0 if mismatches_count is None else mismatches_count
+                result[col_name] = {"no_missing": df_len - na_count, "missing": na_count,
+                                    "mismatches": mismatches_count - na_count}
+            return result
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
