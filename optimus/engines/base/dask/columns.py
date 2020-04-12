@@ -6,6 +6,7 @@ import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
@@ -15,10 +16,10 @@ from sklearn.preprocessing import MinMaxScaler
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function, is_pandas_series
+from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.converter import format_dict, cudf_series_to_pandas
+from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
 from optimus.infer import is_
@@ -32,27 +33,105 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def frequency(self, columns, n=10, percentage=False, total_rows=None):
+    def frequency(self, columns, n=10, percentage=False, total_rows=None, total_count=False):
+
         df = self.df
         columns = parse_columns(df, columns)
-        result = {}
-        lazy_results = [df[col_name].value_counts().nlargest(n) for col_name in columns]
-        temp_result = dd.compute(*lazy_results)
 
-        for temp_result_col in temp_result:
-            if not is_pandas_series(temp_result_col):
-                temp_result_col = cudf_series_to_pandas(temp_result_col)
-            for i, j in temp_result_col.iteritems():
-                result.setdefault(temp_result_col.name, []).append({"value": i, "count": j})
+        @delayed
+        def df_to_dict(_df, _total_freq_count=False):
 
-        if percentage is True:
-            if total_rows is None:
-                total_rows = df.rows.count()
-            for value_counts in result.values():
-                for value_count in value_counts:
-                    value_count["percentage"] = round((value_count["count"] * 100 / total_rows), 2)
+            result = [{"value": i, "count": j} for i, j in _df.to_dict().items()]
 
-        return result
+            if _total_freq_count is True:
+                result = {_df.name: {"frequency": result}}
+            else:
+                result = {_df.name: {"frequency": result, "total_count": _total_freq_count}}
+
+            return result
+
+        @delayed
+        def flat_dict(top_n):
+
+            result = {key: value for ele in top_n for key, value in ele.items()}
+            return result
+
+        @delayed
+        def freq_percentage(_value_counts, _total_rows):
+
+            for i, j in _value_counts.items():
+                for x in list(j.values())[0]:
+                    x["percentage"] = round((x["count"] * 100 / _total_rows), 2)
+
+            return _value_counts
+
+        value_counts = [df[col_name].value_counts().to_delayed()[0] for col_name in columns]
+
+        n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
+
+        if total_count is True:
+            total_count = [_value_counts.count() for _value_counts in value_counts]
+            b = [df_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, total_count)]
+        else:
+            b = [df_to_dict(_n_largest) for _n_largest in n_largest]
+
+        c = flat_dict(b)
+
+        if percentage:
+            c = freq_percentage(c, delayed(len)(df))
+
+        return c
+
+    def hist(self, columns, buckets=20):
+
+        df = self.df
+
+        columns = parse_columns(df, columns)
+
+        @delayed
+        def min_col(_min):
+            return _min.to_dict()
+
+        @delayed
+        def max_col(_max):
+            return _max.to_dict()
+
+        @delayed
+        def bins_col(_columns, _min, _max):
+            return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=10)) for col_name in _columns}
+
+        _min = min_col(df[columns].min().to_delayed()[0])
+        _max = max_col(df[columns].max().to_delayed()[0])
+        _bins = bins_col(columns, _min, _max)
+
+        @delayed
+        def hist(pdf, col_name, _bins):
+            _hist, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
+            return pd.Series({col_name: list(_hist)})
+
+        @delayed
+        def agg_hist(pdf, _bins):
+            r = pdf.groupby(pdf.index).sum().to_dict()
+            # r = [{"lower": c[i], "upper": c[i + 1]} for i, j in zip(range(0, len(c) - 1), c) for c in r.values()]
+            result = {}
+            for col_name, c in r.items():
+                r = []
+                for i, j in zip(range(0, len(c) - 1), c):
+                    r.append({"count": c[i], "lower": c[i], "upper": c[i + 1]})
+                result[col_name] = {"hist":r}
+            return result
+            # return r
+
+        @delayed
+        def to_dict(value):
+            return value.to_dict()
+
+        partitions = df.to_delayed()
+        c = [hist(part, col_name, _bins) for part in partitions for col_name in columns]
+
+        d = agg_hist(dd.from_delayed(c), _bins)
+
+        return d
 
     @staticmethod
     def mode(columns):
