@@ -14,7 +14,7 @@ seaborn==0.9.0
 deprecated==1.2.5
 setuptools>=41.6.0
 pyarrow>=0.14.1
-Jinja2==2.10.1
+Jinja2==2.11.2
 tensorflow>=1.14.0
 keras>=2.2.5
 pygments>=2.1.3
