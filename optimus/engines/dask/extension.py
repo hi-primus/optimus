@@ -61,10 +61,31 @@ def ext(self: DataFrame):
             from dask import delayed
 
             @delayed
-            def merge(_hist, _freq):
-                return {**_hist, **_freq}
+            def merge(_columns, _hist, _freq, _rows_count):
+                _h = {}
+                r = {}
+                # for col_name in columns:
+                for col_name, h in _hist.items():
+                    r[col_name] = {}
+                    r[col_name]["stats"] = {}
+                    r[col_name]["missing"] = 1
+                    r[col_name]["mismatch"] = 1
+                    r[col_name]["null"] = 0
 
-            return merge(hist, freq)
+                    r[col_name]["stats"]["hist"] = h["hist"]
+
+                for col_name, h in _freq.items():
+                    r[col_name] = {}
+                    r[col_name]["stats"] = {}
+                    r[col_name]["missing"] = 1
+                    r[col_name]["mismatch"] = 1
+                    r[col_name]["null"] = 0
+
+                    r[col_name]["stats"]["frequency"] = h["frequency"]
+
+                return {"columns": r, "stats": {"rows_count": _rows_count}}
+
+            return merge(columns, hist, freq, df_length)
             # return  freq
 
             # "count_uniques": len(df[col_name].value_counts())})

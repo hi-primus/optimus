@@ -94,8 +94,6 @@ def functions(self):
                 _serie = df[col_name].to_numpy()
                 if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
 
-                    # _min, _max = _min_max[col_name]["min"], _min_max[col_name]["min"]
-                    # i, j = numba_histogram(_serie, bins=buckets, range=(_min, _max), )
                     i, j = numba_histogram(_serie, bins=buckets)
 
                     result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
