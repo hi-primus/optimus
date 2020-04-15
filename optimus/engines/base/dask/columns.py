@@ -117,7 +117,7 @@ class DaskBaseColumns(BaseColumns):
             for col_name, c in r.items():
                 r = []
                 for i, j in zip(range(0, len(c) - 1), c):
-                    r.append({"count": c[i], "lower": c[i], "upper": c[i + 1]})
+                    r.append({"count": int(c[i]), "lower": float(c[i]), "upper": float(c[i + 1])})
                 result[col_name] = {"hist":r}
             return result
             # return r
