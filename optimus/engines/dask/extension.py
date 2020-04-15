@@ -2,9 +2,11 @@ from dask.dataframe.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import Actions
 from optimus.helpers.functions import random_int
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_list_of_str, is_dict
 
 
 def ext(self: DataFrame):
@@ -21,11 +23,9 @@ def ext(self: DataFrame):
             return df.persist()
 
         @staticmethod
-        def profile(columns, lower_bound=None, upper_bound=None, bins=10, output=None):
+        def profile(columns, bins=10, output=None):
             """
 
-            :param lower_bound:
-            :param upper_bound:
             :param columns:
             :param bins:
             :param output:
@@ -34,20 +34,6 @@ def ext(self: DataFrame):
 
             df = self
             df_length = len(df)
-
-            if lower_bound is None:
-                lower_bound = 0
-
-            if lower_bound < 0:
-                lower_bound = 0
-
-            if upper_bound is None:
-                upper_bound = len(df)
-
-            if upper_bound > df_length:
-                upper_bound = df_length
-
-            df = self[lower_bound:upper_bound]
 
             columns = parse_columns(df, columns)
             result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
@@ -257,3 +243,131 @@ def ext(self: DataFrame):
 
 
 DataFrame.ext = property(ext)
+
+
+def is_cached(self):
+    """
+
+    :return:
+    """
+    return len(self.output_columns) > 0
+
+
+def cols_needs_profiling(self, df, columns):
+    """
+    Calculate the columns that needs to be profiled.
+    :return:
+    """
+    # Metadata
+    # If not empty the profiler already run.
+    # So process the dataframe's metadata to get which columns need to be profiled
+
+    actions = df.meta.get("transformations.actions")
+    are_actions = actions is not None and len(actions) > 0
+
+    # Process actions to check if any column must be processed
+    if self.is_cached():
+        if are_actions:
+
+            drop = ["drop"]
+
+            def match_actions_names(_actions):
+                """
+                Get a list of columns which have been applied and specific action.
+                :param _actions:
+                :return:
+                """
+
+                _actions_json = df.meta.get("transformations.actions")
+
+                modified = []
+                for action in _actions:
+                    if _actions_json.get(action):
+                        # Check if was renamed
+                        col = _actions_json.get(action)
+                        if len(match_renames(col)) == 0:
+                            _result = col
+                        else:
+                            _result = match_renames(col)
+                        modified = modified + _result
+
+                return modified
+
+            def match_renames(_col_names):
+                """
+                Get a list fo columns and return the renamed version.
+                :param _col_names:
+                :return:
+                """
+                _renamed_columns = []
+                _actions = df.meta.get("transformations.actions")
+                _rename = _actions.get("rename")
+
+                def get_name(_col_name):
+                    c = _rename.get(_col_name)
+                    # The column has not been rename. Get the actual column name
+                    if c is None:
+                        c = _col_name
+                    return c
+
+                if _rename:
+                    # if a list
+                    if is_list_of_str(_col_names):
+                        for _col_name in _col_names:
+                            # The column name has been changed. Get the new name
+                            _renamed_columns.append(get_name(_col_name))
+                    # if a dict
+                    if is_dict(_col_names):
+                        for _col1, _col2 in _col_names.items():
+                            _renamed_columns.append({get_name(_col1): get_name(_col2)})
+
+                else:
+                    _renamed_columns = _col_names
+                return _renamed_columns
+
+            # New columns
+            new_columns = []
+
+            current_col_names = df.cols.names()
+            renamed_cols = match_renames(df.meta.get("transformations.columns"))
+            for current_col_name in current_col_names:
+                if current_col_name not in renamed_cols:
+                    new_columns.append(current_col_name)
+
+            # Rename keys to match new names
+            profiler_columns = self.output_columns["columns"]
+            actions = df.meta.get("transformations.actions")
+            rename = actions.get("rename")
+            if rename:
+                for k, v in actions["rename"].items():
+                    profiler_columns[v] = profiler_columns.pop(k)
+                    profiler_columns[v]["name"] = v
+
+            # Drop Keys
+            for col_names in match_actions_names(drop):
+                profiler_columns.pop(col_names)
+
+            # Copy Keys
+            copy_columns = df.meta.get("transformations.actions.copy")
+            if copy_columns is not None:
+                for source, target in copy_columns.items():
+                    profiler_columns[target] = profiler_columns[source].copy()
+                    profiler_columns[target]["name"] = target
+                # Check is a new column is a copied column
+                new_columns = list(set(new_columns) - set(copy_columns.values()))
+
+            # Actions applied to current columns
+
+            modified_columns = match_actions_names(Actions.list())
+            calculate_columns = modified_columns + new_columns
+
+            # Remove duplicated.
+            calculate_columns = list(set(calculate_columns))
+
+        elif not are_actions:
+            calculate_columns = None
+        # elif not is_cached:
+    else:
+        calculate_columns = columns
+
+    return calculate_columns
