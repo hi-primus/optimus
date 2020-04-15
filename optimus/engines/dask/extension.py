@@ -89,7 +89,7 @@ def ext(self: DataFrame):
 
                 return {"columns": r, "stats": {"rows_count": _rows_count}}
 
-            return merge(columns, hist, freq, df_length, output)
+            return merge(columns, hist, freq, df_length, output).compute()
             # return  freq
 
             # "count_uniques": len(df[col_name].value_counts())})
