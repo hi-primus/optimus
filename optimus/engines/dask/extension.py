@@ -3,6 +3,7 @@ from dask.dataframe.core import DataFrame
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
+from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -61,7 +62,7 @@ def ext(self: DataFrame):
             from dask import delayed
 
             @delayed
-            def merge(_columns, _hist, _freq, _rows_count):
+            def merge(_columns, _hist, _freq, _rows_count, output):
                 _h = {}
                 r = {}
                 # for col_name in columns:
@@ -83,9 +84,12 @@ def ext(self: DataFrame):
 
                     r[col_name]["stats"]["frequency"] = h["frequency"]
 
+                if output == "json":
+                    r = dump_json(r)
+
                 return {"columns": r, "stats": {"rows_count": _rows_count}}
 
-            return merge(columns, hist, freq, df_length)
+            return merge(columns, hist, freq, df_length, output)
             # return  freq
 
             # "count_uniques": len(df[col_name].value_counts())})
