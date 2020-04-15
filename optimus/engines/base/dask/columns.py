@@ -80,7 +80,7 @@ class DaskBaseColumns(BaseColumns):
         if percentage:
             c = freq_percentage(c, delayed(len)(df))
 
-        return c
+        return c.compute()
 
     def hist(self, columns, buckets=20):
 
@@ -118,7 +118,7 @@ class DaskBaseColumns(BaseColumns):
                 r = []
                 for i, j in zip(range(0, len(c) - 1), c):
                     r.append({"count": int(c[i]), "lower": float(c[i]), "upper": float(c[i + 1])})
-                result[col_name] = {"hist":r}
+                result[col_name] = {"hist": r}
             return result
             # return r
 
@@ -131,7 +131,7 @@ class DaskBaseColumns(BaseColumns):
 
         d = agg_hist(dd.from_delayed(c), _bins)
 
-        return d
+        return d.compute()
 
     @staticmethod
     def mode(columns):
