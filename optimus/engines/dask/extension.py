@@ -294,8 +294,8 @@ def ext(self: DataFrame):
             :return:
             """
             # print("is_cache", df.output_columns)
-            # return False if df.meta.get("profile") is None else True
-            return False
+            return False if df.meta.get("profile") is None else True
+            # return False
 
         def cols_needs_profiling(self, df, columns):
             """
