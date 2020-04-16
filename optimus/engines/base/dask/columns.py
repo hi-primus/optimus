@@ -11,6 +11,7 @@ from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
+from numba import jit
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
@@ -27,7 +28,9 @@ from optimus.profiler.functions import fill_missing_var_types
 
 
 # This implementation works for Dask and dask_cudf
-
+@jit
+def _min(value):
+    return np.min(value)
 class DaskBaseColumns(BaseColumns):
 
     def __init__(self, df):
@@ -601,6 +604,29 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
+    def min(self, columns):
+        df = self.df
+
+        columns = parse_columns(df, columns)
+        partitions = df.to_delayed()
+
+        @delayed
+        def func(_df, col_name):
+            if _df[col_name].dtype != "O":
+                # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+                return pd.DataFrame({"col_name": col_name, "min": np.min(_df[col_name].to_numpy())},
+                                    index=[0])
+
+        #         return pd.Series({col_name:df[col_name].min(),col_name:df[col_name].max()})
+
+        delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
+
+        # print(delayed_parts)
+        c = pd.concat(dd.compute(*delayed_parts))
+        d = c.groupby(["col_name"]).min()["min"].to_dict()
+        # e = c.groupby(["col_name"]).max()["max"].to_dict()
+        return d
+
     @dispatch(list)
     def copy(self, columns) -> DataFrame:
         return self.copy(columns=columns)
@@ -922,7 +948,6 @@ class DaskBaseColumns(BaseColumns):
 
         for input_col, output_col in zip(input_cols, output_cols):
             partitions = df[input_col].to_delayed()
-            # print("aAA3", args)
             temp = [dask.delayed(func)(part, args)
                     for part in partitions]
             result[output_col] = from_delayed(temp)
