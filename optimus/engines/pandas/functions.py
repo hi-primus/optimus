@@ -101,7 +101,7 @@ def functions(self):
                     r = []
                     for idx, v in enumerate(j):
                         if idx < len(j) - 1:
-                            r.append({"count": i[idx], "lower": j[idx], "upper": j[idx + 1]})
+                            r.append({"count": float(i[idx]), "lower": float(j[idx]), "upper": float(j[idx + 1])})
 
                     f = {col_name: {"hist": r}}
                     result.update(f)
