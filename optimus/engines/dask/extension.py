@@ -38,18 +38,17 @@ def ext(self: DataFrame):
             """
 
             df = self
-
             df_length = len(df)
 
-            cols_to_profile = self.ext.cols_needs_profiling(df, columns)
+            cols_to_profile = df.ext.cols_needs_profiling(df, columns)
             columns = parse_columns(df, columns)
 
-            output_columns = df.output_columns
+            output_columns = df.meta.get("profile")
 
-            df = self
             result = {}
             result["columns"] = {}
-            if cols_to_profile or not df.ext.is_cached():
+
+            if cols_to_profile or not Ext.is_cached(df):
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
@@ -93,7 +92,7 @@ def ext(self: DataFrame):
 
                 data_set_info = {'cols_count': len(df.columns),
                                  'rows_count': df.rows.count(),
-                                 'size': df.ext.size(format = "human")}
+                                 'size': df.ext.size(format="human")}
 
                 assign(output_columns, "summary", data_set_info, dict)
                 # result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
@@ -117,7 +116,8 @@ def ext(self: DataFrame):
             df = df.meta.set(value={})
             df = df.meta.columns(df.cols.names())
 
-            df.output_columns = output_columns
+            df.meta.set("profile", output_columns)
+
             df.meta.set("transformations.actions", {})
 
             return output_columns
@@ -287,13 +287,15 @@ def ext(self: DataFrame):
 
             raise NotImplementedError
 
-        def is_cached(self, df):
+        @staticmethod
+        def is_cached(df):
             """
 
             :return:
             """
-            print("is_cache", df.output_columns)
-            return len(df.output_columns) > 0
+            # print("is_cache", df.output_columns)
+            # return False if df.meta.get("profile") is None else True
+            return False
 
         def cols_needs_profiling(self, df, columns):
             """
@@ -308,8 +310,7 @@ def ext(self: DataFrame):
             are_actions = actions is not None and len(actions) > 0
 
             # Process actions to check if any column must be processed
-            if df.ext.is_cached(df):
-                print("is cached")
+            if Ext.is_cached(df):
                 if are_actions:
                     drop = ["drop"]
 
@@ -377,7 +378,7 @@ def ext(self: DataFrame):
                             new_columns.append(current_col_name)
 
                     # Rename keys to match new names
-                    profiler_columns = df.output_columns["columns"]
+                    profiler_columns = df.meta.get("profile")["columns"]
                     actions = df.meta.get("transformations.actions")
                     rename = actions.get("rename")
                     if rename:
