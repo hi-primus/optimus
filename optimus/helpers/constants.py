@@ -54,10 +54,16 @@ class Actions(Enum):
         return list(map(lambda c: c.value, Actions))
 
 
+class ProfilerDataTypesQuality(Enum):
+    MISMATCH = 0
+    MISSING = 1
+    NO_MISMATCH = 2
+
+
 class ProfilerDataTypes(Enum):
     INT = "int"
     DECIMAL = "decimal"
-    TRIM = "string"
+    STRING = "string"
     BOOLEAN = "boolean"
     DATE = "date"
     ARRAY = "array"

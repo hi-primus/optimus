@@ -1,6 +1,5 @@
 import re
 
-import fastnumbers
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
@@ -13,7 +12,7 @@ from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import parse_dtypes
-from optimus.infer import is_list, is_str, is_object
+from optimus.infer import is_list, is_str, profiler_dtype_func
 
 DataFrame = pd.DataFrame
 
@@ -333,25 +332,8 @@ def cols(self: DataFrame):
             df = self
             columns = parse_columns(df, columns)
 
-            from optimus.infer import is_bool, is_list
-
-            def func(d_type):
-                if d_type == "bool":
-                    return is_bool
-                elif d_type == "int":
-                    return fastnumbers.isint
-                elif d_type == "float":
-                    return fastnumbers.isfloat
-                elif d_type == "list":
-                    return is_list
-                elif d_type == "str":
-                    return is_str
-                elif d_type == "object":
-                    return is_object
-
             dtype = parse_dtypes(df, dtype)
-            # print("aAAsdf",dtype)
-            f = func(dtype)
+            f = profiler_dtype_func(dtype)
             if f is not None:
                 for col_name in columns:
                     df = df[col_name].apply(f)
@@ -412,8 +394,8 @@ def cols(self: DataFrame):
 
                 mismatches_count = df.cols.is_match(col_name, dtype).value_counts().to_dict().get(False)
                 mismatches_count = 0 if mismatches_count is None else mismatches_count
-                result[col_name] = {"no_missing": df_len - na_count, "missing": na_count,
-                                    "mismatches": mismatches_count - na_count}
+                result[col_name] = {"match": df_len - na_count, "missing": na_count,
+                                    "mismatch": mismatches_count - na_count}
             return result
 
         @staticmethod

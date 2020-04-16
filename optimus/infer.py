@@ -2,12 +2,12 @@
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
 # This can not import any optimus file unless it's imported via addPyFile
 import datetime
-import math
 import os
 import re
 from ast import literal_eval
 
 import fastnumbers
+import math
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 from dateutil.parser import parse as dparse
@@ -16,8 +16,8 @@ from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
-
 # This function return True or False if a string can be converted to any datatype.
+from optimus.helpers.constants import ProfilerDataTypes
 
 
 def str_to_boolean(_value):
@@ -367,6 +367,26 @@ class Infer(object):
             return _data_type
 
 
+def profiler_dtype_func(dtype):
+    """
+    Return a function that check if a value match a datatype
+    :param dtype:
+    :return:
+    """
+    if dtype == ProfilerDataTypes.BOOLEAN.value:
+        return is_bool
+    elif dtype == ProfilerDataTypes.INT.value:
+        return fastnumbers.isint
+    elif dtype == ProfilerDataTypes.DECIMAL.value:
+        return fastnumbers.isfloat
+    elif dtype == ProfilerDataTypes.ARRAY.value:
+        return is_list
+    elif dtype == ProfilerDataTypes.STRING.value:
+        return is_str
+    elif dtype == ProfilerDataTypes.OBJECT.value:
+        return is_object
+
+
 def is_nan(value):
     """
     Check if a value is nan
@@ -680,6 +700,7 @@ def is_str(value):
     """
     return isinstance(value, str)
 
+
 def is_object(value):
     """
     Check if an object is a string
@@ -687,6 +708,7 @@ def is_object(value):
     :return:
     """
     return isinstance(value, str)
+
 
 def is_list_of_futures(value):
     """

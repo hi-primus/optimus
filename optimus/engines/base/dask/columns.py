@@ -18,10 +18,10 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -32,6 +32,52 @@ class DaskBaseColumns(BaseColumns):
 
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
+
+    def count_mismatch(self, columns_mismatch: dict = None):
+        df = self.df
+
+        @delayed
+        def func(_df, _col_name, _func_dtype):
+
+            def _func(value):
+                # null values
+                if pd.isnull(value):
+                    return ProfilerDataTypesQuality.MISSING.value
+
+                # match data type
+                elif _func_dtype(value):
+                    return ProfilerDataTypesQuality.NO_MISMATCH.value
+
+                # mismatch
+                else:
+                    return ProfilerDataTypesQuality.MISMATCH.value
+
+            return _df[_col_name].apply(_func).value_counts()
+
+        partitions = df.to_delayed()
+        delayed_parts = [func(part, col_name, profiler_dtype_func(dtype)) for part in partitions for col_name, dtype in
+                         columns_mismatch.items()]
+
+        @delayed
+        def merge(value):
+            return [{v.name: v.to_dict()} for v in value]
+
+        b = merge(delayed_parts)
+
+        c = dd.compute(b)[0]
+
+        # Flat dict
+        c = {x: y for b in c for x, y in b.items()}
+
+        def none_to_zero(value):
+            return value if value is not None else 0
+
+        result = {}
+        for col_name, values in c.items():
+            result[col_name] = {"mismatch": none_to_zero(values.get(0)), "missing": none_to_zero(values.get(1)),
+                                "match": none_to_zero(values.get(2))}
+
+        return result
 
     def frequency(self, columns, n=10, percentage=False, total_rows=None, total_count=False):
 
@@ -202,9 +248,9 @@ class DaskBaseColumns(BaseColumns):
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    @staticmethod
-    def count_mismatch(columns_mismatch: dict = None):
-        pass
+    # @staticmethod
+    # def count_mismatch(columns_mismatch: dict = None):
+    #     pass
 
     def count(self):
         df = self.df

@@ -176,7 +176,7 @@ class Profiler:
         """
         # Metadata
         # If not empty the profiler already run.
-        # So process the dataframe's metadata to be sure which columns need to be profiled
+        # So process the dataframe's metadata to get which columns need to be profiled
 
         actions = df.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
