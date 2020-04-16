@@ -98,7 +98,6 @@ def ext(self: DataFrame):
                 assign(output_columns, "summary", data_set_info, dict)
                 # result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
 
-
                 # Nulls
                 total_count_na = 0
                 a = df.cols.count_mismatch({"INCIDENT_NUMBER": "int", "OFFENSE_CODE": "int"})
@@ -218,13 +217,16 @@ def ext(self: DataFrame):
             raise NotImplementedError
 
         @staticmethod
-        def size(deep=False):
+        def size(deep=False, format="human"):
             """
             Get the size of a dask in bytes
             :return:
             """
             df = self
             result = df.memory_usage(index=True, deep=deep).sum().compute()
+            if format == "human":
+                result = humanize.naturalsize(result)
+                
             return result
 
         @staticmethod
