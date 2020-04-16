@@ -190,7 +190,10 @@ class BaseExt(ABC):
             upper_bound = df_length
 
         if lower_bound >= df_length:
-            RaiseIt.value_error(df_length, str(df_length - 1))
+            diff = upper_bound - lower_bound
+            lower_bound= df_length - diff
+            upper_bound= df_length
+            # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(df, columns)
         return df[input_columns][lower_bound: upper_bound]
