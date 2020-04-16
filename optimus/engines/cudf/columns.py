@@ -314,7 +314,7 @@ def cols(self: DataFrame):
             result = {}
             df_len = len(df)
             for col_name, na in df.cols.count_na(columns).items():
-                result[col_name] = {"no_missing": df_len - na, "missing": na, "mismatches": 0}
+                result[col_name] = {"match": df_len - na, "missing": na, "mismatches": 0}
             return result
 
             # return np.count_nonzero(df.isnull().values.ravel())
