@@ -93,7 +93,7 @@ def ext(self: DataFrame):
 
                 data_set_info = {'cols_count': len(df.columns),
                                  'rows_count': df.rows.count(),
-                                 'size': humanize.naturalsize(df.ext.size())}
+                                 'size': df.ext.size(format = "human")}
 
                 assign(output_columns, "summary", data_set_info, dict)
                 # result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
@@ -217,7 +217,7 @@ def ext(self: DataFrame):
             raise NotImplementedError
 
         @staticmethod
-        def size(deep=False, format="human"):
+        def size(deep=False, format=None):
             """
             Get the size of a dask in bytes
             :return:
@@ -226,7 +226,7 @@ def ext(self: DataFrame):
             result = df.memory_usage(index=True, deep=deep).sum().compute()
             if format == "human":
                 result = humanize.naturalsize(result)
-                
+
             return result
 
         @staticmethod
