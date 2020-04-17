@@ -52,14 +52,16 @@ def ext(self: DataFrame):
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
-                numeric_cols = df.cols.names(filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-                string_cols = df.cols.names(filter_by_column_dtypes=df.constants.STRING_TYPES)
+                numeric_cols = df.cols.names(cols_to_profile,filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+                string_cols = df.cols.names(cols_to_profile,filter_by_column_dtypes=df.constants.STRING_TYPES)
                 hist = None
                 if numeric_cols is not None:
                     hist = df.cols.hist(numeric_cols, buckets=bins)
 
                 freq = None
                 if string_cols is not None:
+                    # print("STRING COLS", string_cols)
+                    # print("NNN",bins)
                     freq = df.cols.frequency(string_cols, n=bins)
 
                 @delayed
@@ -84,9 +86,6 @@ def ext(self: DataFrame):
                             r[col_name].update(mismatch[col_name])
 
                             r[col_name]["stats"]["frequency"] = f["frequency"]
-
-                    if _output == "json":
-                        r = dump_json(r)
 
                     return {"columns": r, "stats": {"rows_count": _rows_count}}
 
@@ -123,6 +122,9 @@ def ext(self: DataFrame):
             df.meta.set("profile", output_columns)
 
             df.meta.set("transformations.actions", {})
+
+            if output == "json":
+                output_columns = dump_json(output_columns)
 
             return output_columns
             # return  freq
