@@ -439,7 +439,6 @@ def cols(self: DataFrame):
             columns = prepare_columns(df, input_cols, output_cols, merge=True)
 
             for input_col, output_col in columns:
-                print("ASDfads")
                 x = df[[input_col]]
                 est = KBinsDiscretizer(n_bins=splits, encode='ordinal', strategy='uniform')
                 est.fit(input_col)
@@ -492,6 +491,20 @@ def cols(self: DataFrame):
         def count(self):
             df = self.df
             return len(df)
+
+        @staticmethod
+        def h_freq(columns):
+            df = self
+            columns = parse_columns(df, columns)
+            result = {}
+            for col_name in columns:
+                df["hash"] = df[col_name].apply(hash)
+                m = df["hash"].value_counts().nlargest().to_dict()
+
+                # print(m)
+                for l, n in m.items():
+                    print(df[df["hash"] == l].iloc[0][col_name], n)
+                return
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):

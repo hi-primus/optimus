@@ -82,6 +82,30 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
+    def h_freq(self, columns):
+        from dask import dataframe as dd
+        from dask import delayed
+
+        col_name = "OFFENSE_CODE_GROUP"
+        # columns =["OFFENSE_CODE_GROUP"]
+        result = {}
+
+        @delayed
+        def func(df):
+            df["hash"] = df[col_name].apply(hash)
+            return df
+
+        partitions = df.to_delayed()
+
+        for col_name in columns:
+            delayed_parts = [func(part) for part in partitions]
+        #     m = df["hash"].value_counts().nlargest().to_dict()
+
+        #     # print(m)
+        #     for l, n in m.items():
+        #         print(df[df["hash"] == l].iloc[0][col_name], n)
+        dd.from_delayed(delayed_parts).compute()
+
     def frequency(self, columns, n=10, percentage=False, total_rows=None, total_count=False):
 
         df = self.df
