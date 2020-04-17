@@ -11,7 +11,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.functions import random_int
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str, is_dict
+from optimus.infer import is_list_of_str, is_dict, Infer
 
 
 def ext(self: DataFrame):
@@ -38,7 +38,6 @@ def ext(self: DataFrame):
             """
 
             df = self
-            df_length = len(df)
 
             cols_to_profile = df.ext.cols_needs_profiling(df, columns)
             columns = parse_columns(df, columns)
@@ -49,6 +48,8 @@ def ext(self: DataFrame):
             result["columns"] = {}
 
             if cols_to_profile or not Ext.is_cached(df) or flush:
+                df_length = len(df)
+
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
@@ -65,7 +66,7 @@ def ext(self: DataFrame):
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
                 @delayed
-                def merge(_columns, _hist, _freq, _mismatch, _dtypes,_freq_uniques):
+                def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                     # _h = {}
                     _f = {}
 
@@ -90,10 +91,14 @@ def ext(self: DataFrame):
                     # _f[col_name]["stats"]["rows_count"] = _rows_count
                     return {"columns": _f}
 
+                # Infered column data type using a 10 first rows
+                infered = df.head(10).applymap(Infer.parse_pandas)
+
+                mismatch = df.cols.count_mismatch(
+                    {col_name: infered[col_name].value_counts().index[0] for col_name in df.cols.names()})
+
                 # Nulls
                 total_count_na = 0
-                mismatch = df.cols.count_mismatch({c: "int" for c in df.cols.names()})
-                # print(a)
                 for i in mismatch.values():
                     total_count_na = total_count_na + i["missing"]
 
@@ -101,8 +106,8 @@ def ext(self: DataFrame):
 
                 dtypes = df.cols.dtypes("*")
 
-                freq_uniques  = df.cols.count_uniques(numeric_cols)
-                output_columns = merge(columns, hist, freq, mismatch, dtypes,freq_uniques).compute()
+                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
+                output_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)

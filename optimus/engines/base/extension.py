@@ -168,6 +168,8 @@ class BaseExt(ABC):
         input_columns = parse_columns(df, columns)
         df._buffer = df[input_columns].head(n, npartitions=-1)
 
+        # df._buffer = df[input_columns].get_partition(1).compute()
+
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
         df = self.df
@@ -425,6 +427,5 @@ class BaseExt(ABC):
 
     def reset(self):
         df = self.df
-        df = df.meta.set("transformations.actions", {})
-        Profiler.instance.output_columns = {}
+        df = df.meta.set(None, {})
         return df

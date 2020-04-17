@@ -2,12 +2,12 @@
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
 # This can not import any optimus file unless it's imported via addPyFile
 import datetime
+import math
 import os
 import re
 from ast import literal_eval
 
 import fastnumbers
-import math
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 from dateutil.parser import parse as dparse
@@ -18,6 +18,9 @@ from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, Dou
 
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
+import pandas as pd
+
+from optimus.helpers.raiseit import RaiseIt
 
 
 def str_to_boolean(_value):
@@ -366,6 +369,42 @@ class Infer(object):
             # print(_data_type)
             return _data_type
 
+    @staticmethod
+    def parse_pandas(value):
+        # Try to order the functions from less to more computational expensive
+
+        int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
+
+        str_funcs = [
+            (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
+            (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
+            (str_to_url, "url"),
+            (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
+        ]
+        # if pd.isnull(value):
+        #     _data_type = "decimal"
+        if isinstance(value, bool):
+            _data_type = "boolean"
+        #
+        elif fastnumbers.isint(value):  # Check if value is integer
+            _data_type = "int"
+            for func in int_funcs:
+                if func[0](str(value)) is True:
+                    _data_type = func[1]
+        #
+        elif fastnumbers.isfloat(value):
+            _data_type = "decimal"
+        #
+        elif isinstance(value, str):
+            # print("strings")
+            _data_type = "string"
+            for func in str_funcs:
+                if func[0](value) is True:
+                    _data_type = func[1]
+        else:
+            _data_type = "null"
+        return _data_type
+
 
 def profiler_dtype_func(dtype):
     """
@@ -380,11 +419,15 @@ def profiler_dtype_func(dtype):
     elif dtype == ProfilerDataTypes.DECIMAL.value:
         return fastnumbers.isfloat
     elif dtype == ProfilerDataTypes.ARRAY.value:
-        return is_list
+        return str_to_array
     elif dtype == ProfilerDataTypes.STRING.value:
         return is_str
     elif dtype == ProfilerDataTypes.OBJECT.value:
-        return is_object
+        return str_to_object
+    elif dtype == ProfilerDataTypes.DATE.value:
+        return is_date
+    else:
+        RaiseIt.value_error(dtype,ProfilerDataTypes.list())
 
 
 def is_nan(value):

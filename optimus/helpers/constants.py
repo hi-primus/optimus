@@ -20,8 +20,9 @@ from optimus.helpers.logger import logger
 
 class Actions(Enum):
     """
-    Actions that modify a columns.
+    Actions that modify a columns/rows.
     """
+    # COLUMNS
     LOWER = "lower"
     UPPER = "upper"
     TRIM = "trim"
@@ -74,8 +75,13 @@ class ProfilerDataTypes(Enum):
     EMAIL = "email"
     CREDIT_CARD_NUMBER = "credit_card_number"
     ZIP_CODE = "zip_code"
-    NULL = "null"
-    MISSING = "missing"
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, ProfilerDataTypes))
+
+    # NULL = "null"
+    # MISSING = "missing"
 
 
 # Strings and Function Messages

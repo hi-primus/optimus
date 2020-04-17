@@ -87,3 +87,4 @@ def parse_dtypes(df, value):
     else:
         result = data_type
     return result
+
