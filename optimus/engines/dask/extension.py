@@ -28,7 +28,7 @@ def ext(self: DataFrame):
             return df.persist()
 
         @staticmethod
-        def profile(columns, bins=10, output=None):
+        def profile(columns, bins=10, output=None, flush=None):
             """
 
             :param columns:
@@ -48,44 +48,56 @@ def ext(self: DataFrame):
             result = {}
             result["columns"] = {}
 
-            if cols_to_profile or not Ext.is_cached(df):
+            if cols_to_profile or not Ext.is_cached(df) or flush:
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
                 numeric_cols = df.cols.names(filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
                 string_cols = df.cols.names(filter_by_column_dtypes=df.constants.STRING_TYPES)
-                hist = df.cols.hist(numeric_cols, buckets=bins)
-                freq = df.cols.frequency(string_cols, n=bins)
+                hist = None
+                if numeric_cols is not None:
+                    hist = df.cols.hist(numeric_cols, buckets=bins)
+
+                freq = None
+                if string_cols is not None:
+                    freq = df.cols.frequency(string_cols, n=bins)
 
                 @delayed
-                def merge(_columns, _hist, _freq, _rows_count, _output):
+                def merge(_columns, _hist, _freq, _mismatch, _rows_count, _output):
                     _h = {}
                     r = {}
                     # for col_name in columns:
-                    for col_name, h in _hist.items():
-                        r[col_name] = {}
-                        r[col_name]["stats"] = {}
-                        r[col_name]["missing"] = 1
-                        r[col_name]["mismatch"] = 1
-                        r[col_name]["null"] = 0
+                    if _hist is not None:
+                        for col_name, h in _hist.items():
+                            r[col_name] = {}
+                            r[col_name]["stats"] = {}
+                            # r[col_name]["stats"]["hist"] = {}
+                            r[col_name].update(mismatch[col_name])
 
-                        r[col_name]["stats"]["hist"] = h["hist"]
+                            r[col_name]["stats"]["hist"] = h["hist"]
 
-                    for col_name, h in _freq.items():
-                        r[col_name] = {}
-                        r[col_name]["stats"] = {}
-                        r[col_name]["missing"] = 1
-                        r[col_name]["mismatch"] = 1
-                        r[col_name]["null"] = 0
+                    if _freq is not None:
+                        for col_name, f in _freq.items():
+                            r[col_name] = {}
+                            r[col_name]["stats"] = {}
+                            r[col_name]["stats"]["frequency"] = {}
+                            r[col_name].update(mismatch[col_name])
 
-                        r[col_name]["stats"]["frequency"] = h["frequency"]
+                            r[col_name]["stats"]["frequency"] = f["frequency"]
 
                     if _output == "json":
                         r = dump_json(r)
 
                     return {"columns": r, "stats": {"rows_count": _rows_count}}
 
-                output_columns = merge(columns, hist, freq, df_length, output).compute()
+                # Nulls
+                total_count_na = 0
+                mismatch = df.cols.count_mismatch({c: "int" for c in df.cols.names()})
+                # print(a)
+                for i in mismatch.values():
+                    total_count_na = total_count_na + i["missing"]
+
+                output_columns = merge(columns, hist, freq, mismatch, df_length, output).compute()
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
@@ -95,14 +107,6 @@ def ext(self: DataFrame):
                                  'size': df.ext.size(format="human")}
 
                 assign(output_columns, "summary", data_set_info, dict)
-                # result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
-
-                # Nulls
-                total_count_na = 0
-                a = df.cols.count_mismatch({"INCIDENT_NUMBER": "int", "OFFENSE_CODE": "int"})
-                print(a)
-                for i in a.values():
-                    total_count_na = total_count_na + i["missing"]
 
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
                 assign(output_columns, "summary.p_missing", round(total_count_na / df_length * 100, 2))
