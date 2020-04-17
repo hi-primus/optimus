@@ -106,7 +106,7 @@ class DaskBaseColumns(BaseColumns):
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
 
-    def frequency(self, columns, n=10, percentage=False, total_rows=None, total_count=False):
+    def frequency(self, columns, n=10, percentage=False, total_rows=None, count_uniques=False):
 
         df = self.df
         columns = parse_columns(df, columns)
@@ -119,7 +119,7 @@ class DaskBaseColumns(BaseColumns):
             if _total_freq_count is True:
                 result = {_df.name: {"frequency": result}}
             else:
-                result = {_df.name: {"frequency": result, "total_count": _total_freq_count}}
+                result = {_df.name: {"frequency": result, "count_uniques": _total_freq_count}}
 
             return result
 
@@ -142,9 +142,9 @@ class DaskBaseColumns(BaseColumns):
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
-        if total_count is True:
-            total_count = [_value_counts.count() for _value_counts in value_counts]
-            b = [df_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, total_count)]
+        if count_uniques is True:
+            count_uniques = [_value_counts.count() for _value_counts in value_counts]
+            b = [df_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
         else:
             b = [df_to_dict(_n_largest) for _n_largest in n_largest]
 

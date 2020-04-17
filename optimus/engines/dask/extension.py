@@ -52,8 +52,8 @@ def ext(self: DataFrame):
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
-                numeric_cols = df.cols.names(cols_to_profile,filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-                string_cols = df.cols.names(cols_to_profile,filter_by_column_dtypes=df.constants.STRING_TYPES)
+                numeric_cols = df.cols.names(cols_to_profile, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+                string_cols = df.cols.names(cols_to_profile, filter_by_column_dtypes=df.constants.STRING_TYPES)
                 hist = None
                 if numeric_cols is not None:
                     hist = df.cols.hist(numeric_cols, buckets=bins)
@@ -62,32 +62,32 @@ def ext(self: DataFrame):
                 if string_cols is not None:
                     # print("STRING COLS", string_cols)
                     # print("NNN",bins)
-                    freq = df.cols.frequency(string_cols, n=bins)
+                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
                 @delayed
                 def merge(_columns, _hist, _freq, _mismatch, _rows_count, _output):
                     _h = {}
-                    r = {}
+                    _f = {}
                     # for col_name in columns:
                     if _hist is not None:
                         for col_name, h in _hist.items():
-                            r[col_name] = {}
-                            r[col_name]["stats"] = {}
+                            _f[col_name] = {}
+                            _f[col_name]["stats"] = mismatch[col_name]
                             # r[col_name]["stats"]["hist"] = {}
-                            r[col_name].update(mismatch[col_name])
+                            # r[col_name].update()
 
-                            r[col_name]["stats"]["hist"] = h["hist"]
+                            _f[col_name]["stats"]["hist"] = h["hist"]
 
                     if _freq is not None:
                         for col_name, f in _freq.items():
-                            r[col_name] = {}
-                            r[col_name]["stats"] = {}
-                            r[col_name]["stats"]["frequency"] = {}
-                            r[col_name].update(mismatch[col_name])
+                            _f[col_name] = {}
+                            _f[col_name]["stats"] = mismatch[col_name]
+                            _f[col_name]["stats"]["frequency"] = {}
 
-                            r[col_name]["stats"]["frequency"] = f["frequency"]
+                            _f[col_name]["stats"]["frequency"] = f["frequency"]
+                            _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
-                    return {"columns": r, "stats": {"rows_count": _rows_count}}
+                    return {"columns": _f, "stats": {"rows_count": _rows_count}}
 
                 # Nulls
                 total_count_na = 0
