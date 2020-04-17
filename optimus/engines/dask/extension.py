@@ -114,7 +114,7 @@ def ext(self: DataFrame):
                 assign(output_columns, "summary", data_set_info, dict)
 
                 dtypes_list = list(set(df.cols.dtypes("*").values()))
-                assign(output_columns, "summary.dtypes_list", dtypes, dict)
+                assign(output_columns, "summary.dtypes_list", dtypes_list, dict)
                 assign(output_columns, "summary.total_count_dtypes", len(dtypes), dict)
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
                 assign(output_columns, "summary.p_missing", round(total_count_na / df_length * 100, 2))
