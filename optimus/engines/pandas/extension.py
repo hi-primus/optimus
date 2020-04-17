@@ -65,7 +65,7 @@ def ext(self: DataFrame):
                 elif col_dtype == "object":
 
                     # df[col_name] = df[col_name].astype("str").dropna()
-                    stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name],
+                    stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name]["frequency"],
                                            "count_uniques": len(df[col_name].value_counts())})
                     r = {col_name: stats}
                 else:
