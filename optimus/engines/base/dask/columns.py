@@ -119,7 +119,7 @@ class DaskBaseColumns(BaseColumns):
             if _total_freq_count is True:
                 result = {_df.name: {"frequency": result}}
             else:
-                result = {_df.name: {"frequency": result, "count_uniques": _total_freq_count}}
+                result = {_df.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
 
             return result
 
