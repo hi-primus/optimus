@@ -65,20 +65,17 @@ def ext(self: DataFrame):
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
                 @delayed
-                def merge(_columns, _hist, _freq, _mismatch):
+                def merge(_columns, _hist, _freq, _mismatch, _dtypes,_freq_uniques):
                     # _h = {}
                     _f = {}
-                    # for col_name in columns:
+
                     if _hist is not None:
                         for col_name, h in _hist.items():
                             _f[col_name] = {}
                             _f[col_name]["stats"] = mismatch[col_name]
-                            # r[col_name]["stats"]["hist"] = {}
-                            # r[col_name].update()
-
                             _f[col_name]["stats"]["hist"] = h["hist"]
-                            _f[col_name]["stats"]["count_uniques"] = 123
-                            _f[col_name]["dtype"] = "int"
+                            _f[col_name]["stats"]["count_uniques"] = freq_uniques[col_name]["count_uniques"]
+                            _f[col_name]["dtype"] = _dtypes[col_name]
 
                     if _freq is not None:
                         for col_name, f in _freq.items():
@@ -88,7 +85,7 @@ def ext(self: DataFrame):
 
                             _f[col_name]["stats"]["frequency"] = f["frequency"]
                             _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
-                            _f[col_name]["dtype"] = "int"
+                            _f[col_name]["dtype"] = _dtypes[col_name]
 
                     # _f[col_name]["stats"]["rows_count"] = _rows_count
                     return {"columns": _f}
@@ -101,7 +98,11 @@ def ext(self: DataFrame):
                     total_count_na = total_count_na + i["missing"]
 
                 df.cols.count_uniques(numeric_cols)
-                output_columns = merge(columns, hist, freq, mismatch).compute()
+
+                dtypes = df.cols.dtypes("*")
+
+                freq_uniques  = df.cols.count_uniques(numeric_cols)
+                output_columns = merge(columns, hist, freq, mismatch, dtypes,freq_uniques).compute()
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
