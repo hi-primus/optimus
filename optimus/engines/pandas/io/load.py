@@ -52,7 +52,8 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=",", header=True, infer_schema=True, charset="UTF-8", null_value="None", quoting=3,
+            lineterminator="\n", error_bad_lines=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -76,6 +77,7 @@ class Load:
 
             for file_name, j in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
+                                 quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                                  *args,
                                  **kwargs)
                 df_list.append(df)
