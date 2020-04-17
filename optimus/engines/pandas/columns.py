@@ -514,17 +514,19 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-
+                col_values = []
                 if df[col_name].dtype == np.int64 or df[col_name].dtype == np.float64:
                     i, j = bincount(df[col_name], n)
 
-                    result[col_name] = {"values": list(i), "count": list(j)}
+                    # result[col_name] = {"values": list(i), "count": list(j)}
                 else:
                     # Value counts
                     r = df[col_name].value_counts().nlargest(n)
                     i = r.index.tolist()
                     j = r.tolist()
-                    result[col_name] = ({"values": i, "count": j})
+                col_values = [{"value": _i, "count": _j} for _i, _j in zip(i, j)]
+
+                result[col_name] = {"frequency": col_values}
             return result
 
     return Cols(self)
