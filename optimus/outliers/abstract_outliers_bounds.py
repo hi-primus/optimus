@@ -102,7 +102,7 @@ class AbstractOutlierBounds(ABC):
         """
         col_name = self.col_name
         df = self.df
-        return df.rows.select(df[col_name] < bound).count()
+        return df.rows.select(df[col_name] < bound).rows.count()
 
     def count_upper_bound(self, bound: int):
         """
@@ -111,7 +111,7 @@ class AbstractOutlierBounds(ABC):
         """
         col_name = self.col_name
         df = self.df
-        return df.rows.select(df[col_name] > bound).count()
+        return df.rows.select(df[col_name] > bound).rows.count()
 
     def count(self):
         """
@@ -120,7 +120,7 @@ class AbstractOutlierBounds(ABC):
         """
         col_name = self.col_name
         df = self.df
-        return df.rows.select((df[col_name] > self.upper_bound) | (df[col_name] < self.lower_bound)).count()
+        return df.rows.select((df[col_name] > self.upper_bound) | (df[col_name] < self.lower_bound)).rows.count()
 
     def non_outliers_count(self):
         """
@@ -129,7 +129,7 @@ class AbstractOutlierBounds(ABC):
         """
         df = self.df
         col_name = self.col_name
-        return df.rows.select((df[col_name] <= self.upper_bound) & (df[col_name] >= self.lower_bound)).count()
+        return df.rows.select((df[col_name] <= self.upper_bound) & (df[col_name] >= self.lower_bound)).rows.count()
 
     @abstractmethod
     def info(self, output: str = "dict"):
