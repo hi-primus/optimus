@@ -22,7 +22,7 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -31,13 +31,18 @@ from optimus.profiler.functions import fill_missing_var_types
 @jit
 def _min(value):
     return np.min(value)
+
+
 class DaskBaseColumns(BaseColumns):
 
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def count_mismatch(self, columns_mismatch: dict = None):
+    def count_mismatch(self, columns_mismatch: dict = None, infer=True):
+
         df = self.df
+        if not is_dict(columns_mismatch):
+            columns_mismatch = parse_columns(df, columns_mismatch)
 
         @delayed
         def func(_df, _col_name, _func_dtype):
@@ -49,7 +54,7 @@ class DaskBaseColumns(BaseColumns):
 
                 # match data type
                 elif _func_dtype(value):
-                    return ProfilerDataTypesQuality.NO_MISMATCH.value
+                    return ProfilerDataTypesQuality.MATCH.value
 
                 # mismatch
                 else:
@@ -57,9 +62,25 @@ class DaskBaseColumns(BaseColumns):
 
             return _df[_col_name].apply(_func).value_counts()
 
+        df_len = len(df)
+        nulls_count = df.isna().sum().compute().to_dict()
+
+        @delayed
+        def no_infer_func(_df, _col_name):
+
+            return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - nulls_count[_col_name],
+                              ProfilerDataTypesQuality.MISSING.value: nulls_count[_col_name]}, name=_col_name)
+
         partitions = df.to_delayed()
-        delayed_parts = [func(part, col_name, profiler_dtype_func(dtype)) for part in partitions for col_name, dtype in
-                         columns_mismatch.items()]
+
+        if infer is True:
+
+            delayed_parts = [func(part, col_name, profiler_dtype_func(dtype)) for part in partitions for
+                             col_name, dtype in columns_mismatch.items()]
+
+        else:
+            delayed_parts = [no_infer_func(part, col_name) for part in partitions for
+                             col_name in columns_mismatch]
 
         @delayed
         def merge(value):
@@ -70,15 +91,16 @@ class DaskBaseColumns(BaseColumns):
         c = dd.compute(b)[0]
 
         # Flat dict
-        c = {x: y for b in c for x, y in b.items()}
+        c = {x: y for result in c for x, y in result.items()}
 
         def none_to_zero(value):
             return value if value is not None else 0
 
         result = {}
         for col_name, values in c.items():
-            result[col_name] = {"mismatch": none_to_zero(values.get(0)), "missing": none_to_zero(values.get(1)),
-                                "match": none_to_zero(values.get(2))}
+            result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
+                                "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
+                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))}
 
         return result
 

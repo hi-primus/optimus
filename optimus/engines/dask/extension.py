@@ -28,12 +28,13 @@ def ext(self: DataFrame):
             return df.persist()
 
         @staticmethod
-        def profile(columns, bins=10, output=None, flush=None):
+        def profile(columns, bins=10, output=None, infer=False, flush=None):
             """
 
             :param columns:
             :param bins:
             :param output:
+            :param infer:
             :return:
             """
 
@@ -70,32 +71,34 @@ def ext(self: DataFrame):
                     # _h = {}
                     _f = {}
 
+                    for col_name in _columns:
+                        _f[col_name] = {"stats": mismatch[col_name], "dtype": _dtypes[col_name]}
+
                     if _hist is not None:
                         for col_name, h in _hist.items():
-                            _f[col_name] = {}
-                            _f[col_name]["stats"] = mismatch[col_name]
+                            # _f[col_name] = {}
                             _f[col_name]["stats"]["hist"] = h["hist"]
                             _f[col_name]["stats"]["count_uniques"] = freq_uniques[col_name]["count_uniques"]
-                            _f[col_name]["dtype"] = _dtypes[col_name]
 
                     if _freq is not None:
                         for col_name, f in _freq.items():
-                            _f[col_name] = {}
-                            _f[col_name]["stats"] = mismatch[col_name]
-                            _f[col_name]["stats"]["frequency"] = {}
+                            # _f[col_name] = {}
+                            # _f[col_name]["stats"]["frequency"] = {}
 
                             _f[col_name]["stats"]["frequency"] = f["frequency"]
                             _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
-                            _f[col_name]["dtype"] = _dtypes[col_name]
 
                     # _f[col_name]["stats"]["rows_count"] = _rows_count
                     return {"columns": _f}
 
                 # Infered column data type using a 10 first rows
-                infered = df.head(10).applymap(Infer.parse_pandas)
+                if infer is True:
+                    temp = df.head(10).applymap(Infer.parse_pandas)
+                    infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in df.cols.names()}
+                else:
+                    infered_sample = "*"
 
-                mismatch = df.cols.count_mismatch(
-                    {col_name: infered[col_name].value_counts().index[0] for col_name in df.cols.names()})
+                mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
                 # Nulls
                 total_count_na = 0

@@ -58,7 +58,7 @@ class Actions(Enum):
 class ProfilerDataTypesQuality(Enum):
     MISMATCH = 0
     MISSING = 1
-    NO_MISMATCH = 2
+    MATCH = 2
 
 
 class ProfilerDataTypes(Enum):
