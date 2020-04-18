@@ -1173,9 +1173,9 @@ class DaskBaseColumns(BaseColumns):
         def _replace(value, args):
             return value.str.replace(args[0], args[1])
 
-        df.cols.apply(input_cols, _replace, func_return_type=str,
-                      filter_col_by_dtypes=df.constants.STRING_TYPES,
-                      output_cols=output_cols, args=(regex, replace_by))
+        df = df.cols.apply(input_cols, _replace, func_return_type=str,
+                           filter_col_by_dtypes=df.constants.STRING_TYPES,
+                           output_cols=output_cols, args=(regex, replace_by))
 
         return df
 
