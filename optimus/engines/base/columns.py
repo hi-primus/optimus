@@ -670,8 +670,8 @@ class BaseColumns(ABC):
     def schema_dtype(columns="*"):
         pass
 
-    def names(self, col_names="*", filter_by_column_dtypes=None, invert=False):
-        columns = parse_columns(self.df, col_names, filter_by_column_dtypes=filter_by_column_dtypes, invert=invert)
+    def names(self, col_names="*", by_dtypes=None, invert=False):
+        columns = parse_columns(self.df, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
         return columns
 
     @staticmethod

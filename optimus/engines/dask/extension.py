@@ -54,8 +54,8 @@ def ext(self: DataFrame):
                 # self.rows_count = df.rows.count()
                 # self.cols_count = cols_count = len(df.columns)
 
-                numeric_cols = df.cols.names(cols_to_profile, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-                string_cols = df.cols.names(cols_to_profile, filter_by_column_dtypes=df.constants.STRING_TYPES)
+                numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
+                string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
                 hist = None
                 if numeric_cols is not None:
                     hist = df.cols.hist(numeric_cols, buckets=bins)

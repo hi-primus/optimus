@@ -395,7 +395,7 @@ class DaskBaseJDBC:
         :return:
         """
         # Parse array and vector to string. JDBC can not handle this data types
-        columns = df.cols.names("*", filter_by_column_dtypes=["array", "vector"])
+        columns = df.cols.names("*", by_dtypes=["array", "vector"])
         df = df.cols.cast(columns, "str")
 
         conf = df.write \

@@ -1971,15 +1971,15 @@ def cols(self):
             return {col_name: data_types[col_name] for col_name in columns}
 
         @staticmethod
-        def names(col_names="*", filter_by_column_dtypes=None, invert=False):
+        def names(col_names="*", by_dtypes=None, invert=False):
             """
             Get columns names
             :param col_names: Columns names to be processed '*' for all or a list of column names
-            :param filter_by_column_dtypes: Data type used to select the columns
+            :param by_dtypes: Data type used to select the columns
             :param invert: Invert the columns selection
             :return:
             """
-            columns = parse_columns(self, col_names, filter_by_column_dtypes=filter_by_column_dtypes, invert=invert)
+            columns = parse_columns(self, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
             return columns
 
         @staticmethod
