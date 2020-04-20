@@ -1018,7 +1018,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         _dtypes = []
 
-        def _cast_int(value):
+        def _cast_int(value,arg):
             try:
                 return int(value)
             except ValueError:
@@ -1036,7 +1036,7 @@ class DaskBaseColumns(BaseColumns):
             else:
                 return bool(value)
 
-        def _cast_str(value):
+        def _cast_str(value, arg):
             try:
                 return value.astype(str)
             except:
@@ -1071,11 +1071,11 @@ class DaskBaseColumns(BaseColumns):
             else:
                 func = _cast_str
 
-            # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
-            # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
-            df[output_col] = df[input_col].astype(dtype)
-
-            df[output_col].odtype = dtype
+            df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
+            # df[output_col] = df[input_col].apply(func=func, meta=df[input_col])
+            # df[output_col] = df[input_col].astype(dtype)
+            #
+            # df[output_col].odtype = dtype
 
         return df
 
