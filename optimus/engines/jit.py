@@ -39,8 +39,28 @@ def histogram1d(v, bins, range):
 # Numba
 @njit(fastmath=True)
 def get_bin_edges(a, bins):
+    """
+    Get edges from a arrray
+    :param a:
+    :param bins:
+    :return:
+    """
     bin_edges = np.zeros((bins + 1,), dtype=np.float64)
     a_min, a_max = min_max(a)
+    # a_min = a.min()
+    # a_max = a.max()
+    delta = (a_max - a_min) / bins
+    for i in range(bin_edges.shape[0]):
+        bin_edges[i] = a_min + i * delta
+
+    bin_edges[-1] = a_max  # Avoid roundoff error on last point
+    return bin_edges
+
+
+@njit(fastmath=True)
+def get_bin_edges_min_max(a_min, a_max, bins):
+    bin_edges = np.zeros((bins + 1,), dtype=np.float64)
+    # a_min, a_max = min , max
     # a_min = a.min()
     # a_max = a.max()
     delta = (a_max - a_min) / bins
@@ -86,6 +106,18 @@ def numba_histogram(a, bins):
             hist[int(bin)] += 1
 
     return hist, bin_edges
+
+
+@njit(fastmath=True)
+def numba_histogram_edges(a, bin_edges):
+    hist = np.zeros(len(bin_edges), dtype=np.intp)
+
+    for x in a.flat:
+        bin = compute_bin(x, bin_edges)
+        if bin is not None:
+            hist[int(bin)] += 1
+
+    return list(hist)
 
 
 def count_na_j(df, series):

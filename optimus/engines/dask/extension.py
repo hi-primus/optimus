@@ -1,11 +1,13 @@
 from collections import OrderedDict
 
+import dask
 import humanize
 from dask import delayed
 from dask.dataframe.core import DataFrame
 from glom import assign
 
 from optimus.engines.base.extension import BaseExt
+from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.functions import random_int
@@ -26,6 +28,57 @@ def ext(self: DataFrame):
         def cache():
             df = self
             return df.persist()
+
+        @staticmethod
+        def profile_new(columns, bins=10, output=None, infer=False, flush=None):
+            df = self
+            from dask import delayed
+            from dask import dataframe as dd
+            import numpy as np
+            columns = parse_columns(df, columns)
+            partitions = df.to_delayed()
+
+            @delayed
+            def func(pdf, _columns, _bins):
+                _hist = None
+                _freq = None
+                for col_name in _columns:
+                    series = pdf[col_name]
+                    if series.dtype == np.object:
+                        result = series.value_counts().nlargest(_bins).to_dict()
+                    elif series.dtype == np.int64 or pdf.dtype == np.float64:
+
+                        result = numba_histogram(series.to_numpy(), bins=_bins)
+                        # _hist, bins_edges = np.histogram(pdf, bins=_bins)
+
+                return  result
+
+            # numeric_cols = df.cols.names(columns, by_dtypes=df.constants.NUMERIC_TYPES)
+            # string_cols = df.cols.names(columns, by_dtypes=df.constants.STRING_TYPES)
+
+            _min_max = [dask.delayed(func)(part, columns, 10) for part in partitions]
+
+            # _min_max = {col_name: dask.delayed(get_bin_edges_min_max)(**_min_max, ) for part in partitions for
+            #             col_name in numeric_cols}
+            # @delayed
+            # def bins_col(_min_max, _bins=10):
+            #     return {col_name: get_bin_edges_min_max(min, max, _bins) for col_name, (min, max) in _min_max.items()}
+
+            # _bins = bins_col(_min_max, bins)
+
+            # print(_bins.compute())
+
+            # _hist = [dask.delayed(numba_histogram_edges)(part[col_name].to_numpy(), _bins[col_name]) for part in
+            #          partitions for col_name in numeric_cols]
+
+            # _bins = bins_col(columns, _min, _max)
+
+            # result = dd.compute(_min_max)
+
+            # delayed_parts = [func(part[col_name], [-10, 10]) for part in partitions for col_name in df.cols.names()]
+            # print(dd.compute(delayed_parts))
+
+            return _min_max
 
         @staticmethod
         def profile(columns, bins=10, output=None, infer=False, flush=None):
@@ -82,9 +135,6 @@ def ext(self: DataFrame):
 
                     if _freq is not None:
                         for col_name, f in _freq.items():
-                            # _f[col_name] = {}
-                            # _f[col_name]["stats"]["frequency"] = {}
-
                             _f[col_name]["stats"]["frequency"] = f["frequency"]
                             _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
@@ -94,7 +144,7 @@ def ext(self: DataFrame):
                 # Infered column data type using a 10 first rows
                 if infer is True:
                     temp = df.head(10).applymap(Infer.parse_pandas)
-                    infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in df.cols.names()}
+                    infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
                 else:
                     infered_sample = "*"
 
