@@ -16,7 +16,7 @@ Comm.instance = None
 class DaskEngine:
     __version__ = __version__
 
-    def __init__(self, session=None, n_workers=2, threads_per_worker=4, processes=False, memory_limit='2GB',
+    def __init__(self, session=None, n_workers=1, threads_per_worker=None, processes=False, memory_limit='2GB',
                  verbose=False, comm=None, *args, **kwargs):
         if comm is True:
             Comm.instance = Comm()
@@ -25,11 +25,15 @@ class DaskEngine:
 
         self.engine = 'dask'
 
+        if n_workers is None:
+            import psutil
+            threads_per_worker = psutil.cpu_count()*4
         # self.create = Create()
         self.load = Load()
         self.verbose(verbose)
 
         if session is None:
+            print("PROCESS", processes)
             Dask.instance = Client(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
                                    memory_limit=memory_limit, *args,
                                    **kwargs)
