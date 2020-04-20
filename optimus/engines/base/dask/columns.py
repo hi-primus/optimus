@@ -207,7 +207,6 @@ class DaskBaseColumns(BaseColumns):
         @delayed
         def agg_hist(pdf, _bins):
             r = pdf.groupby(pdf.index).sum().to_dict()
-            # r = [{"lower": c[i], "upper": c[i + 1]} for i, j in zip(range(0, len(c) - 1), c) for c in r.values()]
             result = {}
             for col_name, c in r.items():
                 r = []
@@ -992,9 +991,10 @@ class DaskBaseColumns(BaseColumns):
 
         result = {}
 
+        partitions = df.to_delayed()
         for input_col, output_col in zip(input_cols, output_cols):
-            partitions = df[input_col].to_delayed()
-            temp = [dask.delayed(func)(part, args)
+
+            temp = [dask.delayed(func)(part[input_col], args)
                     for part in partitions]
             result[output_col] = from_delayed(temp)
 
@@ -1170,8 +1170,8 @@ class DaskBaseColumns(BaseColumns):
         else:
             regex = search
 
-        def _replace(value, args):
-            return value.str.replace(args[0], args[1])
+        def _replace(part, args):
+            return part.str.replace(args[0], args[1])
 
         df = df.cols.apply(input_cols, _replace, func_return_type=str,
                            filter_col_by_dtypes=df.constants.STRING_TYPES,
