@@ -30,7 +30,9 @@ class DaskEngine:
         self.verbose(verbose)
 
         if session is None:
-            Dask.instance = Client(*args, **kwargs)
+            Dask.instance = Client(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
+                                   memory_limit=memory_limit, *args,
+                                   **kwargs)
             # a = Dask()
             # b = a.create(n_workers=n_workers, threads_per_worker=threads_per_worker,
             #              processes=processes, memory_limit=memory_limit, *args, **kwargs)
