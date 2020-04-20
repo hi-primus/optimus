@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-import dask
 import humanize
 from dask import delayed
 from dask.dataframe.core import DataFrame
@@ -33,7 +32,6 @@ def ext(self: DataFrame):
         def profile_new(columns, bins=10, output=None, infer=False, flush=None):
             df = self
             from dask import delayed
-            from dask import dataframe as dd
             import numpy as np
             columns = parse_columns(df, columns)
             partitions = df.to_delayed()
@@ -51,12 +49,12 @@ def ext(self: DataFrame):
                         result = numba_histogram(series.to_numpy(), bins=_bins)
                         # _hist, bins_edges = np.histogram(pdf, bins=_bins)
 
-                return  result
+                return result
 
             # numeric_cols = df.cols.names(columns, by_dtypes=df.constants.NUMERIC_TYPES)
             # string_cols = df.cols.names(columns, by_dtypes=df.constants.STRING_TYPES)
 
-            _min_max = [dask.delayed(func)(part, columns, 10) for part in partitions]
+            _min_max = [func(part, columns, 10) for part in partitions]
 
             # _min_max = {col_name: dask.delayed(get_bin_edges_min_max)(**_min_max, ) for part in partitions for
             #             col_name in numeric_cols}
@@ -92,9 +90,13 @@ def ext(self: DataFrame):
             """
 
             df = self
+            if flush is None:
+                cols_to_profile = df.ext.cols_needs_profiling(df, columns)
+            else:
+                cols_to_profile = parse_columns(df, columns)
+            columns = cols_to_profile
 
-            cols_to_profile = df.ext.cols_needs_profiling(df, columns)
-            columns = parse_columns(df, columns)
+            # columns = parse_columns(df, columns)
 
             output_columns = df.meta.get("profile")
 
@@ -146,8 +148,7 @@ def ext(self: DataFrame):
                     temp = df.head(10).applymap(Infer.parse_pandas)
                     infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
                 else:
-                    infered_sample = "*"
-
+                    infered_sample = columns
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
                 # Nulls
@@ -484,8 +485,7 @@ def ext(self: DataFrame):
                     calculate_columns = None
                 # elif not is_cached:
             else:
-                calculate_columns = columns
-
+                calculate_columns = parse_columns(df,columns)
             return calculate_columns
 
     return Ext(self)
