@@ -46,10 +46,8 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, cache=False,
-            quoting=3, lineterminator="\n", error_bad_lines=False,
-            *args,
-            **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, charset="utf-8", null_value="None", n_rows=-1, cache=False,
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -72,7 +70,8 @@ class Load:
         file, file_name = prepare_path(path, "csv")
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
-                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines, *args,
+                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                             keep_default_na=keep_default_na, *args,
                              **kwargs)
             if n_rows > -1:
                 df = df.head(n_rows)
