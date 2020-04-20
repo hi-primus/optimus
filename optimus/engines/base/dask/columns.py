@@ -43,6 +43,9 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
+            columns = columns_mismatch
+        else:
+            columns = columns_mismatch.keys()
 
         @delayed
         def func(_df, _col_name, _func_dtype):
@@ -63,7 +66,7 @@ class DaskBaseColumns(BaseColumns):
             return _df[_col_name].apply(_func).value_counts()
 
         df_len = len(df)
-        nulls_count = df.isna().sum().compute().to_dict()
+        nulls_count = df[columns].isna().sum().compute().to_dict()
 
         @delayed
         def no_infer_func(_df, _col_name):
