@@ -84,7 +84,7 @@ class Load:
         return df
 
     @staticmethod
-    def parquet(path, columns=None, *args, **kwargs):
+    def parquet(path, columns=None, engine="pyarrow",*args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -97,7 +97,7 @@ class Load:
         file, file_name = prepare_path(path, "parquet")
 
         try:
-            df = dd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
+            df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
             df.meta.set("file_name", file_name)
 
         except IOError as error:

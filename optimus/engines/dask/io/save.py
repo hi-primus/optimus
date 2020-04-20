@@ -53,7 +53,7 @@ def save(self: DataFrame):
                 raise
 
         @staticmethod
-        def parquet(path, mode="overwrite", num_partitions=1):
+        def parquet(path, mode="overwrite", num_partitions=1, engine="pyarrow"):
             """
             Save data frame to a parquet file
             :param path: path where the spark will be saved.
@@ -77,7 +77,11 @@ def save(self: DataFrame):
             df = self.cols.rename(func)
 
             try:
-                df.to_parquet(path, num_partitions=num_partitions)
+                if engine == 'pyarrow':
+                    df.to_parquet(path, num_partitions=num_partitions, engine='pyarrow')
+                elif engine == "fastparquet":
+                    df.to_parquet(path, engine='fastparquet')
+
             except IOError as e:
                 logger.print(e)
                 raise
