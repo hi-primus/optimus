@@ -9,7 +9,7 @@ from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.functions import random_int
+from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict, Infer
@@ -99,9 +99,9 @@ def ext(self: DataFrame):
             # columns = parse_columns(df, columns)
 
             output_columns = df.meta.get("profile")
-
-            result = {}
-            result["columns"] = {}
+            if output_columns is None:
+                output_columns = {}
+            # print("output_columns", output_columns)
 
             if cols_to_profile or not Ext.is_cached(df) or flush:
                 df_length = len(df)
@@ -117,7 +117,7 @@ def ext(self: DataFrame):
 
                 freq = None
                 if string_cols is not None:
-                    # print("STRING COLS", string_cols)
+                    print("STRING COLS", string_cols)
                     # print("NNN",bins)
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
@@ -149,6 +149,7 @@ def ext(self: DataFrame):
                     infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
                 else:
                     infered_sample = columns
+                print("INFERED SAMPLE", infered_sample)
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
                 # Nulls
@@ -161,14 +162,17 @@ def ext(self: DataFrame):
                 dtypes = df.cols.dtypes("*")
 
                 freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
-                output_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
+                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
+
+                output_columns = update_dict(output_columns, updated_columns)
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 data_set_info = {'cols_count': len(df.columns),
                                  'rows_count': df.rows.count(),
-                                 'size': df.ext.size(format="human")}
+                                 # 'size': df.ext.size(format="human")
+                                 }
 
                 assign(output_columns, "summary", data_set_info, dict)
 
@@ -184,7 +188,7 @@ def ext(self: DataFrame):
                 {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
                  _cols_name in list(actual_columns.keys())}))
 
-            df = df.meta.set(value={})
+            df = df.meta.set("transformations", value={})
             df = df.meta.columns(df.cols.names())
 
             df.meta.set("profile", output_columns)
@@ -452,7 +456,7 @@ def ext(self: DataFrame):
                             new_columns.append(current_col_name)
 
                     # Rename keys to match new names
-                    profiler_columns = df.meta.get("profile")["columns"]
+                    profiler_columns = df.meta.get("profile.columns")
                     actions = df.meta.get("transformations.actions")
                     rename = actions.get("rename")
                     if rename:
@@ -485,7 +489,7 @@ def ext(self: DataFrame):
                     calculate_columns = None
                 # elif not is_cached:
             else:
-                calculate_columns = parse_columns(df,columns)
+                calculate_columns = parse_columns(df, columns)
             return calculate_columns
 
     return Ext(self)
