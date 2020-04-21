@@ -74,7 +74,7 @@ class Load:
                              keep_default_na=keep_default_na, *args,
                              **kwargs)
             if n_rows > -1:
-                df = df.head(n_rows)
+                df = dd.from_pandas(df.head(n_rows), npartitions=1)
 
             df.meta.set("file_name", file_name)
         except IOError as error:
