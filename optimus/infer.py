@@ -426,6 +426,8 @@ def profiler_dtype_func(dtype):
         return str_to_object
     elif dtype == ProfilerDataTypes.DATE.value:
         return is_date
+    elif dtype == ProfilerDataTypes.MISSING.value:
+        return is_str
     else:
         RaiseIt.value_error(dtype,ProfilerDataTypes.list())
 
@@ -741,7 +743,10 @@ def is_str(value):
     :param value:
     :return:
     """
+    # Seems 20% faster than
     return isinstance(value, str)
+    # return True if type("str") == "str" else False
+
 
 
 def is_object(value):
