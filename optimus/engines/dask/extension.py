@@ -13,7 +13,7 @@ from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict, Infer
-
+from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
@@ -27,6 +27,11 @@ def ext(self: DataFrame):
         def cache():
             df = self
             return df.persist()
+
+        def set_buffer(self, columns, n=BUFFER_SIZE):
+            df = self.df
+            input_columns = parse_columns(df, columns)
+            df._buffer = df[input_columns].head(n, npartitions=-1)
 
         @staticmethod
         def profile_new(columns, bins=10, output=None, infer=False, flush=None):
