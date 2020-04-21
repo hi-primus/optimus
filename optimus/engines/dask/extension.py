@@ -117,7 +117,7 @@ def ext(self: DataFrame):
 
                 freq = None
                 if string_cols is not None:
-                    print("STRING COLS", string_cols)
+                    # print("STRING COLS", string_cols)
                     # print("NNN",bins)
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
@@ -149,7 +149,7 @@ def ext(self: DataFrame):
                     infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
                 else:
                     infered_sample = columns
-                print("INFERED SAMPLE", infered_sample)
+                # print("INFERED SAMPLE", infered_sample)
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
                 # Nulls
@@ -199,38 +199,7 @@ def ext(self: DataFrame):
                 output_columns = dump_json(output_columns)
 
             return output_columns
-            # return  freq
 
-            # "count_uniques": len(df[col_name].value_counts())})
-
-            # for col_name in columns:
-            #     stats = {}
-            #
-            #     # stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
-            #     stats["stats"] = df.cols.count_by_dtypes(col_name)[col_name]
-            #
-            #     col_dtype = df[col_name].dtype
-            #     if col_dtype == np.float64 or df[col_name].dtype == np.int64:
-            #         stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)})
-            #         r = {col_name: stats}
-            #
-            #     elif col_dtype == "object":
-            #
-            #         # df[col_name] = df[col_name].astype("str").dropna()
-            #         stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name],
-            #                                "count_uniques": len(df[col_name].value_counts())})
-            #         r = {col_name: stats}
-            #     else:
-            #
-            #         RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
-
-            #     result["columns"].update(r)
-            # result["stats"] = {"rows_count": len(df)}
-            #
-            # if output == "json":
-            #     result = dump_json(result)
-
-            # return
 
         @staticmethod
         def sample(n=10, random=False):
