@@ -19,13 +19,14 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
+MAX_BUCKETS = 33
 
 # This implementation works for Dask and dask_cudf
 @jit
@@ -46,7 +47,7 @@ class DaskBaseColumns(BaseColumns):
             columns = columns_mismatch
         else:
             columns = columns_mismatch.keys()
-
+        # print("MISMATCHES", columns)
         @delayed
         def func(_df, _col_name, _func_dtype):
 
@@ -131,7 +132,7 @@ class DaskBaseColumns(BaseColumns):
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
 
-    def frequency(self, columns, n=10, percentage=False, total_rows=None, count_uniques=False):
+    def frequency(self, columns, n=MAX_BUCKETS , percentage=False, total_rows=None, count_uniques=False):
 
         df = self.df
         columns = parse_columns(df, columns)
@@ -868,7 +869,7 @@ class DaskBaseColumns(BaseColumns):
                 if old_col_name != col_name:
                     df = df.rename(columns={old_col_name: new_column})
 
-                df = df.meta.preserve(df, value=current_meta)
+                # df = df.meta.preserve(df, value=current_meta)
 
                 df = df.meta.rename((old_col_name, new_column))
 
@@ -996,11 +997,15 @@ class DaskBaseColumns(BaseColumns):
 
         partitions = df.to_delayed()
         for input_col, output_col in zip(input_cols, output_cols):
-
+            # print(output_col)
             temp = [dask.delayed(func)(part[input_col], args)
                     for part in partitions]
-            result[output_col] = from_delayed(temp)
 
+            result[output_col] = from_delayed(temp)
+            # print("division", result[output_col].known_divisions)
+
+        # dd.from_delayed(result).compute()
+        # print("asdf", result)
         return df.assign(**result)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
@@ -1021,7 +1026,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         _dtypes = []
 
-        def _cast_int(value,arg):
+        def _cast_int(value, arg):
             try:
                 return int(value)
             except ValueError:
@@ -1114,6 +1119,9 @@ class DaskBaseColumns(BaseColumns):
         else:
             kw_columns = {output_col[0]: _nest_array}
         df = df.assign(**kw_columns)
+
+        df = df.meta.preserve(self, Actions.NEST.value, list(kw_columns.values()))
+
         return df
 
     def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False):
