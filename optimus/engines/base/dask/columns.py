@@ -28,6 +28,7 @@ from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
 
+
 # This implementation works for Dask and dask_cudf
 @jit
 def _min(value):
@@ -46,10 +47,11 @@ class DaskBaseColumns(BaseColumns):
             columns_mismatch = parse_columns(df, columns_mismatch)
             columns = columns_mismatch
         else:
-            columns = columns_mismatch.keys()
+            columns = list(columns_mismatch.keys())
+
         # print("MISMATCHES", columns)
         @delayed
-        def func(_df, _col_name, _func_dtype):
+        def count_dtypes(_df, _col_name, _func_dtype):
 
             def _func(value):
                 # null values
@@ -57,21 +59,21 @@ class DaskBaseColumns(BaseColumns):
                     return ProfilerDataTypesQuality.MISSING.value
 
                 # match data type
-                elif _func_dtype(value):
+                if _func_dtype(value):
                     return ProfilerDataTypesQuality.MATCH.value
 
                 # mismatch
                 else:
                     return ProfilerDataTypesQuality.MISMATCH.value
 
-            return _df[_col_name].apply(_func).value_counts()
+            return _df[_col_name].map(_func).value_counts()
 
         df_len = len(df)
-        nulls_count = df[columns].isna().sum().compute().to_dict()
+
 
         @delayed
         def no_infer_func(_df, _col_name):
-
+            nulls_count = df[columns].isna().sum().compute().to_dict()
             return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - nulls_count[_col_name],
                               ProfilerDataTypesQuality.MISSING.value: nulls_count[_col_name]}, name=_col_name)
 
@@ -79,7 +81,7 @@ class DaskBaseColumns(BaseColumns):
 
         if infer is True:
 
-            delayed_parts = [func(part, col_name, profiler_dtype_func(dtype)) for part in partitions for
+            delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype)) for part in partitions for
                              col_name, dtype in columns_mismatch.items()]
 
         else:
@@ -95,13 +97,13 @@ class DaskBaseColumns(BaseColumns):
         c = dd.compute(b)[0]
 
         # Flat dict
-        c = {x: y for result in c for x, y in result.items()}
+        d = {x: y for _c in c for x, y in _c.items()}
 
         def none_to_zero(value):
             return value if value is not None else 0
 
         result = {}
-        for col_name, values in c.items():
+        for col_name, values in d.items():
             result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
                                 "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
                                 "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))}
@@ -132,7 +134,7 @@ class DaskBaseColumns(BaseColumns):
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
 
-    def frequency(self, columns, n=MAX_BUCKETS , percentage=False, total_rows=None, count_uniques=False):
+    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False):
 
         df = self.df
         columns = parse_columns(df, columns)

@@ -75,6 +75,7 @@ class ProfilerDataTypes(Enum):
     EMAIL = "email"
     CREDIT_CARD_NUMBER = "credit_card_number"
     ZIP_CODE = "zip_code"
+    MISSING = "missing"
 
     @staticmethod
     def list():
