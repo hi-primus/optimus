@@ -1173,13 +1173,15 @@ class DaskBaseColumns(BaseColumns):
         else:
             regex = search
 
-        def _replace(part, args):
-            return part.str.replace(args[0], args[1])
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.assign(**{output_col: df[input_col].str.replace(regex, replace_by)})
 
-        df = df.cols.apply(input_cols, _replace, func_return_type=str,
-                           filter_col_by_dtypes=df.constants.STRING_TYPES,
-                           output_cols=output_cols, args=(regex, replace_by))
+        # The apply function seems to have problem appending new columns https://github.com/dask/dask/issues/2690
+        # df = df.cols.apply(input_cols, _replace, func_return_type=str,
+        #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
+        #                    output_cols=output_cols, args=(regex, replace_by))
 
+        df = df.meta.preserve(df, Actions.REPLACE.value, output_cols)
         return df
 
     def is_numeric(self, col_name):
