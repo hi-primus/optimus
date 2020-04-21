@@ -354,11 +354,9 @@ def cols(self: DataFrame):
             def get_match_positions(_value, _separator):
                 result = None
                 if is_str(_value):
-                    length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
+                    length = [[match.start(), match.end()] for match in re.finditer(re.escape(_separator), _value)]
                     result = length if len(length) > 0 else None
                 return result
-
-            sub = ["\\." if ele == "." else ele for ele in sub]
 
             for col_name in columns:
                 df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
