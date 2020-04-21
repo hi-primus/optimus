@@ -1148,6 +1148,7 @@ class DaskBaseColumns(BaseColumns):
         if drop is True:
             df.drop(columns=input_cols, inplace=True)
 
+        df = df.meta.preserve(df, Actions.UNNEST.value, list(kw_columns.keys()))
         return df
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
