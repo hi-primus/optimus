@@ -499,7 +499,7 @@ def downloader(url, file_format):
 
 
 @functools.lru_cache(maxsize=128)
-def prepare_path(path, file_format):
+def prepare_path(path, file_format=None):
     """
     Helper to return the file to be loaded and the file name.
     This will memoise
