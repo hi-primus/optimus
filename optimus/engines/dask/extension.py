@@ -119,9 +119,10 @@ def ext(self: DataFrame):
                 numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
                 string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
                 hist = None
+                freq_uniques = None
                 if numeric_cols is not None:
                     hist = df.cols.hist(numeric_cols, buckets=bins)
-
+                    freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None
                 if string_cols is not None:
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
@@ -155,6 +156,7 @@ def ext(self: DataFrame):
                 else:
                     infered_sample = columns
                 # print("INFERED SAMPLE", infered_sample)
+
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
                 # Nulls
@@ -162,15 +164,13 @@ def ext(self: DataFrame):
                 for i in mismatch.values():
                     total_count_na = total_count_na + i["missing"]
 
-                df.cols.count_uniques(numeric_cols)
-
                 dtypes = df.cols.dtypes("*")
+                # return True
 
-                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
 
                 output_columns = update_dict(output_columns, updated_columns)
-
+                # print("FINFIN")
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
