@@ -56,15 +56,18 @@ class DaskBaseColumns(BaseColumns):
             def _func(value):
                 # null values
                 if pd.isnull(value):
-                    return ProfilerDataTypesQuality.MISSING.value
+                    # ProfilerDataTypesQuality.MISSING.value
+                    return 1
 
                 # match data type
-                if _func_dtype(value):
-                    return ProfilerDataTypesQuality.MATCH.value
+                elif _func_dtype(value):
+                    # ProfilerDataTypesQuality.MATCH.value
+                    return 2
 
                 # mismatch
                 else:
-                    return ProfilerDataTypesQuality.MISMATCH.value
+                    # ProfilerDataTypesQuality.MISMATCH.value
+                    return 0
 
             return _df[_col_name].map(_func).value_counts()
 
