@@ -9,11 +9,11 @@ from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
+from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict, Infer
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.profiler.constants import MAX_BUCKETS
 
 
@@ -204,7 +204,6 @@ def ext(self: DataFrame):
                 output_columns = dump_json(output_columns)
 
             return output_columns
-
 
         @staticmethod
         def sample(n=10, random=False):
@@ -460,9 +459,16 @@ def ext(self: DataFrame):
                     calculate_columns = list(set(calculate_columns))
 
                 elif not are_actions:
-                    calculate_columns = None
-                # elif not is_cached:
+                    # Check if there are columns that have not beend profiler an that are not in the profiler buffer
+                    profiler_columns = list(df.meta.get("profile.columns").keys())
+                    new_columns = parse_columns(df, columns)
+
+                    calculate_columns = [x for x in new_columns if
+                                         not x in profiler_columns or profiler_columns.remove(x)]
+
             else:
+                # Check if all the columns are calculated
+
                 calculate_columns = parse_columns(df, columns)
             return calculate_columns
 
