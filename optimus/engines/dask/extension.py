@@ -13,7 +13,9 @@ from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict, Infer
-from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
+from optimus.helpers.constants import BUFFER_SIZE
+from optimus.profiler.constants import MAX_BUCKETS
+
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
@@ -34,7 +36,7 @@ def ext(self: DataFrame):
             df._buffer = df[input_columns].head(n, npartitions=-1)
 
         @staticmethod
-        def profile_new(columns, bins=10, output=None, infer=False, flush=None):
+        def profile_new(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None):
             df = self
             from dask import delayed
             import numpy as np
@@ -59,7 +61,7 @@ def ext(self: DataFrame):
             # numeric_cols = df.cols.names(columns, by_dtypes=df.constants.NUMERIC_TYPES)
             # string_cols = df.cols.names(columns, by_dtypes=df.constants.STRING_TYPES)
 
-            _min_max = [func(part, columns, 10) for part in partitions]
+            _min_max = [func(part, columns, bins) for part in partitions]
 
             # _min_max = {col_name: dask.delayed(get_bin_edges_min_max)(**_min_max, ) for part in partitions for
             #             col_name in numeric_cols}
@@ -84,7 +86,7 @@ def ext(self: DataFrame):
             return _min_max
 
         @staticmethod
-        def profile(columns, bins=10, output=None, infer=False, flush=None):
+        def profile(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None):
             """
 
             :param columns:
@@ -122,8 +124,6 @@ def ext(self: DataFrame):
 
                 freq = None
                 if string_cols is not None:
-                    # print("STRING COLS", string_cols)
-                    # print("NNN",bins)
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
 
                 @delayed

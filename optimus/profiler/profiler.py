@@ -22,8 +22,7 @@ from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
 
-MAX_BUCKETS = 33
-BATCH_SIZE = 20
+from optimus.profiler.constants import MAX_BUCKETS, BATCH_SIZE
 
 
 class Profiler:
