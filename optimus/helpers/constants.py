@@ -76,7 +76,7 @@ class ProfilerDataTypes(Enum):
     CREDIT_CARD_NUMBER = "credit_card_number"
     ZIP_CODE = "zip_code"
     MISSING = "missing"
-
+    CATEGORICAL = "categorical"
     @staticmethod
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))

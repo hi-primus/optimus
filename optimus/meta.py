@@ -17,7 +17,7 @@ def meta(self):
         @staticmethod
         def reset(self):
             df = self.meta.set("transformations.actions", {})
-            Profiler.instance.output_columns = {}
+            # Profiler.instance.output_columns = {}
             return df
 
         @staticmethod

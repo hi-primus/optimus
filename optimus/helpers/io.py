@@ -1,5 +1,4 @@
 import csv
-import urllib.request
 import uuid
 import os
 import magic
