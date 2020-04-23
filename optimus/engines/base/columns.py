@@ -2,6 +2,8 @@ import string
 from abc import abstractmethod, ABC
 from enum import Enum
 
+import numpy as np
+
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
@@ -22,7 +24,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def select(columns="*", regex=None, data_type=None, invert=False) -> str:
+    def select(columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> str:
         pass
 
     @staticmethod
@@ -274,7 +276,17 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
         data_types = ({k: str(v) for k, v in dict(df.dtypes).items()})
-        return {col_name: data_types[col_name] for col_name in columns}
+        return format_dict({col_name: data_types[col_name] for col_name in columns})
+
+    def schema_dtype(self, columns="*"):
+        """
+        Return the column(s) data type as Type
+        :param columns: Columns to be processed
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+        return format_dict({col_name: np.dtype(df[col_name]).type for col_name in columns})
 
     @staticmethod
     @abstractmethod
@@ -663,11 +675,6 @@ class BaseColumns(ABC):
         #               'fliers': fliers, 'label': one_list_to_val(col_name)}]
         #
         #     return stats
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def schema_dtype(columns="*"):
         pass
 
     def names(self, col_names="*", by_dtypes=None, invert=False):
