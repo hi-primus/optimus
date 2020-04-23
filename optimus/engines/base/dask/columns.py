@@ -1190,7 +1190,7 @@ class DaskBaseColumns(BaseColumns):
 
         df = df.meta.preserve(df, Actions.UNNEST.value, list(kw_columns.keys()))
 
-        return df
+        return df.cols.select(output_ordered_columns)
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
         """
