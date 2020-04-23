@@ -37,3 +37,4 @@ dask-ml[complete]==1.2.0
 fast-histogram==0.8
 python-magic==0.4.15
 python-magic-bin==0.4.14
+gputil
