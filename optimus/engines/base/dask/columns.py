@@ -639,7 +639,7 @@ class DaskBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    def set(self, output_col, value=None):
+    def set(self, value=None,output_col=None):
         """
         Execute a hive expression. Also handle ints and list in columns
         :param output_col: Output columns
@@ -649,13 +649,9 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
 
-        columns = parse_columns(df, output_col, accepts_missing_cols=True)
-        check_column_numbers(columns, 1)
+        check_column_numbers(output_col, 1)
 
-        if is_list(value):
-            df = df.assign(**{output_col: np.array(value)})
-        else:
-            df = df.assign(**{output_col: value})
+        df = df.assign(**{output_col: eval(value)})
 
         return df
 
