@@ -39,7 +39,7 @@ packaging==19.1
 ordered-set==3.1.1
 deepdiff==4.0.6
 papermill==1.0.1
-cryptography==2.7
+cryptography==2.9.2
 pypika==0.32.0
 statsmodels==0.10.1
 glom==19.10.0
