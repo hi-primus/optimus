@@ -1,11 +1,18 @@
+import csv
 import ntpath
+import os
 
 import dask.bag as db
+import magic
 import pandas as pd
 from dask import dataframe as dd
 
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+
+XML_THRESHOLD = 10
+JSON_THRESHOLD = 20
+BYTES_SIZE = 2048
 
 
 class Load:
@@ -46,7 +53,7 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="utf-8", null_value="None", n_rows=-1, cache=False,
+    def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
 
         """
@@ -57,7 +64,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
-        :param charset:
+        :param encoding:
         :param null_value:
         :param n_rows:
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
@@ -69,7 +76,7 @@ class Load:
 
         file, file_name = prepare_path(path, "csv")
         try:
-            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
+            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding, na_values=null_value,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=keep_default_na, *args,
                              **kwargs)
@@ -84,7 +91,7 @@ class Load:
         return df
 
     @staticmethod
-    def parquet(path, columns=None, engine="pyarrow",*args, **kwargs):
+    def parquet(path, columns=None, engine="pyarrow", *args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -200,4 +207,53 @@ class Load:
             logger.print(error)
             raise
 
+        return df
+
+    @staticmethod
+    def file(path, infer=True, *args, **kwargs):
+
+        full_file_name, file_name = prepare_path(path)
+
+        file_ext = os.path.splitext(file_name)[1]
+
+        file = open(full_file_name).read(BYTES_SIZE)
+
+        mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_file_name).split(";")
+        mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "ext": file_ext}
+
+        if mime == "text/plain":
+
+            # Try to infer if is a valid json
+            if sum([file.count(i) for i in ['(', '{', '}', '[', ']']]) > JSON_THRESHOLD:
+                mime_info["filetype"] = "json"
+
+            elif sum([file.count(i) for i in ['<', '/>']]) > XML_THRESHOLD:
+                mime_info["filetype"] = "xml"
+
+            # CSV
+            else:
+                try:
+                    dialect = csv.Sniffer().sniff(file)
+                    mime_info["filetype"] = "csv"
+
+                    r = {"properties": {"delimiter": dialect.delimiter,
+                                        "doublequote": dialect.doublequote,
+                                        "escapechar": dialect.escapechar,
+                                        "lineterminator": dialect.lineterminator,
+                                        "quotechar": dialect.quotechar,
+                                        "quoting": dialect.quoting,
+                                        "skipinitialspace": dialect.skipinitialspace}}
+
+                    mime_info.update(r)
+                except:
+                    pass
+
+        elif mime == "application/vnd.ms-excel":
+            mime_info["filetype"] = "excel"
+
+        if mime_info["filetype"] == "csv":
+            df = Load.csv(full_file_name, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
+        elif mime_info["filetype"] == "json":
+            df = Load.json(full_file_name, args, kwargs)
+        df.meta.set("mime_info", mime_info)
         return df

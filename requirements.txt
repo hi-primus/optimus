@@ -1,5 +1,4 @@
-ujson
-numba
+numba==0.49
 simplejson==3.16.0
 cryptography==2.7
 imgkit==1.0.1
@@ -36,3 +35,5 @@ fastavro==0.22.7
 dask[complete]==2.9.2
 dask-ml[complete]==1.2.0
 fast-histogram==0.8
+python-magic==0.4.15
+python-magic-bin==0.4.14
