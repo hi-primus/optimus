@@ -1177,11 +1177,11 @@ class DaskBaseColumns(BaseColumns):
             kw_columns = {}
             for i in range(splits):
                 output_col = output_cols[0] + "_" + str(i)
-                kw_columns = {output_col: df_new.map(lambda x, i=i: x[i] if i < len(x) else None)}
-                df = df.assign(**kw_columns)
-
+                kw_columns[output_col] = df_new.map(lambda x, i=i: x[i] if i < len(x) else None)
                 col_index = output_ordered_columns.index(input_col) + i + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
+
+            df = df.assign(**kw_columns)
 
         if drop is True:
             df = df.drop(columns=input_cols)
