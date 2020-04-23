@@ -55,14 +55,15 @@ class DaskBaseColumns(BaseColumns):
 
             def _func(value):
                 # null values
-                if pd.isnull(value):
-                    # ProfilerDataTypesQuality.MISSING.value
-                    return 1
 
                 # match data type
-                elif _func_dtype(value):
+                if _func_dtype(value):
                     # ProfilerDataTypesQuality.MATCH.value
                     return 2
+
+                elif value is None:
+                    # ProfilerDataTypesQuality.MISSING.value
+                    return 1
 
                 # mismatch
                 else:
@@ -73,12 +74,11 @@ class DaskBaseColumns(BaseColumns):
 
         df_len = len(df)
 
-
         @delayed
-        def no_infer_func(_df, _col_name):
-            nulls_count = df[columns].isna().sum().compute().to_dict()
-            return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - nulls_count[_col_name],
-                              ProfilerDataTypesQuality.MISSING.value: nulls_count[_col_name]}, name=_col_name)
+        def no_infer_func(_df, _col_name, _nulls_count):
+
+            return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
+                              ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
 
         partitions = df.to_delayed()
 
@@ -88,7 +88,8 @@ class DaskBaseColumns(BaseColumns):
                              col_name, dtype in columns_mismatch.items()]
 
         else:
-            delayed_parts = [no_infer_func(part, col_name) for part in partitions for
+            nulls_count = df.isna().sum().compute().to_dict()
+            delayed_parts = [no_infer_func(part, col_name, nulls_count) for part in partitions for
                              col_name in columns_mismatch]
 
         @delayed
