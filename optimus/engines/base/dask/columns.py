@@ -1247,15 +1247,6 @@ class DaskBaseColumns(BaseColumns):
             result = False
         return result
 
-    def schema_dtype(self, columns="*"):
-        """
-        Return the column(s) data type as Type
-        :param columns: Columns to be processed
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns)
-        return format_dict([np.dtype(df[col_name]).type for col_name in columns])
 
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
