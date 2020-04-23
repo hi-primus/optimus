@@ -1,4 +1,5 @@
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
 from optimus.meta import meta
 from optimus.outliers.outliers import outliers
 from optimus.plots import plots
@@ -18,7 +19,7 @@ class MetadataDask:
         self._metadata = value
 
 
-def optimus(engine="spark", *args, **kwargs):
+def optimus(engine="dask", *args, **kwargs):
     logger.print("ENGINE", engine)
     # Monkey Patching
     import pandas as pd
@@ -110,6 +111,8 @@ def optimus(engine="spark", *args, **kwargs):
         from optimus.engines.cudf.engine import CUDFEngine
         return CUDFEngine(*args, **kwargs)
 
-    elif engine == "dask-cudf":
+    elif engine == "dask_cudf":
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         return DaskCUDFEngine(*args, **kwargs)
+    else:
+        RaiseIt.value_error(engine, ["pandas","spark", "dask", "cudf", "dask_cudf"])
