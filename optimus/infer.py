@@ -69,11 +69,12 @@ def str_to_data_type(_value, _dtypes):
     :param _value:
     :return:
     """
-    try:
-        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
-            return True
-    except (ValueError, SyntaxError):
-        pass
+    return True if isinstance(_value, str) else False
+    # try:
+    #     if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
+    #         return True
+    # except (ValueError, SyntaxError,AttributeError):
+    #     pass
 
 
 def str_to_array(_value):
