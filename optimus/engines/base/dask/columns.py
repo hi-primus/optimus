@@ -22,6 +22,7 @@ from optimus.helpers.columns import parse_columns, validate_columns_names, check
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
+from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
@@ -639,7 +640,7 @@ class DaskBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    def set(self, value=None,output_col=None):
+    def set(self, value=None, output_col=None):
         """
         Execute a hive expression. Also handle ints and list in columns
         :param output_col: Output columns
@@ -691,19 +692,26 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
+        output_ordered_columns = df.cols.names()
 
         if columns is None:
             input_cols = parse_columns(df, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
                 output_cols = get_output_cols(input_cols, output_cols)
-        else:
+
+        if columns:
             input_cols = list([c[0] for c in columns])
             output_cols = list([c[1] for c in columns])
             output_cols = get_output_cols(input_cols, output_cols)
 
+        for input_col, output_col in zip(input_cols, output_cols):
+            if input_col != output_col:
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
         df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
 
-        return df
+        return df.cols.select(output_ordered_columns)
 
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -980,7 +988,8 @@ class DaskBaseColumns(BaseColumns):
 
         input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                    accepts_missing_cols=True)
-        check_column_numbers(input_cols, "*")
+        # check_column_numbers(input_cols, "*")
+        output_ordered_columns = df.cols.names()
 
         if skip_output_cols_processing:
             output_cols = val_to_list(output_cols)
@@ -1004,11 +1013,14 @@ class DaskBaseColumns(BaseColumns):
                     for part in partitions]
 
             result[output_col] = from_delayed(temp)
+            if input_col != output_col:
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
             # print("division", result[output_col].known_divisions)
 
-        # dd.from_delayed(result).compute()
-        # print("asdf", result)
-        return df.assign(**result)
+        df = df.assign(**result)
+        return df.cols.select(output_ordered_columns)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -1101,8 +1113,12 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         input_cols = parse_columns(df, input_cols)
-        output_col = parse_columns(df, output_col, accepts_missing_cols=True)
-        check_column_numbers(output_col, 1)
+        if output_col is None:
+            RaiseIt.type(output_col, ["str"])
+
+        # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
+        # check_column_numbers(output_col, 1)
+        output_ordered_columns = df.cols.names()
 
         def _nest_string(row):
             v = row[input_cols[0]].astype(str)
@@ -1117,14 +1133,18 @@ class DaskBaseColumns(BaseColumns):
             return "[" + v + "]"
 
         if shape == "string":
-            kw_columns = {output_col[0]: _nest_string}
+            kw_columns = {output_col: _nest_string}
         else:
-            kw_columns = {output_col[0]: _nest_array}
+            kw_columns = {output_col: _nest_array}
+
         df = df.assign(**kw_columns)
 
-        df = df.meta.preserve(self, Actions.NEST.value, list(kw_columns.values()))
+        col_index = output_ordered_columns.index(input_cols[-1]) + 1
+        output_ordered_columns[col_index:col_index] = [output_col]
 
-        return df
+        df = df.meta.preserve(df, Actions.NEST.value, list(kw_columns.values()))
+
+        return df.cols.select(output_ordered_columns)
 
     def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False):
 
@@ -1145,20 +1165,31 @@ class DaskBaseColumns(BaseColumns):
 
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
+        output_ordered_columns = df.cols.names()
+
         # columns = prepare_columns(df, input_cols, output_cols)
         # new data frame with split value columns
 
         for input_col in input_cols:
             df_new = df[input_col].astype("str").str.split(separator, n=splits)
+
             # Sometime when split the result are less parts that the split param. We handle this returning Null
-            kw_columns = {output_cols[0] + "_" + str(i): df_new.map(lambda x, i=i: x[i] if i < len(x) else None) for i
-                          in range(splits)}
-            df = df.assign(**kw_columns)
+            kw_columns = {}
+            for i in range(splits):
+                output_col = output_cols[0] + "_" + str(i)
+                kw_columns = {output_col: df_new.map(lambda x, i=i: x[i] if i < len(x) else None)}
+                df = df.assign(**kw_columns)
+
+                col_index = output_ordered_columns.index(input_col) + i + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
 
         if drop is True:
-            df.drop(columns=input_cols, inplace=True)
+            df = df.drop(columns=input_cols)
+            for input_col in input_cols:
+                if input_col in output_ordered_columns: output_ordered_columns.remove(input_col)
 
         df = df.meta.preserve(df, Actions.UNNEST.value, list(kw_columns.keys()))
+
         return df
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -1176,6 +1207,8 @@ class DaskBaseColumns(BaseColumns):
 
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
+        output_ordered_columns = df.cols.names()
+
         search = val_to_list(search)
         if search_by == "chars":
             regex = re.compile("|".join(map(re.escape, search)))
@@ -1184,16 +1217,21 @@ class DaskBaseColumns(BaseColumns):
         else:
             regex = search
 
+        kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
-            df = df.assign(**{output_col: df[input_col].str.replace(regex, replace_by)})
+            kw_columns[output_col] = df[input_col].str.replace(regex, replace_by)
 
+            if input_col != output_col:
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
+        df = df.assign(**kw_columns)
         # The apply function seems to have problem appending new columns https://github.com/dask/dask/issues/2690
         # df = df.cols.apply(input_cols, _replace, func_return_type=str,
         #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
         #                    output_cols=output_cols, args=(regex, replace_by))
-
         df = df.meta.preserve(df, Actions.REPLACE.value, output_cols)
-        return df
+        return df.cols.select(output_ordered_columns)
 
     def is_numeric(self, col_name):
         """
@@ -1219,7 +1257,7 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
         return format_dict([np.dtype(df[col_name]).type for col_name in columns])
 
-    def select(self, columns="*", regex=None, data_type=None, invert=False):
+    def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
         Select columns using index, column name, regex to data type
         :param columns:
@@ -1229,7 +1267,8 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
+        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+                                accepts_missing_cols=accepts_missing_cols)
         if columns is not None:
             df = df[columns]
             result = df
