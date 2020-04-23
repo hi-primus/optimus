@@ -212,17 +212,15 @@ class Load:
     @staticmethod
     def file(path, infer=True, *args, **kwargs):
 
-        full_file_name, file_name = prepare_path(path)
+        full_path, file_name = prepare_path(path)
 
         file_ext = os.path.splitext(file_name)[1]
 
-        file = open(full_file_name).read(BYTES_SIZE)
-
-        mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_file_name).split(";")
+        mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
         mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "ext": file_ext}
 
         if mime == "text/plain":
-
+            file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
             # Try to infer if is a valid json
             if sum([file.count(i) for i in ['(', '{', '}', '[', ']']]) > JSON_THRESHOLD:
                 mime_info["filetype"] = "json"
@@ -252,8 +250,8 @@ class Load:
             mime_info["filetype"] = "excel"
 
         if mime_info["filetype"] == "csv":
-            df = Load.csv(full_file_name, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
+            df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
         elif mime_info["filetype"] == "json":
-            df = Load.json(full_file_name, args, kwargs)
+            df = Load.json(full_path, args, kwargs)
         df.meta.set("mime_info", mime_info)
         return df
