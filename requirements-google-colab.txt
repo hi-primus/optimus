@@ -1,5 +1,5 @@
 simplejson==3.8.2
-cryptography==1.5
+cryptography==2.9.2
 imgkit==1.0.1
 packaging==19.1
 requests==2.20.0
