@@ -44,6 +44,7 @@ class Tukey(AbstractOutlierBounds):
         Get whiskers, iqrs and outliers and non outliers count
         :return:
         """
+
         lower_bound = self.lower_bound
         upper_bound = self.upper_bound
 

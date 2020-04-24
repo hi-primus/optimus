@@ -92,7 +92,6 @@ class AbstractOutlierBounds(ABC):
         df = self.df
         col_name = self.col_name
         # upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-        # print(upper_bound, lower_bound)
         return df.rows.drop((df[col_name] > self.upper_bound) | (df[col_name] < self.lower_bound))
 
     def count_lower_bound(self, bound: int):

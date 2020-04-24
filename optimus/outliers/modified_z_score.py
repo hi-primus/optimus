@@ -2,6 +2,7 @@
 
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.converter import format_dict
 from optimus.helpers.core import one_list_to_val
 from optimus.infer import is_numeric
 from optimus.outliers.abstract_outliers_threshold import AbstractOutlierThreshold
@@ -40,15 +41,26 @@ class ModifiedZScore(AbstractOutlierThreshold):
         col_name = self.col_name
 
         mad = df.cols.mad(col_name, self.relative_error, True)
+        mad = mad[col_name]
         m_z_col_name = name_col(col_name, "modified_z_score")
 
-        return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))
+        def func(pdf, arg):
+            median = arg[0]
+            mad = arg[1]
+
+            return abs(0.6745 * (pdf - median) / mad)
+
+        df = df.cols.apply(col_name, func, args=(mad["median"], mad["mad"]), output_cols=m_z_col_name)
+        return df
+
+        # return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))
 
     def info(self, output: str = "dict"):
         m_z_col_name = name_col(self.col_name, "modified_z_score")
 
-        df = self._m_z_score()
+        df = self.df_score
+        # return df
         max_m_z_score = df.rows.select(df[m_z_col_name] > self.threshold).cols.max(m_z_col_name)
-
+        #
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
-                "max_m_z_score": max_m_z_score}
+                "max_m_z_score": format_dict(max_m_z_score)}

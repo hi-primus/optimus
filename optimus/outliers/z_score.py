@@ -38,7 +38,8 @@ class ZScore(AbstractOutlierThreshold):
         self.tmp_col = name_col(self.col_name, "z_score")
 
         df = self.z_score()
-        max_z_score = df.rows.select(F.col(self.tmp_col) > self.threshold).cols.max(self.tmp_col)
+
+        max_z_score = df.rows.select(df[self.tmp_col] > self.threshold).cols.max(self.tmp_col)
 
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                 "max_z_score": max_z_score}

@@ -22,7 +22,7 @@ class MAD(AbstractOutlierBounds):
         self.threshold = threshold
         self.relative_error = relative_error
         self.upper_bound, self.lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-
+        # print("AaAA",self.upper_bound, self.lower_bound)
         super().__init__(df, col_name, self.lower_bound, self.upper_bound)
 
     def whiskers(self):
@@ -31,6 +31,7 @@ class MAD(AbstractOutlierBounds):
         :return:
         """
         mad_value = self.df.cols.mad(self.col_name, self.relative_error, more=True)
+        mad_value = mad_value[self.col_name]
         lower_bound = mad_value["median"] - self.threshold * mad_value["mad"]
         upper_bound = mad_value["median"] + self.threshold * mad_value["mad"]
 

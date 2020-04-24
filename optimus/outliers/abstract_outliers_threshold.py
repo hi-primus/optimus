@@ -28,6 +28,7 @@ class AbstractOutlierThreshold(ABC):
         """
 
         df = self.df
+
         return df.rows.select(df[self.tmp_col] > self.threshold).cols.drop(self.tmp_col)
 
     def drop(self):
@@ -60,7 +61,7 @@ class AbstractOutlierThreshold(ABC):
         Count the outliers rows using the selected column
         :return:
         """
-        return self.select().count()
+        return self.select().rows.count(delayed=False)
 
     def non_outliers_count(self):
         """
@@ -68,7 +69,7 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
         df = self.df
-        return df.rows.select(df[self.tmp_col] < self.threshold).cols.drop(self.tmp_col).count()
+        return df.rows.select(df[self.tmp_col] < self.threshold).cols.drop(self.tmp_col).rows.count(delayed=False)
 
     @abstractmethod
     def info(self, output: str = "dict"):
