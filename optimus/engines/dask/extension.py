@@ -86,13 +86,15 @@ def ext(self: DataFrame):
             return _min_max
 
         @staticmethod
-        def profile(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None):
+        def profile(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None, size=True):
             """
 
             :param columns:
             :param bins:
             :param output:
             :param infer:
+            :param flush:
+            :param size:
             :return:
             """
 
@@ -146,7 +148,6 @@ def ext(self: DataFrame):
                             _f[col_name]["stats"]["frequency"] = f["frequency"]
                             _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
-                    # _f[col_name]["stats"]["rows_count"] = _rows_count
                     return {"columns": _f}
 
                 # Infered column data type using a 10 first rows
@@ -155,7 +156,6 @@ def ext(self: DataFrame):
                     infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
                 else:
                     infered_sample = columns
-                # print("INFERED SAMPLE", infered_sample)
 
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
 
@@ -165,19 +165,18 @@ def ext(self: DataFrame):
                     total_count_na = total_count_na + i["missing"]
 
                 dtypes = df.cols.dtypes("*")
-                # return True
 
                 updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
 
                 output_columns = update_dict(output_columns, updated_columns)
-                # print("FINFIN")
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 data_set_info = {'cols_count': len(df.columns),
                                  'rows_count': df.rows.count(),
-                                 # 'size': df.ext.size(format="human")
                                  }
+                if size is True:
+                    data_set_info.update({'size': df.ext.size(format="human")})
 
                 assign(output_columns, "summary", data_set_info, dict)
 
