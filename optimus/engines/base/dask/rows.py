@@ -132,7 +132,7 @@ class DaskBaseRows(BaseRows):
             if order != "asc" and order != "asc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df = df.meta.preserve(self.df, Actions.SORT_ROW.value, col_name)
+            df = df.meta.preserve(df, Actions.SORT_ROW.value, col_name)
 
             c = df.cols.names()
             # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
@@ -149,8 +149,8 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.df
-        df = df.drop[where]
-        df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df[where]
+        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
@@ -216,7 +216,7 @@ class DaskBaseRows(BaseRows):
         # df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     def drop_by_dtypes(self, input_cols, data_type=None):
