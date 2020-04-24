@@ -51,11 +51,13 @@ def ext(self: DataFrame):
 
             df = self
             result["columns"] = {}
+            dtypes = df.cols.dtypes("*")
+
             for col_name in columns:
                 stats = {}
 
                 # stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
-                stats["stats"] = df.cols.count_by_dtypes(col_name,"int")[col_name]
+                stats["stats"] = df.cols.count_by_dtypes(col_name, "int")[col_name]
 
                 col_dtype = df[col_name].dtype
                 if col_dtype == np.float64 or df[col_name].dtype == np.int64:
@@ -64,16 +66,15 @@ def ext(self: DataFrame):
 
                 elif col_dtype == "object":
 
-                    # df[col_name] = df[col_name].astype("str").dropna()
                     stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name]["frequency"],
                                            "count_uniques": len(df[col_name].value_counts())})
                     r = {col_name: stats}
                 else:
 
                     RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
-
+                r[col_name]["dtype"]= dtypes[col_name]
                 result["columns"].update(r)
-            result["stats"] = {"rows_count": len(df)}
+            result["summary"] = {"rows_count": len(df)}
 
             if output == "json":
                 result = dump_json(result)
