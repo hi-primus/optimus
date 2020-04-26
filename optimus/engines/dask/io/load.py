@@ -7,6 +7,7 @@ import magic
 import pandas as pd
 from dask import dataframe as dd
 
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 
@@ -41,7 +42,7 @@ class Load:
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
         """
-        Return a spark from a tsv file.
+        Return a dataframe from a tsv file.
         :param path: path or location of the file.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
@@ -93,7 +94,7 @@ class Load:
     @staticmethod
     def parquet(path, columns=None, engine="pyarrow", *args, **kwargs):
         """
-        Return a spark from a parquet file.
+        Return a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
         :param args: custom argument to be passed to the spark parquet function
@@ -156,10 +157,10 @@ class Load:
     @staticmethod
     def avro(path, *args, **kwargs):
         """
-        Return a spark from a avro file.
+        Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
+        :param args: custom argument to be passed to the avro function
+        :param kwargs: custom keyword arguments to be passed to the avro function
         :return: Spark Dataframe
         """
         file, file_name = prepare_path(path, "avro")
@@ -175,37 +176,65 @@ class Load:
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, *args, **kwargs):
+    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_partitions=1, *args, **kwargs):
         """
-        Return a spark from a excel file.
+        Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
+        :param merge_sheets:
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
-        :return: Spark Dataframe
+
         """
-        file, file_name = prepare_path(path, "xls")
+        file, file_name = prepare_path(path)
+        header = None
+        if merge_sheets is True:
+            skiprows = -1
+        else:
+            header = 0
+            skiprows = 0
 
-        try:
-            pdf = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+        pdfs = val_to_list(
+            pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, *args, **kwargs))
 
-            # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
-            # exception when Spark try to infer the column data type
-            col_names = list(pdf.select_dtypes(include=['object']))
+        pdf = pd.concat(pdfs, axis=0).reset_index(drop=True)
 
-            column_dtype = {}
-            for col in col_names:
-                column_dtype[col] = str
+        df = dd.from_pandas(pdf, npartitions=n_partitions)
+        df.meta.set("file_name", ntpath.basename(file_name))
+        df.meta.set("sheet_names", len(pdfs))
 
-            # Convert object columns to string
-            pdf = pdf.astype(column_dtype)
-
-            # Create spark data frame
-            df = dd.from_pandas(pdf, npartitions=3)
-            df.meta.set("file_name", ntpath.basename(file_name))
-        except IOError as error:
-            logger.print(error)
-            raise
+        return df
+        # try:
+        #     # pdf = pd.ExcelFile(file, sheet_name=sheet_name, on_demand=True, *args, **kwargs)
+        #     xlsx = pd.ExcelFile(file)
+        #     sheet_names = xlsx.sheet_names
+        #     # print(sheet_names)
+        #     if sheet_name is None:
+        #         sheet_name = sheet_names[0]
+        #
+        #     # pandas.read_excel('records.xlsx', sheet_name='Cars', usecols=['Car Name', 'Car Price'])
+        #
+        #     pdf = xlsx.parse(sheet_name, header=None)
+        #
+        #     # xlsx = pd.ExcelFile(excel_file)
+        #     sheet_data = []
+        #     if merge_sheets:
+        #         for sheet_name in sheet_names:
+        #             # print(sheet_name)
+        #             temp = xlsx.parse(sheet_name).reset_index(drop=True)
+        #             # print(temp)
+        #             sheet_data.append(temp)
+        #         print(sheet_data)
+        #         pdf = pd.concat(sheet_data, axis=0)
+        #         # print("AAA",pdf)
+        #
+        #     df = dd.from_pandas(pdf, npartitions=n_partitions)
+        #     df.meta.set("file_name", ntpath.basename(file_name))
+        #     df.meta.set("sheet_names", sheet_names)
+        #
+        # except IOError as error:
+        #     logger.print(error)
+        #     raise
 
         return df
 
@@ -214,25 +243,27 @@ class Load:
 
         full_path, file_name = prepare_path(path)
 
-        file_ext = os.path.splitext(file_name)[1]
+        file_ext = os.path.splitext(file_name)[1].replace(".", "")
 
         mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
-        mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "ext": file_ext}
+        mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
 
+        # print("mini", mime_info)
         if mime == "text/plain":
             file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
             # Try to infer if is a valid json
             if sum([file.count(i) for i in ['(', '{', '}', '[', ']']]) > JSON_THRESHOLD:
-                mime_info["filetype"] = "json"
+                mime_info["file_type"] = "json"
+                df = Load.json(full_path, args, kwargs)
 
             elif sum([file.count(i) for i in ['<', '/>']]) > XML_THRESHOLD:
-                mime_info["filetype"] = "xml"
+                mime_info["file_type"] = "xml"
 
             # CSV
             else:
                 try:
                     dialect = csv.Sniffer().sniff(file)
-                    mime_info["filetype"] = "csv"
+                    mime_info["file_type"] = "csv"
 
                     r = {"properties": {"delimiter": dialect.delimiter,
                                         "doublequote": dialect.doublequote,
@@ -243,15 +274,21 @@ class Load:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
+
+                    df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
                 except:
                     pass
 
-        elif mime == "application/vnd.ms-excel":
-            mime_info["filetype"] = "excel"
 
-        if mime_info["filetype"] == "csv":
-            df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
-        elif mime_info["filetype"] == "json":
-            df = Load.json(full_path, args, kwargs)
+        elif mime_info["file_ext"] == "xls" or mime_info["file_ext"] == "xlsx":
+            # print("asdf")
+            mime_info["file_type"] = "excel"
+            df = Load.excel(full_path, **kwargs)
+        # print(mime_info["file_ext"])
+        #
+        # elif mime_info["mime"] == "application/vnd.ms-excel":
+        #     mime_info["file_type"] = "excel"
+        #     df = Load.excel(full_path, **kwargs)
+
         df.meta.set("mime_info", mime_info)
         return df
