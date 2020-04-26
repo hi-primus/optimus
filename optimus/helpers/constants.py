@@ -44,6 +44,8 @@ class Actions(Enum):
     INDEX_TO_STRING = "index_to_string"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
+    APPLY_COLS = "apply_cols"
+
     # ROWS
     SELECT_ROW = "select_row"
     DROP_ROW = "drop_row"
@@ -77,6 +79,7 @@ class ProfilerDataTypes(Enum):
     ZIP_CODE = "zip_code"
     MISSING = "missing"
     CATEGORICAL = "categorical"
+
     @staticmethod
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))
