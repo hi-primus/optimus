@@ -201,12 +201,12 @@ def cols(self):
             """
 
             return Cols.apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                              output_cols=output_cols, meta=meta)
+                              output_cols=output_cols, meta_action=meta)
 
         @staticmethod
         def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
                   filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-                  meta="apply") -> DataFrame:
+                  meta_action="apply") -> DataFrame:
             """
             Apply a function using pandas udf or udf if apache arrow is not available
             :param input_cols: Columns in which the function is going to be applied
@@ -220,7 +220,7 @@ def cols(self):
             :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
             :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
             True or False
-            :param meta: Metadata transformation to a dataframe
+            :param meta_action: Metadata transformation to a dataframe
             """
             input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                        accepts_missing_cols=True)
@@ -246,7 +246,7 @@ def cols(self):
 
             for input_col, output_col in zip(input_cols, output_cols):
                 df = df.withColumn(output_col, expr(when))
-                df = df.meta.preserve(self, meta, output_col)
+                df = df.meta.preserve(self, meta_action, output_col)
 
             return df
 
@@ -430,7 +430,7 @@ def cols(self):
                 return_type, func, func_type = cast_factory(data_type)
 
                 df = df.cols.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                                   output_cols=output_col, meta=Actions.CAST.value)
+                                   output_cols=output_col, meta_action=Actions.CAST.value)
 
             return df
 
@@ -868,7 +868,7 @@ def cols(self):
                 return F.lower(F.col(col))
 
             return Cols.apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols,
-                              meta=Actions.LOWER.value)
+                              meta_action=Actions.LOWER.value)
 
         @staticmethod
         def upper(input_cols, output_cols=None):
@@ -883,7 +883,7 @@ def cols(self):
                 return F.upper(F.col(col))
 
             return Cols.apply(input_cols, _upper, filter_col_by_dtypes="string", output_cols=output_cols,
-                              meta=Actions.UPPER.value)
+                              meta_action=Actions.UPPER.value)
 
         @staticmethod
         def trim(input_cols, output_cols=None):
@@ -899,7 +899,7 @@ def cols(self):
 
             return Cols.apply(input_cols, _trim, filter_col_by_dtypes=self.constants.NOT_ARRAY_TYPES,
                               output_cols=output_cols,
-                              meta=Actions.TRIM.value)
+                              meta_action=Actions.TRIM.value)
 
         @staticmethod
         def reverse(input_cols, output_cols=None):
@@ -950,7 +950,7 @@ def cols(self):
                 return with_out_accents
 
             df = Cols.apply(input_cols, _remove_accents, "string", output_cols=output_cols,
-                            meta=Actions.REMOVE_ACCENTS.value)
+                            meta_action=Actions.REMOVE_ACCENTS.value)
             return df
 
         @staticmethod
@@ -983,7 +983,7 @@ def cols(self):
 
             df = Cols.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
                             filter_col_by_dtypes=self.constants.NOT_ARRAY_TYPES,
-                            meta=Actions.REMOVE_WHITE_SPACES.value)
+                            meta_action=Actions.REMOVE_WHITE_SPACES.value)
             return df
 
         @staticmethod
@@ -1152,7 +1152,7 @@ def cols(self):
 
             return Cols.apply(input_cols, func=func_regex, args=[regex, value], output_cols=output_cols,
                               filter_col_by_dtypes=self.constants.STRING_TYPES + self.constants.NUMERIC_TYPES,
-                              meta=Actions.REPLACE_REGEX.value)
+                              meta_action=Actions.REPLACE_REGEX.value)
 
         @staticmethod
         def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
@@ -1233,7 +1233,7 @@ def cols(self):
                     else:
                         RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
 
-                df = df.cols.apply(input_col, func=func, output_cols=output_col, meta=Actions.FILL_NA.value)
+                df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
 
             return df
 
@@ -1249,7 +1249,7 @@ def cols(self):
             def _replace_na(_col_name, _value):
                 return F.when(F.col(_col_name).isNull(), True).otherwise(False)
 
-            return self.cols.apply(input_cols, _replace_na, output_cols=output_cols, meta=Actions.IS_NA.value)
+            return self.cols.apply(input_cols, _replace_na, output_cols=output_cols, meta_action=Actions.IS_NA.value)
 
         @staticmethod
         def count():
@@ -1442,7 +1442,7 @@ def cols(self):
 
             return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=self.constants.NUMERIC_TYPES,
                               output_cols=output_cols,
-                              meta=Actions.Z_SCORE.value)
+                              meta_action=Actions.Z_SCORE.value)
 
         @staticmethod
         def standard_scaler(input_cols, output_cols=None):
@@ -1466,7 +1466,7 @@ def cols(self):
 
             return Cols.apply(input_cols, func=_min_max, filter_col_by_dtypes=self.constants.NUMERIC_TYPES,
                               output_cols=output_cols,
-                              meta=Actions.MIN_MAX_SCALER.value)
+                              meta_action=Actions.MIN_MAX_SCALER.value)
 
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
@@ -1488,7 +1488,7 @@ def cols(self):
 
             return Cols.apply(input_cols, func=_result, filter_col_by_dtypes=self.constants.NUMERIC_TYPES,
                               output_cols=output_cols,
-                              meta=Actions.MAX_ABS_SCALER.value)
+                              meta_action=Actions.MAX_ABS_SCALER.value)
 
         @staticmethod
         def iqr(columns, more=None, relative_error=RELATIVE_ERROR):
@@ -1556,11 +1556,11 @@ def cols(self):
                 # Arrays needs all the elements with the same data type. We try to cast to type
                 df = df.cols.cast("*", "str")
                 df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col,
-                                   skip_output_cols_processing=True, meta=Actions.NEST.value)
+                                   skip_output_cols_processing=True, meta_action=Actions.NEST.value)
 
             elif shape is "string":
                 df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col,
-                                   skip_output_cols_processing=True, meta=Actions.NEST.value)
+                                   skip_output_cols_processing=True, meta_action=Actions.NEST.value)
             else:
                 RaiseIt.value_error(shape, ["vector", "array", "string"])
 

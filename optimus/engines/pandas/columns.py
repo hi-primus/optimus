@@ -35,7 +35,7 @@ def cols(self: DataFrame):
             pass
 
         def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
+                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
             df = self.df
 
             input_cols = parse_columns(df, input_cols)
