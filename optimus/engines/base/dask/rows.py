@@ -74,12 +74,12 @@ class DaskBaseRows(BaseRows):
         input_cols = parse_columns(self, input_cols)
         return self.select(fbdt(input_cols, data_type))
 
-    def count(self, delayed=True) -> int:
+    def count(self, compute=True) -> int:
         """
         Count dataframe rows
         """
         df = self.df
-        if delayed is True:
+        if compute is True:
             result = len(df.compute())
         else:
             result = len(df)
