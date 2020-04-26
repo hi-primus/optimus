@@ -684,46 +684,9 @@ class DataFrameBaseColumns(BaseColumns):
         return df
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
 
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                   accepts_missing_cols=True)
-        check_column_numbers(input_cols, "*")
-
-        if skip_output_cols_processing:
-            output_cols = val_to_list(output_cols)
-        else:
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        if output_cols is None:
-            output_cols = input_cols
-
-        args = val_to_list(args)
-
-        func_return_type = val_to_list(func_return_type)
-        for input_col, output_col in zip(input_cols, output_cols):
-
-            if func_return_type is None:
-                _meta = df[input_col]
-            else:
-                if "int" in func_return_type:
-                    return_type = int
-                elif "float" in func_return_type:
-                    return_type = float
-                elif "bool" in func_return_type:
-                    return_type = bool
-                else:
-                    return_type = object
-                _meta = df[input_col].astype(return_type)
-            if args is None: args = []
-            a = map_delayed(df[input_col], func, *args)
-            # df[output_col] = df[input_col].apply(func, meta=_meta, args=args)
-
-        # print(df.head())
-        return a
-        # return df
+        pass
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
