@@ -338,6 +338,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         iqr_result = {}
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+
         check_column_numbers(columns, "*")
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
@@ -354,7 +355,6 @@ class DaskBaseColumns(BaseColumns):
             else:
                 result = iqr_value
             iqr_result[col_name] = result
-
         return format_dict(iqr_result)
 
     @staticmethod
@@ -560,14 +560,15 @@ class DaskBaseColumns(BaseColumns):
 
     def remove_accents(self, input_cols, output_cols=None):
         def _remove_accents(value, args):
-            cell_str = str(value)
+            def func(_value):
+                # first, normalize strings:
+                nfkd_str = unicodedata.normalize('NFKD', str(_value))
 
-            # first, normalize strings:
-            nfkd_str = unicodedata.normalize('NFKD', cell_str)
+                # Keep chars that has no other char combined (i.e. accents chars)
+                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
+                return with_out_accents
 
-            # Keep chars that has no other char combined (i.e. accents chars)
-            with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-            return with_out_accents
+            return value.map(func)
 
         df = self.df
         return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
@@ -960,7 +961,8 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _lower, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols,
+                             meta_action=Actions.LOWER.value)
 
     def upper(self, input_cols, output_cols=None):
         def _upper(value, args):
@@ -969,7 +971,8 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _upper, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols,
+                             meta_action=Actions.UPPER.value)
 
     def trim(self, input_cols, output_cols=None):
 
@@ -979,10 +982,12 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _trim, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols,
+                             meta_action=Actions.TRIM.value)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta="apply"):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+              meta_action=Actions.APPLY_COLS.value):
 
         df = self.df
 
@@ -999,8 +1004,6 @@ class DaskBaseColumns(BaseColumns):
         if output_cols is None:
             output_cols = input_cols
 
-        # args = val_to_list(args)
-
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1008,15 +1011,21 @@ class DaskBaseColumns(BaseColumns):
 
         partitions = df.to_delayed()
         for input_col, output_col in zip(input_cols, output_cols):
-            # print(output_col)
             temp = [dask.delayed(func)(part[input_col], args)
                     for part in partitions]
 
             result[output_col] = from_delayed(temp)
-            if input_col != output_col:
+
+            # Preserve column order
+            # print("ASDFDS", df.cols.names(), output_ordered_columns)
+
+            if output_col not in df.cols.names():
                 col_index = output_ordered_columns.index(input_col) + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
+                print("aaasdfsfd", input_col, output_col)
 
+            # Preserve actions for the profiler
+            df = df.meta.preserve(df, meta_action, output_col)
             # print("division", result[output_col].known_divisions)
 
         df = df.assign(**result)
@@ -1114,7 +1123,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         input_cols = parse_columns(df, input_cols)
         if output_col is None:
-            RaiseIt.type(output_col, ["str"])
+            RaiseIt.type_error(output_col, ["str"])
 
         # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
         # check_column_numbers(output_col, 1)
@@ -1246,7 +1255,6 @@ class DaskBaseColumns(BaseColumns):
         else:
             result = False
         return result
-
 
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
