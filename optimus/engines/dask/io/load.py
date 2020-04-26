@@ -176,7 +176,7 @@ class Load:
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_partitions=1, *args, **kwargs):
+    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, *args, **kwargs):
         """
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -195,46 +195,13 @@ class Load:
             skiprows = 0
 
         pdfs = val_to_list(
-            pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, *args, **kwargs))
+            pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args, **kwargs))
 
         pdf = pd.concat(pdfs, axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
         df.meta.set("file_name", ntpath.basename(file_name))
         df.meta.set("sheet_names", len(pdfs))
-
-        return df
-        # try:
-        #     # pdf = pd.ExcelFile(file, sheet_name=sheet_name, on_demand=True, *args, **kwargs)
-        #     xlsx = pd.ExcelFile(file)
-        #     sheet_names = xlsx.sheet_names
-        #     # print(sheet_names)
-        #     if sheet_name is None:
-        #         sheet_name = sheet_names[0]
-        #
-        #     # pandas.read_excel('records.xlsx', sheet_name='Cars', usecols=['Car Name', 'Car Price'])
-        #
-        #     pdf = xlsx.parse(sheet_name, header=None)
-        #
-        #     # xlsx = pd.ExcelFile(excel_file)
-        #     sheet_data = []
-        #     if merge_sheets:
-        #         for sheet_name in sheet_names:
-        #             # print(sheet_name)
-        #             temp = xlsx.parse(sheet_name).reset_index(drop=True)
-        #             # print(temp)
-        #             sheet_data.append(temp)
-        #         print(sheet_data)
-        #         pdf = pd.concat(sheet_data, axis=0)
-        #         # print("AAA",pdf)
-        #
-        #     df = dd.from_pandas(pdf, npartitions=n_partitions)
-        #     df.meta.set("file_name", ntpath.basename(file_name))
-        #     df.meta.set("sheet_names", sheet_names)
-        #
-        # except IOError as error:
-        #     logger.print(error)
-        #     raise
 
         return df
 
