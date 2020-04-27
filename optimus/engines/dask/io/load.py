@@ -249,19 +249,21 @@ class Load:
                     mime_info.update(r)
 
                     df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
-                except:
+                except Exception as err:
+                    print(err)
                     pass
 
-
         elif mime_info["file_ext"] == "xls" or mime_info["file_ext"] == "xlsx":
-            # print("asdf")
             mime_info["file_type"] = "excel"
             df = Load.excel(full_path, **kwargs)
+
         # print(mime_info["file_ext"])
         #
         # elif mime_info["mime"] == "application/vnd.ms-excel":
         #     mime_info["file_type"] = "excel"
         #     df = Load.excel(full_path, **kwargs)
+        else:
+            RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
 
         df.meta.set("mime_info", mime_info)
         return df
