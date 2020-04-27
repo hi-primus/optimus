@@ -10,10 +10,11 @@ from dask import dataframe as dd
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
-BYTES_SIZE = 2048
+BYTES_SIZE = 4096
 
 
 class Load:
@@ -131,7 +132,6 @@ class Load:
 
         for f in file_list:
             with ZipFile(wd + f, "r") as zip:
-                print(zip.namelist())
                 zip.extractall(destdir, None, None)
                 df = dd.read_csv(zip.namelist(), usecols=['Enter', 'Columns', 'Here'], parse_dates=['Date'])
                 ddf = ddf.append(df)
@@ -194,20 +194,21 @@ class Load:
             header = 0
             skiprows = 0
 
-        if n_rows== -1:
-            pdfs = val_to_list(
-                pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, *args,
-                              **kwargs))
-
-        else:
-            pdfs = val_to_list(
-            pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args, **kwargs))
-
-        pdf = pd.concat(pdfs, axis=0).reset_index(drop=True)
+        if n_rows == -1:
+            n_rows = None
+        #     pdfs = val_to_list(
+        #         pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=None, *args,
+        #                       **kwargs))
+        # else:
+        pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args,
+                             **kwargs)
+        sheet_names = list(pd.read_excel(file, None).keys())
+        
+        pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
         df.meta.set("file_name", ntpath.basename(file_name))
-        df.meta.set("sheet_names", len(pdfs))
+        df.meta.set("sheet_names", sheet_names)
 
         return df
 
@@ -221,11 +222,12 @@ class Load:
         mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
         mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
 
-        # print("mini", mime_info)
         if mime == "text/plain":
             file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
             # Try to infer if is a valid json
-            if sum([file.count(i) for i in ['(', '{', '}', '[', ']']]) > JSON_THRESHOLD:
+
+            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD:
+                # print("sdf",file)
                 mime_info["file_type"] = "json"
                 df = Load.json(full_path, args, kwargs)
 
@@ -247,7 +249,7 @@ class Load:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
-
+                    # print("asdda",mime_info)
                     df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
                 except Exception as err:
                     print(err)
