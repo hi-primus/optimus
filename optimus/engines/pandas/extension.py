@@ -7,6 +7,7 @@ from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
+from optimus.profiler.constants import MAX_BUCKETS
 
 DataFrame = pd.DataFrame
 
@@ -18,7 +19,7 @@ def ext(self: DataFrame):
             super().__init__(df)
 
         @staticmethod
-        def profile(columns, lower_bound=None, upper_bound=None, bins=10, output=None):
+        def profile(columns, lower_bound=None, upper_bound=None, bins=MAX_BUCKETS, output=None):
             """
 
             :param lower_bound:
