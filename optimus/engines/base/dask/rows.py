@@ -153,7 +153,7 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.df
-        df = df[where]
+        df = df[~where]
         df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
         return df
 
@@ -236,7 +236,7 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.df
-
+        print("sdfasd")
         input_cols = val_to_list(input_cols)
         df = df.dropna(how=how, subset=input_cols, *args, **kwargs)
         return df
