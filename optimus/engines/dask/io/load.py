@@ -194,7 +194,13 @@ class Load:
             header = 0
             skiprows = 0
 
-        pdfs = val_to_list(
+        if n_rows== -1:
+            pdfs = val_to_list(
+                pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, *args,
+                              **kwargs))
+
+        else:
+            pdfs = val_to_list(
             pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args, **kwargs))
 
         pdf = pd.concat(pdfs, axis=0).reset_index(drop=True)
