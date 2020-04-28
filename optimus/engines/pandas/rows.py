@@ -219,6 +219,9 @@ def rows(self):
             else:
                 subset_df = df
 
+            if output_col is None:
+                output_col = "__nulls__"
+
             if how == "all":
                 df[output_col] = subset_df.isnull().all(axis=1)
             else:
