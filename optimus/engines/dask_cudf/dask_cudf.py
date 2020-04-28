@@ -18,7 +18,6 @@ class DaskCUDF:
 
         logger.print(STARTING_DASK)
 
-        # Create Dask client
         cluster = LocalCUDACluster()
         self._client = Client(cluster, *args, **kwargs)
         self._cluster = cluster
@@ -38,7 +37,6 @@ class DaskCUDF:
 
     def info(self):
         return self._client.scheduler_info()
-        # ["workers"]
 
     def cuda_cluster(self):
         return self._cluster

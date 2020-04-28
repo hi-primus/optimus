@@ -434,9 +434,7 @@ class DataFrameBaseColumns(BaseColumns):
             output_cols = list([c[1] for c in columns])
             output_cols = get_output_cols(input_cols, output_cols)
 
-        # print(output_cols)
         df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
-        # print(df)
         return df
 
     @staticmethod
