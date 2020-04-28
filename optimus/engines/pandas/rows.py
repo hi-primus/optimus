@@ -225,7 +225,23 @@ def rows(self):
                 df[output_col] = subset_df.isnull().any(axis=1)
 
             return df
-        
+
+        @staticmethod
+        def tag_duplicated(keep="first", output_col=None):
+            """
+            Find the rows that have null values
+
+            :param keep:
+            :param output_col:
+            :return:
+            """
+
+            df = self
+
+            df[output_col] = df.duplicated(keep=keep)
+
+            return df
+
         @staticmethod
         def drop_na(input_cols, how="any", *args, **kwargs) -> DataFrame:
             """
