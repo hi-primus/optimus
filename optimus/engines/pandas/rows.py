@@ -215,7 +215,8 @@ def rows(self):
             df = self
 
             if subset is not None:
-                subset_df = df[[subset]]
+                subset = val_to_list(subset)
+                subset_df = df[subset]
             else:
                 subset_df = df
 
@@ -240,11 +241,16 @@ def rows(self):
             """
 
             df = self
+            if subset is not None:
+                subset = val_to_list(subset)
+                subset_df = df[subset]
+            else:
+                subset_df = df
 
             if output_col is None:
                 output_col = "__duplicated__"
 
-            df[output_col] = df.duplicated(keep=keep, subset=subset)
+            df[output_col] = subset_df.duplicated(keep=keep, subset=subset)
 
             return df
 
