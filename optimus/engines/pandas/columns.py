@@ -12,7 +12,7 @@ from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import parse_dtypes
-from optimus.infer import is_list, is_str, profiler_dtype_func
+from optimus.infer import is_str, profiler_dtype_func
 
 DataFrame = pd.DataFrame
 
@@ -268,18 +268,27 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def nulls(columns):
+        def tag_nulls(how="all", subset=None, output_col=None):
             """
             Find the rows that have null values
-            :param columns:
+            :param how:
+            :param subset:
+            :param output_col:
             :return:
             """
-            df = self
-            columns = parse_columns(df, columns)
 
-            for col_name in columns:
-                # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
-                df["__nulls__"] = df[col_name].isnull()
+            df = self
+
+            if subset is not None:
+                subset_df = df[[subset]]
+            else:
+                subset_df = df
+
+            if how == "all":
+                df[output_col] = subset_df.isnull().all(axis=1)
+            else:
+                df[output_col] = subset_df.isnull().any(axis=1)
+
             return df
 
         # @staticmethod
