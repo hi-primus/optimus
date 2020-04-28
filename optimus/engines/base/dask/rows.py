@@ -4,7 +4,6 @@ import operator
 import dask.array as da
 import dask.dataframe as  dd
 # from dask_cudf.core import DataFrame
-from dask import delayed
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
@@ -139,7 +138,6 @@ class DaskBaseRows(BaseRows):
                 RaiseIt.value_error(order, ["asc", "desc"])
 
             def func(pdf):
-                print(order)
                 return pdf.sort_values(col_name, ascending=True if order == "asc" else False)
 
             df = df.map_partitions(func)
@@ -235,32 +233,31 @@ class DaskBaseRows(BaseRows):
         df = self
         return df
 
-    def drop_na(self, input_cols, how="any", *args, **kwargs):
+    def drop_na(self, subset=None, how="any", *args, **kwargs):
         """
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
-        :param input_cols:
+        :param subset:
         :param how:
         :return:
         """
         df = self.df
-        print("sdfasd")
-        input_cols = val_to_list(input_cols)
-        df = df.dropna(how=how, subset=input_cols, *args, **kwargs)
+
+        df = df.dropna(how=how, subset=subset)
+
         return df
 
-    def drop_duplicates(self, input_cols=None):
+    def drop_duplicates(self, keep="first", subset=None):
         """
         Drop duplicates values in a dataframe
-        :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
+        :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
         :return: Return a new DataFrame with duplicate rows removed
-        :param input_cols:
         :return:
         """
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        input_cols = val_to_list(input_cols)
-        df = df.drop_duplicates(subset=input_cols)
+        subset = parse_columns(df, subset)
+        subset = val_to_list(subset)
+        df = df.drop_duplicates(keep=keep, subset=subset)
 
         return df
 
