@@ -227,7 +227,7 @@ def rows(self):
             return df
 
         @staticmethod
-        def tag_duplicated(keep="first", output_col=None):
+        def tag_duplicated(keep="first", subset=None, output_col=None):
             """
             Find the rows that have null values
 
@@ -238,7 +238,10 @@ def rows(self):
 
             df = self
 
-            df[output_col] = df.duplicated(keep=keep)
+            if output_col is None:
+                output_col = "__duplicated__"
+
+            df[output_col] = df.duplicated(keep=keep, subset=subset)
 
             return df
 
