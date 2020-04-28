@@ -218,18 +218,17 @@ def rows(self):
             return df
 
         @staticmethod
-        def drop_duplicates(input_cols=None) -> DataFrame:
+        def drop_duplicates(subset=None) -> DataFrame:
             """
             Drop duplicates values in a dataframe
-            :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
+            :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
             :return: Return a new DataFrame with duplicate rows removed
-            :param input_cols:
             :return:
             """
             df = self
-            input_cols = parse_columns(df, input_cols)
-            input_cols = val_to_list(input_cols)
-            df = df.drop_duplicates(subset=input_cols)
+            subset = parse_columns(df, subset)
+            subset = val_to_list(subset)
+            df = df.drop_duplicates(subset=subset)
 
             return df
 
