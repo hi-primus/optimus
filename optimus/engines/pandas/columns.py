@@ -339,7 +339,7 @@ def cols(self: DataFrame):
         @staticmethod
         def find(columns, sub):
             """
-            Find the position start and end position for a char or substring
+            Find the start and end position for a char or substring
             :param columns:
             :param sub:
             :return:
