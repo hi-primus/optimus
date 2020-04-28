@@ -203,6 +203,30 @@ def rows(self):
             return df
 
         @staticmethod
+        def tag_nulls(how="all", subset=None, output_col=None):
+            """
+            Find the rows that have null values
+            :param how:
+            :param subset:
+            :param output_col:
+            :return:
+            """
+
+            df = self
+
+            if subset is not None:
+                subset_df = df[[subset]]
+            else:
+                subset_df = df
+
+            if how == "all":
+                df[output_col] = subset_df.isnull().all(axis=1)
+            else:
+                df[output_col] = subset_df.isnull().any(axis=1)
+
+            return df
+        
+        @staticmethod
         def drop_na(input_cols, how="any", *args, **kwargs) -> DataFrame:
             """
             Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
