@@ -4,6 +4,7 @@ import operator
 import dask.array as da
 import dask.dataframe as  dd
 # from dask_cudf.core import DataFrame
+from dask import delayed
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
@@ -130,18 +131,25 @@ class DaskBaseRows(BaseRows):
             col_sort = t
 
         for cs in col_sort:
+            # print(col_sort)
             col_name = one_list_to_val(cs[0])
             order = cs[1]
 
-            if order != "asc" and order != "asc":
+            if order != "asc" and order != "desc":
                 RaiseIt.value_error(order, ["asc", "desc"])
+
+            def func(pdf):
+                print(order)
+                return pdf.sort_values(col_name, ascending=True if order == "asc" else False)
+
+            df = df.map_partitions(func)
 
             df = df.meta.preserve(df, Actions.SORT_ROW.value, col_name)
 
-            c = df.cols.names()
+            # c = df.cols.names()
             # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
             # We should fins a way to make it work desc and form multiple columns
-            df = df.set_index(col_name).reset_index()[c]
+            # df = df.set_index(col_name).reset_index()[c]
 
         return df
 

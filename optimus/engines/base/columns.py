@@ -9,6 +9,7 @@ from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.core import val_to_list
+from optimus.helpers.raiseit import RaiseIt
 
 
 class BaseColumns(ABC):
@@ -200,6 +201,27 @@ class BaseColumns(ABC):
                                                           replace_by).value_counts().to_pandas().to_dict()
         return result
 
+    def groupby(self, by, agg, order="asc", *args, **kwargs):
+        """
+        This helper function aims to help managing columns name in the aggregation output.
+        Also how to handle ordering columns because dask can order columns
+        :param by:
+        :param agg:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        df = self.df
+        compact = {}
+        for col_agg in list(agg.values()):
+            for col_name, _agg in col_agg.items():
+                compact.setdefault(col_name, []).append(_agg)
+
+        df = df.groupby(by=by).agg(compact).reset_index()
+        df.columns = [by] + list(agg.keys())
+
+        return df
+
     def join(self, df_right, *args, **kwargs):
         """
 
@@ -236,10 +258,45 @@ class BaseColumns(ABC):
         df = df.merge(df_right, *args, **kwargs)
         return df
 
-    @staticmethod
-    @abstractmethod
-    def move(column, position, ref_col=None):
-        pass
+    def move(self, column, position, ref_col=None):
+        """
+        Move a column to specific position
+        :param column: Column to be moved
+        :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
+        :param ref_col: Column taken as reference
+        :return: Spark DataFrame
+        """
+        # Check that column is a string or a list
+        column = parse_columns(self, column)
+        ref_col = parse_columns(self, ref_col)
+
+        # Get dataframe columns
+        columns = self.columns
+
+        # Get source and reference column index position
+        new_index = columns.index(ref_col[0])
+
+        # Column to move
+        column_to_move_index = columns.index(column[0])
+
+        if position == 'after':
+            # Check if the movement is from right to left:
+            if new_index < column_to_move_index:
+                new_index = new_index + 1
+        elif position == 'before':  # If position if before:
+            if new_index >= column_to_move_index:  # Check if the movement if from right to left:
+                new_index = new_index - 1
+        elif position == 'beginning':
+            new_index = 0
+        elif position == 'end':
+            new_index = len(columns)
+        else:
+            RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
+
+        # Move the column to the new place
+        columns.insert(new_index, columns.pop(column_to_move_index))  # insert and delete a element
+
+        return self[columns]
 
     @staticmethod
     @abstractmethod

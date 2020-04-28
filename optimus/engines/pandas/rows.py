@@ -121,15 +121,12 @@ def rows(self):
                 col_name = one_list_to_val(cs[0])
                 order = cs[1]
 
-                if order != "asc" and order != "asc":
+                if order != "asc" and order != "desc":
                     RaiseIt.value_error(order, ["asc", "desc"])
 
                 df = df.meta.preserve(self, Actions.SORT_ROW.value, col_name)
 
-                c = df.cols.names()
-                # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
-                # We should fins a way to make it work desc and form multiple columns
-                df.set_index(col_name).reset_index()[c].head()
+                df = df.sort_values(col_name, ascending=True if order == "asc" else False)
 
             return df
 

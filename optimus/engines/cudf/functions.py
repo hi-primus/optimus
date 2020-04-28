@@ -164,7 +164,6 @@ def functions(self):
             else:
                 ps = df.cols.nunique(col_name)
             result = [{"count_uniques": ps}]
-            print("ASDFASDF", result)
             return result
 
         @staticmethod
