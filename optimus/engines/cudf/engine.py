@@ -1,5 +1,4 @@
-import pandas as pd
-
+import cudf
 from optimus.bumblebee import Comm
 from optimus.engines.cudf.io.jdbc import JDBC
 from optimus.engines.cudf.io.load import Load
@@ -28,7 +27,7 @@ class CUDFEngine:
         # self.read = self.spark.read
         self.verbose(verbose)
 
-        CUDF.instance = pd
+        CUDF.instance = cudf
 
         self.client = CUDF.instance
 
