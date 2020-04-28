@@ -111,7 +111,7 @@ class BaseColumns(ABC):
     def count_mismatch(columns_mismatch: dict = None):
         pass
 
-    def round(self, input_cols, decimals, output_cols=None):
+    def round(self, input_cols, decimals=1, output_cols=None):
         """
 
         :param input_cols:
@@ -122,7 +122,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
         for input_col, output_col in columns:
-            df[input_col] = df[output_col].round(decimals)
+            df[output_col] = df[input_col].round(decimals)
         return df
 
     def ceil(self, input_cols, output_cols=None):
@@ -135,7 +135,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
         for input_col, output_col in columns:
-            df[input_col] = df[output_col].ceil()
+            df[output_col] = df[input_col].map(np.ceil)
         return df
 
     def floor(self, input_cols, output_cols=None):
@@ -149,7 +149,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
         for input_col, output_col in columns:
-            df[input_col] = df[output_col].floor()
+            df[output_col] = df[input_col].map(np.floor)
         return df
 
     def patterns(self, input_cols, output_cols=None, mode=0):
