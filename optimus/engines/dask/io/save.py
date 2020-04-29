@@ -30,7 +30,7 @@ def save(self: DataFrame):
                 raise
 
         @staticmethod
-        def csv(filename, mode="w", **kwargs):
+        def csv(filename, mode="w", return_path = False, **kwargs):
             """
             Save data frame to a CSV file.
             :param filename: path where the spark will be saved.
@@ -41,10 +41,17 @@ def save(self: DataFrame):
 
             try:
                 df = self
+
                 df.to_csv(filename=filename, mode=mode, **kwargs)
+
+            # elif format == "posix":
+
             except IOError as error:
                 logger.print(error)
                 raise
+
+            if return_path is True:
+                return Path(filename).absolute().as_uri()
 
         @staticmethod
         def parquet(path, mode="overwrite", num_partitions=1, engine="pyarrow"):
