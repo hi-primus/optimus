@@ -1,4 +1,6 @@
 # from pyspark.sql import DataFrame
+from pathlib import Path
+
 from dask.dataframe.core import DataFrame
 
 from optimus.helpers.logger import logger
@@ -28,10 +30,10 @@ def save(self: DataFrame):
                 raise
 
         @staticmethod
-        def csv(path, mode="rb", **kwargs):
+        def csv(filename, mode="w", **kwargs):
             """
             Save data frame to a CSV file.
-            :param path: path where the spark will be saved.
+            :param filename: path where the spark will be saved.
             :param mode: 'rb', 'wt', etc
             it uses the default value.
             :return: Dataframe in a CSV format in the specified path.
@@ -39,15 +41,7 @@ def save(self: DataFrame):
 
             try:
                 df = self
-                # columns = parse_columns(self, "*",
-                #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
-                # df = df.cols.cast(columns, "str").repartition(num_partitions)
-
-                # Dask reference
-                # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
-                # df.to_csv(filename=path)
-                df.to_csv(filename=path, mode=mode, **kwargs)
-
+                df.to_csv(filename=filename, mode=mode, **kwargs)
             except IOError as error:
                 logger.print(error)
                 raise
