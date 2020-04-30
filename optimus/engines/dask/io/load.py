@@ -69,6 +69,10 @@ class Load:
         :param encoding:
         :param null_value:
         :param n_rows:
+        :param quoting:
+        :param lineterminator:
+        :param error_bad_lines:
+        :param keep_default_na:
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
         """
@@ -78,9 +82,9 @@ class Load:
 
         file, file_name = prepare_path(path, "csv")
         try:
-            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding, na_values=null_value,
+            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=keep_default_na, *args,
+                             keep_default_na=True, na_values=None, engine="c", *args,
                              **kwargs)
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
@@ -203,7 +207,7 @@ class Load:
         pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args,
                              **kwargs)
         sheet_names = list(pd.read_excel(file, None).keys())
-        
+
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
@@ -250,7 +254,16 @@ class Load:
 
                     mime_info.update(r)
                     # print("asdda",mime_info)
-                    df = Load.csv(full_path, encoding=mime_info["encoding"], **mime_info["properties"], **kwargs)
+
+                    # Try to infer the number of columns
+
+                    # with open(full_path) as f:
+                    #     first_line = f.readline().strip()
+                    #
+                    # dtypes = {col_name: object for col_name in first_line.split(dialect.delimiter)}
+
+                    df = Load.csv(full_path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
+                                  **kwargs)
                 except Exception as err:
                     print(err)
                     pass
