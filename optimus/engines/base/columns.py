@@ -357,7 +357,7 @@ class BaseColumns(ABC):
                 result[col_name] = "category"
             else:
                 result[col_name] = np.dtype(df[col_name]).type
-        return
+        return format_dict(result)
 
     @staticmethod
     @abstractmethod
