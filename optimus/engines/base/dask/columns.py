@@ -145,11 +145,11 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
 
         @delayed
-        def df_to_dict(_df, _total_freq_count=False):
+        def df_to_dict(_df, _total_freq_count=None):
 
             result = [{"value": i, "count": j} for i, j in _df.to_dict().items()]
 
-            if _total_freq_count is True:
+            if _total_freq_count is None:
                 result = {_df.name: {"frequency": result}}
             else:
                 result = {_df.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
