@@ -47,7 +47,7 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=0, infer_schema='true', charset="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=0, infer_schema='true', encoding="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -66,9 +66,10 @@ class Load:
         file, file_name = prepare_path(path, "csv")
 
         try:
-            print(charset)
-            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
+            # print(charset)
+            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else -1, encoding=encoding, na_values=null_value,
                                     *args, **kwargs)
+            print(type(df))
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
