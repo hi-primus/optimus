@@ -266,12 +266,14 @@ class BaseColumns(ABC):
         :param ref_col: Column taken as reference
         :return: Spark DataFrame
         """
+
+        df = self.df
         # Check that column is a string or a list
-        column = parse_columns(self, column)
-        ref_col = parse_columns(self, ref_col)
+        column = parse_columns(df, column)
+        ref_col = parse_columns(df, ref_col)
 
         # Get dataframe columns
-        columns = self.columns
+        columns = df.cols.names()
 
         # Get source and reference column index position
         new_index = columns.index(ref_col[0])
@@ -296,7 +298,7 @@ class BaseColumns(ABC):
         # Move the column to the new place
         columns.insert(new_index, columns.pop(column_to_move_index))  # insert and delete a element
 
-        return self[columns]
+        return df[columns]
 
     @staticmethod
     @abstractmethod
