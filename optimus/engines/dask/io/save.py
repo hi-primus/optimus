@@ -41,10 +41,7 @@ def save(self: DataFrame):
 
             try:
                 df = self
-
                 df.to_csv(filename=filename, mode=mode, **kwargs)
-
-            # elif format == "posix":
 
             except IOError as error:
                 logger.print(error)
