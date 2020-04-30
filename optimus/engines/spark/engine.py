@@ -463,7 +463,7 @@ class SparkEngine:
                 print("Dataframes are equal")
                 return True
             else:
-                print("Dataframes not equal. Use 'json' param to check for diffrences")
+                print("Dataframes not equal. Use 'json' param to check for differences")
                 return False
 
         else:
