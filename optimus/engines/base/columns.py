@@ -351,7 +351,13 @@ class BaseColumns(ABC):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        return format_dict({col_name: np.dtype(df[col_name]).type for col_name in columns})
+        result = {}
+        for col_name in columns:
+            if df[col_name].dtype.name == "category":
+                result[col_name] = "category"
+            else:
+                result[col_name] = np.dtype(df[col_name]).type
+        return
 
     @staticmethod
     @abstractmethod
