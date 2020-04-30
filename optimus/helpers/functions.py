@@ -11,8 +11,10 @@ from functools import reduce
 from pathlib import Path
 from urllib.request import Request, urlopen
 
+import humanize
 import numpy as np
 import six
+from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -368,9 +370,9 @@ def update_dict(d, u):
     return d
 
 
-def reduce_mem_usage(df, categorical_threshold=50):
+def reduce_mem_usage(df, categorical_threshold=50, verbose=False):
     """
-    Change the columns datatypes to reduce the memory usage
+    Change the columns datatypes to reduce the memory usage. Also identify
     :param df:
     :param categorical_threshold:
     :return:
@@ -380,7 +382,7 @@ def reduce_mem_usage(df, categorical_threshold=50):
     # rows_count = df.rows.count()
 
     start_mem_usg = df.ext.size()
-    print("Memory usage after optimization:", start_mem_usg, " MB")
+
     NA_list = []  # Keeps track of columns that have missing values filled in.
     columns_dtype = {}
 
@@ -431,16 +433,106 @@ def reduce_mem_usage(df, categorical_threshold=50):
                         columns_dtype[col_name] = np.int64
             else:
                 columns_dtype[col_name] = np.float32
-
+    # print(columns_dtype)
     df = df.astype(columns_dtype)
     # Print final result
     # print("___MEMORY USAGE AFTER COMPLETION:___")
     # mem_usg = df.memory_usage().sum() / 1024 ** 2
     mem_usg = df.ext.size()
+    if verbose is True:
+        print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))
+        print("Memory usage before optimization is: ", humanize.naturalsize(mem_usg))
+        print(round(100 * mem_usg / start_mem_usg), "% of the initial size")
 
-    print("Memory usage before optimization is: ", mem_usg, " MB")
-    print(100 * mem_usg / start_mem_usg, "% of the initial size")
-    # return props, NA_list
+    return df
+
+
+def reduce_mem_usage1(df, categorical=True, categorical_threshold=50, verbose=False):
+    """
+    Change the columns datatypes to reduce the memory usage. Also identify
+    :param df:
+    :param categorical:
+    :param categorical_threshold:
+    :param verbose:
+    :return:
+    """
+
+    # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
+
+    start_mem_usg = df.ext.size()
+
+    ints = df.applymap(isint).sum().compute().to_dict()
+    floats = df.applymap(isfloat).sum().compute().to_dict()
+    # print("SFASDF", ints)
+    nulls = df.isnull().sum().compute().to_dict()
+    total_rows = len(df)
+    # print("INTSSS", ints)
+    # print("NULLSSS", nulls)
+
+    columns_dtype = {}
+    for x, y in ints.items():
+        # print("columns", x)
+        # print("ints", ints[x])
+        # print("floats", floats[x])
+        # print("nulls", nulls[x])
+        # print("total", total_rows)
+        # print("-----")
+        if ints[x] == nulls[x]:
+            dtype = "object"
+        elif floats[x] == total_rows:
+            # print(x)
+            dtype = "numerical"
+        elif total_rows <= ints[x] + nulls[x]:
+            dtype = "numerical"
+        else:
+            dtype = "object"
+        columns_dtype[x] = dtype
+
+    numerical_int = [col for col, dtype in columns_dtype.items() if dtype == "numerical"]
+    # print("NUMERICAL", numerical_int)
+    final = {}
+
+    if len(numerical_int) > 0:
+        min_max = df.cols.range(numerical_int)
+
+        import numpy as np
+        for col_name in min_max.keys():
+            _min = min_max[col_name]["min"]
+            _max = min_max[col_name]["max"]
+            if _max >= 0:
+                if _min < 255:
+                    final[col_name] = np.uint8
+                elif _min < 65535:
+                    columns_dtype[col_name] = np.uint16
+                elif _min < 4294967295:
+                    final[col_name] = np.uint32
+                else:
+                    final[col_name] = np.uint64
+            else:
+                if _max > np.iinfo(np.int8).min and _min < np.iinfo(np.int8).max:
+                    final[col_name] = np.int8
+                elif _max > np.iinfo(np.int16).min and _min < np.iinfo(np.int16).max:
+                    final[col_name] = np.int16
+                elif _max > np.iinfo(np.int32).min and _min < np.iinfo(np.int32).max:
+                    final[col_name] = np.int32
+                elif _max > np.iinfo(np.int64).min and _min < np.iinfo(np.int64).max:
+                    final[col_name] = np.int64
+
+    object_int = [col for col, dtype in columns_dtype.items() if dtype == "object"]
+    count_values = df.cols.value_counts(object_int)
+    if categorical is True:
+        for col_name in object_int:
+            if len(count_values[col_name]) <= categorical_threshold:
+                final[col_name] = "category"
+
+    df = df.astype(final)
+    mem_usg = df.ext.size()
+
+    if verbose is True:
+        print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))
+        print("Memory usage before optimization is: ", humanize.naturalsize(mem_usg))
+        print(round(100 * mem_usg / start_mem_usg), "% of the initial size")
+
     return df
 
 
