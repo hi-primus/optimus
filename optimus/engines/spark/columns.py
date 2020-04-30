@@ -444,46 +444,6 @@ def cols(self):
             """
             return Cols.cast(*args, **kwargs)
 
-        @staticmethod
-        def move(column, position, ref_col=None):
-            """
-            Move a column to specific position
-            :param column: Column to be moved
-            :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
-            :param ref_col: Column taken as reference
-            :return: Spark DataFrame
-            """
-            # Check that column is a string or a list
-            column = parse_columns(self, column)
-            ref_col = parse_columns(self, ref_col)
-
-            # Get dataframe columns
-            columns = self.columns
-
-            # Get source and reference column index position
-            new_index = columns.index(ref_col[0])
-
-            # Column to move
-            column_to_move_index = columns.index(column[0])
-
-            if position == 'after':
-                # Check if the movement is from right to left:
-                if new_index < column_to_move_index:
-                    new_index = new_index + 1
-            elif position == 'before':  # If position if before:
-                if new_index >= column_to_move_index:  # Check if the movement if from right to left:
-                    new_index = new_index - 1
-            elif position == 'beginning':
-                new_index = 0
-            elif position == 'end':
-                new_index = len(columns)
-            else:
-                RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
-
-            # Move the column to the new place
-            columns.insert(new_index, columns.pop(column_to_move_index))  # insert and delete a element
-
-            return self[columns]
 
         @staticmethod
         def keep(columns=None, regex=None):
@@ -505,29 +465,29 @@ def cols(self):
             df = df.meta.action("keep", columns)
             return df
 
-        @staticmethod
-        # TODO: Create a function to sort by datatype?
-        def sort(order="asc", columns=None):
-            """
-            Sort data frames columns asc or desc
-            :param order: 'asc' or 'desc' accepted
-            :param columns:
-            :return: Spark DataFrame
-            """
-            df = self
-            if columns is None:
-                _reverse = None
-                if order == "asc":
-                    _reverse = False
-                elif order == "desc":
-                    _reverse = True
-                else:
-                    RaiseIt.value_error(order, ["asc", "desc"])
-
-                columns = df.cols.names()
-                columns.sort(key=lambda v: v.upper(), reverse=_reverse)
-
-            return df.cols.select(columns)
+        # @staticmethod
+        # # TODO: Create a function to sort by datatype?
+        # def sort(order="asc", columns=None):
+        #     """
+        #     Sort data frames columns asc or desc
+        #     :param order: 'asc' or 'desc' accepted
+        #     :param columns:
+        #     :return: Spark DataFrame
+        #     """
+        #     df = self
+        #     if columns is None:
+        #         _reverse = None
+        #         if order == "asc":
+        #             _reverse = False
+        #         elif order == "desc":
+        #             _reverse = True
+        #         else:
+        #             RaiseIt.value_error(order, ["asc", "desc"])
+        #
+        #         columns = df.cols.names()
+        #         columns.sort(key=lambda v: v.upper(), reverse=_reverse)
+        #
+        #     return df.cols.select(columns)
 
         @staticmethod
         def drop(columns=None, regex=None, data_type=None):

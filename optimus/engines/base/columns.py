@@ -305,21 +305,27 @@ class BaseColumns(ABC):
     def keep(columns=None, regex=None):
         pass
 
-    def sort(self, input_cols=None, order: [str, list] = "asc"):
+    def sort(self, columns=None, order: [str, list] = "asc"):
         """
-
-        :param input_cols:
-        :param order:
-        :return:
+        Sort data frames columns asc or desc
+        :param order: 'asc' or 'desc' accepted
+        :param columns:
+        :return: Spark DataFrame
         """
         df = self.df
+        if columns is None:
+            _reverse = None
+            if order == "asc":
+                _reverse = False
+            elif order == "desc":
+                _reverse = True
+            else:
+                RaiseIt.value_error(order, ["asc", "desc"])
 
-        columns = parse_columns(df, input_cols, )
-        order = val_to_list(order)
-        ascending = [True if _order == "asc" else False for _order in order]
+            columns = df.cols.names()
+            columns.sort(key=lambda v: v.upper(), reverse=_reverse)
 
-        df = df.sort_values(by=columns, ascending=ascending)
-        return df
+        return df.cols.select(columns)
 
     @staticmethod
     @abstractmethod
