@@ -633,8 +633,6 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-
-
     @staticmethod
     def astype(*args, **kwargs):
         pass
@@ -1199,14 +1197,15 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.select(output_ordered_columns)
 
-    def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+    def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
         """
         Replace a value, list of values by a specified string
         :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one
         :param search_by: Can be "full","words","chars" or "numeric".
+        :param ignore_case: Ignore case when searching for match
+        :param output_cols:
         :return: Dask DataFrame
         """
 
@@ -1218,11 +1217,16 @@ class DaskBaseColumns(BaseColumns):
 
         search = val_to_list(search)
         if search_by == "chars":
-            regex = re.compile("|".join(map(re.escape, search)))
+            str_regex = "|".join(map(re.escape, search))
         elif search_by == "words":
-            regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+            str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         else:
-            regex = search
+            str_regex = search
+        if ignore_case is True:
+            regex = re.compile(str_regex, re.IGNORECASE)
+        else:
+            regex = re.compile(str_regex)
+
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):

@@ -134,17 +134,22 @@ def cols(self: DataFrame):
             return result
 
         @staticmethod
-        def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+        def replace(input_cols, search=None, replace_by=None, search_by="chars", ignore_case= False, output_cols=None):
             df = self
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
             search = val_to_list(search)
+
             if search_by == "chars":
-                _regex = re.compile("|".join(map(re.escape, search)))
+                str_regex = "|".join(map(re.escape, search))
             elif search_by == "words":
-                _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+                str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
             else:
-                _regex = search
+                str_regex = search
+            if ignore_case is True:
+                _regex = re.compile(str_regex, re.IGNORECASE)
+            else:
+                _regex = re.compile(str_regex)
 
             df = df.cols.cast(input_cols, "str")
             for input_col, output_col in zip(input_cols, output_cols):
