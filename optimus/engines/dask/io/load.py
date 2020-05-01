@@ -217,7 +217,7 @@ class Load:
         return df
 
     @staticmethod
-    def file(path, infer=True, *args, **kwargs):
+    def file(path, *args, **kwargs):
 
         full_path, file_name = prepare_path(path)
 
@@ -227,14 +227,21 @@ class Load:
         mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
 
         if mime == "text/plain":
-            file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
-            # Try to infer if is a valid json
 
+            # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
+            if mime_info["encoding"] == "unknown-8bit":
+                mime_info["encoding"] = "latin-1"
+
+            file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
+
+            # JSON
+            # Try to infer if is a valid json
             if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD:
                 # print("sdf",file)
                 mime_info["file_type"] = "json"
-                df = Load.json(full_path, args, kwargs)
+                df = Load.json(full_path, *args, **kwargs)
 
+            # XML
             elif sum([file.count(i) for i in ['<', '/>']]) > XML_THRESHOLD:
                 mime_info["file_type"] = "xml"
 
@@ -253,15 +260,6 @@ class Load:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
-                    # print("asdda",mime_info)
-
-                    # Try to infer the number of columns
-
-                    # with open(full_path) as f:
-                    #     first_line = f.readline().strip()
-                    #
-                    # dtypes = {col_name: object for col_name in first_line.split(dialect.delimiter)}
-
                     df = Load.csv(full_path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
                                   **kwargs)
                 except Exception as err:
@@ -272,11 +270,6 @@ class Load:
             mime_info["file_type"] = "excel"
             df = Load.excel(full_path, **kwargs)
 
-        # print(mime_info["file_ext"])
-        #
-        # elif mime_info["mime"] == "application/vnd.ms-excel":
-        #     mime_info["file_type"] = "excel"
-        #     df = Load.excel(full_path, **kwargs)
         else:
             RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
 
