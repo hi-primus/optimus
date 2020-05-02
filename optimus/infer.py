@@ -429,8 +429,11 @@ def profiler_dtype_func(dtype):
         return is_date
     elif dtype == ProfilerDataTypes.MISSING.value:
         return is_str
+    elif dtype == ProfilerDataTypes.ZIP_CODE.value:
+        return str_to_zip_code
+
     else:
-        RaiseIt.value_error(dtype,ProfilerDataTypes.list())
+        RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
 
 def is_nan(value):
