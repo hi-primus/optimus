@@ -18,8 +18,6 @@ from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, Dou
 
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
-import pandas as pd
-
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -69,12 +67,12 @@ def str_to_data_type(_value, _dtypes):
     :param _value:
     :return:
     """
-    return True if isinstance(_value, str) else False
-    # try:
-    #     if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
-    #         return True
-    # except (ValueError, SyntaxError,AttributeError):
-    #     pass
+    # return True if isinstance(_value, str) else False
+    try:
+        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
+            return True
+    except (ValueError, SyntaxError, AttributeError):
+        pass
 
 
 def str_to_array(_value):
@@ -323,19 +321,20 @@ class Infer(object):
                 (str_to_url, "url"),
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
-        # print(dtypes[col_name])
         # Check 'string' for Spark, 'object' for Dask
         if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
 
             if isinstance(value, bool):
                 _data_type = "boolean"
-
             elif fastnumbers.isint(value):  # Check if value is integer
                 _data_type = "int"
                 for func in int_funcs:
                     if func[0](value) is True:
                         _data_type = func[1]
                         break
+
+            elif value != value:
+                _data_type = "null"
 
             elif fastnumbers.isfloat(value):
                 _data_type = "decimal"
@@ -346,8 +345,6 @@ class Infer(object):
                     if func[0](value) is True:
                         _data_type = func[1]
                         break
-            else:
-                _data_type = "null"
 
         else:
             _data_type = dtypes[col_name]
@@ -367,7 +364,7 @@ class Infer(object):
         if full:
             return result
         else:
-            # print(_data_type)
+            # print("ASdf", value, "---", _data_type)
             return _data_type
 
     @staticmethod
@@ -750,7 +747,6 @@ def is_str(value):
     # Seems 20% faster than
     return isinstance(value, str)
     # return True if type("str") == "str" else False
-
 
 
 def is_object(value):
