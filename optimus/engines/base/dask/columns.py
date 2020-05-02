@@ -111,7 +111,9 @@ class DaskBaseColumns(BaseColumns):
         for col_name, values in d.items():
             result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
                                 "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
-                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))}
+                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value)),
+                                "profiler_dtype": columns_mismatch[col_name]
+                                }
 
         return result
 
