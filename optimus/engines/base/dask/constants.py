@@ -4,7 +4,10 @@ from dask.dataframe.core import DataFrame
 
 def constants(self):
     class Constants:
-        DTYPES_DICT = {"string": np.str, "int32": np.int32, "int64": np.int64, "float": np.float, "float64": np.float64,
+        DTYPES_DICT = {"string": np.str, "uint8": np.uint8, "uint16": np.uint16, "uint32": np.uint32,
+                       "uint64": np.uint64,
+                       "int8": np.int8, "int16": np.int16, "int32": np.int32, "int64": np.int64, "float": np.float,
+                       "float64": np.float64,
                        "boolean": np.bool, "array": np.array,
                        "bigint": np.int64, "object": np.object_}
 
@@ -12,8 +15,16 @@ def constants(self):
                         "str": "string",
                         "integer": "int",
                         "int": "int",
-                        "int64": "int64",
+
+                        "uint8": "uint8",
+                        "uint16": "uint16",
+                        "uint32": "uint32",
+                        "uint64": "uint64",
+                        "int8": "int8",
+                        "int16": "int16",
                         "int32": "int32",
+                        "int64": "int64",
+
                         "float64": "float64",
                         "big": "bigint",
                         "long": "bigint",
@@ -34,7 +45,7 @@ def constants(self):
                         "object": "object"
                         }
 
-        NUMERIC_TYPES = ["int32", "int64", "float64"]
+        NUMERIC_TYPES = ["int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float64"]
         DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "float": ["float64", "float"], "object": ["object"]}
 
         STRING_TYPES = ["string", "object"]
