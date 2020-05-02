@@ -124,7 +124,7 @@ def count_na_j(df, series):
     return np.count_nonzero(df[series].isnull().values.ravel())
 
 
-# Refenrece https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
+# Reference https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
 # https://stackoverflow.com/a/21124789/581858
 def bincount(a, n):
     y = np.bincount(a)
