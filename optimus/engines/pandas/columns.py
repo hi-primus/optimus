@@ -134,7 +134,7 @@ def cols(self: DataFrame):
             return result
 
         @staticmethod
-        def replace(input_cols, search=None, replace_by=None, search_by="chars", ignore_case= False, output_cols=None):
+        def replace(input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
             df = self
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
@@ -327,10 +327,11 @@ def cols(self: DataFrame):
                 return df
 
         @staticmethod
-        def find(columns, sub):
+        def find(columns, sub, ignore_case=False):
             """
             Find the start and end position for a char or substring
             :param columns:
+            :param ignore_case:
             :param sub:
             :return:
             """
@@ -340,7 +341,11 @@ def cols(self: DataFrame):
             def get_match_positions(_value, _separator):
                 result = None
                 if is_str(_value):
-                    length = [[match.start(), match.end()] for match in re.finditer(re.escape(_separator), _value)]
+                    if ignore_case is True:
+                        length = [[match.start(), match.end()] for match in
+                                  re.finditer(re.escape(_separator), _value, re.IGNORECASE)]
+                    else:
+                        length = [[match.start(), match.end()] for match in re.finditer(re.escape(_separator), _value)]
                     result = length if len(length) > 0 else None
                 return result
 
