@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function
+from optimus.helpers.check import equal_function, is_cudf_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
@@ -84,7 +84,6 @@ class DaskBaseColumns(BaseColumns):
         partitions = df.to_delayed()
 
         if infer is True:
-
             delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype)) for part in partitions for
                              col_name, dtype in columns_mismatch.items()]
 
@@ -147,14 +146,18 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
 
         @delayed
-        def df_to_dict(_df, _total_freq_count=None):
+        def series_to_dict(_series, _total_freq_count=None):
 
-            result = [{"value": i, "count": j} for i, j in _df.to_dict().items()]
+            if is_cudf_series(_series):
+                r = {i[0]: i[1] for i in _series.to_frame().to_records()}
+                result = [{"value": i, "count": j} for i, j in r.items()]
+            else:
+                result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
 
             if _total_freq_count is None:
-                result = {_df.name: {"frequency": result}}
+                result = {_series.name: {"frequency": result}}
             else:
-                result = {_df.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
+                result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
 
             return result
 
@@ -179,9 +182,9 @@ class DaskBaseColumns(BaseColumns):
 
         if count_uniques is True:
             count_uniques = [_value_counts.count() for _value_counts in value_counts]
-            b = [df_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
+            b = [series_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
         else:
-            b = [df_to_dict(_n_largest) for _n_largest in n_largest]
+            b = [series_to_dict(_n_largest) for _n_largest in n_largest]
 
         c = flat_dict(b)
 

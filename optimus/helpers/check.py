@@ -74,6 +74,10 @@ def is_cudf_dataframe(value):
     from cudf.core import DataFrame as CUDFDataFrame
     return isinstance(value, CUDFDataFrame)
 
+def is_cudf_series(value):
+    import cudf
+    return isinstance(value, cudf.core.series.Series)
+
 
 def is_dask_cudf_dataframe(value):
     from dask_cudf.core import DataFrame as DaskCUDFDataFrame
