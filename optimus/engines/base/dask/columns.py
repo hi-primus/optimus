@@ -107,12 +107,14 @@ class DaskBaseColumns(BaseColumns):
             return value if value is not None else 0
 
         result = {}
+
         for col_name, values in d.items():
             result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
                                 "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
-                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value)),
-                                "profiler_dtype": columns_mismatch[col_name]
+                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
                                 }
+            if infer is True:
+                result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
 
         return result
 
@@ -150,7 +152,7 @@ class DaskBaseColumns(BaseColumns):
 
             if is_pandas_series(_series):
                 result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
-                
+
             elif is_cudf_series(_series):
                 r = {i[0]: i[1] for i in _series.to_frame().to_records()}
                 result = [{"value": i, "count": j} for i, j in r.items()]
@@ -1232,7 +1234,6 @@ class DaskBaseColumns(BaseColumns):
             regex = re.compile(str_regex, re.IGNORECASE)
         else:
             regex = re.compile(str_regex)
-
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
