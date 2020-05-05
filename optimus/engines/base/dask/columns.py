@@ -17,7 +17,7 @@ from sklearn.preprocessing import MinMaxScaler
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function, is_cudf_series
+from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
@@ -148,11 +148,12 @@ class DaskBaseColumns(BaseColumns):
         @delayed
         def series_to_dict(_series, _total_freq_count=None):
 
-            if is_cudf_series(_series):
+            if is_pandas_series(_series):
+                result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
+                
+            elif is_cudf_series(_series):
                 r = {i[0]: i[1] for i in _series.to_frame().to_records()}
                 result = [{"value": i, "count": j} for i, j in r.items()]
-            else:
-                result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
 
             if _total_freq_count is None:
                 result = {_series.name: {"frequency": result}}
