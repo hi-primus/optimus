@@ -218,7 +218,7 @@ class BaseColumns(ABC):
                 compact.setdefault(col_name, []).append(_agg)
 
         df = df.groupby(by=by).agg(compact).reset_index()
-        df.columns = [by] + list(agg.keys())
+        df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
 
         return df
 
