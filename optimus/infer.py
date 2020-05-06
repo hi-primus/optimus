@@ -410,24 +410,47 @@ def profiler_dtype_func(dtype):
     :param dtype:
     :return:
     """
-    if dtype == ProfilerDataTypes.BOOLEAN.value:
-        return is_bool
-    elif dtype == ProfilerDataTypes.INT.value:
+    if dtype == ProfilerDataTypes.INT.value:
         return fastnumbers.isint
+
     elif dtype == ProfilerDataTypes.DECIMAL.value:
         return fastnumbers.isfloat
-    elif dtype == ProfilerDataTypes.ARRAY.value:
-        return str_to_array
+
     elif dtype == ProfilerDataTypes.STRING.value:
         return is_str
+
+    elif dtype == ProfilerDataTypes.BOOLEAN.value:
+        return is_bool
+
+    elif dtype == ProfilerDataTypes.DATE.value:
+        return str_to_date
+
+    elif dtype == ProfilerDataTypes.ARRAY.value:
+        return str_to_array
+
     elif dtype == ProfilerDataTypes.OBJECT.value:
         return str_to_object
-    elif dtype == ProfilerDataTypes.DATE.value:
-        return is_date
-    elif dtype == ProfilerDataTypes.MISSING.value:
-        return is_str
+
+    elif dtype == ProfilerDataTypes.GENDER.value:
+        return str_to_gender
+
+    elif dtype == ProfilerDataTypes.IP.value:
+        return str_to_ip
+
+    elif dtype == ProfilerDataTypes.URL.value:
+        return str_to_url
+
+    elif dtype == ProfilerDataTypes.EMAIL.value:
+        return str_to_email
+
+    elif dtype == ProfilerDataTypes.CREDIT_CARD_NUMBER.value:
+        return str_to_credit_card
+
     elif dtype == ProfilerDataTypes.ZIP_CODE.value:
         return str_to_zip_code
+
+    elif dtype == ProfilerDataTypes.MISSING.value:
+        return is_str
 
     else:
         RaiseIt.value_error(dtype, ProfilerDataTypes.list())
