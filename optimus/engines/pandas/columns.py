@@ -138,9 +138,12 @@ def cols(self: DataFrame):
             df = self
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
+            # If tupple
+
             search = val_to_list(search)
 
             if search_by == "chars":
+                # print("ASDf", search)
                 str_regex = "|".join(map(re.escape, search))
             elif search_by == "words":
                 str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
@@ -337,20 +340,28 @@ def cols(self: DataFrame):
             """
             df = self
             columns = parse_columns(df, columns)
+            sub = val_to_list(sub)
 
             def get_match_positions(_value, _separator):
+                # print("asdasf",_separator)
                 result = None
                 if is_str(_value):
+                    # regex = re.compile(r'\b(' + '|'.join(_separator) + r')\b')
+                    regex = re.compile('|'.join(_separator))
                     if ignore_case is True:
+                        # print(regex,"----", _value)
                         length = [[match.start(), match.end()] for match in
-                                  re.finditer(re.escape(_separator), _value, re.IGNORECASE)]
+                                  regex.finditer(_value, re.IGNORECASE)]
                     else:
-                        length = [[match.start(), match.end()] for match in re.finditer(re.escape(_separator), _value)]
+                        length = [[match.start(), match.end()] for match in regex.finditer(_value)]
                     result = length if len(length) > 0 else None
                 return result
 
             for col_name in columns:
-                df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
+                # print("ASDF", sub)
+                # Incase a tupple
+                # sub = list(sub)
+                df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=(sub,))
             return df
 
         @staticmethod
