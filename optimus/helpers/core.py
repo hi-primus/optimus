@@ -5,9 +5,10 @@ def val_to_list(val):
     :return:
     """
     if val is not None:
-        if not isinstance(val, list):
+        if not isinstance(val, (list, tuple)):
             val = [val]
-
+        if isinstance(val, tuple):
+            val = list(val)
     return val
 
 
