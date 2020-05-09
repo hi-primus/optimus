@@ -174,7 +174,7 @@ For Dask you need to install some additional libraries to interact with database
 pip install --user psycopg2-binary
 ```
 ## Build conda recipe
-### From windows
+### From Windows
 
 Install Visual Studio Build Tools. Look at this SO post
 https://stackoverflow.com/questions/41724445/python-pip-on-windows-command-cl-exe-failed
@@ -195,7 +195,11 @@ Bumblebee does not do any operation over the data. Just receive data a present i
 Optimus is the python library that connects to Dask, cudf, Spark to process data.
 Bumblebee is a frontend interface to present data in a way that can be easily handled by the user.
 
+## About parsing data
+Dask try to infer the column datatype for every partition so it can cause problem the inferred datatype does not match. 
+Optimus will always parse the columns as object and the try to optimize the data type using the `.ext.optimize` function.
 
+##Infering datataypes
  
 ## About apply
 
