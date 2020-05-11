@@ -120,6 +120,7 @@ def ext(self: DataFrame):
 
                 numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
                 string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
+
                 hist = None
                 freq_uniques = None
                 if numeric_cols is not None:
@@ -150,7 +151,7 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
-                # Infered column data type using a 10 first rows
+                # Inferred column data type using a 10 first rows
                 if infer is True:
                     temp = df.head(10).applymap(Infer.parse_pandas)
                     infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}

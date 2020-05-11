@@ -364,7 +364,6 @@ class Infer(object):
         if full:
             return result
         else:
-            # print("ASdf", value, "---", _data_type)
             return _data_type
 
     @staticmethod

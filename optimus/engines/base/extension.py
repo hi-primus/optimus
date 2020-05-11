@@ -51,8 +51,8 @@ class BaseExt(ABC):
 
     def to_json(self, columns="*", format="bumblebee"):
         """
-        Return a json from a Spark Dataframe
-        :return:
+        Return a json from a Dataframe
+        :return:de
         """
         df = self.df
         if format == "bumblebee":
