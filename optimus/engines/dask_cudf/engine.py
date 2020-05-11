@@ -15,6 +15,7 @@ Comm.instance = None
 
 GREAT_NUMBER = 100000
 
+
 class DaskCUDFEngine:
     def __init__(self, session=None, n_workers=2, threads_per_worker=4, memory_limit='2GB',
                  verbose=False, comm=None, *args, **kwargs):
@@ -50,9 +51,14 @@ class DaskCUDFEngine:
                 logger.print(f"n_workers should equal or less than the number of GPUs. n_workers is now {n_gpus}")
                 n_workers = n_gpus
 
-            cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
-                                       memory_limit=memory_limit)
+            # cluster = LocalCUDACluster()
+            cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker,
+                                       dashboard_address=":8787")
+
             DaskCUDF.instance = Client(cluster, *args, **kwargs)
+            print("cluster status ", cluster.status)
+            print("cluster infomation ", cluster)
+
             # self._cluster = cluster
             # DaskCUDF.instance = DaskCUDF().create(*args, **kwargs)
             # n_workers = n_workers, threads_per_worker = threads_per_worker,

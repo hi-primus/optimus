@@ -1,4 +1,4 @@
-from dask.distributed import Client
+from dask.distributed import Client,LocalCluster
 
 from optimus.bumblebee import Comm
 from optimus.engines.dask.dask import Dask
@@ -35,9 +35,9 @@ class DaskEngine:
 
         if session is None:
             # print("PROCESS", processes)
-            Dask.instance = Client(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
-                                   memory_limit=memory_limit, *args,
-                                   **kwargs)
+            cluster = LocalCluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
+                                   memory_limit=memory_limit, *args, **kwargs)
+            Dask.instance = Client(cluster)
             # a = Dask()
             # b = a.create(n_workers=n_workers, threads_per_worker=threads_per_worker,
             #              processes=processes, memory_limit=memory_limit, *args, **kwargs)
