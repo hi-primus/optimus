@@ -457,12 +457,37 @@ def reduce_mem_usage1(df, categorical=True, categorical_threshold=50, verbose=Fa
     :return:
     """
 
+    # def isint(a, accept_padding=True):
+    #     if isinstance(a, int):
+    #         return True
+    #
+    #     if isinstance(a, str):
+    #         if accept_padding is False and a[0] == "0":
+    #             return False
+    #
+    #         for i in a:
+    #             if i not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]:
+    #                 return False
+    #         return True
+    #
+    # def isfloat(a, accept_padding=True):
+    #     if isinstance(a, float):
+    #         return True
+    #
+    #     if accept_padding is False and a[0] == "0":
+    #         return False
+    #
+    #     for i in a:
+    #         if i not in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "."]:
+    #             return False
+    #     return True
+
     # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
 
     start_mem_usg = df.ext.size()
 
-    ints = df.applymap(isint).sum().compute().to_dict()
-    floats = df.applymap(isfloat).sum().compute().to_dict()
+    ints = df.applymap(lambda x:isint(x,True)).sum().compute().to_dict()
+    floats = df.applymap(lambda x:isfloat(x,True)).sum().compute().to_dict()
     # print("SFASDF", ints)
     nulls = df.isnull().sum().compute().to_dict()
     total_rows = len(df)
