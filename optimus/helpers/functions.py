@@ -370,84 +370,7 @@ def update_dict(d, u):
     return d
 
 
-def reduce_mem_usage(df, categorical_threshold=50, verbose=False):
-    """
-    Change the columns datatypes to reduce the memory usage. Also identify
-    :param df:
-    :param categorical_threshold:
-    :return:
-    """
-    # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
-
-    # rows_count = df.rows.count()
-
-    start_mem_usg = df.ext.size()
-
-    NA_list = []  # Keeps track of columns that have missing values filled in.
-    columns_dtype = {}
-
-    min_max = df.cols.range("*")
-    for col_name in df.columns:
-        if df[col_name].dtype == object:  # Exclude strings
-            if len(df.cols.value_counts(col_name)[col_name]) <= categorical_threshold:
-                columns_dtype[col_name] = "category"
-        else:
-            # make variables for Int, max and min
-            IsInt = False
-            # a = df.cols.range(col_name)
-
-            _min = min_max[col_name]["min"]
-            _max = min_max[col_name]["max"]
-
-            # Integer does not support NA, therefore, NA needs to be filled
-            if not np.isfinite(df[col_name]).all():
-                NA_list.append(col_name)
-                df = df[col_name].fillna(_max - 1, inplace=True).compute()
-
-                # test if column can be converted to an integer
-            asint = df[col_name].fillna(0).astype(np.int64)
-            result = (df[col_name] - asint)
-            result = result.sum().compute()
-            if -0.01 < result < 0.01:
-                IsInt = True
-
-            # Make Integer/unsigned Integer datatypes
-            if IsInt:
-                if _max >= 0:
-                    if _min < 255:
-                        columns_dtype[col_name] = np.uint8
-                    elif _min < 65535:
-                        columns_dtype[col_name] = np.uint16
-                    elif _min < 4294967295:
-                        columns_dtype[col_name] = np.uint32
-                    else:
-                        columns_dtype[col_name] = np.uint64
-                else:
-                    if _max > np.iinfo(np.int8).min and _min < np.iinfo(np.int8).max:
-                        columns_dtype[col_name] = np.int8
-                    elif _max > np.iinfo(np.int16).min and _min < np.iinfo(np.int16).max:
-                        columns_dtype[col_name] = np.int16
-                    elif _max > np.iinfo(np.int32).min and _min < np.iinfo(np.int32).max:
-                        columns_dtype[col_name] = np.int32
-                    elif _max > np.iinfo(np.int64).min and _min < np.iinfo(np.int64).max:
-                        columns_dtype[col_name] = np.int64
-            else:
-                columns_dtype[col_name] = np.float32
-    # print(columns_dtype)
-    df = df.astype(columns_dtype)
-    # Print final result
-    # print("___MEMORY USAGE AFTER COMPLETION:___")
-    # mem_usg = df.memory_usage().sum() / 1024 ** 2
-    mem_usg = df.ext.size()
-    if verbose is True:
-        print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))
-        print("Memory usage before optimization is: ", humanize.naturalsize(mem_usg))
-        print(round(100 * mem_usg / start_mem_usg), "% of the initial size")
-
-    return df
-
-
-def reduce_mem_usage1(df, categorical=True, categorical_threshold=50, verbose=False):
+def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=False):
     """
     Change the columns datatypes to reduce the memory usage. Also identify
     :param df:
@@ -463,20 +386,12 @@ def reduce_mem_usage1(df, categorical=True, categorical_threshold=50, verbose=Fa
 
     ints = df.applymap(isint).sum().compute().to_dict()
     floats = df.applymap(isfloat).sum().compute().to_dict()
-    # print("SFASDF", ints)
     nulls = df.isnull().sum().compute().to_dict()
     total_rows = len(df)
-    # print("INTSSS", ints)
-    # print("NULLSSS", nulls)
 
     columns_dtype = {}
     for x, y in ints.items():
-        # print("columns", x)
-        # print("ints", ints[x])
-        # print("floats", floats[x])
-        # print("nulls", nulls[x])
-        # print("total", total_rows)
-        # print("-----")
+
         if ints[x] == nulls[x]:
             dtype = "object"
         elif floats[x] == total_rows:
@@ -489,7 +404,6 @@ def reduce_mem_usage1(df, categorical=True, categorical_threshold=50, verbose=Fa
         columns_dtype[x] = dtype
 
     numerical_int = [col for col, dtype in columns_dtype.items() if dtype == "numerical"]
-    # print("NUMERICAL", numerical_int)
     final = {}
 
     if len(numerical_int) > 0:
