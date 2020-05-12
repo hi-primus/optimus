@@ -97,6 +97,7 @@ def compute_bin(x, bin_edges):
 
 @njit(fastmath=True)
 def numba_histogram(a, bins):
+
     hist = np.zeros((bins,), dtype=np.intp)
     bin_edges = get_bin_edges(a, bins)
 
@@ -107,6 +108,15 @@ def numba_histogram(a, bins):
 
     return hist, bin_edges
 
+@njit
+def numba_count_uniques(a):
+    q = np.zeros(len(a), dtype=np.uint8)
+    count = 0
+    for x in a.flat:
+        if q[x] == 0:
+            q[x] = 1
+            count += 1
+    return count
 
 @njit(fastmath=True)
 def numba_histogram_edges(a, bin_edges):
