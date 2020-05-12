@@ -182,18 +182,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def replace_regex(input_cols, regex=None, value=None, output_cols=None):
-            pass
-
-        @staticmethod
-        def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
-            pass
-
-        @staticmethod
-        def is_na(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
         def extract(input_cols, output_cols, regex):
             df = self
             from optimus.engines.base.dataframe.commons import extract
@@ -244,25 +232,34 @@ def cols(self: DataFrame):
             df = self
             return df.cols.nunique(columns)
 
+        # NLP
         @staticmethod
-        def select_by_dtypes(data_type):
-            pass
+        def stem_words(input_col):
+            df = self
 
         @staticmethod
-        def _math(columns, operator, new_column):
-            pass
+        def lemmatize_verbs(input_cols, output_cols=None):
+            df = self
 
-        @staticmethod
-        def min_max_scaler(input_cols, output_cols=None):
-            pass
+            def func(value, args=None):
+                return value + "aaa"
 
-        @staticmethod
-        def standard_scaler(input_cols, output_cols=None):
-            pass
+            df = df.cols.apply(input_cols, func, output_cols)
+            return df
 
-        @staticmethod
-        def max_abs_scaler(input_cols, output_cols=None):
-            pass
+        def remove_stopwords(self):
+            df = self
+
+        def remove_numbers(self):
+            df = self
+            self.text = re.sub('[-+]?[0-9]+', '', self.text)
+            return self
+
+        def strip_html(self):
+            df = self
+            # soup = BeautifulSoup(self.text, "html.parser")
+            # self.text = soup.get_text()
+            return self
 
         # @staticmethod
         # def mismatches_1(columns, dtype):
@@ -347,9 +344,6 @@ def cols(self: DataFrame):
                 return result
 
             for col_name in columns:
-                # print("ASDF", sub)
-                # Incase a tupple
-                # sub = list(sub)
                 df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=(sub,))
             return df
 

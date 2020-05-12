@@ -149,7 +149,6 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns)
             result = {}
             for col_name in columns:
-                # print(col_name)
                 result[col_name] = df[col_name].value_counts().index[0]
 
             return result
@@ -246,6 +245,36 @@ def cols(self: DataFrame):
         def nunique_approx(columns):
             df = self
             return df.cols.nunique(columns)
+
+        # NLP
+        @staticmethod
+        def stem_words(input_col):
+            df = self
+
+        @staticmethod
+        def lemmatize_verbs(input_cols, output_cols=None):
+            df = self
+
+            def func(value, args=None):
+                return value + "aaa"
+
+            df = df.cols.apply(input_cols, func, output_cols)
+            return df
+
+        def remove_stopwords(self):
+            df = self
+
+        def remove_numbers(self):
+            df = self
+            self.text = re.sub('[-+]?[0-9]+', '', self.text)
+            return self
+
+        def strip_html(self):
+            df = self
+            # soup = BeautifulSoup(self.text, "html.parser")
+            # self.text = soup.get_text()
+            return self
+
 
         @staticmethod
         def select_by_dtypes(data_type):
