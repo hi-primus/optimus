@@ -41,19 +41,8 @@ def cols(self: DataFrame):
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
 
-            # for input_col, output_col in zip(input_cols, output_cols):
-            def func(value, _func, _args):
-                # print(input_cols, output_cols),.
-                # print(value)
-                # for input_col, output_col in zip(input_cols, _output_cols):
-                # print("output_co", output_col)
-                # print("input_col", input_col)
-                # row[output_cols[0]] = row[input_cols[0]] + 1
-                return _func(value, _args)
-
-            # apply numpy vectorization
             for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df[input_cols].apply(func, args=(func, args))
+                df[output_col] = df[input_cols].apply(func, args=args)
 
             return df
 
