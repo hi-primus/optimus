@@ -122,12 +122,14 @@ def ext(self: DataFrame):
                 string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
                 hist = None
                 freq_uniques = None
+                compute = False
                 if numeric_cols is not None:
-                    hist = df.cols.hist(numeric_cols, buckets=bins)
+                    hist = df.cols.hist(numeric_cols, buckets=bins, compute =compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None
                 if string_cols is not None:
-                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True)
+                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute = compute)
+
 
                 @delayed
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
@@ -158,6 +160,11 @@ def ext(self: DataFrame):
                     infered_sample = columns
 
                 mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
+
+                # from dask import dataframe as dd
+                # print("MISMATCH")
+                # dd.compute(hist, freq_uniques, freq, mismatch)
+                # return
 
                 # Nulls
                 total_count_na = 0

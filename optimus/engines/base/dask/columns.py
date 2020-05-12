@@ -142,7 +142,7 @@ class DaskBaseColumns(BaseColumns):
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
 
-    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False):
+    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute= True):
 
         df = self.df
         columns = parse_columns(df, columns)
@@ -159,6 +159,7 @@ class DaskBaseColumns(BaseColumns):
 
             if _total_freq_count is None:
                 result = {_series.name: {"frequency": result}}
+                print(result)
             else:
                 result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
 
@@ -194,9 +195,14 @@ class DaskBaseColumns(BaseColumns):
         if percentage:
             c = freq_percentage(c, delayed(len)(df))
 
-        return c.compute()
+        if compute is True:
+            result = c.compute()
+        else:
+            result = c
 
-    def hist(self, columns, buckets=20):
+        return  result
+
+    def hist(self, columns, buckets=20, compute=True):
 
         df = self.df
 
@@ -243,8 +249,11 @@ class DaskBaseColumns(BaseColumns):
         c = [hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
         d = agg_hist(dd.from_delayed(c), _bins)
-
-        return d.compute()
+        if compute is True:
+            result = d.compute()
+        else:
+            result = d
+        return result
 
     @staticmethod
     def mode(columns):
