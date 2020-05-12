@@ -11,7 +11,7 @@ from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
-from optimus.helpers.functions import traverse, absolute_path, collect_as_dict, reduce_mem_usage, reduce_mem_usage1
+from optimus.helpers.functions import traverse, absolute_path, collect_as_dict, reduce_mem_usage
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
@@ -214,10 +214,6 @@ class BaseExt(ABC):
     def optimize(self,categorical_threshold= 50, verbose= False):
         df = self.df
         return reduce_mem_usage(df, categorical_threshold=categorical_threshold, verbose=verbose)
-
-    def optimize1(self,categorical_threshold= 50, verbose= False):
-        df = self.df
-        return reduce_mem_usage1(df, categorical_threshold=categorical_threshold, verbose=verbose)
 
     def run(self):
         """
