@@ -1,4 +1,5 @@
 # from pyspark.sql import DataFrame
+import os
 from pathlib import Path
 
 from dask.dataframe.core import DataFrame
@@ -23,32 +24,35 @@ def save(self: DataFrame):
             """
             df = self
             try:
+                os.makedirs(path, exist_ok=True)
                 df.to_json(filename=path, *args, **kwargs)
-
-            except IOError as e:
-                logger.print(e)
+            except (OSError, IOError) as error:
+                logger.print(error)
                 raise
+            #     print("Creation of the directory %s failed" % path)
+            # else:
+            #     print("Successfully created the directory %s" % path)
 
         @staticmethod
-        def csv(filename, mode="w", return_path = False, **kwargs):
+        def csv(path, mode="w", return_path=False, **kwargs):
             """
             Save data frame to a CSV file.
-            :param filename: path where the spark will be saved.
+            :param path: path where the spark will be saved.
             :param mode: 'rb', 'wt', etc
             it uses the default value.
             :return: Dataframe in a CSV format in the specified path.
             """
 
+            df = self
             try:
-                df = self
-                df.to_csv(filename=filename, mode=mode, **kwargs)
-
+                os.makedirs(path, exist_ok=True)
+                df.to_csv(filename=path, mode=mode, **kwargs)
             except IOError as error:
                 logger.print(error)
                 raise
 
             if return_path is True:
-                return Path(filename).absolute().as_uri()
+                return Path(path).absolute().as_uri()
 
         @staticmethod
         def parquet(path, mode="overwrite", num_partitions=1, engine="pyarrow"):
