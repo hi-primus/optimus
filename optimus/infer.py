@@ -91,8 +91,11 @@ def str_to_url(_value):
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    if regex.match(_value):
-        return True
+    try:
+        if regex.match(_value):
+            return True
+    except TypeError:
+        pass
 
 
 def str_to_ip(_value):
