@@ -33,7 +33,7 @@ def str_to_date(_value):
     try:
         dparse(_value)
         return True
-    except (ValueError, OverflowError):
+    except (ValueError, OverflowError, TypeError):
         pass
 
 
