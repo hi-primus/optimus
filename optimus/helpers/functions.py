@@ -12,7 +12,6 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 import humanize
-import numpy as np
 import six
 from fastnumbers import isint, isfloat
 from pyspark.ml.linalg import DenseVector
@@ -433,7 +432,9 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
                     final[col_name] = np.int64
 
     object_int = [col for col, dtype in columns_dtype.items() if dtype == "object"]
-    count_values = df.cols.value_counts(object_int)
+    if len(object_int) > 0:
+        count_values = df.cols.value_counts(object_int)
+
     if categorical is True:
         for col_name in object_int:
             if len(count_values[col_name]) <= categorical_threshold:
