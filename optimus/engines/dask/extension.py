@@ -161,7 +161,7 @@ def ext(self: DataFrame):
                     inferred_sample = columns
 
                 mismatch = df.cols.count_mismatch(inferred_sample, infer=infer)
-                
+
                 # Nulls
                 total_count_na = 0
                 for i in mismatch.values():

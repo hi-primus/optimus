@@ -33,6 +33,7 @@ class Load:
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
+            df.ext.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -76,7 +77,6 @@ class Load:
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
         """
-
         if cache is False:
             prepare_path.cache_clear()
 
@@ -88,12 +88,12 @@ class Load:
                              **kwargs)
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
-
+            df.ext.reset()
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
+
         return df
 
     @staticmethod
@@ -102,6 +102,7 @@ class Load:
         Return a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
+        :param engine:
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
@@ -111,6 +112,7 @@ class Load:
 
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
+            df.ext.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -171,6 +173,7 @@ class Load:
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
+            df.ext.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -211,6 +214,7 @@ class Load:
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
+        df.ext.reset()
         df.meta.set("file_name", ntpath.basename(file_name))
         df.meta.set("sheet_names", sheet_names)
 
@@ -273,5 +277,5 @@ class Load:
         else:
             RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
 
-        df.meta.set("mime_info", mime_info)
+        df.meta.update("mime_info", value=mime_info)
         return df
