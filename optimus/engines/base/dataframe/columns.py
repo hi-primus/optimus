@@ -651,7 +651,6 @@ class DataFrameBaseColumns(BaseColumns):
     def lower(self, input_cols, output_cols=None):
         df = self.df
         input_cols = parse_columns(df, input_cols)
-        # df.select_dtypes(exclude=['string', 'object'])
 
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
@@ -666,7 +665,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
-            if df[input_col].dtype == "object":
+            if df[input_col].dtype == "object" or df[input_col].dtype == "category":
                 df[output_col] = df[input_col].str.upper()
         return df
 
