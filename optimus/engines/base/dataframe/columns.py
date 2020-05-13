@@ -649,41 +649,44 @@ class DataFrameBaseColumns(BaseColumns):
     #     pass
 
     def lower(self, input_cols, output_cols=None):
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
+        def _lower(col, args=None):
+            return col.str.lower()
 
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            if df[input_col].dtype == "object":
-                df[output_col] = df[input_col].str.lower()
-        return df
+        df = self.df
+        return df.cols.apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols)
 
     def upper(self, input_cols, output_cols=None):
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        # df.select_dtypes(exclude=['string', 'object'])
 
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            if df[input_col].dtype == "object" or df[input_col].dtype == "category":
-                df[output_col] = df[input_col].str.upper()
-        return df
+        def _upper(col, args=None):
+            return col.str.upper()
+
+        df = self.df
+        print("asdfasf", input_cols)
+
+        return df.cols.apply(input_cols, _upper, filter_col_by_dtypes=df.constants.STRING_TYPES, output_cols=output_cols)
 
     def trim(self, input_cols, output_cols=None):
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        # df.select_dtypes(exclude=['string', 'object'])
+        def _strip(col, args=None):
+            return col.str.strip()
 
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            if df[input_col].dtype == "object":
-                df[output_col] = df[input_col].str.strip()
-        return df
+        df = self.df
+        return df.cols.apply(input_cols, _strip, filter_col_by_dtypes="string", output_cols=output_cols)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
 
-        pass
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                   accepts_missing_cols=True)
+
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        print("AAA",input_cols, output_cols)
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_cols].apply(func, args=args)
+
+        return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -868,7 +871,6 @@ class DataFrameBaseColumns(BaseColumns):
         if columns is not None:
             df = df[columns]
             # Metadata get lost when using select(). So we copy here again.
-            # df.ext.meta = self.ext.meta
             result = df
         else:
             result = None
