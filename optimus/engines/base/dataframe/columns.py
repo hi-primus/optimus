@@ -43,13 +43,6 @@ class DataFrameBaseColumns(BaseColumns):
     def abs(columns):
         pass
 
-    @staticmethod
-    def get_meta(col_name, spec=None):
-        pass
-
-    @staticmethod
-    def set_meta(col_name, spec=None, value=None, missing=dict):
-        pass
 
     @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
