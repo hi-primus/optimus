@@ -8,7 +8,7 @@ def constants(self):
     class Constants:
         DTYPES_DICT = {"string": np.str, "int32": np.int32, "int64": np.int64, "float": np.float, "float64": np.float64,
                        "boolean": np.bool, "array": np.array,
-                       "object": np.object_}
+                       "object": np.object_, "category": "category"}
 
         SHORT_DTYPES = {"string": "string",
                         "str": "string",

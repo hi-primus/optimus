@@ -34,35 +34,35 @@ def cols(self: DataFrame):
         def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
             pass
 
-        def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
-            df = self.df
-
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df[input_cols].apply(func, args=args)
-
-            return df
-
         @staticmethod
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
             pass
 
-        def set(self, value=None, output_col=None):
+        def set(self, input_cols, where=None, value=None, output_cols=None):
             """
             Execute a hive expression. Also handle ints and list in columns
-            :param output_col: Output columns
+            :param input_cols:
+            :param where:
+            :param output_cols: Output columns
             :param value: numeric, list or hive expression
             :return:
             """
-
             df = self.df
+            input_cols = parse_columns(df, input_cols)
+            output_cols = get_output_cols(input_cols, output_cols)
 
-            check_column_numbers(output_col, 1)
+            for input_col, output_col in zip(input_cols, output_cols):
+                if where is None:
+                    df = df.assign(**{output_col: eval(value)})
+                else:
+                    if df.cols.dtypes(input_col) == "category":
+                        try:
+                            # Handle error if the category already exist
+                            df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+                        except ValueError:
+                            pass
 
-            df = df.assign(**{output_col: eval(value)})
+                    df[output_col] = df[input_col].where(~(where), value)
 
             return df
 
