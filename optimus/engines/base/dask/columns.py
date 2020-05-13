@@ -142,7 +142,7 @@ class DaskBaseColumns(BaseColumns):
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
 
-    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute= True):
+    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
 
         df = self.df
         columns = parse_columns(df, columns)
@@ -200,7 +200,7 @@ class DaskBaseColumns(BaseColumns):
         else:
             result = c
 
-        return  result
+        return result
 
     def hist(self, columns, buckets=20, compute=True):
 
@@ -264,14 +264,6 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def get_meta(col_name, spec=None):
-        pass
-
-    @staticmethod
-    def set_meta(col_name, spec=None, value=None, missing=dict):
-        pass
-
-    @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
         pass
 
@@ -323,10 +315,6 @@ class DaskBaseColumns(BaseColumns):
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):
         pass
-
-    # @staticmethod
-    # def count_mismatch(columns_mismatch: dict = None):
-    #     pass
 
     def count(self):
         df = self.df

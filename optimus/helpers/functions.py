@@ -394,7 +394,6 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
         if ints[x] == nulls[x]:
             dtype = "object"
         elif floats[x] == total_rows:
-            # print(x)
             dtype = "numerical"
         elif total_rows <= ints[x] + nulls[x]:
             dtype = "numerical"

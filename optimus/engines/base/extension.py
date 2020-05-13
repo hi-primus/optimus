@@ -26,14 +26,14 @@ class BaseExt(ABC):
         self.df = df
         # self.buffer_a = None
 
-    def init(self):
-        df = self.df
-        if df.meta.get("optimus.init") is None:
-            # Save columns as the data set original name
-            for col_name in df.cols.names():
-                df = df.cols.set_meta(col_name, "optimus.name", col_name)
-                df = df.cols.set_meta(col_name, "optimus.transformations", [])
-        return df
+    # def init(self):
+    #     df = self.df
+    #     if df.meta.get("optimus.init") is None:
+    #         # Save columns as the data set original name
+    #         for col_name in df.cols.names():
+    #             df = df.cols.set_meta(col_name, "optimus.name", col_name)
+    #             df = df.cols.set_meta(col_name, "optimus.transformations", [])
+    #     return df
 
     @staticmethod
     @abstractmethod

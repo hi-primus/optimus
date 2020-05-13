@@ -2094,46 +2094,46 @@ def cols(self):
             df = df.cols.apply(input_cols, func=_bucketizer, args=splits, output_cols=output_cols)
             return df
 
-        @staticmethod
-        def set_meta(col_name, spec=None, value=None, missing=dict):
-            """
-            Set meta data in a column
-            :param col_name: Column from where to get the value
-            :param spec: Path to the key to be modified
-            :param value: dict value
-            :param missing:
-            :return:
-            """
-            if spec is not None:
-                target = self.cols.get_meta(col_name)
-                data = assign(target, spec, value, missing=missing)
-            else:
-                data = value
-            return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
-
-        @staticmethod
-        def get_meta(col_name, spec=None):
-            """
-            Get meta data from a specific column
-            :param col_name: Column in which to set the value
-            :param spec: Path to the key to be modified
-            :return:
-            """
-
-            col_name = parse_columns(self, col_name, accepts_missing_cols=False)
-            data = ""
-            meta_json = self._jdf.schema().json()
-            fields = json.loads(meta_json)["fields"]
-
-            for col_info in fields:
-                if col_info["name"] == col_name:
-                    data = col_info["metadata"]
-            if spec is not None:
-                data = glom(data, spec, skip_exc=KeyError)
-
-            if data == "":
-                data = {}
-            return data
+        # @staticmethod
+        # def set_meta(col_name, spec=None, value=None, missing=dict):
+        #     """
+        #     Set meta data in a column
+        #     :param col_name: Column from where to get the value
+        #     :param spec: Path to the key to be modified
+        #     :param value: dict value
+        #     :param missing:
+        #     :return:
+        #     """
+        #     if spec is not None:
+        #         target = self.cols.get_meta(col_name)
+        #         data = assign(target, spec, value, missing=missing)
+        #     else:
+        #         data = value
+        #     return self.withColumn(col_name, F.col(col_name).alias(col_name, metadata=data))
+        #
+        # @staticmethod
+        # def get_meta(col_name, spec=None):
+        #     """
+        #     Get meta data from a specific column
+        #     :param col_name: Column in which to set the value
+        #     :param spec: Path to the key to be modified
+        #     :return:
+        #     """
+        #
+        #     col_name = parse_columns(self, col_name, accepts_missing_cols=False)
+        #     data = ""
+        #     meta_json = self._jdf.schema().json()
+        #     fields = json.loads(meta_json)["fields"]
+        #
+        #     for col_info in fields:
+        #         if col_info["name"] == col_name:
+        #             data = col_info["metadata"]
+        #     if spec is not None:
+        #         data = glom(data, spec, skip_exc=KeyError)
+        #
+        #     if data == "":
+        #         data = {}
+        #     return data
 
     return Cols(self)
 

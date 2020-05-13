@@ -106,11 +106,6 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def count_mismatch(columns_mismatch: dict = None):
-        pass
-
     def round(self, input_cols, decimals=1, output_cols=None):
         """
 
@@ -782,12 +777,3 @@ class BaseColumns(ABC):
     def bucketizer(input_cols, splits, output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def set_meta(col_name, spec=None, value=None, missing=dict):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def get_meta(col_name, spec=None):
-        pass

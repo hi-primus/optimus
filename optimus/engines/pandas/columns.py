@@ -429,14 +429,6 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def set_meta(col_name, spec=None, value=None, missing=dict):
-            pass
-
-        @staticmethod
-        def get_meta(col_name, spec=None):
-            pass
-
-        @staticmethod
         def abs(input_cols, output_cols=None):
             """
             Apply abs to the values in a column

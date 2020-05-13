@@ -34,11 +34,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-                  filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
-            pass
-
-        @staticmethod
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
             pass
 
@@ -440,14 +435,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def bucketizer(input_cols, splits, output_cols=None):
-            pass
-
-        @staticmethod
-        def set_meta(col_name, spec=None, value=None, missing=dict):
-            pass
-
-        @staticmethod
-        def get_meta(col_name, spec=None):
             pass
 
         @staticmethod
