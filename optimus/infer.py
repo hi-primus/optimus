@@ -1,6 +1,7 @@
 # This file need to be send to the cluster via .addPyFile to handle the pickle problem
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
 # This can not import any optimus file unless it's imported via addPyFile
+import pandas as pd
 import datetime
 import math
 import os
@@ -382,29 +383,23 @@ class Infer(object):
             (str_to_url, "url"),
             (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
         ]
-        # if pd.isnull(value):
-        #     _data_type = "decimal"
-        if isinstance(value, bool):
+        if pd.isnull(value):
+            _data_type = "null"
+        elif isinstance(value, bool):
             _data_type = "boolean"
-        #
         elif fastnumbers.isint(value):  # Check if value is integer
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
-        #
         elif fastnumbers.isfloat(value):
             _data_type = "decimal"
-        #
         elif isinstance(value, str):
-            # print("strings")
             _data_type = "string"
             for func in str_funcs:
                 if func[0](value) is True:
                     _data_type = func[1]
-        else:
-            _data_type = "null"
-        return _data_type
+        return "string"
 
 
 def profiler_dtype_func(dtype):

@@ -105,18 +105,12 @@ def ext(self: DataFrame):
                 cols_to_profile = parse_columns(df, columns)
             columns = cols_to_profile
 
-            # columns = parse_columns(df, columns)
-
             output_columns = df.meta.get("profile")
             if output_columns is None:
                 output_columns = {}
-            # print("output_columns", output_columns)
 
             if cols_to_profile or not Ext.is_cached(df) or flush:
                 df_length = len(df)
-
-                # self.rows_count = df.rows.count()
-                # self.cols_count = cols_count = len(df.columns)
 
                 numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
                 string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
@@ -124,16 +118,14 @@ def ext(self: DataFrame):
                 freq_uniques = None
                 compute = False
                 if numeric_cols is not None:
-                    hist = df.cols.hist(numeric_cols, buckets=bins, compute =compute)
+                    hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None
                 if string_cols is not None:
-                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute = compute)
-
+                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
                 @delayed
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
-                    # _h = {}
                     _f = {}
 
                     for col_name in _columns:
@@ -152,20 +144,24 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
-                # Infered column data type using a 10 first rows
+                # Inferred column data type using a 10 first rows
                 if infer is True:
-                    temp = df.head(10).applymap(Infer.parse_pandas)
-                    infered_sample = {col_name: temp[col_name].value_counts().index[0] for col_name in columns}
+                    total_preview_rows = 30
+                    temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
+                    inferred_sample = {}
+                    for col_name in columns:
+                        vc = temp[col_name].value_counts()
+                        if vc.index[0] == "null" and vc[0] < total_preview_rows:
+                            r = vc.index[1]
+                        else:
+                            r = "object"
+
+                        inferred_sample[col_name] = r
                 else:
-                    infered_sample = columns
+                    inferred_sample = columns
 
-                mismatch = df.cols.count_mismatch(infered_sample, infer=infer)
-
-                # from dask import dataframe as dd
-                # print("MISMATCH")
-                # dd.compute(hist, freq_uniques, freq, mismatch)
-                # return
-
+                mismatch = df.cols.count_mismatch(inferred_sample, infer=infer)
+                
                 # Nulls
                 total_count_na = 0
                 for i in mismatch.values():
