@@ -224,16 +224,14 @@ class DaskBaseColumns(BaseColumns):
 
         @delayed
         def agg_hist(_count, _bins):
-            result = {}
+            _result = {}
             for col_name in columns:
                 l = len(_count[col_name])
-                r = []
-                for i in range(l):
-                    r.append(
-                        {"lower": _bins[col_name][i], "upper": _bins[col_name][i + 1],"count": _count[col_name][i]})
-                result[col_name] = {"hist": r}
+                r = [{"lower": _bins[col_name][i], "upper": _bins[col_name][i + 1], "count": _count[col_name][i]} for i
+                     in range(l)]
+                _result[col_name] = {"hist": r}
 
-            return result
+            return _result
 
         @delayed
         def to_dict(value):
