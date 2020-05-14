@@ -150,9 +150,11 @@ def ext(self: DataFrame):
                     temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
                     inferred_sample = {}
                     for col_name in columns:
-                        vc = temp[col_name].value_counts()
-                        if vc.index[0] == "null" and vc[0] < total_preview_rows:
-                            r = vc.index[1]
+                        _value_counts = temp[col_name].value_counts()
+                        if _value_counts.index[0] != "null":
+                            r = _value_counts.index[0]
+                        elif _value_counts.index[0] == "null" and _value_counts[0] < total_preview_rows:
+                            r = _value_counts.index[1]
                         else:
                             r = "object"
 
@@ -169,9 +171,14 @@ def ext(self: DataFrame):
 
                 dtypes = df.cols.dtypes("*")
 
+                # mismatch
                 updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
-
                 output_columns = update_dict(output_columns, updated_columns)
+
+                # Move profiler_dtype to the parent
+                for col_name in columns:
+                    output_columns["columns"][col_name].update({"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
+
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
@@ -194,11 +201,10 @@ def ext(self: DataFrame):
                 {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
                  _cols_name in list(actual_columns.keys())}))
 
-            df = df.meta.set("transformations", value={})
             df = df.meta.columns(df.cols.names())
-
+            # df = df.meta.set("transformations", value={})
+            df.meta.set("transformations", value={})
             df.meta.set("profile", output_columns)
-
             df.meta.set("transformations.actions", {})
 
             if output == "json":

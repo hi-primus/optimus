@@ -383,11 +383,13 @@ class Infer(object):
             (str_to_url, "url"),
             (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
         ]
+
         if pd.isnull(value):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
         elif fastnumbers.isint(value):  # Check if value is integer
+
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
@@ -399,7 +401,9 @@ class Infer(object):
             for func in str_funcs:
                 if func[0](value) is True:
                     _data_type = func[1]
-        return "string"
+        else:
+            _data_type = "string"
+        return _data_type
 
 
 def profiler_dtype_func(dtype):
