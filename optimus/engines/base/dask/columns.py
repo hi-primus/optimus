@@ -227,7 +227,7 @@ class DaskBaseColumns(BaseColumns):
             _result = {}
             for col_name in columns:
                 l = len(_count[col_name])
-                r = [{"lower": _bins[col_name][i], "upper": _bins[col_name][i + 1], "count": _count[col_name][i]} for i
+                r = [{"lower": float(_bins[col_name][i]), "upper": float(_bins[col_name][i + 1]), "count": int(_count[col_name][i])} for i
                      in range(l)]
                 _result[col_name] = {"hist": r}
 
