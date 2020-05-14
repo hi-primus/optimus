@@ -19,7 +19,7 @@ def ext(self: DataFrame):
             super().__init__(df)
 
         @staticmethod
-        def profile(columns, lower_bound=None, upper_bound=None, bins=MAX_BUCKETS, output=None):
+        def profile(columns, lower_bound=None, upper_bound=None, bins=MAX_BUCKETS, output=None, infer=False):
             """
 
             :param lower_bound:
