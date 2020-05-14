@@ -85,68 +85,6 @@ def functions(self):
             return _count_na_agg
 
         @staticmethod
-        def hist_agg(columns, args):
-            def str_len(series):
-                return series.str.len()
-
-            def value_counts(series):
-                return series.value_counts().sort_index().reset_index(level=0)
-
-            def min_max_string_func(series):
-                return [series.min()[0], series.max()[0]]
-
-            def min_max_func(series):
-                return [series.min(), series.max()]
-
-            def hist_serie(series, buckets, min_max):
-                _min= min_max[0]
-                _max = min_max[1]
-
-                i = histogram1d(series, range=(_min,_max), bins=buckets)
-                j = np.linspace(_min, _max, num=buckets)
-                # i, j = numpy.histogram(series, bins=buckets, range=min_max)
-                return {"count": list(i), "bins": list(j)}
-
-            # TODO: Calculate mina max in one pass.
-            def hist_agg_(df):
-                # df = args[0]
-                buckets = args[1]
-                min_max = args[2]
-                result_min_max = {}
-
-                delayed_results = []
-
-                for col_name in columns:
-                    calc = None
-                    if min_max is not None:
-                        calc = min_max.get(col_name)
-
-                    if calc is None or min_max is None:
-                        if is_column_a(df, col_name, df.constants.STRING_TYPES):
-                            a = Functions.map_delayed(df[col_name], str_len)
-                            b = Functions.map_delayed(a, value_counts)
-                            c = dask.delayed(min_max_string_func)(b)
-                            f = Functions.map_delayed(b["index"], hist_serie, buckets, c)
-                        #
-                        elif is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
-                            a = Functions.map_delayed(df[col_name], min_max_func)
-                            f = Functions.map_delayed(df[col_name], hist_serie, buckets, a)
-                        else:
-                            RaiseIt.type_error("column", ["numeric", "string"])
-                        delayed_results.append({col_name: f})
-                results_compute = dask.compute(*delayed_results)
-
-                r = {}
-                # Convert list to dict
-                for i in results_compute:
-                    r.update(i)
-                result = {"hist": r}
-
-                return result
-
-            return hist_agg_
-
-        @staticmethod
         def kurtosis(columns, args):
             # Maybe we could contribute with this
             # `nan_policy` other than 'propagate' have not been implemented.
