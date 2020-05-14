@@ -411,24 +411,27 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
         for col_name in min_max.keys():
             _min = min_max[col_name]["min"]
             _max = min_max[col_name]["max"]
-            if _max >= 0:
-                if _min < 255:
+            # print(_min, _max)
+            if _min >= 0:
+                # print("11111")
+                if _max < 255:
                     final[col_name] = np.uint8
-                elif _min < 65535:
-                    columns_dtype[col_name] = np.uint16
-                elif _min < 4294967295:
+                elif _max < 65535:
+                    final[col_name] = np.uint16
+                elif _max < 4294967295:
                     final[col_name] = np.uint32
                 else:
                     final[col_name] = np.uint64
             else:
-                if _max > np.iinfo(np.int8).min and _min < np.iinfo(np.int8).max:
+                if _min > np.iinfo(np.int8).min and _max < np.iinfo(np.int8).max:
                     final[col_name] = np.int8
-                elif _max > np.iinfo(np.int16).min and _min < np.iinfo(np.int16).max:
+                elif _min > np.iinfo(np.int16).min and _max < np.iinfo(np.int16).max:
                     final[col_name] = np.int16
-                elif _max > np.iinfo(np.int32).min and _min < np.iinfo(np.int32).max:
+                elif _min > np.iinfo(np.int32).min and _max < np.iinfo(np.int32).max:
                     final[col_name] = np.int32
-                elif _max > np.iinfo(np.int64).min and _min < np.iinfo(np.int64).max:
+                elif _min > np.iinfo(np.int64).min and _max < np.iinfo(np.int64).max:
                     final[col_name] = np.int64
+            # print(final[col_name])
 
     object_int = [col for col, dtype in columns_dtype.items() if dtype == "object"]
     if len(object_int) > 0:
