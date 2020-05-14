@@ -654,7 +654,6 @@ class DataFrameBaseColumns(BaseColumns):
             return col.str.upper()
 
         df = self.df
-        print("asdfasf", input_cols)
 
         return df.cols.apply(input_cols, _upper, filter_col_by_dtypes=df.constants.STRING_TYPES, output_cols=output_cols)
 
@@ -675,7 +674,6 @@ class DataFrameBaseColumns(BaseColumns):
 
         output_cols = get_output_cols(input_cols, output_cols)
 
-        print("AAA",input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
             df[output_col] = df[input_cols].apply(func, args=args)
 

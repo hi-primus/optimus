@@ -248,9 +248,6 @@ class BaseColumns(ABC):
         if df_right.cols.dtypes(col_index_right) == "category":
             df_right[col_index_right] = df_right[col_index_right].cat.as_ordered()
 
-        # if df_left.cols.dtypes(col_index_left)!= df_right.cols.dtypes(col_index_right):
-        #     df_left = df_left.cols.cast("object")
-
         df_left = df_left.cols.cast(col_index_left, "str").set_index(col_index_left)
         df_right = df_right.cols.cast(col_index_right, "str").set_index(col_index_right)
 
@@ -589,21 +586,6 @@ class BaseColumns(ABC):
         :param operator: A lambda function
         :return:
         """
-
-        # df = self
-        # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        # check_column_numbers(columns, "*")
-        #
-        # for col_name in columns:
-        #     df = df.cols.cast(col_name, "float")
-        #
-        # if len(columns) < 2:
-        #     raise Exception("Error: 2 or more columns needed")
-        #
-        # columns = list(map(lambda x: F.col(x), columns))
-        # expr = reduce(operator, columns)
-        #
-        # return df.withColumn(new_column, expr)
         pass
 
     @staticmethod

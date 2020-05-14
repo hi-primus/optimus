@@ -42,7 +42,7 @@ class DaskBaseColumns(BaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def count_mismatch(self, columns_mismatch: dict = None, infer=True):
-
+        # print("infer", infer)
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
@@ -1027,7 +1027,6 @@ class DaskBaseColumns(BaseColumns):
             if output_col not in df.cols.names():
                 col_index = output_ordered_columns.index(input_col) + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
-                print("aaasdfsfd", input_col, output_col)
 
             # Preserve actions for the profiler
             df = df.meta.preserve(df, meta_action, output_col)

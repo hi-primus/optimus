@@ -86,6 +86,7 @@ class Load:
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=True, na_values=None, engine="c", *args,
                              **kwargs)
+            # print(len(df))
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
             df.ext.reset()
