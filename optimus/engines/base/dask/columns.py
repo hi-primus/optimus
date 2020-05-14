@@ -210,14 +210,14 @@ class DaskBaseColumns(BaseColumns):
 
         @delayed
         def bins_col(_columns, _min, _max):
-            return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=10)) for col_name in _columns}
+            return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=buckets)) for col_name in _columns}
 
         _min = df[columns].min().to_delayed()[0]
         _max = df[columns].max().to_delayed()[0]
         _bins = bins_col(columns, _min, _max)
 
         @delayed
-        def hist(pdf, col_name, _bins):
+        def _hist(pdf, col_name, _bins):
 
             _hist, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
             return pd.Series({col_name: list(_hist)})
@@ -238,8 +238,8 @@ class DaskBaseColumns(BaseColumns):
             return value.to_dict()
 
         partitions = df.to_delayed()
-        c = [hist(part, col_name, _bins) for part in partitions for col_name in columns]
-
+        c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
+        
         d = agg_hist(dd.from_delayed(c), _bins)
 
         if compute is True:
