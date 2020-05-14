@@ -209,37 +209,32 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
 
         @delayed
-        def min_col(_min):
-            return _min.to_dict()
-
-        @delayed
-        def max_col(_max):
-            return _max.to_dict()
-
-        @delayed
         def bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=10)) for col_name in _columns}
 
-        _min = min_col(df[columns].min().to_delayed()[0])
-        _max = max_col(df[columns].max().to_delayed()[0])
+        _min = df[columns].min().to_delayed()[0]
+        _max = df[columns].max().to_delayed()[0]
         _bins = bins_col(columns, _min, _max)
 
         @delayed
         def hist(pdf, col_name, _bins):
+
             _hist, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
             return pd.Series({col_name: list(_hist)})
 
         @delayed
-        def agg_hist(pdf, _bins):
-            r = pdf.groupby(pdf.index).sum().to_dict()
+        def agg_hist(_count, _bins):
             result = {}
-            for col_name, c in r.items():
-                r = []
-                for i, j in zip(range(0, len(c) - 1), c):
-                    r.append({"count": int(c[i]), "lower": float(c[i]), "upper": float(c[i + 1])})
+            r = []
+
+            for col_name in columns:
+                l = len(_count[col_name])
+                for i in range(l):
+                    r.append(
+                        {"count": _count[col_name][i], "lower": _bins[col_name][i], "upper": _bins[col_name][i + 1]})
                 result[col_name] = {"hist": r}
+
             return result
-            # return r
 
         @delayed
         def to_dict(value):
@@ -249,6 +244,7 @@ class DaskBaseColumns(BaseColumns):
         c = [hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
         d = agg_hist(dd.from_delayed(c), _bins)
+
         if compute is True:
             result = d.compute()
         else:
@@ -427,7 +423,6 @@ class DaskBaseColumns(BaseColumns):
         # .value(columns, 1)
 
         result = {}
-        print("COLUMNS", columns)
         for col_name in columns:
             result.update(df[col_name].value_counts().compute().to_frame().to_dict())
         return result
@@ -684,11 +679,10 @@ class DaskBaseColumns(BaseColumns):
                 return pd.DataFrame({"col_name": col_name, "min": np.min(_df[col_name].to_numpy())},
                                     index=[0])
 
-        #         return pd.Series({col_name:df[col_name].min(),col_name:df[col_name].max()})
-
         delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
 
         # print(delayed_parts)
+        # print("asdf",dd.compute(*delayed_parts))
         c = pd.concat(dd.compute(*delayed_parts))
         d = c.groupby(["col_name"]).min()["min"].to_dict()
         # e = c.groupby(["col_name"]).max()["max"].to_dict()
