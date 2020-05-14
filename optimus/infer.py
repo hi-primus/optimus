@@ -1,7 +1,6 @@
 # This file need to be send to the cluster via .addPyFile to handle the pickle problem
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
 # This can not import any optimus file unless it's imported via addPyFile
-import pandas as pd
 import datetime
 import math
 import os
@@ -9,6 +8,7 @@ import re
 from ast import literal_eval
 
 import fastnumbers
+import pandas as pd
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 from dateutil.parser import parse as dparse
@@ -412,11 +412,18 @@ def profiler_dtype_func(dtype):
     :param dtype:
     :return:
     """
+
+    def _float(value):
+        return (fastnumbers.isfloat(value) or value != value)
+
+    def _int(value):
+        return (fastnumbers.isint(value) or value != value)
+
     if dtype == ProfilerDataTypes.INT.value:
-        return fastnumbers.isint
+        return _int
 
     elif dtype == ProfilerDataTypes.DECIMAL.value:
-        return fastnumbers.isfloat
+        return _float
 
     elif dtype == ProfilerDataTypes.STRING.value:
         return is_str
