@@ -226,17 +226,15 @@ class BaseColumns(ABC):
         how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
         :return:
         """
-        df = self.df
+        df_left = self.df
         col_on = kwargs.get("on")
         col_left = kwargs.get("left_on")
         col_right = kwargs.get("right_on")
 
-        # print(col_on)
-
         col_index_left = None
         col_index_right = None
 
-        if col_on:
+        if col_on is not None:
             col_index_left = col_on
             col_index_right = col_on
 
@@ -244,14 +242,21 @@ class BaseColumns(ABC):
             col_index_left = col_left
             col_index_right = col_right
 
-        # print(col_index_right, col_index_left)
-        df = df.set_index(col_index_left)
-        df_right.set_index(col_index_right)
+        if df_left.cols.dtypes(col_index_left) == "category":
+            df_left[col_index_left] = df_left[col_index_left].cat.as_ordered()
 
-        # print(df.index.name)
-        ## Create a index using the join column to speed up the join in big datasets
-        df = df.merge(df_right, *args, **kwargs)
-        return df
+        if df_right.cols.dtypes(col_index_right) == "category":
+            df_right[col_index_right] = df_right[col_index_right].cat.as_ordered()
+
+        # if df_left.cols.dtypes(col_index_left)!= df_right.cols.dtypes(col_index_right):
+        #     df_left = df_left.cols.cast("object")
+
+        df_left = df_left.cols.cast(col_index_left, "str").set_index(col_index_left)
+        df_right = df_right.cols.cast(col_index_right, "str").set_index(col_index_right)
+
+        # Join do not work with different data types.
+        df_left = df_left.merge(df_right, *args, **kwargs)
+        return df_left
 
     def move(self, column, position, ref_col=None):
         """
@@ -688,6 +693,7 @@ class BaseColumns(ABC):
         pass
 
     def hist(self, columns, buckets=20):
+        print("ASDASDF")
         df = self.df
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
         return result

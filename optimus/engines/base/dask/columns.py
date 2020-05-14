@@ -1099,19 +1099,19 @@ class DaskBaseColumns(BaseColumns):
         for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
 
             if dtype == 'int':
-                func = _cast_int
+                func = int
             elif dtype == 'float':
-                func = _cast_float
+                func = float
             elif dtype == 'bool':
-                func = _cast_bool
+                func = bool
             else:
-                func = _cast_str
+                func = str
 
-            df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
+            # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
             # df[output_col] = df[input_col].apply(func=func, meta=df[input_col])
             # df[output_col] = df[input_col].astype(dtype)
             #
-            # df[output_col].odtype = dtype
+            df[output_col] = df[output_col].astype(func)
 
         return df
 
