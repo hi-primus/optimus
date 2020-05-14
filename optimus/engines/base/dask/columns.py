@@ -62,7 +62,7 @@ class DaskBaseColumns(BaseColumns):
                     # ProfilerDataTypesQuality.MATCH.value
                     return 2
 
-                elif value is None:
+                elif pd.isnull(value) is True:
                     # ProfilerDataTypesQuality.MISSING.value
                     return 1
 
@@ -99,10 +99,10 @@ class DaskBaseColumns(BaseColumns):
         b = merge(delayed_parts)
 
         c = dd.compute(b)[0]
-
         # Flat dict
         d = {x: y for _c in c for x, y in _c.items()}
 
+        print("CCC",d)
         def none_to_zero(value):
             return value if value is not None else 0
 
@@ -239,7 +239,7 @@ class DaskBaseColumns(BaseColumns):
 
         partitions = df.to_delayed()
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
-        
+
         d = agg_hist(dd.from_delayed(c), _bins)
 
         if compute is True:
