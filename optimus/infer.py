@@ -406,7 +406,7 @@ class Infer(object):
         return _data_type
 
 
-def profiler_dtype_func(dtype):
+def profiler_dtype_func(dtype, null=False):
     """
     Return a function that check if a value match a datatype
     :param dtype:
@@ -414,10 +414,16 @@ def profiler_dtype_func(dtype):
     """
 
     def _float(value):
-        return (fastnumbers.isfloat(value) or value != value)
+        if null is True:
+            return fastnumbers.isfloat(value)
+        else:
+            return fastnumbers.isfloat(value) or value != value
 
     def _int(value):
-        return (fastnumbers.isint(value) or value != value)
+        if null is True:
+            return fastnumbers.isint(value)
+        else:
+            return fastnumbers.isint(value) or value != value
 
     if dtype == ProfilerDataTypes.INT.value:
         return _int

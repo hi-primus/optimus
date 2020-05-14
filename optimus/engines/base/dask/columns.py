@@ -62,7 +62,7 @@ class DaskBaseColumns(BaseColumns):
                     # ProfilerDataTypesQuality.MATCH.value
                     return 2
 
-                elif pd.isnull(value) is True:
+                elif pd.isnull(value):
                     # ProfilerDataTypesQuality.MISSING.value
                     return 1
 
@@ -84,7 +84,7 @@ class DaskBaseColumns(BaseColumns):
         partitions = df.to_delayed()
 
         if infer is True:
-            delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype)) for part in partitions for
+            delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in partitions for
                              col_name, dtype in columns_mismatch.items()]
 
         else:
@@ -102,7 +102,6 @@ class DaskBaseColumns(BaseColumns):
         # Flat dict
         d = {x: y for _c in c for x, y in _c.items()}
 
-        print("CCC",d)
         def none_to_zero(value):
             return value if value is not None else 0
 
