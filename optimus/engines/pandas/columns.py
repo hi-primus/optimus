@@ -337,7 +337,7 @@ def cols(self: DataFrame):
                     if ignore_case is True:
                         # print(regex,"----", _value)
                         length = [[match.start(), match.end()] for match in
-                                  regex.finditer(_value, re.IGNORECASE)]
+                                  regex.finditer(re.escape(_value), re.IGNORECASE)]
                     else:
                         length = [[match.start(), match.end()] for match in regex.finditer(_value)]
                     result = length if len(length) > 0 else None
