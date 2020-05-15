@@ -101,8 +101,11 @@ def str_to_url(_value):
 
 def str_to_ip(_value):
     regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
-    if regex.match(_value):
-        return True
+    try:
+        if regex.match(_value):
+            return True
+    except TypeError:
+        return False
 
 
 def str_to_email(_value):
@@ -128,9 +131,13 @@ def str_to_credit_card(_value):
 
 def str_to_zip_code(_value):
     regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
-    if regex.match(_value):
-        return True
-    return False
+    try:
+        if regex.match(_value):
+            return True
+    except TypeError:
+        return False
+
+
 
 
 def str_to_missing(_value):
