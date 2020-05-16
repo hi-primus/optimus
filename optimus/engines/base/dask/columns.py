@@ -1034,6 +1034,13 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
+    def profiler_dtype(self, column, dtype):
+
+        df = self.df
+        df.meta.set(f"profile.columns.{column}.profiler_dtype", dtype)
+        df.meta.preserve(df, Actions.PROFILER_DTYPE.value, column)
+        return df
+
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
