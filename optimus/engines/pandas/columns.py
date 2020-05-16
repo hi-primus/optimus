@@ -329,22 +329,24 @@ def cols(self: DataFrame):
             sub = val_to_list(sub)
 
             def get_match_positions(_value, _separator):
-                # print("asdasf",_separator)
+
                 result = None
                 if is_str(_value):
-                    # regex = re.compile(r'\b(' + '|'.join(_separator) + r')\b')
-                    regex = re.compile('|'.join(_separator))
+                    # Using re.IGNORECASE in finditer not seems to work
                     if ignore_case is True:
-                        # print(regex,"----", _value)
-                        length = [[match.start(), match.end()] for match in
-                                  regex.finditer(re.escape(_value), re.IGNORECASE)]
-                    else:
-                        length = [[match.start(), match.end()] for match in regex.finditer(_value)]
+                        _separator = _separator + [s.lower() for s in _separator]
+                    regex = re.compile('|'.join(_separator))
+
+                    length = [[match.start(), match.end()] for match in
+                                  regex.finditer(_value)]
                     result = length if len(length) > 0 else None
                 return result
 
             for col_name in columns:
-                df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=(sub,))
+                # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
+                # That could happened if we try to split a categorical column
+                # df[col_name] = df[col_name].astype("object")
+                df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions, args=(sub,))
             return df
 
         @staticmethod
