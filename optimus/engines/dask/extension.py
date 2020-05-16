@@ -16,6 +16,8 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict, Infer
 from optimus.profiler.constants import MAX_BUCKETS
 
+TOTAL_PREVIEW_ROWS = 30
+
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
@@ -86,7 +88,8 @@ def ext(self: DataFrame):
             return _min_max
 
         @staticmethod
-        def profile(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None, size=True):
+        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
+                    size=True):
             """
 
             :param columns:
@@ -99,7 +102,7 @@ def ext(self: DataFrame):
             """
 
             df = self
-            if flush is None:
+            if flush is False:
                 cols_to_profile = df.ext.cols_needs_profiling(df, columns)
             else:
                 cols_to_profile = parse_columns(df, columns)
@@ -109,7 +112,7 @@ def ext(self: DataFrame):
             if output_columns is None:
                 output_columns = {}
 
-            if cols_to_profile or not Ext.is_cached(df) or flush:
+            if cols_to_profile or not Ext.is_cached(df) or flush is True:
                 df_length = len(df)
 
                 numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
@@ -146,7 +149,7 @@ def ext(self: DataFrame):
 
                 # Inferred column data type using a 10 first rows
                 if infer is True:
-                    total_preview_rows = 30
+                    total_preview_rows = TOTAL_PREVIEW_ROWS
                     temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
                     inferred_sample = {}
                     for col_name in columns:
@@ -160,9 +163,10 @@ def ext(self: DataFrame):
 
                         inferred_sample[col_name] = r
                 else:
-                    inferred_sample = columns
+                    inferred_sample = {c: df.meta.get()["profile"]["columns"][c]["profiler_dtype"] for c in
+                                       cols_to_profile}
 
-                mismatch = df.cols.count_mismatch(inferred_sample, infer=infer)
+                mismatch = df.cols.count_mismatch(inferred_sample, infer=True)
 
                 # Nulls
                 total_count_na = 0
@@ -176,8 +180,10 @@ def ext(self: DataFrame):
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent
-                for col_name in columns:
-                    output_columns["columns"][col_name].update({"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
+                if infer is True:
+                    for col_name in columns:
+                        output_columns["columns"][col_name].update(
+                            {"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
@@ -431,9 +437,11 @@ def ext(self: DataFrame):
 
                     current_col_names = df.cols.names()
                     renamed_cols = match_renames(df.meta.get("transformations.columns"))
-                    for current_col_name in current_col_names:
-                        if current_col_name not in renamed_cols:
-                            new_columns.append(current_col_name)
+
+                    if renamed_cols is not None:
+                        for current_col_name in current_col_names:
+                            if current_col_name not in renamed_cols:
+                                new_columns.append(current_col_name)
 
                     # Rename keys to match new names
                     profiler_columns = df.meta.get("profile.columns")
