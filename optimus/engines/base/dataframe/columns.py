@@ -673,7 +673,6 @@ class DataFrameBaseColumns(BaseColumns):
                                    accepts_missing_cols=True)
 
         output_cols = get_output_cols(input_cols, output_cols)
-        print("SDFSF", input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
             df[output_col] = df[input_cols].apply(func, args=args)
 
