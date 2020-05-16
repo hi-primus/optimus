@@ -1034,6 +1034,14 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
+    def profiler_dtypes(self, columns):
+        df = self.df
+        columns = parse_columns(df, columns)
+        r ={}
+        for col_name in columns:
+            r[col_name] = df.meta.get()["profile"]["columns"][col_name].get("profiler_dtype")
+        return r
+
     def profiler_dtype(self, column, dtype):
 
         df = self.df
