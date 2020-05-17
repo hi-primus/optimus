@@ -4,6 +4,7 @@ import unicodedata
 
 import dask
 import dask.dataframe as dd
+import fastnumbers
 import numpy as np
 import pandas as pd
 from dask import delayed
@@ -637,11 +638,11 @@ class DaskBaseColumns(BaseColumns):
 
     def set(self, input_cols, where=None, value=None, output_cols=None):
         """
-        Execute a hive expression. Also handle ints and list in columns
+        Use a pandas expression to filter and calculate a value
         :param input_cols:
-        :param where:
+        :param where: pandas/dask expression
         :param output_cols: Output columns
-        :param value: numeric, list or hive expression
+        :param value: pandas/dask expression
         :return:
         """
         df = self.df
@@ -649,6 +650,8 @@ class DaskBaseColumns(BaseColumns):
         output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col in zip(input_cols, output_cols):
+            dtype = df.cols.profiler_dtypes(input_col)[input_col]
+            df = df.cols.cast(input_col, dtype)
             if where is None:
                 df = df.assign(**{output_col: eval(value)})
             else:
@@ -659,7 +662,13 @@ class DaskBaseColumns(BaseColumns):
                     except ValueError:
                         pass
 
-                df[output_col] = df[input_col].where(~(where), value)
+                def func(pdf, _value, _where):
+                    _value = eval(_value)
+                    _where = eval(_where)
+                    return pdf["discount"].where(~_where, _value)
+                # print()
+                df = df.map_partitions(func, _where=where, _value=value, meta=dtype)
+                # df[output_col] = df[input_col].where(~(where), value, meta=int)
 
         return df
 
@@ -1044,7 +1053,14 @@ class DaskBaseColumns(BaseColumns):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        return {col_name: df.meta.get()["profile"]["columns"][col_name].get("profiler_dtype") for col_name in columns}
+        result = {}
+        for col_name in columns:
+            column_meta = df.meta.get()["profile"]["columns"].get(col_name)
+            if column_meta is None:
+                result[col_name] = None
+            else:
+                result[col_name] = column_meta["profiler_dtype"]
+        return result
 
     def profiler_dtype(self, column, dtype):
         df = self.df
@@ -1055,7 +1071,8 @@ class DaskBaseColumns(BaseColumns):
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
-        Cast a column or a list of columns to a specific data type
+        Cast a column or a list of columns to a specific data type.
+
         :param input_cols: Columns names to be casted
         :param output_cols:
         :param dtype: final data type
@@ -1070,17 +1087,11 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         _dtypes = []
 
-        def _cast_int(value, arg):
-            try:
-                return int(value)
-            except ValueError:
-                return None
+        def _cast_int(value):
+            return fastnumbers.fast_int(value, default=np.nan)
 
         def _cast_float(value):
-            try:
-                return float(value)
-            except ValueError:
-                return None
+            return fastnumbers.fast_float(value, default=np.nan)
 
         def _cast_bool(value):
             if value is None:
@@ -1115,19 +1126,19 @@ class DaskBaseColumns(BaseColumns):
         for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
 
             if dtype == 'int':
-                func = int
+                func = _cast_int
             elif dtype == 'float':
-                func = float
+                func = _cast_float
             elif dtype == 'bool':
-                func = bool
+                func = _cast_bool
             else:
-                func = str
+                func = _cast_str
 
             # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
-            # df[output_col] = df[input_col].apply(func=func, meta=df[input_col])
+            df[output_col] = df[input_col].apply(func=func, meta=df[input_col])
             # df[output_col] = df[input_col].astype(dtype)
             #
-            df[output_col] = df[output_col].astype(func)
+            # df[output_col] = df[output_col].astype(func)
 
         return df
 
@@ -1251,7 +1262,6 @@ class DaskBaseColumns(BaseColumns):
             regex = re.compile(str_regex, re.IGNORECASE)
         else:
             regex = re.compile(str_regex)
-
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
