@@ -597,7 +597,7 @@ class DataFrameBaseColumns(BaseColumns):
 
                 df = df.meta.preserve(df, value=current_meta)
 
-                df = df.meta.rename((old_col_name, new_column))
+                df = df.meta.rename({old_col_name: new_column})
 
         return df
 

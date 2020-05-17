@@ -151,7 +151,7 @@ def ext(self: DataFrame):
                 if infer is True:
                     total_preview_rows = TOTAL_PREVIEW_ROWS
                     temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
-                    inferred_sample = {}
+                    cols_to_infer = {}
                     for col_name in columns:
                         _value_counts = temp[col_name].value_counts()
                         if _value_counts.index[0] != "null":
@@ -161,12 +161,11 @@ def ext(self: DataFrame):
                         else:
                             r = "object"
 
-                        inferred_sample[col_name] = r
+                        cols_to_infer[col_name] = r
                 else:
-                    inferred_sample = {c: df.meta.get()["profile"]["columns"][c]["profiler_dtype"] for c in
-                                       cols_to_profile}
+                    cols_to_infer = df.cols.profiler_dtypes(cols_to_profile)
 
-                mismatch = df.cols.count_mismatch(inferred_sample, infer=True)
+                mismatch = df.cols.count_mismatch(cols_to_infer, infer=True)
 
                 # Nulls
                 total_count_na = 0
@@ -211,7 +210,7 @@ def ext(self: DataFrame):
             # df = df.meta.set("transformations", value={})
             df.meta.set("transformations", value={})
             df.meta.set("profile", output_columns)
-            df.meta.set("transformations.actions", {})
+            df.meta.set("transformations.actions", [])
 
             if output == "json":
                 output_columns = dump_json(output_columns)
@@ -373,11 +372,16 @@ def ext(self: DataFrame):
             actions = df.meta.get("transformations.actions")
             are_actions = actions is not None and len(actions) > 0
 
+            def _get(key):
+                _actions = df.meta.get("transformations.actions")
+                result = None
+                if _actions:
+                    result = [j for i in _actions for col_name, j in i.items() if col_name == key]
+                return result
+
             # Process actions to check if any column must be processed
             if Ext.is_cached(df):
                 if are_actions:
-                    drop = ["drop"]
-
                     def match_actions_names(_actions):
                         """
                         Get a list of columns which have been applied and specific action.
@@ -386,9 +390,9 @@ def ext(self: DataFrame):
                         """
 
                         _actions_json = df.meta.get("transformations.actions")
-
                         modified = []
-                        for action in _actions:
+
+                        for action in _get(_actions):
                             if _actions_json.get(action):
                                 # Check if was renamed
                                 col = _actions_json.get(action)
@@ -402,13 +406,13 @@ def ext(self: DataFrame):
 
                     def match_renames(_col_names):
                         """
-                        Get a list fo columns and return the renamed version.
+                        Get a list of columns and return the renamed version.
                         :param _col_names:
                         :return:
                         """
                         _renamed_columns = []
-                        _actions = df.meta.get("transformations.actions")
-                        _rename = _actions.get("rename")
+
+                        _rename = _get("rename")
 
                         def get_name(_col_name):
                             c = _rename.get(_col_name)
@@ -436,37 +440,42 @@ def ext(self: DataFrame):
                     new_columns = []
 
                     current_col_names = df.cols.names()
-                    renamed_cols = match_renames(df.meta.get("transformations.columns"))
-
-                    if renamed_cols is not None:
-                        for current_col_name in current_col_names:
-                            if current_col_name not in renamed_cols:
-                                new_columns.append(current_col_name)
-
-                    # Rename keys to match new names
                     profiler_columns = df.meta.get("profile.columns")
-                    actions = df.meta.get("transformations.actions")
-                    rename = actions.get("rename")
-                    if rename:
-                        for k, v in actions["rename"].items():
-                            profiler_columns[v] = profiler_columns.pop(k)
-                            profiler_columns[v]["name"] = v
 
-                    # Drop Keys
-                    for col_names in match_actions_names(drop):
-                        profiler_columns.pop(col_names)
-
+                    # Operations need to be processed int the same order that created
                     # Copy Keys
-                    copy_columns = df.meta.get("transformations.actions.copy")
-                    if copy_columns is not None:
-                        for source, target in copy_columns.items():
-                            profiler_columns[target] = profiler_columns[source].copy()
-                            profiler_columns[target]["name"] = target
-                        # Check is a new column is a copied column
-                        new_columns = list(set(new_columns) - set(copy_columns.values()))
+                    # copy_columns = df.meta.get("transformations.actions.copy")
+
+                    for l in df.meta.get("transformations.actions"):
+                        for i, j in l.items():
+                            if i == "copy":
+                                for source, target in j.items():
+                                    profiler_columns[target] = profiler_columns[source].copy()
+                                    profiler_columns[target]["name"] = target
+                                # Check is a new column is a copied column
+                                new_columns = list(set(new_columns) - set(j.values()))
+
+                            renamed_cols = match_renames(df.meta.get("transformations.columns"))
+
+                            if i == "rename":
+                                for current_col_name in current_col_names:
+                                    if current_col_name not in renamed_cols:
+                                        new_columns.append(current_col_name)
+
+                                # Rename keys to match new names
+                                rename = _get("rename")
+                                if rename:
+                                    for l in rename:
+                                        for k, v in l.items():
+                                            profiler_columns[v] = profiler_columns.pop(k)
+                                            profiler_columns[v]["name"] = v
+
+                            # Drop Keys
+                            if i == "drop":
+                                for col_names in match_actions_names(["drop"]):
+                                    profiler_columns.pop(col_names)
 
                     # Actions applied to current columns
-
                     modified_columns = match_actions_names(Actions.list())
                     calculate_columns = modified_columns + new_columns
 
@@ -483,7 +492,6 @@ def ext(self: DataFrame):
 
             else:
                 # Check if all the columns are calculated
-
                 calculate_columns = parse_columns(df, columns)
             return calculate_columns
 

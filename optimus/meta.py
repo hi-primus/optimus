@@ -1,7 +1,6 @@
 from glom import glom, assign
 
 from optimus.helpers.core import val_to_list
-from optimus.profiler.profiler import Profiler
 
 
 def meta(self):
@@ -16,29 +15,30 @@ def meta(self):
     class Meta:
         @staticmethod
         def reset(self):
-            df = self.meta.set("transformations.actions", {})
+            df = self.meta.set("transformations.actions", [])
             # Profiler.instance.output_columns = {}
+            return df
+
+        @staticmethod
+        def append_action(key, action, value):
+            df = self
+            old_value = df.meta.get(key)
+            old_value.append({action: value})
+            df = df.meta.set(key, old_value)
             return df
 
         @staticmethod
         def copy(old_new_columns):
             """
             Shortcut to add copy transformations to a dataframe
-            :param self:
             :param old_new_columns:
             :return:
             """
 
-            key = "transformations.actions.copy"
+            key = "transformations.actions"
 
             df = self
-
-            copy_cols = df.meta.get(key)
-            if copy_cols is None:
-                copy_cols = {}
-            copy_cols.update(old_new_columns)
-
-            df = df.meta.set(key, copy_cols)
+            df = df.meta.append_action(key, "copy", old_new_columns)
 
             return df
 
@@ -50,29 +50,17 @@ def meta(self):
             :return:
             """
 
-            key = "transformations.actions.rename"
+            key = "transformations.actions"
 
             df = self
-            renamed_cols = df.meta.get(key)
+            df = df.meta.append_action(key, "rename", old_new_columns)
 
-            old, new = old_new_columns
-            if renamed_cols is None or old not in list(renamed_cols.values()):
-                df = df.meta.update(key, {old: new}, dict)
-            else:
-                # This update a key
-                for k, v in renamed_cols.items():
-                    # print(old_new_columns)
-                    n, m = old_new_columns
-                    if v == n:
-                        renamed_cols[k] = m
-
-                df = df.meta.set(key, renamed_cols)
             return df
 
         @staticmethod
         def columns(value):
             """
-            Shortcut to add transformations to a dataframe
+            Shortcut to cache the columns in a dataframe
             :param value:
             :return:
             """
@@ -83,24 +71,25 @@ def meta(self):
             return df
 
         @staticmethod
-        def action(key, value):
+        def action(name, value):
             """
-            Shortcut to add transformations to a dataframe
-            :param key:
+            Shortcut to add actions to a dataframe
+            :param name:
             :param value:
             :return:
             """
+            key = "transformations.actions"
+
             df = self
-            value = val_to_list(value)
-            for v in value:
-                df = df.meta.update("transformations.actions." + key, v, list)
+            df = df.meta.append_action(key, name, value)
+
             return df
 
         @staticmethod
         def preserve(old_df, key=None, value=None):
             """
             In some cases we need to preserve metadata actions before a destructive dataframe transformation.
-            :param old_df: The Spark dataframe you want to coyp the metadata
+            :param old_df: The Spark dataframe you want to copy the metadata
             :param key:
             :param value:
             :return:
@@ -118,7 +107,7 @@ def meta(self):
         @staticmethod
         def update(path, value, default=list):
             """
-            Append meta data to a key
+            Update meta data in a key
             :param path:
             :param value:
             :param default:

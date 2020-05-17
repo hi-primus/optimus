@@ -226,7 +226,8 @@ class DaskBaseColumns(BaseColumns):
             _result = {}
             for col_name in columns:
                 l = len(_count[col_name])
-                r = [{"lower": float(_bins[col_name][i]), "upper": float(_bins[col_name][i + 1]), "count": int(_count[col_name][i])} for i
+                r = [{"lower": float(_bins[col_name][i]), "upper": float(_bins[col_name][i + 1]),
+                      "count": int(_count[col_name][i])} for i
                      in range(l)]
                 _result[col_name] = {"hist": r}
 
@@ -715,7 +716,7 @@ class DaskBaseColumns(BaseColumns):
                 output_ordered_columns[col_index:col_index] = [output_col]
 
         df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
-
+        df = df.meta.copy({input_col: output_col})
         return df.cols.select(output_ordered_columns)
 
     @staticmethod
@@ -886,7 +887,7 @@ class DaskBaseColumns(BaseColumns):
 
                 # df = df.meta.preserve(df, value=current_meta)
 
-                df = df.meta.rename((old_col_name, new_column))
+                df = df.meta.rename({old_col_name: new_column})
 
         return df
 
@@ -963,6 +964,7 @@ class DaskBaseColumns(BaseColumns):
             return value.str.lower()
 
         df = self.df
+
         return df.cols.apply(input_cols, _lower, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
@@ -997,6 +999,7 @@ class DaskBaseColumns(BaseColumns):
 
         input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                    accepts_missing_cols=True)
+
         # check_column_numbers(input_cols, "*")
         output_ordered_columns = df.cols.names()
 
@@ -1008,12 +1011,13 @@ class DaskBaseColumns(BaseColumns):
         if output_cols is None:
             output_cols = input_cols
 
-        input_cols = parse_columns(df, input_cols)
+        # input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
         result = {}
 
         partitions = df.to_delayed()
+
         for input_col, output_col in zip(input_cols, output_cols):
             temp = [dask.delayed(func)(part[input_col], args)
                     for part in partitions]
@@ -1021,29 +1025,29 @@ class DaskBaseColumns(BaseColumns):
             result[output_col] = from_delayed(temp)
 
             # Preserve column order
-            # print("ASDFDS", df.cols.names(), output_ordered_columns)
 
             if output_col not in df.cols.names():
                 col_index = output_ordered_columns.index(input_col) + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
 
             # Preserve actions for the profiler
+            print("AAA",meta_action,output_col)
             df = df.meta.preserve(df, meta_action, output_col)
-            # print("division", result[output_col].known_divisions)
 
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
     def profiler_dtypes(self, columns):
+        """
+
+        :param columns:
+        :return:
+        """
         df = self.df
         columns = parse_columns(df, columns)
-        r ={}
-        for col_name in columns:
-            r[col_name] = df.meta.get()["profile"]["columns"][col_name].get("profiler_dtype")
-        return r
+        return {col_name: df.meta.get()["profile"]["columns"][col_name].get("profiler_dtype") for col_name in columns}
 
     def profiler_dtype(self, column, dtype):
-
         df = self.df
         df.meta.set(f"profile.columns.{column}.profiler_dtype", dtype)
         df.meta.preserve(df, Actions.PROFILER_DTYPE.value, column)
