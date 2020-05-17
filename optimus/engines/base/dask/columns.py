@@ -662,12 +662,12 @@ class DaskBaseColumns(BaseColumns):
                     except ValueError:
                         pass
 
-                def func(pdf, _value, _where):
+                def func(pdf, _input,_value, _where):
                     _value = eval(_value)
                     _where = eval(_where)
-                    return pdf["discount"].where(~_where, _value)
-                # print()
-                df = df.map_partitions(func, _where=where, _value=value, meta=dtype)
+                    return pdf[_input].where(~_where, _value)
+
+                df = df.map_partitions(func, _input=input_col, _value=value, _where=where, meta=dtype)
                 # df[output_col] = df[input_col].where(~(where), value, meta=int)
 
         return df
