@@ -2,6 +2,8 @@ from glom import glom, assign
 
 from optimus.helpers.core import val_to_list
 
+ACTIONS_KEY = "transformations.actions"
+
 
 def meta(self):
     """
@@ -14,15 +16,21 @@ def meta(self):
 
     class Meta:
         @staticmethod
-        def reset(self):
-            df = self.meta.set("transformations.actions", [])
+        def reset():
+            df = self
+            df = df.meta.set(ACTIONS_KEY, [])
             # Profiler.instance.output_columns = {}
             return df
 
         @staticmethod
-        def append_action(key, action, value):
+        def append_action(action, value):
             df = self
+            key = ACTIONS_KEY
+
+            # print("jey111", key, action, value)
             old_value = df.meta.get(key)
+            if old_value is None:
+                old_value = []
             old_value.append({action: value})
             df = df.meta.set(key, old_value)
             return df
@@ -35,10 +43,8 @@ def meta(self):
             :return:
             """
 
-            key = "transformations.actions"
-
             df = self
-            df = df.meta.append_action(key, "copy", old_new_columns)
+            df = df.meta.append_action("copy", old_new_columns)
 
             return df
 
@@ -50,10 +56,8 @@ def meta(self):
             :return:
             """
 
-            key = "transformations.actions"
-
             df = self
-            df = df.meta.append_action(key, "rename", old_new_columns)
+            df = df.meta.append_action("rename", old_new_columns)
 
             return df
 
@@ -78,10 +82,8 @@ def meta(self):
             :param value:
             :return:
             """
-            key = "transformations.actions"
-
             df = self
-            df = df.meta.append_action(key, name, value)
+            df = df.meta.append_action(name, value)
 
             return df
 

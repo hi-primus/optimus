@@ -21,7 +21,7 @@ from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_seri
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
@@ -1031,7 +1031,6 @@ class DaskBaseColumns(BaseColumns):
                 output_ordered_columns[col_index:col_index] = [output_col]
 
             # Preserve actions for the profiler
-            print("AAA",meta_action,output_col)
             df = df.meta.preserve(df, meta_action, output_col)
 
         df = df.assign(**result)
@@ -1253,6 +1252,7 @@ class DaskBaseColumns(BaseColumns):
         else:
             regex = re.compile(str_regex)
 
+
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
             kw_columns[output_col] = df[input_col].str.replace(regex, replace_by)
@@ -1266,7 +1266,8 @@ class DaskBaseColumns(BaseColumns):
         # df = df.cols.apply(input_cols, _replace, func_return_type=str,
         #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
         #                    output_cols=output_cols, args=(regex, replace_by))
-        df = df.meta.preserve(df, Actions.REPLACE.value, output_cols)
+
+        df = df.meta.preserve(df, Actions.REPLACE.value, one_list_to_val(output_cols))
         return df.cols.select(output_ordered_columns)
 
     def is_numeric(self, col_name):
