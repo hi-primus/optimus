@@ -1,6 +1,6 @@
 from optimus.engines.base.contants import NUM_PARTITIONS
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-from optimus.helpers.converter import dask_pandas_to_dask_cudf, dask_pandas_to_cudf
+from optimus.helpers.converter import dask_pandas_to_dask_cudf, dask_dataframe_to_cudf
 
 
 class JDBC(DaskBaseJDBC):
