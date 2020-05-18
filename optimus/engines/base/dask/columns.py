@@ -1107,7 +1107,7 @@ class DaskBaseColumns(BaseColumns):
             if fastnumbers.isint(value):
                 return fastnumbers.fast_int(value)
             else:
-                return 0
+                return np.nan
             # return fastnumbers.fast_int(value, default=np.nan)
 
         def _cast_float(value):
@@ -1154,8 +1154,7 @@ class DaskBaseColumns(BaseColumns):
             else:
                 func = _cast_str
 
-            # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
-            df[output_col] = df[input_col].apply(func=func, meta=object)
+            df[output_col] = df[input_col].apply(func=func, meta=object, convert_dtype=False)
 
         return df
 
@@ -1275,10 +1274,13 @@ class DaskBaseColumns(BaseColumns):
             str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         else:
             str_regex = search
+
         if ignore_case is True:
-            regex = re.compile(str_regex, re.IGNORECASE)
+            # Cudf do not accept re.compile as argument for replace
+            # regex = re.compile(str_regex, re.IGNORECASE)
+            regex = str_regex
         else:
-            regex = re.compile(str_regex)
+            regex = str_regex
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
