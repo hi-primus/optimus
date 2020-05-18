@@ -678,7 +678,11 @@ class DaskBaseColumns(BaseColumns):
                     return df
 
                 # print("DTYE", dtype)
-                df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=df)
+                # Update meta to handle new columns
+                _meta = df.dtypes.to_dict()
+                _meta.update({output_col: object})
+
+                df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=_meta)
                 # df[output_col] = df[input_col].where(~(where), value, meta=int)
 
         return df
