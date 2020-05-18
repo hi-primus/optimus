@@ -1100,7 +1100,7 @@ class DaskBaseColumns(BaseColumns):
         _dtypes = []
 
         def _cast_int(value):
-            return fastnumbers.fast_int(value, default=np.nan)
+            return fastnumbers.fast_int(value, default="")
 
         def _cast_float(value):
             return fastnumbers.fast_float(value, default=np.nan)

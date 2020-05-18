@@ -148,27 +148,26 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
-                # Inferred column data type using a 10 first rows
+                # Inferred column data type using first rows
                 if infer is True:
                     total_preview_rows = TOTAL_PREVIEW_ROWS
                     temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
                     cols_to_infer = {}
                     for col_name in columns:
                         _value_counts = temp[col_name].value_counts()
-                        if _value_counts.index[0] != "null":
+
+                        if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
                             r = _value_counts.index[0]
-                        elif _value_counts.index[0] == "null" and _value_counts[0] < total_preview_rows:
+                        elif _value_counts[0] < total_preview_rows:
                             r = _value_counts.index[1]
                         else:
                             r = "object"
 
                         cols_to_infer[col_name] = r
                 else:
-                    # print("PROFILE", cols_to_profile)
                     cols_to_infer = df.cols.profiler_dtypes(cols_to_profile)
 
                 mismatch = df.cols.count_mismatch(cols_to_infer, infer=True)
-                # print("mismatch", mismatch)
 
                 # Nulls
                 total_count_na = 0
