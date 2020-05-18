@@ -646,7 +646,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        output_cols = parse_columns(df, output_cols)
+        output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
         for output_col in output_cols:
             # dtype = df.cols.profiler_dtypes(input_col).get(input_col)

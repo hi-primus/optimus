@@ -41,7 +41,6 @@ def cols(self: DataFrame):
         def set(self, where=None, value=None, output_cols=None):
             """
             Execute a hive expression. Also handle ints and list in columns
-            :param input_cols:
             :param where:
             :param output_cols: Output columns
             :param value: numeric, list or hive expression
