@@ -11,6 +11,7 @@ from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
+from glom import glom
 from multipledispatch import dispatch
 from numba import jit
 from sklearn.preprocessing import MinMaxScaler
@@ -636,38 +637,48 @@ class DaskBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    def set(self, input_cols, where=None, value=None, output_cols=None):
+    def set(self, where=None, value=None, output_cols=None):
         """
         Use a pandas expression to filter and calculate a value
-        :param input_cols:
         :param where: pandas/dask expression
         :param output_cols: Output columns
         :param value: pandas/dask expression
         :return:
         """
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        output_cols = parse_columns(df, output_cols)
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            dtype = df.cols.profiler_dtypes(input_col)[input_col]
-            df = df.cols.cast(input_col, dtype)
+        for output_col in output_cols:
+            # dtype = df.cols.profiler_dtypes(input_col).get(input_col)
+            # if dtype:
+            #     # print("cast")
+            #     df = df.cols.cast(input_col, dtype)
+            # else:
+            #     dtype = str
             if where is None:
                 df = df.assign(**{output_col: eval(value)})
             else:
-                if df.cols.dtypes(input_col) == "category":
-                    try:
-                        # Handle error if the category already exist
-                        df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-                    except ValueError:
-                        pass
+                # if df.cols.dtypes(input_col) == "category":
+                #     try:
+                #         # Handle error if the category already exist
+                #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+                #     except ValueError:
+                #         pass
 
-                def func(df, _input,_value, _where):
-                    _value = eval(_value)
+                def func(df, _value, _where, _output_col):
                     _where = eval(_where)
-                    return df[_input].where(~_where, _value)
 
-                df = df.map_partitions(func, _input=input_col, _value=value, _where=where, meta=dtype)
+                    _mask = (_where)
+                    mask = df[_mask]
+                    _value = eval(_value)
+
+                    # df[_output_col] = 0
+                    df.loc[_mask, _output_col] = _value
+
+                    return df
+
+                # print("DTYE", dtype)
+                df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=df)
                 # df[output_col] = df[input_col].where(~(where), value, meta=int)
 
         return df
@@ -1055,7 +1066,7 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
         result = {}
         for col_name in columns:
-            column_meta = df.meta.get()["profile"]["columns"].get(col_name)
+            column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
             if column_meta is None:
                 result[col_name] = None
             else:
@@ -1066,6 +1077,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         df.meta.set(f"profile.columns.{column}.profiler_dtype", dtype)
         df.meta.preserve(df, Actions.PROFILER_DTYPE.value, column)
+        df = df.cols.cast(column, dtype)
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
@@ -1099,7 +1111,7 @@ class DaskBaseColumns(BaseColumns):
             else:
                 return bool(value)
 
-        def _cast_str(value, arg):
+        def _cast_str(value):
             try:
                 return value.astype(str)
             except:
