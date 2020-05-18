@@ -38,7 +38,7 @@ def cols(self: DataFrame):
         def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
             pass
 
-        def set(self, input_cols, where=None, value=None, output_cols=None):
+        def set(self, where=None, value=None, output_cols=None):
             """
             Execute a hive expression. Also handle ints and list in columns
             :param input_cols:
@@ -48,21 +48,29 @@ def cols(self: DataFrame):
             :return:
             """
             df = self.df
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
+            # input_cols = parse_columns(df, input_cols)
+            output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
-            for input_col, output_col in zip(input_cols, output_cols):
+            for output_col in output_cols:
                 if where is None:
                     df = df.assign(**{output_col: eval(value)})
                 else:
-                    if df.cols.dtypes(input_col) == "category":
-                        try:
-                            # Handle error if the category already exist
-                            df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-                        except ValueError:
-                            pass
+                    # if df.cols.dtypes(input_col) == "category":
+                    #     try:
+                    #         # Handle error if the category already exist
+                    #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+                    #     except ValueError:
+                    #         pass
 
-                    df[output_col] = df[input_col].where(~(where), value)
+                    _where = eval(where)
+
+                    _mask = (_where)
+                    mask = df[_mask]
+                    _value = eval(value)
+
+                    # df[_output_col] = 0
+                    df.loc[_mask, output_col] = _value
+
 
             return df
 
@@ -338,7 +346,7 @@ def cols(self: DataFrame):
                     regex = re.compile('|'.join(_separator))
 
                     length = [[match.start(), match.end()] for match in
-                                  regex.finditer(_value)]
+                              regex.finditer(_value)]
                     result = length if len(length) > 0 else None
                 return result
 
@@ -346,7 +354,8 @@ def cols(self: DataFrame):
                 # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
                 # That could happened if we try to split a categorical column
                 # df[col_name] = df[col_name].astype("object")
-                df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions, args=(sub,))
+                df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
+                                                                                           args=(sub,))
             return df
 
         @staticmethod
