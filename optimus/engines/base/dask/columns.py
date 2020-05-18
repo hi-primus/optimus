@@ -1104,7 +1104,11 @@ class DaskBaseColumns(BaseColumns):
         _dtypes = []
 
         def _cast_int(value):
-            return fastnumbers.fast_int(value, default=np.nan)
+            if fastnumbers.isint(value):
+                return fastnumbers.fast_int(value)
+            else:
+                return 0
+            # return fastnumbers.fast_int(value, default=np.nan)
 
         def _cast_float(value):
             return fastnumbers.fast_float(value, default=np.nan)
@@ -1151,10 +1155,7 @@ class DaskBaseColumns(BaseColumns):
                 func = _cast_str
 
             # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
-            df[output_col] = df[input_col].apply(func=func, meta=df[input_col])
-            # df[output_col] = df[input_col].astype(dtype)
-            #
-            # df[output_col] = df[output_col].astype(func)
+            df[output_col] = df[input_col].apply(func=func, meta=object)
 
         return df
 
