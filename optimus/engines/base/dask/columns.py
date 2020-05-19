@@ -1065,8 +1065,10 @@ class DaskBaseColumns(BaseColumns):
         _dtype = profiler_dtype_python.get(dtype)
         if _dtype is None: _dtype = dtype
 
-        # For categorical columns we need to transform the series to an object type
-        df[column] = df.cols.cast(column, _dtype).astype(object)
+        # For categorical columns we need to transform the series to an object type so the serie do not complain
+        # about doind aritmetical operation
+        df[column] = df[column].astype(object)
+        df = df.cols.cast(column, _dtype)
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
