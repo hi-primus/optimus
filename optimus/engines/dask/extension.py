@@ -8,7 +8,6 @@ from glom import assign
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import Actions
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
@@ -150,25 +149,21 @@ def ext(self: DataFrame):
                     return {"columns": _f}
 
                 # Inferred column data type using first rows
-                if infer is True:
-                    total_preview_rows = TOTAL_PREVIEW_ROWS
-                    temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
-                    cols_to_infer = {}
-                    for col_name in columns:
-                        _value_counts = temp[col_name].value_counts()
+                total_preview_rows = TOTAL_PREVIEW_ROWS
+                temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
+                cols_and_inferred_dtype = {}
+                for col_name in cols_to_profile:
+                    _value_counts = temp[col_name].value_counts()
 
-                        if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
-                            r = _value_counts.index[0]
-                        elif _value_counts[0] < total_preview_rows:
-                            r = _value_counts.index[1]
-                        else:
-                            r = "object"
-
-                        cols_to_infer[col_name] = r
-                else:
-                    cols_to_infer = df.cols.profiler_dtypes(cols_to_profile)
-
-                mismatch = df.cols.count_mismatch(cols_to_infer, infer=True)
+                    if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
+                        r = _value_counts.index[0]
+                    elif _value_counts[0] < total_preview_rows:
+                        r = _value_counts.index[1]
+                    else:
+                        r = "object"
+                    cols_and_inferred_dtype[col_name] = r
+                df = df.cols.profiler_dtype(columns=cols_and_inferred_dtype)
+                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True)
 
                 # Nulls
                 total_count_na = 0

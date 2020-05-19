@@ -657,7 +657,7 @@ class DaskBaseColumns(BaseColumns):
             #     dtype = str
             if where is None:
                 mask = df
-                df = df.assign(**{output_col: eval(value)}) # <- mask is used here
+                df = df.assign(**{output_col: eval(value)})  # <- mask is used here
             else:
                 # if df.cols.dtypes(input_col) == "category":
                 #     try:
@@ -671,7 +671,7 @@ class DaskBaseColumns(BaseColumns):
 
                     _mask = (_where)
                     mask = df[_mask]
-                    _value = eval(_value) # <- mask is used here
+                    _value = eval(_value)  # <- mask is used here
 
                     # df[_output_col] = 0
                     df.loc[_mask, _output_col] = _value
@@ -1055,27 +1055,34 @@ class DaskBaseColumns(BaseColumns):
                 result[col_name] = column_meta["profiler_dtype"]
         return result
 
-    def profiler_dtype(self, column, dtype):
+    def profiler_dtype(self, input_col=None, dtype=None, columns=None):
         """
         Set a profiler datatype to a column an cast the column accordingly
-        :param column:
+        :param input_col:
         :param dtype:
+        :param columns: `
         :return:
         """
         df = self.df
-        df.meta.set(f"profile.columns.{column}.profiler_dtype", dtype)
-        df.meta.preserve(df, Actions.PROFILER_DTYPE.value, column)
+        input_col = parse_columns(df, input_col)
+
+        if not is_dict(columns):
+            columns[input_col] = dtype
 
         # Map from profiler dtype to python dtype
         profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
                                  ProfilerDataTypes.BOOLEAN.value: "bool"}
-        _dtype = profiler_dtype_python.get(dtype)
-        if _dtype is None: _dtype = dtype
+        for col_name, _dtype in columns.items():
+            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
 
-        # For categorical columns we need to transform the series to an object type so the series do not complain
-        # about doing arithmetical operation
-        df[column] = df[column].astype(object)
-        df = df.cols.cast(column, _dtype)
+            # _dtype = profiler_dtype_python.get(dtype)
+            # if _dtype is None: _dtype = dtype
+
+            # For categorical columns we need to transform the series to an object type so the series do not complain
+            # about doing arithmetical operation
+            df[col_name] = df[col_name].astype(object)
+            df = df.cols.cast(col_name, _dtype)
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
@@ -1098,10 +1105,16 @@ class DaskBaseColumns(BaseColumns):
         _dtypes = []
 
         def _cast_int(value):
-            return fastnumbers.fast_int(value, default=np.nan)
+            if value is None:
+                return np.nan
+            else:
+                return fastnumbers.fast_int(value, default=np.nan)
 
         def _cast_float(value):
-            return fastnumbers.fast_float(value, default=np.nan)
+            if value is None:
+                return np.nan
+            else:
+                return fastnumbers.fast_float(value, default=np.nan)
 
         def _cast_bool(value):
             if value is None:
@@ -1110,9 +1123,10 @@ class DaskBaseColumns(BaseColumns):
                 return bool(value)
 
         def _cast_str(value):
-            try:
-                return value.astype(str)
-            except:
+            if not (value != value):
+                #     return value.astype(str)
+                # except:
+                # print("ASDF",value)
                 return str(value)
 
         # Parse params
