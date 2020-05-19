@@ -86,77 +86,70 @@ def functions(self):
             return count_na_
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
-        @staticmethod
-        def hist_agg(columns, args):
-            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
-            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-            def str_len(serie):
-                return serie.str.len()
-
-            def value_counts(serie):
-                return serie.value_counts().sort_index().reset_index()
-
-            def min_max_string_func(serie):
-                return [serie.min()[0], serie.max()[0]]
-
-            def min_max_func(serie):
-                return [serie.min(), serie.max()]
-
-            def map_delayed(df, func, *args, **kwargs):
-                # if isinstance(df, dask.dataframe.core.Series):
-                #     print(type(df))
-                #     partitions = df.to_delayed()
-                #     delayed_values = [dask.delayed(func)(part, *args, **kwargs)
-                #                       for part in partitions][0]
-                # else:
-                delayed_values = dask.delayed(func)(df, *args, **kwargs)
-
-                return delayed_values
-
-            def hist_serie(serie, buckets):
-
-                arr = cp.fromDlpack(serie.to_dlpack())
-                i, j = cp.histogram(arr, buckets)
-                # We need to convert from array to numeric
-                return {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
-
-            # TODO: Calculate mina max in one pass.
-            def hist_agg_(df):
-                # df = args[0]
-                buckets = args[1]
-                min_max = args[2]
-                result_min_max = {}
-                delayed_results = []
-
-                for col_name in columns:
-                    calc = None
-                    if min_max is not None:
-                        calc = min_max.get(col_name)
-
-                    if calc is None or min_max is None:
-                        if is_column_a(df, col_name, df.constants.STRING_TYPES):
-                            a = map_delayed(df[col_name], str_len)
-                            b = map_delayed(a, value_counts)
-                            c = dask.delayed(min_max_string_func)(b)
-                            f = map_delayed(b["index"], hist_serie, buckets)
-                        #
-                        elif is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
-                            # a = map_delayed(df[col_name], min_max_func)
-                            # f = dask.delayed(hist_serie)(df[col_name], buckets)
-                            f = map_delayed(df[col_name], hist_serie, buckets)
-                        else:
-                            RaiseIt.type_error("column", ["numeric", "string"])
-                        delayed_results.append({col_name: f})
-                # print(delayed_results)
-
-                r = {}
-                # Convert list to dict
-                for i in dask.compute(*delayed_results):
-                    r.update(i)
-
-                return {"hist": r}
-
-            return hist_agg_
+        # @staticmethod
+        # def hist_agg(columns, args):
+        #     # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
+        #     #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
+        #     def str_len(serie):
+        #         return serie.str.len()
+        #
+        #     def value_counts(serie):
+        #         return serie.value_counts().sort_index().reset_index()
+        #
+        #     def min_max_string_func(serie):
+        #         return [serie.min()[0], serie.max()[0]]
+        #
+        #     def map_delayed(df, func, *args, **kwargs):
+        #         # if isinstance(df, dask.dataframe.core.Series):
+        #         #     print(type(df))
+        #         #     partitions = df.to_delayed()
+        #         #     delayed_values = [dask.delayed(func)(part, *args, **kwargs)
+        #         #                       for part in partitions][0]
+        #         # else:
+        #         delayed_values = dask.delayed(func)(df, *args, **kwargs)
+        #
+        #         return delayed_values
+        #
+        #     def hist_serie(serie, buckets):
+        #
+        #         arr = cp.fromDlpack(serie.to_dlpack())
+        #         i, j = cp.histogram(arr, buckets)
+        #         # We need to convert from array to numeric
+        #         return {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
+        #
+        #     def hist_agg_(df):
+        #         # df = args[0]
+        #         buckets = args[1]
+        #         min_max = args[2]
+        #         result_min_max = {}
+        #         delayed_results = []
+        #
+        #         for col_name in columns:
+        #             calc = None
+        #             if min_max is not None:
+        #                 calc = min_max.get(col_name)
+        #
+        #             if calc is None or min_max is None:
+        #                 if is_column_a(df, col_name, df.constants.STRING_TYPES):
+        #                     a = map_delayed(df[col_name], str_len)
+        #                     b = map_delayed(a, value_counts)
+        #                     c = dask.delayed(min_max_string_func)(b)
+        #                     f = map_delayed(b["index"], hist_serie, buckets)
+        #                 #
+        #                 elif is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
+        #                     f = map_delayed(df[col_name], hist_serie, buckets)
+        #                 else:
+        #                     RaiseIt.type_error("column", ["numeric", "string"])
+        #                 delayed_results.append({col_name: f})
+        #
+        #         r = {}
+        #         # Convert list to dict
+        #         for i in dask.compute(*delayed_results):
+        #             r.update(i)
+        #
+        #         return {"hist": r}
+        #
+        #     return hist_agg_
 
         @staticmethod
         def kurtosis(col_name, args):
@@ -174,18 +167,18 @@ def functions(self):
 
             return _skewness
 
-        @staticmethod
-        def count_uniques_agg(col_name, args):
-            estimate = args[0]
-
-            def _count_uniques_agg(serie):
-                if estimate is True:
-                    result = {"count_uniques": serie[col_name].nunique_approx()}
-                else:
-                    result = {"count_uniques": serie[col_name].nunique()}
-                return result
-
-            return _count_uniques_agg
+        # @staticmethod
+        # def count_uniques_agg(col_name, args):
+        #     estimate = args[0]
+        #
+        #     def _count_uniques_agg(serie):
+        #         if estimate is True:
+        #             result = {"count_uniques": serie[col_name].nunique_approx()}
+        #         else:
+        #             result = {"count_uniques": serie[col_name].nunique()}
+        #         return result
+        #
+        #     return _count_uniques_agg
 
         @staticmethod
         def range_agg(columns, args):
