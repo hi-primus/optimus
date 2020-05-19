@@ -47,29 +47,21 @@ def cols(self: DataFrame):
             :return:
             """
             df = self.df
-            # input_cols = parse_columns(df, input_cols)
             output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
             for output_col in output_cols:
                 if where is None:
                     df = df.assign(**{output_col: eval(value)})
                 else:
-                    # if df.cols.dtypes(input_col) == "category":
-                    #     try:
-                    #         # Handle error if the category already exist
-                    #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-                    #     except ValueError:
-                    #         pass
-
                     _where = eval(where)
 
                     _mask = (_where)
+                    # print(_mask)
                     mask = df[_mask]
                     _value = eval(value)
 
                     # df[_output_col] = 0
                     df.loc[_mask, output_col] = _value
-
 
             return df
 
