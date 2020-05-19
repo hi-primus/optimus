@@ -11,7 +11,8 @@ from optimus.engines.base.extension import BaseExt
 from optimus.engines.dask.extension import TOTAL_PREVIEW_ROWS
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import any_dataframe_to_pandas
-from optimus.helpers.functions import random_int, traverse, absolute_path, update_dict
+from optimus.helpers.functions import random_int, absolute_path, update_dict
+from optimus.helpers.functions_spark import traverse
 from optimus.helpers.json import dump_json
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt

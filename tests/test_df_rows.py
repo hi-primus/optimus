@@ -1,4 +1,6 @@
 from pyspark.sql.types import *
+
+import optimus.helpers.functions_spark
 from optimus import Optimus
 from optimus.helpers.json import json_enconding
 from optimus.helpers.functions import deep_sort
@@ -15,7 +17,7 @@ class Test_df_rows(unittest.TestCase):
 	maxDiff = None
 	@staticmethod
 	def test_rows_append():
-		actual_df =source_df.rows.append([('this is a word', 2, 'this is an animal', 'this is a thing', 64, 'this is a filter')])
+		actual_df = optimus.helpers.functions_spark.append([('this is a word', 2, 'this is an animal', 'this is a thing', 64, 'this is a filter')])
 		expected_df = op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a'), ('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1'), (None, 3, 'eagle', 'glass', 8, 'c'), ('this is a word', 2, 'this is an animal', 'this is a thing', 64, 'this is a filter')])
 		assert (expected_df.collect() == actual_df.collect())
 	@staticmethod

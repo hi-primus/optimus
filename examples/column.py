@@ -23,6 +23,8 @@
 
 import sys
 
+import optimus.helpers.functions_spark
+
 sys.path.append("..")
 
 # ## Columns Operations
@@ -74,7 +76,7 @@ df.ext.display()
 
 # ### Create a column with a constant value
 
-df = df.cols.append("new_col_1", 1)
+df = optimus.helpers.functions_spark.append("new_col_1", 1)
 df.ext.display()
 
 df.ext.display()
@@ -91,14 +93,14 @@ df_col = op.create.df(
 
     ])
 
-df.cols.append(df_col).table()
+optimus.helpers.functions_spark.append(df_col).table()
 
 # ### Create multiple columns with a constant value
 
 # +
 from pyspark.sql.functions import *
 
-df.cols.append([
+optimus.helpers.functions_spark.append([
     ("new_col_2", 2.22),
     ("new_col_3", lit(3))
 ]).table()
@@ -106,7 +108,7 @@ df.cols.append([
 
 # ### Create multiple columns with a constant string, a new column with existing columns value and an array
 
-df.cols.append([
+optimus.helpers.functions_spark.append([
     ("new_col_4", "test"),
     ("new_col_5", df['num'] * 2),
     ("new_col_6", [1, 2, 3])
@@ -260,11 +262,7 @@ df.ext.display()
 # The past transformations were done step by step, but this can be achieved by chaining all operations into one line of code, like the cell below. This way is much more efficient and scalable because it uses all optimization issues from the lazy evaluation approach.
 
 df.ext.display()
-df \
-    .cols.rename([('num', 'number')]) \
-    .cols.drop(["number", "words"]) \
-    .withColumn("new_col_2", lit("spongebob")) \
-    .cols.append("new_col_1", 1) \
+optimus.helpers.functions_spark.append("new_col_1", 1) \
     .cols.sort(order="desc") \
     .rows.drop(df["num 2"] == 3) \
     .table()

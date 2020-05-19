@@ -35,20 +35,22 @@ def cols(self: DaskCUDFDataFrame):
             df = self.df
 
             @delayed
-            def hist_series(serie, buckets):
-                arr = cp.asarray(serie)
-                i, j = cp.histogram(arr, buckets)
+            def hist_series(_series, _buckets):
+                arr = cp.asarray(_series)
+                # .to_gpu_array filter nan
+                i, j = cp.histogram(cp.array(arr.to_gpu_array()), _buckets)
+
                 i = list(i)
                 j = list(j)
                 _hist = [{"lower": float(j[index]), "upper": float(j[index + 1]), "count": int(i[index])} for index in
                          range(len(i))]
 
-                return {serie.name: {"hist": _hist}}
+                return {_series.name: {"hist": _hist}}
 
             columns = parse_columns(df, columns)
             partitions = df.to_delayed()
 
-            delayed_parts = [hist_series(part[col_name], 10) for part in partitions for col_name in columns]
+            delayed_parts = [hist_series(part[col_name], buckets) for part in partitions for col_name in columns]
             r = dd.compute(*delayed_parts)
 
             # Flat list of dict

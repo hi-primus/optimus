@@ -4,6 +4,7 @@ import pandas as pd
 import simplejson as json
 from glom import glom
 
+import optimus.helpers.functions_spark
 from optimus.infer import is_dict, is_list, is_str, is_int
 
 META = "_meta"
@@ -79,7 +80,7 @@ class JSON:
                     _properties = values.get(ITEMS).get(PROPERTIES)
 
                 if values.get(PROPERTIES) or values.get(ITEMS):
-                    result.append([key, _meta["count"], _meta["dtype"], parent, len(parent)])
+                    optimus.helpers.functions_spark.append([key, _meta["count"], _meta["dtype"], parent, len(parent)])
                     _profile(_properties, parent + [key], result=result)
 
         data = []

@@ -6,6 +6,7 @@ from shutil import rmtree
 from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
+import optimus.helpers.functions_spark
 from optimus.bumblebee import Comm
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
@@ -16,7 +17,7 @@ from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path
-from optimus.helpers.functions import append as append_df
+from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
@@ -328,7 +329,7 @@ class SparkEngine:
         """
 
         for p in val_to_list(packages):
-            self.packages.append(p)
+            optimus.helpers.functions_spark.append(p)
 
     def _setup_packages(self):
         if self.packages:
@@ -339,7 +340,7 @@ class SparkEngine:
     # Jar
     def _add_jars(self, jar):
         for j in val_to_list(jar):
-            self.jars.append(j)
+            optimus.helpers.functions_spark.append(j)
 
     def _setup_jars(self):
         if self.jars:
@@ -351,7 +352,7 @@ class SparkEngine:
     def _add_driver_class_path(self, driver_class_path):
 
         for d in val_to_list(driver_class_path):
-            self.driver_class_path.append(d)
+            optimus.helpers.functions_spark.append(d)
 
     def _setup_driver_class_path(self):
 

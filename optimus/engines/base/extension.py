@@ -11,7 +11,8 @@ from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
-from optimus.helpers.functions import traverse, absolute_path, collect_as_dict, reduce_mem_usage
+from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage
+from optimus.helpers.functions_spark import traverse
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt

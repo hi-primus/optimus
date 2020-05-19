@@ -13,7 +13,7 @@ from optimus.helpers.check import is_spark_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import append as append_df
+from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_spark_dataframes, is_list_of_tuples, is_list_of_str_or_int
 

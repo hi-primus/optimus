@@ -7,6 +7,7 @@ import magic
 import pandas as pd
 from dask import dataframe as dd
 
+import optimus.helpers.functions_spark
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
@@ -141,7 +142,7 @@ class Load:
             with ZipFile(wd + f, "r") as zip:
                 zip.extractall(destdir, None, None)
                 df = dd.read_csv(zip.namelist(), usecols=['Enter', 'Columns', 'Here'], parse_dates=['Date'])
-                ddf = ddf.append(df)
+                ddf = optimus.helpers.functions_spark.append(df)
 
         ddf.compute()
 

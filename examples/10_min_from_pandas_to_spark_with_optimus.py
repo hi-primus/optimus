@@ -23,6 +23,9 @@
 # Install Optimus all the dependencies.
 
 import sys
+
+import optimus.helpers.functions_spark
+
 if 'google.colab' in sys.modules:
   !apt-get install openjdk-8-jdk-headless -qq > /dev/null
   !wget -q https://archive.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-hadoop2.7.tgz
@@ -225,7 +228,7 @@ df.rows.create_id().table()
 
 # Create wew columns
 
-df.cols.append("Affiliation", "Autobot").table()
+optimus.helpers.functions_spark.append("Affiliation", "Autobot").table()
 
 # ## Missing Data
 
@@ -296,7 +299,7 @@ df_new = op.create.df(
 
     ]).h_repartition(1)
 
-op.append([df, df_new], "columns").table()
+optimus.helpers.functions_spark.append([df, df_new], "columns").table()
 
 # +
 df_new = op.create.df(
@@ -310,7 +313,7 @@ df_new = op.create.df(
         ("Grimlock", 22.9, "Dinobot Commander", 9),
     ]).h_repartition(1)
 
-op.append([df, df_new], "rows").table()
+optimus.helpers.functions_spark.append([df, df_new], "rows").table()
 
 # + {"inputHidden": false, "outputHidden": false}
 # Operations like `join` and `group` are handle using Spark directly

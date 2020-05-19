@@ -7,16 +7,12 @@ import re
 import subprocess
 import sys
 import tempfile
-from functools import reduce
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 import humanize
 import six
 from fastnumbers import isint, isfloat
-from pyspark.ml.linalg import DenseVector
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
 
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_url
@@ -225,37 +221,6 @@ def check_env_vars(env_vars):
 
 
 # Reference https://nvie.com/posts/modifying-deeply-nested-structures/
-def traverse(obj, path=None, callback=None):
-    """
-    Traverse a deep nested python structure
-    :param obj: object to traverse
-    :param path:
-    :param callback: Function used to transform a value
-    :return:
-    """
-    if path is None:
-        path = []
-
-    if is_(obj, dict):
-        value = {k: traverse(v, path + [k], callback)
-                 for k, v in obj.items()}
-
-    elif is_(obj, list):
-        value = [traverse(elem, path + [[]], callback)
-                 for elem in obj]
-
-    elif is_(obj, tuple):
-        value = tuple(traverse(elem, path + [[]], callback)
-                      for elem in obj)
-    elif is_(obj, DenseVector):
-        value = DenseVector([traverse(elem, path + [[]], callback) for elem in obj])
-    else:
-        value = obj
-
-    if callback is None:  # if a callback is provided, call it to get the new value
-        return value
-    else:
-        return callback(path, value)
 
 
 def ellipsis(data, length=20):
@@ -295,38 +260,6 @@ def create_buckets(lower_bound, upper_bound, bins):
 
         buckets[bins - 1]["upper"] = upper_bound
     return buckets
-
-
-def append(dfs, like="columns"):
-    """
-    Concat multiple dataFrames columns or rows wise
-    :param dfs: List of DataFrames
-    :param like: concat as columns or rows
-    :return:
-    """
-
-    # FIX: Because monotonically_increasing_id can create different
-    # sequence for different dataframes the result could be wrong.
-
-    if like == "columns":
-        temp_dfs = []
-        col_temp_name = "id_" + random_int()
-
-        dfs = val_to_list(dfs)
-        for df in dfs:
-            temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
-
-        def _append(df1, df2):
-            return df1.join(df2, col_temp_name, "outer")
-
-        df_result = reduce(_append, temp_dfs).drop(col_temp_name)
-
-    elif like == "rows":
-        df_result = reduce(DataFrame.union, dfs)
-    else:
-        RaiseIt.value_error(like, ["columns", "rows"])
-
-    return df_result
 
 
 def deep_sort(obj):

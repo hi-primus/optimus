@@ -19,6 +19,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
+import optimus.helpers.functions_spark
 from optimus import ROOT_DIR
 # Helpers
 from optimus.engines.base.columns import BaseColumns
@@ -30,7 +31,7 @@ from optimus.helpers.columns import get_output_cols, parse_columns, check_column
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import tuple_to_dict, format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import append as append_df
+from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.functions \
     import filter_list, create_buckets
 from optimus.helpers.logger import logger
@@ -106,7 +107,7 @@ def cols(self):
                 for c in cols_values:
                     col_name = c[0]
                     value = c[1]
-                    df_result = df.cols.append(col_name, value)
+                    df_result = optimus.helpers.functions_spark.append(col_name, value)
 
             elif is_list_of_spark_dataframes(cols_values) or is_spark_dataframe(cols_values):
                 cols_values = val_to_list(cols_values)
