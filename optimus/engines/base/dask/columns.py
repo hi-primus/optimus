@@ -21,7 +21,7 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions, ProfilerDataTypes
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
@@ -44,7 +44,7 @@ class DaskBaseColumns(BaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def count_mismatch(self, columns_mismatch: dict = None, infer=True):
-        # print("infer", infer)
+        # print("infer", columns_mismatch)
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
@@ -677,7 +677,6 @@ class DaskBaseColumns(BaseColumns):
 
                     return df
 
-                # print("DTYE", dtype)
                 # Update meta to handle new columns
                 _meta = df.dtypes.to_dict()
                 _meta.update({output_col: object})
@@ -686,28 +685,6 @@ class DaskBaseColumns(BaseColumns):
                 # df[output_col] = df[input_col].where(~(where), value, meta=int)
 
         return df
-
-    def min(self, columns):
-        df = self.df
-
-        columns = parse_columns(df, columns)
-        partitions = df.to_delayed()
-
-        @delayed
-        def func(_df, col_name):
-            if _df[col_name].dtype != "O":
-                # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
-                return pd.DataFrame({"col_name": col_name, "min": np.min(_df[col_name].to_numpy())},
-                                    index=[0])
-
-        delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
-
-        # print(delayed_parts)
-        # print("asdf",dd.compute(*delayed_parts))
-        c = pd.concat(dd.compute(*delayed_parts))
-        d = c.groupby(["col_name"]).min()["min"].to_dict()
-        # e = c.groupby(["col_name"]).max()["max"].to_dict()
-        return d
 
     @dispatch(list)
     def copy(self, columns) -> DataFrame:

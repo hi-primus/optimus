@@ -1,7 +1,8 @@
 import dask.dataframe as dd
 import numpy as np
+from dask import delayed
 from dask.dataframe.core import DataFrame
-
+import pandas as pd
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
 from optimus.helpers.converter import format_dict
@@ -13,6 +14,26 @@ def cols(self: DataFrame):
     class Cols(DaskBaseColumns):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
+
+        @staticmethod
+        def min(columns):
+            df = self
+
+            columns = parse_columns(df, columns)
+            partitions = df.to_delayed()
+
+            @delayed
+            def func(_df, col_name):
+                if _df[col_name].dtype != "O":
+                    # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+                    return pd.DataFrame({"col_name": col_name, "min": np.min(_df[col_name].to_numpy())},
+                                        index=[0])
+
+            delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
+
+            c = pd.concat(dd.compute(*delayed_parts))
+            d = c.groupby(["col_name"]).min()["min"].to_dict()
+            return d
 
         @staticmethod
         def abs(input_cols, output_cols=None):

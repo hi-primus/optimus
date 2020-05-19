@@ -1,3 +1,5 @@
+import cupy as cp
+from dask import dataframe as dd, delayed
 from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
 from optimus.engines.base.dask.columns import DaskBaseColumns
@@ -10,6 +12,49 @@ def cols(self: DaskCUDFDataFrame):
     class Cols(DaskBaseColumns):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
+
+        def min(self, columns):
+            df = self.df
+            columns = parse_columns(df, columns)
+            min_values = dd.compute(df[col_name].min() for col_name in columns)[0]
+            return {column: _min for column, _min in zip(columns, min_values)}
+
+        def max(self, columns):
+            df = self.df
+            columns = parse_columns(df, columns)
+            max_values = dd.compute(df[col_name].max() for col_name in columns)[0]
+            return {column: _max for column, _max in zip(columns, max_values)}
+
+        def count_uniques(self, columns, estimate=True):
+            df = self.df
+            columns = parse_columns(df, columns)
+            count_uniques_values = dd.compute(df[col_name].nunique() for col_name in columns)[0]
+            return {column: _uniques for column, _uniques in zip(columns, count_uniques_values)}
+
+        def hist(self, columns, buckets=10, compute=True):
+            df = self.df
+
+            @delayed
+            def hist_series(serie, buckets):
+                arr = cp.asarray(serie)
+                i, j = cp.histogram(arr, buckets)
+                i = list(i)
+                j = list(j)
+                _hist = [{"lower": float(j[index]), "upper": float(j[index + 1]), "count": int(i[index])} for index in
+                         range(len(i))]
+
+                return {serie.name: {"hist": _hist}}
+
+            columns = parse_columns(df, columns)
+            partitions = df.to_delayed()
+
+            delayed_parts = [hist_series(part[col_name], 10) for part in partitions for col_name in columns]
+            r = dd.compute(*delayed_parts)
+
+            # Flat list of dict
+            r = {x: y for i in r for x, y in i.items()}
+
+            return r
 
         def append(*args, **kwargs):
             return self
