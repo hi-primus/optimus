@@ -1066,7 +1066,7 @@ class DaskBaseColumns(BaseColumns):
         if _dtype is None: _dtype = dtype
 
         # For categorical columns we need to transform the series to an object type
-        df = df.cols.cast(column, _dtype).astype(object)
+        df[column] = df.cols.cast(column, _dtype).astype(object)
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
