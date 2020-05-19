@@ -176,5 +176,7 @@ def pandas_to_dask_dataframe(df, n_partitions=1):
 
 def pandas_to_dask_cudf(df, n_partitions=1):
     import dask_cudf
+    import cudf
     # Seems that from_cudf also accepts pandas
-    return dask_cudf.from_cudf(df, npartitions=1)
+    df = cudf.DataFrame.from_pandas(df)
+    return dask_cudf.from_cudf(df, npartitions=n_partitions)
