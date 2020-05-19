@@ -51,6 +51,7 @@ def cols(self: DataFrame):
 
             for output_col in output_cols:
                 if where is None:
+                    mask = df
                     df = df.assign(**{output_col: eval(value)})
                 else:
                     _where = eval(where)

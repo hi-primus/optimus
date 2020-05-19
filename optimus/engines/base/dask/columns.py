@@ -656,7 +656,8 @@ class DaskBaseColumns(BaseColumns):
             # else:
             #     dtype = str
             if where is None:
-                df = df.assign(**{output_col: eval(value)})
+                mask = df
+                df = df.assign(**{output_col: eval(value)}) # <- mask is used here
             else:
                 # if df.cols.dtypes(input_col) == "category":
                 #     try:
@@ -670,7 +671,7 @@ class DaskBaseColumns(BaseColumns):
 
                     _mask = (_where)
                     mask = df[_mask]
-                    _value = eval(_value)
+                    _value = eval(_value) # <- mask is used here
 
                     # df[_output_col] = 0
                     df.loc[_mask, _output_col] = _value
@@ -1039,7 +1040,7 @@ class DaskBaseColumns(BaseColumns):
 
     def profiler_dtypes(self, columns):
         """
-
+        Get the profiler data types from the meta data
         :param columns:
         :return:
         """
@@ -1055,6 +1056,12 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def profiler_dtype(self, column, dtype):
+        """
+        Set a profiler datatype to a column an cast the column accordingly
+        :param column:
+        :param dtype:
+        :return:
+        """
         df = self.df
         df.meta.set(f"profile.columns.{column}.profiler_dtype", dtype)
         df.meta.preserve(df, Actions.PROFILER_DTYPE.value, column)
@@ -1065,8 +1072,8 @@ class DaskBaseColumns(BaseColumns):
         _dtype = profiler_dtype_python.get(dtype)
         if _dtype is None: _dtype = dtype
 
-        # For categorical columns we need to transform the series to an object type so the serie do not complain
-        # about doind aritmetical operation
+        # For categorical columns we need to transform the series to an object type so the series do not complain
+        # about doing arithmetical operation
         df[column] = df[column].astype(object)
         df = df.cols.cast(column, _dtype)
         return df
