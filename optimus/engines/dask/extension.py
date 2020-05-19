@@ -358,9 +358,7 @@ def ext(self: DataFrame):
 
             :return:
             """
-            # print("is_cache", df.output_columns)
             return False if df.meta.get("profile") is None else True
-            # return False
 
         def calculate_cols_to_profile(self, df, columns):
             """
@@ -480,12 +478,12 @@ def ext(self: DataFrame):
                                 for col_names in get_columns_by_action(action_name):
                                     profiler_columns.pop(col_names)
                             else:
-                                print("ACTION NAME", action_name)
+                                # print("ACTION NAME", action_name)
                                 modified_columns = modified_columns + (get_columns_by_action(action_name))
 
                     # Actions applied to current columns
-                    print("modified_columns", modified_columns)
-                    print("new_columns", new_columns)
+                    # print("modified_columns", modified_columns)
+                    # print("new_columns", new_columns)
 
                     calculate_columns = modified_columns + new_columns
 
