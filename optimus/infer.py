@@ -100,7 +100,7 @@ def str_to_url(_value):
 
 
 def str_to_ip(_value):
-    regex = re.compile('''\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}''')
+    regex = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
     try:
         if regex.match(_value):
             return True
@@ -263,39 +263,39 @@ class Infer(object):
 
         return parse_spark_class_dtypes(result)
 
-    @staticmethod
-    def func(value, data_type, get_type):
-        """
-        Check if a value can be casted to a specific
-        :param value: value to be checked
-        :return:
-        """
-        if isinstance(value, bool):
-            _data_type = "bool"
-        elif fastnumbers.isint(value):  # Check if value is integer
-            _data_type = "int"
-        elif fastnumbers.isfloat(value):
-            _data_type = "float"
-        # if string we try to parse it to int, float or bool
-        elif isinstance(value, str):
-            if str_to_boolean(value):
-                _data_type = "bool"
-            elif str_to_date(value):
-                _data_type = "date"
-            elif str_to_array(value):
-                _data_type = "array"
-            else:
-                _data_type = "string"
-        else:
-            _data_type = "null"
-
-        if get_type is False:
-            if _data_type == data_type:
-                return True
-            else:
-                return False
-        else:
-            return _data_type
+    # @staticmethod
+    # def func(value, data_type, get_type):
+    #     """
+    #     Check if a value can be casted to a specific
+    #     :param value: value to be checked
+    #     :return:
+    #     """
+    #     if isinstance(value, bool):
+    #         _data_type = "bool"
+    #     elif fastnumbers.isint(value):  # Check if value is integer
+    #         _data_type = "int"
+    #     elif fastnumbers.isfloat(value):
+    #         _data_type = "float"
+    #     # if string we try to parse it to int, float or bool
+    #     elif isinstance(value, str):
+    #         if str_to_boolean(value):
+    #             _data_type = "bool"
+    #         elif str_to_date(value):
+    #             _data_type = "date"
+    #         elif str_to_array(value):
+    #             _data_type = "array"
+    #         else:
+    #             _data_type = "string"
+    #     else:
+    #         _data_type = "null"
+    #
+    #     if get_type is False:
+    #         if _data_type == data_type:
+    #             return True
+    #         else:
+    #             return False
+    #     else:
+    #         return _data_type
 
     # @staticmethod
     # def parse_dask(value, infer, dtypes, str_funcs, int_funcs):
