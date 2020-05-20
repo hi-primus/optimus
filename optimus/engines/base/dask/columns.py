@@ -1072,17 +1072,25 @@ class DaskBaseColumns(BaseColumns):
 
         # Map from profiler dtype to python dtype
         profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
-                                 ProfilerDataTypes.BOOLEAN.value: "bool"}
+                                 ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
+                                 ProfilerDataTypes.DATE.value: "datetime64[ns]"}
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-
+            # print("000", df.cols.dtypes(col_name), _dtype)
             _dtype = profiler_dtype_python.get(_dtype)
+            #
+            # # For categorical columns we need to transform the series to an object
+            # # about doing arithmetical operation
+            # print("AAA", df.cols.dtypes(col_name), _dtype)
+            if df.cols.dtypes(col_name) == "category":
+                df[col_name] = df[col_name].astype(object)
+            # else:
+                # print("AAA",)
 
-            # For categorical columns we need to transform the series to an object type so the series do not complain
-            # about doing arithmetical operation
-            df[col_name] = df[col_name].astype(object)
+            # print(col_name, _dtype)
             df = df.cols.cast(col_name, _dtype)
+            df[col_name] = df[col_name].astype(_dtype)
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
