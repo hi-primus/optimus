@@ -5,11 +5,12 @@ from enum import Enum
 import numpy as np
 
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
-from optimus.helpers.constants import RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_dict
 
 
 class BaseColumns(ABC):
@@ -93,7 +94,6 @@ class BaseColumns(ABC):
                     if k1 in df.constants.DTYPES_TO_PROFILER[k2]:
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
-        # print("AAAA",columns)
         return columns
 
     @staticmethod
@@ -679,6 +679,43 @@ class BaseColumns(ABC):
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
         return result
 
+    def profiler_dtype(self, input_col=None, dtype=None, columns=None):
+        """
+        Set a profiler datatype to a column an cast the column accordingly
+        :param input_col:
+        :param dtype:
+        :param columns: `
+        :return:
+        """
+        df = self.df
+        input_col = parse_columns(df, input_col)
+
+        if not is_dict(columns):
+            columns[input_col] = dtype
+
+        # Map from profiler dtype to python dtype
+        profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
+                                 ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
+                                 ProfilerDataTypes.DATE.value: "datetime64[ns]",
+                                 ProfilerDataTypes.EMAIL.value: "object", ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object"}
+
+        for col_name, _dtype in columns.items():
+            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+            # print("000", df.cols.dtypes(col_name), _dtype)
+            _dtype = profiler_dtype_python.get(_dtype)
+            #
+            # # For categorical columns we need to transform the series to an object
+            # # about doing arithmetical operation
+            # print("AAA", df.cols.dtypes(col_name), _dtype)
+            if df.cols.dtypes(col_name) == "category":
+                df[col_name] = df[col_name].astype(object)
+
+            # print(col_name, _dtype)
+            df = df.cols.cast(col_name, _dtype)
+            df[col_name] = df[col_name].astype(_dtype)
+        return df
+
     @staticmethod
     @abstractmethod
     def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
@@ -763,4 +800,3 @@ class BaseColumns(ABC):
     @abstractmethod
     def bucketizer(input_cols, splits, output_cols=None):
         pass
-

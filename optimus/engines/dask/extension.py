@@ -12,7 +12,7 @@ from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str, is_dict, Infer
+from optimus.infer import Infer
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -150,19 +150,21 @@ def ext(self: DataFrame):
 
                 # Inferred column data type using first rows
                 total_preview_rows = TOTAL_PREVIEW_ROWS
-                temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
+
+                pdf = df.head(total_preview_rows)[cols_to_profile].applymap(Infer.parse_pandas)
+
                 cols_and_inferred_dtype = {}
                 for col_name in cols_to_profile:
-                    _value_counts = temp[col_name].value_counts()
+                    _value_counts = pdf[col_name].value_counts()
 
                     if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
                         r = _value_counts.index[0]
-                    elif _value_counts[0] < total_preview_rows:
+                    elif _value_counts[0] < len(pdf):
                         r = _value_counts.index[1]
                     else:
                         r = "object"
                     cols_and_inferred_dtype[col_name] = r
-                print("cols_and_inferred_dtype", cols_and_inferred_dtype)
+
                 df = df.cols.profiler_dtype(columns=cols_and_inferred_dtype)
                 mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True)
 
@@ -348,10 +350,6 @@ def ext(self: DataFrame):
             """
 
             raise NotImplementedError
-
-
-
-
 
     return Ext(self)
 

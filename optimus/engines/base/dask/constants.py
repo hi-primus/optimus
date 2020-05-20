@@ -5,10 +5,8 @@ from dask.dataframe.core import DataFrame
 def constants(self):
     class Constants:
         DTYPES_DICT = {"string": np.str, "uint8": np.uint8, "uint16": np.uint16, "uint32": np.uint32,
-                       "uint64": np.uint64,
-                       "int8": np.int8, "int16": np.int16, "int32": np.int32, "int64": np.int64, "float": np.float,
-                       "float64": np.float64,
-                       "boolean": np.bool, "array": np.array,
+                       "uint64": np.uint64, "int8": np.int8, "int16": np.int16, "int32": np.int32, "int64": np.int64,
+                       "float": np.float, "float64": np.float64, "boolean": np.bool, "array": np.array,
                        "bigint": np.int64, "object": np.object_}
 
         SHORT_DTYPES = {"string": "string",

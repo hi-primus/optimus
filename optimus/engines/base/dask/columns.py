@@ -48,11 +48,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
-            columns = columns_mismatch
-        else:
-            columns = list(columns_mismatch.keys())
 
-        # print("MISMATCHES", columns)
         @delayed
         def count_dtypes(_df, _col_name, _func_dtype):
 
@@ -1056,42 +1052,7 @@ class DaskBaseColumns(BaseColumns):
                 result[col_name] = column_meta["profiler_dtype"]
         return result
 
-    def profiler_dtype(self, input_col=None, dtype=None, columns=None):
-        """
-        Set a profiler datatype to a column an cast the column accordingly
-        :param input_col:
-        :param dtype:
-        :param columns: `
-        :return:
-        """
-        df = self.df
-        input_col = parse_columns(df, input_col)
 
-        if not is_dict(columns):
-            columns[input_col] = dtype
-
-        # Map from profiler dtype to python dtype
-        profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
-                                 ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
-                                 ProfilerDataTypes.DATE.value: "datetime64[ns]"}
-        for col_name, _dtype in columns.items():
-            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
-            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-            # print("000", df.cols.dtypes(col_name), _dtype)
-            _dtype = profiler_dtype_python.get(_dtype)
-            #
-            # # For categorical columns we need to transform the series to an object
-            # # about doing arithmetical operation
-            # print("AAA", df.cols.dtypes(col_name), _dtype)
-            if df.cols.dtypes(col_name) == "category":
-                df[col_name] = df[col_name].astype(object)
-            # else:
-                # print("AAA",)
-
-            # print(col_name, _dtype)
-            df = df.cols.cast(col_name, _dtype)
-            df[col_name] = df[col_name].astype(_dtype)
-        return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
