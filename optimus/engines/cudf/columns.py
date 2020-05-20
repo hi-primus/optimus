@@ -173,7 +173,7 @@ def cols(self: DataFrame):
             else:
                 _regex = search
 
-            df = df.cols.cast(input_cols, "str")
+            # df = df.cols.cast(input_cols, "str")
 
             if not is_str(replace_by):
                 RaiseIt.type_error(replace_by, ["str"])
