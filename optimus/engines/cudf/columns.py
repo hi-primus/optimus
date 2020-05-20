@@ -9,11 +9,12 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
+from optimus.helpers.constants import ProfilerDataTypesQuality
 from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str
+from optimus.infer import is_str, profiler_dtype_func, is_dict
 
 
 def cols(self: DataFrame):
@@ -270,7 +271,6 @@ def cols(self: DataFrame):
             # self.text = soup.get_text()
             return self
 
-
         @staticmethod
         def select_by_dtypes(data_type):
             pass
@@ -372,8 +372,39 @@ def cols(self: DataFrame):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df
 
+        def min(self, columns):
+
+            df = self.df
+            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+            r = {}
+            for col_name in columns:
+                r[col_name] = df[col_name].min()
+
+            return r
+            # return {column: _min for column, _min in zip(columns, min_values)}
+
+        def max(self, columns):
+
+            df = self.df
+            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+            r = {}
+            for col_name in columns:
+                r[col_name] = df[col_name].max()
+
+            return r
+
+        def count_uniques(self, columns, estimate=True):
+            df = self.df
+            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+            r = {}
+            for col_name in columns:
+                r[col_name] = df[col_name].nunique()
+
+            return r
+
         def hist(self, columns, buckets=10, compute=True):
             df = self.df
+            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
             def hist_series(_series, _buckets):
                 # .to_gpu_array filter nan
@@ -388,8 +419,7 @@ def cols(self: DataFrame):
 
             columns = parse_columns(df, columns)
 
-            delayed_parts = [hist_series(df[col_name], buckets) for col_name in columns]
-            r = delayed_parts
+            r = [hist_series(df[col_name], buckets) for col_name in columns]
 
             # Flat list of dict
             r = {x: y for i in r for x, y in i.items()}
@@ -492,14 +522,81 @@ def cols(self: DataFrame):
 
             return result
 
+        def count_mismatch(self, columns_mismatch: dict = None, infer=True):
+            # print("infer", columns_mismatch)
+            df = self.df
+            if not is_dict(columns_mismatch):
+                columns_mismatch = parse_columns(df, columns_mismatch)
+
+            def count_dtypes(_df, _col_name, _func_dtype):
+
+                def _func(value):
+                    # null values
+
+                    # match data type
+                    if _func_dtype(value):
+                        # ProfilerDataTypesQuality.MATCH.value
+                        return 2
+
+                    elif pd.isnull(value):
+                        # ProfilerDataTypesQuality.MISSING.value
+                        return 1
+
+                    # mismatch
+                    else:
+                        # ProfilerDataTypesQuality.MISMATCH.value
+                        return 0
+
+                return _df[_col_name].map(_func).value_counts()
+
+            df_len = len(df)
+
+            def no_infer_func(_df, _col_name, _nulls_count):
+
+                return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
+                                  ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
+
+            if infer is True:
+                delayed_parts = [count_dtypes(df, col_name, profiler_dtype_func(dtype, True)) for col_name, dtype in
+                                 columns_mismatch.items()]
+
+            else:
+                nulls_count = df.isna().sum().compute().to_dict()
+                delayed_parts = [no_infer_func(df, col_name, nulls_count) for col_name in columns_mismatch]
+
+            def merge(value):
+                return [{v.name: v.to_dict()} for v in value]
+
+            b = merge(delayed_parts)
+
+            c = b
+            # Flat dict
+            d = {x: y for _c in c for x, y in _c.items()}
+
+            def none_to_zero(value):
+                return value if value is not None else 0
+
+            result = {}
+
+            for col_name, values in d.items():
+                result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
+                                    "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
+                                    "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
+                                    }
+                if infer is True:
+                    result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
+
+            return result
+
         def count(self):
             df = self.df
             return len(df)
 
         @staticmethod
-        def frequency(columns, n=10, percentage=False, total_rows=None):
+        def frequency(columns, n=10, percentage=False, count_uniques=False, total_rows=None, *args, **kwargs):
             # https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
             df = self
+
             columns = parse_columns(df, columns)
 
             result = {}

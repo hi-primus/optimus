@@ -7,6 +7,7 @@ from glom import assign
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.dask.extension import TOTAL_PREVIEW_ROWS
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.functions import update_dict
 from optimus.helpers.json import dump_json
 from optimus.infer import Infer
@@ -49,6 +50,11 @@ def ext(self: DataFrame):
         @staticmethod
         def cache():
             return self
+
+        @staticmethod
+        def to_pandas():
+            df = self
+            return any_dataframe_to_pandas(df)
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
@@ -114,7 +120,8 @@ def ext(self: DataFrame):
 
                 # Inferred column data type using first rows
                 total_preview_rows = TOTAL_PREVIEW_ROWS
-                temp = df.head(total_preview_rows).applymap(Infer.parse_pandas)
+                print(type(df))
+                temp = df.to_pandas().head(total_preview_rows).applymap(Infer.parse_pandas)
                 cols_and_inferred_dtype = {}
                 for col_name in cols_to_profile:
                     _value_counts = temp[col_name].value_counts()
