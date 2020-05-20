@@ -1070,8 +1070,7 @@ class DaskBaseColumns(BaseColumns):
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
 
-            # _dtype = profiler_dtype_python.get(dtype)
-            # if _dtype is None: _dtype = dtype
+            _dtype = profiler_dtype_python.get(_dtype)
 
             # For categorical columns we need to transform the series to an object type so the series do not complain
             # about doing arithmetical operation
