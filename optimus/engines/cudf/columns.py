@@ -1,7 +1,7 @@
 import re
 import unicodedata
 
-import cupy
+import cupy as cp
 import numpy as np
 from cudf.core import DataFrame
 from sklearn.preprocessing import StandardScaler
@@ -211,7 +211,7 @@ def cols(self: DataFrame):
             result = {}
 
             def _count_na(_df, _series):
-                return cupy.count_nonzero(_df[_series].isnull().values.ravel())
+                return cp.count_nonzero(_df[_series].isnull().values.ravel())
 
             for col_name in columns:
                 result[col_name] = _count_na(df, col_name)
@@ -371,6 +371,30 @@ def cols(self: DataFrame):
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df
+
+        def hist(self, columns, buckets=10, compute=True):
+            df = self.df
+
+            def hist_series(_series, _buckets):
+                # .to_gpu_array filter nan
+                i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
+
+                i = list(i)
+                j = list(j)
+                _hist = [{"lower": float(j[index]), "upper": float(j[index + 1]), "count": int(i[index])} for index in
+                         range(len(i))]
+
+                return {_series.name: {"hist": _hist}}
+
+            columns = parse_columns(df, columns)
+
+            delayed_parts = [hist_series(df[col_name], buckets) for col_name in columns]
+            r = delayed_parts
+
+            # Flat list of dict
+            r = {x: y for i in r for x, y in i.items()}
+
+            return r
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
