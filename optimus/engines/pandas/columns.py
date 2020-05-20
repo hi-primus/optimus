@@ -132,7 +132,6 @@ def cols(self: DataFrame):
             search = val_to_list(search)
 
             if search_by == "chars":
-                # print("ASDf", search)
                 str_regex = "|".join(map(re.escape, search))
             elif search_by == "words":
                 str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
@@ -143,7 +142,7 @@ def cols(self: DataFrame):
             else:
                 _regex = re.compile(str_regex)
 
-            df = df.cols.cast(input_cols, "str")
+            # df = df.cols.cast(input_cols, "str")
             for input_col, output_col in zip(input_cols, output_cols):
                 if search_by == "chars" or search_by == "words":
                     df[output_col] = df[input_col].str.replace(_regex, replace_by)
@@ -368,6 +367,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, dtype):
+            print("dtype",dtype)
             df = self
             result = {}
             df_len = len(df)
@@ -382,6 +382,7 @@ def cols(self: DataFrame):
                 mismatches_count = 0 if mismatches_count is None else mismatches_count
                 result[col_name] = {"match": df_len - na_count, "missing": na_count,
                                     "mismatch": mismatches_count - na_count}
+            print(result)
             return result
 
         @staticmethod
