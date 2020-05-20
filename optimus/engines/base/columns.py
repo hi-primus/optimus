@@ -675,7 +675,6 @@ class BaseColumns(ABC):
         pass
 
     def hist(self, columns, buckets=20):
-        print("ASDASDF")
         df = self.df
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
         return result
