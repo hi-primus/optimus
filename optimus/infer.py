@@ -120,17 +120,21 @@ def str_to_email(_value):
 def str_to_credit_card(_value):
     # Reference https://www.regular-expressions.info/creditcard.html
     # https://codereview.stackexchange.com/questions/74797/credit-card-checking
-    regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
-                       r'|5[1-5]\d{14}'  # Mastercard
-                       r'|6011\d{12}'  # Discover (incomplete?)
-                       r'|7\d{15}'  # What's this?
-                       r'|3[47]\d{13}'  # American Express
-                       r')$')
-    return bool(regex.match(_value))
+    if _value is None:
+        return False
+    else:
+        regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
+                           r'|5[1-5]\d{14}'  # Mastercard
+                           r'|6011\d{12}'  # Discover (incomplete?)
+                           r'|7\d{15}'  # What's this?
+                           r'|3[47]\d{13}'  # American Express
+                           r')$')
+    # print(_value)
+    return bool(regex.match("4234234234"))
 
 
 def str_to_zip_code(_value):
-    regex = re.compile(r'^(\d{5})([- ])?(\d{4})?$')
+    regex = re.compile(r"^(\d{5})([- ])?(\d{4})?$")
     try:
         if regex.match(_value):
             return True
@@ -316,10 +320,7 @@ class Infer(object):
         :param full: True return a tuple with (col_name, dtype), count or False return dtype
         :return:
         """
-        # return 1
         col_name, value = col_and_value
-        # print("VALUE*---", value)
-        # print("COL_NAME", col_name)
 
         # Try to order the functions from less to more computational expensive
         if int_funcs is None:
@@ -390,24 +391,25 @@ class Infer(object):
             (str_to_url, "url"),
             (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
         ]
-
         if pd.isnull(value):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
+        elif fastnumbers.isfloat(value):
+            _data_type = "decimal"
+        # We first check if a number can be parsed as a credit card or zip code
+        elif value:
+            _data_type = "string"
+            for func in str_funcs:
+                if func[0](str(value)) is True:
+                    _data_type = func[1]
         elif fastnumbers.isint(value):  # Check if value is integer
-
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
-        elif fastnumbers.isfloat(value):
-            _data_type = "decimal"
-        elif isinstance(value, str):
-            _data_type = "string"
-            for func in str_funcs:
-                if func[0](value) is True:
-                    _data_type = func[1]
+
+
         else:
             _data_type = "string"
         return _data_type
