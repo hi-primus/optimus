@@ -649,12 +649,6 @@ class DaskBaseColumns(BaseColumns):
         output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
         for output_col in output_cols:
-            # dtype = df.cols.profiler_dtypes(input_col).get(input_col)
-            # if dtype:
-            #     # print("cast")
-            #     df = df.cols.cast(input_col, dtype)
-            # else:
-            #     dtype = str
             if where is None:
                 mask = df
                 df = df.assign(**{output_col: eval(value)})  # <- mask is used here
@@ -684,7 +678,7 @@ class DaskBaseColumns(BaseColumns):
 
                 df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=_meta)
                 # df[output_col] = df[input_col].where(~(where), value, meta=int)
-
+            df.meta.preserve(df, Actions.SET.value, output_col)
         return df
 
     @dispatch(list)
