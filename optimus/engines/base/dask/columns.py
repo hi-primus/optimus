@@ -649,10 +649,11 @@ class DaskBaseColumns(BaseColumns):
         output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
         for output_col in output_cols:
-            if where is None:
-                mask = df
-                df = df.assign(**{output_col: eval(value)})  # <- mask is used here
-            else:
+            # if where is None:
+            #     mask = df
+            #     df = df.assign(**{output_col: eval(value)})  # <- mask is used here
+            #     # df.map_partitions(lambda pdf: pdf.assign(**eval(value)), meta={"A": object, "B": object, "z": float}).compute()
+            # else:
                 # if df.cols.dtypes(input_col) == "category":
                 #     try:
                 #         # Handle error if the category already exist
@@ -660,7 +661,12 @@ class DaskBaseColumns(BaseColumns):
                 #     except ValueError:
                 #         pass
 
-                def func(df, _value, _where, _output_col):
+            def func(df, _value, _where, _output_col):
+                if where is None:
+                    mask = df
+                    kw_columns = {_output_col: eval(_value)}
+                    return df.assign(**kw_columns)
+                else:
                     _where = eval(_where)
 
                     _mask = (_where)
@@ -670,14 +676,15 @@ class DaskBaseColumns(BaseColumns):
                     # df[_output_col] = 0
                     df.loc[_mask, _output_col] = _value
 
-                    return df
+                return df
 
-                # Update meta to handle new columns
-                _meta = df.dtypes.to_dict()
-                _meta.update({output_col: object})
+            # Update meta to handle new columns
+            _meta = df.dtypes.to_dict()
 
-                df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=_meta)
-                # df[output_col] = df[input_col].where(~(where), value, meta=int)
+            _meta.update({output_col: object})
+
+            df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=_meta)
+            # df[output_col] = df[input_col].where(~(where), value, meta=int)
             df.meta.preserve(df, Actions.SET.value, output_col)
         return df
 
