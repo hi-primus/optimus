@@ -370,10 +370,10 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     if len(object_int) > 0:
         count_values = df.cols.value_counts(object_int)
 
-    if categorical is True:
-        for col_name in object_int:
-            if len(count_values[col_name]) <= categorical_threshold:
-                final[col_name] = "category"
+    # if categorical is True:
+    #     for col_name in object_int:
+    #         if len(count_values[col_name]) <= categorical_threshold:
+    #             final[col_name] = "category"
 
     df = df.astype(final)
     mem_usg = df.ext.size()
