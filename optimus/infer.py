@@ -142,8 +142,6 @@ def str_to_zip_code(_value):
         return False
 
 
-
-
 def str_to_missing(_value):
     return True if _value == "" else False
 
@@ -397,18 +395,18 @@ class Infer(object):
             _data_type = "boolean"
         elif fastnumbers.isfloat(value):
             _data_type = "decimal"
-        # We first check if a number can be parsed as a credit card or zip code
-        elif value:
-            _data_type = "string"
-            for func in str_funcs:
-                if func[0](str(value)) is True:
-                    _data_type = func[1]
-        elif fastnumbers.isint(value):  # Check if value is integer
+
+        elif fastnumbers.isint(value):  # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
+        elif value:
+            _data_type = "string"
+            for func in str_funcs:
+                if func[0](str(value)) is True:
+                    _data_type = func[1]
 
         else:
             _data_type = "string"
