@@ -269,8 +269,10 @@ class BaseColumns(ABC):
         df_left = df_left.cols.cast(col_index_left, "str").set_index(col_index_left)
         df_right = df_right.cols.cast(col_index_right, "str").set_index(col_index_right)
 
+
         # Join do not work with different data types.
-        df_left = df_left.merge(df_right, *args, **kwargs)
+        # Use set_index to return a index in the dataframe
+        df_left = df_left.merge(df_right, *args, **kwargs).reset_index(col_left)
         return df_left
 
     def move(self, column, position, ref_col=None):
