@@ -44,7 +44,6 @@ class DaskBaseColumns(BaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def count_mismatch(self, columns_mismatch: dict = None, infer=True):
-        # print("infer", columns_mismatch)
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
@@ -112,7 +111,7 @@ class DaskBaseColumns(BaseColumns):
                                 }
             if infer is True:
                 result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
-
+        print("result", result)
         return result
 
     def h_freq(self, columns):
@@ -156,7 +155,6 @@ class DaskBaseColumns(BaseColumns):
 
             if _total_freq_count is None:
                 result = {_series.name: {"frequency": result}}
-                print(result)
             else:
                 result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
 
@@ -1035,22 +1033,7 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
-    def profiler_dtypes(self, columns):
-        """
-        Get the profiler data types from the meta data
-        :param columns:
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns)
-        result = {}
-        for col_name in columns:
-            column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
-            if column_meta is None:
-                result[col_name] = None
-            else:
-                result[col_name] = column_meta["profiler_dtype"]
-        return result
+
 
 
 

@@ -21,7 +21,7 @@ TOTAL_PREVIEW_ROWS = 30
 def ext(self: DataFrame):
     class Ext(BaseExt):
 
-        _name = None
+
 
         def __init__(self, df):
             super().__init__(df)

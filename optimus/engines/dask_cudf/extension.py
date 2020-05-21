@@ -23,7 +23,7 @@ from optimus.profiler.constants import MAX_BUCKETS
 def ext(self):
     class Ext(BaseExt):
 
-        _name = None
+        # _name = None
 
         @staticmethod
         def cache():
@@ -271,14 +271,6 @@ def ext(self):
 
             raise NotImplementedError
 
-        @staticmethod
-        def size():
-            """
-            Get the size of a spark in bytes
-            :return:
-            """
-
-            return 0
 
         @staticmethod
         def run():

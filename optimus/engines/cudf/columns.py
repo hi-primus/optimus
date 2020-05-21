@@ -9,7 +9,6 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
-from optimus.helpers.constants import ProfilerDataTypesQuality
 from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
@@ -220,10 +219,6 @@ def cols(self: DataFrame):
             return result
 
         @staticmethod
-        def count_uniques(columns, estimate=True):
-            pass
-
-        @staticmethod
         def extract(input_cols, output_cols, regex):
             # Cudf no support regex to we convert this to pandas, operate and the convert back to cudf
             df = self
@@ -329,10 +324,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def count_mismatch(columns_mismatch: dict = None):
-            pass
-
-        @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
             df = self
             result = {}
@@ -398,7 +389,7 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             r = {}
             for col_name in columns:
-                r[col_name] = df[col_name].nunique()
+                r[col_name] = {"count_uniques": df[col_name].nunique()}
 
             return r
 
@@ -523,69 +514,33 @@ def cols(self: DataFrame):
             return result
 
         def count_mismatch(self, columns_mismatch: dict = None, infer=True):
-            # print("infer", columns_mismatch)
             df = self.df
             if not is_dict(columns_mismatch):
                 columns_mismatch = parse_columns(df, columns_mismatch)
 
-            def count_dtypes(_df, _col_name, _func_dtype):
-
-                def _func(value):
-                    # null values
-
-                    # match data type
-                    if _func_dtype(value):
-                        # ProfilerDataTypesQuality.MATCH.value
-                        return 2
-
-                    elif pd.isnull(value):
-                        # ProfilerDataTypesQuality.MISSING.value
-                        return 1
-
-                    # mismatch
-                    else:
-                        # ProfilerDataTypesQuality.MISMATCH.value
-                        return 0
-
-                return _df[_col_name].map(_func).value_counts()
-
-            df_len = len(df)
-
-            def no_infer_func(_df, _col_name, _nulls_count):
-
-                return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
-                                  ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
-
-            if infer is True:
-                delayed_parts = [count_dtypes(df, col_name, profiler_dtype_func(dtype, True)) for col_name, dtype in
-                                 columns_mismatch.items()]
-
-            else:
-                nulls_count = df.isna().sum().compute().to_dict()
-                delayed_parts = [no_infer_func(df, col_name, nulls_count) for col_name in columns_mismatch]
-
-            def merge(value):
-                return [{v.name: v.to_dict()} for v in value]
-
-            b = merge(delayed_parts)
-
-            c = b
-            # Flat dict
-            d = {x: y for _c in c for x, y in _c.items()}
-
-            def none_to_zero(value):
-                return value if value is not None else 0
-
             result = {}
 
-            for col_name, values in d.items():
-                result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
-                                    "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
-                                    "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
-                                    }
-                if infer is True:
-                    result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
+            nulls = df.isnull().sum().to_pandas().to_dict()
+            for col_name, dtype in columns_mismatch.items():
+                result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
+                result[col_name]["missing"] = nulls.get(col_name)
+                matches_count = {"True": 0, "False": 0}
 
+                if not ((df.cols.names(col_name, by_dtypes=df.constants.NUMERIC_TYPES)) is None):
+                    pass
+                elif not ((df.cols.names(col_name, by_dtypes=df.constants.STRING_TYPES)) is None):
+                    # print("COL", col_name, dtype)
+                    matches_count = df[col_name].str.match(
+                        profiler_dtype_func(dtype, True)).value_counts().to_pandas().to_dict()
+
+                match = matches_count.get("True")
+                mismatch = matches_count.get("False")
+
+                result[col_name]["match"] = 0 if match is None else match
+                result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
+
+            for col_name in columns_mismatch.keys():
+                result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
             return result
 
         def count(self):
@@ -594,7 +549,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, count_uniques=False, total_rows=None, *args, **kwargs):
-            # https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
             df = self
 
             columns = parse_columns(df, columns)
@@ -602,12 +556,16 @@ def cols(self: DataFrame):
             result = {}
             for col_name in columns:
                 # Value counts
-                r = df[col_name].value_counts().nlargest(n)
+                values_and_count = df[col_name].value_counts()
+                count_uniques_result = len(values_and_count)
+                values_and_count = values_and_count.nlargest(n)
 
-                i = list(r.index)
-                j = r.tolist()
-
-                result[col_name] = ({"values": i, "count": j})
+                i = list(values_and_count.index)
+                j = list(values_and_count)
+                value_count = []
+                for idx in range(len(i)):
+                    value_count.append({"values": i[idx], "count": j[idx]})
+                result[col_name] = {"frequency": value_count, "count_uniques": count_uniques_result}
             return result
 
     return Cols(self)

@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-import numpy as np
 from cudf.core import DataFrame
 from glom import assign
 
@@ -16,7 +15,7 @@ from optimus.profiler.constants import MAX_BUCKETS
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
-
+        # _name = None
         def __init__(self, df):
             super().__init__(df)
 
@@ -96,8 +95,8 @@ def ext(self: DataFrame):
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None
                 if string_cols is not None:
-                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
+                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                     _f = {}
@@ -144,7 +143,7 @@ def ext(self: DataFrame):
                 dtypes = df.cols.dtypes("*")
 
                 # mismatch
-                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
+                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent

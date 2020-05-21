@@ -86,11 +86,6 @@ def ext(self: DataFrame):
         def cache(self):
             return self.df
 
-        @staticmethod
-        def size(deep=True):
-            df = self
-            result = df.memory_usage(index=True, deep=deep).sum()
-            return result
 
         @staticmethod
         def sample(n=10, random=False):

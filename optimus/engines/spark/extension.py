@@ -24,7 +24,7 @@ from optimus.profiler.profiler import Profiler
 def ext(self):
     class Ext(BaseExt):
 
-        _name = None
+        # _name = None
 
         @staticmethod
         def cache():

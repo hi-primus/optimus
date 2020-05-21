@@ -23,18 +23,16 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 
 class BaseExt(ABC):
     # _name = None
+    _name = None
 
     def __init__(self, df):
         self.df = df
         # self.buffer_a = None
 
-
-
     @staticmethod
     @abstractmethod
     def cache():
         pass
-
 
     def to_json(self, columns="*", format="bumblebee"):
         """
@@ -176,8 +174,8 @@ class BaseExt(ABC):
 
         if lower_bound >= df_length:
             diff = upper_bound - lower_bound
-            lower_bound= df_length - diff
-            upper_bound= df_length
+            lower_bound = df_length - diff
+            upper_bound = df_length
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(df, columns)
@@ -190,15 +188,19 @@ class BaseExt(ABC):
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                 "value": df.rows.to_list(columns)}
 
-    def size(self):
+    def size(self, deep=True, format=None):
         """
-        Get the size of a spark in bytes
+        Get the size of a dask in bytes
         :return:
         """
+        df = self.df
+        result = df.memory_usage(index=True, deep=deep).sum()
+        if format == "human":
+            result = humanize.naturalsize(result)
 
-        pass
+        return result
 
-    def optimize(self,categorical_threshold= 50, verbose= False):
+    def optimize(self, categorical_threshold=50, verbose=False):
         df = self.df
         return reduce_mem_usage(df, categorical_threshold=categorical_threshold, verbose=verbose)
 
@@ -402,7 +404,6 @@ class BaseExt(ABC):
     @abstractmethod
     def partitions():
         pass
-
 
     @staticmethod
     def partitioner():

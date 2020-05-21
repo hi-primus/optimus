@@ -3,6 +3,7 @@ from abc import abstractmethod, ABC
 from enum import Enum
 
 import numpy as np
+from glom import glom
 
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
@@ -95,6 +96,23 @@ class BaseColumns(ABC):
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
         return columns
+
+    def profiler_dtypes(self, columns):
+        """
+        Get the profiler data types from the meta data
+        :param columns:
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+        result = {}
+        for col_name in columns:
+            column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
+            if column_meta is None:
+                result[col_name] = None
+            else:
+                result[col_name] = column_meta["profiler_dtype"]
+        return result
 
     @staticmethod
     @abstractmethod
@@ -555,6 +573,16 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def count_uniques(columns, estimate=True):
+        """
+        Result
+        {'first_name': {'frequency': [{'value': 'LAUREY', 'count': 3},
+   {'value': 'GARRIE', 'count': 3},
+   {'value': 'ERIN', 'count': 2},
+   {'value': 'DEVINDER', 'count': 1}]}}
+        :param columns:
+        :param estimate:
+        :return:
+        """
         pass
 
     @staticmethod
@@ -696,18 +724,16 @@ class BaseColumns(ABC):
         # Map from profiler dtype to python dtype
         profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
                                  ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
-                                 ProfilerDataTypes.DATE.value: "datetime64[ns]",
+                                 ProfilerDataTypes.DATE.value: "object",
                                  ProfilerDataTypes.EMAIL.value: "object", ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object"}
 
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-            # print("000", df.cols.dtypes(col_name), _dtype)
             _dtype = profiler_dtype_python.get(_dtype)
             #
             # # For categorical columns we need to transform the series to an object
             # # about doing arithmetical operation
-            # print("AAA", df.cols.dtypes(col_name), _dtype)
             if df.cols.dtypes(col_name) == "category":
                 df[col_name] = df[col_name].astype(object)
 
@@ -724,6 +750,11 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def count_mismatch(columns_mismatch: dict = None):
+        """
+        Result {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
+        :param columns_mismatch:
+        :return:
+        """
         pass
 
     @staticmethod
@@ -734,6 +765,18 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def frequency(columns, n=10, percentage=False, total_rows=None):
+        """
+        Result {'col_name': {'frequency': [{'value': 'LAUREY', 'count': 3},
+           {'value': 'GARRIE', 'count': 3},
+           {'value': 'ERIN', 'count': 2},
+           {'value': 'DEVINDER', 'count': 1}],
+          'count_uniques': 4}}
+        :param columns:
+        :param n:
+        :param percentage:
+        :param total_rows:
+        :return:
+        """
         pass
 
     @staticmethod
