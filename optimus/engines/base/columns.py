@@ -235,44 +235,54 @@ class BaseColumns(ABC):
 
         return df
 
-    def join(self, df_right, *args, **kwargs):
+    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, order=True, *args, **kwargs):
         """
-
+        Join 2 dataframes SQL style
         :param df_right:
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param on:
+        :param left_on:
+        :param right_on:
+        :param order: Order the columns putting the left df columns first then the key column and the right df columns
         :param args:
         :param kwargs:
-        how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+
         :return:
         """
+        suffix_left = "_left"
+        suffix_right = "_right"
+
         df_left = self.df
-        col_on = kwargs.get("on")
-        col_left = kwargs.get("left_on")
-        col_right = kwargs.get("right_on")
 
-        col_index_left = None
-        col_index_right = None
+        if on is not None:
+            left_on = on
+            right_on = on
 
-        if col_on is not None:
-            col_index_left = col_on
-            col_index_right = col_on
+        if df_left.cols.dtypes(left_on) == "category":
+            df_left[left_on] = df_left[left_on].cat.as_ordered()
 
-        elif col_left and col_right:
-            col_index_left = col_left
-            col_index_right = col_right
-
-        if df_left.cols.dtypes(col_index_left) == "category":
-            df_left[col_index_left] = df_left[col_index_left].cat.as_ordered()
-
-        if df_right.cols.dtypes(col_index_right) == "category":
-            df_right[col_index_right] = df_right[col_index_right].cat.as_ordered()
-
-        df_left = df_left.cols.cast(col_index_left, "str").set_index(col_index_left)
-        df_right = df_right.cols.cast(col_index_right, "str").set_index(col_index_right)
-
+        if df_right.cols.dtypes(right_on) == "category":
+            df_right[right_on] = df_right[right_on].cat.as_ordered()
 
         # Join do not work with different data types.
         # Use set_index to return a index in the dataframe
-        df_left = df_left.merge(df_right, *args, **kwargs).reset_index(col_left)
+        df_left[left_on] = df_left[left_on].astype(str)
+        df_left.set_index(left_on)
+
+        df_right[right_on] = df_right[right_on].astype(str)
+        df_right.set_index(right_on)
+
+        l_c = df_left.cols.names()[-1]
+        # Use to reorder de output
+        df_left = df_left.merge(df_right, how=how, on=on, left_on=left_on, right_on=right_on,
+                                suffixes=(suffix_left, suffix_right))
+
+        # Remove duplicated index if the name is the same. If the index name are not the same
+        if order is True:
+            if left_on != right_on:
+                df_left = df_left.cols.drop(right_on)
+            df_left = df_left.cols.move(left_on, "before", l_c)
+
         return df_left
 
     def move(self, column, position, ref_col=None):
