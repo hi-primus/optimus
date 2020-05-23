@@ -197,7 +197,14 @@ Bumblebee is a frontend interface to present data in a way that can be easily ha
 
 ## About parsing data
 Dask try to infer the column datatype for every partition so it can cause problem the inferred datatype does not match. 
-Optimus will always parse the columns as object and the try to optimize the data type using the `.ext.optimize` function.
+Optimus will always parse the columns as `object` from a csv and the try to optimize the data type using the `.ext.optimize` function.
+
+## About turbodbc
+Installation
+
+### Windows
+Issues with `boost` missing file
+https://github.com/blue-yonder/turbodbc/issues/236
 
 ##Infering datataypes
  

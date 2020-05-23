@@ -3,6 +3,7 @@ from dask.distributed import Client
 from optimus.bumblebee import Comm
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.io.jdbc import JDBC
+from optimus.engines.base.io.turbodbc import TURBODBC
 from optimus.engines.dask.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
@@ -78,7 +79,7 @@ class DaskEngine:
         :return: JDBC object
         """
 
-        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
+        return TURBODBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                     presto_catalog, cassandra_keyspace, cassandra_table)
     # def create(self, data):
     #     import dask.dataframe as dd
