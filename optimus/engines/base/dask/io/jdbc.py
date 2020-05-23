@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+import sqlalchemy as sa
 from dask.dataframe import from_delayed, from_pandas
 from dask.delayed import delayed
 from sqlalchemy import create_engine
+from sqlalchemy import sql
+from sqlalchemy.sql import elements
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -205,9 +208,6 @@ class DaskBaseJDBC:
             query=None,
             **kwargs
     ):
-        import sqlalchemy as sa
-        from sqlalchemy import sql
-        from sqlalchemy.sql import elements
 
         engine_kwargs = {} if engine_kwargs is None else engine_kwargs
         engine = sa.create_engine(uri, **engine_kwargs)
