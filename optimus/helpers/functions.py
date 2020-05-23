@@ -297,6 +297,9 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
     """
     result = []
 
+    df_left = pd.read_csv("data/dataset - customers.csv").dropna().astype(str)
+    df_right = pd.read_csv("data/dataset - transactions.csv").dropna().astype(str)
+
     # Search column names wiht *id* substring
     def check_ids_columns(_df):
         return [x for x in _df.columns if re.search(r"_id| id|id_| id ", x)]
@@ -317,8 +320,9 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
         string_len = int_columns_df.applymap(lambda value: len(value))
         return (int_columns_names, string_len.min().values, string_len.max().values)
 
-    df_left = min_max_len(df_left)
-    df_right = min_max_len(df_right)
+    min_max_df_left = min_max_len(df_left)
+    min_max_df_right = min_max_len(df_right)
+
 
     def median_len(arr, idx):
         """
@@ -335,10 +339,10 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
             _median = _max
         return _median
 
-    for i, col_l in enumerate(df_left[0]):
-        median_left = median_len(df_left, i)
-        for j, col_r in enumerate(df_right[0]):
-            median_right = median_len(df_right, j)
+    for i, col_l in enumerate(min_max_df_left[0]):
+        median_left = median_len(min_max_df_left, i)
+        for j, col_r in enumerate(min_max_df_right[0]):
+            median_right = median_len(min_max_df_right, j)
             if median_left == median_right:
                 result.append((col_l, col_r,))
 
