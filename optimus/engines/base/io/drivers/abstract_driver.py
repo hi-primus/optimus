@@ -58,7 +58,7 @@ class AbstractDriver(ABC):
     @abstractmethod
     def primary_key_query(self, *args, **kwargs) -> str:
         """
-        Returns the query for counting the rows in a given table.
+        Returns the query the primary keys in a given table.
         :param kwargs: query parameters
         :return: a query to count the number of rows in a table
         """
@@ -67,7 +67,7 @@ class AbstractDriver(ABC):
     @abstractmethod
     def min_max_query(self, *args, **kwargs) -> str:
         """
-        Returns the query for counting the rows in a given table.
+        Returns the query with the min and max values in a columns from a given table.
         :param kwargs: query parameters
         :return: a query to count the number of rows in a table
         """
