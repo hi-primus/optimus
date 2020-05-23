@@ -11,7 +11,6 @@ from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
-from glom import glom
 from multipledispatch import dispatch
 from numba import jit
 from sklearn.preprocessing import MinMaxScaler
@@ -21,7 +20,7 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions, ProfilerDataTypes
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
@@ -648,12 +647,12 @@ class DaskBaseColumns(BaseColumns):
             #     df = df.assign(**{output_col: eval(value)})  # <- mask is used here
             #     # df.map_partitions(lambda pdf: pdf.assign(**eval(value)), meta={"A": object, "B": object, "z": float}).compute()
             # else:
-                # if df.cols.dtypes(input_col) == "category":
-                #     try:
-                #         # Handle error if the category already exist
-                #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-                #     except ValueError:
-                #         pass
+            # if df.cols.dtypes(input_col) == "category":
+            #     try:
+            #         # Handle error if the category already exist
+            #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+            #     except ValueError:
+            #         pass
 
             def func(df, _value, _where, _output_col):
                 if where is None:
@@ -1033,14 +1032,11 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
-
-
-
-
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
-        Cast a column or a list of columns to a specific data type.
+        Cast the elements inside a  column or a list of columns to a specific data type.
+        Unlike 'cast' this not change the columns data type
 
         :param input_cols: Columns names to be casted
         :param output_cols:
@@ -1275,6 +1271,7 @@ class DaskBaseColumns(BaseColumns):
         :param regex: Regular expression to filter the columns
         :param data_type: Data type to be filtered for
         :param invert: Invert the selection
+        :param accepts_missing_cols:
         :return:
         """
         df = self.df

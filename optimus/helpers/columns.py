@@ -336,7 +336,7 @@ def validate_columns_names(df, col_names, index=0):
 
 def check_for_missing_columns(df, col_names):
     """
-    Check if the columns you want to select exits in the spark
+    Check if the columns you want to select exits in the dataframe
     :param df: Dataframe to be checked
     :param col_names: cols names to
     :return:
