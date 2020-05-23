@@ -379,7 +379,7 @@ class Infer(object):
 
     @staticmethod
     def parse_pandas(value):
-        # Try to order the functions from less to more computational expensive
+        #
 
         int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
 
@@ -393,14 +393,16 @@ class Infer(object):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
-        elif fastnumbers.isfloat(value):
-            _data_type = "decimal"
+
 
         elif fastnumbers.isint(value):  # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
+
+        elif fastnumbers.isfloat(value):  # Seems like float can be dates
+            _data_type = "decimal"
 
         elif value:
             _data_type = "string"
@@ -417,6 +419,7 @@ def profiler_dtype_func(dtype, null=False):
     """
     Return a function that check if a value match a datatype
     :param dtype:
+    :param null:
     :return:
     """
 
