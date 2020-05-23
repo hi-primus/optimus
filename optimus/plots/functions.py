@@ -129,8 +129,6 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 
     for col_name, data in column_data.items():
         bins = []
-        # print(data)
-        # print("**********")
         for d in data:
             bins.append(d['lower'])
 

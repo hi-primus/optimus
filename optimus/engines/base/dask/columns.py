@@ -110,7 +110,6 @@ class DaskBaseColumns(BaseColumns):
                                 }
             if infer is True:
                 result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
-        print("result", result)
         return result
 
     def h_freq(self, columns):

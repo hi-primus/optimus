@@ -22,7 +22,6 @@ class MAD(AbstractOutlierBounds):
         self.threshold = threshold
         self.relative_error = relative_error
         self.upper_bound, self.lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
-        # print("AaAA",self.upper_bound, self.lower_bound)
         super().__init__(df, col_name, self.lower_bound, self.upper_bound)
 
     def whiskers(self):

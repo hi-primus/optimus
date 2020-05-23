@@ -29,7 +29,6 @@ class Tukey(AbstractOutlierBounds):
         :return:
         """
         iqr = self.df.cols.iqr(self.col_name, more=True)
-        # print(iqr)
 
         lower_bound = iqr["q1"] - (iqr["iqr"] * 1.5)
         upper_bound = iqr["q3"] + (iqr["iqr"] * 1.5)
