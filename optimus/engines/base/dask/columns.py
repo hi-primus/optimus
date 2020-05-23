@@ -1058,7 +1058,7 @@ class DaskBaseColumns(BaseColumns):
 
         def _cast_int(value):
             if (value is None) or (value is np.nan):
-                return 0
+                return np.nan
             else:
                 return fastnumbers.fast_int(value, default=np.nan)
 
