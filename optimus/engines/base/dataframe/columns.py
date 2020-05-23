@@ -85,7 +85,7 @@ class DataFrameBaseColumns(BaseColumns):
 
     def count(self):
         df = self.df
-        return len(df)
+        return len(df.columns)
 
     @staticmethod
     def frequency_by_group(columns, n=10, percentage=False, total_rows=None):

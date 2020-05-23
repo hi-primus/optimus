@@ -467,9 +467,9 @@ def cols(self: DataFrame):
                 # result[col_name] = _nunique(df,col_name)
             return result
 
-        def count(self):
-            df = self.df
-            return len(df)
+        # def count(self):
+        #     df = self.df
+        #     return len(df.columns)
 
         @staticmethod
         def h_freq(columns):
