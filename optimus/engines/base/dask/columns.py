@@ -1110,7 +1110,7 @@ class DaskBaseColumns(BaseColumns):
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
         """
-        Concat multiple columns to one with the format specified
+        Merge multiple columns with the format specified
         :param input_cols: columns to be nested
         :param separator: char to be used as separator at the concat time
         :param shape: final data type, 'array', 'string' or 'vector'
@@ -1120,11 +1120,13 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         input_cols = parse_columns(df, input_cols)
+        # output_col = val_to_list(output_col)
+        check_column_numbers(input_cols, 2)
         if output_col is None:
             RaiseIt.type_error(output_col, ["str"])
 
         # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
-        # check_column_numbers(output_col, 1)
+
         output_ordered_columns = df.cols.names()
 
         def _nest_string(row):

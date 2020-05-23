@@ -732,12 +732,21 @@ class BaseColumns(ABC):
             columns[input_col] = dtype
 
         # Map from profiler dtype to python dtype
-        profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
-                                 ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
-                                 ProfilerDataTypes.DATE.value: "object", ProfilerDataTypes.EMAIL.value: "object",
+        profiler_dtype_python = {ProfilerDataTypes.INT.value: "object",
+                                 ProfilerDataTypes.DECIMAL.value: "object",
+                                 ProfilerDataTypes.STRING.value: "object",
+                                 ProfilerDataTypes.BOOLEAN.value: "bool",
+                                 ProfilerDataTypes.DATE.value: "object",
+                                 ProfilerDataTypes.ARRAY.value: "object",
+                                 ProfilerDataTypes.OBJECT.value: "object"
+                                 ProfilerDataTypes.GENDER.value: "object",
+                                 ProfilerDataTypes.IP.value: "object",
+                                 ProfilerDataTypes.URL.value: "object",
+                                 ProfilerDataTypes.EMAIL.value: "object",
                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
-                                 ProfilerDataTypes.ARRAY.value: "object"}
+                                 ProfilerDataTypes.ZIP_CODE.value: "object"}
 
+        print("columns",columns)
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
@@ -750,7 +759,8 @@ class BaseColumns(ABC):
 
             # print(col_name, _dtype)
             df = df.cols.cast(col_name, _dtype)
-            df[col_name] = df[col_name].astype(_dtype)
+            # print("_dtype",_dtype)
+            # df[col_name] = df[col_name].astype(_dtype)
         return df
 
     @staticmethod
