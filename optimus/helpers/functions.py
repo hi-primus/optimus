@@ -419,9 +419,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
         for col_name in min_max.keys():
             _min = min_max[col_name]["min"]
             _max = min_max[col_name]["max"]
-            # print(_min, _max)
             if _min >= 0:
-                # print("11111")
                 if _max < 255:
                     final[col_name] = np.uint8
                 elif _max < 65535:

@@ -123,15 +123,14 @@ def cudf_series_to_pandas(serie):
     return serie.to_pandas()
 
 
-def dask_pandas_to_dask_cudf(df):
+def dask_dataframe_to_dask_cudf(df):
     import cudf
     return df.map_partitions(cudf.DataFrame.from_pandas)
 
 
 # To cudf
 def dask_dataframe_to_cudf(df):
-    import cudf
-    return cudf.DataFrame.from_pandas(df)
+    return pandas_to_cudf(dask_dataframe_to_pandas(df))
 
 
 def dask_cudf_to_cudf(df):
@@ -167,7 +166,7 @@ def cudf_to_cupy_arr(df):
 
 def pandas_to_cudf(df):
     import cudf
-    return cudf.form_pandas(df)
+    return cudf.from_pandas(df)
 
 
 def pandas_to_dask_dataframe(df, n_partitions=1):

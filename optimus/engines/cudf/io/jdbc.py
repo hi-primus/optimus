@@ -1,4 +1,5 @@
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
+from optimus.helpers.converter import dask_dataframe_to_cudf
 
 
 class JDBC(DaskBaseJDBC):
@@ -11,3 +12,6 @@ class JDBC(DaskBaseJDBC):
                          presto_catalog=presto_catalog,
                          cassandra_keyspace=cassandra_keyspace,
                          cassandra_table=cassandra_table)
+
+    def table_to_df(self, table_name, columns="*", limit=None):
+        return dask_dataframe_to_cudf(super().table_to_df(table_name, columns, limit))

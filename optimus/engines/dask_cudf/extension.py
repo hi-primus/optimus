@@ -64,7 +64,6 @@ def ext(self):
                 freq_uniques = None
                 compute = False
                 if numeric_cols is not None:
-                    print("numeric cols", numeric_cols)
                     hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None

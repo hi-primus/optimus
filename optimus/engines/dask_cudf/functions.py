@@ -51,7 +51,6 @@ def functions(self):
 
         @staticmethod
         def percentile_agg(columns, args):
-            print("PERCENTILE")
             values = args[1]
 
             def _percentile(df):

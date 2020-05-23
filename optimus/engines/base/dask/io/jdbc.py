@@ -251,17 +251,19 @@ class DaskBaseJDBC:
             # derive metadata from first few rows
             # q = sql.select(columns).limit(head_rows).select_from(table)
             head = pd.read_sql(query, engine, **kwargs)
+            # print("head", head)
             # print("META", head.iloc[:0])
             if head.empty:
                 # no results at all
-                name = table_name.name
-                schema = table_name.schema
-                head = pd.read_sql_table(name, uri, schema=schema, index_col=index_col)
+                # name = table_name.name
+                # schema = table_name.schema
+                # head = pd.read_sql_table(name, uri, schema=schema, index_col=index_col)
+
                 return from_pandas(head, npartitions=1)
 
             bytes_per_row = (head.memory_usage(deep=True, index=True)).sum() / head_rows
             meta = head.iloc[:0]
-            print(list(head.columns.values))
+            # print(list(head.columns.values))
         else:
             if divisions is None and npartitions is None:
                 raise ValueError(

@@ -48,6 +48,18 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     PandasDataFrame.meta = property(meta)
     PandasDataFrame.schema = [MetadataDask()]
 
+    # if engine == Engine.DASK.value or engine == Engine.DASK_CUDF.value:
+    # We are using dask for all the database operations for cudf, das_cudf and dask
+    from dask.dataframe.core import DataFrame as DaskDataFrame
+
+    from optimus.engines.dask import columns, rows, extension, functions
+    from optimus.engines.base.dask import constants
+    from optimus.engines.dask.io import save
+
+    DaskDataFrame.outliers = property(outliers)
+    DaskDataFrame.meta = property(meta)
+    DaskDataFrame.schema = [MetadataDask()]
+
     if engine == Engine.SPARK.value:
         from pyspark.sql import DataFrame as SparkDataFrame
 
@@ -61,16 +73,7 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         SparkDataFrame.outliers = property(outliers)
         SparkDataFrame.meta = property(meta)
 
-    if engine == Engine.DASK.value or engine == Engine.DASK_CUDF.value:
-        from dask.dataframe.core import DataFrame as DaskDataFrame
 
-        from optimus.engines.dask import columns, rows, extension, functions
-        from optimus.engines.base.dask import constants
-        from optimus.engines.dask.io import save
-
-        DaskDataFrame.outliers = property(outliers)
-        DaskDataFrame.meta = property(meta)
-        DaskDataFrame.schema = [MetadataDask()]
 
     if engine == Engine.CUDF.value:
         from cudf.core import DataFrame as CUDFDataFrame
@@ -85,7 +88,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
 
     if engine == Engine.DASK_CUDF.value:
         from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-        print("ASDFADSF")
         from optimus.engines.dask_cudf import columns, rows, extension, functions
         from optimus.engines.base.dask import constants
         from optimus.engines.dask_cudf.io import save
@@ -131,5 +133,4 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         return DaskCUDFEngine(*args, **kwargs)
     else:
-        print("ASDAf", Engine.list())
         RaiseIt.value_error(engine, Engine.list())
