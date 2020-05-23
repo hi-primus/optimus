@@ -586,9 +586,9 @@ class BaseColumns(ABC):
         """
         Result
         {'first_name': {'frequency': [{'value': 'LAUREY', 'count': 3},
-   {'value': 'GARRIE', 'count': 3},
-   {'value': 'ERIN', 'count': 2},
-   {'value': 'DEVINDER', 'count': 1}]}}
+           {'value': 'GARRIE', 'count': 3},
+           {'value': 'ERIN', 'count': 2},
+           {'value': 'DEVINDER', 'count': 1}]}}
         :param columns:
         :param estimate:
         :return:
@@ -734,8 +734,9 @@ class BaseColumns(ABC):
         # Map from profiler dtype to python dtype
         profiler_dtype_python = {ProfilerDataTypes.DECIMAL.value: "float", ProfilerDataTypes.INT.value: "int",
                                  ProfilerDataTypes.BOOLEAN.value: "bool", ProfilerDataTypes.STRING.value: "object",
-                                 ProfilerDataTypes.DATE.value: "object",
-                                 ProfilerDataTypes.EMAIL.value: "object", ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object"}
+                                 ProfilerDataTypes.DATE.value: "object", ProfilerDataTypes.EMAIL.value: "object",
+                                 ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
+                                 ProfilerDataTypes.ARRAY.value: "object"}
 
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
