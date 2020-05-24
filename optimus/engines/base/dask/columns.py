@@ -11,6 +11,7 @@ from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
+from dateutil.parser import parse as dparse
 from multipledispatch import dispatch
 from numba import jit
 from sklearn.preprocessing import MinMaxScaler
@@ -508,6 +509,66 @@ class DaskBaseColumns(BaseColumns):
         df[output_cols] = imputer.transform(_df)[input_cols]
         return df
 
+    # Date operations
+    @staticmethod
+    def years_between(input_cols, date_format=None, output_cols=None):
+        pass
+
+    @staticmethod
+    def to_timestamp(input_cols, date_format=None, output_cols=None):
+        pass
+
+    @staticmethod
+    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+        pass
+
+    def year(self, input_cols, output_cols=None):
+        """
+
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def _year(value):
+            return value.year
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].apply(_year, meta=str)
+
+        return df
+
+    @staticmethod
+    def month(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def day(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def hour(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def minute(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def second(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def weekday(input_cols, output_cols):
+        pass
+
+    @staticmethod
+    def weekofyear(input_cols, output_cols):
+        pass
+
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
         """
         Use a Regex to replace values
@@ -525,10 +586,6 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
-
-    @staticmethod
-    def years_between(input_cols, date_format=None, output_cols=None):
-        pass
 
     def remove_white_spaces(self, input_cols, output_cols=None):
 
@@ -723,10 +780,6 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
-
-    @staticmethod
     def append(dfs) -> DataFrame:
         """
 
@@ -902,10 +955,6 @@ class DaskBaseColumns(BaseColumns):
     def rename(self, old_column, new_column):
         return self.rename([(old_column, new_column)], None)
 
-    @staticmethod
-    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
-        raise NotImplementedError('Look at me I am dask now')
-
     def fill_na(self, input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
@@ -1034,7 +1083,7 @@ class DaskBaseColumns(BaseColumns):
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
-        Cast the elements inside a  column or a list of columns to a specific data type.
+        Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
 
         :param input_cols: Columns names to be casted
@@ -1052,28 +1101,34 @@ class DaskBaseColumns(BaseColumns):
         _dtypes = []
 
         def _cast_int(value):
-            if (value is None) or (value is np.nan):
+            # if (value is None) or (value is np.nan):
+            if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_int(value, default=np.nan)
 
         def _cast_float(value):
-            if value is None:
+            if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_float(value, default=np.nan)
 
         def _cast_bool(value):
-            if value is None:
-                return None
+            if pd.isnull(value):
+                return np.nan
             else:
                 return bool(value)
 
+        def _cast_date(value):
+            if pd.isnull(value):
+                return np.nan
+            elif not isinstance(value, pd.Timestamp):
+                return dparse(value)
+
         def _cast_str(value):
-            if not (value != value):
-                #     return value.astype(str)
-                # except:
-                # print("ASDF",value)
+            if pd.isnull(value):
+                return np.nan
+            else:
                 return str(value)
 
         # Parse params
@@ -1100,10 +1155,13 @@ class DaskBaseColumns(BaseColumns):
                 func = _cast_int
             elif dtype == 'float':
                 func = _cast_float
+            elif dtype == 'date':
+                func = _cast_date
             elif dtype == 'bool':
                 func = _cast_bool
             else:
                 func = _cast_str
+            print("dtype---", dtype)
             df[output_col] = df[input_col].apply(func=func, meta=object, convert_dtype=False)
 
         return df

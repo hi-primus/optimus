@@ -732,13 +732,13 @@ class BaseColumns(ABC):
             columns[input_col] = dtype
 
         # Map from profiler dtype to python dtype
-        profiler_dtype_python = {ProfilerDataTypes.INT.value: "object",
-                                 ProfilerDataTypes.DECIMAL.value: "object",
+        profiler_dtype_python = {ProfilerDataTypes.INT.value: "int",
+                                 ProfilerDataTypes.DECIMAL.value: "float",
                                  ProfilerDataTypes.STRING.value: "object",
                                  ProfilerDataTypes.BOOLEAN.value: "bool",
-                                 ProfilerDataTypes.DATE.value: "object",
+                                 ProfilerDataTypes.DATE.value: "date",
                                  ProfilerDataTypes.ARRAY.value: "object",
-                                 ProfilerDataTypes.OBJECT.value: "object"
+                                 ProfilerDataTypes.OBJECT.value: "object",
                                  ProfilerDataTypes.GENDER.value: "object",
                                  ProfilerDataTypes.IP.value: "object",
                                  ProfilerDataTypes.URL.value: "object",
@@ -746,7 +746,7 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
 
-        print("columns",columns)
+        print("columns", columns)
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
