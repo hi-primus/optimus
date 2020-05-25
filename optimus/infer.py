@@ -16,7 +16,7 @@ from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
-
+import ciso8601
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.raiseit import RaiseIt
@@ -31,8 +31,10 @@ def str_to_boolean(_value):
 
 
 def str_to_date(_value):
+
     try:
-        dparse(_value)
+        ciso8601.parse_datetime(_value)
+        # dparse(_value)
         return True
     except (ValueError, OverflowError, TypeError):
         pass
@@ -77,7 +79,8 @@ def str_to_data_type(_value, _dtypes):
 
 
 def str_to_array(_value):
-    return str_to_data_type(_value, (list, tuple))
+    return _value
+    # return str_to_data_type(_value, (list, tuple))
 
 
 def str_to_object(_value):

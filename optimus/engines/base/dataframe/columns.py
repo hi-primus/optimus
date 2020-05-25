@@ -715,9 +715,9 @@ class DataFrameBaseColumns(BaseColumns):
                 return bool(value)
 
         def _cast_str(value):
-            try:
-                return value.astype(str)
-            except:
+            if pd.isnull(value):
+                return np.nan
+            else:
                 return str(value)
 
         # Parse params

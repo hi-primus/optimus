@@ -297,8 +297,8 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
     """
     result = []
 
-    df_left = pd.read_csv("data/dataset - customers.csv").dropna().astype(str)
-    df_right = pd.read_csv("data/dataset - transactions.csv").dropna().astype(str)
+    df_left = df_left.dropna().astype(str)
+    df_right = df_right.dropna().astype(str)
 
     # Search column names wiht *id* substring
     def check_ids_columns(_df):

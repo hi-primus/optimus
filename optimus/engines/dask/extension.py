@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 import humanize
-from dask import delayed
+from dask import dataframe as dd
 from dask.dataframe.core import DataFrame
 from glom import assign
 
@@ -12,16 +12,11 @@ from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer
 from optimus.profiler.constants import MAX_BUCKETS
-
-TOTAL_PREVIEW_ROWS = 30
 
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
-
-
 
         def __init__(self, df):
             super().__init__(df)
@@ -88,7 +83,7 @@ def ext(self: DataFrame):
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
-                    size=True):
+                    size=False):
             """
 
 
@@ -97,7 +92,7 @@ def ext(self: DataFrame):
             :param output:
             :param infer:
             :param flush:
-            :param size:
+            :param size: get the dataframe size ni memory. Use with caution this could be slow for big dataframes.
             :return:
             """
 
@@ -123,17 +118,16 @@ def ext(self: DataFrame):
                 compute = False
                 if numeric_cols is not None:
                     hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
-                    freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
+                    freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
                 freq = None
                 if string_cols is not None:
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
-
-                @delayed
+                # @delayed
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                     _f = {}
 
                     for col_name in _columns:
-                        _f[col_name] = {"stats": mismatch[col_name], "dtype": _dtypes[col_name]}
+                        _f[col_name] = {"stats": _mismatch[col_name], "dtype": _dtypes[col_name]}
 
                     if _hist is not None:
                         for col_name, h in _hist.items():
@@ -148,35 +142,24 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
-                # Inferred column data type using first rows
-                total_preview_rows = TOTAL_PREVIEW_ROWS
 
-                pdf = df.head(total_preview_rows)[cols_to_profile].applymap(Infer.parse_pandas)
+                cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
 
-                cols_and_inferred_dtype = {}
-                for col_name in cols_to_profile:
-                    _value_counts = pdf[col_name].value_counts()
-
-                    if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
-                        r = _value_counts.index[0]
-                    elif _value_counts[0] < len(pdf):
-                        r = _value_counts.index[1]
-                    else:
-                        r = "object"
-                    cols_and_inferred_dtype[col_name] = r
-
-                df = df.cols.profiler_dtype(columns=cols_and_inferred_dtype)
-                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True)
+                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
+                # mismatch = df.cols
 
                 # Nulls
                 total_count_na = 0
-                for i in mismatch.values():
-                    total_count_na = total_count_na + i["missing"]
+                # for i in mismatch.values():
+                #     total_count_na = total_count_na + i["missing"]
 
                 dtypes = df.cols.dtypes("*")
 
                 # mismatch
-                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques).compute()
+
+                hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
+                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
+                # print("(hist, freq, mismatch, freq_uniques)",(hist, freq, mismatch, freq_uniques))
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent
@@ -202,6 +185,7 @@ def ext(self: DataFrame):
                 assign(output_columns, "summary.p_missing", round(total_count_na / df_length * 100, 2))
 
             actual_columns = output_columns["columns"]
+
             # Order columns
             output_columns["columns"] = dict(OrderedDict(
                 {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
