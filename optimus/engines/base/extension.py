@@ -10,7 +10,8 @@ import simplejson as json
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE
+from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE, Actions
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage
 from optimus.helpers.functions_spark import traverse
 from optimus.helpers.json import json_converter
@@ -277,8 +278,11 @@ class BaseExt(ABC):
                         _result = col
                     else:
                         _result = get_renamed_columns(col)
-                    modified = modified + _result
 
+                    # Unnest return a list inside a list
+                    if action == Actions.UNNEST.value:
+                        _result = _result[0]
+                    modified = modified + _result
                     return modified
 
                 def get_renamed_columns(_col_names):
@@ -351,7 +355,6 @@ class BaseExt(ABC):
                             for col_names in get_columns_by_action(action_name):
                                 profiler_columns.pop(col_names)
                         else:
-                            # print("ACTION NAME", action_name)
                             modified_columns = modified_columns + (get_columns_by_action(action_name))
 
                 # Actions applied to current columns
@@ -360,7 +363,7 @@ class BaseExt(ABC):
 
                 calculate_columns = modified_columns + new_columns
 
-                # Remove duplicated.
+                # Remove duplicated
                 calculate_columns = list(set(calculate_columns))
 
             elif not are_actions:
