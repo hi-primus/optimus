@@ -11,7 +11,6 @@ from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
-from dateutil.parser import parse as dparse
 from multipledispatch import dispatch
 from numba import jit
 from sklearn.preprocessing import MinMaxScaler
@@ -38,12 +37,38 @@ def _min(value):
     return np.min(value)
 
 
+TOTAL_PREVIEW_ROWS = 30
+
+
 class DaskBaseColumns(BaseColumns):
 
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def count_mismatch(self, columns_mismatch: dict = None, infer=True):
+    def infer_profiler_dtypes(self, columns):
+        """
+        Infer datatypes from a samble
+        :param columns:
+        :return:
+        """
+        df = self.df
+        total_preview_rows = TOTAL_PREVIEW_ROWS
+        pdf = df.head(total_preview_rows)[columns].applymap(Infer.parse_pandas)
+
+        cols_and_inferred_dtype = {}
+        for col_name in columns:
+            _value_counts = pdf[col_name].value_counts()
+
+            if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
+                r = _value_counts.index[0]
+            elif _value_counts[0] < len(pdf):
+                r = _value_counts.index[1]
+            else:
+                r = "object"
+            cols_and_inferred_dtype[col_name] = r
+        return cols_and_inferred_dtype
+
+    def count_mismatch(self, columns_mismatch: dict = None, infer=True, compute=True):
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
@@ -70,47 +95,48 @@ class DaskBaseColumns(BaseColumns):
 
             return _df[_col_name].map(_func).value_counts()
 
-        df_len = len(df)
+        # df_len = len(df)
+        # print(df_len)
 
-        @delayed
-        def no_infer_func(_df, _col_name, _nulls_count):
-
-            return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
-                              ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
+        # @delayed
+        # def no_infer_func(_df, _col_name, _nulls_count):
+        #
+        #     return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
+        #                       ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
 
         partitions = df.to_delayed()
 
-        if infer is True:
-            delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in partitions for
-                             col_name, dtype in columns_mismatch.items()]
+        # if infer is True:
+        delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in partitions for
+                         col_name, dtype in columns_mismatch.items()]
 
-        else:
-            nulls_count = df.isna().sum().compute().to_dict()
-            delayed_parts = [no_infer_func(part, col_name, nulls_count) for part in partitions for
-                             col_name in columns_mismatch]
+        # else:
+        #     nulls_count = df.isna().sum().compute().to_dict()
+        #     delayed_parts = [no_infer_func(part, col_name, nulls_count) for part in partitions for
+        #                      col_name in columns_mismatch]
 
         @delayed
         def merge(value):
-            return [{v.name: v.to_dict()} for v in value]
+            _result = {}
+            col_mismatches_count = {v.name: v.to_dict() for v in value}
+
+            def none_to_zero(_value):
+                return _value if _value is not None else 0
+
+            for col_name, values in col_mismatches_count.items():
+                _result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
+                                     "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
+                                     "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
+                                     }
+                _result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
+            return _result
 
         b = merge(delayed_parts)
+        if compute is True:
+            result = dd.compute(b)[0]
+        else:
+            result = b
 
-        c = dd.compute(b)[0]
-        # Flat dict
-        d = {x: y for _c in c for x, y in _c.items()}
-
-        def none_to_zero(value):
-            return value if value is not None else 0
-
-        result = {}
-
-        for col_name, values in d.items():
-            result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
-                                "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
-                                "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
-                                }
-            if infer is True:
-                result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
         return result
 
     def h_freq(self, columns):
@@ -136,6 +162,26 @@ class DaskBaseColumns(BaseColumns):
         #     for l, n in m.items():
         #         print(df[df["hash"] == l].iloc[0][col_name], n)
         dd.from_delayed(delayed_parts).compute()
+
+    def count_uniques(self, columns, estimate: bool = True, compute: bool = True):
+        df = self.df
+        columns = parse_columns(df, columns)
+
+        @delayed
+        def _count_uniques(_df):
+            return _df.nunique()
+
+        @delayed
+        def merge(lu, columns):
+            return {column: {"count_uniques": u} for column, u in zip(columns, lu)}
+
+        count_uniques_values = [_count_uniques(df[col_name]) for col_name in columns]
+        result = merge(count_uniques_values, columns)
+
+        if compute is True:
+            result = result.compute()
+
+        return result
 
     def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
 
@@ -212,31 +258,32 @@ class DaskBaseColumns(BaseColumns):
 
         @delayed
         def _hist(pdf, col_name, _bins):
-
-            _hist, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
-            return pd.Series({col_name: list(_hist)})
+            _count, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
+            return {col_name: [list(_count), list(bins_edges)]}
 
         @delayed
-        def agg_hist(_count, _bins):
+        def _agg_hist(values):
             _result = {}
-            for col_name in columns:
-                l = len(_count[col_name])
-                r = [{"lower": float(_bins[col_name][i]), "upper": float(_bins[col_name][i + 1]),
-                      "count": int(_count[col_name][i])} for i
-                     in range(l)]
+            x = np.zeros(buckets - 1)
+            for i in values:
+                for j in i:
+                    t = i.get(j)
+                    if t is not None:
+                        _count = np.sum([x, t[0]], axis=0)
+                        _bins = t[1]
+                        col_name = j
+                l = len(_count)
+                r = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]),
+                      "count": int(_count[i])} for i in range(l)]
                 _result[col_name] = {"hist": r}
 
             return _result
 
-        @delayed
-        def to_dict(value):
-            return value.to_dict()
-
         partitions = df.to_delayed()
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
-        d = agg_hist(dd.from_delayed(c), _bins)
-
+        d = _agg_hist(c)
+        # c=d
         if compute is True:
             result = d.compute()
         else:
@@ -453,16 +500,17 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return self.agg_exprs(columns, df.functions.zeros_agg)
 
-    def count_uniques(self, columns, estimate=True):
-        """
-        Return how many unique items exist in a columns
-        :param columns: '*', list of columns names or a single column name.
-        :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
-        :type estimate: bool
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.count_uniques_agg, estimate)
+    # def count_uniques(self, columns, estimate=True, compute=True):
+    #     """
+    #     Return how many unique items exist in a columns
+    #     :param columns: '*', list of columns names or a single column name.
+    #     :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
+    #     :type estimate: bool
+    #     :return:
+    #     """
+    #     print("count_uniques")
+    #     df = self.df
+    #     return self.agg_exprs(columns, df.functions.count_uniques_agg, estimate)
 
     def is_na(self, input_cols, output_cols=None):
         """
@@ -1080,7 +1128,7 @@ class DaskBaseColumns(BaseColumns):
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 
-    # TODO: Maybe should be possible to cast and array of integer for example to array of double
+    # TODO: Maybe should be possible to cast and array of integer for example to array of floats
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
         Cast the elements inside a column or a list of columns to a specific data type.
@@ -1098,7 +1146,6 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.df
-        _dtypes = []
 
         def _cast_int(value):
             # if (value is None) or (value is np.nan):
@@ -1123,7 +1170,7 @@ class DaskBaseColumns(BaseColumns):
             if pd.isnull(value):
                 return np.nan
             elif not isinstance(value, pd.Timestamp):
-                return dparse(value)
+                return 1
 
         def _cast_str(value):
             if pd.isnull(value):
@@ -1131,6 +1178,7 @@ class DaskBaseColumns(BaseColumns):
             else:
                 return str(value)
 
+        _dtypes = []
         # Parse params
         if columns is None:
             input_cols = parse_columns(df, input_cols)
@@ -1161,9 +1209,8 @@ class DaskBaseColumns(BaseColumns):
                 func = _cast_bool
             else:
                 func = _cast_str
-            print("dtype---", dtype)
-            df[output_col] = df[input_col].apply(func=func, meta=object, convert_dtype=False)
 
+            df = df.assign(**{output_col: df[input_col].apply(func=func, meta=object, convert_dtype=False)})
         return df
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):

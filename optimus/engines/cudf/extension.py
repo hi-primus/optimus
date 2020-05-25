@@ -132,7 +132,7 @@ def ext(self: DataFrame):
                     else:
                         r = "object"
                     cols_and_inferred_dtype[col_name] = r
-                df = df.cols.profiler_dtype(columns=cols_and_inferred_dtype)
+                df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype)
                 mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True)
 
                 # Nulls

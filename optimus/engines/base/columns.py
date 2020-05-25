@@ -717,12 +717,12 @@ class BaseColumns(ABC):
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
         return result
 
-    def profiler_dtype(self, input_col=None, dtype=None, columns=None):
+    def cast_to_profiler_dtypes(self, input_col=None, dtype=None, columns=None):
         """
         Set a profiler datatype to a column an cast the column accordingly
         :param input_col:
         :param dtype:
-        :param columns: `
+        :param columns:
         :return:
         """
         df = self.df
@@ -746,7 +746,6 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
 
-        print("columns", columns)
         for col_name, _dtype in columns.items():
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
@@ -760,7 +759,6 @@ class BaseColumns(ABC):
             # print(col_name, _dtype)
             df = df.cols.cast(col_name, _dtype)
             # print("_dtype",_dtype)
-            # df[col_name] = df[col_name].astype(_dtype)
         return df
 
     @staticmethod

@@ -369,7 +369,7 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             r = {}
             for col_name in columns:
-                r[col_name] = df[col_name].min()
+                r[col_name] = {"min": df[col_name].min()}
 
             return r
             # return {column: _min for column, _min in zip(columns, min_values)}
@@ -380,7 +380,7 @@ def cols(self: DataFrame):
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             r = {}
             for col_name in columns:
-                r[col_name] = df[col_name].max()
+                r[col_name] = {"max": df[col_name].max()}
 
             return r
 

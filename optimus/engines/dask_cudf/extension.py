@@ -31,7 +31,7 @@ def ext(self):
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
-                    size=True):
+                    size=False):
             """
 
             :param columns:
