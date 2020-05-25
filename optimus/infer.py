@@ -9,14 +9,14 @@ from ast import literal_eval
 
 import fastnumbers
 import pandas as pd
+import pendulum
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
-from dateutil.parser import parse as dparse
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
-import ciso8601
+
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.raiseit import RaiseIt
@@ -30,14 +30,13 @@ def str_to_boolean(_value):
         return False
 
 
-def str_to_date(_value):
-
+def str_to_date(_value, date_format=None):
     try:
-        ciso8601.parse_datetime(_value)
-        # dparse(_value)
+        date_format = "DD/MM/YYYY"
+        pendulum.from_format(_value, date_format)
         return True
     except (ValueError, OverflowError, TypeError):
-        pass
+        return False
 
 
 def str_to_null(_value):
@@ -75,15 +74,16 @@ def str_to_data_type(_value, _dtypes):
         if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
             return True
     except (ValueError, SyntaxError, AttributeError):
-        pass
+        return False
 
 
 def str_to_array(_value):
-    return _value
+    return False
     # return str_to_data_type(_value, (list, tuple))
 
 
 def str_to_object(_value):
+    return False
     return str_to_data_type(_value, (dict, set))
 
 
@@ -381,40 +381,45 @@ class Infer(object):
             return _data_type
 
     @staticmethod
-    def parse_pandas(value):
+    def parse_pandas(value, date_format="DD/MM/YYYY"):
         #
-
+        # print("date_format",date_format)
         int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
 
         str_funcs = [
-            (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
+            (str_to_missing, "missing"), (str_to_boolean, "boolean"),
             (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
             (str_to_url, "url"),
-            (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
-        ]
+            (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")]
+
         if pd.isnull(value):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
-
-
         elif fastnumbers.isint(value):  # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
-        elif fastnumbers.isfloat(value):  # Seems like float can be dates
+        # Seems like float can be parsed as dates
+        elif fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False:
             _data_type = "decimal"
 
-        elif value:
+        elif str_to_date(value, date_format):
+            _data_type = "date"
+
+        else:
             _data_type = "string"
             for func in str_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
-        else:
-            _data_type = "string"
+        # Data
+        # (str_to_date, "date")
+
+        # else:
+        #     _data_type = "string"
         return _data_type
 
 
@@ -423,14 +428,15 @@ def profiler_dtype_func(dtype, null=False):
     Return a function that check if a value match a datatype
     :param dtype:
     :param null:
+    :param date_format: Extra data for a specific data type. Use for date format string
     :return:
     """
 
     def _float(value):
         if null is True:
-            return fastnumbers.isfloat(value)
+            return fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False
         else:
-            return fastnumbers.isfloat(value) or value != value
+            return fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False or value != value
 
     def _int(value):
         if null is True:
@@ -448,7 +454,7 @@ def profiler_dtype_func(dtype, null=False):
         return is_str
 
     elif dtype == ProfilerDataTypes.BOOLEAN.value:
-        return is_bool
+        return str_to_boolean
 
     elif dtype == ProfilerDataTypes.DATE.value:
         return str_to_date
