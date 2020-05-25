@@ -98,6 +98,7 @@ def ext(self: DataFrame):
 
             df = self
             if flush is False:
+                # print("columns",columns)
                 cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
                 # print("cols to profile", cols_to_profile)
             else:
@@ -122,31 +123,29 @@ def ext(self: DataFrame):
                 freq = None
                 if string_cols is not None:
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
+
                 # @delayed
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                     _f = {}
 
-                    for col_name in _columns:
-                        _f[col_name] = {"stats": _mismatch[col_name], "dtype": _dtypes[col_name]}
+                    for _col_name in _columns:
+                        _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
 
                     if _hist is not None:
-                        for col_name, h in _hist.items():
+                        for _col_name, h in _hist.items():
                             # _f[col_name] = {}
-                            _f[col_name]["stats"]["hist"] = h["hist"]
-                            _f[col_name]["stats"]["count_uniques"] = freq_uniques[col_name]["count_uniques"]
+                            _f[_col_name]["stats"]["hist"] = h["hist"]
+                            _f[_col_name]["stats"]["count_uniques"] = freq_uniques[_col_name]["count_uniques"]
 
                     if _freq is not None:
-                        for col_name, f in _freq.items():
-                            _f[col_name]["stats"]["frequency"] = f["frequency"]
-                            _f[col_name]["stats"]["count_uniques"] = f["count_uniques"]
+                        for _col_name, f in _freq.items():
+                            _f[_col_name]["stats"]["frequency"] = f["frequency"]
+                            _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
                     return {"columns": _f}
 
-
                 cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
-
                 mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
-                # mismatch = df.cols
 
                 # Nulls
                 total_count_na = 0
@@ -155,18 +154,17 @@ def ext(self: DataFrame):
 
                 dtypes = df.cols.dtypes("*")
 
-                # mismatch
-
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
                 updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
+                # print("updated_columns",updated_columns)
                 # print("(hist, freq, mismatch, freq_uniques)",(hist, freq, mismatch, freq_uniques))
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent
-                # if infer is True:
                 for col_name in columns:
+                    # print("output_columns",output_columns, col_name)
                     output_columns["columns"][col_name].update(
-                        {"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
+                        {"profiler_dtype": output_columns["columns"][col_name]["stats"]})
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)

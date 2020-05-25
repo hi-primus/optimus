@@ -747,17 +747,17 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
 
         for col_name, _dtype in columns.items():
-            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+            dd = profiler_dtype_python[_dtype]
+            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", _dtype)
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-            _dtype = profiler_dtype_python.get(_dtype)
+
             #
             # # For categorical columns we need to transform the series to an object
             # # about doing arithmetical operation
             if df.cols.dtypes(col_name) == "category":
                 df[col_name] = df[col_name].astype(object)
 
-            # print(col_name, _dtype)
-            df = df.cols.cast(col_name, _dtype)
+            df = df.cols.cast(col_name, dd)
             # print("_dtype",_dtype)
         return df
 
