@@ -415,11 +415,6 @@ class Infer(object):
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
-        # Data
-        # (str_to_date, "date")
-
-        # else:
-        #     _data_type = "string"
         return _data_type
 
 

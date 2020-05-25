@@ -77,7 +77,6 @@ class DaskBaseColumns(BaseColumns):
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
         init = {0: 0, 1: 0, 2: 0}
-
         @delayed
         def count_dtypes(_df, _col_name, _func_dtype):
 
@@ -85,7 +84,6 @@ class DaskBaseColumns(BaseColumns):
 
                 # match data type
                 if _func_dtype(value):
-                    # print(_func_dtype, value )
                     # ProfilerDataTypesQuality.MATCH.value
                     return 2
 
@@ -99,7 +97,7 @@ class DaskBaseColumns(BaseColumns):
                     return 0
 
             r = _df[_col_name].map(_func).value_counts().to_dict()
-            r = update_dict(init, r)
+            r = update_dict(init.copy(), r)
             return {_col_name: r}
 
         partitions = df.to_delayed()
@@ -108,19 +106,20 @@ class DaskBaseColumns(BaseColumns):
                          partitions for col_name, dtype in columns_mismatch.items()]
 
         @delayed
-        def merge(pdf):
-            columns = set(list(i.keys())[0] for i in pdf)
-            r = {col_name: init for col_name in columns}
+        def merge(_pdf):
+            columns = set(list(i.keys())[0] for i in _pdf)
+            r = {col_name: init.copy() for col_name in columns}
 
-            for l in pdf:
+            for l in _pdf:
                 for i, j in l.items():
+                    print(j)
                     r[i][0] = r[i][0] + j[0]
                     r[i][1] = r[i][1] + j[1]
                     r[i][2] = r[i][2] + j[2]
-
             return r
-
+        # TODO: Maybe we can use a reduction here https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.Series.reduction
         b = merge(delayed_parts)
+
         if compute is True:
             result = dd.compute(b)[0]
         else:
