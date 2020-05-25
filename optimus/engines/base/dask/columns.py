@@ -116,6 +116,7 @@ class DaskBaseColumns(BaseColumns):
                     r[i][0] = r[i][0] + j[0]
                     r[i][1] = r[i][1] + j[1]
                     r[i][2] = r[i][2] + j[2]
+
             return r
         # TODO: Maybe we can use a reduction here https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.Series.reduction
         b = merge(delayed_parts)
