@@ -360,6 +360,12 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
 
 
 def update_dict(d, u):
+    """
+    Update only the given keys
+    :param d:
+    :param u:
+    :return:
+    """
     # python 3.8+ compatibility
     try:
         collectionsAbc = collections.abc

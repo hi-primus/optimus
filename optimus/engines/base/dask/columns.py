@@ -2,11 +2,13 @@ import builtins
 import re
 import unicodedata
 
+import ciso8601
 import dask
 import dask.dataframe as dd
 import fastnumbers
 import numpy as np
 import pandas as pd
+import pendulum
 from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
@@ -20,9 +22,10 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypesQuality, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.functions import update_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
@@ -47,11 +50,12 @@ class DaskBaseColumns(BaseColumns):
 
     def infer_profiler_dtypes(self, columns):
         """
-        Infer datatypes from a samble
+        Infer datatypes from a sample
         :param columns:
         :return:
         """
         df = self.df
+        columns = parse_columns(df, columns)
         total_preview_rows = TOTAL_PREVIEW_ROWS
         pdf = df.head(total_preview_rows)[columns].applymap(Infer.parse_pandas)
 
@@ -72,15 +76,16 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
+        init = {0: 0, 1: 0, 2: 0}
 
         @delayed
         def count_dtypes(_df, _col_name, _func_dtype):
 
             def _func(value):
-                # null values
 
                 # match data type
                 if _func_dtype(value):
+                    # print(_func_dtype, value )
                     # ProfilerDataTypesQuality.MATCH.value
                     return 2
 
@@ -93,50 +98,33 @@ class DaskBaseColumns(BaseColumns):
                     # ProfilerDataTypesQuality.MISMATCH.value
                     return 0
 
-            return _df[_col_name].map(_func).value_counts()
-
-        # df_len = len(df)
-        # print(df_len)
-
-        # @delayed
-        # def no_infer_func(_df, _col_name, _nulls_count):
-        #
-        #     return pd.Series({ProfilerDataTypesQuality.MATCH.value: df_len - _nulls_count[_col_name],
-        #                       ProfilerDataTypesQuality.MISSING.value: _nulls_count[_col_name]}, name=_col_name)
+            r = _df[_col_name].map(_func).value_counts().to_dict()
+            r = update_dict(init, r)
+            return {_col_name: r}
 
         partitions = df.to_delayed()
 
-        # if infer is True:
-        delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in partitions for
-                         col_name, dtype in columns_mismatch.items()]
-
-        # else:
-        #     nulls_count = df.isna().sum().compute().to_dict()
-        #     delayed_parts = [no_infer_func(part, col_name, nulls_count) for part in partitions for
-        #                      col_name in columns_mismatch]
+        delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in
+                         partitions for col_name, dtype in columns_mismatch.items()]
 
         @delayed
-        def merge(value):
-            _result = {}
-            col_mismatches_count = {v.name: v.to_dict() for v in value}
+        def merge(pdf):
+            columns = set(list(i.keys())[0] for i in pdf)
+            r = {col_name: init for col_name in columns}
 
-            def none_to_zero(_value):
-                return _value if _value is not None else 0
+            for l in pdf:
+                for i, j in l.items():
+                    r[i][0] = r[i][0] + j[0]
+                    r[i][1] = r[i][1] + j[1]
+                    r[i][2] = r[i][2] + j[2]
 
-            for col_name, values in col_mismatches_count.items():
-                _result[col_name] = {"mismatch": none_to_zero(values.get(ProfilerDataTypesQuality.MISMATCH.value)),
-                                     "missing": none_to_zero(values.get(ProfilerDataTypesQuality.MISSING.value)),
-                                     "match": none_to_zero(values.get(ProfilerDataTypesQuality.MATCH.value))
-                                     }
-                _result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
-            return _result
+            return r
 
         b = merge(delayed_parts)
         if compute is True:
             result = dd.compute(b)[0]
         else:
             result = b
-
         return result
 
     def h_freq(self, columns):
@@ -1166,11 +1154,15 @@ class DaskBaseColumns(BaseColumns):
             else:
                 return bool(value)
 
-        def _cast_date(value):
+        def _cast_date(value, format):
             if pd.isnull(value):
                 return np.nan
-            elif not isinstance(value, pd.Timestamp):
-                return 1
+            else:
+                if is_(value, str):
+                    pendulum.from_format(value, format).year
+                    return ciso8601.parse_datetime(value)
+                else:
+                    return value
 
         def _cast_str(value):
             if pd.isnull(value):
