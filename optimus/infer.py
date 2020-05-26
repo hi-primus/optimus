@@ -33,6 +33,15 @@ def str_to_boolean(_value):
 def str_to_date(_value, date_format=None):
     try:
         date_format = "DD/MM/YYYY"
+        pendulum.parse(_value, strict=False)
+        # pendulum.from_format(_value, date_format)
+        return True
+    except (ValueError, OverflowError, TypeError):
+        return False
+
+
+def str_to_date_format(_value, date_format):
+    try:
         pendulum.from_format(_value, date_format)
         return True
     except (ValueError, OverflowError, TypeError):
