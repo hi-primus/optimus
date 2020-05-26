@@ -568,24 +568,42 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
+
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
-
-        def _year(value):
-            return value.year
-
         for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].apply(_year, meta=str)
-
+            df = df.assign(**{output_col: df[input_col].dt.year})
         return df
 
-    @staticmethod
-    def month(input_cols, output_cols):
-        pass
+    def month(self, input_cols, output_cols=None):
+        """
 
-    @staticmethod
-    def day(input_cols, output_cols):
-        pass
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.assign(**{output_col: df[input_col].dt.month})
+        return df
+
+    def day(self, input_cols, output_cols=None):
+        """
+
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.assign(**{output_col: df[input_col].dt.day})
+        return df
 
     @staticmethod
     def hour(input_cols, output_cols):

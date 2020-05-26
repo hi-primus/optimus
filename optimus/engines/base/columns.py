@@ -533,6 +533,31 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
+    def year(self, input_cols, output_cols=None):
+        pass
+    @staticmethod
+    @abstractmethod
+    def month(self, input_cols, output_cols=None):
+        pass
+    @staticmethod
+    @abstractmethod
+    def day(self, input_cols, output_cols=None):
+        pass
+    @staticmethod
+    @abstractmethod
+    def hour(self, input_cols, output_cols=None):
+        pass
+    @staticmethod
+    @abstractmethod
+    def minute(self, input_cols, output_cols=None):
+        pass
+    @staticmethod
+    @abstractmethod
+    def second(self, input_cols, output_cols=None):
+        pass
+
+    @staticmethod
+    @abstractmethod
     def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
         pass
 
@@ -747,8 +772,9 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
 
         for col_name, _dtype in columns.items():
-            dd = profiler_dtype_python[_dtype]
+            python_dtype = profiler_dtype_python[_dtype]
             df.meta.set(f"profile.columns.{col_name}.profiler_dtype", _dtype)
+
             df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
 
             #
@@ -757,7 +783,11 @@ class BaseColumns(ABC):
             if df.cols.dtypes(col_name) == "category":
                 df[col_name] = df[col_name].astype(object)
 
-            df = df.cols.cast(col_name, dd)
+            if _dtype == "date":
+                df[col_name] = df[col_name].astype('M8[us]')
+                df.meta.set(f"profile.columns.{col_name}.profiler_dtype_fotmat", _dtype)
+
+            df = df.cols.cast(col_name, python_dtype)
             # print("_dtype",_dtype)
         return df
 
