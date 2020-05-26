@@ -67,39 +67,39 @@ def format_dict(_dict, tidy=True):
         else:
             return _dict
 
-
-def str_to_boolean(value):
-    """
-    Check if a str can be converted to boolean
-    :param value:
-    :return:
-    """
-    value = value.lower()
-    if value == "true" or value == "false":
-        return True
-
-
-def str_to_date(value):
-    try:
-        dateutil.parser.parse(value)
-        return True
-    except (ValueError, OverflowError):
-        pass
-
-
-def str_to_array(value):
-    """
-    Check if value can be parsed to a tuple or and array.
-    Because Spark can handle tuples we will try to transform tuples to arrays
-    :param value:
-    :return:
-    """
-    try:
-        if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
-            return True
-    except (ValueError, SyntaxError,):
-        pass
-
+#
+# def str_to_boolean(value):
+#     """
+#     Check if a str can be converted to boolean
+#     :param value:
+#     :return:
+#     """
+#     value = value.lower()
+#     if value == "true" or value == "false":
+#         return True
+#
+#
+# def str_to_date(value):
+#     try:
+#         dateutil.parser.parse(value)
+#         return True
+#     except (ValueError, OverflowError):
+#         pass
+#
+#
+# def str_to_array(value):
+#     """
+#     Check if value can be parsed to a tuple or and array.
+#     Because Spark can handle tuples we will try to transform tuples to arrays
+#     :param value:
+#     :return:
+#     """
+#     try:
+#         if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
+#             return True
+#     except (ValueError, SyntaxError,):
+#         pass
+#
 
 # Functions to convert dataframe between engines
 

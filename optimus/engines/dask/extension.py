@@ -82,6 +82,26 @@ def ext(self: DataFrame):
             return _min_max
 
         @staticmethod
+        def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False,
+                             flush: bool = False, size=False):
+            """
+            Helper function to infer, cast and profile a dataframe.
+            :param columns:
+            :param bins:
+            :param output:
+            :param infer:
+            :param flush:
+            :param size:
+            :return:
+            """
+            df = self
+            cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
+            print("cols_and_inferred_dtype",cols_and_inferred_dtype)
+            df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype)
+            result = df.ext.profile(columns=columns, bins=bins, output=output, infer=infer, flush=flush, size=size)
+            return result
+
+        @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
                     size=False):
             """
@@ -161,10 +181,10 @@ def ext(self: DataFrame):
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent
-                for col_name in columns:
-                    # print("output_columns",output_columns, col_name)
-                    output_columns["columns"][col_name].update(
-                        {"profiler_dtype": output_columns["columns"][col_name]["stats"]})
+                # for col_name in columns:
+                #     # print("output_columns",output_columns, col_name)
+                #     output_columns["columns"][col_name].update(
+                #         {"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
 
                 assign(output_columns, "name", df.ext.get_name(), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)

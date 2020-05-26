@@ -52,7 +52,7 @@ class DaskBaseColumns(BaseColumns):
         """
         Infer datatypes from a sample
         :param columns:
-        :return:
+        :return:Return a dict with the column and the inferred data type
         """
         df = self.df
         columns = parse_columns(df, columns)
@@ -1155,20 +1155,20 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
 
-        def _cast_int(value):
+        def _cast_int(value, args):
             # if (value is None) or (value is np.nan):
             if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_int(value, default=np.nan)
 
-        def _cast_float(value):
+        def _cast_float(value, args):
             if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_float(value, default=np.nan)
 
-        def _cast_bool(value):
+        def _cast_bool(value, args):
             if pd.isnull(value):
                 return np.nan
             else:
@@ -1178,13 +1178,13 @@ class DaskBaseColumns(BaseColumns):
             if pd.isnull(value):
                 return np.nan
             else:
-                if is_(value, str):
-                    pendulum.from_format(value, format).year
-                    return ciso8601.parse_datetime(value)
-                else:
+                # if is_(value, str):
+                try:
+                    return pendulum.from_format(value, format)
+                except:
                     return value
 
-        def _cast_str(value):
+        def _cast_str(value, args):
             if pd.isnull(value):
                 return np.nan
             else:
@@ -1210,19 +1210,22 @@ class DaskBaseColumns(BaseColumns):
             output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
-
+            args = (None,)
+            meta = df[input_col].dtype
             if dtype == 'int':
                 func = _cast_int
             elif dtype == 'float':
                 func = _cast_float
             elif dtype == 'date':
                 func = _cast_date
+                args = ("YYYY/MM/DD",)
+
             elif dtype == 'bool':
                 func = _cast_bool
             else:
                 func = _cast_str
 
-            df = df.assign(**{output_col: df[input_col].apply(func=func, meta=object, convert_dtype=False)})
+            df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
         return df
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
