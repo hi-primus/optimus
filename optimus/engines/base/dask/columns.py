@@ -1209,14 +1209,18 @@ class DaskBaseColumns(BaseColumns):
 
             output_cols = get_output_cols(input_cols, output_cols)
 
-        cast_func = {'int': _cast_int, 'decimal': _cast_float, 'date': _cast_date, 'bool': _cast_bool,
-                     "string": _cast_str, "object": _cast_object, "zip_code": _cast_str}
+        cast_func = {'int': _cast_int, 'decimal': _cast_float, "string": _cast_str, 'bool': _cast_bool,
+                     'date': _cast_date,
+                     "array": _cast_object, "object": _cast_object, "gender": _cast_object, "ip": _cast_object,
+                     "url": _cast_object, "email": _cast_object, "credit_card_number": _cast_object,
+                     "zip_code": _cast_str, "missing": _cast_str}
 
         def func(pdf, cols_dtypes):
             for col, dtype in cols_dtypes.items():
                 pdf[col] = pdf[col].apply(cast_func[dtype], convert_dtype=False)
             return pdf
 
+        # meta = [(i, object) for i in columns]
         df = df.map_partitions(func, columns)
 
         for col_name, dtype in columns.items():
