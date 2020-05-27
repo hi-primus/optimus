@@ -404,14 +404,15 @@ class Infer(object):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
-        elif fastnumbers.isint(value):  # We first check if a number can be parsed as a credit card or zip code
+        elif profiler_dtype_func("int", True)(value):  # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
         # Seems like float can be parsed as dates
-        elif fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False:
+
+        elif profiler_dtype_func("decimal", True)(value):
             _data_type = "decimal"
 
         elif str_to_date(value):
@@ -437,7 +438,7 @@ def profiler_dtype_func(dtype, null=False):
 
     def _float(value):
         if null is True:
-            return fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False
+            return fastnumbers.isfloat(value, allow_nan=True) is True and fastnumbers.isint(value) is False
         else:
             return fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False or value != value
 
@@ -460,7 +461,7 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_boolean
 
     elif dtype == ProfilerDataTypes.DATE.value:
-        return is_date
+        return str_to_date
 
     elif dtype == ProfilerDataTypes.ARRAY.value:
         return is_str
@@ -866,24 +867,6 @@ def is_float(value):
     """
     return isinstance(value, float)
 
-
-#
-# def is_dask_dataframe(value):
-#     """
-#     Check if an object is a Spark DataFrame
-#     :param value:
-#     :return:
-#     """
-#     return isinstance(value, DaskDataFrame)
-#
-#
-# def is_spark_dataframe(value):
-#     """
-#     Check if an object is a Spark DataFrame
-#     :param value:
-#     :return:
-#     """
-#     return isinstance(value, SparkDataFrame)
 
 
 def is_bool(value):

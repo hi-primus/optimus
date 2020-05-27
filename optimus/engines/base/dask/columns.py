@@ -719,7 +719,7 @@ class DaskBaseColumns(BaseColumns):
         """
         df = self.df
         if regex:
-            r = re.compile(regex)
+            # r = re.compile(regex)
             columns = [c for c in list(df.columns) if re.match(regex, c)]
 
         columns = parse_columns(df, columns)
@@ -1159,7 +1159,7 @@ class DaskBaseColumns(BaseColumns):
             if pd.isnull(value):
                 return np.nan
             else:
-                return fastnumbers.fast_float(value, default=np.nan)
+                return fastnumbers.fast_float(value)
 
         def _cast_bool(value):
             if pd.isnull(value):
@@ -1188,7 +1188,7 @@ class DaskBaseColumns(BaseColumns):
 
         def _cast_object(value):
             ## Do nothing
-            return str(value)
+            return value
 
         _dtypes = []
         # Parse params
