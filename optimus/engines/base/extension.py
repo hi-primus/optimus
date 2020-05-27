@@ -23,7 +23,6 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 
 
 class BaseExt(ABC):
-    # _name = None
     _name = None
 
     def __init__(self, df):
@@ -521,6 +520,12 @@ class BaseExt(ABC):
     @abstractmethod
     def debug():
         pass
+
+    @staticmethod
+    @abstractmethod
+    def head():
+        pass
+
 
     # @staticmethod
     # @abstractmethod

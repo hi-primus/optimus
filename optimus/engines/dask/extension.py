@@ -29,7 +29,7 @@ def ext(self: DataFrame):
         def set_buffer(self, columns, n=BUFFER_SIZE):
             df = self.df
             input_columns = parse_columns(df, columns)
-            df._buffer = df[input_columns].head(n, npartitions=-1)
+            df._buffer = df.ext.head(input_columns, n)
 
         @staticmethod
         def profile_new(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None):
@@ -347,6 +347,16 @@ def ext(self: DataFrame):
             :return:
             """
             raise NotImplementedError
+
+        @staticmethod
+        def head(columns, n=10):
+            """
+
+            :return:
+            """
+            df= self
+            columns = parse_columns(df, columns)
+            return df[columns].head(npartitions=-1)
 
         @staticmethod
         def create_id(column="id"):

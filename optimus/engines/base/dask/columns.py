@@ -55,8 +55,8 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         columns = parse_columns(df, columns)
         total_preview_rows = TOTAL_PREVIEW_ROWS
-        pdf = df.head(total_preview_rows)[columns].applymap(Infer.parse_pandas)
-
+        pdf = df.ext.head(columns, total_preview_rows).applymap(Infer.parse_pandas)
+        # print("pdf", pdf)
         cols_and_inferred_dtype = {}
         for col_name in columns:
             _value_counts = pdf[col_name].value_counts()
