@@ -8,7 +8,7 @@ from glom import assign
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE
+from optimus.helpers.constants import BUFFER_SIZE, PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
@@ -82,8 +82,7 @@ def ext(self: DataFrame):
             return _min_max
 
         @staticmethod
-        def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False,
-                             flush: bool = False, size=False):
+        def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
             """
             Helper function to infer, cast and profile a dataframe.
             :param columns:
@@ -96,21 +95,18 @@ def ext(self: DataFrame):
             """
             df = self
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
-            print("cols_and_inferred_dtype",cols_and_inferred_dtype)
-            df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype)
-            result = df.ext.profile(columns=columns, bins=bins, output=output, infer=infer, flush=flush, size=size)
+            df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
+            result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
             return result
 
         @staticmethod
-        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
-                    size=False):
+        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
             """
 
 
             :param columns:
             :param bins:
             :param output:
-            :param infer:
             :param flush:
             :param size: get the dataframe size ni memory. Use with caution this could be slow for big dataframes.
             :return:
@@ -124,24 +120,34 @@ def ext(self: DataFrame):
             else:
                 cols_to_profile = parse_columns(df, columns)
             columns = cols_to_profile
-
             output_columns = df.meta.get("profile")
             if output_columns is None:
                 output_columns = {}
 
             if cols_to_profile or not Ext.is_cached(df) or flush is True:
                 df_length = len(df)
+                numeric_cols = []
+                string_cols = []
+                cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
 
-                numeric_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.NUMERIC_TYPES)
-                string_cols = df.cols.names(cols_to_profile, by_dtypes=df.constants.STRING_TYPES)
+                for col_name, dtype in cols_and_inferred_dtype.items():
+                    for p in PROFILER_NUMERIC_DTYPES:
+                        if dtype == p:
+                            numeric_cols.append(col_name)
+                    for p in PROFILER_STRING_DTYPES:
+                        if dtype == p:
+                            string_cols.append(col_name)
+
                 hist = None
                 freq_uniques = None
-                compute = False
-                if numeric_cols is not None:
+                compute = True
+
+                if len(numeric_cols):
                     hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
                 freq = None
-                if string_cols is not None:
+
+                if len(string_cols):
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
                 # @delayed
@@ -164,7 +170,7 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
-                cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
+                # cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
                 mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
 
                 # Nulls

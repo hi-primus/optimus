@@ -770,25 +770,31 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.EMAIL.value: "object",
                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
-
-        for col_name, _dtype in columns.items():
-            python_dtype = profiler_dtype_python[_dtype]
-            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", _dtype)
-
-            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-
-            #
-            # # For categorical columns we need to transform the series to an object
-            # # about doing arithmetical operation
-            if df.cols.dtypes(col_name) == "category":
-                df[col_name] = df[col_name].astype(object)
-
-            if _dtype == "date":
-                df[col_name] = df[col_name].astype('M8[us]')
-                df.meta.set(f"profile.columns.{col_name}.profiler_dtype_fotmat", _dtype)
-
-            df = df.cols.cast(col_name, python_dtype)
-            # print("_dtype",_dtype)
+        # print("columns",columns)
+        df = df.cols.cast(columns= columns)
+        #
+        # for col_name, _dtype in columns.items():
+        #     python_dtype = profiler_dtype_python[_dtype]
+        #     df.meta.set(f"profile.columns.{col_name}.profiler_dtype", _dtype)
+        #
+        #     df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+        #
+        #     #
+        #     # # For categorical columns we need to transform the series to an object
+        #     # # about doing arithmetical operation
+        #     if df.cols.dtypes(col_name) == "category":
+        #         df[col_name] = df[col_name].astype(object)
+        #
+        #
+        #
+        #
+        #
+        #     if _dtype == "date":
+        #         # We can not use accesor .dt if the column datatype is not a date type
+        #         # df[col_name] = df[col_name].astype('M8[us]')
+        #         df.meta.set(f"profile.columns.{col_name}.profiler_dtype_fotmat", _dtype)
+        #
+        #     # print("_dtype",_dtype)
         return df
 
     @staticmethod

@@ -12,6 +12,7 @@ import pandas as pd
 import pendulum
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
+from pandas._libs.tslibs.np_datetime import OutOfBoundsDatetime
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
@@ -32,11 +33,10 @@ def str_to_boolean(_value):
 
 def str_to_date(_value, date_format=None):
     try:
-        date_format = "DD/MM/YYYY"
+        # date_format = "DD/MM/YYYY"
         pendulum.parse(_value, strict=False)
-        # pendulum.from_format(_value, date_format)
         return True
-    except (ValueError, OverflowError, TypeError):
+    except:
         return False
 
 
@@ -44,7 +44,7 @@ def str_to_date_format(_value, date_format):
     try:
         pendulum.from_format(_value, date_format)
         return True
-    except (ValueError, OverflowError, TypeError):
+    except:
         return False
 
 
@@ -394,7 +394,6 @@ class Infer(object):
         #
         # print("date_format",date_format)
         int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-
         str_funcs = [
             (str_to_missing, "missing"), (str_to_boolean, "boolean"),
             (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
@@ -415,7 +414,7 @@ class Infer(object):
         elif fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False:
             _data_type = "decimal"
 
-        elif str_to_date(value, date_format):
+        elif str_to_date(value):
             _data_type = "date"
 
         else:
@@ -452,7 +451,7 @@ def profiler_dtype_func(dtype, null=False):
         return _int
 
     elif dtype == ProfilerDataTypes.DECIMAL.value:
-        return _float
+        return _int
 
     elif dtype == ProfilerDataTypes.STRING.value:
         return is_str
@@ -461,10 +460,10 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_boolean
 
     elif dtype == ProfilerDataTypes.DATE.value:
-        return str_to_date
+        return is_date
 
     elif dtype == ProfilerDataTypes.ARRAY.value:
-        return str_to_array
+        return is_str
 
     elif dtype == ProfilerDataTypes.OBJECT.value:
         return str_to_object

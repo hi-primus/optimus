@@ -89,6 +89,14 @@ class ProfilerDataTypes(Enum):
     # MISSING = "missing"
 
 
+PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,
+                          ProfilerDataTypes.DATE.value, ProfilerDataTypes.ARRAY.value,
+                          ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
+                          ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
+                          ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
+                          ProfilerDataTypes.ZIP_CODE.value]
+
 # Strings and Function Messages
 JUST_CHECKING = "Just check that all necessary environments vars are present..."
 STARTING_OPTIMUS = "Transform and Roll out..."

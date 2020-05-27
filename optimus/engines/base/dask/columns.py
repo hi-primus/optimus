@@ -1155,40 +1155,44 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
 
-        def _cast_int(value, args):
+        def _cast_int(value):
             # if (value is None) or (value is np.nan):
             if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_int(value, default=np.nan)
 
-        def _cast_float(value, args):
+        def _cast_float(value):
             if pd.isnull(value):
                 return np.nan
             else:
                 return fastnumbers.fast_float(value, default=np.nan)
 
-        def _cast_bool(value, args):
+        def _cast_bool(value):
             if pd.isnull(value):
                 return np.nan
             else:
                 return bool(value)
 
-        def _cast_date(value, format):
+        def _cast_date(value, format="YYYY-MM-DD"):
             if pd.isnull(value):
                 return np.nan
             else:
-                # if is_(value, str):
                 try:
-                    return pendulum.from_format(value, format)
+                    # return pendulum.from_format(value, format)
+                    return value
                 except:
                     return value
 
-        def _cast_str(value, args):
+        def _cast_str(value):
             if pd.isnull(value):
                 return np.nan
             else:
                 return str(value)
+
+        def _cast_object(value):
+            ## Do nothing
+            return str(value)
 
         _dtypes = []
         # Parse params
@@ -1198,34 +1202,32 @@ class DaskBaseColumns(BaseColumns):
                 output_cols = get_output_cols(input_cols, output_cols)
                 for _ in builtins.range(0, len(input_cols)):
                     _dtypes.append(dtype)
-        else:
-            input_cols = list([c[0] for c in columns])
-            if len(columns[0]) == 2:
-                output_cols = get_output_cols(input_cols, output_cols)
-                _dtypes = list([c[1] for c in columns])
-            elif len(columns[0]) == 3:
-                output_cols = list([c[1] for c in columns])
-                _dtypes = list([c[2] for c in columns])
+            # else:
+            #     input_cols = list([c[0] for c in columns])
+            #     if len(columns[0]) == 2:
+            #         output_cols = get_output_cols(input_cols, output_cols)
+            #         _dtypes = list([c[1] for c in columns])
+            #     elif len(columns[0]) == 3:
+            #         output_cols = list([c[1] for c in columns])
+            #         _dtypes = list([c[2] for c in columns])
 
             output_cols = get_output_cols(input_cols, output_cols)
 
-        for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
-            args = (None,)
-            meta = df[input_col].dtype
-            if dtype == 'int':
-                func = _cast_int
-            elif dtype == 'float':
-                func = _cast_float
-            elif dtype == 'date':
-                func = _cast_date
-                args = ("YYYY/MM/DD",)
+        cast_func = {'int': _cast_int, 'decimal': _cast_float, 'date': _cast_date, 'bool': _cast_bool,
+                     "string": _cast_str, "object": _cast_object, "zip_code": _cast_str}
 
-            elif dtype == 'bool':
-                func = _cast_bool
-            else:
-                func = _cast_str
+        def func(pdf, cols_dtypes):
+            for col, dtype in cols_dtypes.items():
+                pdf[col] = pdf[col].apply(cast_func[dtype], convert_dtype=False)
+            return pdf
 
-            df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
+        df = df.map_partitions(func, columns)
+
+        for col_name, dtype in columns.items():
+            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+
+        # df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
         return df
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
