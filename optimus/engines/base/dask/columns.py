@@ -2,13 +2,11 @@ import builtins
 import re
 import unicodedata
 
-import ciso8601
 import dask
 import dask.dataframe as dd
 import fastnumbers
 import numpy as np
 import pandas as pd
-import pendulum
 from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
@@ -605,24 +603,19 @@ class DaskBaseColumns(BaseColumns):
             df = df.assign(**{output_col: df[input_col].dt.day})
         return df
 
-    @staticmethod
-    def hour(input_cols, output_cols):
+    def hour(self, input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def minute(input_cols, output_cols):
+    def minute(self, input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def second(input_cols, output_cols):
+    def second(self, input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def weekday(input_cols, output_cols):
+    def weekday(self, input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    def weekofyear(input_cols, output_cols):
+    def weekofyear(self, input_cols, output_cols=None):
         pass
 
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
@@ -1179,7 +1172,10 @@ class DaskBaseColumns(BaseColumns):
                 return np.nan
             else:
                 try:
+                    # return pendulum.parse(value)
                     # return pendulum.from_format(value, format)
+                    # return dparse(value)
+
                     return value
                 except:
                     return value

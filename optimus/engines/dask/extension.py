@@ -88,7 +88,6 @@ def ext(self: DataFrame):
             :param columns:
             :param bins:
             :param output:
-            :param infer:
             :param flush:
             :param size:
             :return:
