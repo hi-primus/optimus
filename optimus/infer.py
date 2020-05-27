@@ -451,7 +451,7 @@ def profiler_dtype_func(dtype, null=False):
         return _int
 
     elif dtype == ProfilerDataTypes.DECIMAL.value:
-        return _int
+        return _float
 
     elif dtype == ProfilerDataTypes.STRING.value:
         return is_str
