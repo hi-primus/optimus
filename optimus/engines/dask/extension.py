@@ -96,7 +96,7 @@ def ext(self: DataFrame):
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
             df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
             result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
-            return result
+            return df,result
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -356,7 +356,7 @@ def ext(self: DataFrame):
             """
             df= self
             columns = parse_columns(df, columns)
-            return df[columns].head(npartitions=-1)
+            return df[columns].head(n, npartitions=-1)
 
         @staticmethod
         def create_id(column="id"):
