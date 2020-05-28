@@ -746,6 +746,24 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
+        def func(df, _value, _where, _output_col):
+            if where is None:
+                mask = df
+                # kw_columns = {_output_col: eval(_value)}
+                df.loc[_output_col] = eval(_value)
+
+                # return df.assign(**kw_columns)
+            else:
+                _where = eval(_where)
+
+                _mask = (_where)
+                mask = df[_mask]
+                _value = eval(_value)  # <- mask is used here
+
+                df.loc[_mask, _output_col] = eval(_value)
+
+            return df
+
         for output_col in output_cols:
             # if where is None:
             #     mask = df
@@ -758,23 +776,6 @@ class DaskBaseColumns(BaseColumns):
             #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
             #     except ValueError:
             #         pass
-
-            def func(df, _value, _where, _output_col):
-                if where is None:
-                    mask = df
-                    kw_columns = {_output_col: eval(_value)}
-                    return df.assign(**kw_columns)
-                else:
-                    _where = eval(_where)
-
-                    _mask = (_where)
-                    mask = df[_mask]
-                    _value = eval(_value)  # <- mask is used here
-
-                    # df[_output_col] = 0
-                    df.loc[_mask, _output_col] = _value
-
-                return df
 
             # Update meta to handle new columns
             _meta = df.dtypes.to_dict()
