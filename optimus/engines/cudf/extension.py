@@ -67,7 +67,7 @@ def ext(self: DataFrame):
             return df[columns].head(n)
 
         @staticmethod
-        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
+        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False,
                     size=True):
             """
 

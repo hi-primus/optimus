@@ -162,6 +162,7 @@ def cols(self: DataFrame):
 
         def weekofyear(self, input_cols, output_cols=None):
             pass
+
         def mode(self, columns):
             df = self.df
             columns = parse_columns(df, columns)
