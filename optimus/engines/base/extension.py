@@ -523,7 +523,7 @@ class BaseExt(ABC):
 
     @staticmethod
     @abstractmethod
-    def head():
+    def head(columns, head):
         pass
 
 

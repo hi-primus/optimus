@@ -3,8 +3,9 @@ from collections import OrderedDict
 from cudf.core import DataFrame
 from glom import assign
 
+from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
 from optimus.engines.base.extension import BaseExt
-from optimus.engines.dask.extension import TOTAL_PREVIEW_ROWS
+
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.functions import update_dict
@@ -54,6 +55,16 @@ def ext(self: DataFrame):
         def to_pandas():
             df = self
             return any_dataframe_to_pandas(df)
+
+        @staticmethod
+        def head(columns, n=10):
+            """
+
+            :return:
+            """
+            df= self
+            columns = parse_columns(df, columns)
+            return df[columns].head(n)
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,

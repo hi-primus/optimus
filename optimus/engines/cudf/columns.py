@@ -139,6 +139,29 @@ def cols(self: DataFrame):
         def years_between(input_cols, date_format=None, output_cols=None):
             pass
 
+        def year(self, input_cols, output_cols=None):
+            pass
+
+        def month(self, input_cols, output_cols=None):
+            pass
+
+        def day(self, input_cols, output_cols=None):
+            pass
+
+        def hour(self, input_cols, output_cols=None):
+            pass
+
+        def minute(self, input_cols, output_cols=None):
+            pass
+
+        def second(self, input_cols, output_cols=None):
+            pass
+
+        def weekday(self, input_cols, output_cols=None):
+            pass
+
+        def weekofyear(self, input_cols, output_cols=None):
+            pass
         def mode(self, columns):
             df = self.df
             columns = parse_columns(df, columns)
