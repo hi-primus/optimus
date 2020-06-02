@@ -69,6 +69,8 @@ def is_column_a(df, column, dtypes):
 #
 #     # Filter columns by data type
 #     return isinstance(df.schema[column].dataType, data_type)
+def is_cudf_series(value):
+    return cudf.core.series.Series
 
 def is_cudf_dataframe(value):
     from cudf.core import DataFrame as CUDFDataFrame
