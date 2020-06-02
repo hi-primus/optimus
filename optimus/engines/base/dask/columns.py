@@ -47,8 +47,6 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-
-
     def count_mismatch(self, columns_mismatch: dict = None, infer=True, compute=True):
         df = self.df
         if not is_dict(columns_mismatch):
@@ -718,6 +716,7 @@ class DaskBaseColumns(BaseColumns):
     def set(self, where=None, value=None, output_cols=None):
 
         df = self.df
+
         # output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
         # try to infer if we are going to handle the operations as numeric or string
@@ -750,7 +749,7 @@ class DaskBaseColumns(BaseColumns):
         elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
             vfunc = lambda x: str(x)
 
-        def func(pdf, _value, _where, _output_col, args):
+        def func(pdf, _value, _where, _output_col):
 
             pdf = pdf.applymap(vfunc)
 
@@ -784,7 +783,6 @@ class DaskBaseColumns(BaseColumns):
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: a}
         return df.assign(**kw_columns)
-
 
     @dispatch(list)
     def copy(self, columns) -> DataFrame:
