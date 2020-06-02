@@ -5,13 +5,14 @@ from enum import Enum
 import numpy as np
 from glom import glom
 
+# from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict
+from optimus.infer import is_dict, Infer
 
 
 class BaseColumns(ABC):
@@ -114,7 +115,7 @@ class BaseColumns(ABC):
 
     def set_profiler_dtypes(self, columns):
         """
-        Set profiler data typedf = df.cols.cast_to_profiler_dtypes
+        Set profiler data type
         :param columns:
         :return:
         """
@@ -833,6 +834,30 @@ class BaseColumns(ABC):
     @abstractmethod
     def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
         pass
+
+    def infer_profiler_dtypes(self, columns):
+        """
+        Infer datatypes from a sample
+        :param columns:
+        :return:Return a dict with the column and the inferred data type
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+        total_preview_rows = 30
+        pdf = df.ext.head(columns, total_preview_rows).applymap(Infer.parse_pandas)
+        # print("pdf", pdf.head(20))
+        cols_and_inferred_dtype = {}
+        for col_name in columns:
+            # print("_value_counts",col_name)
+            _value_counts = pdf[col_name].value_counts()
+            if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
+                r = _value_counts.index[0]
+            elif _value_counts[0] < len(pdf):
+                r = _value_counts.index[1]
+            else:
+                r = "object"
+            cols_and_inferred_dtype[col_name] = r
+        return cols_and_inferred_dtype
 
     @staticmethod
     @abstractmethod

@@ -1,22 +1,20 @@
+import math
 from abc import abstractmethod, ABC
 
 import humanize
 import imgkit
 import jinja2
-import math
 import numpy as np
 import simplejson as json
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR, BUFFER_SIZE, Actions
-from optimus.helpers.core import val_to_list
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage
 from optimus.helpers.functions_spark import traverse
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
-from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -39,6 +37,7 @@ class BaseExt(ABC):
         Return a json from a Spark Dataframe
         :return:
         """
+
         df = self.df
         if format == "bumblebee":
             columns = parse_columns(df, columns)
@@ -521,11 +520,14 @@ class BaseExt(ABC):
     def debug():
         pass
 
-    @staticmethod
-    @abstractmethod
-    def head(columns, head):
-        pass
+    def head(self, columns="*", n=10):
+        """
 
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+        return df[columns].head(n)
 
     # @staticmethod
     # @abstractmethod

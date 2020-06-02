@@ -74,7 +74,7 @@ def ext(self: DataFrame):
                 else:
 
                     RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
-                r[col_name]["dtype"]= dtypes[col_name]
+                r[col_name]["dtype"] = dtypes[col_name]
                 result["columns"].update(r)
             result["summary"] = {"rows_count": df_length}
 
@@ -85,10 +85,6 @@ def ext(self: DataFrame):
 
         def cache(self):
             return self.df
-
-        @staticmethod
-        def head(self):
-            pass
 
         @staticmethod
         def sample(n=10, random=False):

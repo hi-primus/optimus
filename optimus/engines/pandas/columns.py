@@ -1,5 +1,6 @@
 import re
 
+import fastnumbers
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
@@ -10,6 +11,7 @@ from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_st
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
 from optimus.helpers.core import val_to_list
 from optimus.helpers.parser import parse_dtypes
 from optimus.infer import is_str, profiler_dtype_func
@@ -39,32 +41,80 @@ def cols(self: DataFrame):
             pass
 
         def set(self, where=None, value=None, output_cols=None):
-            """
-            Execute a hive expression. Also handle ints and list in columns
-            :param where:
-            :param output_cols: Output columns
-            :param value: numeric, list or hive expression
-            :return:
-            """
+
             df = self.df
-            output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
-            for output_col in output_cols:
-                if where is None:
-                    mask = df
-                    df = df.assign(**{output_col: eval(value)})
+            # output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
+
+            # try to infer if we are going to handle the operations as numeric or string
+            # Get first column in the operation
+            def prepare_columns(cols):
+                """
+                Extract the columns names from the value and where clauses
+                :param cols:
+                :return:
+                """
+                if cols is not None:
+                    r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
+                                     re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
                 else:
-                    _where = eval(where)
+                    r = None
+                return r
 
-                    _mask = (_where)
-                    # print(_mask)
-                    mask = df[_mask]
-                    _value = eval(value)
+            columns = prepare_columns(value)
 
-                    # df[_output_col] = 0
-                    df.loc[_mask, output_col] = _value
+            f_col = columns[0]
+            where_columns = prepare_columns(where)
+            if where_columns is not None:
+                columns = columns + where_columns
 
-            return df
+            # Remove duplicated columns
+            columns = list(set(columns))
+
+            # column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
+            column_dtype = df.cols.infer_profiler_dtypes(f_col)[f_col]
+            if column_dtype in PROFILER_NUMERIC_DTYPES:
+                vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan)
+            elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
+                vfunc = lambda x: str(x)
+            else:
+                raise
+
+            def func(pdf, _value, _where, _output_col):
+                try:
+                    if where is None:
+                        df = pdf
+                        # print("_value",_value)
+                        return eval(_value)
+                    else:
+
+                        df = pdf
+                        _mask = (eval(_where))
+
+                        mask = df[_mask]
+                        df = mask
+                        _value = eval(_value)  # <- mask is used here
+
+                        df.loc[_mask, _output_col] = _value
+                        return df[_output_col]
+                except:
+                    raise
+                    return np.nan
+
+            # if df.cols.dtypes(input_col) == "category":
+            #     try:
+            #         # Handle error if the category already exist
+            #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+            #     except ValueError:
+            #         pass
+
+            _meta = df.dtypes.to_dict()
+            _meta.update({output_cols: object})
+
+            pdf = df[columns].applymap(vfunc)
+            a = func(pdf, _value=value, _where=where, _output_col=output_cols)
+            kw_columns = {output_cols: a}
+            return df.assign(**kw_columns)
 
         # @staticmethod
         # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -391,7 +441,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, dtype):
-            print("dtype",dtype)
+            print("dtype", dtype)
             df = self
             result = {}
             df_len = len(df)

@@ -47,29 +47,7 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def infer_profiler_dtypes(self, columns):
-        """
-        Infer datatypes from a sample
-        :param columns:
-        :return:Return a dict with the column and the inferred data type
-        """
-        df = self.df
-        columns = parse_columns(df, columns)
-        total_preview_rows = TOTAL_PREVIEW_ROWS
-        pdf = df.ext.head(columns, total_preview_rows).applymap(Infer.parse_pandas)
-        # print("pdf", pdf.head(20))
-        cols_and_inferred_dtype = {}
-        for col_name in columns:
-            # print("_value_counts",col_name)
-            _value_counts = pdf[col_name].value_counts()
-            if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
-                r = _value_counts.index[0]
-            elif _value_counts[0] < len(pdf):
-                r = _value_counts.index[1]
-            else:
-                r = "object"
-            cols_and_inferred_dtype[col_name] = r
-        return cols_and_inferred_dtype
+
 
     def count_mismatch(self, columns_mismatch: dict = None, infer=True, compute=True):
         df = self.df
@@ -750,8 +728,6 @@ class DaskBaseColumns(BaseColumns):
             :param cols:
             :return:
             """
-            print("cols", cols)
-
             if cols is not None:
                 r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
                                  re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
@@ -761,11 +737,12 @@ class DaskBaseColumns(BaseColumns):
 
         columns = prepare_columns(value)
 
-        print("columns", columns)
         f_col = columns[0]
         where_columns = prepare_columns(where)
         if where_columns is not None:
             columns = columns + where_columns
+        # Remove duplicated columns
+        columns = list(set(columns))
 
         column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
         if column_dtype in PROFILER_NUMERIC_DTYPES:
@@ -803,8 +780,7 @@ class DaskBaseColumns(BaseColumns):
 
         _meta = df.dtypes.to_dict()
         _meta.update({output_cols: object})
-        a = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols, args=(columns),
-                                       meta=object)
+        a = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols, meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: a}
         return df.assign(**kw_columns)

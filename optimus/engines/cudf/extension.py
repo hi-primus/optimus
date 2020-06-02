@@ -5,7 +5,6 @@ from glom import assign
 
 from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
 from optimus.engines.base.extension import BaseExt
-
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.functions import update_dict
@@ -57,16 +56,6 @@ def ext(self: DataFrame):
             return any_dataframe_to_pandas(df)
 
         @staticmethod
-        def head(columns, n=10):
-            """
-
-            :return:
-            """
-            df= self
-            columns = parse_columns(df, columns)
-            return df[columns].head(n)
-
-        @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False,
                     size=True):
             """
@@ -106,7 +95,6 @@ def ext(self: DataFrame):
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False)
                 freq = None
                 if string_cols is not None:
-
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
                 def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
