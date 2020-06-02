@@ -745,7 +745,7 @@ class DaskBaseColumns(BaseColumns):
 
         column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
         if column_dtype in PROFILER_NUMERIC_DTYPES:
-            vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan)
+            vfunc = lambda x:  fastnumbers.fast_float(x, default=np.nan) if x is not None else None
         elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
             vfunc = lambda x: str(x)
 
