@@ -86,6 +86,9 @@ def ext(self: DataFrame):
         def cache(self):
             return self.df
 
+        @staticmethod
+        def head(self):
+            pass
 
         @staticmethod
         def sample(n=10, random=False):
