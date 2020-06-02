@@ -95,7 +95,7 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def profiler_dtypes(self, columns):
+    def profiler_dtypes(self, columns="*"):
         """
         Get the profiler data types from the meta data
         :param columns:
@@ -111,6 +111,18 @@ class BaseColumns(ABC):
             else:
                 result[col_name] = column_meta["profiler_dtype"]
         return result
+
+    def set_profiler_dtypes(self, columns):
+        """
+        Set profiler data type
+        :param columns:
+        :return:
+        """
+        df = self.df
+        for col_name, dtype in columns.items():
+            # print("SET PROFILE")
+            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
 
     @staticmethod
     @abstractmethod
@@ -535,22 +547,27 @@ class BaseColumns(ABC):
     @abstractmethod
     def year(self, input_cols, output_cols=None):
         pass
+
     @staticmethod
     @abstractmethod
     def month(self, input_cols, output_cols=None):
         pass
+
     @staticmethod
     @abstractmethod
     def day(self, input_cols, output_cols=None):
         pass
+
     @staticmethod
     @abstractmethod
     def hour(self, input_cols, output_cols=None):
         pass
+
     @staticmethod
     @abstractmethod
     def minute(self, input_cols, output_cols=None):
         pass
+
     @staticmethod
     @abstractmethod
     def second(self, input_cols, output_cols=None):
@@ -771,7 +788,7 @@ class BaseColumns(ABC):
                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
                                  ProfilerDataTypes.ZIP_CODE.value: "object"}
         # print("columns",columns)
-        df = df.cols.cast(columns= columns)
+        df = df.cols.cast(columns=columns)
         #
         # for col_name, _dtype in columns.items():
         #     python_dtype = profiler_dtype_python[_dtype]

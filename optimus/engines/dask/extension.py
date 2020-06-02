@@ -8,7 +8,7 @@ from glom import assign
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE, PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
+from optimus.helpers.constants import BUFFER_SIZE, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.functions import random_int, update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
@@ -96,7 +96,7 @@ def ext(self: DataFrame):
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
             df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
             result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
-            return df,result
+            return df, result
 
         @staticmethod
         def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -113,36 +113,37 @@ def ext(self: DataFrame):
 
             df = self
             if flush is False:
-                # print("columns",columns)
                 cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
-                # print("cols to profile", cols_to_profile)
             else:
                 cols_to_profile = parse_columns(df, columns)
             columns = cols_to_profile
             output_columns = df.meta.get("profile")
             if output_columns is None:
                 output_columns = {}
-
+            cols_and_inferred_dtype = None
             if cols_to_profile or not Ext.is_cached(df) or flush is True:
                 df_length = len(df)
                 numeric_cols = []
                 string_cols = []
                 cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
+                compute = True
 
-                for col_name, dtype in cols_and_inferred_dtype.items():
-                    for p in PROFILER_NUMERIC_DTYPES:
-                        if dtype == p:
+                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
+
+
+                # Get with columns are numerical and does not have mismatch so we can calculate the histogram
+                for col_name, x in cols_and_inferred_dtype.items():
+                    if x in PROFILER_NUMERIC_DTYPES:
+                        if mismatch[col_name]["mismatch"] == 0:
                             numeric_cols.append(col_name)
-                    for p in PROFILER_STRING_DTYPES:
-                        if dtype == p:
-                            string_cols.append(col_name)
+                    else:
+                        string_cols.append(col_name)
 
                 hist = None
                 freq_uniques = None
-                compute = True
 
                 if len(numeric_cols):
-                    hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
+                    hist = df[numeric_cols].astype("float").cols.hist(numeric_cols, buckets=bins, compute=compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
                 freq = None
 
@@ -169,8 +170,8 @@ def ext(self: DataFrame):
 
                     return {"columns": _f}
 
+
                 # cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
-                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
 
                 # Nulls
                 total_count_na = 0
@@ -181,8 +182,8 @@ def ext(self: DataFrame):
 
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
                 updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
-                # print("updated_columns",updated_columns)
-                # print("(hist, freq, mismatch, freq_uniques)",(hist, freq, mismatch, freq_uniques))
+
+
                 output_columns = update_dict(output_columns, updated_columns)
 
                 # Move profiler_dtype to the parent
@@ -211,12 +212,16 @@ def ext(self: DataFrame):
 
             # Order columns
             output_columns["columns"] = dict(OrderedDict(
-                {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
+                {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
                  _cols_name in list(actual_columns.keys())}))
 
             df = df.meta.columns(df.cols.names())
             df.meta.set("transformations", value={})
             df.meta.set("profile", output_columns)
+
+            if cols_and_inferred_dtype is not None:
+                df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+
             # Reset Actions
             df.meta.reset()
 
@@ -354,7 +359,7 @@ def ext(self: DataFrame):
 
             :return:
             """
-            df= self
+            df = self
             columns = parse_columns(df, columns)
             return df[columns].head(n, npartitions=-1)
 

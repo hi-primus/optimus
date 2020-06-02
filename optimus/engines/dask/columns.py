@@ -1,4 +1,5 @@
 import dask.dataframe as dd
+import fastnumbers
 import numpy as np
 from dask import delayed
 from dask.dataframe.core import DataFrame
@@ -16,23 +17,79 @@ def cols(self: DataFrame):
             super(DaskBaseColumns, self).__init__(df)
 
         @staticmethod
-        def min(columns):
+        def min(columns, skip_na = True, force_processing=False):
+            """
+            This calculate the min for a columns.
+            :param columns:
+            :return:
+            """
             df = self
 
             columns = parse_columns(df, columns)
             partitions = df.to_delayed()
 
             @delayed
-            def func(_df, col_name):
-                if _df[col_name].dtype != "O":
-                    # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
-                    return pd.DataFrame({"col_name": col_name, "min": np.min(_df[col_name].to_numpy())},
-                                        index=[0])
+            def func(pdf, col_name):
+
+                # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+
+                # fastnumbers takes most of the time
+                if force_processing is True:
+                    p = [fastnumbers.fast_real(x, default=np.nan) for x in pdf[col_name]]
+                else:
+                    p = pdf[col_name]
+
+                if np.all(p == None) is True:
+                    _min = 0
+                else:
+                    if skip_na is True:
+                        _min = np.nanmin(p)
+                    else:
+                        _min = np.min(p)
+
+                return pd.DataFrame({"col_name": col_name, "min": _min}, index=[0])
 
             delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
-
             c = pd.concat(dd.compute(*delayed_parts))
-            d = c.groupby(["col_name"]).min()["min"].to_dict()
+            d = c.groupby(["col_name"]).min().to_dict()
+            return d
+
+        @staticmethod
+        def max(columns, skip_na = True, force_processing=False):
+            """
+            This calculate the min for a columns.
+            :param columns:
+            :return:
+            """
+            df = self
+
+            columns = parse_columns(df, columns)
+            partitions = df.to_delayed()
+
+            @delayed
+            def func(pdf, col_name):
+
+                # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+
+                # fastnumbers takes most of the time
+                if force_processing is True:
+                    p = [fastnumbers.fast_float(x, default=np.nan) for x in pdf[col_name]]
+                else:
+                    p = pdf[col_name]
+
+                if np.all(p == None) is True:
+                    _max = 0
+                else:
+                    if skip_na is True:
+                        _max = np.nanmax(p)
+                    else:
+                        _max = np.max(p)
+
+                return pd.DataFrame({"col_name": col_name, "max": _max}, index=[0])
+
+            delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
+            c = pd.concat(dd.compute(*delayed_parts))
+            d = c.groupby(["col_name"]).max().to_dict()
             return d
 
         @staticmethod

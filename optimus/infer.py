@@ -461,7 +461,7 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_boolean
 
     elif dtype == ProfilerDataTypes.DATE.value:
-        return str_to_date
+        return str_to_object
 
     elif dtype == ProfilerDataTypes.ARRAY.value:
         return is_str

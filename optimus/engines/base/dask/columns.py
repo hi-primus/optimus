@@ -20,7 +20,8 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, Actions, PROFILER_NUMERIC_DTYPES, \
+    PROFILER_STRING_DTYPES
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import update_dict
@@ -56,11 +57,11 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
         total_preview_rows = TOTAL_PREVIEW_ROWS
         pdf = df.ext.head(columns, total_preview_rows).applymap(Infer.parse_pandas)
-        # print("pdf", pdf)
+        # print("pdf", pdf.head(20))
         cols_and_inferred_dtype = {}
         for col_name in columns:
+            # print("_value_counts",col_name)
             _value_counts = pdf[col_name].value_counts()
-
             if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
                 r = _value_counts.index[0]
             elif _value_counts[0] < len(pdf):
@@ -233,11 +234,11 @@ class DaskBaseColumns(BaseColumns):
     def hist(self, columns, buckets=20, compute=True):
 
         df = self.df
-
         columns = parse_columns(df, columns)
 
         @delayed
         def bins_col(_columns, _min, _max):
+
             return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=buckets)) for col_name in _columns}
 
         _min = df[columns].min().to_delayed()[0]
@@ -246,7 +247,8 @@ class DaskBaseColumns(BaseColumns):
 
         @delayed
         def _hist(pdf, col_name, _bins):
-            _count, bins_edges = np.histogram(pdf[col_name], bins=_bins[col_name])
+            p = [fastnumbers.fast_real(x, default=np.nan) for x in pdf[col_name]]
+            _count, bins_edges = np.histogram(p, bins=_bins[col_name])
             return {col_name: [list(_count), list(bins_edges)]}
 
         @delayed
@@ -271,7 +273,7 @@ class DaskBaseColumns(BaseColumns):
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
-        # c=d
+
         if compute is True:
             result = d.compute()
         else:
@@ -736,56 +738,77 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     def set(self, where=None, value=None, output_cols=None):
-        """
-        Use a pandas expression to filter and calculate a value
-        :param where: pandas/dask expression
-        :param output_cols: Output columns
-        :param value: pandas/dask expression
-        :return:
-        """
+
         df = self.df
-        output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
+        # output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
 
-        def func(df, _value, _where, _output_col):
-            if where is None:
-                mask = df
-                # kw_columns = {_output_col: eval(_value)}
-                df.loc[_output_col] = eval(_value)
+        # try to infer if we are going to handle the operations as numeric or string
+        # Get first column in the operation
+        def prepare_columns(cols):
+            """
+            Extract the columns names from the value and where clauses
+            :param cols:
+            :return:
+            """
+            print("cols", cols)
 
-                # return df.assign(**kw_columns)
+            if cols is not None:
+                r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
+                                 re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
             else:
-                _where = eval(_where)
+                r = None
+            return r
 
-                _mask = (_where)
-                mask = df[_mask]
-                _value = eval(_value)  # <- mask is used here
+        columns = prepare_columns(value)
 
-                df.loc[_mask, _output_col] = eval(_value)
+        print("columns", columns)
+        f_col = columns[0]
+        where_columns = prepare_columns(where)
+        if where_columns is not None:
+            columns = columns + where_columns
 
-            return df
+        column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
+        if column_dtype in PROFILER_NUMERIC_DTYPES:
+            vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan)
+        elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
+            vfunc = lambda x: str(x)
 
-        for output_col in output_cols:
-            # if where is None:
-            #     mask = df
-            #     df = df.assign(**{output_col: eval(value)})  # <- mask is used here
-            #     # df.map_partitions(lambda pdf: pdf.assign(**eval(value)), meta={"A": object, "B": object, "z": float}).compute()
-            # else:
-            # if df.cols.dtypes(input_col) == "category":
-            #     try:
-            #         # Handle error if the category already exist
-            #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-            #     except ValueError:
-            #         pass
+        def func(pdf, _value, _where, _output_col, args):
 
-            # Update meta to handle new columns
-            _meta = df.dtypes.to_dict()
+            pdf = pdf.applymap(vfunc)
 
-            _meta.update({output_col: object})
+            try:
+                if where is None:
+                    df = pdf
+                    return eval(_value)
+                else:
+                    df = pdf
+                    _mask = (eval(_where))
 
-            df = df.map_partitions(func, _value=value, _where=where, _output_col=output_col, meta=_meta)
-            # df[output_col] = df[input_col].where(~(where), value, meta=int)
-            df.meta.preserve(df, Actions.SET.value, output_col)
-        return df
+                    mask = df[_mask]
+                    df = mask
+                    _value = eval(_value)  # <- mask is used here
+
+                    df.loc[_mask, _output_col] = _value
+                    return df[_output_col]
+            except:
+                return np.nan
+
+        # if df.cols.dtypes(input_col) == "category":
+        #     try:
+        #         # Handle error if the category already exist
+        #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+        #     except ValueError:
+        #         pass
+
+        _meta = df.dtypes.to_dict()
+        _meta.update({output_cols: object})
+        a = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols, args=(columns),
+                                       meta=object)
+        df.meta.preserve(df, Actions.SET.value, output_cols)
+        kw_columns = {output_cols: a}
+        return df.assign(**kw_columns)
+
 
     @dispatch(list)
     def copy(self, columns) -> DataFrame:
@@ -1131,7 +1154,7 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.select(output_ordered_columns)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of floats
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
+    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
         """
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
@@ -1148,48 +1171,93 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.df
+        if on_error is None:
+            def _cast_int(value):
+                # if (value is None) or (value is np.nan):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    # return fastnumbers.fast_int(value, default=np.nan)
+                    return fastnumbers.fast_int(value)
 
-        def _cast_int(value):
-            # if (value is None) or (value is np.nan):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                return fastnumbers.fast_int(value, default=np.nan)
+            def _cast_float(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return fastnumbers.fast_float(value)
 
-        def _cast_float(value):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                return fastnumbers.fast_float(value)
+            def _cast_bool(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return bool(value)
 
-        def _cast_bool(value):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                return bool(value)
+            def _cast_date(value, format="YYYY-MM-DD"):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    try:
+                        # return pendulum.parse(value)
+                        # return pendulum.from_format(value, format)
+                        # return dparse(value)
 
-        def _cast_date(value, format="YYYY-MM-DD"):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                try:
-                    # return pendulum.parse(value)
-                    # return pendulum.from_format(value, format)
-                    # return dparse(value)
+                        return value
+                    except:
+                        return value
 
-                    return value
-                except:
-                    return value
+            def _cast_str(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return str(value)
 
-        def _cast_str(value):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                return str(value)
+            def _cast_object(value):
+                ## Do nothing
+                return value
 
-        def _cast_object(value):
-            ## Do nothing
-            return value
+        elif on_error == "nan":
+            def _cast_int(value):
+                # if (value is None) or (value is np.nan):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    # return fastnumbers.fast_int(value, default=np.nan)
+                    return fastnumbers.fast_int(value, default=np.nan)
+
+            def _cast_float(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return fastnumbers.fast_float(value, default=np.nan)
+
+            def _cast_bool(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return bool(value)
+
+            def _cast_date(value, format="YYYY-MM-DD"):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    try:
+                        # return pendulum.parse(value)
+                        # return pendulum.from_format(value, format)
+                        # return dparse(value)
+
+                        return value
+                    except:
+                        return value
+
+            def _cast_str(value):
+                if pd.isnull(value):
+                    return np.nan
+                else:
+                    return str(value)
+
+            def _cast_object(value):
+                ## Do nothing
+                return value
 
         _dtypes = []
         # Parse params
@@ -1211,23 +1279,23 @@ class DaskBaseColumns(BaseColumns):
             output_cols = get_output_cols(input_cols, output_cols)
 
         cast_func = {'int': _cast_int, 'decimal': _cast_float, "string": _cast_str, 'bool': _cast_bool,
-                     'date': _cast_date,
-                     "array": _cast_object, "object": _cast_object, "gender": _cast_object, "ip": _cast_object,
-                     "url": _cast_object, "email": _cast_object, "credit_card_number": _cast_object,
+                     'date': _cast_date, "array": _cast_object, "object": _cast_object, "gender": _cast_object,
+                     "ip": _cast_object, "url": _cast_object, "email": _cast_object, "credit_card_number": _cast_object,
                      "zip_code": _cast_str, "missing": _cast_str}
 
-        def func(pdf, cols_dtypes):
-            for col, dtype in cols_dtypes.items():
-                pdf[col] = pdf[col].apply(cast_func[dtype], convert_dtype=False)
+        def func(pdf, input_cols, output_cols, dtypes):
+            # print("AAA", input_cols, output_cols, dtypes)
+            for input_col, output_col, dtype in zip(input_cols, output_cols, dtypes):
+                # pdf[output_col] = pdf[input_col].apply(cast_func[dtype])
+                pdf = pdf.assign(**{output_col: pdf[input_col].apply(cast_func[dtype])})
             return pdf
 
+        # print("columns",input_cols, output_cols,dtype)
         # meta = [(i, object) for i in columns]
-        df = df.map_partitions(func, columns)
+        df = df.map_partitions(func, input_cols, output_cols, val_to_list(dtype) * len(input_cols), )
+        # df.cols.set_profiler_dtypes(columns)
 
-        for col_name, dtype in columns.items():
-            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
-            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-
+        ## Check this could be faster ddf = ddf.assign(col4=lambda x: check_dist(x.col1,x.col2,x.col3))
         # df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
         return df
 

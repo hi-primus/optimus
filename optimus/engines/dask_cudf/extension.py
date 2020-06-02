@@ -30,14 +30,13 @@ def ext(self):
             return self  # Dask.instance.persist(self)
 
         @staticmethod
-        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, infer: bool = False, flush: bool = False,
+        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False,
                     size=False):
             """
 
             :param columns:
             :param bins:
             :param output:
-            :param infer:
             :param flush:
             :param size:
             :return:
@@ -306,7 +305,6 @@ def ext(self):
             # if len(value) == 0:
             #     RaiseIt.value_error(value, ["> 0"])
 
-            # self.createOrReplaceTempView(value)
 
         @staticmethod
         def get_name():
@@ -350,7 +348,6 @@ def ext(self):
             :return:
             """
             return self.compute()
-            # self.head()
 
         @staticmethod
         def debug():

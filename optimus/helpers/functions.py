@@ -542,7 +542,7 @@ def prepare_path(path, file_format=None):
 
 def match_date(value):
     """
-    Returns True if the string match and specific format
+    Returns Create aregex from a string with a date format
     :param value:
     :return:
     """
@@ -567,10 +567,11 @@ def match_date(value):
                 break
         if found is False:
             raise ValueError('{} is not a valid date format'.format(value[start]))
+
     exprs = []
     for f in result:
         # Separators
-        if f in ["/", ":", "-", " ", "|", "+"]:
+        if f in ["/", ":", "-", " ", "|", "+"," "]:
             exprs.append("\\" + f)
         # elif f == ":":
         #     exprs.append("\\:")
