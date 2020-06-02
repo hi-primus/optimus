@@ -212,7 +212,7 @@ def ext(self: DataFrame):
 
             # Order columns
             output_columns["columns"] = dict(OrderedDict(
-                {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
+                {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
                  _cols_name in list(actual_columns.keys())}))
 
             df = df.meta.columns(df.cols.names())
