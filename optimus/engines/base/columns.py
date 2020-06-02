@@ -114,7 +114,7 @@ class BaseColumns(ABC):
 
     def set_profiler_dtypes(self, columns):
         """
-        Set profiler data type
+        Set profiler data typedf = df.cols.cast_to_profiler_dtypes
         :param columns:
         :return:
         """
