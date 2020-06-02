@@ -12,7 +12,7 @@ from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_i
 from optimus.helpers.check import equal_function
 from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_dtypes
 from optimus.infer import is_str, profiler_dtype_func
 
@@ -107,9 +107,7 @@ def cols(self: DataFrame):
             #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
             #     except ValueError:
             #         pass
-
-            _meta = df.dtypes.to_dict()
-            _meta.update({output_cols: object})
+            output_cols = one_list_to_val(output_cols)
 
             pdf = df[columns].applymap(vfunc)
             a = func(pdf, _value=value, _where=where, _output_col=output_cols)

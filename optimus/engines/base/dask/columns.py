@@ -778,6 +778,7 @@ class DaskBaseColumns(BaseColumns):
         #         pass
 
         _meta = df.dtypes.to_dict()
+        output_cols = one_list_to_val(output_cols)
         _meta.update({output_cols: object})
         a = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols, meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
