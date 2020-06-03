@@ -99,16 +99,28 @@ def cols(self: DataFrame):
                     if where is None:
                         return eval(_value)
                     else:
-                        mask = eval(_where)
-                        pdf = df
-                        print(_where)
-                        if fastnumbers.isreal(_value) or _value.isalnum():
-                            r = pdf[_output_col].mask(mask, _value)
-                        else:
-                            df = df[mask]  # This df is used inside the eval
-                            r = pdf[_output_col].mask(mask, eval(str(_value)))
+                        df = pdf
+                        _mask = (eval(_where))
 
-                        return r
+                        mask = df[_mask]
+                        df = mask
+                        _value = eval(_value)  # <- mask is used here
+
+                        df.loc[_mask, _output_col] = _value
+                        return df[_output_col]
+                        #
+                        # mask = eval(_where)
+                        # pdf = df
+                        # print(_where)
+                        # if fastnumbers.isreal(_value) or _value.isalnum():
+                        #     r = pdf.mask(mask, _value)
+                        #     print("AAA", r)
+                        # else:
+                        #     df = df[mask]  # This df is used inside the eval
+                        #
+                        #     r = pdf.mask(mask, eval(str(_value)))
+                        #
+                        # return r
                 except:
                     raise
                     return np.nan
