@@ -121,14 +121,8 @@ def cols(self: DataFrame):
             output_cols = one_list_to_val(output_cols)
 
             pdf = df[columns].applymap(vfunc)
-
-            if columns:
-                final_value = func(pdf, _value=value, _where=where, _output_col=output_cols)
-            else:
-                # df[output_cols] = value
-                final_value = value
-
-            kw_columns = {output_cols: final_value}
+            a = func(pdf, _value=value, _where=where, _output_col=output_cols)
+            kw_columns = {output_cols: a}
             return df.assign(**kw_columns)
 
         # @staticmethod
