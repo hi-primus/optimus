@@ -1,0 +1,10 @@
+customer_id,first_name,last_name,current_credit_card,address_zip,email,address_street_number,address_city,address_state,adress_zip,phone_number,start_date,end_date,transaction_date,ticket_price,discount,discounted_ticket_price
+0f345kjh345oiuy345,ERIN,DZVONIK,4189789432146548,92703,dzvonik30@att.net,9195 George Street,Cleveland,OH,92703,(714) 633-4198,2012/09/03,,2015/07/06,0.01,0,0.01
+0f345kjh345oiuy345,ERIN,DZVONIK,4189789432146549,92703,dzvonik30@att.net,9195 George Street,Cleveland,OH,92703,(714) 633-4198,2012/09/03,,2015/07/06,12.99,0,12.99
+0fju234978rfjkhsdf,LAUREY,DZVONIK,4189789432146550,92703,dzvonik30@att.net,9195 George Street,Cleveland,OH,92703,(714) 633-4198,2012/09/03,,2015/08/05,12.99,0,12.99
+0fju234978rfjkhsdf,LAUREY,BIFFAR,4189789432146551,7731,laurey.biffar@mac.com,444 Bank Street,Elk Frove,CA,7731,(732)353-4861,2010/01/02,2013/09/08,2013/12/09,0.01,0,0.01
+0fju234978rfjkhsdf,LAUREY,BIFFAR,4189789432146552,7731,laurey.biffar@mac.com,444 Bank Street,Elk Frove,CA,7731,(732)353-4861,2010/01/02,2013/09/08,2013/12/09,12.99,0,11.697
+0f34ruiy23e78y2r,GARRIE,BIFFAR,4189789432146553,7731,laurey.biffar@mac.com,444 Bank Street,Elk Frove,CA,7731,(732)353-4861,2010/01/02,2013/09/08,2014/01/08,12.99,0,12.99
+0f34ruiy23e78y2r,GARRIE,MULANAX,4189789432146554,97756,mulanax60@yahoo.com,882 Park Place,Santa Ana,CA,97756,(541) 727-8215,2014/12/26,,2012/09/03,0.01,0,0.01
+0f34ruiy23e78y2r,GARRIE,MULANAX,4189789432146555,97756,mulanax60@yahoo.com,882 Park Place,Santa Ana,CA,97756,(541) 727-8215,2014/12/26,,2012/09/03,9.99,0,9.99
+0fue298y2r23r23r2,DEVINDER,MULANAX,4189789432146556,97756,mulanax60@yahoo.com,3278 7th AVE,Howell,NJ,97756,(541) 727-8215,2014/12/26,,2012/10/03,9.99,0,9.99
