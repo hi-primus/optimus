@@ -61,18 +61,30 @@ def cols(self: DataFrame):
                     r = None
                 return r
 
-            columns = prepare_columns(value)
+            columns = None
+            if is_str(value):
+                columns = prepare_columns(value)
 
-            f_col = columns[0]
-            where_columns = prepare_columns(where)
-            if where_columns is not None:
-                columns = columns + where_columns
+                if len(columns) > 0:
+                    first_columns = columns[0]
+                    where_columns = prepare_columns(where)
+                    if where_columns is not None:
+                        columns = columns + where_columns
+                    # Remove duplicated columns
+                    columns = list(set(columns))
 
-            # Remove duplicated columns
+                    column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
+            else:
+                if fastnumbers.fast_int(value):
+                    column_dtype = "int"
+                elif fastnumbers.fast_float(value):
+                    column_dtype = "decimal"
+                else:
+                    column_dtype = "string"
             columns = list(set(columns))
 
             # column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
-            column_dtype = df.cols.infer_profiler_dtypes(f_col)[f_col]
+
             if column_dtype in PROFILER_NUMERIC_DTYPES:
                 vfunc = lambda x:  fastnumbers.fast_float(x, default=np.nan) if x is not None else None
             elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
@@ -98,7 +110,6 @@ def cols(self: DataFrame):
                         df.loc[_mask, _output_col] = _value
                         return df[_output_col]
                 except:
-                    raise
                     return np.nan
 
             # if df.cols.dtypes(input_col) == "category":
@@ -110,8 +121,14 @@ def cols(self: DataFrame):
             output_cols = one_list_to_val(output_cols)
 
             pdf = df[columns].applymap(vfunc)
-            a = func(pdf, _value=value, _where=where, _output_col=output_cols)
-            kw_columns = {output_cols: a}
+
+            if columns:
+                final_value = func(pdf, _value=value, _where=where, _output_col=output_cols)
+            else:
+                # df[output_cols] = value
+                final_value = value
+                
+            kw_columns = {output_cols: final_value}
             return df.assign(**kw_columns)
 
         # @staticmethod

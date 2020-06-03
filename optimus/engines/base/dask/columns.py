@@ -26,7 +26,8 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import update_dict
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict, \
+    is_str
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -734,18 +735,30 @@ class DaskBaseColumns(BaseColumns):
                 r = None
             return r
 
-        columns = prepare_columns(value)
+        columns = None
+        if is_str(value):
+            columns = prepare_columns(value)
 
-        f_col = columns[0]
-        where_columns = prepare_columns(where)
-        if where_columns is not None:
-            columns = columns + where_columns
-        # Remove duplicated columns
+            if len(columns) > 0:
+                first_columns = columns[0]
+                where_columns = prepare_columns(where)
+                if where_columns is not None:
+                    columns = columns + where_columns
+                # Remove duplicated columns
+                columns = list(set(columns))
+
+                column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
+        else:
+            if fastnumbers.fast_int(value):
+                column_dtype = "int"
+            elif fastnumbers.fast_float(value):
+                column_dtype = "decimal"
+            else:
+                column_dtype = "string"
         columns = list(set(columns))
 
-        column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
         if column_dtype in PROFILER_NUMERIC_DTYPES:
-            vfunc = lambda x:  fastnumbers.fast_float(x, default=np.nan) if x is not None else None
+            vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan) if x is not None else None
         elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
             vfunc = lambda x: str(x)
 
@@ -780,9 +793,14 @@ class DaskBaseColumns(BaseColumns):
         _meta = df.dtypes.to_dict()
         output_cols = one_list_to_val(output_cols)
         _meta.update({output_cols: object})
-        a = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols, meta=object)
+        if columns:
+            final_value = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols,
+                                                     meta=object)
+        else:
+            # df[output_cols] = value
+            final_value = value
         df.meta.preserve(df, Actions.SET.value, output_cols)
-        kw_columns = {output_cols: a}
+        kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)
 
     @dispatch(list)
