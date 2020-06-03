@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
+from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series, is_pandas_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, Actions, PROFILER_NUMERIC_DTYPES, \
     PROFILER_STRING_DTYPES
@@ -741,51 +741,68 @@ class DaskBaseColumns(BaseColumns):
                 r = None
             return r
 
-        columns = None
-        if is_str(value):
-            columns = prepare_columns(value)
-            if len(columns) > 0:
-                first_columns = columns[0]
-                where_columns = prepare_columns(where)
-                if where_columns is not None:
-                    columns = columns + where_columns
-                # Remove duplicated columns
-                columns = list(set(columns))
+        columns = prepare_columns(value)
+        if columns:
+            first_columns = columns[0]
+            where_columns = prepare_columns(where)
+            if where_columns is not None:
+                columns = columns + where_columns
+            # Remove duplicated columns
+            columns = list(set(columns))
 
-                column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
+            column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
+        else:
+
+            if fastnumbers.fast_int(value):
+                column_dtype = "int"
+            elif fastnumbers.fast_float(value):
+                column_dtype = "decimal"
             else:
-                if fastnumbers.fast_int(value):
-                    column_dtype = "int"
-                elif fastnumbers.fast_float(value):
-                    column_dtype = "decimal"
-                else:
-                    column_dtype = "string"
+                column_dtype = "string"
 
         if column_dtype in PROFILER_NUMERIC_DTYPES:
             vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan) if x is not None else None
         elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
             vfunc = lambda x: str(x)
 
-        def func(pdf, _value, _where, _output_col):
-
-            pdf = pdf.applymap(vfunc)
+        def func(df, _value, _where, _output_col):
 
             try:
                 if where is None:
-                    df = pdf
                     return eval(_value)
                 else:
-                    df = pdf
-                    _mask = (eval(_where))
+                    mask = eval(_where)
+                    pdf = df
+                    print(_where)
+                    if fastnumbers.isreal(_value) or _value.isalnum():
+                        r = pdf[_output_col].mask(mask, _value)
+                    else:
+                        df = df[mask]  # This df is used inside the eval
+                        r = pdf[_output_col].mask(mask, eval(str(_value)))
 
-                    mask = df[_mask]
-                    df = mask
-                    _value = eval(_value)  # <- mask is used here
-
-                    df.loc[_mask, _output_col] = _value
-                    return df[_output_col]
+                    return r
             except:
+                raise
                 return np.nan
+            #
+            # try:
+            #     if where is None:
+            #
+            #         # df = pdf
+            #         # print("_value",_value)
+            #         return eval(_value)
+            #     else:
+            #         mask = eval(_where)
+            #
+            #         pdf = df
+            #         df = df[mask]  # This df is used inside the eval
+            #         pdf.loc[mask, _output_col] = eval(str(_value))
+            #         return pdf[_output_col]
+            #
+            #
+            # except:
+            #     raise
+            #     return np.nan
 
         # if df.cols.dtypes(input_col) == "category":
         #     try:
@@ -801,8 +818,8 @@ class DaskBaseColumns(BaseColumns):
             final_value = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols,
                                                      meta=object)
         else:
-            # df[output_cols] = value
-            final_value = value
+            # pdf = df
+            final_value = func(df, _value=value, _where=where, _output_col=output_cols)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)
