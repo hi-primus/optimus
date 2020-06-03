@@ -24,7 +24,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, Actions, PROFILER_NUMERIC_
     PROFILER_STRING_DTYPES
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import update_dict
+from optimus.helpers.functions import update_dict, set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict, \
     is_str
@@ -714,7 +714,7 @@ class DaskBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    def set(self, where=None, value=None, output_cols=None):
+    def set(self, where=None, value=None, output_cols=None, default=None):
         """
         Set a column value using a number a string or a expression.
         :param where:
@@ -724,68 +724,7 @@ class DaskBaseColumns(BaseColumns):
         """
         df = self.df
 
-        # output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
-
-        # try to infer if we are going to handle the operations as numeric or string
-        # Get first column in the operation
-        def prepare_columns(cols):
-            """
-            Extract the columns names from the value and where clauses
-            :param cols:
-            :return:
-            """
-            if cols is not None:
-                r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
-                                 re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
-            else:
-                r = None
-            return r
-
-        columns = prepare_columns(value)
-        if columns:
-            first_columns = columns[0]
-            where_columns = prepare_columns(where)
-            if where_columns is not None:
-                columns = columns + where_columns
-            # Remove duplicated columns
-            columns = list(set(columns))
-
-            column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
-        else:
-
-            if fastnumbers.fast_int(value):
-                column_dtype = "int"
-            elif fastnumbers.fast_float(value):
-                column_dtype = "decimal"
-            else:
-                column_dtype = "string"
-
-        if column_dtype in PROFILER_NUMERIC_DTYPES:
-            vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan) if x is not None else None
-        elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
-            vfunc = lambda x: str(x) if not pd.isnull(x) else None
-
-        def func(pdf, _value, _where, _output_col):
-
-            pdf = pdf.applymap(vfunc)
-
-            try:
-                if where is None:
-                    df = pdf # <- df is used in the eval
-                    return eval(_value)
-                else:
-                    df = pdf
-                    _mask = (eval(_where))
-
-                    mask = df[_mask]
-                    df = mask
-                    _value = eval(_value)  # <- mask is used here
-
-                    df.loc[_mask, _output_col] = _value
-                    return df[_output_col]
-            except:
-                raise
-                return np.nan
+        columns, vfunc = set_function_parser(df, value, where)
 
         # if df.cols.dtypes(input_col) == "category":
         #     try:
@@ -794,15 +733,17 @@ class DaskBaseColumns(BaseColumns):
         #     except ValueError:
         #         pass
 
-        _meta = df.dtypes.to_dict()
+        # _meta = df.dtypes.to_dict()
         output_cols = one_list_to_val(output_cols)
-        _meta.update({output_cols: object})
+        # _meta.update({output_cols: object})
+
         if columns:
-            final_value = df[columns].map_partitions(func, _value=value, _where=where, _output_col=output_cols,
-                                                     meta=object)
+            final_value = df[columns]
         else:
             # df[output_cols] = value
-            final_value = df.map_partitions(func, _value=value, _where=where, _output_col=output_cols,
+            final_value = df
+        final_value = final_value.map_partitions(set_func, _value=value, _where=where, _output_col=output_cols,
+                                                     vfunc=vfunc, _default=default,
                                                      meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}

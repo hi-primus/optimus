@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 import fastnumbers
 import humanize
+import numpy as np
 import pandas as pd
 import six
 from fastnumbers import isint, isfloat
@@ -21,6 +22,7 @@ from string_grouper import match_strings
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
@@ -323,7 +325,6 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
     min_max_df_left = min_max_len(df_left)
     min_max_df_right = min_max_len(df_right)
 
-
     def median_len(arr, idx):
         """
         Calculate median len of the columns string
@@ -537,9 +538,59 @@ def prepare_path(path, file_format=None):
     return file, file_name
 
 
+def set_func(pdf, _value, _where, _output_col, vfunc, _default=None):
+    pdf = pdf.applymap(vfunc)
+    df = pdf
+    try:
+        if _where is None:
+            return eval(_value)
+        else:
+            # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
+            mask = (eval(_where))
+            if (_output_col not in pdf.cols.names()) and (_default is not None):
+                pdf[_output_col] = pdf[_default]
+            pdf.loc[mask, _output_col] = eval(_value)
+            return pdf[_output_col]
+
+    except:
+        raise
+        return np.nan
+
+
+def set_function_parser(df, value, where):
+    def prepare_columns(cols):
+        """
+        Extract the columns names from the value and where clauses
+        :param cols:
+        :return:
+        """
+        if cols is not None:
+            r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
+                             re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
+        else:
+            r = []
+        return r
+    columns = prepare_columns(value) + prepare_columns(where)
+    columns = list(set(columns))
+    if columns:
+        first_columns = columns[0]
+        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
+    else:
+        if fastnumbers.fast_int(value):
+            column_dtype = "int"
+        elif fastnumbers.fast_float(value):
+            column_dtype = "decimal"
+        else:
+            column_dtype = "string"
+
+    if column_dtype in PROFILER_NUMERIC_DTYPES:
+        vfunc = lambda x: fastnumbers.fast_float(x) if x is not None else None
+    elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
+        vfunc = lambda x: str(x) if not pd.isnull(x) else None
+
+    return columns, vfunc
+
 # value = "dd/MM/yyyy hh:mm:ss-sss MA"
-
-
 def match_date(value):
     """
     Returns Create aregex from a string with a date format
@@ -571,7 +622,7 @@ def match_date(value):
     exprs = []
     for f in result:
         # Separators
-        if f in ["/", ":", "-", " ", "|", "+"," "]:
+        if f in ["/", ":", "-", " ", "|", "+", " "]:
             exprs.append("\\" + f)
         # elif f == ":":
         #     exprs.append("\\:")
