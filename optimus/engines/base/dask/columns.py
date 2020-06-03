@@ -715,7 +715,13 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     def set(self, where=None, value=None, output_cols=None):
-
+        """
+        Set a column value using a number a string or a expression.
+        :param where:
+        :param value:
+        :param output_cols:
+        :return:
+        """
         df = self.df
 
         # output_cols = parse_columns(df, output_cols, accepts_missing_cols=True)
