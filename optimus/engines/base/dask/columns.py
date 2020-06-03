@@ -802,7 +802,8 @@ class DaskBaseColumns(BaseColumns):
                                                      meta=object)
         else:
             # df[output_cols] = value
-            final_value = value
+            final_value = df.map_partitions(func, _value=value, _where=where, _output_col=output_cols,
+                                                     meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)

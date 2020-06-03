@@ -60,10 +60,8 @@ def cols(self: DataFrame):
                                      re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
                     if len(r) == 0:
                         r = None
-
                 return r
 
-            # columns = None
 
             columns = prepare_columns(value)
             if columns:
@@ -74,24 +72,25 @@ def cols(self: DataFrame):
                 # Remove duplicated columns
                 columns = list(set(columns))
 
-                column_dtype = df.cols.profiler_dtypes(first_columns)[first_columns]
+                column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
                 # column_dtype = df.cols.profiler_dtypes(f_col)[f_col]
-                if column_dtype in PROFILER_NUMERIC_DTYPES:
-                    vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan) if x is not None else None
-                elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
-                    vfunc = lambda x: str(x) if not pd.isnull(x) else None
+
+            else:
+
+                if fastnumbers.fast_int(value):
+                    column_dtype = "int"
+                elif fastnumbers.fast_float(value):
+                    column_dtype = "decimal"
                 else:
-                    raise
-            # else:
-            #
-            #     if fastnumbers.fast_int(value):
-            #         column_dtype = "int"
-            #     elif fastnumbers.fast_float(value):
-            #         column_dtype = "decimal"
-            #     else:
-            #         column_dtype = "string"
+                    column_dtype = "string"
 
 
+            if column_dtype in PROFILER_NUMERIC_DTYPES:
+                vfunc = lambda x: fastnumbers.fast_float(x, default=np.nan) if x is not None else None
+            elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
+                vfunc = lambda x: str(x) if not pd.isnull(x) else None
+            else:
+                raise
 
             def func(df, _value, _where, _output_col):
 
@@ -133,12 +132,14 @@ def cols(self: DataFrame):
             #         pass
             output_cols = one_list_to_val(output_cols)
 
+
             if columns:
                 pdf = df[columns].applymap(vfunc)
-                final_value = func(pdf, _value=value, _where=where, _output_col=output_cols)
+                final_value = func(pdf[columns], _value=value, _where=where, _output_col=output_cols)
             else:
                 # df[output_cols] = value
-                pdf = df
+
+                pdf = df.applymap(vfunc)
                 final_value = func(pdf, _value=value, _where=where, _output_col=output_cols)
                 # final_value = value
 
