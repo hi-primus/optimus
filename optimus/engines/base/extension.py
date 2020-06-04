@@ -275,15 +275,14 @@ class BaseExt(ABC):
                     if len(get_renamed_columns(col)) == 0:
                         _result = col
                     else:
-                        _result = get_renamed_columns(col)[0]
+                        _result = get_renamed_columns(col)
 
                     # Unnest return a list inside a list
-                    # if action == Actions.UNNEST.value:
-                    #     _result = _result[0]
-                    #
-                    # print("_result",_result)
-                    # if action == Actions.DROP_ROW.value:
-                    #     _result = _result[0]
+                    if action == Actions.UNNEST.value:
+                        _result = _result[0]
+
+                    if action == Actions.DROP_ROW.value:
+                        _result = _result[0]
                     modified = modified + _result
                     return modified
 
