@@ -44,7 +44,6 @@ def cols(self: DataFrame):
             df = self.df
 
             columns, vfunc = set_function_parser(df, value, where, default)
-
             # if df.cols.dtypes(input_col) == "category":
             #     try:
             #         # Handle error if the category already exist
@@ -52,7 +51,6 @@ def cols(self: DataFrame):
             #     except ValueError:
             #         pass
             output_cols = one_list_to_val(output_cols)
-
 
             if columns:
                 final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,

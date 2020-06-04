@@ -552,7 +552,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     # print("value, where, output_col",value, where, output_col)
     # value = str(value)
     # where = str(where)
-    f = filter(lambda x: x != "__match__", pdf.cols.names())
+    f = list(filter(lambda x: x != "__match__", pdf.cols.names()))
     # cols = i if i!="__match__" for i in
     pdf[f] = pdf[f].applymap(parser)
     df = pdf
@@ -568,8 +568,10 @@ def set_func(pdf, value, where, output_col, parser, default=None):
             pdf.loc[mask, output_col] = eval(value)
             return pdf[output_col]
 
-    except:
-        raise
+    except Exception as e:
+        logger.print(e)
+
+        # raise
         return np.nan
 
 
@@ -603,7 +605,6 @@ def set_function_parser(df, value, where, default):
     # if default is in
     columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
     columns = list(set(columns))
-    print("columns",columns)
     if columns:
         first_columns = columns[0]
         column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
