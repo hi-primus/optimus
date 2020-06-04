@@ -130,23 +130,20 @@ def ext(self: DataFrame):
 
                 mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
 
-
                 # Get with columns are numerical and does not have mismatch so we can calculate the histogram
                 for col_name, x in cols_and_inferred_dtype.items():
-                    if x in PROFILER_NUMERIC_DTYPES:
-                        if mismatch[col_name]["mismatch"] == 0:
-                            numeric_cols.append(col_name)
+                    if x in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
+                        numeric_cols.append(col_name)
                     else:
                         string_cols.append(col_name)
 
                 hist = None
                 freq_uniques = None
-
                 if len(numeric_cols):
                     hist = df[numeric_cols].astype("float").cols.hist(numeric_cols, buckets=bins, compute=compute)
                     freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
-                freq = None
 
+                freq = None
                 if len(string_cols):
                     freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
