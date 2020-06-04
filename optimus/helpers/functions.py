@@ -538,19 +538,34 @@ def prepare_path(path, file_format=None):
     return file, file_name
 
 
-def set_func(pdf, _value, _where, _output_col, vfunc, _default=None):
-    pdf = pdf.applymap(vfunc)
+def set_func(pdf, value, where, output_col, parser, default=None):
+    """
+    Core implementation of the set function
+    :param pdf:
+    :param value:
+    :param where:
+    :param output_col:
+    :param parser:
+    :param default:
+    :return:
+    """
+    # print("value, where, output_col",value, where, output_col)
+    # value = str(value)
+    # where = str(where)
+
+    pdf = pdf.applymap(parser)
     df = pdf
     try:
-        if _where is None:
-            return eval(_value)
+        if where is None:
+            return eval(value)
         else:
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
-            mask = (eval(_where))
-            if (_output_col not in pdf.cols.names()) and (_default is not None):
-                pdf[_output_col] = pdf[_default]
-            pdf.loc[mask, _output_col] = eval(_value)
-            return pdf[_output_col]
+            mask = (eval(where))
+            if (output_col not in pdf.cols.names()) and (default is not None):
+                pdf[output_col] = pdf[default]
+
+            pdf.loc[mask, output_col] = eval(value)
+            return pdf[output_col]
 
     except:
         raise
@@ -558,18 +573,30 @@ def set_func(pdf, _value, _where, _output_col, vfunc, _default=None):
 
 
 def set_function_parser(df, value, where):
+    """
+    We infer the data type that must be use to make a calculation using the set function
+    :param df:
+    :param value:
+    :param where:
+    :return:
+    """
+    value = str(value)
+    where = str(where)
+
     def prepare_columns(cols):
         """
         Extract the columns names from the value and where clauses
         :param cols:
         :return:
         """
+
         if cols is not None:
             r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
                              re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
         else:
             r = []
         return r
+
     columns = prepare_columns(value) + prepare_columns(where)
     columns = list(set(columns))
     if columns:
@@ -584,11 +611,12 @@ def set_function_parser(df, value, where):
             column_dtype = "string"
 
     if column_dtype in PROFILER_NUMERIC_DTYPES:
-        vfunc = lambda x: fastnumbers.fast_float(x) if x is not None else None
+        func = lambda x: fastnumbers.fast_float(x) if x is not None else None
     elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
-        vfunc = lambda x: str(x) if not pd.isnull(x) else None
+        func = lambda x: str(x) if not pd.isnull(x) else None
 
-    return columns, vfunc
+    return columns, func
+
 
 # value = "dd/MM/yyyy hh:mm:ss-sss MA"
 def match_date(value):

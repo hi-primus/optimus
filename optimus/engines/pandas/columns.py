@@ -53,13 +53,14 @@ def cols(self: DataFrame):
             #         pass
             output_cols = one_list_to_val(output_cols)
 
+
             if columns:
-                final_value = set_func(df[columns], _value=value, _where=where, _output_col=output_cols, vfunc=vfunc,
-                                       _default=default)
+                final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
+                                       default=default)
             else:
                 df = df.applymap(vfunc)
-                final_value = set_func(df, _value=value, _where=where, _output_col=output_cols, vfunc=vfunc,
-                                       _default=default)
+                final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
+                                       default=default)
 
             kw_columns = {output_cols: final_value}
             return df.assign(**kw_columns)

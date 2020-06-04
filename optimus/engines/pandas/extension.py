@@ -61,7 +61,6 @@ def ext(self: DataFrame):
                 stats["stats"] = df.cols.count_by_dtypes(col_name, "int")[col_name]
 
                 col_dtype = df[col_name].dtype
-
                 if col_dtype == np.float64 or df[col_name].dtype == np.int64:
                     stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)[col_name]["hist"]})
                     r = {col_name: stats}
@@ -72,8 +71,8 @@ def ext(self: DataFrame):
                                            "count_uniques": len(df[col_name].value_counts())})
                     r = {col_name: stats}
                 else:
-
                     RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
+
                 r[col_name]["dtype"] = dtypes[col_name]
                 result["columns"].update(r)
             result["summary"] = {"rows_count": df_length}

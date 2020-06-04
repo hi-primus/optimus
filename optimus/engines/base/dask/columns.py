@@ -20,14 +20,12 @@ from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_stri
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.constants import RELATIVE_ERROR, Actions, PROFILER_NUMERIC_DTYPES, \
-    PROFILER_STRING_DTYPES
+from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import update_dict, set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict, \
-    is_str
+from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
 from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
@@ -720,6 +718,7 @@ class DaskBaseColumns(BaseColumns):
         :param where:
         :param value:
         :param output_cols:
+        :param default:
         :return:
         """
         df = self.df
@@ -742,9 +741,8 @@ class DaskBaseColumns(BaseColumns):
         else:
             # df[output_cols] = value
             final_value = df
-        final_value = final_value.map_partitions(set_func, _value=value, _where=where, _output_col=output_cols,
-                                                     vfunc=vfunc, _default=default,
-                                                     meta=object)
+        final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols, parser=vfunc,
+                                                 default=default, meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)
