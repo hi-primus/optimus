@@ -381,10 +381,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df
 
     @staticmethod
-    def move(column, position, ref_col=None):
-        pass
-
-    @staticmethod
     def astype(*args, **kwargs):
         pass
 

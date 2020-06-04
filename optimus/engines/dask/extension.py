@@ -107,7 +107,7 @@ def ext(self: DataFrame):
             :param bins:
             :param output:
             :param flush:
-            :param size: get the dataframe size ni memory. Use with caution this could be slow for big dataframes.
+            :param size: get the dataframe size in memory. Use with caution this could be slow for big dataframes.
             :return:
             """
 
