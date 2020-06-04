@@ -275,11 +275,15 @@ class BaseExt(ABC):
                     if len(get_renamed_columns(col)) == 0:
                         _result = col
                     else:
-                        _result = get_renamed_columns(col)
+                        _result = get_renamed_columns(col)[0]
 
                     # Unnest return a list inside a list
-                    if action == Actions.UNNEST.value:
-                        _result = _result[0]
+                    # if action == Actions.UNNEST.value:
+                    #     _result = _result[0]
+                    #
+                    # print("_result",_result)
+                    # if action == Actions.DROP_ROW.value:
+                    #     _result = _result[0]
                     modified = modified + _result
                     return modified
 
@@ -353,7 +357,7 @@ class BaseExt(ABC):
                             for col_names in get_columns_by_action(action_name):
                                 profiler_columns.pop(col_names)
                         else:
-                            modified_columns = modified_columns + (get_columns_by_action(action_name))
+                            modified_columns = modified_columns + get_columns_by_action(action_name)
 
                 # Actions applied to current columns
                 # print("modified_columns", modified_columns)
