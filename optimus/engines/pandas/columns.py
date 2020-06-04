@@ -311,25 +311,7 @@ def cols(self: DataFrame):
         #             df = df[df[col_name].apply(f)]
         #         return df
 
-        @staticmethod
-        def is_match(columns, dtype, invert=False):
-            """
-            Find the rows that match a data type
-            :param columns:
-            :param dtype: data type to match
-            :param invert: Invert the match
-            :return:
-            """
-            df = self
-            columns = parse_columns(df, columns)
 
-            dtype = parse_dtypes(df, dtype)
-            f = profiler_dtype_func(dtype)
-            if f is not None:
-                for col_name in columns:
-                    df = df[col_name].apply(f)
-                    df = ~df if invert is True else df
-                return df
 
         @staticmethod
         def find(columns, sub, ignore_case=False):

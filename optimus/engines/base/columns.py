@@ -11,8 +11,9 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.core import val_to_list
+from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer
+from optimus.infer import is_dict, Infer, profiler_dtype_func
 
 
 class BaseColumns(ABC):
@@ -295,6 +296,25 @@ class BaseColumns(ABC):
             df_left = df_left.cols.move(left_on, "before", l_c)
 
         return df_left
+
+    def is_match(self,columns, dtype, invert=False):
+        """
+        Find the rows that match a data type
+        :param columns:
+        :param dtype: data type to match
+        :param invert: Invert the match
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+
+        dtype = parse_dtypes(df, dtype)
+        f = profiler_dtype_func(dtype)
+        if f is not None:
+            for col_name in columns:
+                df = df[col_name].apply(f)
+                df = ~df if invert is True else df
+            return df
 
     def move(self, column, position, ref_col=None):
         """
