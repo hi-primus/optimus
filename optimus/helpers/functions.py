@@ -593,14 +593,17 @@ def set_function_parser(df, value, where, default):
 
         if cols is not None:
             r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
-                             re.findall(r"\[df(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
+                             re.findall(r"(df\['[A-Za-z0-9_]*'\])", cols.replace("\"", "'"))])
+            a = [re.findall(r"'([^']*)'",i)[0] for i in r]
+
         else:
-            r = []
-        return r
+            a = []
+        return a
 
     # if default is in
     columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
     columns = list(set(columns))
+    print("columns",columns)
     if columns:
         first_columns = columns[0]
         column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
