@@ -593,7 +593,7 @@ def set_function_parser(df, value, where, default):
 
         if cols is not None:
             r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
-                             re.findall(r"\[(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
+                             re.findall(r"\[df(['A-Za-z0-9_']+)\]", cols.replace("\"", "'"))])
         else:
             r = []
         return r
