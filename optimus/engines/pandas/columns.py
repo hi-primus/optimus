@@ -43,7 +43,7 @@ def cols(self: DataFrame):
 
             df = self.df
 
-            columns, vfunc = set_function_parser(df, value, where)
+            columns, vfunc = set_function_parser(df, value, where, default)
 
             # if df.cols.dtypes(input_col) == "category":
             #     try:

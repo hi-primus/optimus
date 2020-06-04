@@ -562,6 +562,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
             mask = (eval(where))
             if (output_col not in pdf.cols.names()) and (default is not None):
+                print("AAAa",pdf)
                 pdf[output_col] = pdf[default]
 
             pdf.loc[mask, output_col] = eval(value)
@@ -572,7 +573,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
         return np.nan
 
 
-def set_function_parser(df, value, where):
+def set_function_parser(df, value, where, default):
     """
     We infer the data type that must be use to make a calculation using the set function
     :param df:
@@ -597,7 +598,7 @@ def set_function_parser(df, value, where):
             r = []
         return r
 
-    columns = prepare_columns(value) + prepare_columns(where)
+    columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
     columns = list(set(columns))
     if columns:
         first_columns = columns[0]
