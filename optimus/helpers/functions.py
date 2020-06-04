@@ -552,8 +552,9 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     # print("value, where, output_col",value, where, output_col)
     # value = str(value)
     # where = str(where)
-
-    pdf = pdf.applymap(parser)
+    f = filter(lambda x: x != "__match__", pdf.cols.names())
+    # cols = i if i!="__match__" for i in
+    pdf[f] = pdf[f].applymap(parser)
     df = pdf
     try:
         if where is None:
@@ -562,7 +563,6 @@ def set_func(pdf, value, where, output_col, parser, default=None):
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
             mask = (eval(where))
             if (output_col not in pdf.cols.names()) and (default is not None):
-                print("AAAa",pdf)
                 pdf[output_col] = pdf[default]
 
             pdf.loc[mask, output_col] = eval(value)
@@ -598,6 +598,7 @@ def set_function_parser(df, value, where, default):
             r = []
         return r
 
+    # if default is in
     columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
     columns = list(set(columns))
     if columns:
