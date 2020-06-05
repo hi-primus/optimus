@@ -138,9 +138,9 @@ def cols(self: DataFrame):
             # df = df.cols.cast(input_cols, "str")
             for input_col, output_col in zip(input_cols, output_cols):
                 if search_by == "chars" or search_by == "words":
-                    df[output_col] = df[input_col].str.replace(_regex, replace_by)
+                    df[output_col] = df[input_col].astype(str).str.replace(_regex, replace_by)
                 elif search_by == "full":
-                    df[output_col] = df[input_col].replace(search, replace_by)
+                    df[output_col] = df[input_col].astype(str).replace(search, replace_by)
 
             return df
 

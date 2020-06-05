@@ -1364,7 +1364,7 @@ class DaskBaseColumns(BaseColumns):
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
-            kw_columns[output_col] = df[input_col].str.replace(regex, replace_by)
+            kw_columns[output_col] = df[input_col].astype(str).str.replace(regex, replace_by)
 
             if input_col != output_col:
                 col_index = output_ordered_columns.index(input_col) + 1
