@@ -107,9 +107,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         VaexDataFrame.schema = [MetadataDask()]
 
     # Dummy so pycharm not complain about not used imports
-
-    # else:
-    #     RaiseIt.value_error(engine, ["spark", "cudf", "dask-cudf"])
     columns, rows, constants, extension, functions, save, plots
 
     # Init engine
