@@ -1,21 +1,24 @@
 from rply import LexerGenerator
 
-op_functions = ["SQRT", "ROUND"]
+op_math_functions = ["MOD", "ABS", "EXP", "LOG", "POW", "CEILING", "SQRT", "FLOOR", "TRUNC", "RADIANS", "DEGREES"]
+op_trigonometric_functions = ["SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "SINH", "ASINH", "COSH", "TANH", "ACOSH",
+                              "ATANH"]
+
+op_functions = op_math_functions + op_trigonometric_functions
 
 
 class Parser:
     """
     Parse an expression to optimus code
     """
+
     def __init__(self):
         self.lexer_generator = LexerGenerator()
         self._add_tokens()
         self.lexer = self.lexer_generator.build()
 
     def _add_tokens(self):
-        # Print
         l_g = self.lexer_generator
-        l_g.add('PRINT', r'print(?!\w)')
 
         for f in op_functions:
             rx = f'{f}(?!\w)'
