@@ -1,3 +1,6 @@
+import math
+
+import fastnumbers
 from dask.distributed import Client
 
 from optimus.bumblebee import Comm
@@ -7,7 +10,7 @@ from optimus.engines.dask.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
-
+import numpy as np
 Dask.instance = None
 Profiler.instance = None
 Comm.instance = None
@@ -83,3 +86,4 @@ class DaskEngine:
     # def create(self, data):
     #     import dask.dataframe as dd
     #     return dd.DataFrame(data)
+
