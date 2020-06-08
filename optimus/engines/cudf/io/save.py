@@ -1,5 +1,4 @@
-# from pyspark.sql import DataFrame
-from dask.dataframe.core import DataFrame
+from cudf.core.dataframe import DataFrame
 
 from optimus.helpers.logger import logger
 
@@ -16,7 +15,6 @@ def save(self: DataFrame):
                     "overwrite" (default case): Overwrite existing data.
                     "ignore": Silently ignore this operation if data already exists.
                     "error": Throw an exception if data already exists.
-            :param num_partitions: the number of partitions of the DataFrame
             :return:
             """
             df = self
@@ -46,7 +44,7 @@ def save(self: DataFrame):
                 # Dask reference
                 # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
                 # df.to_csv(filename=path)
-                df.to_csv(filename=path, mode=mode, **kwargs)
+                df.to_csv(path, **kwargs)
 
             except IOError as error:
                 logger.print(error)

@@ -53,7 +53,6 @@ class Load:
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
 
-        # def csv(path, sep=',', header=True, infer_schema=True, encoding="UTF-8", null_value="None", *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -76,9 +75,17 @@ class Load:
 
         try:
             # TODO:  lineterminator=lineterminator seems to be broken
-            df = cudf.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding,
+            if header is True:
+                header = 0
+            elif header is False:
+                header = None
+            # else is_float(header):
+            #     header = header
+
+            print("header",header)
+            df = cudf.read_csv(file, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
-                               keep_default_na=True, na_values=None)
+                               keep_default_na=keep_default_na, na_values=null_value)
 
             df.meta.set("file_name", file_name)
         except IOError as error:
