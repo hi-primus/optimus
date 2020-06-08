@@ -73,8 +73,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         SparkDataFrame.outliers = property(outliers)
         SparkDataFrame.meta = property(meta)
 
-
-
     if engine == Engine.CUDF.value:
         from cudf.core import DataFrame as CUDFDataFrame
 

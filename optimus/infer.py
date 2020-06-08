@@ -12,7 +12,6 @@ import pandas as pd
 import pendulum
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
-from pandas._libs.tslibs.np_datetime import OutOfBoundsDatetime
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import functions as F, DataFrame as SparkDataFrame
 from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
@@ -21,14 +20,6 @@ from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, Dou
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.raiseit import RaiseIt
-
-
-def str_to_boolean(_value):
-    _value = _value.lower()
-    if _value == "true" or _value == "false":
-        return True
-    else:
-        return False
 
 
 def str_to_date(_value, date_format=None):
@@ -41,6 +32,7 @@ def str_to_date(_value, date_format=None):
 
 
 def str_to_date_format(_value, date_format):
+    # Check this https://stackoverflow.com/questions/17134716/convert-dataframe-column-type-from-string-to-datetime-dd-mm-yyyy-format
     try:
         pendulum.from_format(_value, date_format)
         return True
@@ -57,15 +49,7 @@ def str_to_null(_value):
 
 
 def is_null(_value):
-    if _value is None:
-        return True
-    else:
-        return False
-
-
-def str_to_gender(_value):
-    _value = _value.lower()
-    if _value == "male" or _value == "female":
+    if pd.isnull(_value):
         return True
     else:
         return False
@@ -93,69 +77,96 @@ def str_to_array(_value):
 
 def str_to_object(_value):
     return False
-    return str_to_data_type(_value, (dict, set))
+    # return str_to_data_type(_value, (dict, set))
 
 
-def str_to_url(_value):
-    regex = re.compile(
-        r'^https?://'  # http:// or https://
-        r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
-        r'localhost|'  # localhost...
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
-        r'(?::\d+)?'  # optional port
-        r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    try:
-        if regex.match(_value):
-            return True
-    except TypeError:
-        pass
+regex_int = r"^\d+$" # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14 
+regex_decimal = r"^\d+\.\d$"
 
 
-def str_to_ip(_value):
-    regex = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
-    try:
-        if regex.match(_value):
-            return True
-    except TypeError:
-        return False
+regex_boolean = r"\btrue\b|\bfalse\b"
+regex_boolean_compiled = re.compile(regex_boolean)
 
 
-def str_to_email(_value):
-    try:
-        regex = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
-        if regex.match(_value):
-            return True
-    except TypeError:
-        pass
+def str_to_boolean(value, compile=False):
+    return str_to(value, regex_boolean, regex_boolean_compiled, compile)
 
 
-def str_to_credit_card(_value):
-    # Reference https://www.regular-expressions.info/creditcard.html
-    # https://codereview.stackexchange.com/questions/74797/credit-card-checking
-    if _value is None:
-        return False
+regex_gender = r"\bmale\b|\bfemale\b"
+regex_gender_compiled = re.compile(regex_gender)
+
+
+def str_to_gender(value, compile=False):
+    return str_to(value, regex_gender, regex_gender_compiled, compile)
+
+
+regex_url = "(http|https|ftp|s3):\/\/.?[a-zA-Z]*.\w*.[a-zA-Z0-9]*\/?[a-zA-z_-]*.?[a-zA-Z]*\/?"
+regex_url_compiled = re.compile(regex_url, re.IGNORECASE)
+
+
+def str_to_url(value, compile=False):
+    return str_to(value, regex_url, regex_url_compiled, compile)
+
+
+regex_ip = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+regex_ip_compiled = re.compile(regex_ip, re.IGNORECASE)
+
+
+def str_to_ip(value, compile=False):
+    return str_to(value, regex_ip, regex_ip_compiled, compile)
+
+
+# regex_email = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" # This do not work in CUDF/RE2
+regex_email = r"^[^@]+@[^@]+\.[a-zA-Z]{2,}$"
+regex_email_compiled = re.compile(regex_email, re.IGNORECASE)
+
+
+def str_to_email(value, compile=False):
+    return str_to(value, regex_email, regex_email_compiled, compile)
+
+
+# Reference https://www.regular-expressions.info/creditcard.html
+# https://codereview.stackexchange.com/questions/74797/credit-card-checking
+regex_credit_card = (r'(4(?:\d{12}|\d{15})'  # Visa
+                     r'|5[1-5]\d{14}'  # Mastercard
+                     r'|6011\d{12}'  # Discover (incomplete?)
+                     r'|7\d{15}'  # What's this?
+                     r'|3[47]\d{13}'  # American Express
+                     r')$')
+
+regex_credit_card_compiled = re.compile(regex_credit_card)
+
+
+def str_to_credit_card(value, compile=False):
+    return str_to(value, regex_credit_card, regex_credit_card_compiled, compile)
+
+
+regex_zip_code = r"^(\d{5})([- ])?(\d{4})?$"
+regex_zip_code_compiled = re.compile(regex_zip_code, re.IGNORECASE)
+
+
+def str_to_zip_code(value, compile=False):
+    return str_to(value, regex_zip_code, regex_zip_code_compiled, compile)
+
+
+regex_missing = r" "
+regex_missing_compiled = re.compile(regex_missing, re.IGNORECASE)
+
+
+def str_to_missing(value, compile=False):
+    return str_to(value, regex_missing, regex_missing_compiled, compile)
+
+
+def str_to(value, regex, compiled_regex, compile=False):
+    if value is None:
+        result = False
     else:
-        regex = re.compile(r'(4(?:\d{12}|\d{15})'  # Visa
-                           r'|5[1-5]\d{14}'  # Mastercard
-                           r'|6011\d{12}'  # Discover (incomplete?)
-                           r'|7\d{15}'  # What's this?
-                           r'|3[47]\d{13}'  # American Express
-                           r')$')
-    # print(_value)
-    return bool(regex.match("4234234234"))
-
-
-def str_to_zip_code(_value):
-    regex = re.compile(r"^(\d{5})([- ])?(\d{4})?$")
-    try:
-        if regex.match(_value):
-            return True
-    except TypeError:
-        return False
-
-
-def str_to_missing(_value):
-    return True if _value == "" else False
+        if compile is True:
+            regex = compiled_regex
+        else:
+            regex = regex
+        result = bool(re.match(regex,value))
+    return result
 
 
 def str_to_int(_value):
@@ -277,46 +288,6 @@ class Infer(object):
 
         return parse_spark_class_dtypes(result)
 
-    # @staticmethod
-    # def func(value, data_type, get_type):
-    #     """
-    #     Check if a value can be casted to a specific
-    #     :param value: value to be checked
-    #     :return:
-    #     """
-    #     if isinstance(value, bool):
-    #         _data_type = "bool"
-    #     elif fastnumbers.isint(value):  # Check if value is integer
-    #         _data_type = "int"
-    #     elif fastnumbers.isfloat(value):
-    #         _data_type = "float"
-    #     # if string we try to parse it to int, float or bool
-    #     elif isinstance(value, str):
-    #         if str_to_boolean(value):
-    #             _data_type = "bool"
-    #         elif str_to_date(value):
-    #             _data_type = "date"
-    #         elif str_to_array(value):
-    #             _data_type = "array"
-    #         else:
-    #             _data_type = "string"
-    #     else:
-    #         _data_type = "null"
-    #
-    #     if get_type is False:
-    #         if _data_type == data_type:
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return _data_type
-
-    # @staticmethod
-    # def parse_dask(value, infer, dtypes, str_funcs, int_funcs):
-    #     # print(type(value))
-    #     return value.apply(lambda row: Infer.parse((value.name, row), infer, dtypes, str_funcs, int_funcs, full=False))
-    #     # return value.apply(Infer.parse((value.name, value), infer, dtypes, str_funcs, int_funcs, full=False))
-
     @staticmethod
     def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
         """
@@ -386,13 +357,11 @@ class Infer(object):
         if full:
             return result
         else:
-            # print("ASdf", value, "---", _data_type)
             return _data_type
 
     @staticmethod
     def parse_pandas(value, date_format="DD/MM/YYYY"):
         #
-        # print("date_format",date_format)
         int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
         str_funcs = [
             (str_to_missing, "missing"), (str_to_boolean, "boolean"),
@@ -404,14 +373,14 @@ class Infer(object):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
-        elif profiler_dtype_func("int", True)(value):  # We first check if a number can be parsed as a credit card or zip code
+        elif profiler_dtype_func("int", True)(
+                value):  # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
 
         # Seems like float can be parsed as dates
-
         elif profiler_dtype_func("decimal", True)(value):
             _data_type = "decimal"
 
@@ -432,7 +401,6 @@ def profiler_dtype_func(dtype, null=False):
     Return a function that check if a value match a datatype
     :param dtype:
     :param null:
-    :param date_format: Extra data for a specific data type. Use for date format string
     :return:
     """
 
@@ -866,7 +834,6 @@ def is_float(value):
     :return:
     """
     return isinstance(value, float)
-
 
 
 def is_bool(value):

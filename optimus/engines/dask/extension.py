@@ -1,16 +1,11 @@
-from collections import OrderedDict
-
 import humanize
-from dask import dataframe as dd
 from dask.dataframe.core import DataFrame
-from glom import assign
 
 from optimus.engines.base.extension import BaseExt
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE, PROFILER_NUMERIC_DTYPES
-from optimus.helpers.functions import random_int, update_dict
-from optimus.helpers.json import dump_json
+from optimus.helpers.constants import BUFFER_SIZE
+from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -99,135 +94,6 @@ def ext(self: DataFrame):
             return df, result
 
         @staticmethod
-        def profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
-            """
-
-
-            :param columns:
-            :param bins:
-            :param output:
-            :param flush:
-            :param size: get the dataframe size in memory. Use with caution this could be slow for big dataframes.
-            :return:
-            """
-
-            df = self
-            if flush is False:
-                cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
-            else:
-                cols_to_profile = parse_columns(df, columns)
-            columns = cols_to_profile
-            output_columns = df.meta.get("profile")
-            if output_columns is None:
-                output_columns = {}
-            cols_and_inferred_dtype = None
-            if cols_to_profile or not Ext.is_cached(df) or flush is True:
-                df_length = len(df)
-                numeric_cols = []
-                string_cols = []
-                cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
-                compute = True
-
-                mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
-
-                # Get with columns are numerical and does not have mismatch so we can calculate the histogram
-                for col_name, x in cols_and_inferred_dtype.items():
-                    if x in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
-                        numeric_cols.append(col_name)
-                    else:
-                        string_cols.append(col_name)
-
-                hist = None
-                freq_uniques = None
-                if len(numeric_cols):
-                    hist = df[numeric_cols].astype("float").cols.hist(numeric_cols, buckets=bins, compute=compute)
-                    freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
-
-                freq = None
-                if len(string_cols):
-                    freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
-
-                # @delayed
-                def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
-                    _f = {}
-
-                    for _col_name in _columns:
-                        _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
-
-                    if _hist is not None:
-                        for _col_name, h in _hist.items():
-                            # _f[col_name] = {}
-                            _f[_col_name]["stats"]["hist"] = h["hist"]
-                            _f[_col_name]["stats"]["count_uniques"] = freq_uniques[_col_name]["count_uniques"]
-
-                    if _freq is not None:
-                        for _col_name, f in _freq.items():
-                            _f[_col_name]["stats"]["frequency"] = f["frequency"]
-                            _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
-
-                    return {"columns": _f}
-
-
-                # cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
-
-                # Nulls
-                total_count_na = 0
-                # for i in mismatch.values():
-                #     total_count_na = total_count_na + i["missing"]
-
-                dtypes = df.cols.dtypes("*")
-
-                hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
-                updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
-
-
-                output_columns = update_dict(output_columns, updated_columns)
-
-                # Move profiler_dtype to the parent
-                # for col_name in columns:
-                #     # print("output_columns",output_columns, col_name)
-                #     output_columns["columns"][col_name].update(
-                #         {"profiler_dtype": output_columns["columns"][col_name]["stats"].pop("profiler_dtype")})
-
-                assign(output_columns, "name", df.ext.get_name(), dict)
-                assign(output_columns, "file_name", df.meta.get("file_name"), dict)
-
-                data_set_info = {'cols_count': len(df.columns),
-                                 'rows_count': df.rows.count(),
-                                 }
-                if size is True:
-                    data_set_info.update({'size': df.ext.size(format="human")})
-
-                assign(output_columns, "summary", data_set_info, dict)
-                dtypes_list = list(set(df.cols.dtypes("*").values()))
-                assign(output_columns, "summary.dtypes_list", dtypes_list, dict)
-                assign(output_columns, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
-                assign(output_columns, "summary.missing_count", total_count_na, dict)
-                assign(output_columns, "summary.p_missing", round(total_count_na / df_length * 100, 2))
-
-            actual_columns = output_columns["columns"]
-
-            # Order columns
-            output_columns["columns"] = dict(OrderedDict(
-                {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
-                 _cols_name in list(actual_columns.keys())}))
-
-            df = df.meta.columns(df.cols.names())
-            df.meta.set("transformations", value={})
-            df.meta.set("profile", output_columns)
-
-            if cols_and_inferred_dtype is not None:
-                df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
-
-            # Reset Actions
-            df.meta.reset()
-
-            if output == "json":
-                output_columns = dump_json(output_columns)
-
-            return output_columns
-
-        @staticmethod
         def sample(n=10, random=False):
             """
             Return a n number of sample from a dataFrame
@@ -250,8 +116,9 @@ def ext(self: DataFrame):
                 fraction = 1.0
             return self.sample(frac=fraction, random_state=seed)
 
+
         @staticmethod
-        def stratified_sample(col_name, seed: int = 1) -> DataFrame:
+        def stratified_sample(col_name, seed: int = 1):
             """
             Stratified Sampling
             :param col_name:

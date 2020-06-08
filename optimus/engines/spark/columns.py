@@ -1714,7 +1714,7 @@ def cols(self):
             :param columns: Columns to be processed
             :param n: Number of buckets
             :param percentage:
-            :param total_rows:
+            :param total_rows: total rows count to calculate the percentage per item
             :return:
             """
             columns = parse_columns(self, columns)

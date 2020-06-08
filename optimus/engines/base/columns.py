@@ -864,11 +864,9 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
         total_preview_rows = 30
-        pdf = df.ext.head(columns, total_preview_rows).applymap(Infer.parse_pandas)
-        # print("pdf", pdf.head(20))
+        pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            # print("_value_counts",col_name)
             _value_counts = pdf[col_name].value_counts()
             if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
                 r = _value_counts.index[0]

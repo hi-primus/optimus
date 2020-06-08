@@ -28,12 +28,26 @@ def func(value, col):
 #     return np.arctanh(value[col].astype(float))
 
 
-
-
+# CUDF
+# cudf.sqrt(df.Lat)
+# cudf.sin(df.Lat)
+# cudf.cos(df.Lat)
+# cudf.tan(df.Lat)
+# cudf.arcsin(df.Lat)
+# cudf.arccos(df.Lat)
+# cudf.arctan(df.Lat)
+# df.Lat.abs()
+# df.Lat.exp()
+# df.Lat.log()
+# df.Lat.pow(2)
+# df.Lat.round(2)
+# df.Lat.floor()
+# df.Lat.mod(1)
+# df.Lat.sqrt()
+# df.Lat.log()
 
 
 class Engine:
-
 
     def func(pdf, col_name):
         return pdf.map_partitions(func, col_name, meta=float).compute()

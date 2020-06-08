@@ -13,7 +13,8 @@ from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, profiler_dtype_func, is_dict
+from optimus.infer import is_str, profiler_dtype_func, is_dict, regex_credit_card, regex_zip_code, regex_url, \
+    regex_gender, regex_boolean, regex_ip, regex_email, regex_decimal, regex_int
 
 
 def cols(self: DataFrame):
@@ -387,7 +388,7 @@ def cols(self: DataFrame):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df
 
-        def min(self, columns):
+        def min(self, columns="*"):
 
             df = self.df
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
@@ -398,7 +399,7 @@ def cols(self: DataFrame):
             return r
             # return {column: _min for column, _min in zip(columns, min_values)}
 
-        def max(self, columns):
+        def max(self, columns="*"):
 
             df = self.df
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
@@ -408,16 +409,16 @@ def cols(self: DataFrame):
 
             return r
 
-        def count_uniques(self, columns, estimate=True):
+        def count_uniques(self, columns="*", estimate=True, **kwargs):
             df = self.df
-            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+            # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
             r = {}
             for col_name in columns:
                 r[col_name] = {"count_uniques": df[col_name].nunique()}
 
             return r
 
-        def hist(self, columns, buckets=10, compute=True):
+        def hist(self, columns="*", buckets=10, compute=True):
             df = self.df
             columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
@@ -433,7 +434,6 @@ def cols(self: DataFrame):
                 return {_series.name: {"hist": _hist}}
 
             columns = parse_columns(df, columns)
-
             r = [hist_series(df[col_name], buckets) for col_name in columns]
 
             # Flat list of dict
@@ -537,28 +537,43 @@ def cols(self: DataFrame):
 
             return result
 
-        def count_mismatch(self, columns_mismatch: dict = None, infer=True):
+        def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
             df = self.df
             if not is_dict(columns_mismatch):
                 columns_mismatch = parse_columns(df, columns_mismatch)
 
             result = {}
-
             nulls = df.isnull().sum().to_pandas().to_dict()
+            total_rows = len(df)
+
+            func = {"int": regex_int, # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
+                    "decimal": regex_decimal,
+                    "email": regex_email,
+                    "ip": regex_ip,
+                    "url": regex_url,
+                    "gender": regex_gender,
+                    "boolean": regex_boolean,
+                    "zip_code": regex_zip_code,
+                    "credit card": regex_credit_card,
+                    "date": r"",
+                    "object": r""
+                    }
+
             for col_name, dtype in columns_mismatch.items():
                 result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
                 result[col_name]["missing"] = nulls.get(col_name)
-                matches_count = {"True": 0, "False": 0}
+                matches_count = {True: 0, False: 0}
 
-                if not ((df.cols.names(col_name, by_dtypes=df.constants.NUMERIC_TYPES)) is None):
-                    pass
-                elif not ((df.cols.names(col_name, by_dtypes=df.constants.STRING_TYPES)) is None):
-                    # print("COL", col_name, dtype)
-                    matches_count = df[col_name].str.match(
-                        profiler_dtype_func(dtype, True)).value_counts().to_pandas().to_dict()
+                if dtype == "string":
+                    matches_count[True] = total_rows - nulls[col_name]
+                    matches_count[False] = nulls[col_name]
 
-                match = matches_count.get("True")
-                mismatch = matches_count.get("False")
+                else:
+                    matches_count = df[col_name].str.match(func[dtype]).value_counts().to_pandas().to_dict()
+
+                match = matches_count.get(True)
+                mismatch = matches_count.get(False)
+                # print("mismatch", mismatch, match, matches_count)
 
                 result[col_name]["match"] = 0 if match is None else match
                 result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
@@ -579,17 +594,14 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                # Value counts
                 values_and_count = df[col_name].value_counts()
-                count_uniques_result = len(values_and_count)
-                values_and_count = values_and_count.nlargest(n)
 
-                i = list(values_and_count.index)
-                j = list(values_and_count)
-                value_count = []
-                for idx in range(len(i)):
-                    value_count.append({"values": i[idx], "count": j[idx]})
-                result[col_name] = {"frequency": value_count, "count_uniques": count_uniques_result}
+                value_count = [{"values": value, "count": count} for value, count in
+                               values_and_count.nlargest(n).to_pandas().items()]
+                if count_uniques is True:
+                    result[col_name] = {"frequency": value_count, "count_uniques": len(values_and_count)}
+                else:
+                    result[col_name] = {"frequency": value_count}
             return result
 
     return Cols(self)

@@ -46,7 +46,7 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def count_mismatch(self, columns_mismatch: dict = None, infer=True, compute=True):
+    def count_mismatch(self, columns_mismatch: dict = None, compute=True):
         df = self.df
         if not is_dict(columns_mismatch):
             columns_mismatch = parse_columns(df, columns_mismatch)
