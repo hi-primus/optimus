@@ -1,13 +1,48 @@
 from rply import LexerGenerator
 
-op_math_functions = ["MOD", "ABS", "EXP", "LOG", "POW", "CEILING", "SQRT", "FLOOR", "TRUNC", "RADIANS", "DEGREES"]
-op_trigonometric_functions = ["SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "SINH", "ASINH", "COSH", "TANH", "ACOSH",
-                              "ATANH"]
-unary_operators = ["~", "|", "&", "+", "-"]
-binary_operators = ["+", "-", "*", "/"]
-functions = op_math_functions + op_trigonometric_functions
-reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
 
+op_functions = {
+    "MOD": "MOD function description", # Math functions
+    "ABS": "ABS function description",
+    "EXP": "EXP function description",
+    "LOG": "LOG function description",
+    "POW": "POW function description",
+    "CEILING": "CEILING function description",
+    "SQRT": "SQRT function description",
+    "FLOOR": "FLOOR function description",
+    "TRUNC": "TRUNC function description",
+    "RADIANS": "RADIANS function description", # Trigonometric Functions
+    "DEGREES": "DEGREES function description",               
+    "SIN": "SIN function description",
+    "COS": "COS function description",
+    "TAN": "TAN function description",
+    "ASIN": "ASIN function description",
+    "ACOS": "ACOS function description",
+    "ATAN": "ATAN function description",
+    "SINH": "SINH function description",
+    "ASINH": "ASINH function description",
+    "COSH": "COSH function description",
+    "TANH": "TANH function description",
+    "ACOSH": "ACOSH function description",
+    "ATANH": "ATANH function description"
+}
+unary_operators = {
+    "~": "~ funtion description",
+    "|": "| funtion description",
+    "&": "& funtion description",
+    "+": "+ funtion description",
+    "-": "- funtion description"
+}
+binary_operators = {
+    "+": "+ funtion description",
+    "-": "- funtion description",
+    "*": "* funtion description",
+    "/": "/ funtion description"}
+
+functions = op_functions
+
+reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
+functions = list(op_functions.keys())
 
 class Parser:
     """

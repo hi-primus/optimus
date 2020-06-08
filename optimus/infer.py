@@ -80,7 +80,7 @@ def str_to_object(_value):
     # return str_to_data_type(_value, (dict, set))
 
 
-regex_int = r"^\d+$" # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14 
+regex_int = r"^\d+$" # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
 regex_decimal = r"^\d+\.\d$"
 
 
