@@ -109,7 +109,7 @@ def ext(self):
                 else:
                     cols_to_infer = df.cols.profiler_dtypes(cols_to_profile)
 
-                mismatch = df.cols.count_mismatch(cols_to_infer, infer=True)
+                mismatch = df.cols.count_mismatch(cols_to_infer)
 
                 # Nulls
                 total_count_na = 0

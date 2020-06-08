@@ -616,7 +616,7 @@ class BaseExt(ABC):
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
 
-            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, infer=True, compute=compute)
+            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
