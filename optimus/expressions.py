@@ -3,8 +3,10 @@ from rply import LexerGenerator
 op_math_functions = ["MOD", "ABS", "EXP", "LOG", "POW", "CEILING", "SQRT", "FLOOR", "TRUNC", "RADIANS", "DEGREES"]
 op_trigonometric_functions = ["SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "SINH", "ASINH", "COSH", "TANH", "ACOSH",
                               "ATANH"]
-
-op_functions = op_math_functions + op_trigonometric_functions
+unary_operators = ["~", "|", "&", "+", "-"]
+binary_operators = ["+", "-", "*", "/"]
+functions = op_math_functions + op_trigonometric_functions
+reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
 
 
 class Parser:
@@ -20,7 +22,7 @@ class Parser:
     def _add_tokens(self):
         l_g = self.lexer_generator
 
-        for f in op_functions:
+        for f in functions:
             rx = f'{f}(?!\w)'
             l_g.add(f, rx)
 
@@ -59,7 +61,7 @@ class Parser:
             #     print(token.name)
             if token.name == "IDENTIFIER":
                 r = "df['" + token.value + "']"
-            elif token.name in op_functions:
+            elif token.name in functions:
                 r = "op." + token.value.lower()
             else:
                 r = token.value
