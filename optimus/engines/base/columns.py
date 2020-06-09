@@ -6,11 +6,11 @@ import numpy as np
 from glom import glom
 
 # from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
-from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns
+from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 # This implementation works for Spark, Dask, dask_cudf
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func
@@ -566,35 +566,86 @@ class BaseColumns(ABC):
     def remove_white_spaces(input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def year(self, input_cols, output_cols=None):
-        pass
+    def year(self, input_cols, format=None, output_cols=None):
+        """
 
-    @staticmethod
-    @abstractmethod
-    def month(self, input_cols, output_cols=None):
-        pass
+        :param input_cols:
+        :param output_cols:
+        :param format:
+        :return:
+        """
 
-    @staticmethod
-    @abstractmethod
-    def day(self, input_cols, output_cols=None):
-        pass
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
 
-    @staticmethod
-    @abstractmethod
-    def hour(self, input_cols, output_cols=None):
-        pass
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.year
 
-    @staticmethod
-    @abstractmethod
-    def minute(self, input_cols, output_cols=None):
-        pass
+        for input_col in input_cols:
+            df = df.rows.apply(func, args=(input_col, format), output_cols=output_cols)
 
-    @staticmethod
-    @abstractmethod
-    def second(self, input_cols, output_cols=None):
-        pass
+        return df
+
+    def month(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.month
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+
+    def day(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.day
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+
+    def hour(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.hour
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+
+    def minute(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.minute
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+
+    def second(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.second
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+
+    def weekday(self, input_cols, format=None, output_cols=None):
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def func(_df, _input_col, _format):
+            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.weekday
+
+        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
     @staticmethod
     @abstractmethod

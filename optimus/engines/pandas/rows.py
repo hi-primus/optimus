@@ -5,6 +5,7 @@ import pandas as pd
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
@@ -15,7 +16,10 @@ DataFrame = pd.DataFrame
 
 
 def rows(self):
-    class Rows:
+    class Rows(BaseRows):
+        def __init__(self, df):
+            super(Rows, self).__init__(df)
+
         @staticmethod
         def create_id(column="id") -> DataFrame:
             pass
@@ -316,7 +320,7 @@ def rows(self):
             """
             return Rows.count()
 
-    return Rows()
+    return Rows(self)
 
 
 DataFrame.rows = property(rows)

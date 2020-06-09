@@ -13,7 +13,8 @@ from multipledispatch import dispatch
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
+from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
+    prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
@@ -42,7 +43,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def abs(columns):
         pass
-
 
     @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
@@ -301,6 +301,9 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def years_between(input_cols, date_format=None, output_cols=None):
         pass
+
+    def weekofyear(self, input_cols, output_cols=None):
+        raise NotImplementedError("To be implemented")
 
     def remove_white_spaces(self, input_cols, output_cols=None):
         df = self.df
@@ -642,7 +645,8 @@ class DataFrameBaseColumns(BaseColumns):
             return col.str.lower()
 
         df = self.df
-        return df.cols.apply(input_cols, _lower, filter_col_by_dtypes=df.constants.STRING_TYPES, output_cols=output_cols)
+        return df.cols.apply(input_cols, _lower, filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
     def upper(self, input_cols, output_cols=None):
 
@@ -651,14 +655,16 @@ class DataFrameBaseColumns(BaseColumns):
 
         df = self.df
 
-        return df.cols.apply(input_cols, _upper, filter_col_by_dtypes=df.constants.STRING_TYPES, output_cols=output_cols)
+        return df.cols.apply(input_cols, _upper, filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
     def trim(self, input_cols, output_cols=None):
         def _strip(col, args=None):
             return col.str.strip()
 
         df = self.df
-        return df.cols.apply(input_cols, _strip, filter_col_by_dtypes=df.constants.STRING_TYPES, output_cols=output_cols)
+        return df.cols.apply(input_cols, _strip, filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):

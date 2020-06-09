@@ -1,32 +1,3 @@
-def func(value, col):
-#     value= value.astype(float)
-#     return np.mod(value[col].astype(float),1)
-#     return np.abs(value[col].astype(float))
-#     return np.exp(value[col].astype(float))
-#     return np.power(value[col].astype(float),2)
-#     return np.ceil(value[col].astype(float))
-#     return np.sqrt(value[col].astype(float))
-#     return np.floor(value[col].astype(float))
-#     return np.trunc(value[col].astype(float))
-
-#     return np.radians(value[col].astype(float))
-#     return np.degrees(value[col].astype(float))
-#     return np.log(value[col].astype(float))
-#     return np.log10(value[col].astype(float))
-
-#     return np.sin(value[col].astype(float))
-#     return np.cos(value[col].astype(float))
-#     return np.tan(value[col].astype(float))
-#     return np.arcsin(value[col].astype(float))
-#     return np.arccos(value[col].astype(float))
-#     return np.arctan(value[col].astype(float))
-#     return np.sinh(value[col].astype(float))
-#     return np.arcsinh(value[col].astype(float))
-#     return np.cosh(value[col].astype(float))
-#     return np.arccosh(value[col].astype(float))
-#     return np.tanh(value[col].astype(float))
-#     return np.arctanh(value[col].astype(float))
-
 
 # CUDF
 # cudf.sqrt(df.Lat)
@@ -45,139 +16,211 @@ def func(value, col):
 # df.Lat.mod(1)
 # df.Lat.sqrt()
 # df.Lat.log()
+from abc import abstractmethod
 
+from optimus.engines.dask.io.jdbc import JDBC
+from optimus.helpers.logger import logger
 
-class Engine:
+op_to_series_func = {
+    "abs": {
+        "cudf": "abs",
+        "numpy": "abs",
+    },
+    "exp": {
+        "cudf": "exp",
+        "numpy": "exp",
+    },
+    "sqrt": {
+        "cudf": "sqrt",
+        "numpy": "sqrt",
+    },
+    "mod": {
+        "cudf": "mod",
+        "numpy": "mod"
 
-    def func(pdf, col_name):
-        return pdf.map_partitions(func, col_name, meta=float).compute()
-
-    op_to_series_func = {
-        "sqrt": {
-            "cudf": "sqrt",
-            "python": "sqrt",
-        },
-        "abs": {
-            "cudf": "abs",
-            "python": "fabs"
-
-        },
-        "pow": {
-            "cudf": "pow",
-            "python": "pow"
-        },
-        "exp": {
-            "cudf": "exp",
-            "python": "exp"
-        }
-
+    },
+    "pow": {
+        "cudf": "pow",
+        "numpy": "power"
+    },
+    "ceil": {
+        "cudf": "ceil",
+        "numpy": "ceil"
+    },
+    "floor": {
+        "cudf": "floor",
+        "numpy": "floor"
+    },
+    "trunc": {
+        "cudf": "trunc",
+        "numpy": "trunc"
+    },
+    "radians": {
+        "cudf": "radians",
+        "numpy": "radians"
+    },
+    "degrees": {
+        "cudf": "degrees",
+        "numpy": "degrees"
+    },
+    "ln": {
+        "cudf": "log",
+        "numpy": "log"
+    },
+    "log": {
+        "cudf": "log10",
+        "numpy": "log10"
+    },
+    "sin": {
+        "cudf": "sin",
+        "numpy": "sin"
+    },
+    "cos": {
+        "cudf": "cos",
+        "numpy": "cos"
+    },
+    "tan": {
+        "cudf": "tan",
+        "numpy": "tan"
+    },
+    "asin": {
+        "cudf": "asin",
+        "numpy": "arcsin"
+    },
+    "acos": {
+        "cudf": "acos",
+        "numpy": "arccos"
+    },
+    "atan": {
+        "cudf": "atan",
+        "numpy": "arctan"
+    },
+    "sinh": {
+        "cudf": "sinh",
+        "numpy": "sinh"
+    },
+    "asinh": {
+        "cudf": "arcsinh",
+        "numpy": "arcsinh"
+    },
+    "cosh": {
+        "cudf": "cosh",
+        "numpy": "cosh"
+    }
+    ,
+    "acosh": {
+        "cudf": "arccosh",
+        "numpy": "arccosh"
+    },
+    "tanh": {
+        "cudf": "tanh",
+        "numpy": "tanh"
+    },
+    "atanh": {
+        "cudf": "arctanh",
+        "numpy": "arctanh"
     }
 
+}
+
+
+class BaseEngine:
+
     @staticmethod
-    def call(value, *args, method_name=None):
+    def verbose(verbose):
         """
-        Process a series or number with a function
-        :param value:
-        :param args:
-        :param method_name:
+        Enable verbose mode
+        :param verbose:
         :return:
         """
 
-        # if is_dask_series(value):
-        method = getattr(value, Engine.op_to_series_func[method_name]["pandas"])
-        result = method(*args)
-        # elif fastnumbers.isreal(value):  # Numeric
-        #     method = getattr(math, Engine.op_to_series_func[method_name]["python"])
-        #     result = method(fastnumbers.fast_real(value), *args)
-        # else:  # string
-        #     result = np.nan
-        return result
+        logger.active(verbose)
 
     @staticmethod
-    def mod(value):
-        return Engine.call(value, method_name="mod")
+    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
+                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
+                cassandra_keyspace=None, cassandra_table=None):
+        """
+        Create the JDBC string connection
+        :return: JDBC object
+        """
 
-    @staticmethod
-    def abs(value):
-        return Engine.call(value, method_name="abs")
+        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
+                    presto_catalog, cassandra_keyspace, cassandra_table)
 
-    @staticmethod
-    def exp(value):
-        return Engine.call(value, method_name="exp")
+    @abstractmethod
+    def call(self, *args, method_name):
+        pass
 
-    @staticmethod
-    def pow(value, n):
-        return Engine.call(value, n, method_name="pow")
+    def abs(self, series):
+        return self.call(series, method_name="abs")
 
-    @staticmethod
-    def ceiling(value):
-        return Engine.call(value, method_name="ceiling")
+    def exp(self, series):
+        return self.call(series, method_name="exp")
 
-    @staticmethod
-    def sqrt(value):
-        return Engine.call(value, method_name="sqrt")
+    def mod(self, series, *args):
+        return self.call(series, *args, method_name="mod")
 
-    @staticmethod
-    def floor(value):
-        return Engine.call(value, method_name="floor")
+    def pow(self, series, *args):
+        return self.call(series, *args, method_name="pow")
 
-    @staticmethod
-    def trunc(value):
-        return Engine.call(value, method_name="trunc")
+    def ceil(self, series):
+        return self.call(series, method_name="ceil")
 
-    @staticmethod
-    def radians(value):
-        return Engine.call(value, method_name="trunc")
+    def sqrt(self, series):
+        return self.call(series, method_name="sqrt")
 
-    @staticmethod
-    def degrees(value):
-        return Engine.call(value, method_name="trunc")
+    def floor(self, series):
+        return self.call(series, method_name="floor")
+
+    def trunc(self, series):
+        return self.call(series, method_name="trunc")
+
+    def radians(self, series):
+        return self.call(series, method_name="radians")
+
+    def degrees(self, series):
+        return self.call(series, method_name="degrees")
+
+    def ln(self, series):
+        return self.call(series, method_name="ln")
+
+    def log(self, series):
+        return self.call(series, method_name="log")
 
     # Trigonometrics
-    @staticmethod
-    def sin(value):
-        return Engine.call(value, method_name="sin")
+    def sin(self, series):
+        return self.call(series, method_name="sin")
 
-    @staticmethod
-    def cos(value):
-        return Engine.call(value, method_name="cos")
+    def cos(self, series):
+        return self.call(series, method_name="cos")
 
-    @staticmethod
-    def tan(value):
-        return Engine.call(value, method_name="tan")
+    def tan(self, series):
+        return self.call(series, method_name="tan")
 
-    @staticmethod
-    def asin(value):
-        return Engine.call(value, method_name="asin")
+    def asin(self, series):
+        return self.call(series, method_name="asin")
 
-    @staticmethod
-    def acos(value):
-        return Engine.call(value, method_name="acos")
+    def acos(self, series):
+        return self.call(series, method_name="acos")
 
-    @staticmethod
-    def atan(value):
-        return Engine.call(value, method_name="atan")
+    def atan(self, series):
+        return self.call(series, method_name="atan")
 
-    @staticmethod
-    def sinh(value):
-        return Engine.call(value, method_name="sinh")
+    def sinh(self, series):
+        return self.call(series, method_name="sinh")
 
-    @staticmethod
-    def asinh(value):
-        return Engine.call(value, method_name="asinh")
+    def asinh(self, series):
+        return self.call(series, method_name="asinh")
 
-    @staticmethod
-    def cosh(value):
-        return Engine.call(value, method_name="cosh")
+    def cosh(self, series):
+        return self.call(series, method_name="cosh")
 
-    @staticmethod
-    def tanh(value):
-        return Engine.call(value, method_name="tanh")
+    def tanh(self, series):
+        return self.call(series, method_name="tanh")
 
-    @staticmethod
-    def acosh(value):
-        return Engine.call(value, method_name="acosh")
+    def acosh(self, series):
+        return self.call(series, method_name="acosh")
 
-    @staticmethod
-    def atanh(value):
-        return Engine.call(value, method_name="atanh")
+    def atanh(self, series):
+        return self.call(series, method_name="atanh")

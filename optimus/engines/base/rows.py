@@ -19,6 +19,24 @@ class BaseRows(ABC):
     def append(rows):
         pass
 
+    def apply(self, func, args=None, output_cols=None):
+        """
+        This will aimed to handle vectorized and not vectorized operations
+        :param output_cols:
+        :param func:
+        :return:
+        """
+        df = self.df
+        kw_columns = {}
+
+        for output_col in output_cols:
+            result = func(df, *args)
+            # print("result",result)
+            # for r in result.cols.names():
+            kw_columns = {output_col: result}
+
+        return df.assign(**kw_columns)
+
     @staticmethod
     @abstractmethod
     def select(condition):
@@ -43,16 +61,6 @@ class BaseRows(ABC):
     @abstractmethod
     def sort(input_cols):
         pass
-
-    # @staticmethod
-    # @abstractmethod
-    # def sort(columns, order="desc"):
-    #     pass
-    #
-    # @staticmethod
-    # @abstractmethod
-    # def sort(col_sort):
-    #     pass
 
     @staticmethod
     @abstractmethod

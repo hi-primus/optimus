@@ -1,27 +1,26 @@
-import math
-
-import fastnumbers
+import numpy as np
+from dask import dataframe as dd
 from dask.distributed import Client
 
 from optimus.bumblebee import Comm
+from optimus.engines.base.engine import BaseEngine, op_to_series_func
 from optimus.engines.dask.dask import Dask
-from optimus.engines.dask.io.jdbc import JDBC
 from optimus.engines.dask.io.load import Load
-from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
-import numpy as np
+
 Dask.instance = None
 Profiler.instance = None
 Comm.instance = None
 
 
-class DaskEngine:
+class DaskEngine(BaseEngine):
     __version__ = __version__
 
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
     def __init__(self, session=None, n_workers=1, threads_per_worker=None, processes=False, memory_limit='4GB',
                  verbose=False, comm=None, *args, **kwargs):
+
         if comm is True:
             Comm.instance = Comm()
         else:
@@ -54,16 +53,6 @@ class DaskEngine:
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-    @staticmethod
-    def verbose(verbose):
-        """
-        Enable verbose mode
-        :param verbose:
-        :return:
-        """
-
-        logger.active(verbose)
-
     @property
     def dask(self):
         """
@@ -72,18 +61,17 @@ class DaskEngine:
         """
         return Dask.instance.dask
 
-    @staticmethod
-    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
-                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
-                cassandra_keyspace=None, cassandra_table=None):
+    def call(self, value, *args, method_name=None):
         """
-        Create the JDBC string connection
-        :return: JDBC object
+        Process a series or number with a function
+        :param value:
+        :param args:
+        :param method_name:
+        :return:
         """
 
-        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog, cassandra_keyspace, cassandra_table)
-    # def create(self, data):
-    #     import dask.dataframe as dd
-    #     return dd.DataFrame(data)
+        def func(series, _method, args):
+            return _method(series, *args)
 
+        method = getattr(np, op_to_series_func[method_name]["numpy"])
+        return dd.map_partitions(func, value, method, args, meta=float)

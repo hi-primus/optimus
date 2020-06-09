@@ -5,6 +5,7 @@ import pandas as pd
 from multipledispatch import dispatch
 
 from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
@@ -15,7 +16,10 @@ from cudf.core import DataFrame
 
 
 def rows(self):
-    class Rows:
+    class Rows(BaseRows):
+        def __init__(self, df):
+            super(Rows, self).__init__(df)
+
         @staticmethod
         def create_id(column="id") -> DataFrame:
             pass
@@ -127,13 +131,15 @@ def rows(self):
             """
             Drop a row depending on a dataframe expression
             :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
-            :return: Spark DataFrame
+            :return: DataFrame
             :return:
             """
             df = self
             df = df.drop[where]
             df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
             return df
+
+
 
         @staticmethod
         def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
@@ -253,7 +259,7 @@ def rows(self):
             """
             return Rows.count()
 
-    return Rows()
+    return Rows(self)
 
 
 DataFrame.rows = property(rows)

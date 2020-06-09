@@ -1,24 +1,19 @@
-import math
-
 import cudf
-import fastnumbers
-import numpy as np
 
 from optimus.bumblebee import Comm
+from optimus.engines.base.engine import BaseEngine, op_to_series_func
 from optimus.engines.cudf.cudf import CUDF
-from optimus.engines.cudf.io.jdbc import JDBC
 from optimus.engines.cudf.io.load import Load
-from optimus.helpers.check import is_cudf_series
-from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
+from dask import dataframe as dd
 
 CUDF.instance = None
 Profiler.instance = None
 Comm.instance = None
 
 
-class CUDFEngine:
+class CUDFEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
@@ -28,7 +23,6 @@ class CUDFEngine:
             Comm.instance = comm
 
         self.engine = 'cudf'
-        # self.create = Create()
         self.load = Load()
         self.verbose(verbose)
 
@@ -39,24 +33,15 @@ class CUDFEngine:
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-    @staticmethod
-    def verbose(verbose):
+    def call(self, series, *args, method_name=None):
         """
-        Enable verbose mode
-        :param verbose:
+        Process a series or number with a function
+        :param value:
+        :param args:
+        :param method_name:
         :return:
         """
-
-        logger.active(verbose)
-
-    @staticmethod
-    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
-                oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
-                cassandra_keyspace=None, cassandra_table=None):
-        """
-        Create the JDBC string connection
-        :return: JDBC object
-        """
-
-        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog, cassandra_keyspace, cassandra_table)
+        print("op_to_series_func[method_name]",op_to_series_func[method_name]["cudf"])
+        print("series",dir(series),series)
+        method = getattr(series, op_to_series_func[method_name]["cudf"])
+        return method(*args)

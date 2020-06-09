@@ -39,6 +39,7 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     # Monkey Patching
     import pandas as pd
     PandasDataFrame = pd.DataFrame
+    PandasDataFrame._lib = pd
 
     # from optimus.engines.pandas import rows, columns, extension, constants, functions
     from optimus.engines.pandas import rows, columns, extension, constants, functions
@@ -74,6 +75,7 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         SparkDataFrame.meta = property(meta)
 
     if engine == Engine.CUDF.value:
+        import cudf
         from cudf.core import DataFrame as CUDFDataFrame
 
         from optimus.engines.cudf import columns, rows, extension, functions, constants
@@ -83,6 +85,7 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         CUDFDataFrame.outliers = property(outliers)
         CUDFDataFrame.meta = property(meta)
         CUDFDataFrame.schema = [MetadataDask()]
+        CUDFDataFrame._lib = cudf
 
     if engine == Engine.DASK_CUDF.value:
         from dask_cudf.core import DataFrame as DaskCUDFDataFrame
