@@ -114,17 +114,19 @@ class BaseColumns(ABC):
                 result[col_name] = column_meta["profiler_dtype"]
         return result
 
-    def set_profiler_dtypes(self, columns):
+    def set_profiler_dtypes(self, columns: dict):
         """
         Set profiler data type
-        :param columns:
+        :param columns: A dict with the form {"col_name": profiler dtype}
         :return:
         """
         df = self.df
         for col_name, dtype in columns.items():
-            # print("SET PROFILE")
-            df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
-            df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+            if dtype in ProfilerDataTypes.list():
+                df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+                df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+            else:
+                RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
     @staticmethod
     @abstractmethod
@@ -297,7 +299,7 @@ class BaseColumns(ABC):
 
         return df_left
 
-    def is_match(self,columns, dtype, invert=False):
+    def is_match(self, columns, dtype, invert=False):
         """
         Find the rows that match a data type
         :param columns:
