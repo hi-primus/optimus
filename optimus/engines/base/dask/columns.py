@@ -535,7 +535,7 @@ class DaskBaseColumns(BaseColumns):
     def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
         pass
 
-    def year(self, input_cols, output_cols=None):
+    def year(self, input_cols, format= None,output_cols=None):
         """
 
         :param input_cols:
@@ -547,7 +547,7 @@ class DaskBaseColumns(BaseColumns):
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
-            df = df.assign(**{output_col: df[input_col].dt.year})
+            df = df.assign(**{output_col: df[input_col].to_datetime(format=format).dt.year})
         return df
 
     def month(self, input_cols, output_cols=None):

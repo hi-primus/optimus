@@ -45,3 +45,21 @@ class CUDFEngine(BaseEngine):
         print("series",dir(series),series)
         method = getattr(series, op_to_series_func[method_name]["cudf"])
         return method(*args)
+
+    def sinh(self, series):
+        raise NotImplementedError('Not implemented yet')
+
+    def asinh(self, series):
+        raise NotImplementedError('Not implemented yet')
+
+    def cosh(self, series):
+        raise NotImplementedError('Not implemented yet')
+
+    def tanh(self, series):
+        raise NotImplementedError('Not implemented yet')
+
+    def acosh(self, series):
+        raise NotImplementedError('Not implemented yet')
+
+    def atanh(self, series):
+        raise NotImplementedError('Not implemented yet')

@@ -79,5 +79,5 @@ class DaskCUDFEngine(BaseEngine):
         def func(series, _method, args):
             return _method(series, *args)
 
-        method = getattr(value, op_to_series_func[method_name]["numpy"])
+        method = getattr(value, op_to_series_func[method_name]["cudf"])
         return dd.map_partitions(func, value, method, args, meta=float)
