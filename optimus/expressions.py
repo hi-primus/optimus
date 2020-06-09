@@ -1,8 +1,7 @@
 from rply import LexerGenerator
 
-
 op_functions = {
-    "MOD": "MOD function description", # Math functions
+    "MOD": "MOD function description",  # Math functions
     "ABS": "ABS function description",
     "EXP": "EXP function description",
     "LOG": "LOG function description",
@@ -11,8 +10,8 @@ op_functions = {
     "SQRT": "SQRT function description",
     "FLOOR": "FLOOR function description",
     "TRUNC": "TRUNC function description",
-    "RADIANS": "RADIANS function description", # Trigonometric Functions
-    "DEGREES": "DEGREES function description",               
+    "RADIANS": "RADIANS function description",  # Trigonometric Functions
+    "DEGREES": "DEGREES function description",
     "SIN": "SIN function description",
     "COS": "COS function description",
     "TAN": "TAN function description",
@@ -44,6 +43,7 @@ functions = op_functions
 reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
 functions = list(op_functions.keys())
 
+
 class Parser:
     """
     Parse an expression to optimus code
@@ -68,7 +68,8 @@ class Parser:
         # Semi Colon
         l_g.add('SEMI_COLON', r'\;')
 
-        l_g.add('IDENTIFIER', "[^\W0-9]\w*")  # Reference
+        l_g.add('IDENTIFIER', r'{(.*?)}')  # Reference
+        l_g.add('IDENTIFIER', "[^\W0-9 ]\w*")  # Column names
         l_g.add('STRINGS', r'"(.*?)"')  # Reference
 
         # Operators
@@ -95,7 +96,11 @@ class Parser:
         for token in tokens:
             #     print(token.name)
             if token.name == "IDENTIFIER":
-                r = "df['" + token.value + "']"
+                t = token.value
+                for r in (("{", ""), ("}", "")):
+                    t = t.replace(*r)
+
+                r = "df['" + t + "']"
             elif token.name in functions:
                 r = "op." + token.value.lower()
             else:
