@@ -58,7 +58,7 @@ class Parser:
         l_g = self.lexer_generator
 
         for f in functions:
-            rx = f'{f}(?!\w)'
+            rx = f'(?i){f}(?!\w)'
             l_g.add(f, rx)
 
         # Parenthesis
