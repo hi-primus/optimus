@@ -50,13 +50,13 @@ def cols(self: DataFrame):
             #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
             #     except ValueError:
             #         pass
+
             output_cols = one_list_to_val(output_cols)
 
             if columns:
                 final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
                                        default=default)
             else:
-                df = df.applymap(vfunc)
                 final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
                                        default=default)
 

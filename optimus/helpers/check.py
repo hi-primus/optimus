@@ -69,12 +69,13 @@ def is_column_a(df, column, dtypes):
 #
 #     # Filter columns by data type
 #     return isinstance(df.schema[column].dataType, data_type)
-def is_cudf_series(value):
-    return cudf.core.series.Series
+# def is_cudf_series(value):
+#     return cudf.core.series.Series
 
 def is_cudf_dataframe(value):
     from cudf.core import DataFrame as CUDFDataFrame
     return isinstance(value, CUDFDataFrame)
+
 
 def is_cudf_series(value):
     import cudf
@@ -86,6 +87,11 @@ def is_dask_cudf_dataframe(value):
     return isinstance(value, DaskCUDFDataFrame)
 
 
+def is_dask_cudf_series(value):
+    from dask_cudf.core import Series as DaskCUDFSeries
+    return isinstance(value, DaskCUDFSeries)
+
+
 def is_dask_dataframe(value):
     """
     Check if an object is a Dask DataFrame
@@ -94,6 +100,16 @@ def is_dask_dataframe(value):
     """
     from dask.dataframe.core import DataFrame as DaskDataFrame
     return isinstance(value, DaskDataFrame)
+
+
+def is_dask_series(value):
+    """
+    Check if an object is a Dask DataFrame
+    :param value:
+    :return:
+    """
+    from dask.dataframe.core import Series as DaskSeries
+    return isinstance(value, DaskSeries)
 
 
 def is_spark_dataframe(value):

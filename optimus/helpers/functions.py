@@ -568,10 +568,10 @@ def set_func(pdf, value, where, output_col, parser, default=None):
             pdf.loc[mask, output_col] = eval(value)
             return pdf[output_col]
 
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         logger.print(e)
 
-        # raise
+        raise
         return np.nan
 
 

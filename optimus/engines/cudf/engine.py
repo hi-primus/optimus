@@ -33,33 +33,4 @@ class CUDFEngine(BaseEngine):
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-    def call(self, series, *args, method_name=None):
-        """
-        Process a series or number with a function
-        :param value:
-        :param args:
-        :param method_name:
-        :return:
-        """
-        print("op_to_series_func[method_name]",op_to_series_func[method_name]["cudf"])
-        print("series",dir(series),series)
-        method = getattr(series, op_to_series_func[method_name]["cudf"])
-        return method(*args)
 
-    def sinh(self, series):
-        raise NotImplementedError('Not implemented yet')
-
-    def asinh(self, series):
-        raise NotImplementedError('Not implemented yet')
-
-    def cosh(self, series):
-        raise NotImplementedError('Not implemented yet')
-
-    def tanh(self, series):
-        raise NotImplementedError('Not implemented yet')
-
-    def acosh(self, series):
-        raise NotImplementedError('Not implemented yet')
-
-    def atanh(self, series):
-        raise NotImplementedError('Not implemented yet')

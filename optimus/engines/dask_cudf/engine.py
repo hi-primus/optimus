@@ -67,17 +67,3 @@ class DaskCUDFEngine(BaseEngine):
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-    def call(self, value, *args, method_name=None):
-        """
-        Process a series or number with a function
-        :param value:
-        :param args:
-        :param method_name:
-        :return:
-        """
-
-        def func(series, _method, args):
-            return _method(series, *args)
-
-        method = getattr(value, op_to_series_func[method_name]["cudf"])
-        return dd.map_partitions(func, value, method, args, meta=float)

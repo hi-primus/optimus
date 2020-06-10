@@ -26,17 +26,17 @@ op_functions = {
     "ATANH": "ATANH function description"
 }
 unary_operators = {
-    "~": "~ funtion description",
-    "|": "| funtion description",
-    "&": "& funtion description",
-    "+": "+ funtion description",
-    "-": "- funtion description"
+    "~": "~ function description",
+    "|": "| function description",
+    "&": "& function description",
+    "+": "+ function description",
+    "-": "- function description"
 }
 binary_operators = {
-    "+": "+ funtion description",
-    "-": "- funtion description",
-    "*": "* funtion description",
-    "/": "/ funtion description"}
+    "+": "+ function description",
+    "-": "- function description",
+    "*": "* function description",
+    "/": "/ function description"}
 
 functions = op_functions
 
@@ -102,9 +102,19 @@ class Parser:
 
                 r = "df['" + t + "']"
             elif token.name in functions:
-                r = "op." + token.value.lower()
+                r = "F." + token.value.lower()
             else:
                 r = token.value
             result.append(r)
         result = "".join(result)
         return result
+
+
+op_functions = {
+    "ABS": {
+        "type": "function",
+        "description": "Absolute value of a columns",
+        "params": "abs(column name)",
+        "example": "ABS(COL_NAME)"
+    }
+}

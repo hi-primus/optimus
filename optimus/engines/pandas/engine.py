@@ -38,14 +38,3 @@ class PandasEngine(BaseEngine):
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-    def call(self, value, *args, method_name=None):
-        """
-        Process a series or number with a function
-        :param value:
-        :param args:
-        :param method_name:
-        :return:
-        """
-
-        method = getattr(np, op_to_series_func[method_name]["numpy"])
-        return method(value, *args)

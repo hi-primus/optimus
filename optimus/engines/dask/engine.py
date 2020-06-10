@@ -3,7 +3,7 @@ from dask import dataframe as dd
 from dask.distributed import Client
 
 from optimus.bumblebee import Comm
-from optimus.engines.base.engine import BaseEngine, op_to_series_func
+from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.io.load import Load
 from optimus.profiler.profiler import Profiler
@@ -61,17 +61,3 @@ class DaskEngine(BaseEngine):
         """
         return Dask.instance.dask
 
-    def call(self, value, *args, method_name=None):
-        """
-        Process a series or number with a function
-        :param value:
-        :param args:
-        :param method_name:
-        :return:
-        """
-
-        def func(series, _method, args):
-            return _method(series, *args)
-
-        method = getattr(np, op_to_series_func[method_name]["numpy"])
-        return dd.map_partitions(func, value, method, args, meta=float)

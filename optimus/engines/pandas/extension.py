@@ -4,9 +4,11 @@ import numpy as np
 import pandas as pd
 
 from optimus.engines.base.extension import BaseExt
+from optimus.functions import op_to_series_func
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.json import dump_json
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_str
 from optimus.profiler.constants import MAX_BUCKETS
 
 DataFrame = pd.DataFrame
@@ -142,6 +144,20 @@ def ext(self: DataFrame):
         def create_id(column="id"):
             pass
 
+        def call(self, series, *args, method_name=None):
+            """
+            Process a series or number with a function
+            :param value:
+            :param args:
+            :param method_name:
+            :return:
+            """
+            df = self.df
+            if is_str(series):
+                series = df[series]
+
+            method = getattr(np, op_to_series_func[method_name]["numpy"])
+            return method(series, *args)
     return Ext(self)
 
 
