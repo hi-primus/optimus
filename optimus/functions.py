@@ -146,19 +146,19 @@ def abs(series):
 
 
 def exp(series):
-    return series.call(series, method_name="exp")
+    return call(series, method_name="exp")
 
 
 def mod(series, *args):
-    return series.call(series, *args, method_name="mod")
+    return call(series, *args, method_name="mod")
 
 
 def pow(series, *args):
-    return series.call(series, *args, method_name="pow")
+    return call(series, *args, method_name="pow")
 
 
 def ceil(series):
-    return series.call(series, method_name="ceil")
+    return call(series, method_name="ceil")
 
 
 def sqrt(series):
@@ -166,76 +166,76 @@ def sqrt(series):
 
 
 def floor(series):
-    return series.call(series, method_name="floor")
+    return call(series, method_name="floor")
 
 
 def trunc(series):
-    return series.call(series, method_name="trunc")
+    return call(series, method_name="trunc")
 
 
 def radians(series):
-    return series.call(series, method_name="radians")
+    return call(series, method_name="radians")
 
 
 def degrees(series):
-    return series.call(series, method_name="degrees")
+    return call(series, method_name="degrees")
 
 
 def ln(series):
-    return series.call(series, method_name="ln")
+    return call(series, method_name="ln")
 
 
 def log(series):
-    return series.call(series, method_name="log")
+    return call(series, method_name="log")
 
 
 # Trigonometrics
 def sin(series):
-    return series.call(series, method_name="sin")
+    return call(series, method_name="sin")
 
 
 def cos(series):
-    return series.call(series, method_name="cos")
+    return call(series, method_name="cos")
 
 
 def tan(series):
-    return series.call(series, method_name="tan")
+    return call(series, method_name="tan")
 
 
 def asin(series):
-    return series.call(series, method_name="asin")
+    return call(series, method_name="asin")
 
 
 def acos(series):
-    return series.call(series, method_name="acos")
+    return call(series, method_name="acos")
 
 
 def atan(series):
-    return series.call(series, method_name="atan")
+    return call(series, method_name="atan")
 
 
 def sinh(series):
-    return series.call(series, method_name="sinh")
+    return call(series, method_name="sinh")
 
 
 def asinh(series):
-    return series.call(series, method_name="asinh")
+    return call(series, method_name="asinh")
 
 
 def cosh(series):
-    return series.call(series, method_name="cosh")
+    return call(series, method_name="cosh")
 
 
 def tanh(series):
-    return series.call(series, method_name="tanh")
+    return call(series, method_name="tanh")
 
 
 def acosh(series):
-    return series.call(series, method_name="acosh")
+    return call(series, method_name="acosh")
 
 
 def atanh(series):
-    return series.call(series, method_name="atanh")
+    return call(series, method_name="atanh")
 
 # Not available in cudf dask cudf
 #
