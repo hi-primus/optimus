@@ -10,6 +10,7 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 from urllib.request import Request, urlopen
+from optimus import functions as F
 
 import fastnumbers
 import humanize
