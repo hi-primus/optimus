@@ -348,7 +348,7 @@ def cols(self: DataFrame):
 
         @staticmethod
         def count_by_dtypes(columns, dtype):
-            print("dtype", dtype)
+
             df = self
             result = {}
             df_len = len(df)
@@ -363,7 +363,6 @@ def cols(self: DataFrame):
                 mismatches_count = 0 if mismatches_count is None else mismatches_count
                 result[col_name] = {"match": df_len - na_count, "missing": na_count,
                                     "mismatch": mismatches_count - na_count}
-            print(result)
             return result
 
         @staticmethod

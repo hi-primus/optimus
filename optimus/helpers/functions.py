@@ -11,7 +11,6 @@ from collections import Counter
 from pathlib import Path
 from urllib.request import Request, urlopen
 from optimus import functions as F
-
 import fastnumbers
 import humanize
 import numpy as np
@@ -593,11 +592,10 @@ def set_function_parser(df, value, where, default):
         :param cols:
         :return:
         """
-
         if cols is not None:
             r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
-                             re.findall(r"(df\['[A-Za-z0-9_]*'\])", cols.replace("\"", "'"))])
-            a = [re.findall(r"'([^']*)'",i)[0] for i in r]
+                             re.findall(r"(df\['[A-Za-z0-9_ -]*'\])", cols.replace("\"", "'"))])
+            a = [re.findall(r"'([^']*)'", i)[0] for i in r]
 
         else:
             a = []
