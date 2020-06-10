@@ -142,7 +142,7 @@ def call(series, *args, method_name=None):
 
 
 def abs(series):
-    return ext.call(series, method_name="abs")
+    return call(series, method_name="abs")
 
 
 def exp(series):

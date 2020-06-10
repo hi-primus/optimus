@@ -67,6 +67,7 @@ class Parser:
 
         # Semi Colon
         l_g.add('SEMI_COLON', r'\;')
+        l_g.add('COMMA', r'\,')
 
         l_g.add('IDENTIFIER', r'{(.*?)}')  # Reference
         l_g.add('IDENTIFIER', "[^\W0-9 ]\w*")  # Column names
@@ -94,7 +95,6 @@ class Parser:
 
         result = []
         for token in tokens:
-            #     print(token.name)
             if token.name == "IDENTIFIER":
                 t = token.value
                 for r in (("{", ""), ("}", "")):
