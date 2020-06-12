@@ -237,6 +237,102 @@ def acosh(series):
 def atanh(series):
     return call(series, method_name="atanh")
 
+
+# Strings
+def upper(series):
+    return series.str.upper()
+
+
+def lower(series):
+    return series.str.lower()
+
+
+def proper(series):
+    return series.str.title()
+
+
+def trim(series):
+    return series.str.strip()
+
+
+def remove_white_spaces(series):
+    return series.str.replace(" ", "")
+
+
+def remove_special_chars(series):
+    pass
+
+
+def len(series):
+    return series.str.len()
+
+
+def remove_accents(series):
+    pass
+
+
+def find(series, sub, start=0, end=None):
+    return series.str.find(sub, start, end)
+
+
+def rfind(series, sub, start=0, end=None):
+    return series.str.rfind(sub, start, end)
+
+
+def left(series, position):
+    return series.str[:position]
+
+
+def right(series, position):
+    return series.str[-1 * position:]
+
+
+def starts_with(series, pat):
+    return series.str.startswith(pat)
+
+
+def ends_with(series, pat):
+    return series.str.endswith(pat)
+
+
+def char(series):
+    pass
+
+
+def unicode(series):
+    pass
+
+
+def exact(series, pat):
+    return series == pat
+
+
+# dates
+def year(series):
+    return series.dt.year()
+
+
+def month(series):
+    return series.dt.mont()
+
+
+def day(series):
+    return series.dt.day()
+
+
+def hour(series):
+    return series.dt.hour()
+
+
+def minute(series):
+    return series.dt.minute()
+
+
+def second(series):
+    return series.dt.second()
+
+# pad
+
 # Not available in cudf dask cudf
 #
 # def sinh(self, series):

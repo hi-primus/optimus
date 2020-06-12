@@ -1,10 +1,22 @@
 from rply import LexerGenerator
+#
+# op_functions = {
+#     "ABS": {
+#         "type": "function",
+#         "description": "Absolute value of a columns",
+#         "params": "abs(column name)",
+#         "example": "ABS(COL_NAME)"
+#     }
+# }
 
 op_functions = {
-    "MOD": "MOD function description",  # Math functions
+    "MOD": {    # Math functions
+        "description": "MOD function description",
+        "example": "MOD(COL_NAME)"},
     "ABS": "ABS function description",
     "EXP": "EXP function description",
     "LOG": "LOG function description",
+    "LN": "LN function description",
     "POW": "POW function description",
     "CEILING": "CEILING function description",
     "SQRT": "SQRT function description",
@@ -23,7 +35,27 @@ op_functions = {
     "COSH": "COSH function description",
     "TANH": "TANH function description",
     "ACOSH": "ACOSH function description",
-    "ATANH": "ATANH function description"
+    "ATANH": "ATANH function description",  # String
+    "UPPER": "ATANH function description",
+    "LOWER": "ATANH function description",
+    "PROPER": "ATANH function description",
+    "TRIM": "ATANH function description",
+    "REMOVE": "ATANH function description",
+    "LEN": "ATANH function description",
+    "FIND": "ATANH function description",
+    "RFIND": "ATANH function description",
+    "LEFT": "ATANH function description",
+    "RIGHT": "ATANH function description",
+    "STARTS_WITH": "ATANH function description",
+    "ENDS_WITH": "ATANH function description",
+    "EXACT": "ATANH function description",
+    "YEAR": "ATANH function description",  # Date
+    "MONTH": "ATANH function description",
+    "DAY": "ATANH function description",
+    "HOUR": "ATANH function description",
+    "MINUTE": "ATANH function description",
+    "SECOND": "ATANH function description",
+
 }
 unary_operators = {
     "~": "~ function description",
@@ -108,13 +140,3 @@ class Parser:
             result.append(r)
         result = "".join(result)
         return result
-
-
-op_functions = {
-    "ABS": {
-        "type": "function",
-        "description": "Absolute value of a columns",
-        "params": "abs(column name)",
-        "example": "ABS(COL_NAME)"
-    }
-}
