@@ -1,6 +1,7 @@
 from glom import glom, assign
 
 from optimus.helpers.core import val_to_list
+from optimus.infer import is_list
 
 ACTIONS_KEY = "transformations.actions"
 
@@ -26,7 +27,6 @@ def meta(self):
         def append_action(action, value):
             df = self
             key = ACTIONS_KEY
-
 
             old_value = df.meta.get(key)
             if old_value is None:
@@ -83,7 +83,10 @@ def meta(self):
             :return:
             """
             df = self
-            df = df.meta.append_action(name, value)
+            value = val_to_list(value)
+
+            for _value in value:
+                df = df.meta.append_action(name, _value)
 
             return df
 

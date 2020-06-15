@@ -24,6 +24,7 @@ from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 from dask import dataframe as dd
 
+
 class BaseExt(ABC):
     _name = None
 
@@ -276,23 +277,17 @@ class BaseExt(ABC):
                     :param action:
                     :return:
                     """
-                    modified = []
+                    # modified = []
 
                     col = get_columns(action)
                     # Check if was renamed
-                    if len(get_renamed_columns(col)) == 0:
+                    renamed_columns = get_renamed_columns(col)
+                    if len(renamed_columns) == 0:
                         _result = col
                     else:
-                        _result = get_renamed_columns(col)
+                        _result = renamed_columns
 
-                    # Unnest return a list inside a list
-                    if action == Actions.UNNEST.value:
-                        _result = _result[0]
-
-                    if action == Actions.DROP_ROW.value:
-                        _result = _result[0]
-                    modified = modified + _result
-                    return modified
+                    return _result
 
                 def get_renamed_columns(_col_names):
                     """
@@ -301,10 +296,7 @@ class BaseExt(ABC):
                     :return:
                     """
                     _renamed_columns = []
-
                     _rename = get_columns("rename")
-
-                    # print("RENAME", _rename)
 
                     def get_name(_col_name):
                         c = _rename.get(_col_name)
@@ -367,9 +359,6 @@ class BaseExt(ABC):
                             modified_columns = modified_columns + get_columns_by_action(action_name)
 
                 # Actions applied to current columns
-                # print("modified_columns", modified_columns)
-                # print("new_columns", new_columns)
-
                 calculate_columns = modified_columns + new_columns
 
                 # Remove duplicated
