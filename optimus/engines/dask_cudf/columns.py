@@ -66,9 +66,7 @@ def cols(self: DaskCUDFDataFrame):
             # See https://github.com/rapidsai/cudf/issues/3677
             raise NotImplementedError
 
-        @staticmethod
-        def abs(columns):
-            pass
+
 
         def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
             df = self.df

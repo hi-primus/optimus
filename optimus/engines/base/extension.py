@@ -1,28 +1,26 @@
-import math
+from abc import abstractmethod, ABC
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
 import humanize
 import imgkit
 import jinja2
-import numpy as np
 import simplejson as json
+from dask import dataframe as dd
 from glom import assign
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import RELATIVE_ERROR, Actions, PROFILER_NUMERIC_DTYPES
+from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
-from optimus.helpers.functions_spark import traverse
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
-from dask import dataframe as dd
 
 
 class BaseExt(ABC):
@@ -61,51 +59,6 @@ class BaseExt(ABC):
         """
         df = self.df
         return collect_as_dict(df)
-
-    def export(self):
-        """
-        Helper function to export all the spark in text format. Aimed to be used in test functions
-        :return:
-        """
-        df = self.df
-        dict_result = {}
-
-        value = df.collect()
-        schema = []
-        for col_name in df.cols.names():
-
-            data_type = df.cols.schema_dtype(col_name)
-            if isinstance(data_type, np.array):
-                data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
-            else:
-                data_type = str(data_type) + "()"
-
-            nullable = df.schema[col_name].nullable
-
-            schema.append(
-                "('{name}', {dataType}, {nullable})".format(name=col_name, dataType=data_type, nullable=nullable))
-        schema = ",".join(schema)
-        schema = "[" + schema + "]"
-
-        # if there is only an element in the dict just return the value
-        if len(dict_result) == 1:
-            dict_result = next(iter(dict_result.values()))
-        else:
-            dict_result = [tuple(v.asDict().values()) for v in value]
-
-        def func(path, _value):
-            try:
-                if math.isnan(_value):
-                    r = None
-                else:
-                    r = _value
-            except TypeError:
-                r = _value
-            return r
-
-        dict_result = traverse(dict_result, None, func)
-
-        return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
     @staticmethod
     @abstractmethod
@@ -507,8 +460,18 @@ class BaseExt(ABC):
             else:
                 df.ext.show()
         except NameError:
-
             df.show()
+
+    def export(self):
+        """
+        Helper function to export all the dataframe in text format. Aimed to be used in test functions
+        :return:
+        """
+        df = self.df
+        df_data = df.to_json()
+        df_schema = df.dtypes.to_json()
+
+        return f"{df_schema}, {df_data}"
 
     @staticmethod
     @abstractmethod

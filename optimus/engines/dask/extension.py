@@ -2,7 +2,6 @@ import humanize
 from dask.dataframe.core import DataFrame
 
 from optimus.engines.base.extension import BaseExt
-from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int
@@ -15,66 +14,16 @@ def ext(self: DataFrame):
 
         def __init__(self, df):
             super().__init__(df)
+            self.df = df
 
-        @staticmethod
-        def cache():
-            df = self
+        def cache(self):
+            df = self.df
             return df.persist()
 
         def set_buffer(self, columns, n=BUFFER_SIZE):
             df = self.df
             input_columns = parse_columns(df, columns)
             df._buffer = df.ext.head(input_columns, n)
-
-        @staticmethod
-        def profile_new(columns, bins=MAX_BUCKETS, output=None, infer=False, flush=None):
-            df = self
-            from dask import delayed
-            import numpy as np
-            columns = parse_columns(df, columns)
-            partitions = df.to_delayed()
-
-            @delayed
-            def func(pdf, _columns, _bins):
-                _hist = None
-                _freq = None
-                for col_name in _columns:
-                    series = pdf[col_name]
-                    if series.dtype == np.object:
-                        result = series.value_counts().nlargest(_bins).to_dict()
-                    elif series.dtype == np.int64 or pdf.dtype == np.float64:
-
-                        result = numba_histogram(series.to_numpy(), bins=_bins)
-                        # _hist, bins_edges = np.histogram(pdf, bins=_bins)
-
-                return result
-
-            # numeric_cols = df.cols.names(columns, by_dtypes=df.constants.NUMERIC_TYPES)
-            # string_cols = df.cols.names(columns, by_dtypes=df.constants.STRING_TYPES)
-
-            _min_max = [func(part, columns, bins) for part in partitions]
-
-            # _min_max = {col_name: dask.delayed(get_bin_edges_min_max)(**_min_max, ) for part in partitions for
-            #             col_name in numeric_cols}
-            # @delayed
-            # def bins_col(_min_max, _bins=10):
-            #     return {col_name: get_bin_edges_min_max(min, max, _bins) for col_name, (min, max) in _min_max.items()}
-
-            # _bins = bins_col(_min_max, bins)
-
-            # print(_bins.compute())
-
-            # _hist = [dask.delayed(numba_histogram_edges)(part[col_name].to_numpy(), _bins[col_name]) for part in
-            #          partitions for col_name in numeric_cols]
-
-            # _bins = bins_col(columns, _min, _max)
-
-            # result = dd.compute(_min_max)
-
-            # delayed_parts = [func(part[col_name], [-10, 10]) for part in partitions for col_name in df.cols.names()]
-            # print(dd.compute(delayed_parts))
-
-            return _min_max
 
         @staticmethod
         def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -92,6 +41,17 @@ def ext(self: DataFrame):
             df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
             result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
             return df, result
+
+        def export(self):
+            """
+            Helper function to export all the dataframe in text format. Aimed to be used in test functions
+            :return:
+            """
+            df = self.df
+            df_data = df.ext.to_json()
+            df_schema = df.dtypes.to_json()
+
+            return f"{df_schema}, {df_data}"
 
         @staticmethod
         def sample(n=10, random=False):
@@ -116,16 +76,14 @@ def ext(self: DataFrame):
                 fraction = 1.0
             return self.sample(frac=fraction, random_state=seed)
 
-
-        @staticmethod
-        def stratified_sample(col_name, seed: int = 1):
+        def stratified_sample(self, col_name, seed: int = 1):
             """
             Stratified Sampling
             :param col_name:
             :param seed:
             :return:
             """
-            df = self
+            df = self.df
             n = min(5, df[col_name].value_counts().min())
             df = df.groupby(col_name).apply(lambda x: x.sample(2))
             # df_.index = df_.index.droplevel(0)
@@ -156,21 +114,19 @@ def ext(self: DataFrame):
 
             raise NotImplementedError
 
-        @staticmethod
-        def size(deep=False, format=None):
+        def size(self, deep=False, format=None):
             """
             Get the size of a dask in bytes
             :return:
             """
-            df = self
+            df = self.df
             result = df.memory_usage(index=True, deep=deep).sum().compute()
             if format == "human":
                 result = humanize.naturalsize(result)
 
             return result
 
-        @staticmethod
-        def run():
+        def run(self):
             """
             This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
             evaluation approach in processing data: transformation functions are not computed into an action is called.
@@ -182,9 +138,9 @@ def ext(self: DataFrame):
 
             :return:
             """
-
-            self.cache().count()
-            return self
+            df = self.df
+            df.cache().count()
+            return df
 
         @staticmethod
         def query(sql_expression):
@@ -217,13 +173,12 @@ def ext(self: DataFrame):
             """
             raise NotImplementedError
 
-        @staticmethod
-        def head(columns, n=10):
+        def head(self, columns="*", n=10):
             """
 
             :return:
             """
-            df = self
+            df = self.df
             columns = parse_columns(df, columns)
             return df[columns].head(n, npartitions=-1)
 

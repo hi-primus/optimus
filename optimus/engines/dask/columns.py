@@ -1,159 +1,92 @@
 import dask.dataframe as dd
-import fastnumbers
 import numpy as np
 from dask import delayed
 from dask.dataframe.core import DataFrame
 import pandas as pd
 from optimus.engines.base.dask.columns import DaskBaseColumns
-from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
+from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
 from optimus.helpers.converter import format_dict
+from optimus import functions  as F
 
 
 # This implementation works for Dask
-
 def cols(self: DataFrame):
     class Cols(DaskBaseColumns):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
         @staticmethod
-        def min(columns, skip_na = True, force_processing=False):
+        def min(columns, skip_na=True):
             """
             This calculate the min for a columns.
+            :param skip_na:
             :param columns:
             :return:
             """
-            df = self
 
-            columns = parse_columns(df, columns)
+            columns = parse_columns(self, columns)
+            df = self[columns]
             partitions = df.to_delayed()
 
             @delayed
-            def func(pdf, col_name):
-
+            def _min(pdf):
                 # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+                return pdf.min(skipna=skip_na)
 
-                # fastnumbers takes most of the time
-                if force_processing is True:
-                    p = [fastnumbers.fast_real(x, default=np.nan) for x in pdf[col_name]]
-                else:
-                    p = pdf[col_name]
+            delayed_parts = [_min(part) for part in partitions]
 
-                if np.all(p == None) is True:
-                    _min = 0
-                else:
-                    if skip_na is True:
-                        _min = np.nanmin(p)
-                    else:
-                        _min = np.min(p)
+            @delayed
+            def _reduce(_df):
+                c = pd.concat(_df)
+                return c.groupby(c.index).min().to_dict()
 
-                return pd.DataFrame({"col_name": col_name, "min": _min}, index=[0])
-
-            delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
-            c = pd.concat(dd.compute(*delayed_parts))
-            d = c.groupby(["col_name"]).min().to_dict()
-            return d
+            return dd.compute(_reduce(delayed_parts))[0]
 
         @staticmethod
-        def max(columns, skip_na = True, force_processing=False):
+        def max(columns, skip_na=True):
             """
             This calculate the min for a columns.
+            :param skip_na:
             :param columns:
             :return:
             """
-            df = self
 
-            columns = parse_columns(df, columns)
+            columns = parse_columns(self, columns)
+            df = self[columns]
             partitions = df.to_delayed()
 
             @delayed
-            def func(pdf, col_name):
-
+            def _max(pdf):
                 # Using numpy min is faster https://stackoverflow.com/questions/10943088/numpy-max-or-max-which-one-is-faster
+                return pdf.max(skipna=skip_na)
 
-                # fastnumbers takes most of the time
-                if force_processing is True:
-                    p = [fastnumbers.fast_float(x, default=np.nan) for x in pdf[col_name]]
-                else:
-                    p = pdf[col_name]
+            delayed_parts = [_max(part) for part in partitions]
 
-                if np.all(p == None) is True:
-                    _max = 0
-                else:
-                    if skip_na is True:
-                        _max = np.nanmax(p)
-                    else:
-                        _max = np.max(p)
+            @delayed
+            def _reduce(_df):
+                c = pd.concat(_df)
+                return c.groupby(c.index).max().to_dict()
 
-                return pd.DataFrame({"col_name": col_name, "max": _max}, index=[0])
-
-            delayed_parts = [func(part, col_name) for part in partitions for col_name in columns]
-            c = pd.concat(dd.compute(*delayed_parts))
-            d = c.groupby(["col_name"]).max().to_dict()
-            return d
+            return dd.compute(_reduce(delayed_parts))[0]
 
         @staticmethod
-        def abs(input_cols, output_cols=None):
-            """
-            Apply abs to the values in a column
-            :param input_cols:
-            :param output_cols:
-            :return:
-            """
-            df = self
-            input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            output_cols = get_output_cols(input_cols, output_cols)
+        def stddev(columns):
+            columns = parse_columns(self, columns)
+            df = self[columns]
 
-            check_column_numbers(output_cols, "*")
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df.compute(np.abs(df[input_col]))
-            return df
+            return {"stddev": {col_name: df[col_name].std() for col_name in columns}}
 
         @staticmethod
         def mode(columns):
-            """
-            Return the column mode
-            :param columns: '*', list of columns names or a single column name.
-            :return:
-            """
+            columns = parse_columns(self, columns)
+            df = self[columns]
+            f = [df[col_name].mode(dropna=True) for col_name in columns]
 
-            # Reference https://stackoverflow.com/questions/46080171/constructing-mode-and-corresponding-count-functions-using-custom-aggregation-fun
-            def chunk(s):
-                # for the comments, assume only a single grouping column, the
-                # implementation can handle multiple group columns.
-                #
-                # s is a grouped series. value_counts creates a multi-series like
-                # (group, value): count
-                return s.value_counts()
+            @delayed
+            def _mode(parts):
+                return {"mode": {col_name: p.to_list() for p in parts for col_name in columns}}
 
-            def agg(s):
-                # s is a grouped multi-index series. In .apply the full sub-df will passed
-                # multi-index and all. Group on the value level and sum the counts. The
-                # result of the lambda function is a series. Therefore, the result of the
-                # apply is a multi-index series like (group, value): count
-                # return s.apply(lambda s: s.groupby(level=-1).sum())
-
-                # faster version using pandas internals
-                s = s._selected_obj
-                return s.groupby(level=list(range(s.index.nlevels))).sum()
-
-            def finalize(s):
-                # s is a multi-index series of the form (group, value): count. First
-                # manually group on the group part of the index. The lambda will receive a
-                # sub-series with multi index. Next, drop the group part from the index.
-                # Finally, determine the index with the maximum value, i.e., the mode.
-                level = list(range(s.index.nlevels - 1))
-                return (
-                    s.groupby(level=level)
-                        .apply(lambda s: s.reset_index(level=level, drop=True).idxmax())
-                )
-
-            mode = dd.Aggregation('mode', chunk, agg, finalize)
-
-            df = self
-            mode_result = df.groupby(['price']).agg({'price': mode}).compute()
-            return format_dict(mode_result)
+            return _mode(f).compute()
 
     return Cols(self)
 

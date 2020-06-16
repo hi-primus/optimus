@@ -208,6 +208,7 @@ class Test:
             add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
                 _kwargs) + ")" + am + "\n")
 
+        # print("df_result", df_result)
         # Apply function to the spark
         if method is None:
             df_result = self.op.create.df(*args, **kwargs)
@@ -217,6 +218,7 @@ class Test:
                 df_func = getattr(df_func, f)
 
             df_result = df_func(*args, **kwargs)
+
 
         # Additional Methods
         if additional_method is not None:

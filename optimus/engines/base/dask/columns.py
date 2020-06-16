@@ -15,10 +15,11 @@ from multipledispatch import dispatch
 from numba import jit
 from sklearn.preprocessing import MinMaxScaler
 
+from optimus import functions as F
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function, is_cudf_series, is_pandas_series
+from optimus.helpers.check import is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
@@ -26,7 +27,6 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import update_dict, set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_list, is_list_of_tuples, is_one_element, is_int, profiler_dtype_func, is_dict
-from optimus.infer import is_
 from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
@@ -260,10 +260,6 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def abs(columns):
-        pass
-
-    @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
         pass
 
@@ -414,7 +410,7 @@ class DaskBaseColumns(BaseColumns):
 
     def unique(self, columns):
         df = self.df
-        return df.drop_duplicates()
+        return df[columns].drop_duplicates().compute()
 
     def value_counts(self, columns):
         """
@@ -428,7 +424,14 @@ class DaskBaseColumns(BaseColumns):
 
         result = {}
         for col_name in columns:
-            result.update(df[col_name].value_counts().compute().to_frame().to_dict())
+            print("col_name", col_name)
+            try:
+                r = df[col_name].value_counts().compute().to_frame().to_dict()
+                result.update(r)
+            except:
+                pass
+                # result.update({col_name: None})
+
         return result
 
     def extract(self, input_cols, output_cols, regex):
@@ -454,7 +457,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return self.agg_exprs(columns, df.functions.count_na_agg, self)
+        return self.agg_exprs(columns, df.functions.count_na_agg, df)
 
     def count_zeros(self, columns):
         """
@@ -463,7 +466,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return self.agg_exprs(columns, df.functions.zeros_agg)
+        return self.agg_exprs(columns, df.functions.zeros_agg, df)
 
     # def count_uniques(self, columns, estimate=True, compute=True):
     #     """
@@ -535,7 +538,7 @@ class DaskBaseColumns(BaseColumns):
     def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
         pass
 
-    def year(self, input_cols, format= None,output_cols=None):
+    def year(self, input_cols, format=None, output_cols=None):
         """
 
         :param input_cols:
@@ -550,10 +553,11 @@ class DaskBaseColumns(BaseColumns):
             df = df.assign(**{output_col: df[input_col].to_datetime(format=format).dt.year})
         return df
 
-    def month(self, input_cols, output_cols=None):
+    def month(self, input_cols, format=None, output_cols=None):
         """
 
         :param input_cols:
+        :param format:
         :param output_cols:
         :return:
         """
@@ -565,10 +569,11 @@ class DaskBaseColumns(BaseColumns):
             df = df.assign(**{output_col: df[input_col].dt.month})
         return df
 
-    def day(self, input_cols, output_cols=None):
+    def day(self, input_cols, format=None, output_cols=None):
         """
 
         :param input_cols:
+        :param format:
         :param output_cols:
         :return:
         """
@@ -580,16 +585,16 @@ class DaskBaseColumns(BaseColumns):
             df = df.assign(**{output_col: df[input_col].dt.day})
         return df
 
-    def hour(self, input_cols, output_cols=None):
+    def hour(self, input_cols, format=None, output_cols=None):
         pass
 
-    def minute(self, input_cols, output_cols=None):
+    def minute(self, input_cols, format=None, output_cols=None):
         pass
 
-    def second(self, input_cols, output_cols=None):
+    def second(self, input_cols, format=None, output_cols=None):
         pass
 
-    def weekday(self, input_cols, output_cols=None):
+    def weekday(self, input_cols, format=None, output_cols=None):
         pass
 
     def weekofyear(self, input_cols, output_cols=None):
@@ -661,7 +666,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols, w="vectorized")
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -741,7 +746,8 @@ class DaskBaseColumns(BaseColumns):
         else:
             # df[output_cols] = value
             final_value = df
-        final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols, parser=vfunc,
+        final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
+                                                 parser=vfunc,
                                                  default=default, meta=object)
         df.meta.preserve(df, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
@@ -808,110 +814,18 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        # 'scheduler' param values
-        # "threads": a scheduler backed by a thread pool
-        # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
-        # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
-
-        # import dask.multiprocessing
-        # import dask.threaded
-        #
-        # >> > dmaster.compute(get=dask.threaded.get)  # this is default for dask.dataframe
-        # >> > dmaster.compute(get=dask.multiprocessing.get)  # try processes instead
-        #
-        agg_results = dask.compute(*exprs)
-        result = {}
-
-        # Parsing results
-        def parse_percentile(_value):
-            _result = {}
-            if is_(_value, pd.core.series.Series):
-                _result.setdefault(_value.name, {str(i): j for i, j in dict(_value).items()})
-            else:
-                for (p_col_name, p_result) in _value.iteritems():
-                    if is_(p_result, pd.core.series.Series):
-                        p_result = dict(p_result)
-                    _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
-            return _result
-
-        def parse_hist(_value):
-            _result = {}
-            for _col_name, values in _value.items():
-                _hist = []
-
-                x = values["count"]
-                y = values["bins"]
-                for idx, v in enumerate(y):
-                    if idx < len(y) - 1:
-                        _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
-                _result.setdefault(_col_name, _hist)
-            return _result
-
-        def parse_count_uniques(_value):
-            # Because count_uniques() return and Scalar and not support casting we need to make
-            # the cast to int after compute()
-            # Reference https://github.com/dask/dask/issues/1445
-            return {_col_name: int(values) for _col_name, values in _value.items()}
-
-        for agg_name, col_name_result in agg_results:
-            if agg_name == "percentile":
-                col_name_result = parse_percentile(col_name_result)
-            elif agg_name == "hist":
-                col_name_result = parse_hist(col_name_result)
-            elif agg_name == "count_uniques":
-                col_name_result = parse_count_uniques(col_name_result)
-
-            # Process by datatype
-            if is_(col_name_result, pd.core.series.Series):
-                # col_name_result = pd.Series(col_name_result)
-                # print("COL NAME RESULT",col_name_result)
-                index = col_name_result.index
-                for cols_name in index:
-                    result.setdefault(cols_name, {}).update({agg_name: col_name_result[cols_name]})
-            else:
-                index = col_name_result
-                for col_name, value in index.items():
-                    result.setdefault(col_name, {}).update({agg_name: col_name_result[col_name]})
-
-        return result
+        return dask.compute(*exprs)[0]
 
     def create_exprs(self, columns, funcs, *args):
 
         df = self.df
-        # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-        filters = {"object": [df.functions.min, df.functions.stddev],
-                   }
-
-        def _filter(_col_name, _func):
-            for data_type, func_filter in filters.items():
-                for f in func_filter:
-                    if equal_function(func, f) and \
-                            df.cols.dtypes(_col_name)[_col_name] == data_type:
-                        return True
-            return False
-
-        columns = parse_columns(df, columns)
+        r = []
         funcs = val_to_list(funcs)
 
-        result = {}
-
         for func in funcs:
-            # print("FUNC", func)
-            # Create expression for functions that accepts multiple columns
-            filtered_column = []
-            for col_name in columns:
-                # If the key exist update it
-                if not _filter(col_name, func):
-                    filtered_column.append(col_name)
-            if len(filtered_column) > 0:
-                # print("ITER", col_name)
-                func_result = func(columns, args)(df)
-                for k, v in func_result.items():
-                    result[k] = {}
-                    result[k] = v
-        result = list(result.items())
+            r.append(func(df, columns, args))
 
-        return result
+        return r
 
     # TODO: Check if we must use * to select all the columns
     @dispatch(object, object)
@@ -1014,40 +928,39 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def lower(self, input_cols, output_cols=None):
-        def _lower(value, args):
-            return value.str.lower()
+        def _lower(value):
+            return F.lower(value)
 
         df = self.df
-
         return df.cols.apply(input_cols, _lower, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.LOWER.value)
+                             meta_action=Actions.LOWER.value, w="vectorized")
 
     def upper(self, input_cols, output_cols=None):
-        def _upper(value, args):
-            return value.str.upper()
+        def _upper(value):
+            return F.upper(value)
 
         df = self.df
         return df.cols.apply(input_cols, _upper, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.UPPER.value)
+                             meta_action=Actions.UPPER.value, w="vectorized")
 
     def trim(self, input_cols, output_cols=None):
 
-        def _trim(value, args):
-            return value.str.strip()
+        def _trim(value):
+            return F.trim(value)
 
         df = self.df
         return df.cols.apply(input_cols, _trim, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.TRIM.value)
+                             meta_action=Actions.TRIM.value, w="vectorized")
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value):
+              meta_action=Actions.APPLY_COLS.value, w="delayed"):
 
         df = self.df
 
@@ -1073,20 +986,20 @@ class DaskBaseColumns(BaseColumns):
         partitions = df.to_delayed()
 
         for input_col, output_col in zip(input_cols, output_cols):
-            temp = [dask.delayed(func)(part[input_col], args)
-                    for part in partitions]
-
-            result[output_col] = from_delayed(temp)
+            if w == "delayed":
+                delayed_parts = [dask.delayed(func)(part[input_col], args)
+                                 for part in partitions]
+                result[output_col] = from_delayed(delayed_parts)
+            elif w == "vectorized":
+                result[output_col] = func(df[input_col])
 
             # Preserve column order
-
             if output_col not in df.cols.names():
                 col_index = output_ordered_columns.index(input_col) + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
 
             # Preserve actions for the profiler
             df = df.meta.preserve(df, meta_action, output_col)
-
         df = df.assign(**result)
         return df.cols.select(output_ordered_columns)
 

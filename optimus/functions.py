@@ -1,12 +1,13 @@
 import numpy as np
 from dask import dataframe as dd
-
+import dask.array as da
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe
 
 op_to_series_func = {
     "abs": {
         "cudf": "abs",
         "numpy": "abs",
+        "da": "abs"
     },
     "exp": {
         "cudf": "exp",
@@ -125,8 +126,9 @@ def call(series, *args, method_name=None):
         def func(_series, _method, args):
             return _method(_series, *args)
 
-        method = getattr(np, op_to_series_func[method_name]["numpy"])
-        result = dd.map_partitions(func, series, method, args, meta=float)
+        method = getattr(da, op_to_series_func[method_name]["da"])
+        # result = dd.map_partitions(func, series, method, args, meta=float)
+        result = method(series, *args)
     elif is_cudf_series(series):
         method = getattr(series, op_to_series_func[method_name]["cudf"])
         result = method(series, *args)

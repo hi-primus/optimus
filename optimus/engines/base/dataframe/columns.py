@@ -40,9 +40,7 @@ class DataFrameBaseColumns(BaseColumns):
     def frequency(columns, n=10, percentage=False, total_rows=None):
         pass
 
-    @staticmethod
-    def abs(columns):
-        pass
+
 
     @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
@@ -207,7 +205,7 @@ class DataFrameBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        return self.agg_exprs(columns, df.functions.count_na_agg, self)
+        return self.agg_exprs(columns, df.functions.count_na_agg, df)
 
     def count_zeros(self, columns):
         """

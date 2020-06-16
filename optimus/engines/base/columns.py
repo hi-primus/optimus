@@ -14,6 +14,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func
+from optimus import functions as F
 
 
 class BaseColumns(ABC):
@@ -424,7 +425,7 @@ class BaseColumns(ABC):
     def create_exprs(columns, funcs, *args):
         pass
 
-    def agg_exprs(self, columns, funcs, *args):
+    def agg_exprs(self, columns, funcs, df, *args):
         """
         Create and run aggregation
         :param columns:
@@ -432,6 +433,7 @@ class BaseColumns(ABC):
         :param args:
         :return:
         """
+        columns = parse_columns(df, columns)
         return self.exec_agg(self.create_exprs(columns, funcs, *args))
 
     @staticmethod
@@ -478,7 +480,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
-        return self.agg_exprs(columns, df.functions.stddev)
+        return self.agg_exprs(columns, df.functions.stddev, df)
 
     def kurt(self, columns):
         df = self.df
@@ -486,40 +488,55 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return self.agg_exprs(columns, df.functions.kurtosis)
+        return self.agg_exprs(columns, df.functions.kurtosis, df)
 
     def mean(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return self.agg_exprs(columns, df.functions.mean)
+        return self.agg_exprs(columns, df.functions.mean, df)
 
     def skewness(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return self.agg_exprs(columns, df.functions.skewness)
+        return self.agg_exprs(columns, df.functions.skewness, df)
 
     def sum(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return format_dict(self.agg_exprs(columns, df.functions.sum))
+        return format_dict(self.agg_exprs(columns, df.functions.sum, df))
 
     def variance(self, columns):
         df = self.df
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        return format_dict(self.agg_exprs(columns, df.functions.variance))
+        return format_dict(self.agg_exprs(columns, df.functions.variance, df))
 
-    @staticmethod
-    @abstractmethod
-    def abs(columns):
-        pass
+    def abs(self, input_cols, output_cols=None):
+        """
+        Apply abs to the values in a column
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        print("columns", columns)
+
+        print("output_cols", type(columns), columns)
+
+        check_column_numbers(columns, "*")
+        kw_columns = {}
+        for input_col, output_col in columns:
+            kw_columns[output_col] = F.abs(df[input_col])
+
+        return df.assign(**kw_columns)
 
     @staticmethod
     @abstractmethod

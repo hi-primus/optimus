@@ -23,14 +23,18 @@
 
 # + {"outputHidden": false, "inputHidden": false}
 import sys
-
 sys.path.append("../..")
 # -
 
 from optimus import Optimus
 from optimus.helpers.test import Test
 
-op = Optimus(master='local', verbose=True)
+from optimus import Optimus
+op = Optimus("dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True)
+
+import numpy as np
+import pandas as pd
+
 
 # +
 import pandas as pd
@@ -77,98 +81,38 @@ rows = [
     (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None),
 
 ]
-source_df = op.create.df(cols, rows)
-source_df.table()
 
-# +
-import pandas as pd
-from pyspark.sql.types import *
-from datetime import date, datetime
+source_df = pd.DataFrame(columns = ['names','height(ft)','function',
+                      'rank','age','weight(t)','japanese name','last position seen',
+                      'date arrival','last date seen','attributes','Date Type','timestamp',
+                      'Cybertronian','function(binary)','NullType'], 
+             data= rows,
+#              dtype = (object,object,object,
+#                                 object,object,object,object,object,
+#                                 object,object,object,object,object,
+#                                 object,object)
+            )
 
-cols = [
-    ("names", "str"),
-    ("height(ft)", ShortType()),
-    ("function", "str"),
-    ("rank", ByteType()),
-    ("age", "int"),
-    ("weight(t)", "float"),
-    "japanese name",
-    "last position seen",
-    "date arrival",
-    "last date seen",
-    ("attributes", ArrayType(FloatType())),
-    ("Date Type", DateType()),
-    ("timestamp", TimestampType()),
-    ("Cybertronian", BooleanType())
+# from dask import dataframe as dd
 
-]
+# a=pd.DataFrame(source_df.to_dict())
+from dask import dataframe as dd
+source_df = dd.from_pandas(source_df, npartitions=1)
 
-rows = [
-    ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
-     "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True),
-    ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
-     "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True),
-    ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
-     "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True),
-    ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
-     "2013/06/10", [3.9624, 1800.0], date(2013, 6, 24), datetime(2014, 6, 24), True),
-    ("Megatron", None, "None", 10, 5000000, 5.70, ["Megatron"], None, "1980/04/10", "2012/05/10", [None, 5700.0],
-     date(2012, 5, 10), datetime(2014, 6, 24), True),
-    ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
-     [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True),
 
-]
-source_df_string_to_index = op.create.df(cols, rows)
-source_df_string_to_index.table()
 # -
+
+source_df
 
 # ### End Init Section
 
 # # Test
 
-# ## Optimus Test
-
-from pyspark.ml.linalg import Vectors
-
-t = Test(op, None, "create_df", imports=["import datetime",
-                                         "from pyspark.sql import functions as F"], path="..", final_path="..")
-
-# +
-one_column = {"rows": ["Argenis", "Favio", "Matthew"], "cols": ["name"]}
-plain = {"rows": [("BOB", 1), ("JoSe", 2)], "cols": ["name", "age"]}
-plain_infer_false = {"rows": [("BOB", 1), ("JoSe", 2)], "cols": ["name", "age"], "infer_schema": False}
-with_data_types = {"rows": [("BOB", 1), ("JoSe", 2)],
-                   "cols": [("name", StringType(), True), ("age", IntegerType(), False)]}
-nullable = {"rows": [("BOB", 1), ("JoSe", 2)], "cols": [("name", StringType()), ("age", IntegerType())]}
-
-df1 = op.create.df(**one_column)
-df2 = op.create.df(**plain)
-df3 = op.create.df(**plain_infer_false)
-df4 = op.create.df(**with_data_types)
-df5 = op.create.df(**nullable)
-# -
-
-t.create(df1, None, "one_column", "df", **one_column)
-
-t.create(df2, None, "plain", "df", **plain)
-
-t.create(df3, None, "plain_infer_false", "df", **plain_infer_false)
-
-t.create(df4, None, "with_data_types", "df", **with_data_types)
-
-t.create(df5, None, "nullable", "df", **nullable)
-
-t.run()
-
 # ## Columns Test
 
-from pyspark.ml.linalg import Vectors
-
-t = Test(op, source_df, "df_cols", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
-                                            "import numpy as np",
+t = Test(op, source_df, "df_cols_dask", imports=["import numpy as np",
                                             "nan = np.nan",
-                                            "import datetime",
-                                            "from pyspark.sql import functions as F"], path="df_cols", final_path="..")
+                                            "import datetime",], path="df_cols_dask", final_path="..")
 
 # +
 from pyspark.sql import functions as F
@@ -186,9 +130,13 @@ date_col = "date arrival"
 date_col_B = "last date seen"
 new_col = "new col"
 array_col = "attributes"
-# -
 
-t.create(source_df_string_to_index, "cols.string_to_index", None, "df", None, "rank")
+# +
+t.create(source_df, "cols.string_to_index", None, "df", None, "names")
+
+t.create(None, "cols.hist", None, "json", None, ["height(ft)", numeric_col_B], 4)
+
+# -
 
 source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
 
@@ -205,22 +153,26 @@ t.create(source_df_string_to_index, "cols.values_to_cols", "all_columns", "df", 
 
 t.run()
 
+print(source_df.cols.remove(string_col))
+
 t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
 t.run()
 
-t.create(None, "cols.remove", "list", "df", string_col, ["a", "i", "Es"])
+t.create(None, "cols.remove", "list", "df", None, string_col, ["a", "i", "Es"])
 
-t.create(None, "cols.remove", "list_output", "df", string_col, ["a", "i", "Es"], output_cols=string_col + "_new")
+t.create(None, "cols.remove", "list_output", "df", None, string_col, ["a", "i", "Es"], output_cols=string_col + "_new")
 
 t.run()
 
-t.create(None, "cols.min", None, "json", numeric_col)
+t.create(None, "cols.min", None, "json", None, numeric_col)
+
+source_df.cols.names()
 
 t.create(None, "cols.min", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.max", None, "json", numeric_col)
+t.create(None, "cols.max", None, "json", None, numeric_col)
 
 t.create(None, "cols.max", "all_columns", "json", None, "*")
 t.run()
@@ -231,7 +183,7 @@ t.create(None, "cols.range", "all_columns", "json", None, "*")
 
 t.run()
 
-source_df.table()
+source_df.mean().compute()
 
 t.create(None, "cols.median", None, "json", None, numeric_col)
 
@@ -251,7 +203,11 @@ t.create(None, "cols.mad", "all_columns", "json", None, "*")
 
 t.run()
 
-t.create(None, "cols.std", None, "json", numeric_col)
+source_df.min().compute()
+
+source_df.cols.std("*")
+
+t.create(None, "cols.std", None, "json", None, numeric_col)
 
 t.create(None, "cols.std", "all_columns", "json", None, "*")
 t.run()
@@ -262,43 +218,35 @@ t.run()
 t.create(None, "cols.kurt", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.mean", None, "json", numeric_col)
+t.create(None, "cols.mean", None, "json",None, numeric_col)
 
 t.create(None, "cols.mean", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.skewness", None, "json", numeric_col)
+t.create(None, "cols.skewness", None, "json", None, numeric_col)
 
 t.create(None, "cols.skewness", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.sum", None, "json", numeric_col)
+t.create(None, "cols.sum", None, "json", None,numeric_col)
 
 t.create(None, "cols.sum", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.variance", None, "json", numeric_col)
+t.create(None, "cols.variance", None, "json",None, numeric_col)
 
 t.create(None, "cols.variance", "all_columns", "json", None, "*")
 t.run()
 
-source_df.table()
-
-from pyspark.sql import functions as F
-
-source_df.select(F.abs(F.col("age")))
+source_df.ext.table()
 
 t.create(None, "cols.abs", None, "df", None, "weight(t)")
 
-t.create(None, "cols.abs", "all_columns", "json", None, "*")
+t.create(None, "cols.abs", "all_columns", "df", None, "*")
 
-source_df.table()
+source_df.ext.table()
 
-# +
-from pyspark.sql import functions as F
-
-source_df.select(F.abs("weight(t)"))
-# -
+source_df.mode(dropna=True)
 
 t.create(None, "cols.mode", None, "json", None, numeric_col)
 
@@ -319,11 +267,11 @@ t.run()
 
 source_df.cols.names("rank", ["str", "int", "float"], True)
 
-t.create(None, "cols.count_zeros", None, "json", numeric_col)
+t.create(None, "cols.count_zeros", None, "json", None, numeric_col)
+
+source_df.compute()
 
 t.create(None, "cols.count_zeros", "all_columns", "json", None, "*")
-t.run()
-
 t.run()
 
 source_df.cols.names()
@@ -342,13 +290,15 @@ t.run()
 t.create(None, "cols.count_uniques", "all_columns", "json", None, "*")
 t.run()
 
+source_df.compute()
+
 t.create(None, "cols.unique", None, "json", None, numeric_col)
 t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", None, "*")
 t.run()
 
-t.create(None, "cols.add", None, "df", [numeric_col, numeric_col_B])
+t.create(None, "cols.add", None, "df", None, [numeric_col, numeric_col_B])
 
 t.create(None, "cols.add", "all_columns", "df", "*"),
 
@@ -374,23 +324,29 @@ t.create(None, "cols.iqr", "all_columns", "json", None, "*")
 
 t.run()
 
-t.create(None, "cols.lower", None, "df", string_col)
+source_df.cols.names()
 
-t.create(None, "cols.lower", "all_columns", "df", "*")
+source_df["names"].str.lower().compute()
 
-t.create(None, "cols.upper", None, "df", string_col)
+source_df.ext.display()
 
-t.create(None, "cols.upper", "all_columns", "df", "*")
+t.create(None, "cols.lower", None, "df", None, string_col)
 
-t.create(None, "cols.trim", None, "df", numeric_col)
+t.create(None, "cols.lower", "all_columns", "df", None, "*")
 
-t.create(None, "cols.trim", "all_columns", "df", "*")
+t.create(None, "cols.upper", None, "df", None, string_col)
+
+t.create(None, "cols.upper", "all_columns", "df", None, "*")
+
+t.create(None, "cols.trim", None, "df", None, string_col)
+
+t.create(None, "cols.trim", "all_columns", "df", None, "*")
 
 t.create(None, "cols.reverse", None, "df", string_col)
 
 t.create(None, "cols.reverse", "all_columns", "df", "*")
 
-t.create(None, "cols.remove_accents", None, "df", string_col)
+t.create(None, "cols.remove_accents", None, "df", None,string_col)
 
 t.create(None, "cols.remove_accents", "all_columns", "df", string_col)
 

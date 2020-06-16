@@ -299,7 +299,10 @@ def check_column_numbers(columns, number=0):
         RaiseIt.value_error(columns, ["str", "list"],
                             extra_text="Maybe the columns selected do not match a specified datatype filter.")
 
-    count = len(columns)
+    if isinstance(columns, zip):
+        columns = list(columns)
+
+    count = list(columns)
 
     if number == "*":
         if not len(columns) >= 1:
@@ -309,6 +312,7 @@ def check_column_numbers(columns, number=0):
             RaiseIt.value_error(len(columns), ["more than 1"])
     elif len(columns) != number:
         RaiseIt.value_error(count, "{} columns, {} needed".format(number, columns))
+    # elif isinstance(columns,zip):
 
 
 def validate_columns_names(df, col_names, index=0):

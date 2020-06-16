@@ -161,51 +161,7 @@ def ext(self):
 
             return output_columns
 
-        @staticmethod
-        def export():
-            """
-            Helper function to export all the spark in text format. Aimed to be used in test functions
-            :return:
-            """
-            df = self
-            dict_result = {}
 
-            value = df.collect()
-            schema = []
-            for col_name in df.cols.names():
-
-                data_type = df.cols.schema_dtype(col_name)
-                if isinstance(data_type, np.array):
-                    data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
-                else:
-                    data_type = str(data_type) + "()"
-
-                nullable = df.schema[col_name].nullable
-
-                schema.append(
-                    "('{name}', {dataType}, {nullable})".format(name=col_name, dataType=data_type, nullable=nullable))
-            schema = ",".join(schema)
-            schema = "[" + schema + "]"
-
-            # if there is only an element in the dict just return the value
-            if len(dict_result) == 1:
-                dict_result = next(iter(dict_result.values()))
-            else:
-                dict_result = [tuple(v.asDict().values()) for v in value]
-
-            def func(path, _value):
-                try:
-                    if math.isnan(_value):
-                        r = None
-                    else:
-                        r = _value
-                except TypeError:
-                    r = _value
-                return r
-
-            dict_result = traverse(dict_result, None, func)
-
-            return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
         @staticmethod
         def sample(n=10, random=False):

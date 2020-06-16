@@ -107,31 +107,6 @@ def cols(self: DataFrame):
         def remove(input_cols, search=None, search_by="chars", output_cols=None):
             pass
 
-        # @staticmethod
-        # def remove_accents(input_cols, output_cols=None):
-        #     """
-        #     Remove accents in specific columns
-        #     :param input_cols: '*', list of columns names or a single column name.
-        #     :param output_cols:
-        #     :return:
-        #     """
-        #
-        #     print(unicodedata.normalize('NFKD', "cell_str"))
-        #
-        #     def _remove_accents(value, attr):
-        #         cell_str = str(value)
-        #
-        #         # first, normalize strings:
-        #         nfkd_str = unicodedata.normalize('NFKD', cell_str)
-        #
-        #         # Keep chars that has no other char combined (i.e. accents chars)
-        #         with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-        #         return with_out_accents
-        #
-        #     df = Cols.apply(input_cols, _remove_accents, "string", output_cols=output_cols,
-        #                     meta=Actions.REMOVE_ACCENTS.value)
-        #     return df
-
         @staticmethod
         def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
             pass
@@ -486,26 +461,7 @@ def cols(self: DataFrame):
         def bucketizer(input_cols, splits, output_cols=None):
             pass
 
-        @staticmethod
-        def abs(input_cols, output_cols=None):
-            """
-            Apply abs to the values in a column
-            :param input_cols:
-            :param output_cols:
-            :return:
-            """
-            df = self
-            input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            output_cols = get_output_cols(input_cols, output_cols)
 
-            check_column_numbers(output_cols, "*")
-            # Abs not accepts column's string names. Convert to Spark Column
-
-            # TODO: make this in one pass.
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df.compute(np.abs(df[input_col]))
-            return df
 
         @staticmethod
         def nunique(columns):

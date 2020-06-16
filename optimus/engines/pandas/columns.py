@@ -148,9 +148,9 @@ def cols(self: DataFrame):
         def exec_agg(exprs):
             return exprs
 
-        @staticmethod
-        def remove(columns, search=None, search_by="chars", output_cols=None):
-            pass
+        # @staticmethod
+        # def remove(columns, search=None, search_by="chars", output_cols=None):
+        #     pass
 
         @staticmethod
         def remove_accents(input_cols, output_cols=None):
@@ -412,26 +412,7 @@ def cols(self: DataFrame):
                 df[output_col] = est.transform(x)
             return df
 
-        @staticmethod
-        def abs(input_cols, output_cols=None):
-            """
-            Apply abs to the values in a column
-            :param input_cols:
-            :param output_cols:
-            :return:
-            """
-            df = self
-            input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            output_cols = get_output_cols(input_cols, output_cols)
 
-            check_column_numbers(output_cols, "*")
-            # Abs not accepts column's string names. Convert to Spark Column
-
-            # TODO: make this in one pass.
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col] = df.compute(np.abs(df[input_col]))
-            return df
 
         @staticmethod
         def nunique(columns):

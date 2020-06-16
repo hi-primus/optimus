@@ -1,10 +1,12 @@
 # This functions must handle one or multiple columns
 # Must return None if the data type can not be handle
 import dask
+from dask import delayed
 from dask.array import stats
 from dask.dataframe.core import DataFrame
 import numpy as np
 from optimus.helpers.check import is_column_a
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from fast_histogram import histogram1d
@@ -13,97 +15,123 @@ from fast_histogram import histogram1d
 def functions(self):
     class Functions:
 
-        @staticmethod
-        def min(columns, args):
-            def _dataframe_min(df):
-                return {"min": df[columns].min()}
-
-            return _dataframe_min
-
-        @staticmethod
-        def max(columns, args):
-            def _dataframe_max(df):
-                return {"max": df[columns].max()}
-
-            return _dataframe_max
-
-        @staticmethod
-        def mean(columns, args):
-            def _dataframe_mean(df):
-                return {"mean": df[columns].mean()}
-
-            return _dataframe_mean
+        # @staticmethod
+        # def min(columns, args):
+        #     def _dataframe_min(df):
+        #         return {"min": df[columns].min()}
+        #
+        #     return _dataframe_min
+        #
+        # @staticmethod
+        # def max(columns, args):
+        #     def _dataframe_max(df):
+        #         return {"max": df[columns].max()}
+        #
+        #     return _dataframe_max
 
         @staticmethod
-        def variance(columns, args):
-            def _dataframe_var(df):
-                return {"variance": df[columns].var()}
+        def mean(df, columns, args):
 
-            return _dataframe_var
+            f = {col_name: df[col_name].mean() for col_name in columns}
 
-        @staticmethod
-        def sum(columns, args):
+            @delayed
+            def _mean(_f):
+                return {"mean": _f}
 
-            def _dataframe_sum(df):
-                return {"sum": df[columns].sum()}
-
-            return _dataframe_sum
+            return _mean(f)
 
         @staticmethod
-        def percentile_agg(columns, args):
-            values = args[1]
+        def variance(df, columns, args):
 
-            def _percentile(df):
-                return {"percentile": df[columns].quantile(values)}
+            f = {col_name: df[col_name].var() for col_name in columns}
 
-            return _percentile
+            @delayed
+            def _var(_f):
+                return {"var": _f}
 
-        @staticmethod
-        def stddev(columns, args):
-            def _stddev(df):
-                return {"stddev": df[columns].std()}
-
-            return _stddev
+            return _var(f)
 
         @staticmethod
-        def zeros_agg(columns, args):
+        def sum(df, columns, args):
+
+            f = {col_name: df[col_name].sum() for col_name in columns}
+
+            @delayed
+            def _sum(_f):
+                return {"sum": _f}
+
+            return _sum(f)
+
+        @staticmethod
+        def percentile_agg(df, columns, args):
+
+            values = args[0]
+            f = df[columns].quantile(values)
+
+            @delayed
+            def _percentile(_f):
+                return {"percentile": _f.to_dict()}
+
+            return _percentile(f)
+
+        @staticmethod
+        def stddev(df, columns, args):
+
+            f = {col_name: df[col_name].std() for col_name in columns}
+
+            @delayed
+            def _stddev(_f):
+                return {"stddev": _f}
+
+            return _stddev(f)
+
+        @staticmethod
+        def zeros_agg(df, columns, args):
             columns = val_to_list(columns)
 
-            def zeros_(df):
-                result = {"zeros": {col_name: (df[col_name].values == 0).sum() for col_name in columns}}
-                # result = {"zeros": (df[col_name].values == 0).sum()}
-                return result
+            @delayed
+            def _zeros(_df):
+                r = {}
+                for col_name in columns:
+                    s = (_df[col_name].values == 0)
+                    if isinstance(s, np.ndarray):
+                        r[col_name] = s.sum()
+                return {"zeros": r}
 
-            return zeros_
-
-        @staticmethod
-        def count_na_agg(columns, args):
-
-            def _count_na_agg(df):
-                return {"count_na": df[columns].isnull().sum()}
-
-            return _count_na_agg
+            return _zeros(df)
 
         @staticmethod
-        def kurtosis(columns, args):
+        def count_na_agg(df, columns, args):
+
+            @delayed
+            def _count_na_agg(_df):
+                return {"count_na": _df[columns].isnull().sum().to_dict()}
+
+            return _count_na_agg(df)
+
+        @staticmethod
+        def kurtosis(df, columns, args):
             # Maybe we could contribute with this
             # `nan_policy` other than 'propagate' have not been implemented.
 
-            def _kurtosis(serie):
-                result = {"kurtosis": {col: float(stats.kurtosis(serie[col])) for col in columns}}
-                # result = {"kurtosis": float(stats.kurtosis(serie[col_name], nan_policy="propagate"))}
-                return result
+            f = {col_name: stats.kurtosis(df[col_name]) for col_name in columns}
 
-            return _kurtosis
+            @delayed
+            def _kurtosis(_f):
+                return {"kurtosis": _f}
+
+            return _kurtosis(f)
 
         @staticmethod
-        def skewness(columns, args):
-            def _skewness(serie):
-                result = {"skewness": {col: float(stats.skew(serie[col])) for col in columns}}
-                # result = {"skewness": float(stats.skew(serie[col_name], nan_policy="propagate"))}
-                return result
+        def skewness(df, columns, args):
 
-            return _skewness
+            f = {col_name: float(stats.skew(df[col_name])) for col_name in columns}
+
+            @delayed
+            def _skewness(_f):
+                return {"skewness": _f}
+
+            return _skewness(f)
 
         @staticmethod
         def count_uniques_agg(columns, args):
@@ -123,14 +151,26 @@ def functions(self):
             return _count_uniques_agg
 
         @staticmethod
-        def range_agg(columns, args):
-            def _dataframe_range_agg_(df):
-                return {"min": df[columns].min(), "max": df[columns].max()}
+        def range_agg(df, columns, args):
+            columns = parse_columns(df, columns)
+            f = {col_name: {"min": df[col_name].min(), "max": df[col_name].max()} for col_name in columns}
 
-            return _dataframe_range_agg_
+            @delayed
+            def _range_agg(_f):
+                return {"range": _f}
+
+            return _range_agg(f)
+
+        #
+        # @staticmethod
+        # def range_agg(columns, args):
+        #     def _dataframe_range_agg_(df):
+        #         return {"min": df[columns].min(), "max": df[columns].max()}
+        #
+        #     return _dataframe_range_agg_
 
         @staticmethod
-        def mad_agg(col_name, args):
+        def mad_agg(df, col_name, args):
             more = args[0]
 
             def _mad_agg(serie):
@@ -146,18 +186,6 @@ def functions(self):
                 return result
 
             return _mad_agg
-
-        @staticmethod
-        def map_delayed(df, func, *args, **kwargs):
-            if isinstance(df, dask.dataframe.core.Series):
-
-                partitions = df.to_delayed()
-                delayed_values = [dask.delayed(func)(part, *args, **kwargs)
-                                  for part in partitions][0]
-            else:
-                delayed_values = dask.delayed(func)(df, *args, **kwargs)
-
-            return delayed_values
 
     return Functions()
 
