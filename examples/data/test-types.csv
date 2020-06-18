@@ -2,11 +2,11 @@ A,B
 1,2
 1.1,2.2
 Optimus,Megatron
-TRUE,FALSE
+true,false
 10/4/1980,29/11/2007
 "[1,2,3,4,5]","[10,20,30,40,50]"
 "{""a"":1,""b"":2,""c"":3}","{""d"":1,""e"":2,""f"":3}"
-Male,Female
+male,female
 111.111.111.111,192.0.0.1
 https://hi-bumblebee.com,https://google.com
 argenis@hi-bumblebee.com,luis@hi-bumblebee.com

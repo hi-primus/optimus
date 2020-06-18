@@ -1,4 +1,4 @@
-customer_id,transactoin_date,ticket_price,discount,product,info
+customer_id,transaction_date,ticket_price,discount,product,info
 0f345kjh345oiuy345,2010/08/19,29.99,,platinum,1
 0fju234978rfjkhsdf,2012/01/05,29.99,,platinum,2
 0f34ruiy23e78y2r,2009/08/11,29.99,,platinum,3
