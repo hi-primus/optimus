@@ -603,7 +603,7 @@ class DataFrameBaseColumns(BaseColumns):
         return self.rename([(old_column, new_column)], None)
 
     @staticmethod
-    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+    def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
         raise NotImplementedError('Look at me I am dask now')
 
     def fill_na(self, input_cols, value=None, output_cols=None):

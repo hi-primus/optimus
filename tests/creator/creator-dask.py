@@ -291,16 +291,6 @@ t.run()
 
 source_df.cols.names()
 
-# +
-from functools import reduce
-import operator as op
-o = lambda x, y: x + y
-
-expr = reduce(o, [source_df[col_name] for col_name in ["rank","rank"]])
-new_column = "sdf"
-source_df.assign(**{new_column: expr})
-# -
-
 print(source_df.cols.add(["rank","rank"]))
 
 
@@ -321,6 +311,8 @@ t.create(None, "cols.div", None, "df", None,[numeric_col, numeric_col_B])
 t.create(None, "cols.div", "all_columns", "df", None,"*")
 
 t.create(None, "cols.z_score", None, "df", None,numeric_col)
+
+source_df.compute()
 
 t.create(None, "cols.z_score", "all_columns", "df", None, "*")
 
@@ -366,17 +358,18 @@ t.create(None, "cols.remove_white_spaces", None, "df", None, string_col)
 
 t.create(None, "cols.remove_white_spaces", "all_columns", "df", None,"*")
 
-t.create(None, "cols.date_transform", None, "df", None,date_col, "yyyy/MM/dd", "dd-MM-YYYY")
+print(date_col)
+t.create(None, "cols.date_format", None, "df", None,date_col, "%Y/%m/%d", "%d/%m/%Y")
 
 t.run()
 
-t.create(None, "cols.date_transform", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
+t.create(None, "cols.date_format", "all_columns", "df", None, [date_col, date_col_B], "%Y/%m/%d", "%d/%m/%Y")
 
 # t.create(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
-t.delete(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
+t.create(None, "cols.years_between", None, "df", None, date_col, "%Y/%m/%d")
 
 # t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
-t.delete(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
 
 t.run()
 

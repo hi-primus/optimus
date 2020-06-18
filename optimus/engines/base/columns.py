@@ -666,7 +666,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+    def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
         pass
 
     @staticmethod
@@ -802,7 +802,7 @@ class BaseColumns(ABC):
     def z_score(self, input_cols, output_cols=None):
 
         df = self.df
-        columns = prepare_columns(df, input_cols, output_cols)
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
         for input_col, output_col in columns:
             t = df[input_col].astype(float)

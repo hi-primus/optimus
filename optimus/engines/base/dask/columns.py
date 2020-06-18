@@ -532,17 +532,32 @@ class DaskBaseColumns(BaseColumns):
         return df
 
     # Date operations
-    @staticmethod
-    def years_between(input_cols, date_format=None, output_cols=None):
-        pass
+
+    def years_between(self, input_cols, date_format=None, output_cols=None):
+        df = self.df
+        return df
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    @staticmethod
-    def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
-        pass
+    def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
+        """
+        Look at https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes for date formats
+        :param input_cols:
+        :param current_format:
+        :param output_format:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+
+        def _date_format(value, args):
+            return pd.to_datetime(value, format=current_format, errors="coerce").dt.strftime(output_format)
+
+        return df.cols.apply(input_cols, _date_format, func_return_type=str,
+                             output_cols=output_cols,
+                             meta_action=Actions.LOWER.value, mode="delayed", set_index=True)
 
     def year(self, input_cols, format=None, output_cols=None):
         """

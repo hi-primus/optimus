@@ -948,7 +948,7 @@ def cols(self):
             return df
 
         @staticmethod
-        def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+        def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
             """
             Transform a column date to a specified format
             :param input_cols: Columns to be transformed.
@@ -960,7 +960,7 @@ def cols(self):
             :param output_format: Output date string format to be expected. For example "dd-MM-YYYY"
             """
 
-            def _date_transform(col_name, attr):
+            def _date_format(col_name, attr):
                 _current_format = attr[0]
                 _output_format = attr[1]
 
@@ -969,14 +969,14 @@ def cols(self):
                     col_name)
 
             # Asserting if column if in dataFrame:
-            df = Cols.apply(input_cols, _date_transform, args=[current_format, output_format], output_cols=output_cols)
+            df = Cols.apply(input_cols, _date_format, args=[current_format, output_format], output_cols=output_cols)
 
             return df
 
         @staticmethod
         def years_between(input_cols, date_format=None, output_cols=None):
             """
-            This method compute the age based on a born date.
+            Years between a date and now
             :param input_cols: Name of the column born dates column.
             :param output_cols:
             :param date_format: String format date of the column provided. For example "yyyyMMdd"

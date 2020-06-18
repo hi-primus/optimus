@@ -408,11 +408,11 @@ t.create(None, "cols.remove_white_spaces", None, "df", string_col)
 
 t.create(None, "cols.remove_white_spaces", "all_columns", "df", "*")
 
-t.create(None, "cols.date_transform", None, "df", date_col, "yyyy/MM/dd", "dd-MM-YYYY")
+t.create(None, "cols.date_format", None, "df", date_col, "yyyy/MM/dd", "dd-MM-YYYY")
 
 t.run()
 
-t.create(None, "cols.date_transform", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
+t.create(None, "cols.date_format", "all_columns", "df", [date_col, date_col_B], "yyyy/MM/dd", "dd-MM-YYYY")
 
 # t.create(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")
 t.delete(None, "cols.years_between", None, "df", date_col, "yyyy/MM/dd")

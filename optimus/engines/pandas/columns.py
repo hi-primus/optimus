@@ -166,7 +166,7 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def date_transform(input_cols, current_format=None, output_format=None, output_cols=None):
+        def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
             pass
 
         @staticmethod
