@@ -109,3 +109,5 @@ examples/mydask.png
 examples/data/dataset - customers.csv
 
 examples/data/dataset - transactions.csv
+
+tests/creator/dask-worker-space/

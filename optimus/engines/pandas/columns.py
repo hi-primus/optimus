@@ -381,9 +381,6 @@ def cols(self: DataFrame):
         def clip(columns, lower_bound, upper_bound):
             pass
 
-        @staticmethod
-        def values_to_cols(input_cols):
-            pass
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):

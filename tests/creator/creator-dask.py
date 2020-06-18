@@ -62,13 +62,13 @@ cols = [
 ]
 
 rows = [
-    ("Optim'us", -28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
+    ("Optim'us", -28, "Leader", 10, 4000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
      "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
      None),
     ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
      "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True, bytearray("Espionage", "utf-8"),
      None),
-    ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
+    ("ironhide&", 26, "Security", 7, 7000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
      "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True, bytearray("Security", "utf-8"),
      None),
     ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
@@ -102,7 +102,7 @@ source_df = dd.from_pandas(source_df, npartitions=1)
 
 # -
 
-source_df
+source_df.compute()
 
 # ### End Init Section
 
@@ -130,30 +130,22 @@ date_col = "date arrival"
 date_col_B = "last date seen"
 new_col = "new col"
 array_col = "attributes"
+# -
 
-# +
-t.create(source_df, "cols.string_to_index", None, "df", None, "names")
+source_df.cols.dtypes()
+
+source_df.cols.select("rank")
 
 t.create(None, "cols.hist", None, "json", None, ["height(ft)", numeric_col_B], 4)
 
+t.create(source_df, "cols.string_to_index", None, "df", None, "rank")
+
+# +
+# FIX at creation time we los the metadata. Need to find a way to put it on the dataframe creation
+# t.create(source_df, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
 # -
 
-source_df_index_to_string = source_df_string_to_index.cols.string_to_index("rank")
-
-# FIX at creation time we los the metadata. Need to find a way to put it on the dataframe creation
-t.delete(source_df_index_to_string, "cols.index_to_string", None, "df", None, "rank***STRING_TO_INDEX")
-
 t.run()
-
-t.create(source_df_string_to_index, "cols.values_to_cols", None, "df", None, "rank")
-
-t.run()
-
-t.create(source_df_string_to_index, "cols.values_to_cols", "all_columns", "df", None, ["names", "height(ft)"])
-
-t.run()
-
-print(source_df.cols.remove(string_col))
 
 t.create(None, "cols.remove", None, "df", None, string_col, "i")
 
@@ -177,13 +169,15 @@ t.create(None, "cols.max", None, "json", None, numeric_col)
 t.create(None, "cols.max", "all_columns", "json", None, "*")
 t.run()
 
+source_df.cols.min("rank")
+
 t.create(None, "cols.range", None, "json", None, numeric_col)
+
+source_df.ext.display()
 
 t.create(None, "cols.range", "all_columns", "json", None, "*")
 
 t.run()
-
-source_df.mean().compute()
 
 t.create(None, "cols.median", None, "json", None, numeric_col)
 
@@ -197,15 +191,16 @@ t.create(None, "cols.percentile", "all_columns", "json", None, "*", [0.05, 0.25]
 
 # ## MAD
 
+# +
+
+source_df.cols.mad(numeric_col, True)
+# -
+
 t.create(None, "cols.mad", None, "json", None, numeric_col)
 
 t.create(None, "cols.mad", "all_columns", "json", None, "*")
 
 t.run()
-
-source_df.min().compute()
-
-source_df.cols.std("*")
 
 t.create(None, "cols.std", None, "json", None, numeric_col)
 
@@ -265,8 +260,6 @@ t.create(None, "cols.count_na", "all_columns", "json", None, "*")
 
 t.run()
 
-source_df.cols.names("rank", ["str", "int", "float"], True)
-
 t.create(None, "cols.count_zeros", None, "json", None, numeric_col)
 
 source_df.compute()
@@ -290,43 +283,52 @@ t.run()
 t.create(None, "cols.count_uniques", "all_columns", "json", None, "*")
 t.run()
 
-source_df.compute()
-
 t.create(None, "cols.unique", None, "json", None, numeric_col)
 t.run()
 
 t.create(None, "cols.unique", "all_columns", "json", None, "*")
 t.run()
 
+source_df.cols.names()
+
+# +
+from functools import reduce
+import operator as op
+o = lambda x, y: x + y
+
+expr = reduce(o, [source_df[col_name] for col_name in ["rank","rank"]])
+new_column = "sdf"
+source_df.assign(**{new_column: expr})
+# -
+
+print(source_df.cols.add(["rank","rank"]))
+
+
 t.create(None, "cols.add", None, "df", None, [numeric_col, numeric_col_B])
 
-t.create(None, "cols.add", "all_columns", "df", "*"),
+t.create(None, "cols.add", "all_columns", "df", None, "*"),
 
-t.create(None, "cols.sub", None, "df", [numeric_col, numeric_col_B])
+t.create(None, "cols.sub", None, "df", None,[numeric_col, numeric_col_B])
 
-t.create(None, "cols.sub", "all_columns", "df", "*")
+t.create(None, "cols.sub", "all_columns", "df",None, "*")
 
-t.create(None, "cols.mul", None, "df", [numeric_col, numeric_col_B])
+t.create(None, "cols.mul", None, "df", None,[numeric_col, numeric_col_B])
 
-t.create(None, "cols.mul", "all_columns", "df", "*")
+t.create(None, "cols.mul", "all_columns", "df", None, "*")
 
-t.create(None, "cols.div", None, "df", [numeric_col, numeric_col_B])
+t.create(None, "cols.div", None, "df", None,[numeric_col, numeric_col_B])
 
-t.create(None, "cols.div", "all_columns", "df", "*")
+t.create(None, "cols.div", "all_columns", "df", None,"*")
 
-t.create(None, "cols.z_score", None, "df", numeric_col)
+t.create(None, "cols.z_score", None, "df", None,numeric_col)
 
-t.create(None, "cols.z_score", "all_columns", "df", "*")
+t.create(None, "cols.z_score", "all_columns", "df", None, "*")
 
-t.create(None, "cols.iqr", None, "json", None, numeric_col)
+t.create(None, "cols.iqr", None, "json", None, None, numeric_col)
 
 t.create(None, "cols.iqr", "all_columns", "json", None, "*")
 
 t.run()
-
-source_df.cols.names()
-
-source_df["names"].str.lower().compute()
 
 source_df.ext.display()
 
@@ -342,29 +344,29 @@ t.create(None, "cols.trim", None, "df", None, string_col)
 
 t.create(None, "cols.trim", "all_columns", "df", None, "*")
 
-t.create(None, "cols.reverse", None, "df", string_col)
+print(string_col)
+t.create(None, "cols.reverse", None, "df", None, string_col)
 
-t.create(None, "cols.reverse", "all_columns", "df", "*")
+t.create(None, "cols.reverse", "all_columns", "df", None, "*")
 
+print(string_col)
 t.create(None, "cols.remove_accents", None, "df", None,string_col)
 
-t.create(None, "cols.remove_accents", "all_columns", "df", string_col)
+t.create(None, "cols.remove_accents", "all_columns", "df", None,string_col)
 
-source_df.table()
+source_df.ext.table()
 
-t.create(None, "cols.remove_special_chars", None, "df", string_col)
+t.create(None, "cols.remove_special_chars", None, "df", None, string_col)
 
 t.create(None, "cols.remove_special_chars", "all_columns", "df", None, "*")
 t.run()
 # t.create(None, "cols.value_counts", None, "json", None, numeric_col)
 
-source_df.cols.remove_special_chars("*").table()
+t.create(None, "cols.remove_white_spaces", None, "df", None, string_col)
 
-t.create(None, "cols.remove_white_spaces", None, "df", string_col)
+t.create(None, "cols.remove_white_spaces", "all_columns", "df", None,"*")
 
-t.create(None, "cols.remove_white_spaces", "all_columns", "df", "*")
-
-t.create(None, "cols.date_transform", None, "df", date_col, "yyyy/MM/dd", "dd-MM-YYYY")
+t.create(None, "cols.date_transform", None, "df", None,date_col, "yyyy/MM/dd", "dd-MM-YYYY")
 
 t.run()
 
@@ -400,7 +402,7 @@ t.run()
 t.create(None, "cols.frequency", "all_columns", "dict", None, "*", 4)
 t.run()
 
-t.create(None, "cols.schema_dtype", None, "json", numeric_col_B)
+t.create(None, "cols.schema_dtype", None, "json", None, numeric_col_B)
 
 # Problems with casting
 # t.delete(None, "cols.schema_dtype", "all_columns", "json", "*")
@@ -410,7 +412,7 @@ t.create(None, "cols.dtypes", None, "json", None, numeric_col_B)
 
 t.run()
 
-t.create(None, "cols.dtypes", "all_columns", "json", "*")
+t.create(None, "cols.dtypes", "all_columns", "json",None, "*")
 
 t.create(None, "cols.select_by_dtypes", "str", "df", None, "str")
 
@@ -422,13 +424,18 @@ t.create(None, "cols.select_by_dtypes", "array", "df", "array")
 
 t.create(None, "cols.names", None, "json")
 
-t.create(None, "cols.qcut", None, "df", numeric_col_B, 4)
+source_df.compute()
 
-t.create(None, "cols.qcut", "all_columns", "df", "*", 4)
+print(numeric_col_B)
+t.create(None, "cols.qcut", None, "df",None, numeric_col_B, 4)
 
-t.create(None, "cols.clip", None, "df", numeric_col_B, 3, 5)
+t.create(None, "cols.qcut", "all_columns", "df", None,"*", 4)
 
-t.create(None, "cols.clip", "all_columns", "df", "*", 3, 5)
+t.create(None, "cols.clip", None, "df", None,numeric_col_B, 3, 5)
+
+source_df.dtypes
+
+t.create(None, "cols.clip", "all_columns", "df", None,"*", 3, 5)
 
 t.create(None, "cols.replace", "full", "df", None, string_col, ["First Lieutenant", "Battle"], "Match",
          search_by="full")
@@ -438,7 +445,9 @@ t.run()
 
 t.create(None, "cols.replace", "chars", "df", None, string_col, ["F", "E"], "Match", search_by="chars")
 
-t.create(None, "cols.replace", "numeric", "df", None, "age", 5000000, 5, search_by="numeric")
+# +
+# t.create(None, "cols.replace", "numeric", "df", None, "age", 5000000, 5, search_by="numeric")
+# -
 
 t.run()
 
@@ -446,11 +455,14 @@ t.run()
 t.create(None, "cols.replace", "all_columns", "df", None, "*", ["Jazz", "Leader"], "Match")
 t.run()
 
+# +
 # Its necesary to save the function
-t.delete(None, "cols.apply_expr", None, "df", numeric_col_B, func)
+# t.delete(None, "cols.apply_expr", None, "df", numeric_col_B, func)
 
+# +
 # Its necesary to save the function
-t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B, numeric_col_C], func)
+# t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B, numeric_col_C], func)
+# -
 
 t.create(None, "cols.append", "number", "df", new_col, 1)
 
@@ -471,37 +483,40 @@ t.create(None, "cols.append", "dataframes", "df", None, df_col)
 #                                                ]),
 
 
-t.create(None, "cols.rename", None, "df", numeric_col_B, numeric_col_B + "(old)")
+t.create(None, "cols.rename", None, "df", None, numeric_col_B, numeric_col_B + "(old)")
 
-t.create(None, "cols.rename", "list", "df",
+t.create(None, "cols.rename", "list", "df",None,
          [numeric_col, numeric_col + "(tons)", numeric_col_B, numeric_col_B + "(old)"])
 
-t.create(None, "cols.rename", "function", "df", str.upper)
+t.create(None, "cols.rename", "function", "df", None, str.upper)
 
-t.create(None, "cols.drop", None, "df", numeric_col_B)
+print(numeric_col_B)
+t.create(None, "cols.drop", None, "df", None,numeric_col_B)
 
-t.create(None, "cols.cast", None, "df", string_col, "string")
+t.create(None, "cols.cast", None, "df", None, string_col, "string")
 
-t.create(None, "cols.cast", "all_columns", "df", "*", "string")
+t.create(None, "cols.cast", "all_columns", "df", None, "*", "string")
 
 t.run()
 
 # Problems with precision
 t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
 
-t.create(None, "cols.keep", None, "df", numeric_col_B)
+source_df.cols.keep(numeric_col_B).ext.display()
 
-t.create(None, "cols.move", "after", "df", numeric_col_B, "after", array_col)
+t.create(None, "cols.keep", None, "df", None, numeric_col_B)
 
-t.create(None, "cols.move", "before", "df", numeric_col_B, "before", array_col)
+t.create(None, "cols.move", "after", "df",None, numeric_col_B, "after", array_col)
 
-t.create(None, "cols.move", "beginning", "df", numeric_col_B, "beginning")
+t.create(None, "cols.move", "before", "df",None, numeric_col_B, "before", array_col)
 
-t.create(None, "cols.move", "end", "df", numeric_col_B, "end")
+t.create(None, "cols.move", "beginning", "df", None, numeric_col_B, "beginning")
 
-t.create(None, "cols.select", None, "df", 0, numeric_col)
+t.create(None, "cols.move", "end", "df", None, numeric_col_B, "end")
 
-t.create(None, "cols.select", "regex", "df", "n.*", regex=True),
+t.create(None, "cols.select", None, "df", None, 0, numeric_col)
+
+t.create(None, "cols.select", "regex", "df", None, "n.*", regex=True),
 
 t.create(None, "cols.sort", None, "df")
 t.run()
@@ -512,7 +527,7 @@ t.create(None, "cols.sort", "asc", "df", None, "asc")
 
 t.run()
 
-t.create(None, "cols.fill_na", None, "df", numeric_col, "1")
+t.create(None, "cols.fill_na", None, "df", None, numeric_col, "1")
 
 t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1", "2"])
 

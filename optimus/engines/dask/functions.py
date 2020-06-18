@@ -153,13 +153,13 @@ def functions(self):
         @staticmethod
         def range_agg(df, columns, args):
             columns = parse_columns(df, columns)
-            f = {col_name: {"min": df[col_name].min(), "max": df[col_name].max()} for col_name in columns}
 
             @delayed
-            def _range_agg(_f):
-                return {"range": _f}
+            def _range_agg(_min, _max):
+                return {col_name: {"min": __min, "max": __max} for (col_name, __min), __max in
+                        zip(_min["min"].items(), _max["max"].values())}
 
-            return _range_agg(f)
+            return _range_agg(df.cols.min(columns), df.cols.max(columns))
 
         #
         # @staticmethod
@@ -172,20 +172,20 @@ def functions(self):
         @staticmethod
         def mad_agg(df, col_name, args):
             more = args[0]
+            median_value = df[col_name].quantile(0.5)
+            mad_value = (df[col_name] - median_value).abs().quantile(0.5)
 
-            def _mad_agg(serie):
-                median_value = serie[col_name].quantile(0.5)
-                mad_value = (serie[col_name] - median_value).abs().quantile(0.5)
+            @delayed
+            def _mad_agg(_mad_value, _median_value):
 
-                _mad = {}
+                _mad_value = {"mad": _mad_value.to_dict()}
+
                 if more:
-                    result = {"mad": mad_value, "median": median_value}
-                else:
-                    result = {"mad": mad_value}
+                    _mad_value.update({"median": _median_value})
 
-                return result
+                return _mad_value
 
-            return _mad_agg
+            return _mad_agg(mad_value, median_value)
 
     return Functions()
 

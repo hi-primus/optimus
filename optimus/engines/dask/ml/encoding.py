@@ -1,9 +1,7 @@
 # from dask_ml.preprocessing import DummyEncoder
-from pyspark.ml import feature, Pipeline
-from pyspark.ml.feature import StringIndexer, VectorAssembler, Normalizer, IndexToString
 
 from optimus.helpers.check import is_spark_dataframe
-from optimus.helpers.columns import parse_columns, name_col, get_output_cols
+from optimus.helpers.columns import parse_columns, name_col, get_output_cols, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
@@ -31,70 +29,6 @@ def n_gram(df, input_col, n=2):
     return df_model, tfidf_model
 
 
-def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
-    """
-    Maps a string column of labels to an ML column of label indices. If the input column is
-    numeric, we cast it to string and index the string values.
-    :param df: Dataframe to be transformed
-    :param input_cols: Columns to be indexed.
-    :param output_cols:Column where the ouput is going to be saved
-    :param columns:
-    :return: Dataframe with indexed columns.
-    """
-    df_actual = df
-
-    # input_cols = parse_columns(df, input_cols)
-    # output_cols = get_output_cols(input_cols, output_cols)
-    #
-
-    # if columns is None:
-    #     input_cols = parse_columns(df, input_cols)
-    #     if output_cols is None:
-    #         output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
-    #     output_cols = get_output_cols(input_cols, output_cols)
-    # else:
-    #     input_cols, output_cols = zip(*columns)
-
-    indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, **kargs).fit(df) for input_col, output_col
-                in zip(list(set(input_cols)), list(set(output_cols)))]
-
-    pipeline = Pipeline(stages=indexers)
-    df = pipeline.fit(df).transform(df)
-
-    df = df.meta.preserve(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
-
-    return df
-
-
-def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
-    """
-    Maps a column of indices back to a new column of corresponding string values. The index-string mapping is
-    either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
-    ML attributes).
-    :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be indexed.
-    :param output_cols: Column where the output is going to be saved.
-    :param columns:
-    :return: Dataframe with indexed columns.
-    """
-    df_actual = df
-
-    if columns is None:
-        input_cols = parse_columns(df, input_cols)
-        if output_cols is None:
-            output_cols = [name_col(input_col, "index_to_string") for input_col in input_cols]
-        output_cols = get_output_cols(input_cols, output_cols)
-    else:
-        input_cols, output_cols = zip(*columns)
-
-    indexers = [IndexToString(inputCol=input_col, outputCol=output_col, **kargs) for input_col, output_col
-                in zip(list(set(input_cols)), list(set(output_cols)))]
-    pipeline = Pipeline(stages=indexers)
-    df = pipeline.fit(df).transform(df)
-
-    df = df.meta.preserve(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
-
-    return df
 
 
 def one_hot_encoder(df, input_cols, output_col=None, **kargs):

@@ -242,19 +242,19 @@ def atanh(series):
 
 # Strings
 def upper(series):
-    return series.str.upper()
+    return series.astype(str).str.upper()
 
 
 def lower(series):
-    return series.str.lower()
+    return series.astype(str).str.lower()
 
 
 def proper(series):
-    return series.str.title()
+    return series.astype(str).str.title()
 
 
 def trim(series):
-    return series.str.strip()
+    return series.astype(str).str.strip()
 
 
 def remove_white_spaces(series):
@@ -274,11 +274,11 @@ def remove_accents(series):
 
 
 def find(series, sub, start=0, end=None):
-    return series.str.find(sub, start, end)
+    return series.astype(str).str.find(sub, start, end)
 
 
 def rfind(series, sub, start=0, end=None):
-    return series.str.rfind(sub, start, end)
+    return series.astype(str).str.rfind(sub, start, end)
 
 
 def left(series, position):

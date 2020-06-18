@@ -39,7 +39,6 @@ class Actions(Enum):
     Z_SCORE = "z_score"
     NEST = "nest"
     UNNEST = "unnest"
-    VALUES_TO_COLS = "values_to_cols"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
     INDEX_TO_STRING = "index_to_string"

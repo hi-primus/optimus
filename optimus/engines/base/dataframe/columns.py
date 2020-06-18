@@ -50,9 +50,6 @@ class DataFrameBaseColumns(BaseColumns):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-    @staticmethod
-    def values_to_cols(input_cols):
-        pass
 
     def clip(self, columns, lower_bound, upper_bound):
         df = self.df
@@ -156,16 +153,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df
 
-    def z_score(self, input_cols, output_cols=None):
 
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = (df[input_col] - df[input_col].mean()) / df[input_col].std(ddof=0)
-        return df
 
     @staticmethod
     def _math(columns, operator, new_column):
@@ -335,7 +323,7 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols, set_index= True)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """

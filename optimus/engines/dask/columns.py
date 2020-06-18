@@ -1,12 +1,10 @@
 import dask.dataframe as dd
-import numpy as np
+import pandas as pd
 from dask import delayed
 from dask.dataframe.core import DataFrame
-import pandas as pd
+
 from optimus.engines.base.dask.columns import DaskBaseColumns
-from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
-from optimus.helpers.converter import format_dict
-from optimus import functions  as F
+from optimus.helpers.columns import parse_columns
 
 
 # This implementation works for Dask
@@ -40,7 +38,7 @@ def cols(self: DataFrame):
                 c = pd.concat(_df)
                 return c.groupby(c.index).min().to_dict()
 
-            return dd.compute(_reduce(delayed_parts))[0]
+            return dd.compute({"min": _reduce(delayed_parts)})[0]
 
         @staticmethod
         def max(columns, skip_na=True):
@@ -67,7 +65,7 @@ def cols(self: DataFrame):
                 c = pd.concat(_df)
                 return c.groupby(c.index).max().to_dict()
 
-            return dd.compute(_reduce(delayed_parts))[0]
+            return dd.compute({"max":_reduce(delayed_parts)})[0]
 
         @staticmethod
         def stddev(columns):
@@ -80,7 +78,8 @@ def cols(self: DataFrame):
         def mode(columns):
             columns = parse_columns(self, columns)
             df = self[columns]
-            f = [df[col_name].mode(dropna=True) for col_name in columns]
+
+            f = [df[col_name].astype(str).mode(dropna=True) for col_name in columns]
 
             @delayed
             def _mode(parts):

@@ -1466,7 +1466,6 @@ def cols(self):
 
             quartile = self.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
             for col_name in columns:
-
                 q1 = quartile[col_name]["percentile"]["0.25"]
                 q2 = quartile[col_name]["percentile"]["0.5"]
                 q3 = quartile[col_name]["percentile"]["0.75"]
@@ -1987,46 +1986,6 @@ def cols(self):
                 df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
             return df
 
-        @staticmethod
-        def values_to_cols(input_cols):
-            """
-            Create as many columns as values in an specific column. Fill with '1' the column that match the column value.
-            :param input_cols:
-            :return:
-            """
-            before = self
-            keys = before.cols.names()
-
-            def join_all(_dfs):
-                # _dfs[0].table()
-                if len(_dfs) > 1:
-                    # print(_keys)
-                    return _dfs[0].join(join_all(_dfs[1:]), on=keys, how='inner')
-                else:
-                    return _dfs[0]
-
-            combined = []
-
-            pivot_cols = parse_columns(before, input_cols)
-
-            for pivot_col in pivot_cols:
-                pivotDF = before.groupBy(keys).pivot(pivot_col).count()
-
-                # pivotDF.table()
-                new_names = ["{0}_{1}".format(pivot_col, c) for c in pivotDF.columns[len(keys):]]
-                names = pivotDF.columns[:len(keys)] + new_names
-
-                # names = before.cols.names(keys, invert=True)
-                # print(names)
-                pivotDF = pivotDF.meta.preserve(self)
-                df = pivotDF.toDF(*names).cols.fill_na(new_names, 0)
-                df = df.meta.preserve(self, Actions.VALUES_TO_COLS.value, new_names)
-
-                combined.append(df)
-
-            df = join_all(combined)
-
-            return df
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):

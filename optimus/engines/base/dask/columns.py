@@ -1,6 +1,7 @@
 import builtins
 import re
 import unicodedata
+from functools import reduce
 
 import dask
 import dask.dataframe as dd
@@ -10,6 +11,7 @@ import pandas as pd
 from dask import delayed
 from dask.dataframe import from_delayed
 from dask.dataframe.core import DataFrame
+from dask_ml import preprocessing
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
 from numba import jit
@@ -17,10 +19,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus import functions as F
 from optimus.engines.base.columns import BaseColumns
-from optimus.engines.dask.ml.encoding import index_to_string as ml_index_to_string
-from optimus.engines.dask.ml.encoding import string_to_index as ml_string_to_index
+from optimus.engines.base.ml.contants import INDEX_TO_STRING, STRING_TO_INDEX
 from optimus.helpers.check import is_cudf_series, is_pandas_series
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
+from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
+    prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
@@ -132,14 +134,10 @@ class DaskBaseColumns(BaseColumns):
         columns = parse_columns(df, columns)
 
         @delayed
-        def _count_uniques(_df):
-            return _df.nunique()
+        def merge(count_uniques_values, _columns):
+            return {column: {"count_uniques": values} for column, values in zip(_columns, count_uniques_values)}
 
-        @delayed
-        def merge(lu, columns):
-            return {column: {"count_uniques": u} for column, u in zip(columns, lu)}
-
-        count_uniques_values = [_count_uniques(df[col_name]) for col_name in columns]
+        count_uniques_values = [df[col_name].astype(str).nunique() for col_name in columns]
         result = merge(count_uniques_values, columns)
 
         if compute is True:
@@ -265,8 +263,14 @@ class DaskBaseColumns(BaseColumns):
 
     def index_to_string(self, input_cols=None, output_cols=None, columns=None):
         df = self.df
+        columns = prepare_columns(df, input_cols, output_cols, default=INDEX_TO_STRING, accepts_missing_cols=True)
+        le = preprocessing.LabelEncoder()
+        kw_columns = {}
+        for input_col, output_col in columns:
+            kw_columns[output_col] = le.inverse_transform(df[input_col])
+        df = df.assign(**kw_columns)
 
-        df = ml_index_to_string(df, input_cols, output_cols, columns)
+        df = df.meta.preserve(df, Actions.INDEX_TO_STRING.value, output_cols)
 
         return df
 
@@ -280,29 +284,30 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
+        columns = prepare_columns(df, input_cols, output_cols, default=STRING_TO_INDEX, accepts_missing_cols=True)
+        le = preprocessing.LabelEncoder()
+        for input_col, output_col in columns:
+            df[output_col] = le.fit_transform(df[input_col].astype(str))
 
-        df = ml_string_to_index(df, input_cols, output_cols, columns)
+        df = df.meta.preserve(df, Actions.STRING_TO_INDEX.value, output_cols)
 
         return df
 
-    @staticmethod
-    def values_to_cols(input_cols):
-        pass
-
     def clip(self, columns, lower_bound, upper_bound):
         df = self.df
-        columns = parse_columns(df, columns)
-        df[columns] = df[columns].clip(lower_bound, upper_bound)
+        columns = parse_columns(df, columns,
+                                filter_by_column_dtypes=df.constants.NUMERIC_TYPES + df.constants.STRING_TYPES)
+        df[columns] = df[columns].astype(float).clip(lower_bound, upper_bound)
 
         return df
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
-        #
-        # df = self.df
-        # columns = parse_columns(df, columns)
-        # df[columns] = df[columns].map_partitions(pd.cut, num_buckets)
-        # return df
-        pass
+
+        df = self.df
+        columns = parse_columns(df, columns)
+        # s.fillna(np.nan)
+        df[columns] = df[columns].map_partitions(pd.qcut, num_buckets)
+        return df
 
     @staticmethod
     def boxplot(columns):
@@ -345,10 +350,9 @@ class DaskBaseColumns(BaseColumns):
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
         # print(quartile)
         for col_name in columns:
-
-            q1 = quartile[col_name]["percentile"]["0.25"]
-            q2 = quartile[col_name]["percentile"]["0.5"]
-            q3 = quartile[col_name]["percentile"]["0.75"]
+            q1 = quartile["percentile"][col_name][0.25]
+            q2 = quartile["percentile"][col_name][0.5]
+            q3 = quartile["percentile"][col_name][0.75]
 
             iqr_value = q3 - q1
             if more:
@@ -387,18 +391,23 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-    def z_score(self, input_cols, output_cols=None):
+    def _math(self, columns, operator, new_column):
+
+        """
+        Helper to process arithmetic operation between columns. If a
+        :param columns: Columns to be used to make the calculation
+        :param operator: A lambda function
+        :return:
+        """
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = (df[input_col] - df[input_col].mean()) / df[input_col].std(ddof=0)
-        return df
+        for col_name in columns:
+            df.assign(**{col_name: df[col_name].astype(float)})
 
-    @staticmethod
-    def _math(columns, operator, new_column):
-        pass
+        expr = reduce(operator, [df[col_name] for col_name in columns])
+        return df.assign(**{new_column: expr})
 
     @staticmethod
     def select_by_dtypes(data_type):
@@ -410,7 +419,8 @@ class DaskBaseColumns(BaseColumns):
 
     def unique(self, columns):
         df = self.df
-        return df[columns].drop_duplicates().compute()
+        columns = parse_columns(df, columns)
+        return df.astype(str).drop_duplicates(subset=columns).compute()
 
     def value_counts(self, columns):
         """
@@ -420,19 +430,15 @@ class DaskBaseColumns(BaseColumns):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        # .value(columns, 1)
 
-        result = {}
-        for col_name in columns:
-            print("col_name", col_name)
-            try:
-                r = df[col_name].value_counts().compute().to_frame().to_dict()
-                result.update(r)
-            except:
-                pass
-                # result.update({col_name: None})
+        @delayed
+        def to_dict(value):
+            return value.to_dict()
 
-        return result
+        return dask.delayed(
+            {col_name: to_dict(df[col_name].astype(str).value_counts()) for col_name in columns}).compute()
+
+        # return _value_counts(a)
 
     def extract(self, input_cols, output_cols, regex):
         df = self.df
@@ -621,22 +627,21 @@ class DaskBaseColumns(BaseColumns):
     def remove_white_spaces(self, input_cols, output_cols=None):
 
         def _remove_white_spaces(value, args):
-            return value.str.replace(" ", "")
+            return value.astype("str").str.replace(" ", "")
 
         df = self.df
         return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols, mode="delayed", set_index=True)
 
     def remove_special_chars(self, input_cols, output_cols=None):
         def _remove_special_chars(value, args):
-            return value.str.replace('[^A-Za-z0-9]+', '')
-            # return re.sub('[^A-Za-z0-9]+', '', value)
+            return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
         df = self.df
         return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols, mode="delayed", set_index=True)
 
     def remove_accents(self, input_cols, output_cols=None):
         def _remove_accents(value, args):
@@ -653,20 +658,20 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
+                             output_cols=output_cols, mode="delayed", set_index=True)
 
     def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
     def reverse(self, input_cols, output_cols=None):
-        def _reverse(value):
-            return str(value)[::-1]
+        def _reverse(value, args):
+            return value.astype(str).str[::-1]
 
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, w="vectorized")
+                             output_cols=output_cols, mode="delayed", set_index=True)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -935,7 +940,7 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _lower, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.LOWER.value, w="vectorized")
+                             meta_action=Actions.LOWER.value, mode="vectorized")
 
     def upper(self, input_cols, output_cols=None):
         def _upper(value):
@@ -945,7 +950,7 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _upper, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.UPPER.value, w="vectorized")
+                             meta_action=Actions.UPPER.value, mode="vectorized")
 
     def trim(self, input_cols, output_cols=None):
 
@@ -956,11 +961,11 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _trim, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols,
-                             meta_action=Actions.TRIM.value, w="vectorized")
+                             meta_action=Actions.TRIM.value, mode="vectorized")
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, w="delayed"):
+              meta_action=Actions.APPLY_COLS.value, mode="delayed", set_index=False):
 
         df = self.df
 
@@ -986,11 +991,11 @@ class DaskBaseColumns(BaseColumns):
         partitions = df.to_delayed()
 
         for input_col, output_col in zip(input_cols, output_cols):
-            if w == "delayed":
+            if mode == "delayed":
                 delayed_parts = [dask.delayed(func)(part[input_col], args)
                                  for part in partitions]
                 result[output_col] = from_delayed(delayed_parts)
-            elif w == "vectorized":
+            elif mode == "vectorized":
                 result[output_col] = func(df[input_col])
 
             # Preserve column order
@@ -1000,8 +1005,15 @@ class DaskBaseColumns(BaseColumns):
 
             # Preserve actions for the profiler
             df = df.meta.preserve(df, meta_action, output_col)
+
+        if set_index is True:
+            df = df.reset_index()
+
         df = df.assign(**result)
-        return df.cols.select(output_ordered_columns)
+
+        df = df.cols.select(output_ordered_columns)
+
+        return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of floats
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
@@ -1277,6 +1289,7 @@ class DaskBaseColumns(BaseColumns):
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
+            print("input_cols", input_col)
             kw_columns[output_col] = df[input_col].astype(str).str.replace(regex, replace_by)
 
             if input_col != output_col:

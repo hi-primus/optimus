@@ -330,6 +330,7 @@ def validate_columns_names(df, col_names, index=0):
         columns = [c[index] for c in columns]
 
     # Remove duplicates in the list
+
     if is_list_of_strings(columns):
         columns = OrderedSet(columns)
 

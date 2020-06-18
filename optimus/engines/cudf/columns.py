@@ -413,10 +413,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def values_to_cols(input_cols):
-            pass
-
-        @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
             pass
             # from cudf import DataFrame, Series

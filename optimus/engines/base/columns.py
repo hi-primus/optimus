@@ -366,7 +366,7 @@ class BaseColumns(ABC):
     def keep(columns=None, regex=None):
         pass
 
-    def sort(self, columns=None, order: [str, list] = "asc"):
+    def sort(self, order: [str, list] = "asc", columns=None):
         """
         Sort data frames columns asc or desc
         :param order: 'asc' or 'desc' accepted
@@ -402,7 +402,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
         data_types = ({k: str(v) for k, v in dict(df.dtypes).items()})
-        return format_dict({col_name: data_types[col_name] for col_name in columns})
+        return {col_name: data_types[col_name] for col_name in columns}
 
     def schema_dtype(self, columns="*"):
         """
@@ -451,7 +451,7 @@ class BaseColumns(ABC):
 
     def range(self, columns):
         df = self.df
-        return self.agg_exprs(columns, df.functions.range_agg)
+        return self.agg_exprs(columns, df.functions.range_agg, df)
 
     def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR):
         df = self.df
@@ -474,7 +474,7 @@ class BaseColumns(ABC):
         result = {}
         funcs = [df.functions.mad_agg]
 
-        return self.agg_exprs(columns, funcs, more)
+        return self.agg_exprs(columns, funcs, df, more)
 
     def std(self, columns):
         df = self.df
@@ -759,51 +759,56 @@ class BaseColumns(ABC):
         """
         pass
 
-    @staticmethod
-    def add(columns, col_name="sum"):
+    def add(self, columns, col_name="sum"):
         """
         Add two or more columns
         :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
+        df = self.df
+        return df.cols._math(columns, lambda x, y: x + y, col_name)
 
-        return BaseColumns._math(columns, lambda x, y: x + y, col_name)
-
-    @staticmethod
-    def sub(columns, col_name="sub"):
+    def sub(self, columns, col_name="sub"):
         """
         Subs two or more columns
         :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
-        return BaseColumns._math(columns, lambda x, y: x - y, col_name)
+        df = self.df
+        return df.cols._math(columns, lambda x, y: x - y, col_name)
 
-    @staticmethod
-    def mul(columns, col_name="mul"):
+    def mul(self, columns, col_name="mul"):
         """
         Multiply two or more columns
         :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
-        return BaseColumns._math(columns, lambda x, y: x * y, col_name)
+        df = self.df
+        return df.cols._math(columns, lambda x, y: x * y, col_name)
 
-    @staticmethod
-    def div(columns, col_name="div"):
+    def div(self, columns, col_name="div"):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
         :param col_name:
         :return:
         """
-        return BaseColumns._math(columns, lambda x, y: x / y, col_name)
+        df = self.df
+        return df.cols._math(columns, lambda x, y: x / y, col_name)
 
-    @staticmethod
-    @abstractmethod
-    def z_score(input_cols, output_cols=None):
-        pass
+    def z_score(self, input_cols, output_cols=None):
+
+        df = self.df
+        columns = prepare_columns(df, input_cols, output_cols)
+
+        for input_col, output_col in columns:
+            t = df[input_col].astype(float)
+            df[output_col] = (t - t.mean()) / t.std(ddof=0)
+        return df
+
 
     @staticmethod
     @abstractmethod
@@ -1007,11 +1012,6 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def clip(columns, lower_bound, upper_bound):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def values_to_cols(input_cols):
         pass
 
     @staticmethod
