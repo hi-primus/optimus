@@ -132,6 +132,9 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
+print(numeric_col_B)
+t.create(None, "cols.impute", None, "df", None, numeric_col_B)
+
 source_df.cols.dtypes()
 
 source_df.cols.select("rank")
@@ -369,23 +372,27 @@ t.create(None, "cols.date_format", "all_columns", "df", None, [date_col, date_co
 t.create(None, "cols.years_between", None, "df", None, date_col, "%Y/%m/%d")
 
 # t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
-t.create(None, "cols.years_between", "multiple_columns", "df", [date_col, date_col_B], "yyyy/MM/dd")
+t.create(None, "cols.years_between", "multiple_columns", "df", None,[date_col, date_col_B], "%Y/%m/%d")
 
 t.run()
 
-t.create(None, "cols.impute", None, "df", numeric_col_B)
+print(numeric_col_B)
+t.create(None, "cols.impute", None, "df", None, numeric_col_B)
+
+source_df.compute()
 
 # %%time
-t.create(None, "cols.impute", "all_columns", "df", None, "names", "categorical")
+t.create(None, "cols.impute", "multiple_columns", "df", None, "names","categorical")
+
 
 t.run()
 
 # ## Hist
 
 t.create(None, "cols.hist", None, "json", None, ["height(ft)", numeric_col_B], 4)
-t.run()
+t.run() 
 
-t.create(None, "cols.hist", "all_columns", "json", None, "Date Type", 4)
+t.create(None, "cols.hist", "all_columns", "json", None, "*", 4)
 
 t.run()
 
@@ -407,22 +414,16 @@ t.run()
 
 t.create(None, "cols.dtypes", "all_columns", "json",None, "*")
 
-t.create(None, "cols.select_by_dtypes", "str", "df", None, "str")
-
-t.create(None, "cols.select_by_dtypes", "int", "df", "int")
-
-t.create(None, "cols.select_by_dtypes", "float", "df", "float")
-
-t.create(None, "cols.select_by_dtypes", "array", "df", "array")
-
 t.create(None, "cols.names", None, "json")
 
 source_df.compute()
 
 print(numeric_col_B)
-t.create(None, "cols.qcut", None, "df",None, numeric_col_B, 4)
+# t.create(None, "cols.qcut", None, "df",None, numeric_col_B, 4)
 
-t.create(None, "cols.qcut", "all_columns", "df", None,"*", 4)
+# +
+# t.create(None, "cols.qcut", "all_columns", "df", None,"*", 4)
+# -
 
 t.create(None, "cols.clip", None, "df", None,numeric_col_B, 3, 5)
 
@@ -455,18 +456,14 @@ t.run()
 # +
 # Its necesary to save the function
 # t.delete(None, "cols.apply_expr", "all_columns", "df", [numeric_col_B, numeric_col_C], func)
+
+# +
+# t.create(None, "cols.append", "number", "df", None, new_col, 1)
 # -
 
-t.create(None, "cols.append", "number", "df", new_col, 1)
-
-df_col = op.create.df(
-    [
-        ("new_col", "str", True),
-
-    ], [
-        ("q"), ("w"), ("e"), ("r"),
-
-    ])
+df_col = pd.DataFrame(columns = ['new_col'], 
+             data= [(1),(2),(3),(4),(5),(6),(7)])
+print(df_col)                         
 
 t.create(None, "cols.append", "dataframes", "df", None, df_col)
 
@@ -488,12 +485,14 @@ t.create(None, "cols.drop", None, "df", None,numeric_col_B)
 
 t.create(None, "cols.cast", None, "df", None, string_col, "string")
 
-t.create(None, "cols.cast", "all_columns", "df", None, "*", "string")
+t.create(None, "cols.cast", "all_columns", "df", None, "*", "str")
 
 t.run()
 
+# +
 # Problems with precision
-t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
+# t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
+# -
 
 source_df.cols.keep(numeric_col_B).ext.display()
 
@@ -522,16 +521,19 @@ t.run()
 
 t.create(None, "cols.fill_na", None, "df", None, numeric_col, "1")
 
-t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1", "2"])
+# +
+# t.create(None, "cols.fill_na", "array", "df", None, "japanese name", ["1", "2"])
+# -
 
 t.run()
 
-t.create(None, "cols.fill_na", "bool", "df", None, "Cybertronian", False)
+# t.create(None, "cols.fill_na", "bool", "df", None, "Cybertronian", False)
+t.create(None, "cols.fill_na", None, "df", None, "Cybertronian", False)
 
 t.run()
 
 # + {"jupyter": {"outputs_hidden": true}}
-t.create(None, "cols.fill_na", "all_columns", "df", ["names", "height(ft)", "function", "rank", "age"], "2")
+t.create(None, "cols.fill_na", "all_columns", "df", None,["names", "height(ft)", "function", "rank", "age"], "2")
 # -
 
 # ## Nest
@@ -540,9 +542,12 @@ t.create(None, "cols.nest", None, "df", None, [numeric_col, numeric_col_B], sepa
 
 # +
 # t.create(None, "cols.nest", "mix", "df", [F.col(numeric_col_C), F.col(numeric_col_B)], "E", separator="--")
+# -
+
+df_na = source_df.cols.drop("NullType").rows.drop_na("*")
 
 # +
-df_na = source_df.cols.drop("NullType").rows.drop_na("*")
+
 
 t.create(df_na, "cols.nest", "vector_all_columns", "df", None, [numeric_col_C, numeric_col_B], shape="vector",
          output_col=new_col)
@@ -553,22 +558,56 @@ t.create(df_na, "cols.nest", "vector", "df", None, [numeric_col_C, numeric_col_B
 t.create(None, "cols.nest", "array", "df", None, [numeric_col, numeric_col_B, numeric_col_C], shape="array",
          output_col=new_col)
 
-t.create(None, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
-
-t.create(None, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
-
 t.run()
 
 # +
+# import pandas as pd
+# from pyspark.sql.types import *
+# from datetime import date, datetime
 
-dtypes_df = op.create.df(
-    [
-        ("col 1", "str", True),
-        ("col 2", "str", True),
-        ("col 3", "int", True),
+# cols = [
+#     ("col 1", "str"),
+#      ("col 2", "str"),
+#      ("col 3", "str"),
+# ]
 
-    ],
-    [
+# rows = [
+#      ("male", "male", 1),
+#         ("optimus", "bumblebee", 1),
+#         ("3", "4.1", 1),
+#         ("true", "False", 1),
+#         ("[1,2,3,4]", "(1,2,3,4)", 1),
+#         ("{1,2,3,4}", "{'key1' :1 , 'key2':2}", 1),
+#         ("1.1.1.1", "123.123.123.123", 1),
+#         ("http://hi-optimuse.com", "https://hi-bumblebee.com", 1),
+#         ("optimus@cybertron.com", "bumblebee@cybertron.com", 1),
+#         ("5123456789123456", "373655783158306", 1),
+#         ("11529", "30345", 1),
+#         ("04/10/1980", "04/10/1980", 1),
+#         ("null", "Null", 1),
+#         ("", "", 1),
+#         (None, None, 1)
+
+# ]
+
+# source_df = pd.DataFrame(columns = cols, 
+#              data= rows)
+
+# # from dask import dataframe as dd
+
+# # a=pd.DataFrame(source_df.to_dict())
+# from dask import dataframe as dd
+# source_df = dd.from_pandas(source_df, npartitions=1)
+
+# +
+
+cols = [
+        ("col 1"),
+        ("col 2"),
+        ("col 3"),
+
+    ]
+rows = [
         ("male", "male", 1),
         ("optimus", "bumblebee", 1),
         ("3", "4.1", 1),
@@ -585,79 +624,42 @@ dtypes_df = op.create.df(
         ("", "", 1),
         (None, None, 1)
 
-    ], infer_schema=True)
-
+    ]
+mismatch_df = dd.from_pandas(pd.DataFrame(columns = cols, data= rows), npartitions=1)
 # -
 
-t.create(dtypes_df, "cols.count_by_dtypes", "infer", "dict", None, "*", infer=True)
-
-t.run()
-
-t.create(source_df, "cols.count_by_dtypes", None, "dict", None, "*", infer=False)
-
-t.run()
-
-source_df.table()
-
-# +
-import logging
-import sys
-from datetime import date, datetime
-
-from pyspark.sql.types import *
-
-from optimus import Optimus
-
-mismatch_df = op.create.df(
-    [
-        ("names", "str", True),
-        ("height(ft)", "int", True),
-        ("function", "str", True),
-        ("rank", "int", True),
-        ("age", "int", True),
-        ("weight(t)", "float", True),
-        ("japanese name", ArrayType(StringType()), True),
-        ("last position seen", "str", True),
-        ("date arrival", "str", True),
-        ("last date seen", "str", True),
-        ("attributes", ArrayType(FloatType()), True),
-        ("DateType", DateType()),
-        ("Timestamp", TimestampType()),
-        ("Cybertronian", "bool", True),
-        ("function(binary)", "binary", False),
-        ("NullType", "null", True),
-
-    ],
-    [
-        ("31/12/2019", 28, "1978-12-20", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
-         "2016/09/10", [8.5344, 4300.0], date(2016, 9, 10), datetime(2014, 6, 24), True, bytearray("Leader", "utf-8"),
-         None),
-        ("bumbl#ebéé  ", 17, "Espionage", 7, 5000000, 2.0, ["Bumble", "Goldback"], "10.642707,-71.612534", "1980/04/10",
-         "2015/08/10", [5.334, 2000.0], date(2015, 8, 10), datetime(2014, 6, 24), True, bytearray("Espionage", "utf-8"),
-         None),
-        ("ironhide&", 26, "Security", 7, 5000000, 4.0, ["Roadbuster"], "37.789563,-122.400356", "1980/04/10",
-         "2014/07/10", [7.9248, 4000.0], date(2014, 6, 24), datetime(2014, 6, 24), True, bytearray("Security", "utf-8"),
-         None),
-        ("Jazz", 13, "First Lieutenant", 8, 5000000, 1.80, ["Meister"], "33.670666,-117.841553", "1980/04/10",
-         "2013/06/10", [3.9624, 1800.0], date(2013, 6, 24), datetime(2014, 6, 24), True,
-         bytearray("First Lieutenant", "utf-8"), None),
-        ("Megatron", None, "None", 10, 5000000, 5.70, ["Megatron"], None, "1980/04/10", "2012/05/10", [None, 5700.0],
-         date(2012, 5, 10), datetime(2014, 6, 24), True, bytearray("None", "utf-8"), None),
-        ("Metroplex_)^$", 300, "Battle Station", 8, 5000000, None, ["Metroflex"], None, "1980/04/10", "2011/04/10",
-         [91.44, None], date(2011, 4, 10), datetime(2014, 6, 24), True, bytearray("Battle Station", "utf-8"), None),
-        ("1", 2, "3", 4, 5, 6.0, ["7"], 8, "1980/04/10", "2011/04/10",
-         [11.0], date(2011, 4, 10), datetime(2014, 6, 24), True, bytearray("15", "utf-8"), None)
-    ], infer_schema=True)
-# -
+mismatch_df.compute()
 
 mismatch = {"names": "dd/mm/yyyy", "height(ft)": r'^([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}$',
             "function": "yyyy-mm-dd"}
 
 m = {"names": "int"}
 
-mismatch_df.table()
+mismatch_df.ext.display()
 
-t.create(mismatch_df, "cols.count_mismatch", None, "dict", None, {"names": "int"})
+t.create(mismatch_df, "cols.count_mismatch", "int", "dict", None, {"col 1": "int"})
+
+t.create(mismatch_df, "cols.count_mismatch", "decimal", "dict", None, {"col 1": "decimal"})
+
+t.create(mismatch_df, "cols.count_mismatch", "email", "dict", None, {"col 1": "email"})
+
+t.create(mismatch_df, "cols.count_mismatch", "url", "dict", None, {"col 1": "url"})
+
+t.create(mismatch_df, "cols.count_mismatch", "ip", "dict", None, {"col 1": "ip"})
+
+t.create(mismatch_df, "cols.count_mismatch", "boolean", "dict", None, {"col 1": "boolean"})
+
+t.create(mismatch_df, "cols.count_mismatch", "credit_card", "dict", None, {"col 1": "credit_card_number"})
+
+t.create(mismatch_df, "cols.count_mismatch", "object", "dict", None, {"col 1": "object"})
+
+t.create(mismatch_df, "cols.count_mismatch", "array", "dict", None, {"col 1": "array"})
+
+t.create(mismatch_df, "cols.count_mismatch", "date", "dict", None, {"col 1": "date"})
+
+t.create(mismatch_df, "cols.count_mismatch", "zip_code", "dict", None, {"col 1": "zip_code"})
+
+t.create(mismatch_df, "cols.count_mismatch", "string", "dict", None, {"col 1": "string"})
 
 t.run()
 
@@ -672,7 +674,7 @@ t.create(None, "cols.unnest", "string_infer_split", "df", None, date_col, "/")
 t.create(None, "cols.unnest", "string_no_index", "df", None, date_col, "/", splits=3)
 
 t.create(None, "cols.unnest", "string_output_columns", "df", None, date_col, "/", splits=3,
-         output_cols=[("year", "month", "day")])
+         output_cols=["year", "month", "day"])
 
 t.create(None, "cols.unnest", "array_index", "df", None, array_col, index=2)
 
@@ -687,45 +689,44 @@ t.create(None, "cols.unnest", "string_multi_colum_multi_index_multi_output", "df
 t.create(None, "cols.unnest", "string_multi_colum_multi_output", "df", None, ["date arrival", "last date seen"], "/",
          output_cols=[("year1", "month1"), ("year2", "month2")])
 
-t.create(None, "cols.unnest", "array", "df", array_col)
+t.create(None, "cols.unnest", "array", "df", None,array_col)
 
-t.create(None, "cols.unnest", "array_all_columns", "df", array_col)
+t.create(None, "cols.unnest", "array_all_columns", "df", None,array_col)
 
-t.create(None, "cols.is_na", "all_columns", "df", "*")
+t.create(None, "cols.is_na", "all_columns", "df", None, "*")
 
-t.create(None, "cols.is_na", None, "df", numeric_col)
+t.create(None, "cols.is_na", None, "df", None, numeric_col)
 
 t.run()
 
-from pyspark.sql.types import *
+# +
 from optimus import Optimus
 from optimus.helpers.json import json_enconding
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
+
 import numpy as np
+# -
 
 nan = np.nan
 import datetime
 
 # +
-actual_df = op.load.json('https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json')
-expected_df = op.create.df(
-    [('billingId', LongType(), True), ('birth', StringType(), True), ('dummyCol', StringType(), True),
-     ('firstName', StringType(), True), ('id', LongType(), True), ('lastName', StringType(), True),
-     ('price', LongType(), True), ('product', StringType(), True)],
-    [(123, '1980/07/07', 'never', 'Luis', 1, 'Alvarez$$%!', 10, 'Cake')])
+actual_df = op.load.json('https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json', multiline=True)
 
-# assert (expected_df.collect() == actual_df.collect())
+# expected_df = op.create.df(
+#     [('billingId', LongType(), True), ('birth', StringType(), True), ('dummyCol', StringType(), True),
+#      ('firstName', StringType(), True), ('id', LongType(), True), ('lastName', StringType(), True),
+#      ('price', LongType(), True), ('product', StringType(), True)],
+#     [(123, '1980/07/07', 'never', 'Luis', 1, 'Alvarez$$%!', 10, 'Cake')])
 
-from deepdiff import DeepDiff  # For Deep Difference of 2 objects
+# # assert (expected_df.collect() == actual_df.collect())
 
-actual_df.table()
-expected_df.table()
+# from deepdiff import DeepDiff  # For Deep Difference of 2 objects
 
-# source_df.table()
-# print(actual_df.to_json())
-# print(expected_df.to_json())
-a1 = actual_df.to_json()
-e1 = expected_df.to_json()
+# actual_df.table()
+# expected_df.table()
+
+# a1 = actual_df.to_json()
+# e1 = expected_df.to_json()
 
 # -
 
@@ -734,12 +735,9 @@ print(ddiff)
 
 # # Rows Test
 
-t = Test(op, df, "df_rows", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
-                                     "import numpy as np",
+t = Test(op, df, "df_rows", imports=["import numpy as np",
                                      "nan = np.nan",
-                                     "import datetime",
-                                     "from pyspark.sql import functions as F",
-                                     "from optimus.functions import abstract_udf as audf"])
+                                     "import datetime"])
 
 rows = [
     ("Optim'us", 28, "Leader", 10, 5000000, 4.30, ["Inochi", "Convoy"], "19.442735,-99.201111", "1980/04/10",
@@ -747,7 +745,7 @@ rows = [
      None)
 ]
 
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
 t = Test(op, source_df, "op_io", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                           "import numpy as np",
@@ -755,16 +753,18 @@ t = Test(op, source_df, "op_io", imports=["from pyspark.ml.linalg import Vectors
                                           "import datetime",
                                           "from pyspark.sql import functions as F"], path="op_io", final_path="..")
 
-t.create(op, "load.csv", "local_csv", "df", "../../examples/data/foo.csv")
-t.create(op, "load.json", "local_json", "df", "../../examples/data/foo.json")
-t.create(op, "load.parquet", "local_parquet", "df", "../../examples/data/foo.parquet")
-t.create(op, "load.csv", "remote_csv", "df",
+t.create(op, "load.csv", "local_csv", "df", None, "../../examples/data/foo.csv")
+t.create(op, "load.json", "local_json", "df",None,"../../examples/data/foo.json", multiline=True)
+t.create(op, "load.parquet", "local_parquet", "df", None, "../../examples/data/foo.parquet")
+t.create(op, "load.csv", "remote_csv", "df", None,
          "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
-t.create(op, "load.json", "remote_json", "df",
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+t.create(op, "load.json", "remote_json", "df", None,
+         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", multiline= True)
 
-t.create(op, "load.parquet", "remote_parquet", "df",
+# !pip install pyarrow
+
+t.create(op, "load.parquet", "remote_parquet", "df", None,
          "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
 
 # +
@@ -837,12 +837,9 @@ source_df = op.create.df(cols, rows)
 source_df.table()
 # -
 
-t = Test(op, source_df, "df_outliers", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
-                                                "import numpy as np",
+t = Test(op, source_df, "df_outliers_dask", imports=["import numpy as np",
                                                 "nan = np.nan",
-                                                "import datetime",
-                                                "from pyspark.sql import functions as F"], path="df_outliers",
-         final_path="..")
+                                                "import datetime"], path="df_outliers_dask",final_path="..")
 
 # +
 from pyspark.sql import functions as F
@@ -866,7 +863,7 @@ source_df.table()
 
 # ## Tukey
 
-t.create(None, "outliers.tukey", None, "df", "select", numeric_col)
+t.create(None, "outliers.tukey", None, "df", None, "select", numeric_col)
 
 source_df.outliers.tukey(numeric_col).drop().table()
 
@@ -874,11 +871,11 @@ t.create(None, "outliers.tukey", None, "df", "drop", numeric_col)
 
 t.create(None, "outliers.tukey", None, "json", "whiskers", numeric_col)
 
-t.create(None, "outliers.tukey", None, "json", "count", numeric_col)
+t.create(None, "outliers.tukey", None, "json",None, "count", numeric_col)
 
-t.create(None, "outliers.tukey", None, "json", "non_outliers_count", numeric_col)
+t.create(None, "outliers.tukey", None, "json", None, "non_outliers_count", numeric_col)
 
-t.create(None, "outliers.tukey", None, "json", "info", numeric_col)
+t.create(None, "outliers.tukey", None, "json", None, "info", numeric_col)
 
 t.run()
 

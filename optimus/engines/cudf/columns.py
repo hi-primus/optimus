@@ -338,7 +338,7 @@ def cols(self: DataFrame):
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
 
-            df = df.cols.cast(input_cols, "str")
+            df = df.astype(input_cols, "str")
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df

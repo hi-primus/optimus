@@ -1,6 +1,8 @@
 import builtins
 import re
 import unicodedata
+from datetime import datetime
+from datetime import timedelta
 from functools import reduce
 
 import dask
@@ -14,12 +16,12 @@ from dask.dataframe.core import DataFrame
 from dask_ml import preprocessing
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
-from numba import jit
+# from numba import jit
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus import functions as F
 from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.ml.contants import INDEX_TO_STRING, STRING_TO_INDEX
+from optimus.engines.base.ml.contants import INDEX_TO_STRING
 from optimus.helpers.check import is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
     prepare_columns
@@ -33,11 +35,10 @@ from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
 
-
 # This implementation works for Dask and dask_cudf
-@jit
-def _min(value):
-    return np.min(value)
+# @jit
+# def _min(value):
+#     return np.min(value)
 
 
 TOTAL_PREVIEW_ROWS = 30
@@ -182,6 +183,10 @@ class DaskBaseColumns(BaseColumns):
 
             return _value_counts
 
+        non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
+        a = {c: df[c].astype(str) for c in non_numeric_columns}
+        df = df.assign(**a)
+
         value_counts = [df[col_name].value_counts().to_delayed()[0] for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
@@ -207,11 +212,10 @@ class DaskBaseColumns(BaseColumns):
     def hist(self, columns, buckets=20, compute=True):
 
         df = self.df
-        columns = parse_columns(df, columns)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
         @delayed
         def bins_col(_columns, _min, _max):
-
             return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=buckets)) for col_name in _columns}
 
         _min = df[columns].min().to_delayed()[0]
@@ -284,22 +288,25 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         df = self.df
-        columns = prepare_columns(df, input_cols, output_cols, default=STRING_TO_INDEX, accepts_missing_cols=True)
         le = preprocessing.LabelEncoder()
-        for input_col, output_col in columns:
-            df[output_col] = le.fit_transform(df[input_col].astype(str))
 
-        df = df.meta.preserve(df, Actions.STRING_TO_INDEX.value, output_cols)
+        def _string_to_index(value, args):
+            return le.fit_transform(value.astype(str))
 
-        return df
+        return df.cols.apply(input_cols, _string_to_index, func_return_type=str,
+                             output_cols=output_cols,
+                             meta_action=Actions.STRING_TO_INDEX.value, mode="vectorized")
 
-    def clip(self, columns, lower_bound, upper_bound):
+    def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
         df = self.df
-        columns = parse_columns(df, columns,
-                                filter_by_column_dtypes=df.constants.NUMERIC_TYPES + df.constants.STRING_TYPES)
-        df[columns] = df[columns].astype(float).clip(lower_bound, upper_bound)
 
-        return df
+        def _clip(value, args):
+            return pd.to_numeric(value, errors="coerce").clip(lower_bound, upper_bound)
+
+        return df.cols.apply(input_cols, _clip, func_return_type=float,
+                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
+                             output_cols=output_cols,
+                             meta_action=Actions.STRING_TO_INDEX.value, mode="delayed", set_index=True)
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
@@ -494,12 +501,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        def _is_na(value):
-            return value is np.NaN
+        def _is_na(value, args):
+            return value.isnull()
 
         df = self.df
 
-        return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
+        return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -522,23 +529,31 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         imputer = SimpleImputer(strategy=strategy, copy=False)
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        def _imputer(value, args):
+            # print("value", value)
+            return imputer.fit_transform(value.to_frame())[value.name]
 
-        _df = df[input_cols]
-        imputer.fit(_df)
-        # df[output_cols] = imputer.transform(_df)[input_cols]
-        df[output_cols] = imputer.transform(_df)[input_cols]
-        return df
+        return df.cols.apply(input_cols, _imputer, func_return_type=float,
+                             output_cols=output_cols,
+                             meta_action=Actions.IMPUTE.value, mode="vectorized",
+                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES + df.constants.STRING_TYPES)
 
     # Date operations
 
     def years_between(self, input_cols, date_format=None, output_cols=None):
         df = self.df
-        return df
+
+        def _years_between(value, args):
+            return (pd.to_datetime(value, format=date_format,
+                                   errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+
+        return df.cols.apply(input_cols, _years_between, func_return_type=str,
+                             output_cols=output_cols,
+                             meta_action=Actions.YEARS_BETWEEN.value, mode="delayed", set_index=True)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
+
         pass
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
@@ -557,7 +572,7 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.apply(input_cols, _date_format, func_return_type=str,
                              output_cols=output_cols,
-                             meta_action=Actions.LOWER.value, mode="delayed", set_index=True)
+                             meta_action=Actions.DATE_FORMAT.value, mode="delayed", set_index=True)
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -815,16 +830,17 @@ class DaskBaseColumns(BaseColumns):
     def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
         pass
 
-    @staticmethod
-    def append(dfs) -> DataFrame:
+    # @staticmethod
+    def append(self, dfs) -> DataFrame:
         """
 
         :param dfs:
         :return:
         """
-        # df = dd.concat([self, dfs], axis=1)
-        raise NotImplementedError
-        # return df
+        print("asdfasdasdf")
+        df = self.df
+        df = dd.concat([df, dfs], axis=1)
+        return df
 
     @staticmethod
     def exec_agg(exprs):
@@ -907,13 +923,13 @@ class DaskBaseColumns(BaseColumns):
         :param value: value to replace the nan/None values
         :return:
         """
-
-        def _fill_na(value, new_value):
-            return new_value if value is np.NaN else value
-
         df = self.df
 
-        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols)
+        def _fill_na(series, args):
+            value = args
+            return series.fillna(value)
+
+        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.df
@@ -948,7 +964,7 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     def lower(self, input_cols, output_cols=None):
-        def _lower(value):
+        def _lower(value, args):
             return F.lower(value)
 
         df = self.df
@@ -958,7 +974,7 @@ class DaskBaseColumns(BaseColumns):
                              meta_action=Actions.LOWER.value, mode="vectorized")
 
     def upper(self, input_cols, output_cols=None):
-        def _upper(value):
+        def _upper(value, args):
             return F.upper(value)
 
         df = self.df
@@ -969,7 +985,7 @@ class DaskBaseColumns(BaseColumns):
 
     def trim(self, input_cols, output_cols=None):
 
-        def _trim(value):
+        def _trim(value, args):
             return F.trim(value)
 
         df = self.df
@@ -1004,14 +1020,13 @@ class DaskBaseColumns(BaseColumns):
         result = {}
 
         partitions = df.to_delayed()
-
         for input_col, output_col in zip(input_cols, output_cols):
             if mode == "delayed":
                 delayed_parts = [dask.delayed(func)(part[input_col], args)
                                  for part in partitions]
                 result[output_col] = from_delayed(delayed_parts)
             elif mode == "vectorized":
-                result[output_col] = func(df[input_col])
+                result[output_col] = func(df[input_col], args)
 
             # Preserve column order
             if output_col not in df.cols.names():
@@ -1030,8 +1045,19 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-    # TODO: Maybe should be possible to cast and array of integer for example to array of floats
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
+    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
+        df = self.df
+        if columns is None:
+            columns = prepare_columns(df, input_cols, output_cols)
+
+        def _cast(value, args):
+            return value.astype(dtype)
+
+        df = self.df
+        return df.cols.apply(input_cols, _cast, output_cols=output_cols, meta_action=Actions.CAST.value,
+                             mode="vectorized")
+
+    def cast11(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
         """
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
@@ -1189,7 +1215,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         input_cols = parse_columns(df, input_cols)
         # output_col = val_to_list(output_col)
-        check_column_numbers(input_cols, 2)
+        # check_column_numbers(input_cols, 2)
         if output_col is None:
             RaiseIt.type_error(output_col, ["str"])
 
@@ -1293,7 +1319,7 @@ class DaskBaseColumns(BaseColumns):
         elif search_by == "words":
             str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         else:
-            str_regex = search
+            str_regex = (r'^\b%s\b$' % r'\b$|^\b'.join(map(re.escape, search)))
 
         if ignore_case is True:
             # Cudf do not accept re.compile as argument for replace
@@ -1304,7 +1330,7 @@ class DaskBaseColumns(BaseColumns):
 
         kw_columns = {}
         for input_col, output_col in zip(input_cols, output_cols):
-            print("input_cols", input_col)
+            # print("input_cols", regex, replace_by)
             kw_columns[output_col] = df[input_col].astype(str).str.replace(regex, replace_by)
 
             if input_col != output_col:

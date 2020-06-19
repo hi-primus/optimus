@@ -37,6 +37,7 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         # df = self.df
+        print("ASDFASDFASDF")
         df = dd.concat([self, rows], axis=0)
 
         return df
@@ -247,10 +248,8 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.df
-
-        df = df.dropna(how=how, subset=subset)
-
-        return df
+        subset = parse_columns(df, subset)
+        return df.dropna(how=how, subset=subset)
 
     def drop_duplicates(self, keep="first", subset=None):
         """

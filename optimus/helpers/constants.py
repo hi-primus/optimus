@@ -41,10 +41,13 @@ class Actions(Enum):
     UNNEST = "unnest"
     SET = "set"
     STRING_TO_INDEX = "string_to_index"
+    DATE_FORMAT = "date_format"
     INDEX_TO_STRING = "index_to_string"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
     APPLY_COLS = "apply_cols"
+    YEARS_BETWEEN = "apply_cols"
+    IMPUTE = "impute"
 
     # ROWS
     SELECT_ROW = "select_row"

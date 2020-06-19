@@ -802,13 +802,16 @@ class BaseColumns(ABC):
     def z_score(self, input_cols, output_cols=None):
 
         df = self.df
-        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        # columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
 
-        for input_col, output_col in columns:
-            t = df[input_col].astype(float)
-            df[output_col] = (t - t.mean()) / t.std(ddof=0)
-        return df
+        def _z_score(value, args):
+            t = value.astype(float)
+            return (t - t.mean()) / t.std(ddof=0)
 
+        return df.cols.apply(input_cols, _z_score, func_return_type=float,
+                             output_cols=output_cols,
+                             meta_action=Actions.Z_SCORE.value, mode="vectorized",
+                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES)
 
     @staticmethod
     @abstractmethod

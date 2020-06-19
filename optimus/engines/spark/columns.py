@@ -977,7 +977,7 @@ def cols(self):
         def years_between(input_cols, date_format=None, output_cols=None):
             """
             Years between a date and now
-            :param input_cols: Name of the column born dates column.
+            :param input_cols: Input columns
             :param output_cols:
             :param date_format: String format date of the column provided. For example "yyyyMMdd"
             """
