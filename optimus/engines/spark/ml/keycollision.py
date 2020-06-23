@@ -3,7 +3,8 @@ from pyspark.sql import functions as F
 
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.json import dump_json
-from optimus.engines.base.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_COUNT_COL, FINGERPRINT_COL, \
+from optimus.engines.base.ml.contants import CLUSTER_COL, COUNT_COL, RECOMMENDED_COL, CLUSTER_COUNT_COL, \
+    FINGERPRINT_COL, \
     CLUSTER_SUM_COL
 
 
@@ -16,11 +17,12 @@ def fingerprint(df, input_cols):
     """
 
     # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
-    def _split_sort_remove_join(value, args):
+    def _split_sort_remove_join(value):
         """
         Helper function to split, remove duplicates, sort and join back together
         """
         # Split into whitespace-separated token
+        # print("value", type(value), value)
         split_key = value.split()
 
         # Sort and remove duplicated items
@@ -33,12 +35,11 @@ def fingerprint(df, input_cols):
     for input_col in input_cols:
         output_col = name_col(input_col, FINGERPRINT_COL)
         df = (df
-              .withColumn(output_col, F.col(input_col))
-              .cols.trim(output_col)
+              .cols.trim(input_col, output_col)
               .cols.lower(output_col)
               .cols.remove_special_chars(output_col)
               .cols.remove_accents(output_col)
-              .cols.apply(output_col, _split_sort_remove_join, "string")
+              .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
               )
     return df
 

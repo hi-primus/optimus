@@ -1,6 +1,5 @@
 import builtins
 import re
-import unicodedata
 from datetime import datetime
 from datetime import timedelta
 from functools import reduce
@@ -19,7 +18,6 @@ from multipledispatch import dispatch
 # from numba import jit
 from sklearn.preprocessing import MinMaxScaler
 
-from optimus import functions as F
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.ml.contants import INDEX_TO_STRING
 from optimus.helpers.check import is_cudf_series, is_pandas_series
@@ -105,30 +103,6 @@ class DaskBaseColumns(BaseColumns):
         else:
             result = b
         return result
-
-    def h_freq(self, columns):
-        from dask import dataframe as dd
-        from dask import delayed
-
-        col_name = "OFFENSE_CODE_GROUP"
-        # columns =["OFFENSE_CODE_GROUP"]
-        result = {}
-
-        @delayed
-        def func(df):
-            df["hash"] = df[col_name].apply(hash)
-            return df
-
-        partitions = df.to_delayed()
-
-        for col_name in columns:
-            delayed_parts = [func(part) for part in partitions]
-        #     m = df["hash"].value_counts().nlargest().to_dict()
-
-        #     # print(m)
-        #     for l, n in m.items():
-        #         print(df[df["hash"] == l].iloc[0][col_name], n)
-        dd.from_delayed(delayed_parts).compute()
 
     def count_uniques(self, columns, estimate: bool = True, compute: bool = True):
         df = self.df
@@ -258,10 +232,6 @@ class DaskBaseColumns(BaseColumns):
         return result
 
     @staticmethod
-    def mode(columns):
-        pass
-
-    @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
         pass
 
@@ -297,17 +267,6 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols,
                              meta_action=Actions.STRING_TO_INDEX.value, mode="vectorized")
 
-    def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
-        df = self.df
-
-        def _clip(value, args):
-            return pd.to_numeric(value, errors="coerce").clip(lower_bound, upper_bound)
-
-        return df.cols.apply(input_cols, _clip, func_return_type=float,
-                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
-                             output_cols=output_cols,
-                             meta_action=Actions.STRING_TO_INDEX.value, mode="delayed", set_index=True)
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
         df = self.df
@@ -329,16 +288,9 @@ class DaskBaseColumns(BaseColumns):
         return len(df.columns)
 
     @staticmethod
-    def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
-        pass
-
-    @staticmethod
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    def cell(column):
-        pass
 
     def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
         """
@@ -357,6 +309,7 @@ class DaskBaseColumns(BaseColumns):
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
         # print(quartile)
         for col_name in columns:
+            print("quartile", quartile)
             q1 = quartile["percentile"][col_name][0.25]
             q2 = quartile["percentile"][col_name][0.5]
             q3 = quartile["percentile"][col_name][0.75]
@@ -427,7 +380,7 @@ class DaskBaseColumns(BaseColumns):
     def unique(self, columns):
         df = self.df
         columns = parse_columns(df, columns)
-        return df.astype(str).drop_duplicates(subset=columns).compute()
+        return df.astype(str).drop_duplicates(subset=columns)
 
     def value_counts(self, columns):
         """
@@ -446,12 +399,6 @@ class DaskBaseColumns(BaseColumns):
             {col_name: to_dict(df[col_name].astype(str).value_counts()) for col_name in columns}).compute()
 
         # return _value_counts(a)
-
-    def extract(self, input_cols, output_cols, regex):
-        df = self.df
-        from optimus.engines.base.dataframe.commons import extract
-        df = extract(df, input_cols, output_cols, regex)
-        return df
 
     def slice(self, input_cols, output_cols, start, stop, step):
         df = self.df
@@ -540,16 +487,6 @@ class DaskBaseColumns(BaseColumns):
 
     # Date operations
 
-    def years_between(self, input_cols, date_format=None, output_cols=None):
-        df = self.df
-
-        def _years_between(value, args):
-            return (pd.to_datetime(value, format=date_format,
-                                   errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
-
-        return df.cols.apply(input_cols, _years_between, func_return_type=str,
-                             output_cols=output_cols,
-                             meta_action=Actions.YEARS_BETWEEN.value, mode="delayed", set_index=True)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -572,7 +509,7 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.apply(input_cols, _date_format, func_return_type=str,
                              output_cols=output_cols,
-                             meta_action=Actions.DATE_FORMAT.value, mode="delayed", set_index=True)
+                             meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -662,7 +599,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="delayed", set_index=True)
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove_special_chars(self, input_cols, output_cols=None):
         def _remove_special_chars(value, args):
@@ -671,24 +608,17 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="delayed", set_index=True)
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove_accents(self, input_cols, output_cols=None):
+
         def _remove_accents(value, args):
-            def func(_value):
-                # first, normalize strings:
-                nfkd_str = unicodedata.normalize('NFKD', str(_value))
-
-                # Keep chars that has no other char combined (i.e. accents chars)
-                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-                return with_out_accents
-
-            return value.map(func)
+            return value.str.normalize("NFKD")
 
         df = self.df
         return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="delayed", set_index=True)
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
@@ -701,7 +631,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="delayed", set_index=True)
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -837,9 +767,9 @@ class DaskBaseColumns(BaseColumns):
         :param dfs:
         :return:
         """
-        print("asdfasdasdf")
+
         df = self.df
-        df = dd.concat([df, dfs], axis=1)
+        df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
     @staticmethod
@@ -849,19 +779,7 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
-
         return dask.compute(*exprs)[0]
-
-    def create_exprs(self, columns, funcs, *args):
-
-        df = self.df
-        r = []
-        funcs = val_to_list(funcs)
-
-        for func in funcs:
-            r.append(func(df, columns, args))
-
-        return r
 
     # TODO: Check if we must use * to select all the columns
     @dispatch(object, object)
@@ -963,70 +881,31 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    def lower(self, input_cols, output_cols=None):
-        def _lower(value, args):
-            return F.lower(value)
-
-        df = self.df
-        return df.cols.apply(input_cols, _lower, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols,
-                             meta_action=Actions.LOWER.value, mode="vectorized")
-
-    def upper(self, input_cols, output_cols=None):
-        def _upper(value, args):
-            return F.upper(value)
-
-        df = self.df
-        return df.cols.apply(input_cols, _upper, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols,
-                             meta_action=Actions.UPPER.value, mode="vectorized")
-
-    def trim(self, input_cols, output_cols=None):
-
-        def _trim(value, args):
-            return F.trim(value)
-
-        df = self.df
-        return df.cols.apply(input_cols, _trim, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols,
-                             meta_action=Actions.TRIM.value, mode="vectorized")
-
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="delayed", set_index=False):
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False):
 
         df = self.df
 
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                   accepts_missing_cols=True)
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                  accepts_missing_cols=True)
 
         # check_column_numbers(input_cols, "*")
+
+        kw_columns = {}
         output_ordered_columns = df.cols.names()
 
-        if skip_output_cols_processing:
-            output_cols = val_to_list(output_cols)
-        else:
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        if output_cols is None:
-            output_cols = input_cols
-
-        # input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        result = {}
-
         partitions = df.to_delayed()
-        for input_col, output_col in zip(input_cols, output_cols):
-            if mode == "delayed":
+        for input_col, output_col in columns:
+            if mode == "pandas":
                 delayed_parts = [dask.delayed(func)(part[input_col], args)
                                  for part in partitions]
-                result[output_col] = from_delayed(delayed_parts)
+                kw_columns[output_col] = from_delayed(delayed_parts)
             elif mode == "vectorized":
-                result[output_col] = func(df[input_col], args)
+                kw_columns[output_col] = func(df[input_col], args)
+
+            elif mode == "map":
+                kw_columns[output_col] = df[input_col].map(func, args)
 
             # Preserve column order
             if output_col not in df.cols.names():
@@ -1039,8 +918,7 @@ class DaskBaseColumns(BaseColumns):
         if set_index is True:
             df = df.reset_index()
 
-        df = df.assign(**result)
-
+        df = df.assign(**kw_columns)
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -1249,51 +1127,75 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.select(output_ordered_columns)
 
-    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False):
+    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
 
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
-        :param output_cols: Resulted on or multiple columns  after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
+        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
         :param separator: char or regex
-        :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
-        :param index: Return a specific index per columns. [{1,2},()]
+        :param splits: Number of columns splits.
+        :param index: Return a specific index per columns. [1,2]
         :param drop:
         """
-        # Special case. A dot must be escaped
-        if separator == ".":
-            separator = "\\."
-
         df = self.df
 
+        if separator is not None:
+            separator = re.escape(separator)
+
         input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+
+        # if output_cols is None:
+        # output_cols = get_output_cols(input_cols, output_cols)
+
+        index = val_to_list(index)
         output_ordered_columns = df.cols.names()
 
-        # columns = prepare_columns(df, input_cols, output_cols)
-        # new data frame with split value columns
+        # output_cols = [output_cols]
+        for idx, input_col in enumerate(input_cols):
 
-        for input_col in input_cols:
-            df_new = df[input_col].astype("str").str.split(separator, n=splits)
+            if is_list_of_tuples(index):
+                final_index = index[idx]
+            else:
+                final_index = index
 
-            # Sometime when split the result are less parts that the split param. We handle this returning Null
-            kw_columns = {}
-            for i in range(splits):
-                output_col = output_cols[0] + "_" + str(i)
-                kw_columns[output_col] = df_new.map(lambda x, i=i: x[i] if i < len(x) else None)
-                col_index = output_ordered_columns.index(input_col) + i + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
+            if output_cols is None:
+                final_columns = [input_col + "_" + str(i) for i in range(splits)]
+            else:
+                if is_list_of_tuples(output_cols):
+                    final_columns = output_cols[idx]
 
-            df = df.assign(**kw_columns)
+                else:
+                    final_columns = output_cols
+
+            if mode == "string":
+                df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
+
+            elif mode == "array":
+                def func(value):
+                    pdf = value.apply(pd.Series)
+                    pdf.columns = final_columns
+                    return pdf
+
+                df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
+
+            df_new.columns = final_columns
+            if final_index:
+                print("final_index", final_index[idx])
+                df_new = df_new.cols.select(final_index[idx])
+            # print("df_new", df_new.compute())
+
+            df = df.cols.append(df_new)
 
         if drop is True:
             df = df.drop(columns=input_cols)
             for input_col in input_cols:
                 if input_col in output_ordered_columns: output_ordered_columns.remove(input_col)
 
-        df = df.meta.preserve(df, Actions.UNNEST.value, list(kw_columns.keys()))
+        df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
 
-        return df.cols.select(output_ordered_columns)
+        return df
+        # return df.cols.move(df_new.cols.names(), "after", input_cols)
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
         """

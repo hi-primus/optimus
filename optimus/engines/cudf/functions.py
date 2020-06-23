@@ -11,30 +11,6 @@ def functions(self):
     class Functions:
 
         @staticmethod
-        def min(columns, args, df):
-            # columns = args
-            return [{"min": df[columns].min()}]
-
-        @staticmethod
-        def max(columns, args, df):
-            # columns = args
-            return [{"max": df[columns].max()}]
-
-        @staticmethod
-        def mean(columns, args):
-            def dataframe_mean_(df):
-                return {"mean": df[columns].mean()}
-
-            return dataframe_mean_
-
-        @staticmethod
-        def variance(columns, args):
-            def dataframe_var_(df):
-                return {"variance": df[columns].var()}
-
-            return dataframe_var_
-
-        @staticmethod
         def sum(columns, args):
 
             def dataframe_sum_(df):
@@ -51,12 +27,6 @@ def functions(self):
 
             return _percentile
 
-        @staticmethod
-        def stddev(col_name, args):
-            def _stddev(serie):
-                return {"stddev": {col: serie[col].std() for col in col_name}}
-
-            return _stddev
 
         @staticmethod
         def zeros_agg(col_name, args):
@@ -166,12 +136,6 @@ def functions(self):
             result = [{"count_uniques": ps}]
             return result
 
-        @staticmethod
-        def range_agg(columns, args):
-            def _dataframe_range_agg_(df):
-                return {"min": df[columns].min(), "max": df[columns].max()}
-
-            return _dataframe_range_agg_
 
         @staticmethod
         def mad_agg(col_name, args):

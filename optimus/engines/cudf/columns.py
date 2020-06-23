@@ -107,26 +107,11 @@ def cols(self: DataFrame):
         def remove(input_cols, search=None, search_by="chars", output_cols=None):
             pass
 
-        @staticmethod
-        def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
-            pass
-
-        @staticmethod
-        def years_between(input_cols, date_format=None, output_cols=None):
-            pass
 
 
         def weekofyear(self, input_cols, output_cols=None):
             pass
 
-        def mode(self, columns):
-            df = self.df
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                result[col_name] = df[col_name].value_counts().index[0]
-
-            return result
 
         # https://github.com/rapidsai/cudf/issues/3177
         def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -177,10 +162,6 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
-            pass
-
-        @staticmethod
         def is_na(input_cols, output_cols=None):
             pass
 
@@ -198,15 +179,7 @@ def cols(self: DataFrame):
                 # np.count_nonzero(df[col_name].isnull().values.ravel())
             return result
 
-        @staticmethod
-        def extract(input_cols, output_cols, regex):
-            # Cudf no support regex to we convert this to pandas, operate and the convert back to cudf
-            df = self
-            from optimus.engines.base.dataframe.commons import extract
-            df = cudf_to_pandas(df)
-            df = extract(df, input_cols, output_cols, regex)
-            df = pandas_to_cudf(df)
-            return df
+
 
         @staticmethod
         def unique(columns):
@@ -234,11 +207,6 @@ def cols(self: DataFrame):
 
         def remove_stopwords(self):
             df = self
-
-        def remove_numbers(self):
-            df = self
-            self.text = re.sub('[-+]?[0-9]+', '', self.text)
-            return self
 
         def strip_html(self):
             df = self
@@ -292,15 +260,7 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def cell(column):
-            pass
-
-        @staticmethod
         def scatter(columns, buckets=10):
-            pass
-
-        @staticmethod
-        def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
             pass
 
         @staticmethod
@@ -343,26 +303,6 @@ def cols(self: DataFrame):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df
 
-        def min(self, columns="*"):
-
-            df = self.df
-            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            r = {}
-            for col_name in columns:
-                r[col_name] = {"min": df[col_name].min()}
-
-            return r
-            # return {column: _min for column, _min in zip(columns, min_values)}
-
-        def max(self, columns="*"):
-
-            df = self.df
-            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            r = {}
-            for col_name in columns:
-                r[col_name] = {"max": df[col_name].max()}
-
-            return r
 
         def count_uniques(self, columns="*", estimate=True, **kwargs):
             df = self.df
@@ -408,9 +348,6 @@ def cols(self: DataFrame):
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
 
-        @staticmethod
-        def clip(columns, lower_bound, upper_bound):
-            pass
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):

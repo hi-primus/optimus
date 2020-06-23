@@ -108,13 +108,3 @@ def base_clustering_function(df, input_cols, output, func=None, **kwargs):
             [fingerprint_col, "count"], ascending=False).reset_index(drop=False).groupby(fingerprint_col).agg(**kw)
 
     return df
-
-    # for row in collect_as_dict(df):
-    #     _row = list(row.asDict().values())
-    #     # List of dict to dict
-    #     flatted_dict = {k: v for element in _row[1] for k, v in element.items()}
-    #     result[_row[0]] = {"similar": flatted_dict, "count": _row[2], "sum": _row[3]}
-    #
-    # if output == "json":
-    #     result = dump_json(result)
-    # return df

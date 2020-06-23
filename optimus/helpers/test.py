@@ -4,6 +4,7 @@ from io import UnsupportedOperation
 import simplejson as json
 import pyspark
 
+from optimus.helpers.check import is_dask_dataframe
 from optimus.infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
     is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
@@ -169,8 +170,10 @@ class Test:
                 _args.append(json.dumps(v))
             elif is_function(v):
                 _args.append(v.__qualname__)
-
+            elif is_dask_dataframe(v):
+                _args.append("op.create.df('"+v.ext.export()+"')")
             else:
+
                 # _args.append(get_var_name(v))
                 _args.append(str(v))
 
@@ -182,7 +185,6 @@ class Test:
             #
             # code = marshal.loads(code_string)
             # func = types.FunctionType(code, globals(), "some_func_name")
-        print(_args)
         _args = ','.join(_args)
         _kwargs = []
 
@@ -219,28 +221,22 @@ class Test:
 
             df_result = df_func(*args, **kwargs)
 
-
         # Additional Methods
         if additional_method is not None:
             df_result = getattr(df_result, additional_method)()
-
         if output == "df":
-
             df_result.ext.table()
             expected = "\texpected_df = op.create.df(" + df_result.ext.export() + ")\n"
-        elif output == "json":
-            print(df_result)
 
+        elif output == "json":
             if is_str(df_result):
                 df_result = "'" + df_result + "'"
             else:
                 df_result = str(df_result)
             add_buffer("\tactual_df =json_enconding(actual_df)\n")
-
             expected = "\texpected_value =json_enconding(" + df_result + ")\n"
-        elif output == "dict":
-            print(df_result)
 
+        elif output == "dict":
             expected = "\texpected_value =" + str(df_result) + "\n"
         else:
             expected = "\t\n"

@@ -37,7 +37,7 @@ class BaseExt(ABC):
 
     def to_json(self, columns="*", format="bumblebee"):
         """
-        Return a json from a Spark Dataframe
+        Return a json from a Dataframe
         :return:
         """
 
@@ -47,7 +47,7 @@ class BaseExt(ABC):
             result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                                  "value": df.rows.to_list(columns)}}
         else:
-            result = json.dumps(df.ext.to_dict(df), ensure_ascii=False, default=json_converter)
+            result = json.dumps(df.ext.to_dict(), ensure_ascii=False, default=json_converter)
 
         return result
 

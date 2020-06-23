@@ -13,33 +13,6 @@ from optimus.helpers.raiseit import RaiseIt
 def functions(self):
     class Functions:
 
-        @staticmethod
-        def min(columns, args):
-            def dataframe_min_(df):
-                return {"min": df[columns].min()}
-
-            return dataframe_min_
-
-        @staticmethod
-        def max(columns, args):
-            def dataframe_max_(df):
-                return {"max": df[columns].max()}
-
-            return dataframe_max_
-
-        @staticmethod
-        def mean(columns, args):
-            def dataframe_mean_(df):
-                return {"mean": df[columns].mean()}
-
-            return dataframe_mean_
-
-        @staticmethod
-        def variance(columns, args):
-            def dataframe_var_(df):
-                return {"var": df[columns].var()}
-
-            return dataframe_var_
 
         @staticmethod
         def sum(columns, args):
@@ -58,12 +31,6 @@ def functions(self):
 
             return _percentile
 
-        @staticmethod
-        def stddev(col_name, args):
-            def std_(serie):
-                return {"stddev": serie[col_name].std()}
-
-            return std_
 
         @staticmethod
         def zeros_agg(col_name, args):
@@ -179,12 +146,7 @@ def functions(self):
         #
         #     return _count_uniques_agg
 
-        @staticmethod
-        def range_agg(columns, args):
-            def _dataframe_range_agg_(df):
-                return {"min": df[columns].min(), "max": df[columns].max()}
 
-            return _dataframe_range_agg_
 
         @staticmethod
         def mad_agg(col_name, args):

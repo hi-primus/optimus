@@ -1,7 +1,7 @@
 import datetime
 
 import simplejson as json
-
+import pandas as pd
 
 def json_converter(obj):
     """
@@ -9,11 +9,13 @@ def json_converter(obj):
     :param obj:
     :return:
     """
-    if isinstance(obj, datetime.datetime):
-        return obj.strftime('%Y-%m-%d %H:%M:%S')
 
-    elif isinstance(obj, datetime.date):
-        return obj.strftime('%Y-%m-%d')
+    if not pd.isnull(obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%Y-%m-%d')
 
 
 def json_enconding(obj):

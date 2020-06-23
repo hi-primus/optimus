@@ -1,6 +1,7 @@
+import dask.array as da
 import numpy as np
 from dask import dataframe as dd
-import dask.array as da
+
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe
 
 op_to_series_func = {
@@ -117,7 +118,7 @@ def call(series, *args, method_name=None):
     """
     # print("op_to_series_func[method_name]", op_to_series_func[method_name]["cudf"])
     # print("series", dir(series), series)
-
+    print("series", type(series), series)
     if is_pandas_series(series):
         method = getattr(np, op_to_series_func[method_name]["numpy"])
         result = method(series, *args)
@@ -129,6 +130,7 @@ def call(series, *args, method_name=None):
         method = getattr(da, op_to_series_func[method_name]["da"])
         # result = dd.map_partitions(func, series, method, args, meta=float)
         result = method(series, *args)
+
     elif is_cudf_series(series):
         method = getattr(series, op_to_series_func[method_name]["cudf"])
         result = method(series, *args)
@@ -144,7 +146,56 @@ def call(series, *args, method_name=None):
 
 
 def abs(series):
-    return call(series, method_name="abs")
+    return series.abs()
+
+
+def variance(df, columns, *args):
+    return {"var": {col_name: df[col_name].var() for col_name in columns}}
+
+
+def min(df, columns, *args):
+    return {"min": {col_name: df[col_name].min() for col_name in columns}}
+
+
+def max(df, columns, *args):
+    return {"max": {col_name: df[col_name].max() for col_name in columns}}
+
+
+def mode(df, columns, *args):
+    return {"mode": {col_name: df[col_name].mode() for col_name in columns}}
+
+
+def std(df, columns, *args):
+    return {"std": {col_name: df[col_name].std() for col_name in columns}}
+
+
+def range(df, columns, *args):
+    return {"range": {col_name: {"min": df[col_name].min(), "max": df[col_name].max()} for col_name in columns}}
+
+
+def mean(df, columns, *args):
+    return {"mean": {col_name: df[col_name].mean() for col_name in columns}}
+
+
+def percentile_agg(df, columns, args):
+    values = args[0]
+
+    f = [df[col_name].quantile(values) for col_name in columns]
+
+    @delayed
+    def _percentile(_f):
+        return {"percentile": {c: _f[i].to_dict() for i, c in enumerate(columns)}}
+
+    return _percentile(f)
+
+
+def to_numeric(df, columns):
+    if is_pandas_series(df) or is_pandas
+
+
+def count_na(df, columns, args):
+    # estimate = args[0]
+    return {"count_na": {col_name: df[col_name].isnull().sum() for col_name in columns}}
 
 
 def exp(series):
@@ -247,6 +298,10 @@ def upper(series):
 
 def lower(series):
     return series.astype(str).str.lower()
+
+
+def extract(series, regex):
+    return series.astype(str).str.extract(regex)
 
 
 def proper(series):

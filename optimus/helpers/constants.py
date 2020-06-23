@@ -48,6 +48,10 @@ class Actions(Enum):
     APPLY_COLS = "apply_cols"
     YEARS_BETWEEN = "apply_cols"
     IMPUTE = "impute"
+    EXTRACT="extract"
+    ABS = "abs"
+    VARIANCE = "variance"
+    SLICE = "slice"
 
     # ROWS
     SELECT_ROW = "select_row"

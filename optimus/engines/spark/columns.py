@@ -622,7 +622,6 @@ def cols(self):
             """
 
             return format_dict(Cols.agg_exprs(columns, F.min))
-            # Cols.agg_exprs(columns, OF.min())
 
         @staticmethod
         def max(columns):
@@ -1528,7 +1527,7 @@ def cols(self):
             return df
 
         @staticmethod
-        def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None) -> DataFrame:
+        def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False) -> DataFrame:
             """
             Split an array or string in different columns
             :param input_cols: Columns to be un-nested
@@ -1536,6 +1535,7 @@ def cols(self):
             :param separator: char or regex
             :param splits: Number of rows to un-nested. Because we can not know beforehand the number of splits
             :param index: Return a specific index per columns. [{1,2},()]
+            :param drop:
             """
 
             # If a number of split was not defined try to infer the length with the first element
@@ -1544,8 +1544,9 @@ def cols(self):
                 infer_splits = True
 
             # Special case. A dot must be escaped
-            if separator == ".":
-                separator = "\\."
+            if separator is not None:
+                separator = re.escape(separator)
+
             df = self
 
             input_cols = parse_columns(self, input_cols)
@@ -1634,14 +1635,6 @@ def cols(self):
                 df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
             return df
 
-        @staticmethod
-        def cell(column):
-            """
-            Get the value for the first cell from a column in a data frame
-            :param column: Column to be processed
-            :return:
-            """
-            return self.cols.select(column).first()[0]
 
         @staticmethod
         def scatter(columns, buckets=10):
@@ -1706,32 +1699,6 @@ def cols(self):
             #     # print(df.agg(hist_agg(col_name, self, buckets)))
             # return result
 
-        @staticmethod
-        def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
-            """
-            Output values frequency in json format
-            :param columns: Columns to be processed
-            :param n: Number of buckets
-            :param percentage:
-            :param total_rows: total rows count to calculate the percentage per item
-            :return:
-            """
-            columns = parse_columns(self, columns)
-            df = self
-
-            result = {}
-            for col_name in columns:
-                result[col_name] = df.groupBy(col_name).count().rows.sort([("count", "desc")]).limit(n).cols.rename(
-                    col_name, "value").rows.sort([("value", "desc")]).ext.to_dict()
-                logger.print(col_name)
-                if percentage:
-                    if total_rows is None:
-                        RaiseIt.type_error(total_rows, "int")
-
-                    for c in result[col_name]:
-                        c["percentage"] = round((c["count"] * 100 / total_rows), 4)
-
-            return result
 
         @staticmethod
         def count_mismatch(columns_mismatch: dict = None):

@@ -40,8 +40,6 @@ class DataFrameBaseColumns(BaseColumns):
     def frequency(columns, n=10, percentage=False, total_rows=None):
         pass
 
-
-
     @staticmethod
     def bucketizer(input_cols, splits, output_cols=None):
         pass
@@ -50,13 +48,6 @@ class DataFrameBaseColumns(BaseColumns):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-
-    def clip(self, columns, lower_bound, upper_bound):
-        df = self.df
-        columns = parse_columns(df, columns)
-        df[columns] = df[columns].clip(lower_bound, upper_bound)
-
-        return df
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
         #
@@ -82,17 +73,12 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         return len(df.columns)
 
-    @staticmethod
-    def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
-        pass
+
 
     @staticmethod
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    def cell(column):
-        pass
 
     def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
         """
@@ -152,8 +138,6 @@ class DataFrameBaseColumns(BaseColumns):
         df = df.merge(darr)
 
         return df
-
-
 
     @staticmethod
     def _math(columns, operator, new_column):
@@ -284,9 +268,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    @staticmethod
-    def years_between(input_cols, date_format=None, output_cols=None):
-        pass
 
     def weekofyear(self, input_cols, output_cols=None):
         raise NotImplementedError("To be implemented")
@@ -323,7 +304,7 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, set_index= True)
+                             output_cols=output_cols, set_index=True)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -602,9 +583,6 @@ class DataFrameBaseColumns(BaseColumns):
     def rename(self, old_column, new_column):
         return self.rename([(old_column, new_column)], None)
 
-    @staticmethod
-    def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
-        raise NotImplementedError('Look at me I am dask now')
 
     def fill_na(self, input_cols, value=None, output_cols=None):
         """
@@ -626,34 +604,10 @@ class DataFrameBaseColumns(BaseColumns):
     # def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
     #     pass
 
-    def lower(self, input_cols, output_cols=None):
-        def _lower(col, args=None):
-            return col.str.lower()
-
-        df = self.df
-        return df.cols.apply(input_cols, _lower, filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
-
-    def upper(self, input_cols, output_cols=None):
-
-        def _upper(col, args=None):
-            return col.str.upper()
-
-        df = self.df
-
-        return df.cols.apply(input_cols, _upper, filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
-
-    def trim(self, input_cols, output_cols=None):
-        def _strip(col, args=None):
-            return col.str.strip()
-
-        df = self.df
-        return df.cols.apply(input_cols, _strip, filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols)
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply"):
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply",
+              mode="pandas"):
 
         df = self.df
 

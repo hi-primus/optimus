@@ -66,7 +66,7 @@ def escape_columns(columns):
 
 def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
     """
-    Construct output columns base on the in put columns.
+    Construct output columns taking the input columns.
     If it receive a list of input columns and on output column the function will append the output_col name to the input cols list
 
     If
@@ -113,7 +113,7 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
 
     if auto_increment is True:
         # input_cols = input_cols * auto_increment
-        output_cols = val_to_list(output_cols)
+        # output_cols = val_to_list(output_cols)
         # print("LEAN @", len(input_cols)/auto_increment)
         # r = int(len(input_cols) / auto_increment)
         r = list(range(auto_increment)) * 2

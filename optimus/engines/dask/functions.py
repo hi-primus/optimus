@@ -7,6 +7,7 @@ from dask.dataframe.core import DataFrame
 import numpy as np
 from optimus.helpers.check import is_column_a
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from fast_histogram import histogram1d
@@ -15,41 +16,6 @@ from fast_histogram import histogram1d
 def functions(self):
     class Functions:
 
-        # @staticmethod
-        # def min(columns, args):
-        #     def _dataframe_min(df):
-        #         return {"min": df[columns].min()}
-        #
-        #     return _dataframe_min
-        #
-        # @staticmethod
-        # def max(columns, args):
-        #     def _dataframe_max(df):
-        #         return {"max": df[columns].max()}
-        #
-        #     return _dataframe_max
-
-        @staticmethod
-        def mean(df, columns, args):
-
-            f = {col_name: df[col_name].mean() for col_name in columns}
-
-            @delayed
-            def _mean(_f):
-                return {"mean": _f}
-
-            return _mean(f)
-
-        @staticmethod
-        def variance(df, columns, args):
-
-            f = {col_name: df[col_name].var() for col_name in columns}
-
-            @delayed
-            def _var(_f):
-                return {"var": _f}
-
-            return _var(f)
 
         @staticmethod
         def sum(df, columns, args):
@@ -66,24 +32,14 @@ def functions(self):
         def percentile_agg(df, columns, args):
 
             values = args[0]
-            f = df[columns].quantile(values)
+
+            f = [df[col_name].quantile(values) for col_name in columns]
 
             @delayed
             def _percentile(_f):
-                return {"percentile": _f.to_dict()}
+                return {"percentile": {c: _f[i].to_dict() for i, c in enumerate(columns)}}
 
             return _percentile(f)
-
-        @staticmethod
-        def stddev(df, columns, args):
-
-            f = {col_name: df[col_name].std() for col_name in columns}
-
-            @delayed
-            def _stddev(_f):
-                return {"stddev": _f}
-
-            return _stddev(f)
 
         @staticmethod
         def zeros_agg(df, columns, args):
@@ -172,12 +128,12 @@ def functions(self):
         @staticmethod
         def mad_agg(df, col_name, args):
             more = args[0]
-            median_value = df[col_name].quantile(0.5)
+            median_value = format_dict(df.cols.median(col_name))
+            print("median_value",median_value)
             mad_value = (df[col_name] - median_value).abs().quantile(0.5)
 
             @delayed
             def _mad_agg(_mad_value, _median_value):
-
                 _mad_value = {"mad": _mad_value.to_dict()}
 
                 if more:

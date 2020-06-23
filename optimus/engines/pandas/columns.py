@@ -8,12 +8,10 @@ from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.jit import min_max, bincount
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers, prepare_columns
+from optimus.helpers.columns import parse_columns, get_output_cols, prepare_columns
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import set_function_parser, set_func
-from optimus.helpers.parser import parse_dtypes
-from optimus.infer import is_str, profiler_dtype_func
+from optimus.infer import is_str
 
 DataFrame = pd.DataFrame
 
@@ -29,14 +27,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
-            pass
-
-        @staticmethod
-        def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
-            pass
-
-        @staticmethod
-        def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
             pass
 
         def set(self, where=None, value=None, output_cols=None, default=None):
@@ -75,46 +65,6 @@ def cols(self: DataFrame):
         def astype(*args, **kwargs):
             pass
 
-        def mode(self, columns):
-            df = self.df
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                result[col_name] = df[col_name].mode(col_name)[0]
-            return result
-
-        @staticmethod
-        def create_exprs(columns, funcs, *args):
-            df = self
-            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-            filters = {"object": [df.functions.min, df.functions.stddev],
-                       }
-
-            def _filter(_col_name, _func):
-                for data_type, func_filter in filters.items():
-                    for f in func_filter:
-                        if equal_function(func, f) and \
-                                df.cols.dtypes(_col_name)[_col_name] == data_type:
-                            return True
-                return False
-
-            columns = parse_columns(df, columns)
-            funcs = val_to_list(funcs)
-
-            result = {}
-
-            for func in funcs:
-                # Create expression for functions that accepts multiple columns
-                filtered_column = []
-                for col_name in columns:
-                    # If the key exist update it
-                    if not _filter(col_name, func):
-                        filtered_column.append(col_name)
-                if len(filtered_column) > 0:
-                    result = func(columns, args, df=df)
-
-            return result
-
         @staticmethod
         def replace(input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
             df = self
@@ -148,10 +98,6 @@ def cols(self: DataFrame):
         def exec_agg(exprs):
             return exprs
 
-        # @staticmethod
-        # def remove(columns, search=None, search_by="chars", output_cols=None):
-        #     pass
-
         @staticmethod
         def remove_accents(input_cols, output_cols=None):
             df = self
@@ -165,26 +111,11 @@ def cols(self: DataFrame):
                                                                                     errors='ignore').str.decode('utf-8')
             return df
 
-        @staticmethod
-        def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
-            pass
-
-        @staticmethod
-        def years_between(input_cols, date_format=None, output_cols=None):
-            pass
-
         def weekday(self, input_cols, output_cols=None):
             pass
 
         def weekofyear(self, input_cols, output_cols=None):
             pass
-
-        @staticmethod
-        def extract(input_cols, output_cols, regex):
-            df = self
-            from optimus.engines.base.dataframe.commons import extract
-            df = extract(df, input_cols, output_cols, regex)
-            return df
 
         @staticmethod
         def min_max(columns):
@@ -248,11 +179,6 @@ def cols(self: DataFrame):
         def remove_stopwords(self):
             df = self
 
-        def remove_numbers(self):
-            df = self
-            self.text = re.sub('[-+]?[0-9]+', '', self.text)
-            return self
-
         def strip_html(self):
             df = self
             # soup = BeautifulSoup(self.text, "html.parser")
@@ -293,8 +219,6 @@ def cols(self: DataFrame):
         #             df = df[df[col_name].apply(f)]
         #         return df
 
-
-
         @staticmethod
         def find(columns, sub, ignore_case=False):
             """
@@ -331,15 +255,7 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def cell(column):
-            pass
-
-        @staticmethod
         def scatter(columns, buckets=10):
-            pass
-
-        @staticmethod
-        def frequency_by_group(columns, n=10, percentage=False, total_rows=None):
             pass
 
         @staticmethod
@@ -378,11 +294,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def clip(columns, lower_bound, upper_bound):
-            pass
-
-
-        @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
             df = self
             df = ml_string_to_index(df, input_cols, output_cols, columns)
@@ -409,8 +320,6 @@ def cols(self: DataFrame):
                 df[output_col] = est.transform(x)
             return df
 
-
-
         @staticmethod
         def nunique(columns):
             df = self
@@ -424,24 +333,6 @@ def cols(self: DataFrame):
 
                 # result[col_name] = _nunique(df,col_name)
             return result
-
-        # def count(self):
-        #     df = self.df
-        #     return len(df.columns)
-
-        @staticmethod
-        def h_freq(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                df["hash"] = df[col_name].apply(hash)
-                m = df["hash"].value_counts().nlargest().to_dict()
-
-                # print(m)
-                for l, n in m.items():
-                    print(df[df["hash"] == l].iloc[0][col_name], n)
-                return
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):

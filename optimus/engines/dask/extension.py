@@ -49,7 +49,7 @@ def ext(self: DataFrame):
             """
             df = self.df
             df_data = df.ext.to_json()
-            df_schema = df.dtypes.to_json()
+            df_schema = df.cols.dtypes()
 
             return f"{df_schema}, {df_data}"
 

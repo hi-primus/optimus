@@ -13,17 +13,6 @@ def cols(self: DaskCUDFDataFrame):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
-        def min(self, columns):
-            df = self.df
-            columns = parse_columns(df, columns)
-            min_values = dd.compute(df[col_name].min() for col_name in columns)[0]
-            return {column: _min for column, _min in zip(columns, min_values)}
-
-        def max(self, columns):
-            df = self.df
-            columns = parse_columns(df, columns)
-            max_values = dd.compute(df[col_name].max() for col_name in columns)[0]
-            return {column: _max for column, _max in zip(columns, max_values)}
 
         def count_uniques(self, columns, estimate=True):
             df = self.df

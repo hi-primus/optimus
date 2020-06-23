@@ -16,11 +16,7 @@ class Cols(BaseColumns):
 
     @staticmethod
     def lower(input_cols, output_cols=None):
-        def _lower(col, args):
-            return F.lower(F.col(col))
-
-        return Cols.apply(input_cols, _lower, filter_col_by_dtypes="string", output_cols=output_cols,
-                          meta=Actions.LOWER.value)
+        pass
 
     def mul(self, a):
         df = self.df.copy()
