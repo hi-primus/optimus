@@ -1,12 +1,13 @@
 from cudf.core import DataFrame
+from cudf.core import Series
 
 from optimus.engines.base.extension import BaseExt
-from optimus.helpers.converter import any_dataframe_to_pandas
 
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
         _name = None
+
         def __init__(self, df):
             super().__init__(df)
 
@@ -39,7 +40,7 @@ def ext(self: DataFrame):
             pass
 
         @staticmethod
-        def repartition(partitions_number=None, col_name=None):
+        def repartition(n=None, *args, **kwargs):
             pass
 
         @staticmethod
@@ -58,4 +59,17 @@ def ext(self: DataFrame):
     return Ext(self)
 
 
+def ext_series(self: Series):
+    class Ext:
+        def __init__(self, series):
+            self.series = series
+
+        def to_dict(self):
+            series = self.series
+            return series.to_pandas().to_dict()
+
+    return Ext(self)
+
+
 DataFrame.ext = property(ext)
+Series.ext = property(ext_series)

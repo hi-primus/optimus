@@ -1,25 +1,17 @@
 import builtins
-import re
 import string
 from functools import reduce
 
-import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask.dataframe.core import DataFrame
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
-    prepare_columns
-from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.converter import format_dict
-from optimus.helpers.core import val_to_list
+from optimus.functions import to_numeric
+from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
 from optimus.helpers.functions import collect_as_dict
-from optimus.infer import is_
 from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
 
 
@@ -48,7 +40,6 @@ class DataFrameBaseColumns(BaseColumns):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
         #
         # df = self.df
@@ -73,50 +64,32 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.df
         return len(df.columns)
 
-
-
     @staticmethod
     def scatter(columns, buckets=10):
         pass
 
-
-    def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
-        """
-        Return the column Inter Quartile Range
-        :param columns:
-        :param more: Return info about q1 and q3
-        :param relative_error:
-        :return:
-        """
-        df = self.df
-        iqr_result = {}
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
-        # print(quartile)
-        for col_name in columns:
-
-            q1 = quartile[col_name]["percentile"]["0.25"]
-            q2 = quartile[col_name]["percentile"]["0.5"]
-            q3 = quartile[col_name]["percentile"]["0.75"]
-
-            iqr_value = q3 - q1
-            if more:
-                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
-            else:
-                result = iqr_value
-            iqr_result[col_name] = result
-
-        return format_dict(iqr_result)
-
     @staticmethod
-    def standard_scaler():
+    def standard_scaler(self, input_cols, output_cols=None):
         pass
 
     @staticmethod
     def max_abs_scaler(input_cols, output_cols=None):
         pass
+
+    def kurtosis(self, columns):
+        # Maybe we could contribute with this
+        # `nan_policy` other than 'propagate' have not been implemented.
+
+        df = self.df
+        columns = parse_columns(df, columns)
+        result = {"kurtosis": {col_name: to_numeric(df[col_name]).kurtosis() for col_name in columns}}
+        return result
+
+    def skewness(self, columns):
+        df = self.df
+        columns = parse_columns(df, columns)
+        result = {"skewness": {col_name: to_numeric(df[col_name]).skew() for col_name in columns}}
+        return result
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
@@ -147,14 +120,6 @@ class DataFrameBaseColumns(BaseColumns):
     def select_by_dtypes(data_type):
         pass
 
-    @staticmethod
-    def nunique(*args, **kwargs):
-        pass
-
-    def unique(self, columns):
-        df = self.df
-        return df.drop_duplicates()
-
     def value_counts(self, columns):
         """
         Return the counts of uniques values
@@ -169,24 +134,6 @@ class DataFrameBaseColumns(BaseColumns):
         for col_name in columns:
             result.update(collect_as_dict(df[col_name].value_counts(), col_name))
         return result
-
-    def count_na(self, columns):
-        """
-        Return the NAN and Null count in a Column
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.count_na_agg, df)
-
-    def count_zeros(self, columns):
-        """
-        Count zeros in a column
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.zeros_agg)
 
     def count_uniques(self, columns, estimate=True):
         """
@@ -268,7 +215,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-
     def weekofyear(self, input_cols, output_cols=None):
         raise NotImplementedError("To be implemented")
 
@@ -293,10 +239,6 @@ class DataFrameBaseColumns(BaseColumns):
     def remove_accents(input_cols, output_cols=None):
         pass
 
-    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
-        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
-                            output_cols=output_cols)
-
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
@@ -305,50 +247,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, set_index=True)
-
-    def drop(self, columns=None, regex=None, data_type=None):
-        """
-        Drop a list of columns
-        :param columns: Columns to be dropped
-        :param regex: Regex expression to select the columns
-        :param data_type:
-        :return:
-        """
-        df = self.df
-        if regex:
-            r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(regex, c)]
-
-        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
-        check_column_numbers(columns, "*")
-
-        df = df.drop(columns=columns)
-
-        df = df.meta.preserve(df, "drop", columns)
-
-        return df
-
-    def keep(self, columns=None, regex=None):
-        """
-        Drop a list of columns
-        :param columns: Columns to be dropped
-        :param regex: Regex expression to select the columns
-        :param data_type:
-        :return:
-        """
-        df = self.df
-        if regex:
-            # r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(regex, c)]
-
-        columns = parse_columns(df, columns)
-        check_column_numbers(columns, "*")
-
-        df = df.drop(columns=list(set(df.columns) - set(columns)))
-
-        df = df.meta.action("keep", columns)
-
-        return df
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -374,162 +272,14 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df
 
-    def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
-        """
-        Copy one or multiple columns
-        :param input_cols: Source column to be copied
-        :param output_cols: Destination column
-        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
-        :return:
-        """
-        df = self.df
-
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
-                output_cols = get_output_cols(input_cols, output_cols)
-        else:
-            input_cols = list([c[0] for c in columns])
-            output_cols = list([c[1] for c in columns])
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
-        return df
-
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
 
-    @staticmethod
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
-        pass
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
-
-    @staticmethod
-    def append(dfs) -> DataFrame:
-        """
-
-        :param dfs:
-        :return:
-        """
-        # df = dd.concat([self, dfs], axis=1)
-        raise NotImplementedError
-        # return df
-
-    @staticmethod
-    def exec_agg(exprs):
-        """
-        Execute and aggregation
-        :param exprs:
-        :return:
-        """
-
-        # 'scheduler' param values
-        # "threads": a scheduler backed by a thread pool
-        # "processes": a scheduler backed by a process pool (preferred option on local machines as it uses all CPUs)
-        # "single-threaded" (aka “sync”): a synchronous scheduler, good for debugging
-
-        # import dask.multiprocessing
-        # import dask.threaded
-        #
-        # >> > dmaster.compute(get=dask.threaded.get)  # this is default for dask.dataframe
-        # >> > dmaster.compute(get=dask.multiprocessing.get)  # try processes instead
-        #
-        agg_results = dask.compute(*exprs)
-        result = {}
-
-        # Parsing results
-        def parse_percentile(_value):
-            _result = {}
-            if is_(_value, pd.core.series.Series):
-                _result.setdefault(_value.name, {str(i): j for i, j in dict(_value).items()})
-            else:
-                for (p_col_name, p_result) in _value.iteritems():
-                    if is_(p_result, pd.core.series.Series):
-                        p_result = dict(p_result)
-                    _result.setdefault(p_col_name, {str(i): j for i, j in p_result.items()})
-            return _result
-
-        def parse_hist(_value):
-            _result = {}
-            for _col_name, values in _value.items():
-                _hist = []
-
-                x = values["count"]
-                y = values["bins"]
-                for idx, v in enumerate(y):
-                    if idx < len(y) - 1:
-                        _hist.append({"count": x[idx], "lower": y[idx], "upper": y[idx + 1]})
-                _result.setdefault(_col_name, _hist)
-            return _result
-
-        def parse_count_uniques(_value):
-            # Because count_uniques() return and Scalar and not support casting we need to make
-            # the cast to int after compute()
-            # Reference https://github.com/dask/dask/issues/1445
-            return {_col_name: int(values) for _col_name, values in _value.items()}
-
-        for agg_name, col_name_result in agg_results:
-            if agg_name == "percentile":
-                col_name_result = parse_percentile(col_name_result)
-            elif agg_name == "hist":
-                col_name_result = parse_hist(col_name_result)
-            elif agg_name == "count_uniques":
-                col_name_result = parse_count_uniques(col_name_result)
-
-            # Process by datatype
-            if is_(col_name_result, pd.core.series.Series):
-                # col_name_result = pd.Series(col_name_result)
-                # print("COL NAME RESULT",col_name_result)
-                index = col_name_result.index
-                for cols_name in index:
-                    result.setdefault(cols_name, {}).update({agg_name: col_name_result[cols_name]})
-            else:
-                index = col_name_result
-                for col_name, value in index.items():
-                    result.setdefault(col_name, {}).update({agg_name: col_name_result[col_name]})
-
-        return result
-
-    def create_exprs(self, columns, funcs, *args):
-        df = self.df
-        # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-        filters = {"object": [df.functions.min, df.functions.stddev],
-                   }
-
-        def _filter(_col_name, _func):
-            for data_type, func_filter in filters.items():
-                for f in func_filter:
-                    if equal_function(func, f) and \
-                            df.cols.dtypes(_col_name)[_col_name] == data_type:
-                        return True
-            return False
-
-        columns = parse_columns(df, columns)
-        funcs = val_to_list(funcs)
-
-        result = {}
-
-        for func in funcs:
-            # print("FUNC", func)
-            # Create expression for functions that accepts multiple columns
-            filtered_column = []
-            for col_name in columns:
-                # If the key exist update it
-                if not _filter(col_name, func):
-                    filtered_column.append(col_name)
-            if len(filtered_column) > 0:
-                # print("ITER", col_name)
-                func_result = func(columns, args)(df)
-                for k, v in func_result.items():
-                    result[k] = {}
-                    result[k] = v
-        result = list(result.items())
-
-        return result
 
     # TODO: Check if we must use * to select all the columns
     @dispatch(object, object)
@@ -583,7 +333,6 @@ class DataFrameBaseColumns(BaseColumns):
     def rename(self, old_column, new_column):
         return self.rename([(old_column, new_column)], None)
 
-
     def fill_na(self, input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
@@ -598,26 +347,6 @@ class DataFrameBaseColumns(BaseColumns):
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
             df[output_col] = df[input_col].fillna(value=value)
-        return df
-
-    #
-    # def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-    #     pass
-
-
-    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False, meta_action="apply",
-              mode="pandas"):
-
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                   accepts_missing_cols=True)
-
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_cols].apply(func, args=args)
-
         return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
@@ -753,20 +482,6 @@ class DataFrameBaseColumns(BaseColumns):
                 df.drop(columns=input_cols, inplace=True)
         return df
 
-    def word_count(self, input_cols, output_cols=None):
-        """
-        Count words in a column
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].str.strip().str.split().str.len()
-        return df
-
     @staticmethod
     def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
         pass
@@ -787,24 +502,4 @@ class DataFrameBaseColumns(BaseColumns):
             result = True
         else:
             result = False
-        return result
-
-    def select(self, columns="*", regex=None, data_type=None, invert=False):
-        """
-        Select columns using index, column name, regex to data type
-        :param columns:
-        :param regex: Regular expression to filter the columns
-        :param data_type: Data type to be filtered for
-        :param invert: Invert the selection
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
-        if columns is not None:
-            df = df[columns]
-            # Metadata get lost when using select(). So we copy here again.
-            result = df
-        else:
-            result = None
-
         return result

@@ -22,34 +22,9 @@ def functions(self):
 
             return dataframe_sum_
 
-        @staticmethod
-        def percentile_agg(columns, args):
-            values = args[1]
-
-            def _percentile(df):
-                return {"percentile": df[columns].quantile(values)}
-
-            return _percentile
 
 
-        @staticmethod
-        def zeros_agg(col_name, args):
 
-            def zeros_(serie):
-                result = {"zeros": (serie[col_name].values == 0).sum()}
-                return result
-
-            return zeros_
-
-        @staticmethod
-        def count_na_agg(col_name, args):
-            # estimate = args[0]
-
-            def count_na_(serie):
-                result = {"count_na": serie[col_name].isnull().sum()}
-                return result
-
-            return count_na_
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         # @staticmethod
@@ -118,7 +93,7 @@ def functions(self):
         #     return hist_agg_
 
         @staticmethod
-        def kurtosis(col_name, args):
+        kurtosis(col_name, args):
             def _kurtoris(serie):
                 result = {"kurtosis": float(stats.kurtosis(serie[col_name]))}
                 return result
@@ -132,39 +107,6 @@ def functions(self):
                 return result
 
             return _skewness
-
-        # @staticmethod
-        # def count_uniques_agg(col_name, args):
-        #     estimate = args[0]
-        #
-        #     def _count_uniques_agg(serie):
-        #         if estimate is True:
-        #             result = {"count_uniques": serie[col_name].nunique_approx()}
-        #         else:
-        #             result = {"count_uniques": serie[col_name].nunique()}
-        #         return result
-        #
-        #     return _count_uniques_agg
-
-
-
-        @staticmethod
-        def mad_agg(col_name, args):
-            more = args[0]
-
-            def _mad_agg(serie):
-                median_value = serie[col_name].quantile(0.5)
-                mad_value = (serie[col_name] - median_value).abs().quantile(0.5)
-
-                _mad = {}
-                if more:
-                    result = {"mad": mad_value, "median": median_value}
-                else:
-                    result = {"mad": mad_value}
-
-                return result
-
-            return _mad_agg
 
     return Functions()
 

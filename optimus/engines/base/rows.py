@@ -31,8 +31,6 @@ class BaseRows(ABC):
 
         for output_col in output_cols:
             result = func(df, *args)
-            # print("result",result)
-            # for r in result.cols.names():
             kw_columns = {output_col: result}
 
         return df.assign(**kw_columns)

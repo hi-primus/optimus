@@ -16,7 +16,9 @@ class Create:
         :return: Dataframe
         """
 
-        if not is_(pdf, pd.DataFrame):
+        if is_(pdf, pd.DataFrame):
+            df = dd.from_pandas(pdf, npartitions=1)
+        else:
 
             # Process the rows
             if not is_list_of_tuples(rows):
@@ -34,7 +36,7 @@ class Create:
             for col, dtype in zip(_columns, _dtypes):
                 pdf[col].astype(dtype)
 
-        df = dd.from_pandas(pdf, npartitions=1)
+            df = dd.from_pandas(pdf, npartitions=1)
         df = df.meta.columns(df.cols.names())
         return df
 

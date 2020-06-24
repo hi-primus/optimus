@@ -20,7 +20,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.ml.contants import INDEX_TO_STRING
-from optimus.helpers.check import is_cudf_series, is_pandas_series
+from optimus.helpers.check import is_cudf_series, is_pandas_series, is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
     prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -292,36 +292,6 @@ class DaskBaseColumns(BaseColumns):
         pass
 
 
-    def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
-        """
-        Return the column Inter Quartile Range
-        :param columns:
-        :param more: Return info about q1 and q3
-        :param relative_error:
-        :return:
-        """
-        df = self.df
-        iqr_result = {}
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-
-        check_column_numbers(columns, "*")
-
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
-        # print(quartile)
-        for col_name in columns:
-            print("quartile", quartile)
-            q1 = quartile["percentile"][col_name][0.25]
-            q2 = quartile["percentile"][col_name][0.5]
-            q3 = quartile["percentile"][col_name][0.75]
-
-            iqr_value = q3 - q1
-            if more:
-                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
-            else:
-                result = iqr_value
-            iqr_result[col_name] = result
-        return format_dict(iqr_result)
-
     @staticmethod
     def standard_scaler():
         pass
@@ -373,15 +343,6 @@ class DaskBaseColumns(BaseColumns):
     def select_by_dtypes(data_type):
         pass
 
-    @staticmethod
-    def nunique(*args, **kwargs):
-        pass
-
-    def unique(self, columns):
-        df = self.df
-        columns = parse_columns(df, columns)
-        return df.astype(str).drop_duplicates(subset=columns)
-
     def value_counts(self, columns):
         """
         Return the counts of uniques values
@@ -410,35 +371,7 @@ class DaskBaseColumns(BaseColumns):
             df[output_col] = df[input_col].str.slice(start, stop, step)
         return df
 
-    def count_na(self, columns):
-        """
-        Return the NAN and Null count in a Column
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.count_na_agg, df)
 
-    def count_zeros(self, columns):
-        """
-        Count zeros in a column
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.zeros_agg, df)
-
-    # def count_uniques(self, columns, estimate=True, compute=True):
-    #     """
-    #     Return how many unique items exist in a columns
-    #     :param columns: '*', list of columns names or a single column name.
-    #     :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
-    #     :type estimate: bool
-    #     :return:
-    #     """
-    #     print("count_uniques")
-    #     df = self.df
-    #     return self.agg_exprs(columns, df.functions.count_uniques_agg, estimate)
 
     def is_na(self, input_cols, output_cols=None):
         """
@@ -486,7 +419,6 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.NUMERIC_TYPES + df.constants.STRING_TYPES)
 
     # Date operations
-
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -620,10 +552,6 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
-    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
-        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
-                            output_cols=output_cols)
-
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value, args):
             return value.astype(str).str[::-1]
@@ -633,50 +561,28 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
-    def drop(self, columns=None, regex=None, data_type=None):
-        """
-        Drop a list of columns
-        :param columns: Columns to be dropped
-        :param regex: Regex expression to select the columns
-        :param data_type:
-        :return:
-        """
-        df = self.df
-        # if regex:
-        #     r = re.compile(regex)
-        #     columns = [c for c in list(df.columns) if re.match(regex, c)]
-        #
-        # columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
-        # check_column_numbers(columns, "*")
-
-        names = df.cols.names(columns, regex, data_type)
-        df = df.drop(names, axis=1)
-
-        df = df.meta.preserve(df, "drop", columns)
-
-        return df
-
-    def keep(self, columns=None, regex=None):
-        """
-        Drop a list of columns
-        :param columns: Columns to be dropped
-        :param regex: Regex expression to select the columns
-        :param data_type:
-        :return:
-        """
-        df = self.df
-        if regex:
-            # r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(regex, c)]
-
-        columns = parse_columns(df, columns)
-        check_column_numbers(columns, "*")
-
-        df = df.drop(columns=list(set(df.columns) - set(columns)))
-
-        df = df.meta.action("keep", columns)
-
-        return df
+    #
+    # def keep(self, columns=None, regex=None):
+    #     """
+    #     Drop a list of columns
+    #     :param columns: Columns to be dropped
+    #     :param regex: Regex expression to select the columns
+    #     :param data_type:
+    #     :return:
+    #     """
+    #     df = self.df
+    #     if regex:
+    #         # r = re.compile(regex)
+    #         columns = [c for c in list(df.columns) if re.match(regex, c)]
+    #
+    #     columns = parse_columns(df, columns)
+    #     check_column_numbers(columns, "*")
+    #
+    #     df = df.drop(columns=list(set(df.columns) - set(columns)))
+    #
+    #     df = df.meta.action("keep", columns)
+    #
+    #     return df
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -722,55 +628,11 @@ class DaskBaseColumns(BaseColumns):
     def copy(self, columns) -> DataFrame:
         return self.copy(columns=columns)
 
-    def copy(self, input_cols=None, output_cols=None, columns=None) -> DataFrame:
-        """
-        Copy one or multiple columns
-        :param input_cols: Source column to be copied
-        :param output_cols: Destination column
-        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
-        :return:
-        """
-        df = self.df
-        output_ordered_columns = df.cols.names()
-
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
-                output_cols = get_output_cols(input_cols, output_cols)
-
-        if columns:
-            input_cols = list([c[0] for c in columns])
-            output_cols = list([c[1] for c in columns])
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            if input_col != output_col:
-                col_index = output_ordered_columns.index(input_col) + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
-
-        df = df.assign(**{output_col: df[input_col] for input_col, output_col in zip(input_cols, output_cols)})
-        df = df.meta.copy({input_col: output_col})
-        return df.cols.select(output_ordered_columns)
 
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
 
-    @staticmethod
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
-        pass
-
-    # @staticmethod
-    def append(self, dfs) -> DataFrame:
-        """
-
-        :param dfs:
-        :return:
-        """
-
-        df = self.df
-        df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        return df
 
     @staticmethod
     def exec_agg(exprs):
@@ -881,47 +743,6 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False):
-
-        df = self.df
-
-        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                  accepts_missing_cols=True)
-
-        # check_column_numbers(input_cols, "*")
-
-        kw_columns = {}
-        output_ordered_columns = df.cols.names()
-
-        partitions = df.to_delayed()
-        for input_col, output_col in columns:
-            if mode == "pandas":
-                delayed_parts = [dask.delayed(func)(part[input_col], args)
-                                 for part in partitions]
-                kw_columns[output_col] = from_delayed(delayed_parts)
-            elif mode == "vectorized":
-                kw_columns[output_col] = func(df[input_col], args)
-
-            elif mode == "map":
-                kw_columns[output_col] = df[input_col].map(func, args)
-
-            # Preserve column order
-            if output_col not in df.cols.names():
-                col_index = output_ordered_columns.index(input_col) + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
-
-            # Preserve actions for the profiler
-            df = df.meta.preserve(df, meta_action, output_col)
-
-        if set_index is True:
-            df = df.reset_index()
-
-        df = df.assign(**kw_columns)
-        df = df.cols.select(output_ordered_columns)
-
-        return df
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         df = self.df
@@ -1262,23 +1083,4 @@ class DaskBaseColumns(BaseColumns):
             result = False
         return result
 
-    def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
-        """
-        Select columns using index, column name, regex to data type
-        :param columns:
-        :param regex: Regular expression to filter the columns
-        :param data_type: Data type to be filtered for
-        :param invert: Invert the selection
-        :param accepts_missing_cols:
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
-                                accepts_missing_cols=accepts_missing_cols)
-        if columns is not None:
-            df = df[columns]
-            result = df
-        else:
-            result = None
 
-        return result

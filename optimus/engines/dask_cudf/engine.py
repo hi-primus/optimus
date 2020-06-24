@@ -3,7 +3,7 @@ from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 from dask import dataframe as dd
 from optimus.bumblebee import Comm
-from optimus.engines.base.engine import BaseEngine, op_to_series_func
+from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger

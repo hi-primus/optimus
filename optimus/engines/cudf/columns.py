@@ -1,19 +1,16 @@
 import re
-import unicodedata
 
 import cupy as cp
-import numpy as np
 from cudf.core import DataFrame
 from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, get_output_cols, check_column_numbers
-from optimus.helpers.converter import cudf_to_pandas, pandas_to_cudf
+from optimus.helpers.columns import parse_columns, get_output_cols, prepare_columns
 from optimus.helpers.core import val_to_list
 # DataFrame = pd.DataFrame
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, profiler_dtype_func, is_dict, regex_credit_card, regex_zip_code, regex_url, \
+from optimus.infer import is_str, is_dict, regex_credit_card, regex_zip_code, regex_url, \
     regex_gender, regex_boolean, regex_ip, regex_email, regex_decimal, regex_int
 
 
@@ -23,15 +20,7 @@ def cols(self: DataFrame):
             super(DataFrameBaseColumns, self).__init__(df)
 
         @staticmethod
-        def append(*args, **kwargs):
-            pass
-
-        @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
-            pass
-
-        @staticmethod
-        def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None, meta=None):
             pass
 
         @staticmethod
@@ -53,14 +42,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def astype(*args, **kwargs):
-            pass
-
-        @staticmethod
-        def move(column, position, ref_col=None):
-            pass
-
-        @staticmethod
-        def drop(columns=None, regex=None, data_type=None):
             pass
 
         @staticmethod
@@ -99,19 +80,11 @@ def cols(self: DataFrame):
         def exec_agg(exprs):
             return exprs
 
-        @staticmethod
-        def reverse(input_cols, output_cols=None):
-            pass
-
-        @staticmethod
-        def remove(input_cols, search=None, search_by="chars", output_cols=None):
-            pass
-
-
+        def reverse(self, input_cols, output_cols=None):
+            raise NotImplementedError('Not implemented yet')
 
         def weekofyear(self, input_cols, output_cols=None):
             pass
-
 
         # https://github.com/rapidsai/cudf/issues/3177
         def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -126,8 +99,7 @@ def cols(self: DataFrame):
             """
 
             df = self.df
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
+            columns = prepare_columns(df, input_cols, output_cols)
 
             search = val_to_list(search)
             if search_by == "chars":
@@ -138,18 +110,16 @@ def cols(self: DataFrame):
             else:
                 _regex = search
 
-            # df = df.cols.cast(input_cols, "str")
-
             if not is_str(replace_by):
                 RaiseIt.type_error(replace_by, ["str"])
 
-            for input_col, output_col in zip(input_cols, output_cols):
+            for input_col, output_col in columns:
                 if search_by == "chars" or search_by == "words":
                     # This is only implemented in cudf
-                    df[output_col] = df[input_col].str.replace_multi(search, replace_by, regex=False)
+                    df[output_col] = df[input_col].astype(str).str.replace_multi(search, replace_by, regex=False)
                     # df[input_col] = df[input_col].str.replace(search, replace_by)
                 elif search_by == "full":
-                    df[output_col] = df[input_col].replace(search, replace_by)
+                    df[output_col] = df[input_col].astype(str).replace(search, replace_by)
 
             return df
 
@@ -161,34 +131,12 @@ def cols(self: DataFrame):
                 df[output_col] = df[input_col].str.replace_multi(regex, replace_by, regex=True)
             return df
 
-        @staticmethod
-        def is_na(input_cols, output_cols=None):
+        def mode(self, columns):
+            # See https://github.com/rapidsai/cudf/issues/3677
+            raise NotImplementedError("Not implemented error!")
+
+        def is_na(self, input_cols, output_cols=None):
             pass
-
-        @staticmethod
-        def count_na(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-
-            def _count_na(_df, _series):
-                return cp.count_nonzero(_df[_series].isnull().values.ravel())
-
-            for col_name in columns:
-                result[col_name] = _count_na(df, col_name)
-                # np.count_nonzero(df[col_name].isnull().values.ravel())
-            return result
-
-
-
-        @staticmethod
-        def unique(columns):
-            pass
-
-        @staticmethod
-        def nunique_approx(columns):
-            df = self
-            return df.cols.nunique(columns)
 
         # NLP
         @staticmethod
@@ -222,12 +170,10 @@ def cols(self: DataFrame):
         def _math(columns, operator, new_column):
             pass
 
-        @staticmethod
-        def min_max_scaler(input_cols, output_cols=None):
+        def min_max_scaler(self, input_cols, output_cols=None):
             pass
 
-        @staticmethod
-        def standard_scaler(input_cols, output_cols=None):
+        def standard_scaler(self, input_cols, output_cols=None):
 
             df = self
             scaler = StandardScaler()
@@ -237,6 +183,26 @@ def cols(self: DataFrame):
                 df[output_col] = scaler.transform(data)
 
             return df
+
+        def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+            """
+
+            :param input_cols:
+            :param data_type:
+            :param strategy:
+            # - If "mean", then replace missing values using the mean along
+            #   each column. Can only be used with numeric data.
+            # - If "median", then replace missing values using the median along
+            #   each column. Can only be used with numeric data.
+            # - If "most_frequent", then replace missing using the most frequent
+            #   value along each column. Can be used with strings or numeric data.
+            # - If "constant", then replace missing values with fill_value. Can be
+            #   used with strings or numeric data.
+            :param output_cols:
+            :return:
+            """
+
+            raise NotImplementedError("Not implemented yet!")
 
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
@@ -278,20 +244,7 @@ def cols(self: DataFrame):
 
             # pandas_to_cudf()
             # cudf_to_pandas
-            def _remove_accents(value):
-                cell_str = str(value)
-
-                # first, normalize strings:
-                nfkd_str = unicodedata.normalize('NFKD', cell_str)
-
-                # Keep chars that has no other char combined (i.e. accents chars)
-                with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
-                return with_out_accents
-
-            df = self.df
-            return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
-                                 filter_col_by_dtypes=df.constants.STRING_TYPES,
-                                 output_cols=output_cols)
+            raise NotImplementedError('Not implemented yet')
 
         def remove_special_chars(self, input_cols, output_cols=None):
             df = self.df
@@ -302,7 +255,6 @@ def cols(self: DataFrame):
             for input_col, output_col in zip(input_cols, output_cols):
                 df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
             return df
-
 
         def count_uniques(self, columns="*", estimate=True, **kwargs):
             df = self.df
@@ -347,7 +299,6 @@ def cols(self: DataFrame):
         @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
-
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):
@@ -394,18 +345,6 @@ def cols(self: DataFrame):
         def bucketizer(input_cols, splits, output_cols=None):
             pass
 
-
-
-        @staticmethod
-        def nunique(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                result[col_name] = df[col_name].nunique()
-
-            return result
-
         def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
             df = self.df
             if not is_dict(columns_mismatch):
@@ -415,7 +354,7 @@ def cols(self: DataFrame):
             nulls = df.isnull().sum().to_pandas().to_dict()
             total_rows = len(df)
 
-            func = {"int": regex_int, # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
+            func = {"int": regex_int,  # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
                     "decimal": regex_decimal,
                     "email": regex_email,
                     "ip": regex_ip,

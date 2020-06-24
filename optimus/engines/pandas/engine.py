@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from optimus.bumblebee import Comm
-from optimus.engines.base.engine import BaseEngine, op_to_series_func
+from optimus.engines.base.engine import BaseEngine
 from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas

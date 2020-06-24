@@ -21,9 +21,6 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
 
-        @staticmethod
-        def append(*args, **kwargs):
-            pass
 
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -116,50 +113,6 @@ def cols(self: DataFrame):
 
         def weekofyear(self, input_cols, output_cols=None):
             pass
-
-        @staticmethod
-        def min_max(columns):
-            """
-            Calculate min max in one pass.
-            :param columns:
-            :return:
-            """
-
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-            for col_name in columns:
-                _min, _max = min_max(df[col_name].to_numpy())
-                result[col_name] = {"min": _min, "max": _max}
-            return result
-
-        @staticmethod
-        def count_na(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-
-            def _count_na(_df, _serie):
-                return np.count_nonzero(_df[_serie].isnull().values.ravel())
-
-            for col_name in columns:
-                # np is 2x faster than df[columns].isnull().sum().to_dict()
-                # Reference https://stackoverflow.com/questions/28663856/how-to-count-the-occurrence-of-certain-item-in-an-ndarray-in-python
-                result[col_name] = _count_na(df, col_name)
-            return result
-
-        @staticmethod
-        def count_zeros(columns):
-            pass
-
-        @staticmethod
-        def unique(columns):
-            pass
-
-        @staticmethod
-        def nunique_approx(columns):
-            df = self
-            return df.cols.nunique(columns)
 
         # NLP
         @staticmethod
@@ -320,19 +273,6 @@ def cols(self: DataFrame):
                 df[output_col] = est.transform(x)
             return df
 
-        @staticmethod
-        def nunique(columns):
-            df = self
-            columns = parse_columns(df, columns)
-            result = {}
-            # def _nunique(_df, _serie_name):
-            #     return np.unique(_df[_serie_name].values.ravel())
-
-            for col_name in columns:
-                result[col_name] = df[col_name].nunique()
-
-                # result[col_name] = _nunique(df,col_name)
-            return result
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):

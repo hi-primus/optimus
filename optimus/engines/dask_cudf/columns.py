@@ -14,11 +14,6 @@ def cols(self: DaskCUDFDataFrame):
             super(DaskBaseColumns, self).__init__(df)
 
 
-        def count_uniques(self, columns, estimate=True):
-            df = self.df
-            columns = parse_columns(df, columns)
-            count_uniques_values = dd.compute(df[col_name].nunique() for col_name in columns)[0]
-            return {column: _uniques for column, _uniques in zip(columns, count_uniques_values)}
 
         def hist(self, columns, buckets=10, compute=True):
             df = self.df
@@ -46,9 +41,6 @@ def cols(self: DaskCUDFDataFrame):
             r = {x: y for i in r for x, y in i.items()}
 
             return r
-
-        def append(*args, **kwargs):
-            return self
 
         @staticmethod
         def mode(columns):

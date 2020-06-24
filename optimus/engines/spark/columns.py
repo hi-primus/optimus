@@ -188,23 +188,6 @@ def cols(self):
             return df
 
         @staticmethod
-        def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None,
-                       meta=None) -> DataFrame:
-            """
-            Apply a expression to column.
-            :param input_cols: Columns in which the function is going to be applied
-            :param func: Function to be applied to the data
-            :type func: A plain expression or a function
-            :param args: Argument passed to the function
-            :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
-            :param output_cols: Columns in which the transformed data will saved
-            :param meta: Metadata transformation to a dataframe
-            """
-
-            return Cols.apply(input_cols, func=func, args=args, filter_col_by_dtypes=filter_col_by_dtypes,
-                              output_cols=output_cols, meta_action=meta)
-
-        @staticmethod
         def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
                   filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
                   meta_action="apply") -> DataFrame:
@@ -709,7 +692,7 @@ def cols(self):
             return format_dict(Cols.agg_exprs(columns, F.stddev))
 
         @staticmethod
-        def kurt(columns):
+        "pandas"(columns):
             """
             Return the kurtosis of a column dataframe
             :param columns: '*', list of columns names or a single column name.

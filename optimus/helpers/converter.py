@@ -4,7 +4,7 @@ import dateutil
 from dask import dataframe as dd
 
 from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
-    is_pandas_dataframe
+    is_pandas_dataframe, is_cudf_series
 from optimus.infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
 
 
@@ -111,7 +111,7 @@ def any_dataframe_to_pandas(df):
         result = spark_to_pandas(df)
     elif is_dask_dataframe(df):
         result = dask_dataframe_to_pandas(df)
-    elif is_cudf_dataframe(df):
+    elif is_cudf_dataframe(df) or is_cudf_series(df):
         result = cudf_to_pandas(df)
     elif is_dask_cudf_dataframe(df):
         result = dask_cudf_to_pandas(df)

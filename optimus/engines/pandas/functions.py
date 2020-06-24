@@ -5,20 +5,12 @@ import pandas as pd
 
 # from fast_histogram import histogram1d
 from optimus.engines.jit import numba_histogram
-from optimus.helpers.core import val_to_list
 
 DataFrame = pd.DataFrame
 
 
 def functions(self):
     class Functions:
-
-
-        @staticmethod
-        def max(columns, args, df):
-            # columns = args
-            return [{"max": df[columns].max()}]
-
 
         @staticmethod
         def sum(columns, args):
@@ -27,31 +19,6 @@ def functions(self):
                 return {"sum": df[columns].sum()}
 
             return dataframe_sum_
-
-        @staticmethod
-        def percentile_agg(columns, args):
-            values = args[1]
-
-            def _percentile(df):
-                return {"percentile": df[columns].quantile(values)}
-
-            return _percentile
-
-
-        @staticmethod
-        def zeros_agg(col_name, args, df):
-            col_name = val_to_list(col_name)
-
-            def zeros_(df):
-                result = {"zeros": {col: (df[col].values == 0).sum() for col in col_name}}
-                # result = {"zeros": (df[col_name].values == 0).sum()}
-                return result
-
-            return zeros_
-
-        @staticmethod
-        def count_na_agg(columns, args, df):
-            return [{"count_na": df.cols.count_na(columns)}]
 
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
@@ -84,60 +51,6 @@ def functions(self):
                     result.update(f)
 
             return result
-
-        @staticmethod
-        def kurtosis(columns, args):
-            # Maybe we could contribute with this
-            # `nan_policy` other than 'propagate' have not been implemented.
-
-            def _kurtosis(serie):
-                result = {"kurtosis": {col: float(stats.kurtosis(serie[col])) for col in columns}}
-                # result = {"kurtosis": float(stats.kurtosis(serie[col_name], nan_policy="propagate"))}
-                return result
-
-            return _kurtosis
-
-        @staticmethod
-        def skewness(columns, args):
-            def _skewness(serie):
-                result = {"skewness": {col: float(stats.skew(serie[col])) for col in columns}}
-                # result = {"skewness": float(stats.skew(serie[col_name], nan_policy="propagate"))}
-                return result
-
-            return _skewness
-
-        @staticmethod
-        def count_uniques_agg(col_name, args, df):
-            print("ARGS", args)
-            estimate = args[0]
-
-            if estimate is True:
-                ps = df.cols.nunique(col_name)
-                # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
-            else:
-                ps = df.cols.nunique(col_name)
-            result = [{"count_uniques": ps}]
-
-            return result
-
-
-        @staticmethod
-        def mad_agg(col_name, args):
-            more = args[0]
-
-            def _mad_agg(serie):
-                median_value = serie[col_name].quantile(0.5)
-                mad_value = (serie[col_name] - median_value).abs().quantile(0.5)
-
-                _mad = {}
-                if more:
-                    result = {"mad": mad_value, "median": median_value}
-                else:
-                    result = {"mad": mad_value}
-
-                return result
-
-            return _mad_agg
 
     return Functions()
 

@@ -21,7 +21,7 @@ def has_(value, _type):
     return any(isinstance(elem, _type) for elem in value)
 
 
-def is_column_a(df, column, dtypes):
+def is_column_a(df, column=None, dtypes="str"):
     """
     Check if column match a list of data types
     :param df: spark or dask dataframe
@@ -43,7 +43,6 @@ def is_column_a(df, column, dtypes):
     if is_spark_dataframe(df):
         result = isinstance(v, data_type)
     elif is_dask_dataframe(df):
-
         result = v in data_type
     else:
         result = None

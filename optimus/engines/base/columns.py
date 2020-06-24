@@ -1,13 +1,17 @@
+import re
 import string
 from abc import abstractmethod, ABC
 from enum import Enum
 
+import dask
 import numpy as np
 import pandas as pd
+from dask.dataframe import from_delayed
 from glom import glom
 
 from optimus import functions as F
 # from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
+from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe, is_pandas_dataframe, is_cudf_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
@@ -15,7 +19,7 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer, profiler_dtype_func
+from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element
 
 
 class BaseColumns(ABC):
@@ -24,38 +28,178 @@ class BaseColumns(ABC):
     def __init__(self, df):
         self.df = df
 
-    @staticmethod
-    @abstractmethod
-    def append(*args, **kwargs):
-        pass
+    def append(self, dfs):
+        """
 
-    @staticmethod
-    @abstractmethod
-    def select(columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> str:
-        pass
+        :param dfs:
+        :return:
+        """
 
-    @staticmethod
-    @abstractmethod
-    def copy(input_cols, output_cols=None, columns=None):
-        pass
+        df = self.df
+        df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
+        return df
+
+    def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
+        """
+        Select columns using index, column name, regex to data type
+        :param columns:
+        :param regex: Regular expression to filter the columns
+        :param data_type: Data type to be filtered for
+        :param invert: Invert the selection
+        :param accepts_missing_cols:
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+                                accepts_missing_cols=accepts_missing_cols)
+        if columns is not None:
+            df = df[columns]
+            result = df
+        else:
+            result = None
+
+        return result
+
+    def copy(self, input_cols=None, output_cols=None, columns=None):
+        """
+        Copy one or multiple columns
+        :param input_cols: Source column to be copied
+        :param output_cols: Destination column
+        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
+        :return:
+        """
+        df = self.df
+        output_ordered_columns = df.cols.names()
+
+        if columns is None:
+            input_cols = parse_columns(df, input_cols)
+            if is_list(input_cols) or is_one_element(input_cols):
+                output_cols = get_output_cols(input_cols, output_cols)
+
+        if columns:
+            input_cols = list([c[0] for c in columns])
+            output_cols = list([c[1] for c in columns])
+            output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            if input_col != output_col:
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
+        kw_columns = {}
+        for input_col, output_col in zip(input_cols, output_cols):
+            kw_columns[output_col] = df[input_col]
+            df = df.meta.copy({input_col: output_col})
+        df = df.assign(**kw_columns)
+        return df.cols.select(output_ordered_columns)
+
+    def drop(self, columns=None, regex=None, data_type=None):
+        """
+        Drop a list of columns
+        :param columns: Columns to be dropped
+        :param regex: Regex expression to select the columns
+        :param data_type:
+        :return:
+        """
+        df = self.df
+        if regex:
+            r = re.compile(regex)
+            columns = [c for c in list(df.columns) if re.match(r, c)]
+
+        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
+        check_column_numbers(columns, "*")
+
+        df = df.drop(columns=columns)
+
+        df = df.meta.preserve(df, "drop", columns)
+
+        return df
+
+    def keep(self, columns=None, regex=None):
+        """
+        Drop a list of columns
+        :param columns: Columns to be dropped
+        :param regex: Regex expression to select the columns
+        :param data_type:
+        :return:
+        """
+        df = self.df
+        if regex:
+            # r = re.compile(regex)
+            columns = [c for c in list(df.columns) if re.match(regex, c)]
+
+        columns = parse_columns(df, columns)
+        check_column_numbers(columns, "*")
+
+        df = df.drop(columns=list(set(df.columns) - set(columns)))
+
+        df = df.meta.action("keep", columns)
+
+        return df
+
+    def word_count(self, input_cols, output_cols=None):
+        """
+        Count words by column element wise
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        for input_col, output_col in zip(input_cols, output_cols):
+            df[output_col] = df[input_col].str.split().str.len()
+        return df
 
     @staticmethod
     @abstractmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def apply_expr(input_cols, func=None, args=None, filter_col_by_dtypes=None, output_cols=None,
-                   meta=None):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def apply(input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta="apply"):
-        pass
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False):
+
+        df = self.df
+
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                  accepts_missing_cols=True)
+
+        # check_column_numbers(input_cols, "*")
+
+        kw_columns = {}
+        output_ordered_columns = df.cols.names()
+
+        for input_col, output_col in columns:
+            if mode == "pandas" and (is_dask_dataframe(df) or is_dask_cudf_dataframe(df)):
+
+                partitions = df.to_delayed()
+                delayed_parts = [dask.delayed(func)(part[input_col], args)
+                                 for part in partitions]
+
+                kw_columns[output_col] = from_delayed(delayed_parts)
+
+            elif mode == "vectorized" or mode == "pandas":
+                kw_columns[output_col] = func(df[input_col], args)
+
+            elif mode == "map":
+                kw_columns[output_col] = df[input_col].map(func, args)
+
+            # Preserve column order
+            if output_col not in df.cols.names():
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
+            # Preserve actions for the profiler
+            df = df.meta.preserve(df, meta_action, output_col)
+
+        if set_index is True:
+            df = df.reset_index()
+
+        df = df.assign(**kw_columns)
+        df = df.cols.select(output_ordered_columns)
+
+        return df
 
     @staticmethod
     @abstractmethod
@@ -354,11 +498,6 @@ class BaseColumns(ABC):
             # new_index = new_index + 1
         return df[all_columns]
 
-    @staticmethod
-    @abstractmethod
-    def keep(columns=None, regex=None):
-        pass
-
     def sort(self, order: [str, list] = "asc", columns=None):
         """
         Sort data frames columns asc or desc
@@ -380,11 +519,6 @@ class BaseColumns(ABC):
             columns.sort(key=lambda v: v.upper(), reverse=_reverse)
 
         return df.cols.select(columns)
-
-    @staticmethod
-    @abstractmethod
-    def drop(columns=None, regex=None, data_type=None):
-        pass
 
     def dtypes(self, columns="*"):
         """
@@ -431,23 +565,28 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
-
-        return df.cols.exec_agg(funcs)
+        # print("df[col_name][col_name]111[col_name]",type(df[columns][columns]))
+        return df.cols.exec_agg(funcs[0])
 
     @staticmethod
     @abstractmethod
     def exec_agg(exprs):
         pass
 
+    def mad(self, columns):
+        # df = self.df
+        return self.agg_exprs(columns, F.mad)
+
     def min(self, columns):
         df = self.df
-        return df.col.agg_exprs(columns, F.min)
+        return df.cols.agg_exprs(columns, F.min)
 
     def mode(self, columns):
         df = self.df
-        return df.col.agg_exprs(columns, F.mode)
+        return df.cols.agg_exprs(columns, F.mode)
 
     def max(self, columns):
+
         return self.agg_exprs(columns, F.max)
 
     def range(self, columns):
@@ -455,45 +594,28 @@ class BaseColumns(ABC):
 
     def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR):
         df = self.df
-        # values = [str(v) for v in values]
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+
         if values is None:
             values = [0.5]
-        return self.agg_exprs(columns, df.functions.percentile_agg, df, values, relative_error)
+        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error)
 
     def median(self, columns, relative_error=RELATIVE_ERROR):
-        return self.percentile(columns, [0.5], relative_error)
+        return format_dict(self.percentile(columns, [0.5], relative_error))
 
     # Descriptive Analytics
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
 
-    def mad(self, columns, relative_error=RELATIVE_ERROR, more=None):
-        df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        funcs = [df.functions.mad_agg]
-
-        return self.agg_exprs(columns, funcs, df, more)
-
-    def kurt(self, columns):
-        df = self.df
-
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return self.agg_exprs(columns, df.functions.kurtosis, df)
+    @abstractmethod
+    def kurtosis(self, columns):
+        pass
 
     def mean(self, columns):
         df = self.df
-        return self.agg_exprs(columns, df.functions.mean, df)
+        return self.agg_exprs(columns, F.mean)
 
+    @abstractmethod
     def skewness(self, columns):
-        df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return self.agg_exprs(columns, df.functions.skewness, df)
+        pass
 
     def sum(self, columns):
         df = self.df
@@ -504,7 +626,12 @@ class BaseColumns(ABC):
 
     def variance(self, columns):
         df = self.df
-        return self.agg_exprs(df, columns, F.variance)
+        return df.cols.agg_exprs(columns, F.variance)
+
+
+    # def variance(self, columns):
+    #     df = self.df
+    #     return self.agg_exprs(df, columns, F.min)
 
     def std(self, columns):
         return self.agg_exprs(columns, F.std)
@@ -523,10 +650,6 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.apply(input_cols, _abs, func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.ABS.value, mode="vectorized")
-
-    def min(self, columns):
-        df = self.df
-        return df.col.agg_exprs(columns, F.mode)
 
     def extract(self, input_cols, output_cols=None):
         def _extract(value, *args):
@@ -574,10 +697,9 @@ class BaseColumns(ABC):
     def reverse(input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def remove(columns, search=None, search_by="chars", output_cols=None):
-        pass
+    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
+        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
+                            output_cols=output_cols)
 
     @staticmethod
     @abstractmethod
@@ -700,7 +822,6 @@ class BaseColumns(ABC):
                              output_cols=output_cols,
                              meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
 
-
     @staticmethod
     @abstractmethod
     def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -730,15 +851,14 @@ class BaseColumns(ABC):
     def count(self):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def count_na(columns):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def count_zeros(columns):
-        pass
+    def count_na(self, columns):
+        """
+        Return the NAN and Null count in a Column
+        :param columns: '*', list of columns names or a single column name.
+        :return:
+        """
+        df = self.df
+        return df.cols.agg_exprs(columns, F.count_na)
 
     @staticmethod
     @abstractmethod
@@ -760,15 +880,13 @@ class BaseColumns(ABC):
     def value_counts(columns):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def unique(columns):
-        pass
+    def nunique(self, input_cols, output_cols=None):
+        def _remove_special_chars(value, args):
+            return value.astype(str).nunique().to_dict()
 
-    @staticmethod
-    @abstractmethod
-    def nunique(*args, **kwargs):
-        pass
+        df = self.df
+        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
+                             output_cols=output_cols, mode="vectorized")
 
     @staticmethod
     @abstractmethod
@@ -853,10 +971,35 @@ class BaseColumns(ABC):
     def max_abs_scaler(input_cols, output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def iqr(columns, more=None, relative_error=None):
-        pass
+    def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
+        """
+        Return the column Inter Quartile Range
+        :param columns:
+        :param more: Return info about q1 and q3
+        :param relative_error:
+        :return:
+        """
+        df = self.df
+        iqr_result = {}
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        check_column_numbers(columns, "*")
+
+        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
+        # print(quartile)
+        for col_name in columns:
+
+            q1 = quartile[col_name]["percentile"]["0.25"]
+            q2 = quartile[col_name]["percentile"]["0.5"]
+            q3 = quartile[col_name]["percentile"]["0.75"]
+
+            iqr_value = q3 - q1
+            if more:
+                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            else:
+                result = iqr_value
+            iqr_result[col_name] = result
+
+        return format_dict(iqr_result)
 
     @staticmethod
     @abstractmethod
@@ -932,8 +1075,6 @@ class BaseColumns(ABC):
         #
         #     # print("_dtype",_dtype)
         return df
-
-
 
     @staticmethod
     @abstractmethod
@@ -1024,11 +1165,19 @@ class BaseColumns(ABC):
         columns = parse_columns(self.df, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
         return columns
 
+    def count_zeros(self, columns):
+        df = self.df
+        return df.cols.agg_exprs(columns, F.count_zeros)
+
     def to_numeric(self, input_cols, output_cols):
         df = self.df
 
         def _to_numeric(value, args):
-            return pd.to_numeric(value, errors="coerce")
+            if is_pandas_dataframe(value):
+                return pd.to_numeric(value, errors="coerce")
+            elif is_cudf_dataframe(value):
+                import cudf
+                return cudf.to_numeric(value, errors="coerce")
 
         return df.cols.apply(input_cols, _to_numeric, func_return_type=float,
                              filter_col_by_dtypes=df.constants.NUMERIC_TYPES,

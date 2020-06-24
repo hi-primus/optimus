@@ -1,7 +1,7 @@
 import cudf
 
 from optimus.bumblebee import Comm
-from optimus.engines.base.engine import BaseEngine, op_to_series_func
+from optimus.engines.base.engine import BaseEngine
 from optimus.engines.cudf.cudf import CUDF
 from optimus.engines.cudf.io.load import Load
 from optimus.profiler.profiler import Profiler

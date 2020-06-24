@@ -1,8 +1,10 @@
 import dask.array as da
 import numpy as np
+import pandas as pd
 from dask import dataframe as dd
 
-from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe
+from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe, \
+    is_cudf_dataframe, is_pandas_dataframe, is_dask_dataframe
 
 op_to_series_func = {
     "abs": {
@@ -146,19 +148,74 @@ def call(series, *args, method_name=None):
 
 
 def abs(series):
-    return series.abs()
+    return to_numeric(series).abs()
 
 
 def variance(df, columns, *args):
-    return {"var": {col_name: df[col_name].var() for col_name in columns}}
+    return {"var": {col_name: to_numeric(df[col_name]).var() for col_name in columns}}
+
+
+def to_numeric(df_series):
+    def _to_numeric_cudf(_df_series, _col_name=None):
+        import cudf
+        if is_cudf_series(df_series):
+            series = _df_series
+        elif is_cudf_dataframe(df_series):
+            series = _df_series[_col_name]
+
+        series_string = series.astype(str)
+        s = cudf.Series(series_string.str.stof()).fillna(False)
+        s[~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
+        return s
+
+    # if not is_column_a(df_series, col, df.constants.NUMERIC_TYPES):
+
+    if is_pandas_series(df_series) or is_pandas_dataframe(df_series):
+        return pd.to_numeric(df_series, errors="coerce")
+
+    elif is_dask_dataframe(df_series):
+        def func(_df_series):
+            return pd.to_numeric(_df_series, errors="coerce")
+
+        return df_series.map_partitions(func)
+
+    elif is_cudf_series(df_series):
+        return _to_numeric_cudf(df_series)
+
+    elif is_cudf_dataframe(df_series):
+        kw_columns = {}
+        for col_name in df_series.cols.names():
+            kw_columns[col_name] = _to_numeric_cudf(df_series, col_name)
+        return df_series.assign(**kw_columns)
+
+
+def mad(df, columns, args):
+    more = args[0]
+    result = {}
+    for col_name in columns:
+        median_value = df.cols.median(col_name)
+        # print("median_value", df[col_name][col_name][:10])
+        mad_value = (df[col_name] - median_value)[col_name].abs().quantile(0.5)
+
+        def to_dict(_mad_value, _median_value):
+            _mad_value = {"mad": _mad_value.ext.to_dict()}
+
+            if more:
+                _mad_value.update({"median": _median_value})
+
+            return _mad_value
+
+        _mad_agg = delayed(df, to_dict)
+        _mad_agg(mad_value, median_value)
+    return
 
 
 def min(df, columns, *args):
-    return {"min": {col_name: df[col_name].min() for col_name in columns}}
+    return {"min": {col_name: to_numeric(df[col_name]).min() for col_name in columns}}
 
 
 def max(df, columns, *args):
-    return {"max": {col_name: df[col_name].max() for col_name in columns}}
+    return {"max": {col_name: to_numeric(df[col_name]).max() for col_name in columns}}
 
 
 def mode(df, columns, *args):
@@ -166,36 +223,56 @@ def mode(df, columns, *args):
 
 
 def std(df, columns, *args):
-    return {"std": {col_name: df[col_name].std() for col_name in columns}}
+    return {"std": {col_name: to_numeric(df[col_name]).std() for col_name in columns}}
 
 
 def range(df, columns, *args):
-    return {"range": {col_name: {"min": df[col_name].min(), "max": df[col_name].max()} for col_name in columns}}
+    return {
+        "range": {col_name: {"min": to_numeric(df[col_name]).min(), "max": to_numeric(df[col_name]).max()} for col_name
+                  in columns}}
+    # @staticmethod
+    #     def range_agg(df, columns, args):
+    #         columns = parse_columns(df, columns)
+    #
+    #         @delayed
+    #         def _range_agg(_min, _max):
+    #             return {col_name: {"min": __min, "max": __max} for (col_name, __min), __max in
+    #                     zip(_min["min"].items(), _max["max"].values())}
+    #
+    #         return _range_agg(df.cols.min(columns), df.cols.max(columns))
+
+
+def count_zeros(df, columns, *args):
+    return {"zeros": {col_name: (df[col_name].values == 0).sum() for col_name in columns}}
 
 
 def mean(df, columns, *args):
-    return {"mean": {col_name: df[col_name].mean() for col_name in columns}}
+    return {"mean": {col_name: to_numeric(df[col_name]).mean() for col_name in columns}}
+
+
+def delayed(df, func):
+    import dask
+    if is_dask_dataframe(df) or is_dask_cudf_dataframe(df):
+        return dask.delayed(func)
+    return func
 
 
 def percentile_agg(df, columns, args):
     values = args[0]
+    result = [to_numeric(df[col_name]).quantile(values) for col_name in columns]
 
-    f = [df[col_name].quantile(values) for col_name in columns]
+    def to_dict(_result):
+        return {"percentile": {col_name: r.ext.to_dict() for col_name, r in zip(columns, _result)}}
 
-    @delayed
-    def _percentile(_f):
-        return {"percentile": {c: _f[i].to_dict() for i, c in enumerate(columns)}}
-
-    return _percentile(f)
-
-
-def to_numeric(df, columns):
-    if is_pandas_series(df) or is_pandas
+    _percentile = delayed(df, to_dict)
+    return _percentile(result)
 
 
 def count_na(df, columns, args):
     # estimate = args[0]
     return {"count_na": {col_name: df[col_name].isnull().sum() for col_name in columns}}
+    # return np.count_nonzero(_df[_serie].isnull().values.ravel())
+    # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
 
 
 def exp(series):
