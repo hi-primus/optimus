@@ -428,7 +428,6 @@ def cols(self):
             """
             return Cols.cast(*args, **kwargs)
 
-
         @staticmethod
         def keep(columns=None, regex=None):
             """
@@ -692,7 +691,7 @@ def cols(self):
             return format_dict(Cols.agg_exprs(columns, F.stddev))
 
         @staticmethod
-        "pandas"(columns):
+        def kurtosis(columns):
             """
             Return the kurtosis of a column dataframe
             :param columns: '*', list of columns names or a single column name.
@@ -1237,21 +1236,6 @@ def cols(self):
             return format_dict(Cols.agg_exprs(columns, self.functions.count_uniques_agg, estimate))
 
         @staticmethod
-        def value_counts(columns):
-            """
-            Return the counts of uniques values
-            :param columns:
-            :return:
-            """
-            columns = parse_columns(self, columns)
-            # .value(columns, 1)
-
-            result = {}
-            for col_name in columns:
-                result.update(compress_dict(self.groupBy(col_name).count().orderBy('count').ext.to_dict(), col_name))
-            return result
-
-        @staticmethod
         def unique(columns):
             """
             Return uniques values from a columns
@@ -1268,7 +1252,7 @@ def cols(self):
             return result
 
         @staticmethod
-        def nunique(*args, **kwargs):
+        def count_unique(*args, **kwargs):
             """
             Just a pandas compatible shortcut for count uniques
             :param args:
@@ -1288,11 +1272,6 @@ def cols(self):
             columns = parse_columns(self, '*', is_regex=None, filter_by_column_dtypes=data_type)
 
             return self.select(columns)
-
-        # Operations between columns
-        @staticmethod
-        def _math(columns, operator, new_column):
-            pass
 
         #     """
         #     Helper to process arithmetic operation between columns. If a
@@ -1618,7 +1597,6 @@ def cols(self):
                 df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
             return df
 
-
         @staticmethod
         def scatter(columns, buckets=10):
             """
@@ -1681,7 +1659,6 @@ def cols(self):
             #     print(Cols.agg_exprs(hist_agg, col_name, self, buckets))
             #     # print(df.agg(hist_agg(col_name, self, buckets)))
             # return result
-
 
         @staticmethod
         def count_mismatch(columns_mismatch: dict = None):
@@ -1935,7 +1912,6 @@ def cols(self):
             for col_name in columns:
                 df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
             return df
-
 
         @staticmethod
         def string_to_index(input_cols=None, output_cols=None, columns=None):

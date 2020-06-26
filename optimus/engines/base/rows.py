@@ -1,7 +1,11 @@
 from abc import abstractmethod, ABC
 
-
 # This implementation works for Spark, Dask, dask_cudf
+from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import Actions
+from optimus.infer import is_str
+
 
 class BaseRows(ABC):
     """Base class for all Rows implementations"""
@@ -45,10 +49,16 @@ class BaseRows(ABC):
     def select_by_dtypes(self, input_cols, data_type=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def count(self) -> int:
-        pass
+    def count(self, compute=True) -> int:
+        """
+        Count dataframe rows
+        """
+        df = self.df
+        if compute is True and (is_dask_dataframe(df) or is_dask_cudf_dataframe(df)):
+            result = len(df.compute())
+        else:
+            result = len(df)
+        return result
 
     @staticmethod
     @abstractmethod
@@ -60,10 +70,20 @@ class BaseRows(ABC):
     def sort(input_cols):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def drop(where=None):
-        pass
+    def drop(self, where=None):
+        """
+        Drop a row depending on a dataframe expression
+        :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
+        :return: Spark DataFrame
+        :return:
+        """
+        df = self.df
+        if is_str(where):
+            where = eval(where)
+
+        df = df[~where]
+        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
     @staticmethod
     @abstractmethod
@@ -76,17 +96,18 @@ class BaseRows(ABC):
     def drop_by_dtypes(input_cols, data_type=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def drop_na(input_cols, how="any", *args, **kwargs):
+    def drop_na(self, subset=None, how="any", *args, **kwargs):
         """
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
-        :param input_cols:
+        :param subset:
         :param how:
         :return:
         """
-        pass
+        df = self.df
+        subset = parse_columns(df, subset)
+        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
+        return df.dropna(how=how, subset=subset)
 
     @staticmethod
     @abstractmethod
@@ -121,7 +142,9 @@ class BaseRows(ABC):
     def unnest(input_cols):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def approx_count():
-        pass
+    def approx_count(self):
+        """
+        Aprox count
+        :return:
+        """
+        return self.count()

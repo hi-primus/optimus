@@ -1,8 +1,5 @@
 import builtins
 import re
-from datetime import datetime
-from datetime import timedelta
-from functools import reduce
 
 import dask
 import dask.dataframe as dd
@@ -10,8 +7,6 @@ import fastnumbers
 import numpy as np
 import pandas as pd
 from dask import delayed
-from dask.dataframe import from_delayed
-from dask.dataframe.core import DataFrame
 from dask_ml import preprocessing
 from dask_ml.impute import SimpleImputer
 from multipledispatch import dispatch
@@ -20,11 +15,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.ml.contants import INDEX_TO_STRING
-from optimus.helpers.check import is_cudf_series, is_pandas_series, is_dask_dataframe, is_dask_cudf_dataframe
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols, \
+from optimus.helpers.check import is_cudf_series, is_pandas_series
+from optimus.helpers.columns import parse_columns, validate_columns_names, get_output_cols, \
     prepare_columns
-from optimus.helpers.constants import RELATIVE_ERROR, Actions
-from optimus.helpers.converter import format_dict
+from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import update_dict, set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
@@ -112,7 +106,7 @@ class DaskBaseColumns(BaseColumns):
         def merge(count_uniques_values, _columns):
             return {column: {"count_uniques": values} for column, values in zip(_columns, count_uniques_values)}
 
-        count_uniques_values = [df[col_name].astype(str).nunique() for col_name in columns]
+        count_uniques_values = [df[col_name].astype(str).count_unique() for col_name in columns]
         result = merge(count_uniques_values, columns)
 
         if compute is True:
@@ -283,14 +277,9 @@ class DaskBaseColumns(BaseColumns):
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    def count(self):
-        df = self.df
-        return len(df.columns)
-
     @staticmethod
     def scatter(columns, buckets=10):
         pass
-
 
     @staticmethod
     def standard_scaler():
@@ -321,72 +310,10 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-    def _math(self, columns, operator, new_column):
-
-        """
-        Helper to process arithmetic operation between columns. If a
-        :param columns: Columns to be used to make the calculation
-        :param operator: A lambda function
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        for col_name in columns:
-            df.assign(**{col_name: df[col_name].astype(float)})
-
-        expr = reduce(operator, [df[col_name] for col_name in columns])
-        return df.assign(**{new_column: expr})
-
     @staticmethod
     def select_by_dtypes(data_type):
         pass
 
-    def value_counts(self, columns):
-        """
-        Return the counts of uniques values
-        :param columns:
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        @delayed
-        def to_dict(value):
-            return value.to_dict()
-
-        return dask.delayed(
-            {col_name: to_dict(df[col_name].astype(str).value_counts()) for col_name in columns}).compute()
-
-        # return _value_counts(a)
-
-    def slice(self, input_cols, output_cols, start, stop, step):
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].str.slice(start, stop, step)
-        return df
-
-
-
-    def is_na(self, input_cols, output_cols=None):
-        """
-        Replace null values with True and non null with False
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
-
-        def _is_na(value, args):
-            return value.isnull()
-
-        df = self.df
-
-        return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -422,7 +349,6 @@ class DaskBaseColumns(BaseColumns):
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
-
         pass
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
@@ -439,68 +365,8 @@ class DaskBaseColumns(BaseColumns):
         def _date_format(value, args):
             return pd.to_datetime(value, format=current_format, errors="coerce").dt.strftime(output_format)
 
-        return df.cols.apply(input_cols, _date_format, func_return_type=str,
-                             output_cols=output_cols,
+        return df.cols.apply(input_cols, _date_format, func_return_type=str, output_cols=output_cols,
                              meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
-
-    def year(self, input_cols, format=None, output_cols=None):
-        """
-
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.assign(**{output_col: df[input_col].to_datetime(format=format).dt.year})
-        return df
-
-    def month(self, input_cols, format=None, output_cols=None):
-        """
-
-        :param input_cols:
-        :param format:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.assign(**{output_col: df[input_col].dt.month})
-        return df
-
-    def day(self, input_cols, format=None, output_cols=None):
-        """
-
-        :param input_cols:
-        :param format:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.assign(**{output_col: df[input_col].dt.day})
-        return df
-
-    def hour(self, input_cols, format=None, output_cols=None):
-        pass
-
-    def minute(self, input_cols, format=None, output_cols=None):
-        pass
-
-    def second(self, input_cols, format=None, output_cols=None):
-        pass
-
-    def weekday(self, input_cols, format=None, output_cols=None):
-        pass
 
     def weekofyear(self, input_cols, output_cols=None):
         pass
@@ -523,25 +389,6 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def remove_white_spaces(self, input_cols, output_cols=None):
-
-        def _remove_white_spaces(value, args):
-            return value.astype("str").str.replace(" ", "")
-
-        df = self.df
-        return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
-
-    def remove_special_chars(self, input_cols, output_cols=None):
-        def _remove_special_chars(value, args):
-            return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
-
-        df = self.df
-        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
-
     def remove_accents(self, input_cols, output_cols=None):
 
         def _remove_accents(value, args):
@@ -561,28 +408,6 @@ class DaskBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
-    #
-    # def keep(self, columns=None, regex=None):
-    #     """
-    #     Drop a list of columns
-    #     :param columns: Columns to be dropped
-    #     :param regex: Regex expression to select the columns
-    #     :param data_type:
-    #     :return:
-    #     """
-    #     df = self.df
-    #     if regex:
-    #         # r = re.compile(regex)
-    #         columns = [c for c in list(df.columns) if re.match(regex, c)]
-    #
-    #     columns = parse_columns(df, columns)
-    #     check_column_numbers(columns, "*")
-    #
-    #     df = df.drop(columns=list(set(df.columns) - set(columns)))
-    #
-    #     df = df.meta.action("keep", columns)
-    #
-    #     return df
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -624,15 +449,9 @@ class DaskBaseColumns(BaseColumns):
         kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)
 
-    @dispatch(list)
-    def copy(self, columns) -> DataFrame:
-        return self.copy(columns=columns)
-
-
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
-
 
     @staticmethod
     def exec_agg(exprs):
@@ -695,22 +514,6 @@ class DaskBaseColumns(BaseColumns):
     def rename(self, old_column, new_column):
         return self.rename([(old_column, new_column)], None)
 
-    def fill_na(self, input_cols, value=None, output_cols=None):
-        """
-        Replace null data with a specified value
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :param value: value to replace the nan/None values
-        :return:
-        """
-        df = self.df
-
-        def _fill_na(series, args):
-            value = args
-            return series.fillna(value)
-
-        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
-
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.df
         columns = parse_columns(df, columns)
@@ -743,8 +546,13 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
+    def kurtosis(self, columns):
+        raise NotImplementedError("Not implemented yet")
 
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
+    def skewness(self, columns):
+        raise NotImplementedError("Not implemented yet")
+
+    def cast11(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         df = self.df
         if columns is None:
             columns = prepare_columns(df, input_cols, output_cols)
@@ -756,8 +564,17 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, _cast, output_cols=output_cols, meta_action=Actions.CAST.value,
                              mode="vectorized")
 
-    def cast11(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
+    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
         """
+        We have to ways to cast the data. Use the use the native .astype() this is faster but can not handle errors so are going to use
+        to numeric
+        Check is fast_numbers faster that to_numeric?
+        is pendulum faster than pd.to_datatime
+
+        We could use astype str and boolean
+
+
+
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
 
@@ -773,93 +590,51 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.df
-        if on_error is None:
-            def _cast_int(value):
-                # if (value is None) or (value is np.nan):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    # return fastnumbers.fast_int(value, default=np.nan)
-                    return fastnumbers.fast_int(value)
+        if on_error == "nan":
+            kwargs = {"default": np.nan}
 
-            def _cast_float(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return fastnumbers.fast_float(value)
+        def _cast_int(value):
+            # if (value is None) or (value is np.nan):
+            if pd.isnull(value):
+                return np.nan
+            else:
+                # return fastnumbers.fast_int(value, default=np.nan)
+                return fastnumbers.fast_int(value, **kwargs)
 
-            def _cast_bool(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return bool(value)
+        def _cast_float(value):
+            if pd.isnull(value):
+                return np.nan
+            else:
+                return fastnumbers.fast_float(value, **kwargs)
 
-            def _cast_date(value, format="YYYY-MM-DD"):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    try:
-                        # return pendulum.parse(value)
-                        # return pendulum.from_format(value, format)
-                        # return dparse(value)
+        def _cast_bool(value):
+            if pd.isnull(value):
+                return np.nan
+            else:
+                return bool(value)
 
-                        return value
-                    except:
-                        return value
+        def _cast_date(value, format="YYYY-MM-DD"):
+            if pd.isnull(value):
+                return np.nan
+            else:
+                try:
+                    # return pendulum.parse(value)
+                    # return pendulum.from_format(value, format)
+                    # return dparse(value)
 
-            def _cast_str(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return str(value)
+                    return value
+                except:
+                    return value
 
-            def _cast_object(value):
-                ## Do nothing
-                return value
+        def _cast_str(value):
+            if pd.isnull(value):
+                return np.nan
+            else:
+                return str(value)
 
-        elif on_error == "nan":
-            def _cast_int(value):
-                # if (value is None) or (value is np.nan):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    # return fastnumbers.fast_int(value, default=np.nan)
-                    return fastnumbers.fast_int(value, default=np.nan)
-
-            def _cast_float(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return fastnumbers.fast_float(value, default=np.nan)
-
-            def _cast_bool(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return bool(value)
-
-            def _cast_date(value, format="YYYY-MM-DD"):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    try:
-                        # return pendulum.parse(value)
-                        # return pendulum.from_format(value, format)
-                        # return dparse(value)
-
-                        return value
-                    except:
-                        return value
-
-            def _cast_str(value):
-                if pd.isnull(value):
-                    return np.nan
-                else:
-                    return str(value)
-
-            def _cast_object(value):
-                ## Do nothing
-                return value
+        def _cast_object(value):
+            ## Do nothing
+            return value
 
         _dtypes = []
         # Parse params
@@ -924,13 +699,16 @@ class DaskBaseColumns(BaseColumns):
 
         def _nest_string(row):
             v = row[input_cols[0]].astype(str)
-            for i in builtins.range(1, len(input_cols)):
+            for i in range(1, len(input_cols)):
                 v = v + separator + row[input_cols[i]].astype(str)
             return v
 
         def _nest_array(row):
+            #https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
+            # t['combined'] = t.values.tolist()
+
             v = row[input_cols[0]].astype(str)
-            for i in builtins.range(1, len(input_cols)):
+            for i in range(1, len(input_cols)):
                 v += ", " + row[input_cols[i]].astype(str)
             return "[" + v + "]"
 
@@ -948,126 +726,7 @@ class DaskBaseColumns(BaseColumns):
 
         return df.cols.select(output_ordered_columns)
 
-    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
 
-        """
-        Split an array or string in different columns
-        :param input_cols: Columns to be un-nested
-        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
-        :param separator: char or regex
-        :param splits: Number of columns splits.
-        :param index: Return a specific index per columns. [1,2]
-        :param drop:
-        """
-        df = self.df
-
-        if separator is not None:
-            separator = re.escape(separator)
-
-        input_cols = parse_columns(df, input_cols)
-
-        # if output_cols is None:
-        # output_cols = get_output_cols(input_cols, output_cols)
-
-        index = val_to_list(index)
-        output_ordered_columns = df.cols.names()
-
-        # output_cols = [output_cols]
-        for idx, input_col in enumerate(input_cols):
-
-            if is_list_of_tuples(index):
-                final_index = index[idx]
-            else:
-                final_index = index
-
-            if output_cols is None:
-                final_columns = [input_col + "_" + str(i) for i in range(splits)]
-            else:
-                if is_list_of_tuples(output_cols):
-                    final_columns = output_cols[idx]
-
-                else:
-                    final_columns = output_cols
-
-            if mode == "string":
-                df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
-
-            elif mode == "array":
-                def func(value):
-                    pdf = value.apply(pd.Series)
-                    pdf.columns = final_columns
-                    return pdf
-
-                df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
-
-            df_new.columns = final_columns
-            if final_index:
-                print("final_index", final_index[idx])
-                df_new = df_new.cols.select(final_index[idx])
-            # print("df_new", df_new.compute())
-
-            df = df.cols.append(df_new)
-
-        if drop is True:
-            df = df.drop(columns=input_cols)
-            for input_col in input_cols:
-                if input_col in output_ordered_columns: output_ordered_columns.remove(input_col)
-
-        df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
-
-        return df
-        # return df.cols.move(df_new.cols.names(), "after", input_cols)
-
-    def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
-        """
-        Replace a value, list of values by a specified string
-        :param input_cols: '*', list of columns names or a single column name.
-        :param search: Values to look at to be replaced
-        :param replace_by: New value to replace the old one
-        :param search_by: Can be "full","words","chars" or "numeric".
-        :param ignore_case: Ignore case when searching for match
-        :param output_cols:
-        :return: Dask DataFrame
-        """
-
-        df = self.df
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        output_ordered_columns = df.cols.names()
-
-        search = val_to_list(search)
-        if search_by == "chars":
-            str_regex = "|".join(map(re.escape, search))
-        elif search_by == "words":
-            str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        else:
-            str_regex = (r'^\b%s\b$' % r'\b$|^\b'.join(map(re.escape, search)))
-
-        if ignore_case is True:
-            # Cudf do not accept re.compile as argument for replace
-            # regex = re.compile(str_regex, re.IGNORECASE)
-            regex = str_regex
-        else:
-            regex = str_regex
-
-        kw_columns = {}
-        for input_col, output_col in zip(input_cols, output_cols):
-            # print("input_cols", regex, replace_by)
-            kw_columns[output_col] = df[input_col].astype(str).str.replace(regex, replace_by)
-
-            if input_col != output_col:
-                col_index = output_ordered_columns.index(input_col) + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
-
-        df = df.assign(**kw_columns)
-        # The apply function seems to have problem appending new columns https://github.com/dask/dask/issues/2690
-        # df = df.cols.apply(input_cols, _replace, func_return_type=str,
-        #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
-        #                    output_cols=output_cols, args=(regex, replace_by))
-
-        df = df.meta.preserve(df, Actions.REPLACE.value, one_list_to_val(output_cols))
-        return df.cols.select(output_ordered_columns)
 
     def is_numeric(self, col_name):
         """
@@ -1082,5 +741,3 @@ class DaskBaseColumns(BaseColumns):
         else:
             result = False
         return result
-
-

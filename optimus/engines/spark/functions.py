@@ -27,7 +27,7 @@ def functions(self):
             return F.stddev(col_name)
 
         @staticmethod
-        kurtosis(col_name):
+        def kurtosis(col_name):
             return F.kurtosis(col_name)
 
         @staticmethod

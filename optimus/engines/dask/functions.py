@@ -16,16 +16,7 @@ from fast_histogram import histogram1d
 def functions(self):
     class Functions:
 
-        @staticmethod
-        def sum(df, columns, args):
 
-            f = {col_name: df[col_name].sum() for col_name in columns}
-
-            @delayed
-            def _sum(_f):
-                return {"sum": _f}
-
-            return _sum(f)
 
         @staticmethod
         def kurtosis(df, columns, args):
@@ -61,7 +52,7 @@ def functions(self):
                     ps = {col_name: df[col_name].nunique_approx() for col_name in columns}
                     # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
                 else:
-                    ps = {col_name: df[col_name].nunique() for col_name in columns}
+                    ps = {col_name: df[col_name].count_unique() for col_name in columns}
                 result = {"count_uniques": ps}
 
                 return result

@@ -1,5 +1,4 @@
 import builtins
-import string
 from functools import reduce
 
 import dask.dataframe as dd
@@ -11,7 +10,6 @@ from multipledispatch import dispatch
 from optimus.engines.base.columns import BaseColumns
 from optimus.functions import to_numeric
 from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.helpers.functions import collect_as_dict
 from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
 
 
@@ -59,10 +57,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def count_mismatch(columns_mismatch: dict = None):
         pass
-
-    def count(self):
-        df = self.df
-        return len(df.columns)
 
     @staticmethod
     def scatter(columns, buckets=10):
@@ -113,53 +107,8 @@ class DataFrameBaseColumns(BaseColumns):
         return df
 
     @staticmethod
-    def _math(columns, operator, new_column):
-        pass
-
-    @staticmethod
     def select_by_dtypes(data_type):
         pass
-
-    def value_counts(self, columns):
-        """
-        Return the counts of uniques values
-        :param columns:
-        :return:
-        """
-        df = self.df
-        columns = parse_columns(df, columns)
-        # .value(columns, 1)
-
-        result = {}
-        for col_name in columns:
-            result.update(collect_as_dict(df[col_name].value_counts(), col_name))
-        return result
-
-    def count_uniques(self, columns, estimate=True):
-        """
-        Return how many unique items exist in a columns
-        :param columns: '*', list of columns names or a single column name.
-        :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
-        :type estimate: bool
-        :return:
-        """
-        df = self.df
-        return self.agg_exprs(columns, df.functions.count_uniques_agg, estimate)
-
-    def is_na(self, input_cols, output_cols=None):
-        """
-        Replace null values with True and non null with False
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
-
-        def _is_na(value):
-            return value is np.NaN
-
-        df = self.df
-
-        return df.cols.apply(input_cols, _is_na, output_cols=output_cols)
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -218,23 +167,6 @@ class DataFrameBaseColumns(BaseColumns):
     def weekofyear(self, input_cols, output_cols=None):
         raise NotImplementedError("To be implemented")
 
-    def remove_white_spaces(self, input_cols, output_cols=None):
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        df = df.cols.replace(input_cols, " ", "", output_cols=output_cols)
-
-        return df
-
-    def remove_special_chars(self, input_cols, output_cols=None):
-
-        df = self.df
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.STRING_TYPES)
-        check_column_numbers(input_cols, "*")
-        df = df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
-
-        return df
-
     @staticmethod
     def remove_accents(input_cols, output_cols=None):
         pass
@@ -275,7 +207,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
-
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -332,22 +263,6 @@ class DataFrameBaseColumns(BaseColumns):
     @dispatch(str, str)
     def rename(self, old_column, new_column):
         return self.rename([(old_column, new_column)], None)
-
-    def fill_na(self, input_cols, value=None, output_cols=None):
-        """
-        Replace null data with a specified value
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :param value: value to replace the nan/None values
-        :return:
-        """
-
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].fillna(value=value)
-        return df
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
@@ -435,60 +350,21 @@ class DataFrameBaseColumns(BaseColumns):
             output_col = "_".join(input_cols)
 
         input_cols = parse_columns(df, input_cols)
-        dfs = [df[input_col].astype(str) for input_col in input_cols]
+
         # cudf do nor support apply or agg join for this operation
-        # df[output_col] = reduce((lambda x, y: x + separator + y),[dfs])
-        # cudf do nor support apply or agg join for this operation
+        if shape == "vector" or shape == "array":
+            raise NotImplementedError("Not implemented yet")
+            # https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
+            # t['combined'] = t.values.tolist()
 
-        df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
+            dfs = [df[input_col] for input_col in input_cols]
+            df[output_col] = df[input_cols].values.tolist()
+        elif shape == "string":
+            dfs = [df[input_col].astype(str) for input_col in input_cols]
+            df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
         return df
 
-    def slice(self, input_cols, output_cols, start, stop, step):
-        df = self.df
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].str.slice(start, stop, step)
-        return df
-
-    def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False):
-
-        df = self.df
-
-        # new data frame with split value columns
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            df_new = df[input_col].str.split(separator, n=splits, expand=True)
-
-            if splits == -1:
-                splits = len(df_new.columns)
-
-            # Maybe the split do not generate new columns, We need to recalculate it
-            num_columns = len(df_new.columns)
-
-            for i in range(splits):
-                # Making separate first name column from new data frame
-                if i < num_columns:
-                    df[output_col + "_" + str(i)] = df_new[i]
-                else:
-                    df[output_col + "_" + str(i)] = None
-
-            # Dropping old Name columns
-            if drop is True:
-                df.drop(columns=input_cols, inplace=True)
-        return df
-
-    @staticmethod
-    def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-        pass
-
-    # @staticmethod
-    # def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-    #     pass
 
     def is_numeric(self, col_name):
         """

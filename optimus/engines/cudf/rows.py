@@ -58,12 +58,7 @@ def rows(self):
             # TODO
             return self.select(fbdt(input_cols, data_type))
 
-        @staticmethod
-        def count() -> int:
-            """
-            Count dataframe rows
-            """
-            return len(self)
+
 
         @staticmethod
         def to_list(input_cols):
@@ -126,20 +121,6 @@ def rows(self):
 
             return df
 
-        @staticmethod
-        def drop(where=None) -> DataFrame:
-            """
-            Drop a row depending on a dataframe expression
-            :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
-            :return: DataFrame
-            :return:
-            """
-            df = self
-            df = df.drop[where]
-            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
-            return df
-
-
 
         @staticmethod
         def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
@@ -200,20 +181,6 @@ def rows(self):
             df = self
             return df
 
-        @staticmethod
-        def drop_na(input_cols, how="any", *args, **kwargs) -> DataFrame:
-            """
-            Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
-            'any' of the values is null.
-            :param input_cols:
-            :param how:
-            :return:
-            """
-            df = self
-
-            input_cols = val_to_list(input_cols)
-            df = df.dropna(how=how, subset=input_cols, *args, **kwargs)
-            return df
 
         @staticmethod
         def drop_duplicates(input_cols=None) -> DataFrame:
@@ -251,13 +218,7 @@ def rows(self):
             df = self
             return df
 
-        @staticmethod
-        def approx_count():
-            """
-            Aprox count
-            :return:
-            """
-            return Rows.count()
+
 
     return Rows(self)
 

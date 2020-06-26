@@ -77,16 +77,6 @@ class DaskBaseRows(BaseRows):
         input_cols = parse_columns(self, input_cols)
         return self.select(fbdt(input_cols, data_type))
 
-    def count(self, compute=True) -> int:
-        """
-        Count dataframe rows
-        """
-        df = self.df
-        if compute is True:
-            result = len(df.compute())
-        else:
-            result = len(df)
-        return result
 
     def to_list(self, input_cols):
         """
@@ -154,20 +144,7 @@ class DaskBaseRows(BaseRows):
 
         return df
 
-    def drop(self, where=None):
-        """
-        Drop a row depending on a dataframe expression
-        :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
-        :return: Spark DataFrame
-        :return:
-        """
-        df = self.df
-        if is_str(where):
-            where = eval(where)
 
-        df = df[~where]
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
-        return df
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """
@@ -239,17 +216,6 @@ class DaskBaseRows(BaseRows):
         df = self
         return df
 
-    def drop_na(self, subset=None, how="any", *args, **kwargs):
-        """
-        Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
-        'any' of the values is null.
-        :param subset:
-        :param how:
-        :return:
-        """
-        df = self.df
-        subset = parse_columns(df, subset)
-        return df.dropna(how=how, subset=subset)
 
     def drop_duplicates(self, keep="first", subset=None):
         """

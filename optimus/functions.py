@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import dask.array as da
 import numpy as np
 import pandas as pd
@@ -5,6 +7,7 @@ from dask import dataframe as dd
 
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe, \
     is_cudf_dataframe, is_pandas_dataframe, is_dask_dataframe
+from optimus.helpers.converter import format_dict
 
 op_to_series_func = {
     "abs": {
@@ -191,27 +194,38 @@ def to_numeric(df_series):
 
 def mad(df, columns, args):
     more = args[0]
-    result = {}
+    mad_value = {}
     for col_name in columns:
-        median_value = df.cols.median(col_name)
-        # print("median_value", df[col_name][col_name][:10])
-        mad_value = (df[col_name] - median_value)[col_name].abs().quantile(0.5)
+        casted_col = to_numeric(df[col_name])
+        median_value = casted_col.quantile(0.5)
 
-        def to_dict(_mad_value, _median_value):
-            _mad_value = {"mad": _mad_value.ext.to_dict()}
+        # In all case all the values from the column are nan because can not be converted to number
+        if not np.isnan(median_value):
+            mad_value[col_name] = (casted_col - median_value).abs().quantile(0.5)
+        else:
+            mad_value[col_name] = np.nan
 
-            if more:
-                _mad_value.update({"median": _median_value})
+    def to_dict(_mad_value, _median_value):
+        _mad_value = {"mad": _mad_value}
 
-            return _mad_value
+        if more:
+            _mad_value.update({"median": _median_value})
 
-        _mad_agg = delayed(df, to_dict)
-        _mad_agg(mad_value, median_value)
-    return
+        return _mad_value
+
+    _mad_agg = delayed(df, to_dict)
+    return _mad_agg(mad_value, median_value)
 
 
 def min(df, columns, *args):
     return {"min": {col_name: to_numeric(df[col_name]).min() for col_name in columns}}
+
+
+def clip(series, lower_bound, upper_bound):
+    if is_cudf_series(series):
+        raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+    else:
+        return to_numeric(series).clip(lower_bound, upper_bound)
 
 
 def max(df, columns, *args):
@@ -224,6 +238,21 @@ def mode(df, columns, *args):
 
 def std(df, columns, *args):
     return {"std": {col_name: to_numeric(df[col_name]).std() for col_name in columns}}
+
+
+def sum(df, columns, *args):
+    return {"sum": {col_name: to_numeric(df[col_name]).sum() for col_name in columns}}
+
+
+# @staticmethod
+# def sum(df, columns, args):
+#     f = {col_name: df[col_name].sum() for col_name in columns}
+#
+#     @delayed
+#     def _sum(_f):
+#         return {"sum": _f}
+#
+#     return _sum(f)
 
 
 def range(df, columns, *args):
@@ -242,8 +271,23 @@ def range(df, columns, *args):
     #         return _range_agg(df.cols.min(columns), df.cols.max(columns))
 
 
+# return value.astype(str).unique().ext.to_dict()
+
+def unique(df, columns, *args):
+    # Cudf can not handle null so we fill it with non zero values.
+    return {"unique": {col_name: df[col_name].astype(str).unique().ext.to_dict(index=False) for col_name in columns}}
+
+
 def count_zeros(df, columns, *args):
-    return {"zeros": {col_name: (df[col_name].values == 0).sum() for col_name in columns}}
+    # Cudf can not handle null so we fill it with non zero values.
+    non_zero_value = 1
+    return {"zeros": {col_name: int((to_numeric(df[col_name]).fillna(non_zero_value).values == 0).sum()) for col_name in
+                      columns}}
+
+
+def count_uniques(df, columns, *args):
+    # Cudf can not handle null so we fill it with non zero values.
+    return {"unique": {col_name: df[col_name].astype(str).nunique() for col_name in columns}}
 
 
 def mean(df, columns, *args):
@@ -265,7 +309,7 @@ def percentile_agg(df, columns, args):
         return {"percentile": {col_name: r.ext.to_dict() for col_name, r in zip(columns, _result)}}
 
     _percentile = delayed(df, to_dict)
-    return _percentile(result)
+    return format_dict(_percentile(result))
 
 
 def count_na(df, columns, args):
@@ -273,6 +317,24 @@ def count_na(df, columns, args):
     return {"count_na": {col_name: df[col_name].isnull().sum() for col_name in columns}}
     # return np.count_nonzero(_df[_serie].isnull().values.ravel())
     # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
+
+
+def date_format(series, current_format=None, output_format=None):
+    if is_pandas_series(series):
+        return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
+    elif is_cudf_series(series):
+        import cudf
+        return cudf.to_datetime(series).astype('str', format=output_format)
+
+
+def years_between(series, date_format=None):
+    if is_pandas_series(series):
+        return (pd.to_datetime(series, format=date_format,
+                               errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+    elif is_cudf_series(series):
+        import cudf
+        raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
+        return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
 
 
 def exp(series):
@@ -379,6 +441,10 @@ def lower(series):
 
 def extract(series, regex):
     return series.astype(str).str.extract(regex)
+
+
+def slice(series, start, stop, step):
+    return series.astype(str).str.slice(start, stop, step)
 
 
 def proper(series):

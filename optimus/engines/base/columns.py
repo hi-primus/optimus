@@ -2,24 +2,24 @@ import re
 import string
 from abc import abstractmethod, ABC
 from enum import Enum
+from functools import reduce
 
 import dask
 import numpy as np
-import pandas as pd
 from dask.dataframe import from_delayed
 from glom import glom
 
 from optimus import functions as F
 # from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
-from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe, is_pandas_dataframe, is_cudf_dataframe
+from optimus.functions import to_numeric
+from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
-# This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element
+from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples
 
 
 class BaseColumns(ABC):
@@ -111,7 +111,7 @@ class BaseColumns(ABC):
 
         df = df.drop(columns=columns)
 
-        df = df.meta.preserve(df, "drop", columns)
+        df = df.meta.preserve(df, Actions.DROP.value, columns)
 
         return df
 
@@ -133,7 +133,7 @@ class BaseColumns(ABC):
 
         df = df.drop(columns=list(set(df.columns) - set(columns)))
 
-        df = df.meta.action("keep", columns)
+        df = df.meta.preserve(df, Actions.KEEP.value, columns)
 
         return df
 
@@ -305,7 +305,6 @@ class BaseColumns(ABC):
         """
 
         :param input_cols:
-        :param decimals:
         :param output_cols:
         :return:
         """
@@ -573,9 +572,9 @@ class BaseColumns(ABC):
     def exec_agg(exprs):
         pass
 
-    def mad(self, columns):
+    def mad(self, columns, relative_error=RELATIVE_ERROR, more=False):
         # df = self.df
-        return self.agg_exprs(columns, F.mad)
+        return self.agg_exprs(columns, F.mad, relative_error, more)
 
     def min(self, columns):
         df = self.df
@@ -600,9 +599,12 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error)
 
     def median(self, columns, relative_error=RELATIVE_ERROR):
-        return format_dict(self.percentile(columns, [0.5], relative_error))
+        # return format_dict(self.percentile(columns, [0.5], relative_error))
+        df = self.df
+        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error)
 
-    # Descriptive Analytics
+        # Descriptive Analytics
+
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
 
     @abstractmethod
@@ -611,7 +613,7 @@ class BaseColumns(ABC):
 
     def mean(self, columns):
         df = self.df
-        return self.agg_exprs(columns, F.mean)
+        return df.cols.agg_exprs(columns, F.mean)
 
     @abstractmethod
     def skewness(self, columns):
@@ -619,19 +621,11 @@ class BaseColumns(ABC):
 
     def sum(self, columns):
         df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(self.agg_exprs(columns, df.functions.sum, df))
+        return df.cols.agg_exprs(columns, F.sum)
 
     def variance(self, columns):
         df = self.df
         return df.cols.agg_exprs(columns, F.variance)
-
-
-    # def variance(self, columns):
-    #     df = self.df
-    #     return self.agg_exprs(df, columns, F.min)
 
     def std(self, columns):
         return self.agg_exprs(columns, F.std)
@@ -659,9 +653,9 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, _extract, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
-    def slice(self, input_cols, output_cols=None):
+    def slice(self, input_cols, start, stop, step, output_cols=None):
         def _slice(value, *args):
-            return F.slice(value, args)
+            return F.slice(value, start, stop, step)
 
         df = self.df
         return df.cols.apply(input_cols, _slice, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
@@ -692,6 +686,18 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, _trim, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
+    def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
+
+        def _date_format(value, args):
+            _current_format = args[0]
+            _output_format = args[1]
+            return F.date_format(value, _current_format, _output_format)
+
+        df = self.df
+        return df.cols.apply(input_cols, _date_format, args=[current_format, output_format], func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas")
+
     @staticmethod
     @abstractmethod
     def reverse(input_cols, output_cols=None):
@@ -706,15 +712,6 @@ class BaseColumns(ABC):
     def remove_accents(input_cols, output_cols=None):
         pass
 
-    def remove_special_chars(self, input_cols, output_cols=None):
-        def _remove_special_chars(value, args):
-            return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
-
-        df = self.df
-        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
-
     def remove_numbers(self, input_cols, output_cols=None):
 
         def _remove_numbers(value, args):
@@ -725,10 +722,24 @@ class BaseColumns(ABC):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
-    @staticmethod
-    @abstractmethod
-    def remove_white_spaces(input_cols, output_cols=None):
-        pass
+    def remove_white_spaces(self, input_cols, output_cols=None):
+
+        def _remove_white_spaces(value, args):
+            return value.astype("str").str.replace(" ", "")
+
+        df = self.df
+        return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols, mode="pandas", set_index=True)
+
+    def remove_special_chars(self, input_cols, output_cols=None):
+        def _remove_special_chars(value, args):
+            return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
+
+        df = self.df
+        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -757,7 +768,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.month
+            return _df.to_datetime(_df[_input_col], format=_format).dt.month
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -767,7 +778,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.day
+            return _df.to_datetime(_df[_input_col], format=_format).dt.day
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -777,7 +788,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.hour
+            return _df.to_datetime(_df[_input_col], format=_format).dt.hour
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -787,7 +798,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.minute
+            return _df.to_datetime(_df[_input_col], format=_format).dt.minute
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -797,7 +808,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.second
+            return _df.to_datetime(_df[_input_col], format=_format).dt.second
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -807,7 +818,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.weekday
+            return _df.to_datetime(_df[_input_col], format=_format).dt.weekday
 
         return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
 
@@ -815,17 +826,64 @@ class BaseColumns(ABC):
         df = self.df
 
         def _years_between(value, args):
-            return (pd.to_datetime(value, format=date_format,
-                                   errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+            return F.years_between(value, *args)
 
-        return df.cols.apply(input_cols, _years_between, func_return_type=str,
+        return df.cols.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
                              output_cols=output_cols,
                              meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
 
-    @staticmethod
-    @abstractmethod
-    def replace(input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-        pass
+    def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
+        """
+        Replace a value, list of values by a specified string
+        :param input_cols: '*', list of columns names or a single column name.
+        :param search: Values to look at to be replaced
+        :param replace_by: New value to replace the old one
+        :param search_by: Can be "full","words","chars" or "numeric".
+        :param ignore_case: Ignore case when searching for match
+        :param output_cols:
+        :return: Dask DataFrame
+        """
+
+        df = self.df
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+        output_ordered_columns = df.cols.names()
+
+        search = val_to_list(search)
+        if search_by == "chars":
+            # TODO: Maybe we could use replace_multi()
+            str_regex = "|".join(map(re.escape, search))
+        elif search_by == "words":
+            str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        else:
+            str_regex = (r'^\b%s\b$' % r'\b$|^\b'.join(map(re.escape, search)))
+
+        if ignore_case is True:
+            # Cudf do not accept re.compile as argument for replace
+            # regex = re.compile(str_regex, re.IGNORECASE)
+            regex = str_regex
+        else:
+            regex = str_regex
+
+        kw_columns = {}
+        for input_col, output_col in zip(input_cols, output_cols):
+            # print("input_cols", regex, replace_by)
+            # print("str_regex", str_regex)
+            kw_columns[output_col] = df[input_col].astype(str).str.replace(str_regex, replace_by)
+
+            if input_col != output_col:
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
+
+        df = df.assign(**kw_columns)
+        # The apply function seems to have problem appending new columns https://github.com/dask/dask/issues/2690
+        # df = df.cols.apply(input_cols, _replace, func_return_type=str,
+        #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
+        #                    output_cols=output_cols, args=(regex, replace_by))
+
+        df = df.meta.preserve(df, Actions.REPLACE.value, one_list_to_val(output_cols))
+        return df.cols.select(output_ordered_columns)
 
     @staticmethod
     @abstractmethod
@@ -837,19 +895,40 @@ class BaseColumns(ABC):
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def fill_na(input_cols, value=None, output_cols=None):
-        pass
+    def fill_na(self, input_cols, value=None, output_cols=None):
+        """
+        Replace null data with a specified value
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :param value: value to replace the nan/None values
+        :return:
+        """
+        df = self.df
 
-    @staticmethod
-    @abstractmethod
-    def is_na(input_cols, output_cols=None):
-        pass
+        def _fill_na(series, args):
+            value = args
+            return series.fillna(value)
 
-    @staticmethod
+        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
+
+    def is_na(self, input_cols, output_cols=None):
+        """
+        Replace null values with True and non null with False
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :return:
+        """
+
+        def _is_na(value, args):
+            return value.isnull()
+
+        df = self.df
+
+        return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
+
     def count(self):
-        pass
+        df = self.df
+        return len(df.cols.names())
 
     def count_na(self, columns):
         """
@@ -860,89 +939,73 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.agg_exprs(columns, F.count_na)
 
-    @staticmethod
-    @abstractmethod
-    def count_uniques(columns, estimate=True):
-        """
-        Result
-        {'first_name': {'frequency': [{'value': 'LAUREY', 'count': 3},
-           {'value': 'GARRIE', 'count': 3},
-           {'value': 'ERIN', 'count': 2},
-           {'value': 'DEVINDER', 'count': 1}]}}
-        :param columns:
-        :param estimate:
-        :return:
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def value_counts(columns):
-        pass
-
-    def nunique(self, input_cols, output_cols=None):
-        def _remove_special_chars(value, args):
-            return value.astype(str).nunique().to_dict()
-
+    def unique(self, columns, values=None, relative_error=RELATIVE_ERROR):
         df = self.df
-        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
-                             output_cols=output_cols, mode="vectorized")
+
+        return df.cols.agg_exprs(columns, F.unique, values, relative_error)
+
+    def count_uniques(self, columns, values=None, relative_error=RELATIVE_ERROR):
+        df = self.df
+
+        return df.cols.agg_exprs(columns, F.count_uniques, values, relative_error)
 
     @staticmethod
     @abstractmethod
     def select_by_dtypes(data_type):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def _math(columns, operator, new_column):
+    def _math(self, columns, operator, output_col):
+
         """
         Helper to process arithmetic operation between columns. If a
         :param columns: Columns to be used to make the calculation
         :param operator: A lambda function
         :return:
         """
-        pass
+        df = self.df
+        columns = parse_columns(df, columns)
+        expr = reduce(operator, [to_numeric(df[col_name]).fillna(0) for col_name in columns])
+        return df.assign(**{output_col: expr})
 
-    def add(self, columns, col_name="sum"):
+    def add(self, columns, output_col="sum"):
         """
         Add two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param col_name:
+        :param output_col:
         :return:
         """
         df = self.df
-        return df.cols._math(columns, lambda x, y: x + y, col_name)
+        return df.cols._math(columns, lambda x, y: x + y, output_col)
 
-    def sub(self, columns, col_name="sub"):
+    def sub(self, columns, output_col="sub"):
         """
         Subs two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param col_name:
+        :param output_col:
         :return:
         """
         df = self.df
-        return df.cols._math(columns, lambda x, y: x - y, col_name)
+        return df.cols._math(columns, lambda x, y: x - y, output_col)
 
-    def mul(self, columns, col_name="mul"):
+    def mul(self, columns, output_col="mul"):
         """
         Multiply two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param col_name:
+        :param output_col:
         :return:
         """
         df = self.df
-        return df.cols._math(columns, lambda x, y: x * y, col_name)
+        return df.cols._math(columns, lambda x, y: x * y, output_col)
 
-    def div(self, columns, col_name="div"):
+    def div(self, columns, output_col="div"):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param col_name:
+        :param output_col:
         :return:
         """
         df = self.df
-        return df.cols._math(columns, lambda x, y: x / y, col_name)
+        return df.cols._math(columns, lambda x, y: x / y, output_col)
 
     def z_score(self, input_cols, output_cols=None):
 
@@ -985,12 +1048,11 @@ class BaseColumns(ABC):
         check_column_numbers(columns, "*")
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
-        # print(quartile)
         for col_name in columns:
 
-            q1 = quartile[col_name]["percentile"]["0.25"]
-            q2 = quartile[col_name]["percentile"]["0.5"]
-            q3 = quartile[col_name]["percentile"]["0.75"]
+            q1 = quartile[col_name][0.25]
+            q2 = quartile[col_name][0.5]
+            q3 = quartile[col_name][0.75]
 
             iqr_value = q3 - q1
             if more:
@@ -1006,10 +1068,69 @@ class BaseColumns(ABC):
     def nest(input_cols, shape="string", separator="", output_col=None):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False):
-        pass
+    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
+
+        """
+        Split an array or string in different columns
+        :param input_cols: Columns to be un-nested
+        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
+        :param separator: char or regex
+        :param splits: Number of columns splits.
+        :param index: Return a specific index per columns. [1,2]
+        :param drop:
+        """
+        df = self.df
+
+        if separator is not None:
+            separator = re.escape(separator)
+
+        input_cols = parse_columns(df, input_cols)
+
+        index = val_to_list(index)
+        output_ordered_columns = df.cols.names()
+
+        for idx, input_col in enumerate(input_cols):
+
+            if is_list_of_tuples(index):
+                final_index = index[idx]
+            else:
+                final_index = index
+
+            if output_cols is None:
+                final_columns = [input_col + "_" + str(i) for i in range(splits)]
+            else:
+                if is_list_of_tuples(output_cols):
+                    final_columns = output_cols[idx]
+
+                else:
+                    final_columns = output_cols
+
+            if mode == "string":
+                df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
+
+            elif mode == "array":
+                def func(value):
+                    pdf = value.apply(pd.Series)
+                    pdf.columns = final_columns
+                    return pdf
+
+                df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
+
+            df_new.columns = final_columns
+            if final_index:
+                print("final_index", final_index[idx])
+                df_new = df_new.cols.select(final_index[idx])
+            df = df.cols.append(df_new)
+
+        if drop is True:
+            df = df.drop(columns=input_cols)
+            for input_col in input_cols:
+                if input_col in output_ordered_columns: output_ordered_columns.remove(input_col)
+
+        df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
+
+        # return df
+        return df.cols.move(df_new.cols.names(), "after", input_cols)
 
     @staticmethod
     @abstractmethod
@@ -1169,21 +1290,6 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.agg_exprs(columns, F.count_zeros)
 
-    def to_numeric(self, input_cols, output_cols):
-        df = self.df
-
-        def _to_numeric(value, args):
-            if is_pandas_dataframe(value):
-                return pd.to_numeric(value, errors="coerce")
-            elif is_cudf_dataframe(value):
-                import cudf
-                return cudf.to_numeric(value, errors="coerce")
-
-        return df.cols.apply(input_cols, _to_numeric, func_return_type=float,
-                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
-                             output_cols=output_cols,
-                             meta_action=Actions.CLIP.value, mode="vectorized")
-
     @staticmethod
     @abstractmethod
     def qcut(columns, num_buckets, handle_invalid="skip"):
@@ -1193,10 +1299,9 @@ class BaseColumns(ABC):
         df = self.df
 
         def _clip(value, args):
-            return pd.to_numeric(value, errors="coerce").clip(lower_bound, upper_bound)
+            return F.clip(value, lower_bound, upper_bound)
 
-        return df.cols.apply(input_cols, _clip, func_return_type=float, filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
-                             output_cols=output_cols,
+        return df.cols.apply(input_cols, _clip, func_return_type=float, output_cols=output_cols,
                              meta_action=Actions.CLIP.value, mode="vectorized")
 
     @staticmethod

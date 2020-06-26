@@ -1,24 +1,23 @@
 import pandas as pd
-from dask import dataframe as dd
 
-from optimus.infer import is_, is_list_of_tuples
+from optimus.infer import is_list_of_tuples
 
 
 class Create:
-    @staticmethod
-    def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
+    def __init__(self, creator):
+        print("creator", creator)
+        self.creator = creator
+
+    def data_frame(self, cols=None, rows=None, pdf=None, *args, **kwargs):
         """
-        Helper to create a Spark dataframe:
+        Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples with the same number and types that cols
-        :param infer_schema: Try to infer the schema data type.
         :param pdf: a pandas dataframe
         :return: Dataframe
         """
 
-        if is_(pdf, pd.DataFrame):
-            df = dd.from_pandas(pdf, npartitions=1)
-        else:
+        if pdf is None:
 
             # Process the rows
             if not is_list_of_tuples(rows):
@@ -36,7 +35,9 @@ class Create:
             for col, dtype in zip(_columns, _dtypes):
                 pdf[col].astype(dtype)
 
-            df = dd.from_pandas(pdf, npartitions=1)
+        # df = dd.from_pandas(pdf, npartitions=1)
+        df = self.creator.from_pandas(pdf, *args, **kwargs)
+
         df = df.meta.columns(df.cols.names())
         return df
 

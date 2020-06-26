@@ -1,7 +1,6 @@
-import numpy as np
 from dask import dataframe as dd
 from dask.distributed import Client
-from optimus.engines.dask.create import Create
+from optimus.engines.base.create import Create
 from optimus.bumblebee import Comm
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
@@ -31,7 +30,8 @@ class DaskEngine(BaseEngine):
         if n_workers is None:
             import psutil
             threads_per_worker = psutil.cpu_count() * 4
-        self.create = Create()
+
+        self.create = Create(dd)
         self.load = Load()
         self.verbose(verbose)
 

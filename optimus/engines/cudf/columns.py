@@ -1,16 +1,14 @@
 import re
 
+import cudf
 import cupy as cp
 from cudf.core import DataFrame
 from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.helpers.check import equal_function
-from optimus.helpers.columns import parse_columns, get_output_cols, prepare_columns
-from optimus.helpers.core import val_to_list
+from optimus.helpers.columns import parse_columns, get_output_cols
 # DataFrame = pd.DataFrame
-from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, is_dict, regex_credit_card, regex_zip_code, regex_url, \
+from optimus.infer import is_dict, regex_credit_card, regex_zip_code, regex_url, \
     regex_gender, regex_boolean, regex_ip, regex_email, regex_decimal, regex_int
 
 
@@ -19,62 +17,24 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
 
+        def append(self, dfs):
+            """
+
+            :param dfs:
+            :return:
+            """
+
+            df = self.df
+            df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
+            return df
+
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
         @staticmethod
-        def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
-            pass
-
-        @staticmethod
         def set(output_col, value=None):
             pass
-
-        # @staticmethod
-        # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
-        #     df = self
-        #     input_cols = parse_columns(df, input_cols)
-        #     df[input_cols] = df[input_cols].astype("str")
-        #
-        #     return df
-        #     # return df
-
-        @staticmethod
-        def astype(*args, **kwargs):
-            pass
-
-        @staticmethod
-        def create_exprs(columns, funcs, *args):
-            df = self
-            # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
-            filters = {"object": [df.functions.min, df.functions.stddev],
-                       }
-
-            def _filter(_col_name, _func):
-                for data_type, func_filter in filters.items():
-                    for f in func_filter:
-                        if equal_function(func, f) and \
-                                df.cols.dtypes(_col_name)[_col_name] == data_type:
-                            return True
-                return False
-
-            columns = parse_columns(df, columns)
-            funcs = val_to_list(funcs)
-
-            result = {}
-
-            for func in funcs:
-                # Create expression for functions that accepts multiple columns
-                filtered_column = []
-                for col_name in columns:
-                    # If the key exist update it
-                    if not _filter(col_name, func):
-                        filtered_column.append(col_name)
-                if len(filtered_column) > 0:
-                    result = func(columns, args, df=df)
-
-            return result
 
         @staticmethod
         def exec_agg(exprs):
@@ -84,44 +44,48 @@ def cols(self: DataFrame):
             raise NotImplementedError('Not implemented yet')
 
         def weekofyear(self, input_cols, output_cols=None):
-            pass
+            raise NotImplementedError('Not implemented yet')
 
         # https://github.com/rapidsai/cudf/issues/3177
-        def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
-            """
-            Replace a value, list of values by a specified string
-            :param input_cols: '*', list of columns names or a single column name.
-            :param output_cols:
-            :param search: Values to look at to be replaced
-            :param replace_by: New value to replace the old one
-            :param search_by: Can be "full","words","chars" or "numeric".
-            :return: Dask DataFrame
-            """
-
-            df = self.df
-            columns = prepare_columns(df, input_cols, output_cols)
-
-            search = val_to_list(search)
-            if search_by == "chars":
-                _regex = search
-                # _regex = re.compile("|".join(map(re.escape, search)))
-            elif search_by == "words":
-                _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-            else:
-                _regex = search
-
-            if not is_str(replace_by):
-                RaiseIt.type_error(replace_by, ["str"])
-
-            for input_col, output_col in columns:
-                if search_by == "chars" or search_by == "words":
-                    # This is only implemented in cudf
-                    df[output_col] = df[input_col].astype(str).str.replace_multi(search, replace_by, regex=False)
-                    # df[input_col] = df[input_col].str.replace(search, replace_by)
-                elif search_by == "full":
-                    df[output_col] = df[input_col].astype(str).replace(search, replace_by)
-
-            return df
+        # def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+        #     """
+        #     Replace a value, list of values by a specified string
+        #     :param input_cols: '*', list of columns names or a single column name.
+        #     :param output_cols:
+        #     :param search: Values to look at to be replaced
+        #     :param replace_by: New value to replace the old one
+        #     :param search_by: Can be "full","words","chars" or "numeric".
+        #     :return: Dask DataFrame
+        #     """
+        #
+        #     df = self.df
+        #     columns = prepare_columns(df, input_cols, output_cols)
+        #
+        #     search = val_to_list(search)
+        #     if search_by == "chars":
+        #         _regex = search
+        #         # _regex = re.compile("|".join(map(re.escape, search)))
+        #     elif search_by == "words":
+        #         _regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        #     else:
+        #         _regex = search
+        #
+        #     if not is_str(replace_by):
+        #         RaiseIt.type_error(replace_by, ["str"])
+        #
+        #     kw_columns = {}
+        #     for input_col, output_col in columns:
+        #         if search_by == "chars" or search_by == "words":
+        #             # This is only implemented in cudf
+        #             kw_columns[output_col] = df[input_col].astype(str).str.replace_multi(search, replace_by,
+        #                                                                                  regex=False)
+        #         elif search_by == "full":
+        #             kw_columns[output_col] = df[input_col].astype(str).replace(search, replace_by)
+        #
+        #     print("kw_columns",kw_columns)
+        #     print("search",search)
+        #     df.assign(**kw_columns)
+        #     return df
 
         def replace_regex(self, input_cols, regex=None, replace_by=None, output_cols=None):
             df = self.df
@@ -132,11 +96,7 @@ def cols(self: DataFrame):
             return df
 
         def mode(self, columns):
-            # See https://github.com/rapidsai/cudf/issues/3677
-            raise NotImplementedError("Not implemented error!")
-
-        def is_na(self, input_cols, output_cols=None):
-            pass
+            raise NotImplementedError("Not implemented error. See https://github.com/rapidsai/cudf/issues/3677")
 
         # NLP
         @staticmethod
@@ -164,10 +124,6 @@ def cols(self: DataFrame):
 
         @staticmethod
         def select_by_dtypes(data_type):
-            pass
-
-        @staticmethod
-        def _math(columns, operator, new_column):
             pass
 
         def min_max_scaler(self, input_cols, output_cols=None):
@@ -202,7 +158,7 @@ def cols(self: DataFrame):
             :return:
             """
 
-            raise NotImplementedError("Not implemented yet!")
+            raise NotImplementedError("Not implemented yet")
 
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
@@ -241,29 +197,7 @@ def cols(self: DataFrame):
             # return np.count_nonzero(df.isnull().values.ravel())
 
         def remove_accents(self, input_cols, output_cols=None):
-
-            # pandas_to_cudf()
-            # cudf_to_pandas
             raise NotImplementedError('Not implemented yet')
-
-        def remove_special_chars(self, input_cols, output_cols=None):
-            df = self.df
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-
-            df = df.astype(input_cols, "str")
-            for input_col, output_col in zip(input_cols, output_cols):
-                df[output_col].str.replace_multi(["[^A-Za-z0-9]+"], "", regex=True)
-            return df
-
-        def count_uniques(self, columns="*", estimate=True, **kwargs):
-            df = self.df
-            # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-            r = {}
-            for col_name in columns:
-                r[col_name] = {"count_uniques": df[col_name].nunique()}
-
-            return r
 
         def hist(self, columns="*", buckets=10, compute=True):
             df = self.df
@@ -362,9 +296,10 @@ def cols(self: DataFrame):
                     "gender": regex_gender,
                     "boolean": regex_boolean,
                     "zip_code": regex_zip_code,
-                    "credit card": regex_credit_card,
+                    "credit_card_number": regex_credit_card,
                     "date": r"",
-                    "object": r""
+                    "object": r"",
+                    "array": r""
                     }
 
             for col_name, dtype in columns_mismatch.items():
@@ -389,10 +324,6 @@ def cols(self: DataFrame):
             for col_name in columns_mismatch.keys():
                 result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
             return result
-
-        def count(self):
-            df = self.df
-            return len(df)
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, count_uniques=False, total_rows=None, *args, **kwargs):

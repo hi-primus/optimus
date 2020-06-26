@@ -64,9 +64,12 @@ def ext_series(self: Series):
         def __init__(self, series):
             self.series = series
 
-        def to_dict(self):
+        def to_dict(self, index=True):
             series = self.series
-            return series.to_pandas().to_dict()
+            if index is True:
+                return series.to_pandas().to_dict()
+            else:
+                return series.to_pandas().to_list()
 
     return Ext(self)
 

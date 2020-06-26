@@ -1,6 +1,7 @@
 import cudf
 
 from optimus.bumblebee import Comm
+from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.cudf.cudf import CUDF
 from optimus.engines.cudf.io.load import Load
@@ -23,6 +24,8 @@ class CUDFEngine(BaseEngine):
             Comm.instance = comm
 
         self.engine = 'cudf'
+
+        self.create = Create(cudf)
         self.load = Load()
         self.verbose(verbose)
 

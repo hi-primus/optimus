@@ -13,19 +13,6 @@ from optimus.helpers.raiseit import RaiseIt
 def functions(self):
     class Functions:
 
-
-        @staticmethod
-        def sum(columns, args):
-
-            def dataframe_sum_(df):
-                return {"sum": df[columns].sum()}
-
-            return dataframe_sum_
-
-
-
-
-
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         # @staticmethod
         # def hist_agg(columns, args):

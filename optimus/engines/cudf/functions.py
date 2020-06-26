@@ -10,18 +10,6 @@ from optimus.helpers.core import val_to_list
 def functions(self):
     class Functions:
 
-        @staticmethod
-        def sum(columns, args):
-
-            def dataframe_sum_(df):
-                return {"sum": df[columns].sum()}
-
-            return dataframe_sum_
-
-
-
-
-
         # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
         @staticmethod
         def hist_agg(columns, args, df):
@@ -80,20 +68,6 @@ def functions(self):
 
             return hist_agg_
 
-
-
-        @staticmethod
-        def count_uniques_agg(col_name, args, df):
-            print("ARGS", args)
-            estimate = args[0]
-
-            if estimate is True:
-                ps = df.cols.nunique_approx(col_name)
-                # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
-            else:
-                ps = df.cols.nunique(col_name)
-            result = [{"count_uniques": ps}]
-            return result
 
     return Functions()
 
