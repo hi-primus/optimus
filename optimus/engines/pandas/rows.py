@@ -26,15 +26,6 @@ def rows(self):
 
         @staticmethod
         def append(rows) -> DataFrame:
-            """
-            Append a row or dataframe at the end of a dataframe
-            :param rows: List of tuples or dataframes to be appended
-            :return:
-            """
-            pass
-
-        @staticmethod
-        def append(rows) -> DataFrame:
             pass
 
         @staticmethod
@@ -65,14 +56,6 @@ def rows(self):
             df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
 
             return df
-
-        @staticmethod
-        def select_by_dtypes(input_cols, data_type=None) -> DataFrame:
-            input_cols = parse_columns(self, input_cols)
-            # self.cols.apply()
-            # TODO
-            return self.select(fbdt(input_cols, data_type))
-
 
         @staticmethod
         def to_list(input_cols):
@@ -279,6 +262,7 @@ def rows(self):
         def unnest(input_cols) -> DataFrame:
             df = self
             return df
+
 
 
     return Rows(self)

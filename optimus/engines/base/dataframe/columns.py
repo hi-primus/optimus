@@ -1,25 +1,14 @@
-import builtins
 from functools import reduce
 
 import dask.dataframe as dd
-import numpy as np
-import pandas as pd
 from dask_ml.impute import SimpleImputer
-from multipledispatch import dispatch
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.functions import to_numeric
-from optimus.helpers.columns import parse_columns, validate_columns_names, check_column_numbers, get_output_cols
-from optimus.infer import is_list, is_list_of_tuples, is_one_element, is_int
+# from optimus.engines.base.functions import to_numeric
+from optimus.helpers.columns import parse_columns, get_output_cols
+from optimus.helpers.core import one_list_to_val
+from optimus.helpers.functions import set_function_parser, set_func
 
-
-# from sklearn.preprocessing import MinMaxScaler
-
-
-# Some expression accepts multiple columns at the same time.
-# python_set = set
-
-# This implementation works for pandas asd cudf
 
 class DataFrameBaseColumns(BaseColumns):
 
@@ -31,23 +20,10 @@ class DataFrameBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def bucketizer(input_cols, splits, output_cols=None):
-        pass
-
-    @staticmethod
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
-        #
-        # df = self.df
-        # columns = parse_columns(df, columns)
-        # df[columns] = df[columns].map_partitions(pd.cut, num_buckets)
-        # return df
-        pass
-
-    @staticmethod
-    def boxplot(columns):
         pass
 
     @staticmethod
@@ -76,13 +52,13 @@ class DataFrameBaseColumns(BaseColumns):
 
         df = self.df
         columns = parse_columns(df, columns)
-        result = {"kurtosis": {col_name: to_numeric(df[col_name]).kurtosis() for col_name in columns}}
+        result = {"kurtosis": {col_name: df.cols.to_float(df[col_name]).kurtosis() for col_name in columns}}
         return result
 
     def skewness(self, columns):
         df = self.df
         columns = parse_columns(df, columns)
-        result = {"skewness": {col_name: to_numeric(df[col_name]).skew() for col_name in columns}}
+        result = {"skewness": {col_name: df.cols.to_float(df[col_name]).skew() for col_name in columns}}
         return result
 
     def min_max_scaler(self, input_cols, output_cols=None):
@@ -105,10 +81,6 @@ class DataFrameBaseColumns(BaseColumns):
         df = df.merge(darr)
 
         return df
-
-    @staticmethod
-    def select_by_dtypes(data_type):
-        pass
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
@@ -167,10 +139,6 @@ class DataFrameBaseColumns(BaseColumns):
     def weekofyear(self, input_cols, output_cols=None):
         raise NotImplementedError("To be implemented")
 
-    @staticmethod
-    def remove_accents(input_cols, output_cols=None):
-        pass
-
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
@@ -184,26 +152,6 @@ class DataFrameBaseColumns(BaseColumns):
     def astype(*args, **kwargs):
         pass
 
-    def set(self, output_col, value=None):
-        """
-
-        :param output_col: Output columns
-        :param value: numeric, list or hive expression
-        :return:
-        """
-
-        df = self.df
-
-        columns = parse_columns(df, output_col, accepts_missing_cols=True)
-        check_column_numbers(columns, 1)
-
-        if is_list(value):
-            df = df.assign(**{output_col: np.array(value)})
-        else:
-            df = df.assign(**{output_col: value})
-
-        return df
-
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
@@ -212,136 +160,81 @@ class DataFrameBaseColumns(BaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    # TODO: Check if we must use * to select all the columns
-    @dispatch(object, object)
-    def rename(self, columns_old_new=None, func=None):
-        """"
-        Changes the name of a column(s) dataFrame.
-        :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
-        :param func: can be lower, upper or any string transformation function
-        """
+    def set(self, where=None, value=None, output_cols=None, default=None):
 
         df = self.df
 
-        # Apply a transformation function
-        if is_list_of_tuples(columns_old_new):
-            validate_columns_names(df, columns_old_new)
-            for col_name in columns_old_new:
+        columns, vfunc = set_function_parser(df, value, where, default)
+        # if df.cols.dtypes(input_col) == "category":
+        #     try:
+        #         # Handle error if the category already exist
+        #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+        #     except ValueError:
+        #         pass
 
-                old_col_name = col_name[0]
-                if is_int(old_col_name):
-                    old_col_name = df.schema.names[old_col_name]
-                if func:
-                    old_col_name = func(old_col_name)
+        output_cols = one_list_to_val(output_cols)
 
-                current_meta = df.meta.get()
-                # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
-                # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
-
-                new_column = col_name[1]
-                if old_col_name != col_name:
-                    df = df.rename(columns={old_col_name: new_column})
-
-                df = df.meta.preserve(df, value=current_meta)
-
-                df = df.meta.rename({old_col_name: new_column})
-
-        return df
-
-    @dispatch(list)
-    def rename(self, columns_old_new=None):
-        return self.rename(columns_old_new, None)
-
-    @dispatch(object)
-    def rename(self, func=None):
-        return self.rename(None, func)
-
-    @dispatch(str, str, object)
-    def rename(self, old_column, new_column, func=None):
-        return self.rename([(old_column, new_column)], func)
-
-    @dispatch(str, str)
-    def rename(self, old_column, new_column):
-        return self.rename([(old_column, new_column)], None)
-
-    # TODO: Maybe should be possible to cast and array of integer for example to array of double
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
-        """
-        Cast a column or a list of columns to a specific data type
-        :param input_cols: Columns names to be casted
-        :param output_cols:
-        :param dtype: final data type
-        :param columns: List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-        :return: Dask DataFrame
-        """
-
-        df = self.df
-        _dtypes = []
-
-        def _cast_int(value):
-            try:
-                return int(value)
-            except ValueError:
-                return None
-
-        def _cast_float(value):
-            try:
-                return float(value)
-            except ValueError:
-                return None
-
-        def _cast_bool(value):
-            if value is None:
-                return None
-            else:
-                return bool(value)
-
-        def _cast_str(value):
-            if pd.isnull(value):
-                return np.nan
-            else:
-                return str(value)
-
-        # Parse params
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
-                output_cols = get_output_cols(input_cols, output_cols)
-                for _ in builtins.range(0, len(input_cols)):
-                    _dtypes.append(dtype)
+        if columns:
+            final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
+                                   default=default)
         else:
-            input_cols = list([c[0] for c in columns])
-            if len(columns[0]) == 2:
-                output_cols = get_output_cols(input_cols, output_cols)
-                _dtypes = list([c[1] for c in columns])
-            elif len(columns[0]) == 3:
-                output_cols = list([c[1] for c in columns])
-                _dtypes = list([c[2] for c in columns])
+            final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
+                                   default=default)
 
-            output_cols = get_output_cols(input_cols, output_cols)
+        kw_columns = {output_cols: final_value}
+        return df.assign(**kw_columns)
 
-        for input_col, output_col, dtype in zip(input_cols, output_cols, _dtypes):
-
-            if dtype == 'int':
-                func = _cast_int
-            elif dtype == 'float':
-                func = _cast_float
-            elif dtype == 'bool':
-                func = _cast_bool
-            else:
-                func = _cast_str
-
-            # df.cols.apply(input_col, func=func, func_return_type=dtype, output_cols=output_col)
-            # df[output_col] = df[input_col].apply(func=_cast_str, meta=df[input_col])
-            df[output_col] = df[input_col].astype(dtype)
-
-            df[output_col].odtype = dtype
-
-        return df
+    # # TODO: Check if we must use * to select all the columns
+    # @dispatch(object, object)
+    # def rename(self, columns_old_new=None, func=None):
+    #     """"
+    #     Changes the name of a column(s) dataFrame.
+    #     :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+    #     :param func: can be lower, upper or any string transformation function
+    #     """
+    #
+    #     df = self.df
+    #
+    #     # Apply a transformation function
+    #     if is_list_of_tuples(columns_old_new):
+    #         validate_columns_names(df, columns_old_new)
+    #         for col_name in columns_old_new:
+    #
+    #             old_col_name = col_name[0]
+    #             if is_int(old_col_name):
+    #                 old_col_name = df.schema.names[old_col_name]
+    #             if func:
+    #                 old_col_name = func(old_col_name)
+    #
+    #             current_meta = df.meta.get()
+    #             # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
+    #             # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
+    #
+    #             new_column = col_name[1]
+    #             if old_col_name != col_name:
+    #                 df = df.rename(columns={old_col_name: new_column})
+    #
+    #             df = df.meta.preserve(df, value=current_meta)
+    #
+    #             df = df.meta.rename({old_col_name: new_column})
+    #
+    #     return df
+    #
+    # @dispatch(list)
+    # def rename(self, columns_old_new=None):
+    #     return self.rename(columns_old_new, None)
+    #
+    # @dispatch(object)
+    # def rename(self, func=None):
+    #     return self.rename(None, func)
+    #
+    # @dispatch(str, str, object)
+    # def rename(self, old_column, new_column, func=None):
+    #     return self.rename([(old_column, new_column)], func)
+    #
+    # @dispatch(str, str)
+    # def rename(self, old_column, new_column):
+    #     return self.rename([(old_column, new_column)], None)
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
         df = self.df
@@ -364,18 +257,16 @@ class DataFrameBaseColumns(BaseColumns):
             df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
         return df
 
-
-
-    def is_numeric(self, col_name):
-        """
-        Check if a column is numeric
-        :param col_name:
-        :return:
-        """
-        df = self.df
-        # TODO: Check if this is the best way to check the data type
-        if np.dtype(df[col_name]).type in [np.int64, np.int32, np.float64]:
-            result = True
-        else:
-            result = False
-        return result
+    # def is_numeric(self, col_name):
+    #     """
+    #     Check if a column is numeric
+    #     :param col_name:
+    #     :return:
+    #     """
+    #     df = self.df
+    #     # TODO: Check if this is the best way to check the data type
+    #     if np.dtype(df[col_name]).type in [np.int64, np.int32, np.float64]:
+    #         result = True
+    #     else:
+    #         result = False
+    #     return result

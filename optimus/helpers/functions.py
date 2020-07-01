@@ -10,7 +10,7 @@ import tempfile
 from collections import Counter
 from pathlib import Path
 from urllib.request import Request, urlopen
-from optimus import functions as F
+
 import fastnumbers
 import humanize
 import numpy as np
@@ -550,12 +550,9 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     :return:
     """
     # print("value, where, output_col",value, where, output_col)
-    # value = str(value)
-    # where = str(where)
-    f = list(filter(lambda x: x != "__match__", pdf.cols.names()))
-    # cols = i if i!="__match__" for i in
-    pdf[f] = pdf[f].applymap(parser)
-    df = pdf
+    col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
+
+    df = pdf.cols.cast(col_names, parser)
     try:
         if where is None:
             return eval(value)
@@ -571,13 +568,13 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     except (ValueError, TypeError) as e:
         logger.print(e)
 
-        raise
+        # raise
         return np.nan
 
 
-def set_function_parser(df, value, where, default):
+def set_function_parser(df, value, where, default=None):
     """
-    We infer the data type that must be use to make a calculation using the set function
+    We infer the data type that must be used to make a calculation using the set function
     :param df:
     :param value:
     :param where:
@@ -601,6 +598,9 @@ def set_function_parser(df, value, where, default):
             a = []
         return a
 
+    if default is None:
+        default = []
+
     # if default is in
     columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
     columns = list(set(columns))
@@ -615,12 +615,12 @@ def set_function_parser(df, value, where, default):
         else:
             column_dtype = "string"
 
-    if column_dtype in PROFILER_NUMERIC_DTYPES:
-        func = lambda x: fastnumbers.fast_float(x) if x is not None else None
-    elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
-        func = lambda x: str(x) if not pd.isnull(x) else None
+    # if column_dtype in PROFILER_NUMERIC_DTYPES:
+    #     func = lambda x: fastnumbers.fast_float(x) if x is not None else None
+    # elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
+    #     func = lambda x: str(x) if not pd.isnull(x) else None
 
-    return columns, func
+    return columns, column_dtype
 
 
 # value = "dd/MM/yyyy hh:mm:ss-sss MA"

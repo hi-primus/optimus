@@ -1261,81 +1261,6 @@ def cols(self):
             """
             return self.functions.count_uniques(*args, **kwargs)
 
-        @staticmethod
-        def select_by_dtypes(data_type):
-            """
-            This function returns one or multiple dataFrame columns which match with the data type provided.
-            :param data_type: Datatype column to look at
-            :return:
-            """
-
-            columns = parse_columns(self, '*', is_regex=None, filter_by_column_dtypes=data_type)
-
-            return self.select(columns)
-
-        #     """
-        #     Helper to process arithmetic operation between columns. If a
-        #     :param columns: Columns to be used to make the calculation
-        #     :param operator: A lambda function
-        #     :return:
-        #     """
-        #
-        #     columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
-        #     check_column_numbers(columns, "*")
-        #
-        #     df = self
-        #     for col_name in columns:
-        #         df = df.cols.cast(col_name, "float")
-        #
-        #     if len(columns) < 2:
-        #         raise Exception("Error: 2 or more columns needed")
-        #
-        #     columns = list(map(lambda x: F.col(x), columns))
-        #     expr = reduce(operator, columns)
-        #
-        #     return df.withColumn(new_column, expr)
-
-        # @staticmethod
-        # def add(columns, col_name="sum"):
-        #     """
-        #     Add two or more columns
-        #     :param columns: '*', list of columns names or a single column name
-        #     :param col_name:
-        #     :return:
-        #     """
-        #
-        #     return Cols._math(columns, lambda x, y: x + y, col_name)
-        #
-        # @staticmethod
-        # def sub(columns, col_name="sub"):
-        #     """
-        #     Subs two or more columns
-        #     :param columns: '*', list of columns names or a single column name
-        #     :param col_name:
-        #     :return:
-        #     """
-        #     return Cols._math(columns, lambda x, y: x - y, col_name)
-        #
-        # @staticmethod
-        # def mul(columns, col_name="mul"):
-        #     """
-        #     Multiply two or more columns
-        #     :param columns: '*', list of columns names or a single column name
-        #     :param col_name:
-        #     :return:
-        #     """
-        #     return Cols._math(columns, lambda x, y: x * y, col_name)
-        #
-        # @staticmethod
-        # def div(columns, col_name="div"):
-        #     """
-        #     Divide two or more columns
-        #     :param columns: '*', list of columns names or a single column name
-        #     :param col_name:
-        #     :return:
-        #     """
-        #     return Cols._math(columns, lambda x, y: x / y, col_name)
-
         # Stats
         @staticmethod
         def z_score(input_cols, output_cols=None):
@@ -1830,10 +1755,6 @@ def cols(self):
                 result = sorted(result, key=lambda k: k['value'], reverse=True)
 
             return {"cols": input_cols, "data": result}
-
-        @staticmethod
-        def boxplot(columns):
-            pass
 
         @staticmethod
         def schema_dtype(columns="*"):

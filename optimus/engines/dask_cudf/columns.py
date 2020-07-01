@@ -13,8 +13,6 @@ def cols(self: DaskCUDFDataFrame):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
-
-
         def hist(self, columns, buckets=10, compute=True):
             df = self.df
 
@@ -44,10 +42,7 @@ def cols(self: DaskCUDFDataFrame):
 
         @staticmethod
         def mode(columns):
-            # See https://github.com/rapidsai/cudf/issues/3677
-            raise NotImplementedError
-
-
+            raise NotImplementedError("Not implemented yet. See https://github.com/rapidsai/cudf/issues/3677")
 
         def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
             df = self.df

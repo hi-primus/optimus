@@ -70,28 +70,7 @@ def rows(self):
 
             return df
 
-        @staticmethod
-        def select_by_dtypes(input_cols, data_type=None) -> DataFrame:
-            """
-            This function has built in order to filter some type of row depending of the var type detected by python
-            for Example if you have a column with
-            | a |
-            | 1 |
-            | b |
 
-            and you filter by type = integer you will get
-
-            | 1 |
-
-            :param input_cols: Column to be filtered
-            :param data_type: Datatype use filter values
-            :return: Spark DataFrame
-            """
-
-            input_cols = parse_columns(self, input_cols)
-            # self.cols.apply()
-
-            return self.where(fbdt(input_cols, data_type))
 
         @staticmethod
         def count() -> int:

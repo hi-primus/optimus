@@ -20,6 +20,10 @@ def ext(self: DataFrame):
             df = self.df
             return df.persist()
 
+        def compute(self):
+            df = self.df
+            return df.compute()
+
         def set_buffer(self, columns, n=BUFFER_SIZE):
             df = self.df
             input_columns = parse_columns(df, columns)
@@ -153,13 +157,12 @@ def ext(self: DataFrame):
 
         @staticmethod
         def partitioner():
-            print("Dask not support custom partitiones")
+            print("Dask not support custom partitioner")
             raise NotImplementedError
 
         @staticmethod
         def show():
             """
-            Print df lineage
             :return:
             """
             df = self
@@ -168,7 +171,7 @@ def ext(self: DataFrame):
         @staticmethod
         def debug():
             """
-            Print df lineage
+
             :return:
             """
             raise NotImplementedError

@@ -35,6 +35,14 @@ class BaseExt(ABC):
     def cache():
         pass
 
+    @staticmethod
+    @abstractmethod
+    def compute():
+        # We will handle all dataframe as if the could compute the result,
+        # something that only can be done in dask and in spark triggering and action.
+        # With this we expect to abstract the behavior and just use compute() a value from operation
+        pass
+
     def to_json(self, columns="*", format="bumblebee"):
         """
         Return a json from a Dataframe

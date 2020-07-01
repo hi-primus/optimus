@@ -244,9 +244,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
 
 def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None, is_regex=None,
-                    filter_by_column_dtypes=None,
-                    accepts_missing_cols=False, invert: bool = False, default=None, columns=None, auto_increment=False,
-                    merge=False):
+                    filter_by_column_dtypes=None, accepts_missing_cols=False, invert: bool = False, default=None,
+                    columns=None, auto_increment=False, merge=False, args=None):
     """
     One input columns- > Same output column. lower(), upper()
     One input column -> One output column. copy()
@@ -282,9 +281,16 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
         if auto_increment is not False:
             input_cols = input_cols * auto_increment
 
-        # output_cols = val_to_list(output_cols)
         output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
-        result = zip(input_cols, output_cols)
+
+        if args is None:
+            result = zip(input_cols, output_cols)
+        else:
+            args = val_to_list(args)
+            if len(args) == 1:
+                args = args * len(input_cols)
+
+            result = zip(input_cols, output_cols, args)
     return result
 
 

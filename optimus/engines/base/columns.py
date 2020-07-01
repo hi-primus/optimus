@@ -1,25 +1,28 @@
 import re
 import string
 from abc import abstractmethod, ABC
-from enum import Enum
 from functools import reduce
 
 import dask
 import numpy as np
+import pandas as pd
 from dask.dataframe import from_delayed
 from glom import glom
+from multipledispatch import dispatch
 
-from optimus import functions as F
-# from optimus.engines.base.dask.columns import TOTAL_PREVIEW_ROWS
-from optimus.functions import to_numeric
-from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
-from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols
+from optimus.engines.base import functions as F
+from optimus.helpers.check import is_dask_dataframe
+from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
+    validate_columns_names
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.functions import collect_as_list, set_function_parser, set_func
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples
+from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
+    regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
+    is_int
 
 
 class BaseColumns(ABC):
@@ -28,16 +31,9 @@ class BaseColumns(ABC):
     def __init__(self, df):
         self.df = df
 
+    @abstractmethod
     def append(self, dfs):
-        """
-
-        :param dfs:
-        :return:
-        """
-
-        df = self.df
-        df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        return df
+        pass
 
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
@@ -171,7 +167,7 @@ class BaseColumns(ABC):
         output_ordered_columns = df.cols.names()
 
         for input_col, output_col in columns:
-            if mode == "pandas" and (is_dask_dataframe(df) or is_dask_cudf_dataframe(df)):
+            if mode == "pandas" and (is_dask_dataframe(df)):
 
                 partitions = df.to_delayed()
                 delayed_parts = [dask.delayed(func)(part[input_col], args)
@@ -201,20 +197,89 @@ class BaseColumns(ABC):
 
         return df
 
-    @staticmethod
-    @abstractmethod
-    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
-        pass
+    def set(self, where=None, value=None, output_cols=None, default=None):
+        """
+        Set a column value using a number a string or a expression.
+        :param where:
+        :param value:
+        :param output_cols:
+        :param default:
+        :return:
+        """
+        df = self.df
 
-    @staticmethod
-    @abstractmethod
-    def set(output_col, value=None):
-        pass
+        columns, vfunc = set_function_parser(df, value, where, default)
+        print(columns, vfunc)
+        # if df.cols.dtypes(input_col) == "category":
+        #     try:
+        #         # Handle error if the category already exist
+        #         df[input_vcol] = df[input_col].cat.add_categories(val_to_list(value))
+        #     except ValueError:
+        #         pass
 
-    @staticmethod
-    @abstractmethod
-    def rename(*args, **kwargs) -> Enum:
-        pass
+        output_cols = one_list_to_val(output_cols)
+
+        if columns:
+            final_value = df[columns]
+        else:
+            final_value = df
+        final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
+                                                 parser=vfunc, default=default, meta=object)
+
+        df.meta.preserve(df, Actions.SET.value, output_cols)
+        kw_columns = {output_cols: final_value}
+        return df.assign(**kw_columns)
+
+    @dispatch(object, object)
+    def rename(self, columns_old_new=None, func=None):
+        """"
+        Changes the name of a column(s) dataFrame.
+        :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+        :param func: can be lower, upper or any string transformation function
+        """
+
+        df = self.df
+
+        # Apply a transformation function
+        if is_list_of_tuples(columns_old_new):
+            validate_columns_names(df, columns_old_new)
+            for col_name in columns_old_new:
+
+                old_col_name = col_name[0]
+                if is_int(old_col_name):
+                    old_col_name = df.schema.names[old_col_name]
+                if func:
+                    old_col_name = func(old_col_name)
+
+                current_meta = df.meta.get()
+                # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
+                # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
+
+                new_column = col_name[1]
+                if old_col_name != col_name:
+                    df = df.rename(columns={old_col_name: new_column})
+
+                # df = df.meta.preserve(df, value=current_meta)
+
+                df = df.meta.rename({old_col_name: new_column})
+
+        return df
+
+    @dispatch(list)
+    def rename(self, columns_old_new=None):
+        return self.rename(columns_old_new, None)
+
+    @dispatch(object)
+    def rename(self, func=None):
+        return self.rename(None, func)
+
+    @dispatch(str, str, object)
+    def rename(self, old_column, new_column, func=None):
+        return self.rename([(old_column, new_column)], func)
+
+    @dispatch(str, str)
+    def rename(self, old_column, new_column):
+        return self.rename([(old_column, new_column)], None)
 
     def parse_profiler_dtypes(self, col_data_type):
         """
@@ -264,10 +329,110 @@ class BaseColumns(ABC):
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
-    @staticmethod
-    @abstractmethod
-    def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
-        pass
+    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
+        """
+        We have to ways to cast the data. Use the use the native .astype() this is faster but can not handle errors so are going to use
+        to numeric
+        Check is fast_numbers faster that to_numeric?
+        is pendulum faster than pd.to_datatime
+
+        We could use astype str and boolean
+
+
+
+        Cast the elements inside a column or a list of columns to a specific data type.
+        Unlike 'cast' this not change the columns data type
+
+        :param input_cols: Columns names to be casted
+        :param output_cols:
+        :param dtype: final data type
+        :param columns: List of tuples of column names and types to be casted. This variable should have the
+                following structure:
+                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+                The first parameter in each tuple is the column name, the second is the final datatype of column after
+                the transformation is made.
+        :return: Dask DataFrame
+        """
+
+        df = self.df
+        # if on_error == "nan":
+        #     kwargs = {"default": np.nan}
+        #
+        # def _cast_bool(value):
+        #     if pd.isnull(value):
+        #         return np.nan
+        #     else:
+        #         return bool(value)
+        #
+        # def _cast_date(value, format="YYYY-MM-DD"):
+        #     if pd.isnull(value):
+        #         return np.nan
+        #     else:
+        #         try:
+        #             # return pendulum.parse(value)
+        #             # return pendulum.from_format(value, format)
+        #             # return dparse(value)
+        #
+        #             return value
+        #         except:
+        #             return value
+        #
+        # def _cast_str(value):
+        #     if pd.isnull(value):
+        #         return np.nan
+        #     else:
+        #         return str(value)
+        #
+        # def _cast_object(value):
+        #     ## Do nothing
+        #     return value
+
+        # _dtypes = []
+        # # Parse params
+        # if columns is None:
+        #     input_cols = parse_columns(df, input_cols)
+        #     if is_list(input_cols) or is_one_element(input_cols):
+        #         output_cols = get_output_cols(input_cols, output_cols)
+        #         for _ in range(0, len(input_cols)):
+        #             _dtypes.append(dtype)
+        #     elif is_list_of_tuples(input_cols):
+        #         input_cols = list([c[0] for c in columns])
+        #         if len(columns[0]) == 2:
+        #             output_cols = get_output_cols(input_cols, output_cols)
+        #             _dtypes = list([c[1] for c in columns])
+        #         elif len(columns[0]) == 3:
+        #             output_cols = list([c[1] for c in columns])
+        #             _dtypes = list([c[2] for c in columns])
+        #
+        #     output_cols = get_output_cols(input_cols, output_cols)
+        #
+        # cast_func = {'int': _cast_int, 'decimal': _cast_float, "string": _cast_str, 'bool': _cast_bool,
+        #              'date': _cast_date, "object": _cast_object, "missing": _cast_str}
+
+        # meta = [(i, object) for i in columns]
+        print("dtype", dtype)
+        columns = prepare_columns(df, input_cols, output_cols, args=dtype)
+        for input_col, output_col, arg in columns:
+            if arg == "float":
+                df = df.cols.to_float(input_col, output_col)
+            elif arg == "integer":
+                df = df.cols.to_integer(input_col, output_col)
+            elif arg == "datetime":
+                df = df.cols.to_datetime(input_col, output_col)
+            elif arg == "bool":
+                df = df.cols.to_boolean(input_col, output_col)
+            elif arg == "string":
+                df = df.cols.to_string(input_col, output_col)
+            else:
+                raise Exception
+
+        # df = df.cols.apply(input_cols, cast_func[dtype], output_cols=output_cols, mode="map")
+
+        # df.cols.set_profiler_dtypes(columns)
+
+        ## Check this could be faster ddf = ddf.assign(col4=lambda x: check_dist(x.col1,x.col2,x.col3))
+        # df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
+        return df
 
     @staticmethod
     @abstractmethod
@@ -360,7 +525,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col in columns:
             result[input_col] = df[input_col].str.replace(search_by,
-                                                          replace_by).value_counts().to_pandas().to_dict()
+                                                          replace_by).value_counts().ext.to_dict()
         return result
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
@@ -564,8 +729,8 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
-        # print("df[col_name][col_name]111[col_name]",type(df[columns][columns]))
-        return df.cols.exec_agg(funcs[0])
+
+        return df.cols.exec_agg(format_dict(funcs[0]))
 
     @staticmethod
     @abstractmethod
@@ -599,7 +764,6 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error)
 
     def median(self, columns, relative_error=RELATIVE_ERROR):
-        # return format_dict(self.percentile(columns, [0.5], relative_error))
         df = self.df
         return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error)
 
@@ -949,11 +1113,6 @@ class BaseColumns(ABC):
 
         return df.cols.agg_exprs(columns, F.count_uniques, values, relative_error)
 
-    @staticmethod
-    @abstractmethod
-    def select_by_dtypes(data_type):
-        pass
-
     def _math(self, columns, operator, output_col):
 
         """
@@ -1142,70 +1301,57 @@ class BaseColumns(ABC):
         result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
         return result
 
-    def cast_to_profiler_dtypes(self, input_col=None, dtype=None, columns=None):
-        """
-        Set a profiler datatype to a column an cast the column accordingly
-        :param input_col:
-        :param dtype:
-        :param columns:
-        :return:
-        """
-        df = self.df
-        input_col = parse_columns(df, input_col)
-
-        if not is_dict(columns):
-            columns[input_col] = dtype
-
-        # Map from profiler dtype to python dtype
-        profiler_dtype_python = {ProfilerDataTypes.INT.value: "int",
-                                 ProfilerDataTypes.DECIMAL.value: "float",
-                                 ProfilerDataTypes.STRING.value: "object",
-                                 ProfilerDataTypes.BOOLEAN.value: "bool",
-                                 ProfilerDataTypes.DATE.value: "date",
-                                 ProfilerDataTypes.ARRAY.value: "object",
-                                 ProfilerDataTypes.OBJECT.value: "object",
-                                 ProfilerDataTypes.GENDER.value: "object",
-                                 ProfilerDataTypes.IP.value: "object",
-                                 ProfilerDataTypes.URL.value: "object",
-                                 ProfilerDataTypes.EMAIL.value: "object",
-                                 ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "object",
-                                 ProfilerDataTypes.ZIP_CODE.value: "object"}
-        # print("columns",columns)
-        df = df.cols.cast(columns=columns)
-        #
-        # for col_name, _dtype in columns.items():
-        #     python_dtype = profiler_dtype_python[_dtype]
-        #     df.meta.set(f"profile.columns.{col_name}.profiler_dtype", _dtype)
-        #
-        #     df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
-        #
-        #     #
-        #     # # For categorical columns we need to transform the series to an object
-        #     # # about doing arithmetical operation
-        #     if df.cols.dtypes(col_name) == "category":
-        #         df[col_name] = df[col_name].astype(object)
-        #
-        #
-        #
-        #
-        #
-        #     if _dtype == "date":
-        #         # We can not use accesor .dt if the column datatype is not a date type
-        #         # df[col_name] = df[col_name].astype('M8[us]')
-        #         df.meta.set(f"profile.columns.{col_name}.profiler_dtype_fotmat", _dtype)
-        #
-        #     # print("_dtype",_dtype)
-        return df
-
     @staticmethod
-    @abstractmethod
-    def count_mismatch(columns_mismatch: dict = None):
+    def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
         """
         Result {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         :param columns_mismatch:
         :return:
         """
-        pass
+        df = self.df
+        if not is_dict(columns_mismatch):
+            columns_mismatch = parse_columns(df, columns_mismatch)
+
+        result = {}
+        nulls = df.isnull().sum().to_pandas().to_dict()
+        total_rows = len(df)
+
+        func = {"int": regex_int,  # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
+                "decimal": regex_decimal,
+                "email": regex_email,
+                "ip": regex_ip,
+                "url": regex_url,
+                "gender": regex_gender,
+                "boolean": regex_boolean,
+                "zip_code": regex_zip_code,
+                "credit_card_number": regex_credit_card,
+                "date": r"",
+                "object": r"",
+                "array": r""
+                }
+
+        for col_name, dtype in columns_mismatch.items():
+            result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
+            result[col_name]["missing"] = nulls.get(col_name)
+            matches_count = {True: 0, False: 0}
+
+            if dtype == "string":
+                matches_count[True] = total_rows - nulls[col_name]
+                matches_count[False] = nulls[col_name]
+
+            else:
+                matches_count = df[col_name].str.match(func[dtype]).value_counts().to_pandas().to_dict()
+
+            match = matches_count.get(True)
+            mismatch = matches_count.get(False)
+            # print("mismatch", mismatch, match, matches_count)
+
+            result[col_name]["match"] = 0 if match is None else match
+            result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
+
+        for col_name in columns_mismatch.keys():
+            result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
+        return result
 
     @staticmethod
     @abstractmethod
@@ -1256,30 +1402,28 @@ class BaseColumns(ABC):
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    @staticmethod
-    @abstractmethod
     def boxplot(columns):
-        # """
-        # Output values frequency in json format
-        # :param columns: Columns to be processed
-        # :return:
-        # """
-        # df = self
-        # columns = parse_columns(df, columns)
-        #
-        # for col_name in columns:
-        #     iqr = df.cols.iqr(col_name, more=True)
-        #     lb = iqr["q1"] - (iqr["iqr"] * 1.5)
-        #     ub = iqr["q3"] + (iqr["iqr"] * 1.5)
-        #
-        #     _mean = df.cols.mean(columns)
-        #
-        #     query = ((F.col(col_name) < lb) | (F.col(col_name) > ub))
-        #     fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
-        #     stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
-        #               'fliers': fliers, 'label': one_list_to_val(col_name)}]
-        #
-        #     return stats
+        """
+        Output values frequency in json format
+        :param columns: Columns to be processed
+        :return:
+        """
+        df = self.df
+        columns = parse_columns(df, columns)
+
+        for col_name in columns:
+            iqr = df.cols.iqr(col_name, more=True)
+            lb = iqr["q1"] - (iqr["iqr"] * 1.5)
+            ub = iqr["q3"] + (iqr["iqr"] * 1.5)
+
+            _mean = df.cols.mean(columns)
+
+            query = ((df(col_name) < lb) | (df(col_name) > ub))
+            fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
+            stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
+                      'fliers': fliers, 'label': one_list_to_val(col_name)}]
+
+            return stats
         pass
 
     def names(self, col_names="*", by_dtypes=None, invert=False):
@@ -1295,14 +1439,23 @@ class BaseColumns(ABC):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
+    def cut(self, input_cols, bins, output_cols=None):
+        df = self.df
+
+        def _cut(value, args):
+            return F.cut(value, bins)
+
+        return df.cols.apply(input_cols, _cut, output_cols=output_cols, meta_action=Actions.CUT.value,
+                             mode="vectorized")
+
     def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
         df = self.df
 
         def _clip(value, args):
             return F.clip(value, lower_bound, upper_bound)
 
-        return df.cols.apply(input_cols, _clip, func_return_type=float, output_cols=output_cols,
-                             meta_action=Actions.CLIP.value, mode="vectorized")
+        return df.cols.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value,
+                             mode="vectorized")
 
     @staticmethod
     @abstractmethod
@@ -1312,9 +1465,4 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def index_to_string(input_cols=None, output_cols=None, columns=None):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def bucketizer(input_cols, splits, output_cols=None):
         pass

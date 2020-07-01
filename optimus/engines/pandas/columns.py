@@ -1,14 +1,15 @@
 import re
 
+import fastnumbers
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import KBinsDiscretizer
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.jit import min_max, bincount
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.columns import parse_columns, get_output_cols, prepare_columns
+from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import set_function_parser, set_func
 from optimus.infer import is_str
@@ -21,50 +22,58 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
 
+        def append(self, dfs):
+            """
+
+            :param dfs:
+            :return:
+            """
+
+            df = self.df
+            df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
+            return df
 
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
-        def set(self, where=None, value=None, output_cols=None, default=None):
+        def to_string(self, input_cols, output_cols=None):
+            df = self.df
+
+            return df.cols.apply(input_cols, str, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+                                 mode="map")
+
+        def to_integer(self, input_cols, output_cols=None):
+            # if pd.isnull(value):
+            #     return np.nan
+            # else:
+            #     return fastnumbers.fast_float(value, **kwargs)
+            #
+
+            def _to_integer(value, *args):
+                return fastnumbers.fast_int(value, default=0)
 
             df = self.df
 
-            columns, vfunc = set_function_parser(df, value, where, default)
-            # if df.cols.dtypes(input_col) == "category":
-            #     try:
-            #         # Handle error if the category already exist
-            #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-            #     except ValueError:
-            #         pass
+            return df.cols.apply(input_cols, _to_integer, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+                                 mode="map")
 
-            output_cols = one_list_to_val(output_cols)
+        def to_float(self, input_cols, output_cols=None):
+            def _to_float(value, *args):
+                return fastnumbers.fast_float(value, default=np.nan)
 
-            if columns:
-                final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
-                                       default=default)
-            else:
-                final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
-                                       default=default)
+            df = self.df
 
-            kw_columns = {output_cols: final_value}
-            return df.assign(**kw_columns)
-
-        # @staticmethod
-        # def cast(input_cols=None, dtype=None, output_cols=None, columns=None):
-        #     df = self
-        #     input_cols = parse_columns(df, input_cols)
-        #     df[input_cols] = df[input_cols].astype(dtype)
-        #
-        #     return df
+            return df.cols.apply(input_cols, _to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+                                 mode="map")
 
         @staticmethod
         def astype(*args, **kwargs):
             pass
 
-        @staticmethod
-        def replace(input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
-            df = self
+        def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False,
+                    output_cols=None):
+            df = self.df
             input_cols = parse_columns(df, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
             # If tupple
@@ -212,10 +221,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def count_mismatch(columns_mismatch: dict = None):
-            pass
-
-        @staticmethod
         def count_by_dtypes(columns, dtype):
 
             df = self
@@ -239,10 +244,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def boxplot(columns):
-            pass
-
-        @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
 
@@ -259,20 +260,6 @@ def cols(self: DataFrame):
             df = ml_index_to_string(df, input_cols, output_cols, columns)
 
             return df
-
-        @staticmethod
-        def bucketizer(input_cols, splits, output_cols=None):
-            df = self
-
-            columns = prepare_columns(df, input_cols, output_cols, merge=True)
-
-            for input_col, output_col in columns:
-                x = df[[input_col]]
-                est = KBinsDiscretizer(n_bins=splits, encode='ordinal', strategy='uniform')
-                est.fit(input_col)
-                df[output_col] = est.transform(x)
-            return df
-
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, total_rows=None):

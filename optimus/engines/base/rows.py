@@ -44,18 +44,15 @@ class BaseRows(ABC):
     def select(condition):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def select_by_dtypes(self, input_cols, data_type=None):
-        pass
+
 
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
         """
         df = self.df
-        if compute is True and (is_dask_dataframe(df) or is_dask_cudf_dataframe(df)):
-            result = len(df.compute())
+        if compute is True:
+            result = len(df.ext.compute())
         else:
             result = len(df)
         return result

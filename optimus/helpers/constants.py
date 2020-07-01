@@ -55,6 +55,8 @@ class Actions(Enum):
     CLIP = "clip"
     DROP = "drop"
     KEEP = "keep"
+    CUT = "cut"
+    TO_FLOAT = "to_float"
 
     # ROWS
     SELECT_ROW = "select_row"

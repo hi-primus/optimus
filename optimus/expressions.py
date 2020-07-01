@@ -10,7 +10,7 @@ from rply import LexerGenerator
 # }
 
 op_functions = {
-    "MOD": {    # Math functions
+    "MOD": {    # Math functions               # Numeric Transformations
         "description": "MOD function description",
         "example": "MOD(COL_NAME)"},
     "ABS": "ABS function description",
@@ -35,8 +35,8 @@ op_functions = {
     "COSH": "COSH function description",
     "TANH": "TANH function description",
     "ACOSH": "ACOSH function description",
-    "ATANH": "ATANH function description",  # String
-    "UPPER": "ATANH function description",
+    "ATANH": "ATANH function description",
+    "UPPER": "ATANH function description",  # String Tranformations
     "LOWER": "ATANH function description",
     "PROPER": "ATANH function description",
     "TRIM": "ATANH function description",
@@ -62,13 +62,18 @@ unary_operators = {
     "|": "| function description",
     "&": "& function description",
     "+": "+ function description",
-    "-": "- function description"
+    "-": "- function description",
+
+
 }
 binary_operators = {
     "+": "+ function description",
     "-": "- function description",
     "*": "* function description",
-    "/": "/ function description"}
+    "/": "/ function description",
+    "%": "- function description"
+}
+
 
 functions = op_functions
 

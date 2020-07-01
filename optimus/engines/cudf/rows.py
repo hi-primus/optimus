@@ -51,14 +51,6 @@ def rows(self):
 
             return df
 
-        @staticmethod
-        def select_by_dtypes(input_cols, data_type=None) -> DataFrame:
-            input_cols = parse_columns(self, input_cols)
-            # self.cols.apply()
-            # TODO
-            return self.select(fbdt(input_cols, data_type))
-
-
 
         @staticmethod
         def to_list(input_cols):

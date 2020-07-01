@@ -4,110 +4,124 @@ import dask.array as da
 import numpy as np
 import pandas as pd
 from dask import dataframe as dd
-
+# import cudf
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe, \
     is_cudf_dataframe, is_pandas_dataframe, is_dask_dataframe
 from optimus.helpers.converter import format_dict
 
 op_to_series_func = {
     "abs": {
-        "cudf": "abs",
-        "numpy": "abs",
-        "da": "abs"
+        # "cudf": cudf.abs,
+        "numpy": np.abs,
+        # "da": da.abs
     },
     "exp": {
         "cudf": "exp",
-        "numpy": "exp",
+        "numpy": np.exp,
+        "da": da.exp
     },
     "sqrt": {
         "cudf": "sqrt",
-        "numpy": "sqrt",
+        "numpy": np.sqrt,
+        "da": da.sqrt
     },
     "mod": {
         "cudf": "mod",
-        "numpy": "mod"
+        "numpy": np.mod,
+        "da": da.mod
 
     },
     "pow": {
         "cudf": "pow",
-        "numpy": "power"
-    },
-    "ceil": {
-        "cudf": "ceil",
-        "numpy": "ceil"
-    },
-    "floor": {
-        "cudf": "floor",
-        "numpy": "floor"
-    },
-    "trunc": {
-        "cudf": "trunc",
-        "numpy": "trunc"
+        "numpy": np.power,
+        "da": da.power
     },
     "radians": {
         "cudf": "radians",
-        "numpy": "radians"
+        "numpy": np.radians,
+        "da": da.radians
+
     },
     "degrees": {
         "cudf": "degrees",
-        "numpy": "degrees"
+        # "numpy": np.degress,
+        "da": da.degrees
     },
     "ln": {
         "cudf": "log",
-        "numpy": "log"
+        "numpy": np.log,
+        "da": da.log
     },
     "log": {
         "cudf": "log10",
-        "numpy": "log10"
+        "numpy": np.log10,
+        "da": da.log10
+
     },
     "sin": {
         "cudf": "sin",
-        "numpy": "sin"
+        "numpy": np.sin,
+        "da": da.sin
     },
     "cos": {
         "cudf": "cos",
-        "numpy": "cos"
+        "numpy": np.cos,
+        "da": da.cos
     },
     "tan": {
         "cudf": "tan",
-        "numpy": "tan"
+        "numpy": np.tan,
+        "da": da.tan
     },
     "asin": {
-        "cudf": "asin",
-        "numpy": "arcsin"
+        "cudf": "arcsin",
+        "numpy": np.arcsin,
+        "da": da.arcsin
     },
     "acos": {
-        "cudf": "acos",
-        "numpy": "arccos"
+        "cudf": "arccos",
+        "numpy": np.arccos,
+        "da": da.arccos
+
     },
     "atan": {
-        "cudf": "atan",
-        "numpy": "arctan"
+        "cudf": "arctan",
+        "numpy": np.arctan,
+        "da": da.arctan
+
     },
     "sinh": {
         "cudf": None,
-        "numpy": "sinh"
+        "numpy": np.sinh,
+        "da": da.sinh
     },
     "asinh": {
         "cudf": None,
-        "numpy": "arcsinh"
+        "numpy": np.arcsinh,
+        "da": da.arcsinh
     },
     "cosh": {
         "cudf": None,
-        "numpy": "cosh"
+        "numpy": np.cosh,
+        "da": da.cosh
     }
     ,
     "acosh": {
         "cudf": None,
-        "numpy": "arccosh"
+        "numpy": np.arccosh,
+        "da": da.arccosh
+
     },
     "tanh": {
         "cudf": None,
-        "numpy": "tanh"
+        "numpy": np.tanh,
+        "da": da.tanh
+
     },
     "atanh": {
         "cudf": None,
-        "numpy": "arctanh"
+        "numpy": np.arctanh,
+        "da": da.arctanh
     }
 
 }
@@ -123,22 +137,19 @@ def call(series, *args, method_name=None):
     """
     # print("op_to_series_func[method_name]", op_to_series_func[method_name]["cudf"])
     # print("series", dir(series), series)
-    print("series", type(series), series)
+    # print("series", type(series), series)
     if is_pandas_series(series):
-        method = getattr(np, op_to_series_func[method_name]["numpy"])
+        method = op_to_series_func[method_name]["numpy"]
         result = method(series, *args)
 
     elif is_dask_series(series):
-        def func(_series, _method, args):
-            return _method(_series, *args)
-
-        method = getattr(da, op_to_series_func[method_name]["da"])
-        # result = dd.map_partitions(func, series, method, args, meta=float)
+        method = op_to_series_func[method_name]["da"]
         result = method(series, *args)
 
     elif is_cudf_series(series):
-        method = getattr(series, op_to_series_func[method_name]["cudf"])
-        result = method(series, *args)
+        import cudf
+        method = getattr(cudf, op_to_series_func[method_name]["cudf"])
+        result = method(series)
 
     elif is_dask_cudf_dataframe(series):
         def func(series, _method, args):
@@ -154,42 +165,40 @@ def abs(series):
     return to_numeric(series).abs()
 
 
-def variance(df, columns, *args):
-    return {"var": {col_name: to_numeric(df[col_name]).var() for col_name in columns}}
-
-
-def to_numeric(df_series):
-    def _to_numeric_cudf(_df_series, _col_name=None):
-        import cudf
-        if is_cudf_series(df_series):
-            series = _df_series
-        elif is_cudf_dataframe(df_series):
-            series = _df_series[_col_name]
-
-        series_string = series.astype(str)
-        s = cudf.Series(series_string.str.stof()).fillna(False)
-        s[~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-        return s
-
-    # if not is_column_a(df_series, col, df.constants.NUMERIC_TYPES):
-
-    if is_pandas_series(df_series) or is_pandas_dataframe(df_series):
-        return pd.to_numeric(df_series, errors="coerce")
-
-    elif is_dask_dataframe(df_series):
-        def func(_df_series):
-            return pd.to_numeric(_df_series, errors="coerce")
-
-        return df_series.map_partitions(func)
-
-    elif is_cudf_series(df_series):
-        return _to_numeric_cudf(df_series)
-
-    elif is_cudf_dataframe(df_series):
-        kw_columns = {}
-        for col_name in df_series.cols.names():
-            kw_columns[col_name] = _to_numeric_cudf(df_series, col_name)
-        return df_series.assign(**kw_columns)
+# def to_numeric(df_series, args):
+#     def _to_numeric_cudf(_df_series, _col_name=None):
+#         import cudf
+#         if is_cudf_series(df_series):
+#             series = _df_series
+#         elif is_cudf_dataframe(df_series):
+#             series = _df_series[_col_name]
+#
+#         series_string = series.astype(str)
+#         # See https://github.com/rapidsai/cudf/issues/5345
+#         series = cudf.Series(series_string.str.stof()).fillna(False)
+#         series[~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
+#         return series
+#
+#     # if not is_column_a(df_series, col, df.constants.NUMERIC_TYPES):
+#
+#
+#     if is_pandas_series(df_series) or is_pandas_dataframe(df_series):
+#         return pd.to_numeric(df_series, errors="coerce")
+#
+#     elif is_dask_dataframe(df_series):
+#         def func(_df_series):
+#             return pd.to_numeric(_df_series, errors="coerce")
+#
+#         return df_series.map_partitions(func)
+#
+#     elif is_cudf_series(df_series):
+#         return _to_numeric_cudf(df_series)
+#
+#     elif is_cudf_dataframe(df_series):
+#         kw_columns = {}
+#         for col_name in df_series.cols.names():
+#             kw_columns[col_name] = _to_numeric_cudf(df_series, col_name)
+#         return df_series.assign(**kw_columns)
 
 
 def mad(df, columns, args):
@@ -217,10 +226,6 @@ def mad(df, columns, args):
     return _mad_agg(mad_value, median_value)
 
 
-def min(df, columns, *args):
-    return {"min": {col_name: to_numeric(df[col_name]).min() for col_name in columns}}
-
-
 def clip(series, lower_bound, upper_bound):
     if is_cudf_series(series):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
@@ -228,20 +233,75 @@ def clip(series, lower_bound, upper_bound):
         return to_numeric(series).clip(lower_bound, upper_bound)
 
 
-def max(df, columns, *args):
-    return {"max": {col_name: to_numeric(df[col_name]).max() for col_name in columns}}
+def cut(series, bins):
+    # if is_cudf_series(series):
+    #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+    # else:
+    if is_pandas_series(series):
+        return to_numeric(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+    elif is_cudf_series(series):
+        raise NotImplementedError("Not implemented yet")
 
 
-def mode(df, columns, *args):
-    return {"mode": {col_name: df[col_name].mode() for col_name in columns}}
+def is_any_series(series):
+    if is_cudf_series(series) or is_pandas_series(series) or is_dask_series(series):
+        return True
 
 
-def std(df, columns, *args):
-    return {"std": {col_name: to_numeric(df[col_name]).std() for col_name in columns}}
+# TODO: dask seems more efficient triggering multiple .min() task, one for every column
+# cudf seems to be calculate faster in on pass using df.min()
+
+def min(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"min": {df_or_series.name: to_numeric(df_or_series).min()}}
+
+    return {"min": {col_name: to_numeric(df_or_series[col_name]).min() for col_name in columns}}
 
 
-def sum(df, columns, *args):
-    return {"sum": {col_name: to_numeric(df[col_name]).sum() for col_name in columns}}
+def max(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"max": {df_or_series.name: to_numeric(df_or_series).max()}}
+
+    return {"max": {col_name: to_numeric(df_or_series[col_name]).max() for col_name in columns}}
+
+
+def mean(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"mean": {df_or_series.name: to_numeric(df_or_series).mean()}}
+
+    return {"mean": {col_name: to_numeric(df_or_series[col_name]).mean() for col_name in columns}}
+
+
+def mode(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"mode": {df_or_series.name: to_numeric(df_or_series).mode()}}
+
+    return {"mode": {col_name: to_numeric(df_or_series[col_name]).mode() for col_name in columns}}
+
+
+def std(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"std": {df_or_series.name: to_numeric(df_or_series).std()}}
+
+    return {"std": {col_name: to_numeric(df_or_series[col_name]).std() for col_name in columns}}
+
+
+def sum(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"sum": {df_or_series.name: to_numeric(df_or_series).sum()}}
+
+    return {"sum": {col_name: to_numeric(df_or_series[col_name]).sum() for col_name in columns}}
+
+
+def variance(df_or_series, columns=None):
+    if is_any_series(df_or_series):
+        return {"var": {df_or_series.name: to_numeric(df_or_series).var()}}
+
+    return {"var": {col_name: to_numeric(df_or_series[col_name]).var() for col_name in columns}}
+
+
+# def variance(df, columns, *args):
+#     return {"var": {col_name: to_numeric(df[col_name]).var() for col_name in columns}}
 
 
 # @staticmethod
@@ -290,10 +350,6 @@ def count_uniques(df, columns, *args):
     return {"unique": {col_name: df[col_name].astype(str).nunique() for col_name in columns}}
 
 
-def mean(df, columns, *args):
-    return {"mean": {col_name: to_numeric(df[col_name]).mean() for col_name in columns}}
-
-
 def delayed(df, func):
     import dask
     if is_dask_dataframe(df) or is_dask_cudf_dataframe(df):
@@ -324,6 +380,7 @@ def date_format(series, current_format=None, output_format=None):
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
     elif is_cudf_series(series):
         import cudf
+        print("strftime will be available in https://github.com/rapidsai/cudf/issues/5583")
         return cudf.to_datetime(series).astype('str', format=output_format)
 
 
@@ -342,7 +399,7 @@ def exp(series):
 
 
 def mod(series, *args):
-    return call(series, *args, method_name="mod")
+    return to_numeric(series).mod(*args)
 
 
 def pow(series, *args):
@@ -350,7 +407,7 @@ def pow(series, *args):
 
 
 def ceil(series):
-    return call(series, method_name="ceil")
+    return to_numeric(series).ceil()
 
 
 def sqrt(series):
@@ -358,15 +415,15 @@ def sqrt(series):
 
 
 def floor(series):
-    return call(series, method_name="floor")
+    return to_numeric(series).floor()
 
 
 def trunc(series):
-    return call(series, method_name="trunc")
+    return to_numeric(series).truncate()
 
 
 def radians(series):
-    return call(series, method_name="radians")
+    return to_numeric(series).radians()
 
 
 def degrees(series):
@@ -394,7 +451,7 @@ def tan(series):
     return call(series, method_name="tan")
 
 
-def asin(series):
+def adsin(series):
     return call(series, method_name="asin")
 
 
@@ -428,6 +485,31 @@ def acosh(series):
 
 def atanh(series):
     return call(series, method_name="atanh")
+
+
+#
+# def sinh(self, series):
+#     raise NotImplementedError('Not implemented yet')
+#
+#
+# def asinh(self, series):
+#     raise NotImplementedError('Not implemented yet')
+#
+#
+# def cosh(self, series):
+#     raise NotImplementedError('Not implemented yet')
+#
+#
+# def tanh(self, series):
+#     raise NotImplementedError('Not implemented yet')
+#
+#
+# def acosh(self, series):
+#     raise NotImplementedError('Not implemented yet')
+#
+#
+# def arctanh(self, series):
+#     raise NotImplementedError('Not implemented yet')
 
 
 # Strings
@@ -530,25 +612,3 @@ def minute(series):
 
 def second(series):
     return series.dt.second()
-
-# pad
-
-# Not available in cudf dask cudf
-#
-# def sinh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-# def asinh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-# def cosh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-# def tanh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-# def acosh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-# def atanh(self, series):
-#     raise NotImplementedError('Not implemented yet')

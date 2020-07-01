@@ -8,8 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 # DataFrame = pd.DataFrame
-from optimus.infer import is_dict, regex_credit_card, regex_zip_code, regex_url, \
-    regex_gender, regex_boolean, regex_ip, regex_email, regex_decimal, regex_int
+from optimus.helpers.constants import Actions
 
 
 def cols(self: DataFrame):
@@ -28,12 +27,36 @@ def cols(self: DataFrame):
             df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
             return df
 
-        @staticmethod
-        def to_timestamp(input_cols, date_format=None, output_cols=None):
-            pass
+        def to_integer(self, input_cols, output_cols=None):
+            def _to_integer(value, *args):
+                series_string = value.astype(str)
+                # See https://github.com/rapidsai/cudf/issues/5345
+                series = cudf.Series(series_string.str.stoi()).fillna(False)
+                series[
+                    ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
+                return series
+
+            df = self.df
+
+            return df.cols.apply(input_cols, _to_integer, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+                                 mode="pandas")
+
+        def to_float(self, input_cols, output_cols=None):
+            def _to_float(value, *args):
+                series_string = value.astype(str)
+                # See https://github.com/rapidsai/cudf/issues/5345
+                series = cudf.Series(series_string.str.stof()).fillna(False)
+                series[
+                    ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
+                return series
+
+            df = self.df
+
+            return df.cols.apply(input_cols, _to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+                                 mode="pandas")
 
         @staticmethod
-        def set(output_col, value=None):
+        def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
         @staticmethod
@@ -114,6 +137,7 @@ def cols(self: DataFrame):
             return df
 
         def remove_stopwords(self):
+            # Reference https://medium.com/rapids-ai/show-me-the-word-count-3146e1173801
             df = self
 
         def strip_html(self):
@@ -121,10 +145,6 @@ def cols(self: DataFrame):
             # soup = BeautifulSoup(self.text, "html.parser")
             # self.text = soup.get_text()
             return self
-
-        @staticmethod
-        def select_by_dtypes(data_type):
-            pass
 
         def min_max_scaler(self, input_cols, output_cols=None):
             pass
@@ -227,10 +247,6 @@ def cols(self: DataFrame):
             pass
 
         @staticmethod
-        def boxplot(columns):
-            pass
-
-        @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
 
@@ -274,56 +290,6 @@ def cols(self: DataFrame):
         @staticmethod
         def index_to_string(input_cols=None, output_cols=None, columns=None):
             pass
-
-        @staticmethod
-        def bucketizer(input_cols, splits, output_cols=None):
-            pass
-
-        def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
-            df = self.df
-            if not is_dict(columns_mismatch):
-                columns_mismatch = parse_columns(df, columns_mismatch)
-
-            result = {}
-            nulls = df.isnull().sum().to_pandas().to_dict()
-            total_rows = len(df)
-
-            func = {"int": regex_int,  # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
-                    "decimal": regex_decimal,
-                    "email": regex_email,
-                    "ip": regex_ip,
-                    "url": regex_url,
-                    "gender": regex_gender,
-                    "boolean": regex_boolean,
-                    "zip_code": regex_zip_code,
-                    "credit_card_number": regex_credit_card,
-                    "date": r"",
-                    "object": r"",
-                    "array": r""
-                    }
-
-            for col_name, dtype in columns_mismatch.items():
-                result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-                result[col_name]["missing"] = nulls.get(col_name)
-                matches_count = {True: 0, False: 0}
-
-                if dtype == "string":
-                    matches_count[True] = total_rows - nulls[col_name]
-                    matches_count[False] = nulls[col_name]
-
-                else:
-                    matches_count = df[col_name].str.match(func[dtype]).value_counts().to_pandas().to_dict()
-
-                match = matches_count.get(True)
-                mismatch = matches_count.get(False)
-                # print("mismatch", mismatch, match, matches_count)
-
-                result[col_name]["match"] = 0 if match is None else match
-                result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
-
-            for col_name in columns_mismatch.keys():
-                result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
-            return result
 
         @staticmethod
         def frequency(columns, n=10, percentage=False, count_uniques=False, total_rows=None, *args, **kwargs):

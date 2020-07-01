@@ -37,7 +37,6 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         # df = self.df
-        print("ASDFASDFASDF")
         df = dd.concat([self, rows], axis=0)
 
         return df
@@ -72,10 +71,6 @@ class DaskBaseRows(BaseRows):
 
         return df
 
-    def select_by_dtypes(self, input_cols, data_type=None):
-
-        input_cols = parse_columns(self, input_cols)
-        return self.select(fbdt(input_cols, data_type))
 
 
     def to_list(self, input_cols):

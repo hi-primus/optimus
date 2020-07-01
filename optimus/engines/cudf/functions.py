@@ -20,8 +20,6 @@ def functions(self):
             buckets = args[1]
             min_max = args[2]
 
-            # print("aaaaa",df[columns],buckets, min_max)
-
             # https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
             # Fast histograms library https://github.com/astrofrog/fast-histogram
 
@@ -37,37 +35,8 @@ def functions(self):
                     arr = cp.fromDlpack(_serie.to_dlpack())
                     i, j = cp.histogram(arr, buckets)
                     # We need to convert from array to numeric
-                    result[col_name]= {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
+                    result[col_name] = {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
             return result
-
-            # result_hist = {}
-            # for col in col_name:
-            #     if is_column_a(df, col, df.constants.STRING_TYPES):
-            #         if min_max is None:
-            #             def func(val):
-            #                 return val.str.len()
-            #
-            #             partitions = df[col].to_delayed()
-            #             delayed_values = [dask.delayed(func)(part)
-            #                               for part in partitions]
-            #             df_len = from_delayed(delayed_values)
-            #             df_len = df_len.value_counts()
-            #             min, max = dd.compute(df_len.min(), df_len.max())
-            #             min_max = {"min": min, "max": max}
-            #         df_hist = df_len
-            #
-            #     elif is_column_a(df, col, df.constants.NUMERIC_TYPES):
-            #         if min_max is None:
-            #             min_max = df.cols.range(col_name)[col]
-            #         df_hist = serie[col]
-            #     else:
-            #         RaiseIt.type_error("column", ["numeric", "string"])
-            #
-            #     i, j = (da.histogram(df_hist, bins=buckets, range=[min_max["min"], min_max["max"]]))
-            #     result_hist.update({col: {"count": list(i), "bins": list(j)}})
-
-            return hist_agg_
-
 
     return Functions()
 
