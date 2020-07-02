@@ -589,7 +589,7 @@ class BaseExt(ABC):
             freq_uniques = None
             if len(numeric_cols):
                 hist = df[numeric_cols].astype("float").cols.hist(numeric_cols, buckets=bins, compute=compute)
-                freq_uniques = df.cols.count_uniques(numeric_cols, relative_error=False, compute=compute)
+                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
 
             freq = None
             if len(string_cols):

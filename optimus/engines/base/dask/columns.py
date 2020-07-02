@@ -389,13 +389,17 @@ class DaskBaseColumns(BaseColumns):
         pass
 
     @staticmethod
-    def exec_agg(exprs):
+    def exec_agg(exprs, compute):
         """
         Execute and aggregation
         :param exprs:
         :return:
         """
-        return exprs.compute()
+        if compute is True:
+            result =  exprs.compute()
+        else:
+            result = exprs
+        return result
 
     # TODO: Check if we must use * to select all the columns
 

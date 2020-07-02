@@ -658,7 +658,7 @@ class BaseColumns(ABC):
     # def create_exprs(columns, funcs, *args):
     #     pass
 
-    def agg_exprs(self, columns, funcs, *args):
+    def agg_exprs(self, columns, funcs, *args, compute=True):
         """
         Create and run aggregation
         :param columns:
@@ -672,11 +672,11 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
 
-        return df.cols.exec_agg(format_dict(funcs[0]))
+        return df.cols.exec_agg(format_dict(funcs[0]), compute)
 
     @staticmethod
     @abstractmethod
-    def exec_agg(exprs):
+    def exec_agg(exprs, compute):
         pass
 
     def mad(self, columns, relative_error=RELATIVE_ERROR, more=False):
@@ -1028,10 +1028,10 @@ class BaseColumns(ABC):
 
         return df.cols.agg_exprs(columns, F.unique, values, relative_error)
 
-    def count_uniques(self, columns, values=None, relative_error=RELATIVE_ERROR):
+    def count_uniques(self, columns, values=None, estimate=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.count_uniques, values, relative_error)
+        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, compute=compute)
 
     def _math(self, columns, operator, output_col):
 

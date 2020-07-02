@@ -274,8 +274,20 @@ def var(ds, columns=None, args=None):
     return _base(ds, "var", columns, args)
 
 
-def count_uniques(ds, columns=None, args=None):
-    return _base(ds, "nunique", columns, args)
+def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
+    def _count_uniques(_df):
+        return _df.nunique()
+
+    def merge(lu, columns):
+        return {column: {"count_uniques": u} for column, u in zip(columns, lu)}
+
+    _count_uniques = delayed(df, _count_uniques)
+    count_uniques_values = delayed(df, [_count_uniques(df[col_name]) for col_name in columns])
+
+    merge = delayed(df, merge)
+    result = merge(count_uniques_values, columns)
+
+    return result
 
 
 def range(df, columns, *args):
