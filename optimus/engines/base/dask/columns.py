@@ -99,7 +99,6 @@ class DaskBaseColumns(BaseColumns):
             result = b
         return result
 
-
     def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
 
         df = self.df
@@ -137,11 +136,11 @@ class DaskBaseColumns(BaseColumns):
 
             return _value_counts
 
-        non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
-        a = {c: df[c].astype(str) for c in non_numeric_columns}
-        df = df.assign(**a)
+        # non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
+        # a = {c: df[c].astype(str) for c in non_numeric_columns}
+        # df = df.assign(**a)
 
-        value_counts = [df[col_name].value_counts().to_delayed()[0] for col_name in columns]
+        value_counts = [df[col_name].astype(str).value_counts().to_delayed()[0] for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
@@ -341,8 +340,6 @@ class DaskBaseColumns(BaseColumns):
     #     return df.cols.apply(input_cols, _date_format, func_return_type=str, output_cols=output_cols,
     #                          meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
 
-
-
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
         """
         Use a Regex to replace values
@@ -396,7 +393,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
         if compute is True:
-            result =  exprs.compute()
+            result = exprs.compute()
         else:
             result = exprs
         return result
