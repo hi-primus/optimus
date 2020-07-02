@@ -116,7 +116,7 @@ class DataFrameBaseExt(BaseExt):
         pass
 
 
-class SeriesBaseExt(ABC):
+class DataFrameSeriesBaseExt(ABC):
 
     def __init__(self, series):
         self.series = series
@@ -130,9 +130,9 @@ class SeriesBaseExt(ABC):
         """
         series = self.series
         if index is True:
-            return series.to_pandas().to_dict()
+            return series.to_dict()
         else:
-            return series.to_pandas().to_list()
+            return series.to_list()
 
     def export(self):
         """

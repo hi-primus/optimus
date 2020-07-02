@@ -1,7 +1,7 @@
 import pandas as pd
 
 from optimus.engines.base.commons.functions import to_float, to_integer, to_datetime
-from optimus.engines.base.dataframe.extension import DataFrameBaseExt, SeriesBaseExt
+from optimus.engines.base.dataframe.extension import DataFrameBaseExt, DataFrameSeriesBaseExt
 
 DataFrame = pd.DataFrame
 Series = pd.Series
@@ -17,7 +17,7 @@ def ext(self: DataFrame):
 
 
 def ext_series(self: Series):
-    class Ext(SeriesBaseExt):
+    class Ext(DataFrameSeriesBaseExt):
 
         def __init__(self, series):
             super(Ext, self).__init__(series)
@@ -35,6 +35,17 @@ def ext_series(self: Series):
             series = self.series
             return to_datetime(series, format)
 
+        def to_dict(self, index=True):
+            """
+            Create a dict
+            :param index: Return the series index
+            :return:
+            """
+            series = self.series
+            if index is True:
+                return series.to_dict()
+            else:
+                return series.to_list()
     return Ext(self)
 
 

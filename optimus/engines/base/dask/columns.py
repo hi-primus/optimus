@@ -66,7 +66,8 @@ class DaskBaseColumns(BaseColumns):
                     # ProfilerDataTypesQuality.MISMATCH.value
                     return 0
 
-            r = _df[_col_name].map(_func).value_counts().ext.to_dict()
+            r = _df[_col_name].astype(str).map(_func).value_counts().ext.to_dict()
+
             r = update_dict(init.copy(), r)
             a = {_col_name: {"mismatch": r[0], "missing": r[1], "match": r[2]}}
             return a

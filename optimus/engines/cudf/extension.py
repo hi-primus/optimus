@@ -2,7 +2,7 @@ from cudf.core import DataFrame
 from cudf.core import Series
 
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf, to_datetime_cudf
-from optimus.engines.base.dataframe.extension import DataFrameBaseExt, SeriesBaseExt
+from optimus.engines.base.dataframe.extension import DataFrameBaseExt, DataFrameSeriesBaseExt
 
 
 def ext(self: DataFrame):
@@ -16,7 +16,7 @@ def ext(self: DataFrame):
 
 
 def ext_series(self: Series):
-    class Ext(SeriesBaseExt):
+    class Ext(DataFrameSeriesBaseExt):
 
         def __init__(self, series):
             super(Ext, self).__init__(series)

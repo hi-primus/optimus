@@ -3,14 +3,14 @@ from dask.dataframe.core import DataFrame
 from dask.dataframe.core import Series
 
 from optimus.engines.base.commons.functions import to_float, to_integer, to_datetime
-from optimus.engines.base.dataframe.extension import SeriesBaseExt
+from optimus.engines.base.dataframe.extension import DataFrameSeriesBaseExt
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.constants import MAX_BUCKETS
-import pandas as pd
+
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
@@ -202,7 +202,19 @@ def ext(self: DataFrame):
 
 
 def ext_series(self: Series):
-    class Ext(SeriesBaseExt):
+    class Ext(DataFrameSeriesBaseExt):
+
+        def to_dict(self, index=True):
+            """
+            Create a dict
+            :param index: Return the series index
+            :return:
+            """
+            series = self.series
+            if index is True:
+                return series.cfompute().to_dict()
+            else:
+                return series.compute().to_list()
 
         def __init__(self, series):
             super(Ext, self).__init__(series)
