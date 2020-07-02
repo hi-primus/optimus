@@ -355,62 +355,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        # if on_error == "nan":
-        #     kwargs = {"default": np.nan}
-        #
-        # def _cast_bool(value):
-        #     if pd.isnull(value):
-        #         return np.nan
-        #     else:
-        #         return bool(value)
-        #
-        # def _cast_date(value, format="YYYY-MM-DD"):
-        #     if pd.isnull(value):
-        #         return np.nan
-        #     else:
-        #         try:
-        #             # return pendulum.parse(value)
-        #             # return pendulum.from_format(value, format)
-        #             # return dparse(value)
-        #
-        #             return value
-        #         except:
-        #             return value
-        #
-        # def _cast_str(value):
-        #     if pd.isnull(value):
-        #         return np.nan
-        #     else:
-        #         return str(value)
-        #
-        # def _cast_object(value):
-        #     ## Do nothing
-        #     return value
 
-        # _dtypes = []
-        # # Parse params
-        # if columns is None:
-        #     input_cols = parse_columns(df, input_cols)
-        #     if is_list(input_cols) or is_one_element(input_cols):
-        #         output_cols = get_output_cols(input_cols, output_cols)
-        #         for _ in range(0, len(input_cols)):
-        #             _dtypes.append(dtype)
-        #     elif is_list_of_tuples(input_cols):
-        #         input_cols = list([c[0] for c in columns])
-        #         if len(columns[0]) == 2:
-        #             output_cols = get_output_cols(input_cols, output_cols)
-        #             _dtypes = list([c[1] for c in columns])
-        #         elif len(columns[0]) == 3:
-        #             output_cols = list([c[1] for c in columns])
-        #             _dtypes = list([c[2] for c in columns])
-        #
-        #     output_cols = get_output_cols(input_cols, output_cols)
-        #
-        # cast_func = {'int': _cast_int, 'decimal': _cast_float, "string": _cast_str, 'bool': _cast_bool,
-        #              'date': _cast_date, "object": _cast_object, "missing": _cast_str}
-
-        # meta = [(i, object) for i in columns]
-        print("dtype", dtype)
         columns = prepare_columns(df, input_cols, output_cols, args=dtype)
         for input_col, output_col, arg in columns:
             if arg == "float":
@@ -426,12 +371,6 @@ class BaseColumns(ABC):
             else:
                 raise Exception
 
-        # df = df.cols.apply(input_cols, cast_func[dtype], output_cols=output_cols, mode="map")
-
-        # df.cols.set_profiler_dtypes(columns)
-
-        ## Check this could be faster ddf = ddf.assign(col4=lambda x: check_dist(x.col1,x.col2,x.col3))
-        # df = df.assign(**{output_col: df[input_col].apply(func=func, args=args, meta=meta, convert_dtype=False)})
         return df
 
     @staticmethod
@@ -520,10 +459,13 @@ class BaseColumns(ABC):
             search_by = alpha_lower + alpha_upper + digits + punctuation
             replace_by = ["*"] * len(alpha_lower + alpha_upper + digits + punctuation)
 
+        df.cols.replace()
         result = {}
         columns = prepare_columns(df, input_cols, output_cols)
 
         for input_col, output_col in columns:
+            print("search_by", search_by)
+            print("replace_by", replace_by)
             result[input_col] = df[input_col].str.replace(search_by,
                                                           replace_by).value_counts().ext.to_dict()
         return result
@@ -909,72 +851,65 @@ class BaseColumns(ABC):
         """
 
         :param input_cols:
-        :param output_cols:
         :param format:
+        :param output_cols:
         :return:
         """
 
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df._lib.to_datetime(_df[_input_col], format=_format).dt.year
+        def _year(value, _format):
+            return F.year(value, _format)
 
-        for input_col in input_cols:
-            df = df.rows.apply(func, args=(input_col, format), output_cols=output_cols)
-
-        return df
+        return df.cols.apply(input_cols, _year, args=format, output_cols=output_cols, meta_action=Actions.YEAR.value,
+                             mode="pandas", set_index=True)
 
     def month(self, input_cols, format=None, output_cols=None):
+        """
+
+        :param input_cols:
+        :param format:
+        :param output_cols:
+        :return:
+        """
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.month
+        def _month(value, _format):
+            return F.month(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _month, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def day(self, input_cols, format=None, output_cols=None):
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.day
+        def _day(value, _format):
+            return F.day(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _day, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def hour(self, input_cols, format=None, output_cols=None):
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.hour
+        def _hour(value, _format):
+            return F.day(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def minute(self, input_cols, format=None, output_cols=None):
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.minute
+        def _minute(value, _format):
+            return F.day(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def second(self, input_cols, format=None, output_cols=None):
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.second
+        def _second(value, _format):
+            return F.day(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def weekday(self, input_cols, format=None, output_cols=None):
         df = self.df
@@ -1010,11 +945,8 @@ class BaseColumns(ABC):
 
         df = self.df
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        output_ordered_columns = df.cols.names()
-
         search = val_to_list(search)
+
         if search_by == "chars":
             # TODO: Maybe we could use replace_multi()
             str_regex = "|".join(map(re.escape, search))
@@ -1030,24 +962,12 @@ class BaseColumns(ABC):
         else:
             regex = str_regex
 
-        kw_columns = {}
-        for input_col, output_col in zip(input_cols, output_cols):
-            # print("input_cols", regex, replace_by)
-            # print("str_regex", str_regex)
-            kw_columns[output_col] = df[input_col].astype(str).str.replace(str_regex, replace_by)
+        def _replace(series, args):
+            _str_regex, _replace_by = args
+            return series.str.replace(_str_regex, _replace_by)
 
-            if input_col != output_col:
-                col_index = output_ordered_columns.index(input_col) + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
-
-        df = df.assign(**kw_columns)
-        # The apply function seems to have problem appending new columns https://github.com/dask/dask/issues/2690
-        # df = df.cols.apply(input_cols, _replace, func_return_type=str,
-        #                    filter_col_by_dtypes=df.constants.STRING_TYPES,
-        #                    output_cols=output_cols, args=(regex, replace_by))
-
-        df = df.meta.preserve(df, Actions.REPLACE.value, one_list_to_val(output_cols))
-        return df.cols.select(output_ordered_columns)
+        return df.cols.apply(input_cols, _replace, args=(str_regex, replace_by), output_cols=output_cols,
+                             mode="vectorized")
 
     @staticmethod
     @abstractmethod
@@ -1123,7 +1043,7 @@ class BaseColumns(ABC):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        expr = reduce(operator, [to_numeric(df[col_name]).fillna(0) for col_name in columns])
+        expr = reduce(operator, [df[col_name].to_float().fillna(0) for col_name in columns])
         return df.assign(**{output_col: expr})
 
     def add(self, columns, output_col="sum"):
@@ -1402,7 +1322,7 @@ class BaseColumns(ABC):
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    def boxplot(columns):
+    def boxplot(self, columns):
         """
         Output values frequency in json format
         :param columns: Columns to be processed

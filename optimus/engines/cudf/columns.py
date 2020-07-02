@@ -5,6 +5,7 @@ import cupy as cp
 from cudf.core import DataFrame
 from sklearn.preprocessing import StandardScaler
 
+from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 # DataFrame = pd.DataFrame
@@ -28,31 +29,17 @@ def cols(self: DataFrame):
             return df
 
         def to_integer(self, input_cols, output_cols=None):
-            def _to_integer(value, *args):
-                series_string = value.astype(str)
-                # See https://github.com/rapidsai/cudf/issues/5345
-                series = cudf.Series(series_string.str.stoi()).fillna(False)
-                series[
-                    ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
-                return series
 
             df = self.df
-
-            return df.cols.apply(input_cols, _to_integer, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+            return df.cols.apply(input_cols, to_integer_cudf, output_cols=output_cols,
+                                 meta_action=Actions.TO_FLOAT.value,
                                  mode="pandas")
 
         def to_float(self, input_cols, output_cols=None):
-            def _to_float(value, *args):
-                series_string = value.astype(str)
-                # See https://github.com/rapidsai/cudf/issues/5345
-                series = cudf.Series(series_string.str.stof()).fillna(False)
-                series[
-                    ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-                return series
 
             df = self.df
 
-            return df.cols.apply(input_cols, _to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+            return df.cols.apply(input_cols, to_float_cudf, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
                                  mode="pandas")
 
         @staticmethod
@@ -66,8 +53,7 @@ def cols(self: DataFrame):
         def reverse(self, input_cols, output_cols=None):
             raise NotImplementedError('Not implemented yet')
 
-        def weekofyear(self, input_cols, output_cols=None):
-            raise NotImplementedError('Not implemented yet')
+
 
         # https://github.com/rapidsai/cudf/issues/3177
         # def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -217,7 +203,7 @@ def cols(self: DataFrame):
             # return np.count_nonzero(df.isnull().values.ravel())
 
         def remove_accents(self, input_cols, output_cols=None):
-            raise NotImplementedError('Not implemented yet')
+            raise NotImplementedError('Not implemented yet. See https://github.com/rapidsai/cudf/issues/5527#issuecomment-650121132')
 
         def hist(self, columns="*", buckets=10, compute=True):
             df = self.df

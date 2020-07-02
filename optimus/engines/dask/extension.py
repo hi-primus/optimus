@@ -1,13 +1,16 @@
 import humanize
 from dask.dataframe.core import DataFrame
+from dask.dataframe.core import Series
 
+from optimus.engines.base.commons.functions import to_float, to_integer, to_datetime
+from optimus.engines.base.dataframe.extension import SeriesBaseExt
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.constants import MAX_BUCKETS
-
+import pandas as pd
 
 def ext(self: DataFrame):
     class Ext(BaseExt):
@@ -198,4 +201,27 @@ def ext(self: DataFrame):
     return Ext(self)
 
 
+def ext_series(self: Series):
+    class Ext(SeriesBaseExt):
+
+        def __init__(self, series):
+            super(Ext, self).__init__(series)
+            self.series = series
+
+        def to_float(self):
+            series = self.series
+            return series.map(to_float)
+
+        def to_integer(self):
+            series = self.series
+            return series.map(to_integer)
+
+        def to_datetime(self, format):
+            series = self.series
+            return to_datetime(series, format)
+
+    return Ext(self)
+
+
 DataFrame.ext = property(ext)
+Series.ext = property(ext_series)

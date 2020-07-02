@@ -147,3 +147,4 @@ class SeriesBaseExt(ABC):
 
     def table(self):
         pass
+

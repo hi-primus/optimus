@@ -136,8 +136,7 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def weekofyear(self, input_cols, output_cols=None):
-        raise NotImplementedError("To be implemented")
+
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):

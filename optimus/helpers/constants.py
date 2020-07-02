@@ -57,6 +57,8 @@ class Actions(Enum):
     KEEP = "keep"
     CUT = "cut"
     TO_FLOAT = "to_float"
+    TO_INTEGER = "to_integer"
+    YEAR = "years"
 
     # ROWS
     SELECT_ROW = "select_row"

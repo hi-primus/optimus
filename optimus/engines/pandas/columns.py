@@ -1,17 +1,16 @@
 import re
 
-import fastnumbers
 import numpy as np
 import pandas as pd
 
+from optimus.engines.base.commons.functions import to_integer, to_float
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.jit import min_max, bincount
+from optimus.engines.jit import bincount
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
-from optimus.helpers.columns import parse_columns, get_output_cols, prepare_columns
+from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import set_function_parser, set_func
+from optimus.helpers.core import val_to_list
 from optimus.infer import is_str
 
 DataFrame = pd.DataFrame
@@ -44,27 +43,16 @@ def cols(self: DataFrame):
                                  mode="map")
 
         def to_integer(self, input_cols, output_cols=None):
-            # if pd.isnull(value):
-            #     return np.nan
-            # else:
-            #     return fastnumbers.fast_float(value, **kwargs)
-            #
-
-            def _to_integer(value, *args):
-                return fastnumbers.fast_int(value, default=0)
 
             df = self.df
 
-            return df.cols.apply(input_cols, _to_integer, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+            return df.cols.apply(input_cols, to_integer, output_cols=output_cols, meta_action=Actions.TO_INTEGER.value,
                                  mode="map")
 
         def to_float(self, input_cols, output_cols=None):
-            def _to_float(value, *args):
-                return fastnumbers.fast_float(value, default=np.nan)
-
             df = self.df
 
-            return df.cols.apply(input_cols, _to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
+            return df.cols.apply(input_cols, to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
                                  mode="map")
 
         @staticmethod
@@ -117,11 +105,7 @@ def cols(self: DataFrame):
                                                                                     errors='ignore').str.decode('utf-8')
             return df
 
-        def weekday(self, input_cols, output_cols=None):
-            pass
 
-        def weekofyear(self, input_cols, output_cols=None):
-            pass
 
         # NLP
         @staticmethod

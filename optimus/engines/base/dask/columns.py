@@ -98,21 +98,6 @@ class DaskBaseColumns(BaseColumns):
             result = b
         return result
 
-    def count_uniques(self, columns, estimate: bool = True, compute: bool = True):
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        @delayed
-        def merge(count_uniques_values, _columns):
-            return {column: {"count_uniques": values} for column, values in zip(_columns, count_uniques_values)}
-
-        count_uniques_values = [df[col_name].astype(str).count_unique() for col_name in columns]
-        result = merge(count_uniques_values, columns)
-
-        if compute is True:
-            result = result.compute()
-
-        return result
 
     def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
 
@@ -355,8 +340,7 @@ class DaskBaseColumns(BaseColumns):
     #     return df.cols.apply(input_cols, _date_format, func_return_type=str, output_cols=output_cols,
     #                          meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
 
-    def weekofyear(self, input_cols, output_cols=None):
-        pass
+
 
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
         """
@@ -410,7 +394,7 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
-        return dask.compute(*exprs)[0]
+        return exprs.compute()
 
     # TODO: Check if we must use * to select all the columns
 

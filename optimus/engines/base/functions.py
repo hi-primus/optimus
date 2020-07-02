@@ -4,10 +4,12 @@ import dask.array as da
 import numpy as np
 import pandas as pd
 from dask import dataframe as dd
+
 # import cudf
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe, \
-    is_cudf_dataframe, is_pandas_dataframe, is_dask_dataframe
+    is_dask_dataframe
 from optimus.helpers.converter import format_dict
+from optimus.helpers.core import val_to_list
 
 op_to_series_func = {
     "abs": {
@@ -162,50 +164,14 @@ def call(series, *args, method_name=None):
 
 
 def abs(series):
-    return to_numeric(series).abs()
-
-
-# def to_numeric(df_series, args):
-#     def _to_numeric_cudf(_df_series, _col_name=None):
-#         import cudf
-#         if is_cudf_series(df_series):
-#             series = _df_series
-#         elif is_cudf_dataframe(df_series):
-#             series = _df_series[_col_name]
-#
-#         series_string = series.astype(str)
-#         # See https://github.com/rapidsai/cudf/issues/5345
-#         series = cudf.Series(series_string.str.stof()).fillna(False)
-#         series[~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-#         return series
-#
-#     # if not is_column_a(df_series, col, df.constants.NUMERIC_TYPES):
-#
-#
-#     if is_pandas_series(df_series) or is_pandas_dataframe(df_series):
-#         return pd.to_numeric(df_series, errors="coerce")
-#
-#     elif is_dask_dataframe(df_series):
-#         def func(_df_series):
-#             return pd.to_numeric(_df_series, errors="coerce")
-#
-#         return df_series.map_partitions(func)
-#
-#     elif is_cudf_series(df_series):
-#         return _to_numeric_cudf(df_series)
-#
-#     elif is_cudf_dataframe(df_series):
-#         kw_columns = {}
-#         for col_name in df_series.cols.names():
-#             kw_columns[col_name] = _to_numeric_cudf(df_series, col_name)
-#         return df_series.assign(**kw_columns)
+    return series.to_float().abs()
 
 
 def mad(df, columns, args):
     more = args[0]
     mad_value = {}
     for col_name in columns:
-        casted_col = to_numeric(df[col_name])
+        casted_col = df.cols.to_float(df[col_name])
         median_value = casted_col.quantile(0.5)
 
         # In all case all the values from the column are nan because can not be converted to number
@@ -227,10 +193,10 @@ def mad(df, columns, args):
 
 
 def clip(series, lower_bound, upper_bound):
-    if is_cudf_series(series):
-        raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
-    else:
-        return to_numeric(series).clip(lower_bound, upper_bound)
+    # if is_cudf_series(series):
+    #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+    # else:
+    return series.ext.to_float().clip(lower_bound, upper_bound)
 
 
 def cut(series, bins):
@@ -238,86 +204,84 @@ def cut(series, bins):
     #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
     # else:
     if is_pandas_series(series):
-        return to_numeric(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+        return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
     elif is_cudf_series(series):
         raise NotImplementedError("Not implemented yet")
 
 
 def is_any_series(series):
-    if is_cudf_series(series) or is_pandas_series(series) or is_dask_series(series):
+    if is_pandas_series(series):
         return True
+
+    if is_dask_series(series):
+        return True
+    # if is_cudf_series(series):
+    #     return True
 
 
 # TODO: dask seems more efficient triggering multiple .min() task, one for every column
 # cudf seems to be calculate faster in on pass using df.min()
+# method_to_call = getattr(foo, 'bar')
+# result = method_to_call()
 
-def min(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"min": {df_or_series.name: to_numeric(df_or_series).min()}}
+def _base(ds, func_name, columns=None, args=None):
+    if is_any_series(ds):
+        result = [getattr(ds.ext.to_float(), func_name)()]
+        columns = val_to_list(ds.name)
+    else:
+        result = [getattr(ds[col_name].ext.to_float(), func_name)() for col_name in columns]
 
-    return {"min": {col_name: to_numeric(df_or_series[col_name]).min() for col_name in columns}}
+    def to_dict(_result):
+        return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}})
 
-
-def max(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"max": {df_or_series.name: to_numeric(df_or_series).max()}}
-
-    return {"max": {col_name: to_numeric(df_or_series[col_name]).max() for col_name in columns}}
-
-
-def mean(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"mean": {df_or_series.name: to_numeric(df_or_series).mean()}}
-
-    return {"mean": {col_name: to_numeric(df_or_series[col_name]).mean() for col_name in columns}}
+    d = delayed(ds, to_dict)
+    return d(result)
 
 
-def mode(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"mode": {df_or_series.name: to_numeric(df_or_series).mode()}}
-
-    return {"mode": {col_name: to_numeric(df_or_series[col_name]).mode() for col_name in columns}}
-
-
-def std(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"std": {df_or_series.name: to_numeric(df_or_series).std()}}
-
-    return {"std": {col_name: to_numeric(df_or_series[col_name]).std() for col_name in columns}}
+def delayed(df, func):
+    import dask
+    if is_dask_dataframe(df) or is_dask_series(df):  # or is_dask_cudf_dataframe(df):
+        return dask.delayed(func)
+    return func
 
 
-def sum(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"sum": {df_or_series.name: to_numeric(df_or_series).sum()}}
-
-    return {"sum": {col_name: to_numeric(df_or_series[col_name]).sum() for col_name in columns}}
+# Reductions
+def min(ds, columns=None, args=None):
+    return _base(ds, "min", columns, args)
 
 
-def variance(df_or_series, columns=None):
-    if is_any_series(df_or_series):
-        return {"var": {df_or_series.name: to_numeric(df_or_series).var()}}
-
-    return {"var": {col_name: to_numeric(df_or_series[col_name]).var() for col_name in columns}}
+def max(ds, columns=None, args=None):
+    return _base(ds, "max", columns, args)
 
 
-# def variance(df, columns, *args):
-#     return {"var": {col_name: to_numeric(df[col_name]).var() for col_name in columns}}
+def mean(ds, columns=None, args=None):
+    return _base(ds, "mean", columns, args)
 
 
-# @staticmethod
-# def sum(df, columns, args):
-#     f = {col_name: df[col_name].sum() for col_name in columns}
-#
-#     @delayed
-#     def _sum(_f):
-#         return {"sum": _f}
-#
-#     return _sum(f)
+def mode(ds, columns=None, args=None):
+    return _base(ds, "mode", columns, args)
+
+
+def std(ds, columns=None, args=None):
+    return _base(ds, "std", columns, args)
+
+
+def sum(ds, columns=None, args=None):
+    return _base(ds, "sum", columns, args)
+
+
+def var(ds, columns=None, args=None):
+    return _base(ds, "var", columns, args)
+
+
+def count_uniques(ds, columns=None, args=None):
+    return _base(ds, "nunique", columns, args)
 
 
 def range(df, columns, *args):
     return {
-        "range": {col_name: {"min": to_numeric(df[col_name]).min(), "max": to_numeric(df[col_name]).max()} for col_name
+        "range": {col_name: {"min": df.cols.to_float(df[col_name]).min(), "max": df.cols.to_float(df[col_name]).max()}
+                  for col_name
                   in columns}}
     # @staticmethod
     #     def range_agg(df, columns, args):
@@ -341,25 +305,15 @@ def unique(df, columns, *args):
 def count_zeros(df, columns, *args):
     # Cudf can not handle null so we fill it with non zero values.
     non_zero_value = 1
-    return {"zeros": {col_name: int((to_numeric(df[col_name]).fillna(non_zero_value).values == 0).sum()) for col_name in
-                      columns}}
-
-
-def count_uniques(df, columns, *args):
-    # Cudf can not handle null so we fill it with non zero values.
-    return {"unique": {col_name: df[col_name].astype(str).nunique() for col_name in columns}}
-
-
-def delayed(df, func):
-    import dask
-    if is_dask_dataframe(df) or is_dask_cudf_dataframe(df):
-        return dask.delayed(func)
-    return func
+    return {
+        "zeros": {col_name: int((df.cols.to_float(df[col_name]).fillna(non_zero_value).values == 0).sum()) for col_name
+                  in
+                  columns}}
 
 
 def percentile_agg(df, columns, args):
     values = args[0]
-    result = [to_numeric(df[col_name]).quantile(values) for col_name in columns]
+    result = [df.cols.to_float(df[col_name]).quantile(values) for col_name in columns]
 
     def to_dict(_result):
         return {"percentile": {col_name: r.ext.to_dict() for col_name, r in zip(columns, _result)}}
@@ -399,7 +353,7 @@ def exp(series):
 
 
 def mod(series, *args):
-    return to_numeric(series).mod(*args)
+    return series.ext.to_float().mod(*args)
 
 
 def pow(series, *args):
@@ -407,7 +361,7 @@ def pow(series, *args):
 
 
 def ceil(series):
-    return to_numeric(series).ceil()
+    return series.ext.to_float().ceil()
 
 
 def sqrt(series):
@@ -415,15 +369,15 @@ def sqrt(series):
 
 
 def floor(series):
-    return to_numeric(series).floor()
+    return series.ext.to_float().floor()
 
 
 def trunc(series):
-    return to_numeric(series).truncate()
+    return series.ext.to_float().truncate()
 
 
 def radians(series):
-    return to_numeric(series).radians()
+    return series.ext.to_float().radians()
 
 
 def degrees(series):
@@ -590,25 +544,26 @@ def exact(series, pat):
 
 
 # dates
-def year(series):
-    return series.dt.year()
+def year(series, format):
+    # return series.ext.to_datetime(format=format).strftime('%Y').to_series().reset_index(drop=True)
+    return series.ext.to_datetime(format=format).dt.year
 
 
-def month(series):
-    return series.dt.mont()
+def month(series, format):
+    return series.ext.to_datetime(format=format).dt.month
 
 
-def day(series):
-    return series.dt.day()
+def day(series, format):
+    return series.ext.to_datetime(format=format).dt.day
 
 
 def hour(series):
-    return series.dt.hour()
+    return series.ext.to_datetime(format=format).dt.hour
 
 
 def minute(series):
-    return series.dt.minute()
+    return series.ext.to_datetime(format=format).dt.minute
 
 
 def second(series):
-    return series.dt.second()
+    return series.ext.to_datetime(format=format).dt.second

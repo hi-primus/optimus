@@ -16,8 +16,6 @@ from fast_histogram import histogram1d
 def functions(self):
     class Functions:
 
-
-
         @staticmethod
         def kurtosis(df, columns, args):
             # Maybe we could contribute with this
@@ -41,24 +39,6 @@ def functions(self):
                 return {"skewness": _f}
 
             return _skewness(f)
-
-        @staticmethod
-        def count_uniques_agg(columns, args):
-            estimate = args[0]
-
-            def _count_uniques_agg(df):
-
-                if estimate is True:
-                    ps = {col_name: df[col_name].nunique_approx() for col_name in columns}
-                    # ps = pd.Series({col: df[col].nunique_approx() for col in df.cols.names()})
-                else:
-                    ps = {col_name: df[col_name].count_unique() for col_name in columns}
-                result = {"count_uniques": ps}
-
-                return result
-
-            return _count_uniques_agg
-
 
 
 
