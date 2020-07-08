@@ -17,13 +17,13 @@ def min_max(arr):
         y = arr[i + 1]
         if x > y:
             x, y = y, x
-        min_val = min(x, min_val)
-        max_val = max(y, max_val)
+        min_val = np.nanmin([x, min_val])
+        max_val = np.nanmax([y, max_val])
         i += 2
     if not odd:
         x = arr[n]
-        min_val = min(x, min_val)
-        max_val = max(y, max_val)
+        min_val = np.nanmin([x, min_val])
+        max_val = np.nanmax([y, max_val])
     return min_val, max_val
 
 
@@ -40,20 +40,18 @@ def histogram1d(v, bins, range):
 @njit(fastmath=True)
 def get_bin_edges(a, bins):
     """
-    Get edges from a arrray
+    Get edges from a array
     :param a:
     :param bins:
     :return:
     """
     bin_edges = np.zeros((bins + 1,), dtype=np.float64)
     a_min, a_max = min_max(a)
-    # a_min = a.min()
-    # a_max = a.max()
     delta = (a_max - a_min) / bins
     for i in range(bin_edges.shape[0]):
         bin_edges[i] = a_min + i * delta
 
-    bin_edges[-1] = a_max  # Avoid roundoff error on last point
+    bin_edges[-1] = a_max  # Avoid round off error on last point
     return bin_edges
 
 
