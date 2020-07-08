@@ -2,12 +2,11 @@ import re
 
 import numpy as np
 import pandas as pd
+from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import to_integer, to_float
+from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.jit import bincount, numba_histogram
-from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
-from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
+from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
@@ -26,14 +25,9 @@ def cols(self: DataFrame):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
 
-            # print("args",args)
-            # df = args[0]
-            # buckets = args[1]
-            # min_max = args[2]
             df = self.df
             result = {}
             result_hist = {}
-            # _min_max = df.cols.min_max(columns)
 
             columns = parse_columns(df, columns)
 
@@ -41,7 +35,6 @@ def cols(self: DataFrame):
                 if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
 
                     i, j = numba_histogram(df[col_name].to_numpy(), bins=buckets)
-
                     result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
 
                     r = []
@@ -88,38 +81,42 @@ def cols(self: DataFrame):
             return df.cols.apply(input_cols, to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
                                  mode="map")
 
+        def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+            df = self.df
+            return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
+
         @staticmethod
         def astype(*args, **kwargs):
             pass
 
-        def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False,
-                    output_cols=None):
-            df = self.df
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-            # If tupple
-
-            search = val_to_list(search)
-
-            if search_by == "chars":
-                str_regex = "|".join(map(re.escape, search))
-            elif search_by == "words":
-                str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-            else:
-                str_regex = search
-            if ignore_case is True:
-                _regex = re.compile(str_regex, re.IGNORECASE)
-            else:
-                _regex = re.compile(str_regex)
-
-            # df = df.cols.cast(input_cols, "str")
-            for input_col, output_col in zip(input_cols, output_cols):
-                if search_by == "chars" or search_by == "words":
-                    df[output_col] = df[input_col].astype(str).str.replace(_regex, replace_by)
-                elif search_by == "full":
-                    df[output_col] = df[input_col].astype(str).replace(search, replace_by)
-
-            return df
+        # def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False,
+        #             output_cols=None):
+        #     df = self.df
+        #     input_cols = parse_columns(df, input_cols)
+        #     output_cols = get_output_cols(input_cols, output_cols)
+        #     # If tupple
+        #
+        #     search = val_to_list(search)
+        #
+        #     if search_by == "chars":
+        #         str_regex = "|".join(map(re.escape, search))
+        #     elif search_by == "words":
+        #         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        #     else:
+        #         str_regex = search
+        #     if ignore_case is True:
+        #         _regex = re.compile(str_regex, re.IGNORECASE)
+        #     else:
+        #         _regex = re.compile(str_regex)
+        #
+        #     # df = df.cols.cast(input_cols, "str")
+        #     for input_col, output_col in zip(input_cols, output_cols):
+        #         if search_by == "chars" or search_by == "words":
+        #             df[output_col] = df[input_col].astype(str).str.replace(_regex, replace_by)
+        #         elif search_by == "full":
+        #             df[output_col] = df[input_col].astype(str).replace(search, replace_by)
+        #
+        #     return df
 
         @staticmethod
         def remove_accents(input_cols, output_cols=None):
@@ -258,39 +255,19 @@ def cols(self: DataFrame):
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
 
-        @staticmethod
-        def string_to_index(input_cols=None, output_cols=None, columns=None):
-            df = self
-            df = ml_string_to_index(df, input_cols, output_cols, columns)
+        def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+            df = self.df
+            le = preprocessing.LabelEncoder()
+            df = string_to_index(df, input_cols, output_cols, le)
 
             return df
 
-        @staticmethod
-        def index_to_string(input_cols=None, output_cols=None, columns=None):
-            df = self
-            df = ml_index_to_string(df, input_cols, output_cols, columns)
+        def index_to_string(self, input_cols=None, output_cols=None, columns=None):
+            df = self.df
+            le = preprocessing.LabelEncoder()
+            df = index_to_string(df, input_cols, output_cols, le)
 
             return df
-
-        @staticmethod
-        def frequency(columns, n=10, percentage=False, total_rows=None):
-            # https://stackoverflow.com/questions/10741346/numpy-most-efficient-frequency-counts-for-unique-values-in-an-array
-            df = self
-            columns = parse_columns(df, columns)
-
-            result = {}
-            for col_name in columns:
-                if df[col_name].dtype == np.int64 or df[col_name].dtype == np.float64:
-                    i, j = bincount(df[col_name], n)
-                else:
-                    # Value counts
-                    r = df[col_name].value_counts().nlargest(n)
-                    i = r.index.tolist()
-                    j = r.tolist()
-                col_values = [{"value": value, "count": count} for value, count in zip(i, j)]
-
-                result[col_name] = {"frequency": col_values}
-            return result
 
     return Cols(self)
 

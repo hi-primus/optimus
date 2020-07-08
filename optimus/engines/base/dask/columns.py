@@ -1,23 +1,18 @@
 import dask
 import dask.dataframe as dd
-import fastnumbers
 import numpy as np
 import pandas as pd
 from dask import delayed
 from dask_ml import preprocessing
-from dask_ml.impute import SimpleImputer
-# from numba import jit
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.ml.contants import INDEX_TO_STRING
-from optimus.helpers.check import is_cudf_series, is_pandas_series
 from optimus.helpers.columns import parse_columns, get_output_cols, \
     prepare_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.functions import update_dict
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, profiler_dtype_func, is_dict
+from optimus.infer import Infer
 from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
@@ -111,69 +106,6 @@ class DaskBaseColumns(BaseColumns):
     #     else:
     #         result = b
     #     return result
-
-    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
-
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        @delayed
-        def series_to_dict(_series, _total_freq_count=None):
-
-            if is_pandas_series(_series):
-                result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
-
-            elif is_cudf_series(_series):
-                r = {i[0]: i[1] for i in _series.to_frame().to_records()}
-                result = [{"value": i, "count": j} for i, j in r.items()]
-
-            if _total_freq_count is None:
-                result = {_series.name: {"frequency": result}}
-            else:
-                result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
-
-            return result
-
-        @delayed
-        def flat_dict(top_n):
-
-            result = {key: value for ele in top_n for key, value in ele.items()}
-            return result
-
-        @delayed
-        def freq_percentage(_value_counts, _total_rows):
-
-            for i, j in _value_counts.items():
-                for x in list(j.values())[0]:
-                    x["percentage"] = round((x["count"] * 100 / _total_rows), 2)
-
-            return _value_counts
-
-        # non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
-        # a = {c: df[c].astype(str) for c in non_numeric_columns}
-        # df = df.assign(**a)
-
-        value_counts = [df[col_name].astype(str).value_counts().to_delayed()[0] for col_name in columns]
-
-        n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
-
-        if count_uniques is True:
-            count_uniques = [_value_counts.count() for _value_counts in value_counts]
-            b = [series_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
-        else:
-            b = [series_to_dict(_n_largest) for _n_largest in n_largest]
-
-        c = flat_dict(b)
-
-        if percentage:
-            c = freq_percentage(c, delayed(len)(df))
-
-        if compute is True:
-            result = c.compute()
-        else:
-            result = c
-
-        return result
 
     def hist(self, columns, buckets=20, compute=True):
 
@@ -301,36 +233,6 @@ class DaskBaseColumns(BaseColumns):
 
         return df
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        """
-
-        :param input_cols:
-        :param data_type:
-        :param strategy:
-        # - If "mean", then replace missing values using the mean along
-        #   each column. Can only be used with numeric data.
-        # - If "median", then replace missing values using the median along
-        #   each column. Can only be used with numeric data.
-        # - If "most_frequent", then replace missing using the most frequent
-        #   value along each column. Can be used with strings or numeric data.
-        # - If "constant", then replace missing values with fill_value. Can be
-        #   used with strings or numeric data.
-        :param output_cols:
-        :return:
-        """
-
-        df = self.df
-        imputer = SimpleImputer(strategy=strategy, copy=False)
-
-        def _imputer(value, args):
-            # print("value", value)
-            return imputer.fit_transform(value.to_frame())[value.name]
-
-        return df.cols.apply(input_cols, _imputer, func_return_type=float,
-                             output_cols=output_cols,
-                             meta_action=Actions.IMPUTE.value, mode="vectorized",
-                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES + df.constants.STRING_TYPES)
-
     # Date operations
 
     @staticmethod
@@ -398,7 +300,6 @@ class DaskBaseColumns(BaseColumns):
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
-
 
     # TODO: Check if we must use * to select all the columns
 

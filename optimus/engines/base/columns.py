@@ -11,6 +11,7 @@ from glom import glom
 from multipledispatch import dispatch
 
 from optimus.engines.base import functions as F
+from optimus.engines.base.functions import op_delayed
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
@@ -23,6 +24,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
     is_int
+from optimus.profiler.constants import MAX_BUCKETS
 
 
 class BaseColumns(ABC):
@@ -154,12 +156,12 @@ class BaseColumns(ABC):
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False):
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None):
 
         df = self.df
 
         columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                  accepts_missing_cols=True)
+                                  accepts_missing_cols=True, default=default)
 
         # check_column_numbers(input_cols, "*")
 
@@ -360,16 +362,16 @@ class BaseColumns(ABC):
         for input_col, output_col, arg in columns:
             if arg == "float":
                 df = df.cols.to_float(input_col, output_col)
-            elif arg == "integer":
+            elif arg == "int":
                 df = df.cols.to_integer(input_col, output_col)
             elif arg == "datetime":
                 df = df.cols.to_datetime(input_col, output_col)
             elif arg == "bool":
                 df = df.cols.to_boolean(input_col, output_col)
-            elif arg == "string":
+            elif arg == "str":
                 df = df.cols.to_string(input_col, output_col)
             else:
-                raise Exception
+                RaiseIt.value_error(str, ["float", "integer","datetime", "bool", "string"])
 
         return df
 
@@ -965,7 +967,7 @@ class BaseColumns(ABC):
 
         def _replace(series, args):
             _str_regex, _replace_by = args
-            return series.str.replace(_str_regex, _replace_by)
+            return series.astype(str).str.replace(_str_regex, _replace_by)
 
         return df.cols.apply(input_cols, _replace, args=(str_regex, replace_by), output_cols=output_cols,
                              mode="vectorized")
@@ -1029,10 +1031,10 @@ class BaseColumns(ABC):
 
         return df.cols.agg_exprs(columns, F.unique, values, relative_error, tidy=True, compute=True)
 
-    def count_uniques(self, columns, values=None, estimate=True,  tidy=True, compute=True):
+    def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate,  tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, tidy=True, compute=True)
 
     def _math(self, columns, operator, output_col):
 
@@ -1303,22 +1305,63 @@ class BaseColumns(ABC):
             cols_and_inferred_dtype[col_name] = r
         return cols_and_inferred_dtype
 
-    @staticmethod
-    @abstractmethod
-    def frequency(columns, n=10, percentage=False, total_rows=None):
-        """
-        Result {'col_name': {'frequency': [{'value': 'LAUREY', 'count': 3},
-           {'value': 'GARRIE', 'count': 3},
-           {'value': 'ERIN', 'count': 2},
-           {'value': 'DEVINDER', 'count': 1}],
-          'count_uniques': 4}}
-        :param columns:
-        :param n:
-        :param percentage:
-        :param total_rows:
-        :return:
-        """
-        pass
+    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
+
+        df = self.df
+        columns = parse_columns(df, columns)
+
+        @op_delayed(df)
+        def series_to_dict(_series, _total_freq_count=None):
+
+            result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
+
+            if _total_freq_count is None:
+                result = {_series.name: {"frequency": result}}
+            else:
+                result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
+
+            return result
+
+        @op_delayed(df)
+        def flat_dict(top_n):
+
+            result = {key: value for ele in top_n for key, value in ele.items()}
+            return result
+
+        @op_delayed(df)
+        def freq_percentage(_value_counts, _total_rows):
+
+            for i, j in _value_counts.items():
+                for x in list(j.values())[0]:
+                    x["percentage"] = round((x["count"] * 100 / _total_rows), 2)
+
+            return _value_counts
+
+        # non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
+        # a = {c: df[c].astype(str) for c in non_numeric_columns}
+        # df = df.assign(**a)
+
+        value_counts = [df[col_name].astype(str).value_counts() for col_name in columns]
+
+        n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
+
+        if count_uniques is True:
+            count_uniques = [_value_counts.count() for _value_counts in value_counts]
+            b = [series_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
+        else:
+            b = [series_to_dict(_n_largest) for _n_largest in n_largest]
+
+        c = flat_dict(b)
+
+        if percentage:
+            c = freq_percentage(c, op_delayed(len)(df))
+
+        if compute is True and not is_dict(c):
+            result = c.ext.compute()
+        else:
+            result = c
+
+        return result
 
     @staticmethod
     @abstractmethod

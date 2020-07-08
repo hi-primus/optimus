@@ -1,7 +1,6 @@
 from functools import reduce
 
 import dask.dataframe as dd
-from dask_ml.impute import SimpleImputer
 
 from optimus.engines.base.columns import BaseColumns
 # from optimus.engines.base.functions import to_numeric
@@ -26,9 +25,7 @@ class DataFrameBaseColumns(BaseColumns):
         """
         return exprs
 
-    @staticmethod
-    def frequency(columns, n=10, percentage=False, total_rows=None):
-        pass
+
 
     @staticmethod
     def index_to_string(input_cols=None, output_cols=None, columns=None):
@@ -93,36 +90,6 @@ class DataFrameBaseColumns(BaseColumns):
         darr.name = 'z'
         df = df.merge(darr)
 
-        return df
-
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        """
-
-        :param input_cols:
-        :param data_type:
-        :param strategy:
-        # - If "mean", then replace missing values using the mean along
-        #   each column. Can only be used with numeric data.
-        # - If "median", then replace missing values using the median along
-        #   each column. Can only be used with numeric data.
-        # - If "most_frequent", then replace missing using the most frequent
-        #   value along each column. Can be used with strings or numeric data.
-        # - If "constant", then replace missing values with fill_value. Can be
-        #   used with strings or numeric data.
-        :param output_cols:
-        :return:
-        """
-
-        df = self.df
-        imputer = SimpleImputer(strategy=strategy, copy=False)
-
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        _df = df[input_cols]
-        imputer.fit(_df)
-        # df[output_cols] = imputer.transform(_df)[input_cols]
-        df[output_cols] = imputer.transform(_df)[input_cols]
         return df
 
     def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):

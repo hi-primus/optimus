@@ -274,23 +274,7 @@ def cols(self: DataFrame):
         def index_to_string(input_cols=None, output_cols=None, columns=None):
             pass
 
-        @staticmethod
-        def frequency(columns, n=10, percentage=False, count_uniques=False, total_rows=None, *args, **kwargs):
-            df = self
 
-            columns = parse_columns(df, columns)
-
-            result = {}
-            for col_name in columns:
-                values_and_count = df[col_name].value_counts()
-
-                value_count = [{"values": value, "count": count} for value, count in
-                               values_and_count.nlargest(n).to_pandas().items()]
-                if count_uniques is True:
-                    result[col_name] = {"frequency": value_count, "count_uniques": len(values_and_count)}
-                else:
-                    result[col_name] = {"frequency": value_count}
-            return result
 
     return Cols(self)
 
