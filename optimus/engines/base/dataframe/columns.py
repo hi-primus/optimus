@@ -16,6 +16,17 @@ class DataFrameBaseColumns(BaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     @staticmethod
+    def exec_agg(exprs, compute=None):
+        """
+        Exectute and aggregation
+        Expression in Non dask dataframe can not handle compute. See exec_agg dask implementation
+        :param exprs:
+        :param compute:
+        :return:
+        """
+        return exprs
+
+    @staticmethod
     def frequency(columns, n=10, percentage=False, total_rows=None):
         pass
 
@@ -28,10 +39,6 @@ class DataFrameBaseColumns(BaseColumns):
 
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):
-        pass
-
-    @staticmethod
-    def count_mismatch(columns_mismatch: dict = None):
         pass
 
     @staticmethod
@@ -52,14 +59,20 @@ class DataFrameBaseColumns(BaseColumns):
 
         df = self.df
         columns = parse_columns(df, columns)
-        result = {"kurtosis": {col_name: df.cols.to_float(df[col_name]).kurtosis() for col_name in columns}}
-        return result
+
+        def flat_dict(ele):
+            return {x: y for i in ele for x, y in i.items()}
+
+        return flat_dict(df.cols.select(col_name).cols.to_float().kurtosis().to_dict() for col_name in columns)
 
     def skewness(self, columns):
         df = self.df
         columns = parse_columns(df, columns)
-        result = {"skewness": {col_name: df.cols.to_float(df[col_name]).skew() for col_name in columns}}
-        return result
+
+        def flat_dict(ele):
+            return {x: y for i in ele for x, y in i.items()}
+
+        return flat_dict(df.cols.select(col_name).cols.to_float().skew().to_dict() for col_name in columns)
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
@@ -136,10 +149,8 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-
-
     def reverse(self, input_cols, output_cols=None):
-        def _reverse(value):
+        def _reverse(value, args):
             return str(value)[::-1]
 
         df = self.df

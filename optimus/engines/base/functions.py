@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+import dask
 import dask.array as da
 import numpy as np
 import pandas as pd
@@ -164,22 +165,23 @@ def call(series, *args, method_name=None):
 
 
 def abs(series):
-    return series.to_float().abs()
+    return series.ext.to_float().abs()
 
 
 def mad(df, columns, args):
     more = args[0]
     mad_value = {}
     for col_name in columns:
-        casted_col = df.cols.to_float(df[col_name])
-        median_value = casted_col.quantile(0.5)
+        casted_col = df.cols.select(col_name).cols.to_float()
+        median_value = casted_col.cols.median(col_name)
 
         # In all case all the values from the column are nan because can not be converted to number
         if not np.isnan(median_value):
-            mad_value[col_name] = (casted_col - median_value).abs().quantile(0.5)
+            mad_value = (casted_col - median_value).abs().quantile(0.5)
         else:
             mad_value[col_name] = np.nan
 
+    @op_delayed(df)
     def to_dict(_mad_value, _median_value):
         _mad_value = {"mad": _mad_value}
 
@@ -188,8 +190,7 @@ def mad(df, columns, args):
 
         return _mad_value
 
-    _mad_agg = delayed(df, to_dict)
-    return _mad_agg(mad_value, median_value)
+    return to_dict(mad_value, median_value)
 
 
 def clip(series, lower_bound, upper_bound):
@@ -224,30 +225,35 @@ def is_any_series(series):
 # method_to_call = getattr(foo, 'bar')
 # result = method_to_call()
 
-def _base(ds, func_name, columns=None, args=None):
+def _base(ds, func_name, columns=None, tidy=True, args=None):
     if is_any_series(ds):
         result = [getattr(ds.ext.to_float(), func_name)()]
         columns = val_to_list(ds.name)
     else:
         result = [getattr(ds[col_name].ext.to_float(), func_name)() for col_name in columns]
 
+    @op_delayed(ds)
     def to_dict(_result):
-        return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}})
+        return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}}, tidy=tidy)
 
-    d = delayed(ds, to_dict)
-    return d(result)
+    return to_dict(result)
 
 
-def delayed(df, func):
-    import dask
-    if is_dask_dataframe(df) or is_dask_series(df):  # or is_dask_cudf_dataframe(df):
-        return dask.delayed(func)
-    return func
+def op_delayed(df):
+    def inner(func):
+        def wrapper(*args, **kwargs):
+            if is_dask_dataframe(df) or is_dask_series(df):  # or is_dask_cudf_dataframe(df):
+                return dask.delayed(func)(*args, **kwargs)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return inner
 
 
 # Reductions
-def min(ds, columns=None, args=None):
-    return _base(ds, "min", columns, args)
+def min(ds, columns=None, tidy=True, *args):
+    return _base(ds, "min", columns, tidy, args)
 
 
 def max(ds, columns=None, args=None):
@@ -275,26 +281,17 @@ def var(ds, columns=None, args=None):
 
 
 def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
-    def _count_uniques(_df):
-        return _df.nunique()
+    @op_delayed(df)
+    def flat_dict(ele):
+        return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
 
-    def merge(lu, columns):
-        return {column: {"count_uniques": u} for column, u in zip(columns, lu)}
-
-    _count_uniques = delayed(df, _count_uniques)
-    count_uniques_values = delayed(df, [_count_uniques(df[col_name]) for col_name in columns])
-
-    merge = delayed(df, merge)
-    result = merge(count_uniques_values, columns)
-
-    return result
+    return flat_dict(df.cols.select(col_name).astype(str).nunique() for col_name in columns)
 
 
 def range(df, columns, *args):
     return {
-        "range": {col_name: {"min": df.cols.to_float(df[col_name]).min(), "max": df.cols.to_float(df[col_name]).max()}
-                  for col_name
-                  in columns}}
+        "range": {col_name: {"min": df.cols.min(col_name), "max": df.cols.max(col_name)}
+                  for col_name in columns}}
     # @staticmethod
     #     def range_agg(df, columns, args):
     #         columns = parse_columns(df, columns)
@@ -309,29 +306,53 @@ def range(df, columns, *args):
 
 # return value.astype(str).unique().ext.to_dict()
 
+# def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
+#     @op_delayed(df)
+#     def flat_dict(ele):
+#         return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
+#
+#     return flat_dict(df.cols.select(col_name).astype(str).nunique() for col_name in columns)
+
+
 def unique(df, columns, *args):
     # Cudf can not handle null so we fill it with non zero values.
-    return {"unique": {col_name: df[col_name].astype(str).unique().ext.to_dict(index=False) for col_name in columns}}
+    @op_delayed(df)
+    def flat_dict(ele):
+        # print(ele)
+        # return ele
+        r = {i: j for i, j in ele.items()}
+        # print(r)
+        return r
+
+    return flat_dict({col_name: list(df.cols.select(col_name)[col_name].astype(str).unique()) for col_name in columns})
 
 
 def count_zeros(df, columns, *args):
     # Cudf can not handle null so we fill it with non zero values.
     non_zero_value = 1
     return {
-        "zeros": {col_name: int((df.cols.to_float(df[col_name]).fillna(non_zero_value).values == 0).sum()) for col_name
-                  in
-                  columns}}
+        "zeros": {col_name: int((df.cols.select(col_name).cols.to_float().fillna(non_zero_value).values == 0).sum()) for
+                  col_name in columns}}
 
 
 def percentile_agg(df, columns, args):
     values = args[0]
-    result = [df.cols.to_float(df[col_name]).quantile(values) for col_name in columns]
+    result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
 
+    @op_delayed(df)
     def to_dict(_result):
-        return {"percentile": {col_name: r.ext.to_dict() for col_name, r in zip(columns, _result)}}
+        ## In pandas if all values are non it return {} on dict
+        _r = {}
+        for col_name, r in zip(columns, _result):
+            r_dict = r.to_dict()
+            if r_dict.get(col_name):
+                _r[col_name] = r_dict
+            else:
+                _r[col_name] = np.nan
+            # {"percentile": {col_name: r.to_dict() }}
+        return _r
 
-    _percentile = delayed(df, to_dict)
-    return format_dict(_percentile(result))
+    return format_dict(to_dict(result))
 
 
 def count_na(df, columns, args):

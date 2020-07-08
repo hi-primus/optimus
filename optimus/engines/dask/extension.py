@@ -212,7 +212,7 @@ def ext_series(self: Series):
             """
             series = self.series
             if index is True:
-                return series.cfompute().to_dict()
+                return series.compute().to_dict()
             else:
                 return series.compute().to_list()
 

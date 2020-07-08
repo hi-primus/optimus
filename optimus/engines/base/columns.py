@@ -658,9 +658,10 @@ class BaseColumns(ABC):
     # def create_exprs(columns, funcs, *args):
     #     pass
 
-    def agg_exprs(self, columns, funcs, *args, compute=True):
+    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
         """
         Create and run aggregation
+        :param compute:
         :param columns:
         :param funcs:
         :param args:
@@ -672,42 +673,42 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
 
-        return df.cols.exec_agg(format_dict(funcs[0]), compute)
+        return df.cols.exec_agg(format_dict(funcs[0], tidy), compute)
 
     @staticmethod
     @abstractmethod
     def exec_agg(exprs, compute):
         pass
 
-    def mad(self, columns, relative_error=RELATIVE_ERROR, more=False):
+    def mad(self, columns, relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         # df = self.df
-        return self.agg_exprs(columns, F.mad, relative_error, more)
+        return self.agg_exprs(columns, F.mad, relative_error, more, compute=compute, tidy=True)
 
-    def min(self, columns):
+    def min(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.min)
+        return df.cols.agg_exprs(columns, F.min, compute=compute, tidy=tidy)
 
-    def mode(self, columns):
+    def max(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.mode)
+        return df.cols.agg_exprs(columns, F.max, compute=compute, tidy=tidy)
 
-    def max(self, columns):
+    def mode(self, columns, tidy=True, compute=True):
+        df = self.df
+        return df.cols.agg_exprs(columns, F.mode, tidy=True, compute=True)
 
-        return self.agg_exprs(columns, F.max)
+    def range(self, columns, tidy=True, compute=True):
+        return self.agg_exprs(columns, F.range, compute=compute, tidy=tidy)
 
-    def range(self, columns):
-        return self.agg_exprs(columns, F.range)
-
-    def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR):
+    def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
 
         if values is None:
             values = [0.5]
-        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error)
+        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error, tidy=True, compute=True)
 
-    def median(self, columns, relative_error=RELATIVE_ERROR):
+    def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error)
+        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error, tidy=True, compute=True)
 
         # Descriptive Analytics
 
@@ -717,24 +718,24 @@ class BaseColumns(ABC):
     def kurtosis(self, columns):
         pass
 
-    def mean(self, columns):
+    def mean(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.mean)
+        return df.cols.agg_exprs(columns, F.mean, tidy=True, compute=True)
 
     @abstractmethod
     def skewness(self, columns):
         pass
 
-    def sum(self, columns):
+    def sum(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.sum)
+        return df.cols.agg_exprs(columns, F.sum, tidy=True, compute=True)
 
-    def variance(self, columns):
+    def var(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.variance)
+        return df.cols.agg_exprs(columns, F.var, tidy=True, compute=True)
 
-    def std(self, columns):
-        return self.agg_exprs(columns, F.std)
+    def std(self, columns, tidy=True, compute=True):
+        return self.agg_exprs(columns, F.std, tidy=True, compute=True)
 
     def abs(self, input_cols, output_cols=None):
         """
@@ -1014,24 +1015,24 @@ class BaseColumns(ABC):
         df = self.df
         return len(df.cols.names())
 
-    def count_na(self, columns):
+    def count_na(self, columns, tidy=True, compute=True):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
         df = self.df
-        return df.cols.agg_exprs(columns, F.count_na)
+        return df.cols.agg_exprs(columns, F.count_na, tidy=True, compute=True)
 
-    def unique(self, columns, values=None, relative_error=RELATIVE_ERROR):
+    def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.unique, values, relative_error)
+        return df.cols.agg_exprs(columns, F.unique, values, relative_error, tidy=True, compute=True)
 
-    def count_uniques(self, columns, values=None, estimate=True, compute=True):
+    def count_uniques(self, columns, values=None, estimate=True,  tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, compute=compute)
+        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate,  tidy=True, compute=True)
 
     def _math(self, columns, operator, output_col):
 
@@ -1043,7 +1044,7 @@ class BaseColumns(ABC):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        expr = reduce(operator, [df[col_name].to_float().fillna(0) for col_name in columns])
+        expr = reduce(operator, [df[col_name].ext.to_float().fillna(0) for col_name in columns])
         return df.assign(**{output_col: expr})
 
     def add(self, columns, output_col="sum"):
@@ -1216,12 +1217,14 @@ class BaseColumns(ABC):
     def scatter(columns, buckets=10):
         pass
 
-    def hist(self, columns, buckets=20):
-        df = self.df
-        result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
-        return result
-
     @staticmethod
+    @abstractmethod
+    def hist(columns, buckets=20):
+        # df = self.df
+        # result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
+        # return result
+        pass
+
     def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
         """
         Result {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
@@ -1233,7 +1236,7 @@ class BaseColumns(ABC):
             columns_mismatch = parse_columns(df, columns_mismatch)
 
         result = {}
-        nulls = df.isnull().sum().to_pandas().to_dict()
+        nulls = df.isnull().sum().ext.to_dict()
         total_rows = len(df)
 
         func = {"int": regex_int,  # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
@@ -1260,7 +1263,7 @@ class BaseColumns(ABC):
                 matches_count[False] = nulls[col_name]
 
             else:
-                matches_count = df[col_name].str.match(func[dtype]).value_counts().to_pandas().to_dict()
+                matches_count = df[col_name].astype(str).str.match(func[dtype]).value_counts().ext.to_dict()
 
             match = matches_count.get(True)
             mismatch = matches_count.get(False)
@@ -1350,9 +1353,9 @@ class BaseColumns(ABC):
         columns = parse_columns(self.df, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
         return columns
 
-    def count_zeros(self, columns):
+    def count_zeros(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.count_zeros)
+        return df.cols.agg_exprs(columns, F.count_zeros, tidy=True, compute=True)
 
     @staticmethod
     @abstractmethod

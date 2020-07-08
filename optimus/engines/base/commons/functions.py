@@ -7,19 +7,27 @@ import pandas as pd
 # Some functions are commons for pandas and dask.
 
 def to_integer(value, *args):
-    return fastnumbers.fast_int(value, default=0)
+    try:
+        # fastnumbers can only handle string or numerics values. Not None, dates or list
+        return fastnumbers.fast_int(value, default=0)
+    except TypeError:
+        return np.nan
 
 
 def to_float(value, *args):
-    # fastnumbers.fast_float(x) if x is not None else None
-    return fastnumbers.fast_float(value, default=np.nan)
+    # if value is None or isinstance(value, str):
+    #     return None
+    # else:
+    try:
+        # fastnumbers can only handle string or numerics values. Not None, dates or list
+        return fastnumbers.fast_float(value, default=np.nan)
+    except TypeError:
+        return np.nan
+
+    # return fastnumbers.fast_float(value, default=np.nan)
 
 
 def to_datetime(value, format):
-    return pd.to_datetime(value, format=format, errors="coerce")
-
-
-def to_datetime_cudf(value, format):
     return pd.to_datetime(value, format=format, errors="coerce")
 
 
@@ -41,6 +49,11 @@ def to_float_cudf(value, *args):
     series[
         ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
     return series
+
+
+def to_datetime_cudf(value, format):
+    import cudf
+    return cudf.to_datetime(value, format=format, errors="coerce")
 
 # def _cast_date(value, format="YYYY-MM-DD"):
 #     if pd.isnull(value):

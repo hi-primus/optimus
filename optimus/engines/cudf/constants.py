@@ -1,5 +1,7 @@
 import numpy as np
 from cudf.core import DataFrame
+
+
 # from cudf.core.column.numerical import NumericalColumn
 # from cudf.core.column.datetime import DatetimeColumn
 # from cudf.core.column.categorical import CategoricalColumn
@@ -54,6 +56,7 @@ def constants(self):
         OBJECT_TYPES = ["object"]
 
     return Constants()
+
 
 STARTING_DASK = "Starting or setting Cudf..."
 DataFrame.constants = property(constants)

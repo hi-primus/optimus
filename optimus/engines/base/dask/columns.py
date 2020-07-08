@@ -30,6 +30,19 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
+    @staticmethod
+    def exec_agg(exprs, compute):
+        """
+        Execute and aggregation
+        :param exprs:
+        :return:
+        """
+        if compute is True:
+            result = exprs.compute()
+        else:
+            result = exprs
+        return result
+
     def append(self, dfs):
         """
 
@@ -41,63 +54,63 @@ class DaskBaseColumns(BaseColumns):
         df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
-    def count_mismatch(self, columns_mismatch: dict = None, compute=True):
-        df = self.df
-        if not is_dict(columns_mismatch):
-            columns_mismatch = parse_columns(df, columns_mismatch)
-        init = {0: 0, 1: 0, 2: 0}
-
-        @delayed
-        def count_dtypes(_df, _col_name, _func_dtype):
-
-            def _func(value):
-
-                # match data type
-                if _func_dtype(value):
-                    # ProfilerDataTypesQuality.MATCH.value
-                    return 2
-
-                elif pd.isnull(value):
-                    # ProfilerDataTypesQuality.MISSING.value
-                    return 1
-
-                # mismatch
-                else:
-                    # ProfilerDataTypesQuality.MISMATCH.value
-                    return 0
-
-            r = _df[_col_name].astype(str).map(_func).value_counts().ext.to_dict()
-
-            r = update_dict(init.copy(), r)
-            a = {_col_name: {"mismatch": r[0], "missing": r[1], "match": r[2]}}
-            return a
-
-        partitions = df.to_delayed()
-
-        delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in
-                         partitions for col_name, dtype in columns_mismatch.items()]
-
-        @delayed
-        def merge(_pdf):
-            columns = set(list(i.keys())[0] for i in _pdf)
-            r = {col_name: {"mismatch": 0, "missing": 0, "match": 0} for col_name in columns}
-
-            for l in _pdf:
-                for i, j in l.items():
-                    r[i]["mismatch"] = r[i]["mismatch"] + j["mismatch"]
-                    r[i]["missing"] = r[i]["missing"] + j["missing"]
-                    r[i]["match"] = r[i]["match"] + j["match"]
-
-            return r
-
-        # TODO: Maybe we can use a reduction here https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.Series.reduction
-        b = merge(delayed_parts)
-
-        if compute is True:
-            result = dd.compute(b)[0]
-        else:
-            result = b
-        return result
+    # def count_mismatch(self, columns_mismatch: dict = None, compute=True):
+    #     df = self.df
+    #     if not is_dict(columns_mismatch):
+    #         columns_mismatch = parse_columns(df, columns_mismatch)
+    #     init = {0: 0, 1: 0, 2: 0}
+    #
+    #     @delayed
+    #     def count_dtypes(_df, _col_name, _func_dtype):
+    #
+    #         def _func(value):
+    #
+    #             # match data type
+    #             if _func_dtype(value):
+    #                 # ProfilerDataTypesQuality.MATCH.value
+    #                 return 2
+    #
+    #             elif pd.isnull(value):
+    #                 # ProfilerDataTypesQuality.MISSING.value
+    #                 return 1
+    #
+    #             # mismatch
+    #             else:
+    #                 # ProfilerDataTypesQuality.MISMATCH.value
+    #                 return 0
+    #
+    #         r = _df[_col_name].astype(str).map(_func).value_counts().ext.to_dict()
+    #
+    #         r = update_dict(init.copy(), r)
+    #         a = {_col_name: {"mismatch": r[0], "missing": r[1], "match": r[2]}}
+    #         return a
+    #
+    #     partitions = df.to_delayed()
+    #
+    #     delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in
+    #                      partitions for col_name, dtype in columns_mismatch.items()]
+    #
+    #     @delayed
+    #     def merge(_pdf):
+    #         columns = set(list(i.keys())[0] for i in _pdf)
+    #         r = {col_name: {"mismatch": 0, "missing": 0, "match": 0} for col_name in columns}
+    #
+    #         for l in _pdf:
+    #             for i, j in l.items():
+    #                 r[i]["mismatch"] = r[i]["mismatch"] + j["mismatch"]
+    #                 r[i]["missing"] = r[i]["missing"] + j["missing"]
+    #                 r[i]["match"] = r[i]["match"] + j["match"]
+    #
+    #         return r
+    #
+    #     # TODO: Maybe we can use a reduction here https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.Series.reduction
+    #     b = merge(delayed_parts)
+    #
+    #     if compute is True:
+    #         result = dd.compute(b)[0]
+    #     else:
+    #         result = b
+    #     return result
 
     def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
 
@@ -165,23 +178,24 @@ class DaskBaseColumns(BaseColumns):
     def hist(self, columns, buckets=20, compute=True):
 
         df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns)
 
-        @delayed
-        def bins_col(_columns, _min, _max):
-            return {col_name: list(np.linspace(_min[col_name], _max[col_name], num=buckets)) for col_name in _columns}
+        @delayed(df)
+        def _bins_col(_columns, _min, _max):
+            return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for col_name
+                    in
+                    _columns}
 
-        _min = df[columns].min().to_delayed()[0]
-        _max = df[columns].max().to_delayed()[0]
-        _bins = bins_col(columns, _min, _max)
+        _min = df.cols.min(columns, compute=False, tidy=False)
+        _max = df.cols.max(columns, compute=False, tidy=False)
+        _bins = _bins_col(columns, _min, _max)
 
-        @delayed
+        @delayed(df)
         def _hist(pdf, col_name, _bins):
-            p = [fastnumbers.fast_real(x, default=np.nan) for x in pdf[col_name]]
-            _count, bins_edges = np.histogram(p, bins=_bins[col_name])
+            _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @delayed
+        @delayed(df)
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -385,18 +399,6 @@ class DaskBaseColumns(BaseColumns):
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         pass
 
-    @staticmethod
-    def exec_agg(exprs, compute):
-        """
-        Execute and aggregation
-        :param exprs:
-        :return:
-        """
-        if compute is True:
-            result = exprs.compute()
-        else:
-            result = exprs
-        return result
 
     # TODO: Check if we must use * to select all the columns
 

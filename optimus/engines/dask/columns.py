@@ -12,7 +12,7 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
-        def to_float(self, input_cols, output_cols=None):
+        def to_float(self, input_cols="*", output_cols=None):
 
             df = self.df
 

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from optimus.infer import is_list_of_tuples
+from optimus.infer import is_list_of_tuples, is_
 
 
 class Create:
@@ -36,7 +36,12 @@ class Create:
                 pdf[col].astype(dtype)
 
         # df = dd.from_pandas(pdf, npartitions=1)
-        df = self.creator.from_pandas(pdf, *args, **kwargs)
+        creator = self.creator
+
+        if creator == pd:
+            df = self.creator.DataFrame(pdf, *args, **kwargs)
+        else:
+            df = self.creator.from_pandas(pdf, *args, **kwargs)
 
         df = df.meta.columns(df.cols.names())
         return df

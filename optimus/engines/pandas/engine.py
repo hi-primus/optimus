@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from optimus.bumblebee import Comm
+from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
@@ -24,7 +25,7 @@ class PandasEngine(BaseEngine):
             Comm.instance = comm
 
         self.engine = 'pandas'
-        # self.create = Create()
+        self.create = Create(pd)
         self.load = Load()
         self.extract = Extract()
 

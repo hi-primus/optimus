@@ -5,7 +5,7 @@ import pandas as pd
 
 from optimus.engines.base.commons.functions import to_integer, to_float
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.jit import bincount
+from optimus.engines.jit import bincount, numba_histogram
 from optimus.engines.pandas.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.pandas.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.columns import parse_columns, get_output_cols
@@ -20,6 +20,39 @@ def cols(self: DataFrame):
     class Cols(DataFrameBaseColumns):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
+
+        def hist(self, columns, buckets=20, compute=True):
+
+            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
+            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
+
+            # print("args",args)
+            # df = args[0]
+            # buckets = args[1]
+            # min_max = args[2]
+            df = self.df
+            result = {}
+            result_hist = {}
+            # _min_max = df.cols.min_max(columns)
+
+            columns = parse_columns(df, columns)
+
+            for col_name in columns:
+                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+
+                    i, j = numba_histogram(df[col_name].to_numpy(), bins=buckets)
+
+                    result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
+
+                    r = []
+                    for idx, v in enumerate(j):
+                        if idx < len(j) - 1:
+                            r.append({"count": float(i[idx]), "lower": float(j[idx]), "upper": float(j[idx + 1])})
+
+                    f = {col_name: {"hist": r}}
+                    result.update(f)
+
+            return result
 
         def append(self, dfs):
             """
@@ -49,7 +82,7 @@ def cols(self: DataFrame):
             return df.cols.apply(input_cols, to_integer, output_cols=output_cols, meta_action=Actions.TO_INTEGER.value,
                                  mode="map")
 
-        def to_float(self, input_cols, output_cols=None):
+        def to_float(self, input_cols="*", output_cols=None):
             df = self.df
 
             return df.cols.apply(input_cols, to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
@@ -89,10 +122,6 @@ def cols(self: DataFrame):
             return df
 
         @staticmethod
-        def exec_agg(exprs):
-            return exprs
-
-        @staticmethod
         def remove_accents(input_cols, output_cols=None):
             df = self
             input_cols = parse_columns(df, input_cols)
@@ -104,8 +133,6 @@ def cols(self: DataFrame):
                     df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
                                                                                     errors='ignore').str.decode('utf-8')
             return df
-
-
 
         # NLP
         @staticmethod

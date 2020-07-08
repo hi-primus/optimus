@@ -16,6 +16,7 @@ def functions(self):
             # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
             #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
 
+
             df = args[0]
             buckets = args[1]
             min_max = args[2]

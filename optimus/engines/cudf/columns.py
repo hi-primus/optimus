@@ -46,9 +46,6 @@ def cols(self: DataFrame):
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
-        @staticmethod
-        def exec_agg(exprs):
-            return exprs
 
         def reverse(self, input_cols, output_cols=None):
             raise NotImplementedError('Not implemented yet')
