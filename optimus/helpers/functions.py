@@ -28,6 +28,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
+import glob
 
 
 def random_int(n=5):
@@ -470,7 +471,6 @@ def downloader(url, file_format):
     """
     Send the request to download a file
     """
-
     def write_file(response, file, chunk_size=8192):
         """
         Load the data from the http request and save it to disk
@@ -520,7 +520,7 @@ def downloader(url, file_format):
     return path
 
 
-@functools.lru_cache(maxsize=128)
+
 def prepare_path(path, file_format=None):
     """
     Helper to return the file to be loaded and the file name.
@@ -529,13 +529,16 @@ def prepare_path(path, file_format=None):
     :param file_format: format file
     :return:
     """
-    # print(path)
-    file_name = ntpath.basename(path)
+    r = []
     if is_url(path):
         file = downloader(path, file_format)
+        file_name = ntpath.basename(path)
+        r = (file, file_name,)
     else:
-        file = path
-    return file, file_name
+
+        for file_name in glob.glob(path, recursive=True):
+            r.append((file_name, ntpath.basename(file_name),))
+    return r
 
 
 def set_func(pdf, value, where, output_col, parser, default=None):

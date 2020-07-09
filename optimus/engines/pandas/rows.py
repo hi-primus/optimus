@@ -171,6 +171,7 @@ def rows(self):
             return df
 
         @staticmethod
+
         def drop_by_dtypes(input_cols, data_type=None):
             df = self
             return df

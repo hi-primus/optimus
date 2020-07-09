@@ -1,16 +1,16 @@
 from abc import abstractmethod, ABC
-from abc import abstractmethod, ABC
 from collections import OrderedDict
 
 import humanize
 import imgkit
 import jinja2
 import simplejson as json
-from dask import dataframe as dd
+from dask import dataframe as dd, delayed
 from glom import assign
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
+from optimus.engines.base.functions import op_delayed
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
@@ -575,7 +575,6 @@ class BaseExt(ABC):
             string_cols = []
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
-
             mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
@@ -588,14 +587,15 @@ class BaseExt(ABC):
             hist = None
             freq_uniques = None
             if len(numeric_cols):
-                hist = df[numeric_cols].astype("float").cols.hist(numeric_cols, buckets=bins, compute=compute)
+                hist = df[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
                 freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
 
             freq = None
             if len(string_cols):
                 freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
+            # print(numeric_cols, string_cols)
 
-            # @delayed
+
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                 _f = {}
 
@@ -603,14 +603,13 @@ class BaseExt(ABC):
                     _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
 
                 if _hist is not None:
-                    for _col_name, h in _hist.items():
-                        # _f[col_name] = {}
-                        _f[_col_name]["stats"]["hist"] = h["hist"]
-                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques[_col_name]["count_uniques"]
+                    for _col_name, h in _hist["hist"].items():
+                        _f[_col_name]["stats"]["hist"] = h
+                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques["count_uniques"]
 
                 if _freq is not None:
-                    for _col_name, f in _freq.items():
-                        _f[_col_name]["stats"]["frequency"] = f["frequency"]
+                    for _col_name, f in _freq["frequency"].items():
+                        _f[_col_name]["stats"]["frequency"] = f["values"]
                         _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
                 return {"columns": _f}
@@ -624,7 +623,6 @@ class BaseExt(ABC):
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
-
             updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
 
             output_columns = update_dict(output_columns, updated_columns)

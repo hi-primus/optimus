@@ -20,32 +20,7 @@ def cols(self: DataFrame):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
 
-        def hist(self, columns, buckets=20, compute=True):
 
-            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
-            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-
-            df = self.df
-            result = {}
-            result_hist = {}
-
-            columns = parse_columns(df, columns)
-
-            for col_name in columns:
-                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-
-                    i, j = numba_histogram(df[col_name].to_numpy(), bins=buckets)
-                    result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
-
-                    r = []
-                    for idx, v in enumerate(j):
-                        if idx < len(j) - 1:
-                            r.append({"count": float(i[idx]), "lower": float(j[idx]), "upper": float(j[idx + 1])})
-
-                    f = {col_name: {"hist": r}}
-                    result.update(f)
-
-            return result
 
         def append(self, dfs):
             """
@@ -234,7 +209,7 @@ def cols(self: DataFrame):
             df = self
             result = {}
             df_len = len(df)
-            for col_name, na_count in df.cols.count_na(columns).items():
+            for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():
                 # for i, j in df.constants.DTYPES_DICT.items():
                 #     if j == df[col_name].dtype.type:
                 #         _dtype = df.constants.SHORT_DTYPES[i]
@@ -250,6 +225,33 @@ def cols(self: DataFrame):
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
             pass
+
+        def hist(self, columns, buckets=20, compute=True):
+
+            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
+            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
+
+            df = self.df
+            result = {}
+            result_hist = {}
+
+            columns = parse_columns(df, columns)
+
+            for col_name in columns:
+                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
+
+                    i, j = numba_histogram(df[col_name].to_numpy(), bins=buckets)
+                    result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
+
+                    r = []
+                    for idx, v in enumerate(j):
+                        if idx < len(j) - 1:
+                            r.append({"count": float(i[idx]), "lower": float(j[idx]), "upper": float(j[idx + 1])})
+
+                    f = {col_name: {"hist": r}}
+                    result.update(f)
+
+            return result
 
         @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):

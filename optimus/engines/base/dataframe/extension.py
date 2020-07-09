@@ -62,7 +62,7 @@ class DataFrameBaseExt(BaseExt):
 
             elif col_dtype == "object" or "category":
 
-                stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)[col_name]["frequency"],
+                stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)["frequency"][col_name],
                                        "count_uniques": len(df[col_name].value_counts())})
                 r = {col_name: stats}
             else:
@@ -147,4 +147,3 @@ class DataFrameSeriesBaseExt(ABC):
 
     def table(self):
         pass
-

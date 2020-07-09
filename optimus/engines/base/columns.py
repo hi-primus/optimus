@@ -6,6 +6,7 @@ from functools import reduce
 import dask
 import numpy as np
 import pandas as pd
+from dask import dataframe as dd
 from dask.dataframe import from_delayed
 from glom import glom
 from multipledispatch import dispatch
@@ -371,7 +372,7 @@ class BaseColumns(ABC):
             elif arg == "str":
                 df = df.cols.to_string(input_col, output_col)
             else:
-                RaiseIt.value_error(str, ["float", "integer","datetime", "bool", "string"])
+                RaiseIt.value_error(str, ["float", "integer", "datetime", "bool", "string"])
 
         return df
 
@@ -601,7 +602,6 @@ class BaseColumns(ABC):
 
         # Move the column to the new place
         for col_name in column:
-            print("col_name", col_name)
             all_columns.insert(new_index, all_columns.pop(all_columns.index(col_name)))  # insert and delete a element
             # new_index = new_index + 1
         return df[all_columns]
@@ -1024,17 +1024,17 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        return df.cols.agg_exprs(columns, F.count_na, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.count_na, tidy=tidy, compute=compute)
 
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.unique, values, relative_error, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.unique, values, relative_error, tidy=tidy, compute=compute)
 
     def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
     def _math(self, columns, operator, output_col):
 
@@ -1132,9 +1132,9 @@ class BaseColumns(ABC):
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
         for col_name in columns:
 
-            q1 = quartile[col_name][0.25]
-            q2 = quartile[col_name][0.5]
-            q3 = quartile[col_name][0.75]
+            q1 = quartile[0.25]
+            q2 = quartile[0.5]
+            q3 = quartile[0.75]
 
             iqr_value = q3 - q1
             if more:
@@ -1191,16 +1191,18 @@ class BaseColumns(ABC):
                 df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
 
             elif mode == "array":
-                def func(value):
-                    pdf = value.apply(pd.Series)
-                    pdf.columns = final_columns
-                    return pdf
+                if is_dask_dataframe(df):
+                    def func(value):
+                        pdf = value.apply(pd.Series)
+                        pdf.columns = final_columns
+                        return pdf
 
-                df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
+                    df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
+                else:
+                    df_new = df[input_col].apply(pd.Series)
 
             df_new.columns = final_columns
             if final_index:
-                print("final_index", final_index[idx])
                 df_new = df_new.cols.select(final_index[idx])
             df = df.cols.append(df_new)
 
@@ -1316,16 +1318,16 @@ class BaseColumns(ABC):
             result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
             if _total_freq_count is None:
-                result = {_series.name: {"frequency": result}}
+                result = {_series.name: {"values": result}}
             else:
-                result = {_series.name: {"frequency": result, "count_uniques": int(_total_freq_count)}}
+                result = {_series.name: {"values": result, "count_uniques": int(_total_freq_count)}}
 
             return result
 
         @op_delayed(df)
         def flat_dict(top_n):
 
-            result = {key: value for ele in top_n for key, value in ele.items()}
+            result = {"frequency":{key: value for ele in top_n for key, value in ele.items()}}
             return result
 
         @op_delayed(df)
@@ -1355,11 +1357,10 @@ class BaseColumns(ABC):
 
         if percentage:
             c = freq_percentage(c, op_delayed(len)(df))
-
-        if compute is True and not is_dict(c):
-            result = c.ext.compute()
-        else:
+        if is_dict(c):
             result = c
+        elif compute is True:
+            result = dd.compute(c)[0]
 
         return result
 

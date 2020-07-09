@@ -19,9 +19,10 @@ class Load:
 
         :return:
         """
-        file_names = glob.glob(path, recursive=True)
-        local_file_names = [prepare_path(file_name, "json") for file_name in file_names]
 
+        # print("file_names",file_names)
+        local_file_names = prepare_path(path, "json")
+        print("local_file_names", local_file_names)
         try:
             df_list = []
 
@@ -64,6 +65,8 @@ class Load:
         :param infer_schema: infers the input schema automatically from data.
         :param null_value:
         :param charset:
+        :param lineterminator:
+        :param error_bad_lines:
         It requires one extra pass over the data. True default.
 
         :return dataFrame

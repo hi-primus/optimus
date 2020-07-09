@@ -12,7 +12,7 @@ from optimus.helpers.columns import parse_columns, get_output_cols, \
     prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer
+from optimus.infer import Infer, is_dict
 from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
@@ -32,10 +32,12 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
-        if compute is True:
-            result = exprs.compute()
-        else:
+        # print("exprs",type(exprs),exprs)
+        if is_dict(exprs):
             result = exprs
+        else:
+            result = exprs.compute()
+
         return result
 
     def append(self, dfs):
@@ -112,7 +114,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.df
         columns = parse_columns(df, columns)
 
-        @delayed(df)
+        @delayed
         def _bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for col_name
                     in
@@ -122,12 +124,12 @@ class DaskBaseColumns(BaseColumns):
         _max = df.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @delayed(df)
+        @delayed
         def _hist(pdf, col_name, _bins):
             _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @delayed(df)
+        @delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -141,9 +143,9 @@ class DaskBaseColumns(BaseColumns):
                 l = len(_count)
                 r = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]),
                       "count": int(_count[i])} for i in range(l)]
-                _result[col_name] = {"hist": r}
+                _result[col_name] = r
 
-            return _result
+            return {"hist": _result}
 
         partitions = df.to_delayed()
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]

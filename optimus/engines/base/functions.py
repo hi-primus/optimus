@@ -283,9 +283,10 @@ def var(ds, columns=None, args=None):
 def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
     @op_delayed(df)
     def flat_dict(ele):
-        return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
+        return {"count_uniques": {x: y for x, y in ele.items()}}
+        # return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
 
-    return flat_dict(df.cols.select(col_name).astype(str).nunique() for col_name in columns)
+    return flat_dict({col_name: df[col_name].astype(str).nunique() for col_name in columns})
 
 
 def range(df, columns, *args):
@@ -318,10 +319,7 @@ def unique(df, columns, *args):
     # Cudf can not handle null so we fill it with non zero values.
     @op_delayed(df)
     def flat_dict(ele):
-        # print(ele)
-        # return ele
         r = {i: j for i, j in ele.items()}
-        # print(r)
         return r
 
     return flat_dict({col_name: list(df.cols.select(col_name)[col_name].astype(str).unique()) for col_name in columns})
@@ -357,7 +355,14 @@ def percentile_agg(df, columns, args):
 
 def count_na(df, columns, args):
     # estimate = args[0]
-    return {"count_na": {col_name: df[col_name].isnull().sum() for col_name in columns}}
+    @op_delayed(df)
+    def flat_dict(ele):
+        r = {"count_na": {i: j for i, j in ele.items()}}
+        return r
+
+    return flat_dict({col_name: df[col_name].isnull().sum() for col_name in columns})
+
+    # return {"count_na": {col_name:  for col_name in columns}}
     # return np.count_nonzero(_df[_serie].isnull().values.ravel())
     # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
 
