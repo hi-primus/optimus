@@ -6,7 +6,6 @@ from optimus.engines.base.commons.functions import to_float, to_integer, to_date
 from optimus.engines.base.dataframe.extension import DataFrameSeriesBaseExt
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.constants import MAX_BUCKETS
@@ -26,11 +25,6 @@ def ext(self: DataFrame):
         def compute(self):
             df = self.df
             return df.compute()
-
-        def set_buffer(self, columns, n=BUFFER_SIZE):
-            df = self.df
-            input_columns = parse_columns(df, columns)
-            df._buffer = df.ext.head(input_columns, n)
 
         @staticmethod
         def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):

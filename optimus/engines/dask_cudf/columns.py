@@ -13,33 +13,6 @@ def cols(self: DaskCUDFDataFrame):
         def __init__(self, df):
             super(DaskBaseColumns, self).__init__(df)
 
-        def hist(self, columns, buckets=10, compute=True):
-            df = self.df
-
-            @delayed
-            def hist_series(_series, _buckets):
-                arr = cp.asarray(_series)
-                # .to_gpu_array filter nan
-                i, j = cp.histogram(cp.array(arr.to_gpu_array()), _buckets)
-
-                i = list(i)
-                j = list(j)
-                _hist = [{"lower": float(j[index]), "upper": float(j[index + 1]), "count": int(i[index])} for index in
-                         range(len(i))]
-
-                return {_series.name: {"hist": _hist}}
-
-            columns = parse_columns(df, columns)
-            partitions = df.to_delayed()
-
-            delayed_parts = [hist_series(part[col_name], buckets) for part in partitions for col_name in columns]
-            r = dd.compute(*delayed_parts)
-
-            # Flat list of dict
-            r = {x: y for i in r for x, y in i.items()}
-
-            return r
-
         @staticmethod
         def mode(columns):
             raise NotImplementedError("Not implemented yet. See https://github.com/rapidsai/cudf/issues/3677")

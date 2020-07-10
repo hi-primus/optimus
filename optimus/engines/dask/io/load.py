@@ -29,7 +29,7 @@ class Load:
 
         :return:
         """
-        file, file_name = prepare_path(path, "json")
+        file, file_name = prepare_path(path, "json")[0]
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
@@ -81,7 +81,7 @@ class Load:
         if cache is False:
             prepare_path.cache_clear()
 
-        file, file_name = prepare_path(path, "csv")
+        file, file_name = prepare_path(path, "csv")[0]
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,

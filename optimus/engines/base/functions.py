@@ -11,6 +11,7 @@ from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_seri
     is_dask_dataframe
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
+from optimus.helpers.raiseit import RaiseIt
 
 op_to_series_func = {
     "abs": {
@@ -155,11 +156,13 @@ def call(series, *args, method_name=None):
         result = method(series)
 
     elif is_dask_cudf_dataframe(series):
-        def func(series, _method, args):
-            return _method(series, *args)
+        def func(_series, _method, args):
+            return _method(_series, *args)
 
         method = getattr(series, op_to_series_func[method_name]["cudf"])
         result = dd.map_partitions(func, series, method, args, meta=float)
+    else:
+        raise RaiseIt.type_error(series, ["pandas series", "dask series", "cudf series", "dask cudf series"])
 
     return result
 
@@ -306,14 +309,6 @@ def range(df, columns, *args):
 
 
 # return value.astype(str).unique().ext.to_dict()
-
-# def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
-#     @op_delayed(df)
-#     def flat_dict(ele):
-#         return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
-#
-#     return flat_dict(df.cols.select(col_name).astype(str).nunique() for col_name in columns)
-
 
 def unique(df, columns, *args):
     # Cudf can not handle null so we fill it with non zero values.

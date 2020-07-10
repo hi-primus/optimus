@@ -674,8 +674,8 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
-
-        return df.cols.exec_agg(format_dict(funcs[0], tidy), compute)
+        # print("tidy",tidy)
+        return format_dict(df.cols.exec_agg(funcs[0], compute), tidy)
 
     @staticmethod
     @abstractmethod
@@ -783,8 +783,8 @@ class BaseColumns(ABC):
             return F.upper(value)
 
         df = self.df
-        return df.cols.apply(input_cols, _upper, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, meta_action=Actions.UPPER.value, mode="vectorized")
+        return df.cols.apply(input_cols, _upper, func_return_type=str, output_cols=output_cols,
+                             meta_action=Actions.UPPER.value, mode="vectorized")
 
     def trim(self, input_cols, output_cols=None):
 
@@ -1221,13 +1221,56 @@ class BaseColumns(ABC):
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    @abstractmethod
-    def hist(columns, buckets=20):
-        # df = self.df
-        # result = self.agg_exprs(columns, df.functions.hist_agg, df, buckets, None)
-        # return result
-        pass
+    def hist(self, columns, buckets=20, compute=True):
+
+        df = self.df
+        columns = parse_columns(df, columns)
+
+        @op_delayed(df)
+        def _bins_col(_columns, _min, _max):
+            return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
+                    col_name
+                    in
+                    _columns}
+
+        _min = df.cols.min(columns, compute=False, tidy=False)
+        _max = df.cols.max(columns, compute=False, tidy=False)
+        _bins = _bins_col(columns, _min, _max)
+
+        @op_delayed(df)
+        def _hist(pdf, col_name, _bins):
+            _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
+            # i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
+            return {col_name: [list(_count), list(bins_edges)]}
+
+        @op_delayed(df)
+        def _agg_hist(values):
+            _result = {}
+            x = np.zeros(buckets - 1)
+            for i in values:
+                for j in i:
+                    t = i.get(j)
+                    if t is not None:
+                        _count = np.sum([x, t[0]], axis=0)
+                        _bins = t[1]
+                        col_name = j
+                l = len(_count)
+                r = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]),
+                      "count": int(_count[i])} for i in range(l)]
+                _result[col_name] = r
+
+            return {"hist": _result}
+
+        partitions = df.ext.to_delayed()
+        c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
+
+        d = _agg_hist(c)
+
+        if is_dict(d):
+            result = d
+        elif compute == True:
+            result = d.compute()
+        return result
 
     def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
         """
@@ -1318,6 +1361,7 @@ class BaseColumns(ABC):
             result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
             if _total_freq_count is None:
+                print("dasda")
                 result = {_series.name: {"values": result}}
             else:
                 result = {_series.name: {"values": result, "count_uniques": int(_total_freq_count)}}
@@ -1327,8 +1371,7 @@ class BaseColumns(ABC):
         @op_delayed(df)
         def flat_dict(top_n):
 
-            result = {"frequency":{key: value for ele in top_n for key, value in ele.items()}}
-            return result
+            return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
         @op_delayed(df)
         def freq_percentage(_value_counts, _total_rows):
@@ -1338,10 +1381,6 @@ class BaseColumns(ABC):
                     x["percentage"] = round((x["count"] * 100 / _total_rows), 2)
 
             return _value_counts
-
-        # non_numeric_columns = df.cols.names(by_dtypes=df.constants.NUMERIC_TYPES, invert=True)
-        # a = {c: df[c].astype(str) for c in non_numeric_columns}
-        # df = df.assign(**a)
 
         value_counts = [df[col_name].astype(str).value_counts() for col_name in columns]
 

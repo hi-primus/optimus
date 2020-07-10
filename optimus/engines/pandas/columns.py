@@ -6,11 +6,12 @@ from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.functions import op_delayed
 from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str
+from optimus.infer import is_str, is_dict
 
 DataFrame = pd.DataFrame
 
@@ -19,8 +20,6 @@ def cols(self: DataFrame):
     class Cols(DataFrameBaseColumns):
         def __init__(self, df):
             super(DataFrameBaseColumns, self).__init__(df)
-
-
 
         def append(self, dfs):
             """
@@ -226,32 +225,7 @@ def cols(self: DataFrame):
         def correlation(input_cols, method="pearson", output="json"):
             pass
 
-        def hist(self, columns, buckets=20, compute=True):
 
-            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
-            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
-
-            df = self.df
-            result = {}
-            result_hist = {}
-
-            columns = parse_columns(df, columns)
-
-            for col_name in columns:
-                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-
-                    i, j = numba_histogram(df[col_name].to_numpy(), bins=buckets)
-                    result_hist.update({col_name: {"count": list(i), "bins": list(j)}})
-
-                    r = []
-                    for idx, v in enumerate(j):
-                        if idx < len(j) - 1:
-                            r.append({"count": float(i[idx]), "lower": float(j[idx]), "upper": float(j[idx + 1])})
-
-                    f = {col_name: {"hist": r}}
-                    result.update(f)
-
-            return result
 
         @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):

@@ -1,81 +1,12 @@
 from abc import ABC
 
-import numpy as np
-
 from optimus.engines.base.extension import BaseExt
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.json import dump_json
-from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.constants import MAX_BUCKETS
 
 
 class DataFrameBaseExt(BaseExt):
 
     def __init__(self, df):
         super(DataFrameBaseExt, self).__init__(df)
-
-    def profile(self, columns, lower_bound=None, upper_bound=None, bins=MAX_BUCKETS, output=None, infer=False):
-        """
-
-        :param lower_bound:
-        :param upper_bound:
-        :param columns:
-        :param bins:
-        :param output:
-        :return:
-        """
-
-        df = self.df
-        df_length = len(df)
-
-        if lower_bound is None:
-            lower_bound = 0
-
-        if lower_bound < 0:
-            lower_bound = 0
-
-        if upper_bound is None:
-            upper_bound = len(df)
-
-        if upper_bound > df_length:
-            upper_bound = df_length
-
-        df = df[lower_bound:upper_bound]
-
-        columns = parse_columns(df, columns)
-        result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()]}}
-
-        # df = self
-        result["columns"] = {}
-        dtypes = df.cols.dtypes("*")
-
-        for col_name in columns:
-            stats = {}
-
-            # stats["stats"] = {"missing": 3, "mismatch": 4, "null": df.cols.count_na(col_name)[col_name]}
-            stats["stats"] = df.cols.count_by_dtypes(col_name, "int")[col_name]
-
-            col_dtype = df[col_name].dtype
-            if col_dtype == np.float64 or df[col_name].dtype == np.int64:
-                stats["stats"].update({"hist": df.cols.hist(col_name, buckets=bins)[col_name]["hist"]})
-                r = {col_name: stats}
-
-            elif col_dtype == "object" or "category":
-
-                stats["stats"].update({"frequency": df.cols.frequency(col_name, n=bins)["frequency"][col_name],
-                                       "count_uniques": len(df[col_name].value_counts())})
-                r = {col_name: stats}
-            else:
-                RaiseIt.type_error(col_dtype, [np.float64, np.int64, np.object_])
-
-            r[col_name]["dtype"] = dtypes[col_name]
-            result["columns"].update(r)
-        result["summary"] = {"rows_count": df_length}
-
-        if output == "json":
-            result = dump_json(result)
-
-        return result
 
     def cache(self):
         return self.df
@@ -89,6 +20,9 @@ class DataFrameBaseExt(BaseExt):
     def melt(self, id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
         pass
 
+    def to_delayed(self):
+        return [self.df]
+
     def query(self, sql_expression):
         pass
 
@@ -99,7 +33,7 @@ class DataFrameBaseExt(BaseExt):
         pass
 
     def repartition(self, n=None, *args, **kwargs):
-        pass
+        return self.df
 
     def show(self):
         df = self

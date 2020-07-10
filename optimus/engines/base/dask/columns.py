@@ -109,54 +109,6 @@ class DaskBaseColumns(BaseColumns):
     #         result = b
     #     return result
 
-    def hist(self, columns, buckets=20, compute=True):
-
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        @delayed
-        def _bins_col(_columns, _min, _max):
-            return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for col_name
-                    in
-                    _columns}
-
-        _min = df.cols.min(columns, compute=False, tidy=False)
-        _max = df.cols.max(columns, compute=False, tidy=False)
-        _bins = _bins_col(columns, _min, _max)
-
-        @delayed
-        def _hist(pdf, col_name, _bins):
-            _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
-            return {col_name: [list(_count), list(bins_edges)]}
-
-        @delayed
-        def _agg_hist(values):
-            _result = {}
-            x = np.zeros(buckets - 1)
-            for i in values:
-                for j in i:
-                    t = i.get(j)
-                    if t is not None:
-                        _count = np.sum([x, t[0]], axis=0)
-                        _bins = t[1]
-                        col_name = j
-                l = len(_count)
-                r = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]),
-                      "count": int(_count[i])} for i in range(l)]
-                _result[col_name] = r
-
-            return {"hist": _result}
-
-        partitions = df.to_delayed()
-        c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
-
-        d = _agg_hist(c)
-
-        if compute is True:
-            result = d.compute()
-        else:
-            result = d
-        return result
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 

@@ -202,29 +202,6 @@ def cols(self: DataFrame):
         def remove_accents(self, input_cols, output_cols=None):
             raise NotImplementedError('Not implemented yet. See https://github.com/rapidsai/cudf/issues/5527#issuecomment-650121132')
 
-        def hist(self, columns="*", buckets=10, compute=True):
-            df = self.df
-            columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-
-            def hist_series(_series, _buckets):
-                # .to_gpu_array filter nan
-                i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
-
-                i = list(i)
-                j = list(j)
-                _hist = [{"lower": float(j[index]), "upper": float(j[index + 1]), "count": int(i[index])} for index in
-                         range(len(i))]
-
-                return {_series.name: {"hist": _hist}}
-
-            columns = parse_columns(df, columns)
-            r = [hist_series(df[col_name], buckets) for col_name in columns]
-
-            # Flat list of dict
-            r = {x: y for i in r for x, y in i.items()}
-
-            return r
-
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
             pass

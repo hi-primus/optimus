@@ -1,5 +1,6 @@
 import collections
 import functools
+import glob
 import ntpath
 import os
 import random
@@ -22,13 +23,11 @@ from string_grouper import match_strings
 from optimus import ROOT_DIR
 from optimus.helpers.check import is_url
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, PROFILER_STRING_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
-import glob
 
 
 def random_int(n=5):
@@ -471,6 +470,7 @@ def downloader(url, file_format):
     """
     Send the request to download a file
     """
+
     def write_file(response, file, chunk_size=8192):
         """
         Load the data from the http request and save it to disk
@@ -520,9 +520,9 @@ def downloader(url, file_format):
     return path
 
 
-
+@functools.lru_cache(maxsize=128)
 def prepare_path(path, file_format=None):
-    """
+    """d
     Helper to return the file to be loaded and the file name.
     This will memoise
     :param path: Path to the file to be loaded
@@ -533,11 +533,12 @@ def prepare_path(path, file_format=None):
     if is_url(path):
         file = downloader(path, file_format)
         file_name = ntpath.basename(path)
-        r = (file, file_name,)
+        r = [(file, file_name,)]
     else:
-
         for file_name in glob.glob(path, recursive=True):
             r.append((file_name, ntpath.basename(file_name),))
+    # if len(r) == 0:
+    #     raise Exception("File not found")
     return r
 
 

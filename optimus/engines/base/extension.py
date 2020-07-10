@@ -11,6 +11,7 @@ from glom import assign
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.engines.base.functions import op_delayed
+from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
@@ -117,8 +118,10 @@ class BaseExt(ABC):
 
         pass
 
-    # def set_buffer(self, columns, n=BUFFER_SIZE):
-    #     pass
+    def set_buffer(self, columns, n=BUFFER_SIZE):
+        df = self.df
+        input_columns = parse_columns(df, columns)
+        df._buffer = df.ext.head(input_columns, n)
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
@@ -201,6 +204,9 @@ class BaseExt(ABC):
         :return:
         """
         return False if df.meta.get("profile") is None else True
+
+    def to_delayed(self):
+        return self.df.to_delayed()
 
     def calculate_cols_to_profile(self, df, columns):
         """
@@ -549,13 +555,12 @@ class BaseExt(ABC):
 
     def profile(self, columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         """
-        Return
-
+        Return profiler info
         :param columns:
         :param bins:
         :param output:
         :param flush:
-        :param size: get the dataframe size in memory. Use with caution this could be slow for big dataframes.
+        :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
         """
 
@@ -564,11 +569,15 @@ class BaseExt(ABC):
             cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
         else:
             cols_to_profile = parse_columns(df, columns)
+
         columns = cols_to_profile
-        output_columns = df.meta.get("profile")
-        if output_columns is None:
-            output_columns = {}
+        print("cols_to_profile",columns)
+
+        profiler_data = df.meta.get("profile")
+        if profiler_data is None:
+            profiler_data = {}
         cols_and_inferred_dtype = None
+
         if cols_to_profile or not BaseExt.is_cached(df) or flush is True:
             df_length = len(df)
             numeric_cols = []
@@ -586,6 +595,7 @@ class BaseExt(ABC):
 
             hist = None
             freq_uniques = None
+            print("numeric_cols, string_cols",numeric_cols, string_cols)
             if len(numeric_cols):
                 hist = df[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
                 freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
@@ -593,8 +603,8 @@ class BaseExt(ABC):
             freq = None
             if len(string_cols):
                 freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
-            # print(numeric_cols, string_cols)
 
+            # print(numeric_cols, string_cols)
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
                 _f = {}
@@ -605,7 +615,8 @@ class BaseExt(ABC):
                 if _hist is not None:
                     for _col_name, h in _hist["hist"].items():
                         _f[_col_name]["stats"]["hist"] = h
-                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques["count_uniques"]
+                        print("freq_uniques",freq_uniques)
+                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques[_col_name]
 
                 if _freq is not None:
                     for _col_name, f in _freq["frequency"].items():
@@ -616,19 +627,17 @@ class BaseExt(ABC):
 
             # Nulls
             total_count_na = 0
-            # for i in mismatch.values():
-            #     total_count_na = total_count_na + i["missing"]
 
             dtypes = df.cols.dtypes("*")
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
             updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
+            profiler_data = update_dict(profiler_data, updated_columns)
+            # print("profiler_data",profiler_data)
 
-            output_columns = update_dict(output_columns, updated_columns)
-
-            assign(output_columns, "name", df.ext.get_name(), dict)
-            assign(output_columns, "file_name", df.meta.get("file_name"), dict)
+            assign(profiler_data, "name", df.ext.get_name(), dict)
+            assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
 
             data_set_info = {'cols_count': len(df.columns),
                              'rows_count': df.rows.count(),
@@ -636,23 +645,23 @@ class BaseExt(ABC):
             if size is True:
                 data_set_info.update({'size': df.ext.size(format="human")})
 
-            assign(output_columns, "summary", data_set_info, dict)
+            assign(profiler_data, "summary", data_set_info, dict)
             dtypes_list = list(set(df.cols.dtypes("*").values()))
-            assign(output_columns, "summary.dtypes_list", dtypes_list, dict)
-            assign(output_columns, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
-            assign(output_columns, "summary.missing_count", total_count_na, dict)
-            assign(output_columns, "summary.p_missing", round(total_count_na / df_length * 100, 2))
+            assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
+            assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
+            assign(profiler_data, "summary.missing_count", total_count_na, dict)
+            assign(profiler_data, "summary.p_missing", round(total_count_na / df_length * 100, 2))
 
-        actual_columns = output_columns["columns"]
+        actual_columns = profiler_data["columns"]
 
         # Order columns
-        output_columns["columns"] = dict(OrderedDict(
-            {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
+        profiler_data["columns"] = dict(OrderedDict(
+            {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
         df = df.meta.columns(df.cols.names())
         df.meta.set("transformations", value={})
-        df.meta.set("profile", output_columns)
+        df.meta.set("profile", profiler_data)
 
         if cols_and_inferred_dtype is not None:
             df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
@@ -661,6 +670,6 @@ class BaseExt(ABC):
         df.meta.reset()
 
         if output == "json":
-            output_columns = dump_json(output_columns)
+            profiler_data = dump_json(profiler_data)
 
-        return output_columns
+        return profiler_data

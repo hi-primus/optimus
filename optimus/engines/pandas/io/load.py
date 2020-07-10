@@ -22,14 +22,13 @@ class Load:
 
         # print("file_names",file_names)
         local_file_names = prepare_path(path, "json")
-        print("local_file_names", local_file_names)
         try:
             df_list = []
 
             for file_name, j in local_file_names:
                 df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
                 df_list.append(df)
-
+            print("df_list",df_list)
             df = pd.concat(df_list, axis=0, ignore_index=True)
             df.meta.set("file_name", local_file_names[0])
 
@@ -53,8 +52,8 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=",", header=True, infer_schema=True, charset="UTF-8", null_value="None", quoting=3,
-            lineterminator="\n", error_bad_lines=False, *args, **kwargs):
+    def csv(path, sep=",", header=True, infer_schema=True, encoding="UTF-8", null_value="None", quoting=3,
+            lineterminator="\n", error_bad_lines=False, cache=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -72,14 +71,14 @@ class Load:
         :return dataFrame
         """
 
-        file_names = glob.glob(path, recursive=True)
-        local_file_names = [prepare_path(file_name, "csv") for file_name in file_names]
+        local_file_names = prepare_path(path, "json")
 
         try:
             df_list = []
+            print("local_file_names", local_file_names)
 
-            for file_name, j in local_file_names:
-                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=charset, na_values=null_value,
+            for file_name, _ in local_file_names:
+                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, na_values=null_value,
                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                                  *args,
                                  **kwargs)
