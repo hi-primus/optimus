@@ -106,7 +106,7 @@ def string_to_index(df, input_cols, output_cols=None, le=None, **kwargs):
 
     def _string_to_index(value,args):
         # Label encoder can not handle np.nan
-        value[pd.isnull(value)] = 'NaN'
+        # value[value.isnull()] = 'NaN'
         return le.fit_transform(value.astype(str))
 
     return df.cols.apply(input_cols, _string_to_index, output_cols=output_cols,

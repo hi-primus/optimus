@@ -27,10 +27,6 @@ class DataFrameBaseColumns(BaseColumns):
 
 
 
-    @staticmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
-        pass
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
         pass
 

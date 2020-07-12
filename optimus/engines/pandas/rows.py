@@ -4,13 +4,12 @@ import operator
 import pandas as pd
 from multipledispatch import dispatch
 
-from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_str
+from optimus.infer import is_list_of_str_or_int, is_str, is_list
 
 DataFrame = pd.DataFrame
 
@@ -24,9 +23,21 @@ def rows(self):
         def create_id(column="id") -> DataFrame:
             pass
 
-        @staticmethod
-        def append(rows) -> DataFrame:
-            pass
+        def append(self, rows):
+            """
+
+            :param rows:
+            :return:
+            """
+            df = self.df
+
+            if is_list(rows):
+                rows = pd.DataFrame(rows)
+            # Can not concatenate dataframe with not string columns names
+
+            rows.columns = df.cols.names()
+            df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
+            return df
 
         @staticmethod
         def find(condition) -> DataFrame:
@@ -115,7 +126,6 @@ def rows(self):
 
             return df
 
-
         @staticmethod
         def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                     bounds=None) -> DataFrame:
@@ -171,7 +181,6 @@ def rows(self):
             return df
 
         @staticmethod
-
         def drop_by_dtypes(input_cols, data_type=None):
             df = self
             return df
@@ -228,7 +237,6 @@ def rows(self):
 
             return df
 
-
         @staticmethod
         def drop_duplicates(subset=None) -> DataFrame:
             """
@@ -263,8 +271,6 @@ def rows(self):
         def unnest(input_cols) -> DataFrame:
             df = self
             return df
-
-
 
     return Rows(self)
 

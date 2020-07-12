@@ -537,8 +537,8 @@ def prepare_path(path, file_format=None):
     else:
         for file_name in glob.glob(path, recursive=True):
             r.append((file_name, ntpath.basename(file_name),))
-    # if len(r) == 0:
-    #     raise Exception("File not found")
+    if len(r) == 0:
+        raise Exception("File not found")
     return r
 
 
@@ -553,7 +553,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     :param default:
     :return:
     """
-    # print("value, where, output_col",value, where, output_col)
+
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
 
     df = pdf.cols.cast(col_names, parser)

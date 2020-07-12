@@ -1,6 +1,8 @@
 # from pyspark.sql import DataFrame
-from dask.dataframe.core import DataFrame
+# from dask.dataframe.core import DataFrame
+import pandas as pd
 
+DataFrame = pd.DataFrame
 from optimus.helpers.logger import logger
 
 
@@ -21,14 +23,14 @@ def save(self: DataFrame):
             """
             df = self
             try:
-                df.to_json(filename=path, *args, **kwargs)
+                df.to_json(path, *args, **kwargs)
 
             except IOError as e:
                 logger.print(e)
                 raise
 
         @staticmethod
-        def csv(path, mode="rb", **kwargs):
+        def csv(path, mode="w", **kwargs):
             """
             Save data frame to a CSV file.
             :param path: path where the spark will be saved.
@@ -46,7 +48,7 @@ def save(self: DataFrame):
                 # Dask reference
                 # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
                 # df.to_csv(filename=path)
-                df.to_csv(filename=path, mode=mode, **kwargs)
+                df.to_csv(path, mode=mode)
 
             except IOError as error:
                 logger.print(error)
@@ -88,10 +90,6 @@ def save(self: DataFrame):
 
         @staticmethod
         def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
-            raise NotImplementedError('Not implemented yet')
-
-        @staticmethod
-        def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
             raise NotImplementedError('Not implemented yet')
 
     return Save()

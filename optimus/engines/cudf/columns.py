@@ -1,11 +1,11 @@
 import re
 
 import cudf
-import cupy as cp
 from cudf.core import DataFrame
+from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
-from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf
+from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 # DataFrame = pd.DataFrame
@@ -46,11 +46,8 @@ def cols(self: DataFrame):
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
 
-
         def reverse(self, input_cols, output_cols=None):
             raise NotImplementedError('Not implemented yet')
-
-
 
         # https://github.com/rapidsai/cudf/issues/3177
         # def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -200,7 +197,8 @@ def cols(self: DataFrame):
             # return np.count_nonzero(df.isnull().values.ravel())
 
         def remove_accents(self, input_cols, output_cols=None):
-            raise NotImplementedError('Not implemented yet. See https://github.com/rapidsai/cudf/issues/5527#issuecomment-650121132')
+            raise NotImplementedError(
+                'Not implemented yet. See https://github.com/rapidsai/cudf/issues/5527#issuecomment-650121132')
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
@@ -210,48 +208,16 @@ def cols(self: DataFrame):
         def qcut(columns, num_buckets, handle_invalid="skip"):
             pass
 
-        @staticmethod
-        def string_to_index(input_cols=None, output_cols=None, columns=None):
-            pass
-            # from cudf import DataFrame, Series
-            #
-            # data = DataFrame({'category': ['a', 'b', 'c', 'd']})
-            #
-            # # There are two functionally equivalent ways to do this
-            # le = LabelEncoder()
-            # le.fit(data.category)  # le = le.fit(data.category) also works
-            # encoded = le.transform(data.category)
-            #
-            # print(encoded)
-            #
-            # # This method is preferred
-            # le = LabelEncoder()
-            # encoded = le.fit_transform(data.category)
-            #
-            # print(encoded)
-            #
-            # # We can assign this to a new column
-            # data = data.assign(encoded=encoded)
-            # print(data.head())
-            #
-            # # We can also encode more data
-            # test_data = Series(['c', 'a'])
-            # encoded = le.transform(test_data)
-            # print(encoded)
-            #
-            # # After train, ordinal label can be inverse_transform() back to
-            # # string labels
-            # ord_label = cudf.Series([0, 0, 1, 2, 1])
-            # ord_label = dask_cudf.from_cudf(data, npartitions=2)
-            # str_label = le.inverse_transform(ord_label)
-            # print(str_label)
-            #
+        def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+            df = self.df
+            le = preprocessing.LabelEncoder()
+            return string_to_index(df, input_cols, output_cols, le)
 
         @staticmethod
         def index_to_string(input_cols=None, output_cols=None, columns=None):
-            pass
-
-
+            df = self.df
+            le = preprocessing.LabelEncoder()
+            return index_to_string(df, input_cols, output_cols, le)
 
     return Cols(self)
 

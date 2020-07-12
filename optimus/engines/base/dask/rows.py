@@ -12,7 +12,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_str
+from optimus.infer import is_list_of_str_or_int, is_str, is_list
 
 
 # This implementation works for Spark, Dask, dask_cudf
@@ -36,8 +36,15 @@ class DaskBaseRows(BaseRows):
         :param rows:
         :return:
         """
-        # df = self.df
-        df = dd.concat([self, rows], axis=0)
+        df = self.df
+        import pandas as pd
+        if is_list(rows):
+            rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
+
+        # Can not concatenate dataframe with not string columns names
+        rows.columns = df.columns
+
+        df = dd.concat([df, rows], axis=0, interleave_partitions=True)
 
         return df
 
@@ -70,8 +77,6 @@ class DaskBaseRows(BaseRows):
         df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
 
         return df
-
-
 
     def to_list(self, input_cols):
         """
@@ -138,8 +143,6 @@ class DaskBaseRows(BaseRows):
             # df = df.set_index(col_name).reset_index()[c]
 
         return df
-
-
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """
@@ -210,7 +213,6 @@ class DaskBaseRows(BaseRows):
     def drop_by_dtypes(self, input_cols, data_type=None):
         df = self
         return df
-
 
     def drop_duplicates(self, keep="first", subset=None):
         """

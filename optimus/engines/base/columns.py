@@ -696,7 +696,7 @@ class BaseColumns(ABC):
 
     def mode(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.mode, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.mode, tidy=tidy, compute=compute)
 
     def range(self, columns, tidy=True, compute=True):
         return self.agg_exprs(columns, F.range, compute=compute, tidy=tidy)
@@ -705,12 +705,12 @@ class BaseColumns(ABC):
         df = self.df
 
         if values is None:
-            values = [0.5]
-        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error, tidy=True, compute=True)
+            values = [0.25,0.5, 0.75]
+        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error, tidy=tidy, compute=True)
 
     def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error, tidy=tidy, compute=True)
 
         # Descriptive Analytics
 
@@ -1129,12 +1129,11 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
+        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)
         for col_name in columns:
-
-            q1 = quartile[0.25]
-            q2 = quartile[0.5]
-            q3 = quartile[0.75]
+            q1 = quartile[col_name][0.25]
+            q2 = quartile[col_name][0.5]
+            q3 = quartile[col_name][0.75]
 
             iqr_value = q3 - q1
             if more:
@@ -1361,7 +1360,6 @@ class BaseColumns(ABC):
             result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
             if _total_freq_count is None:
-                print("dasda")
                 result = {_series.name: {"values": result}}
             else:
                 result = {_series.name: {"values": result, "count_uniques": int(_total_freq_count)}}

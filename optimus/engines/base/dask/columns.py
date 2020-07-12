@@ -2,7 +2,6 @@ import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask import delayed
 from dask_ml import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 
@@ -32,7 +31,6 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
-        # print("exprs",type(exprs),exprs)
         if is_dict(exprs):
             result = exprs
         else:
@@ -109,7 +107,6 @@ class DaskBaseColumns(BaseColumns):
     #         result = b
     #     return result
 
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
         df = self.df
@@ -118,37 +115,6 @@ class DaskBaseColumns(BaseColumns):
         df[columns] = df[columns].map_partitions(pd.qcut, num_buckets)
         return df
 
-    def index_to_string(self, input_cols=None, output_cols=None, columns=None):
-        df = self.df
-        columns = prepare_columns(df, input_cols, output_cols, default=INDEX_TO_STRING, accepts_missing_cols=True)
-        le = preprocessing.LabelEncoder()
-        kw_columns = {}
-        for input_col, output_col in columns:
-            kw_columns[output_col] = le.inverse_transform(df[input_col])
-        df = df.assign(**kw_columns)
-
-        df = df.meta.preserve(df, Actions.INDEX_TO_STRING.value, output_cols)
-
-        return df
-
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
-
-        """
-        Encodes a string column of labels to a column of label indices
-        :param input_cols:
-        :param output_cols:
-        :param columns:
-        :return:
-        """
-        df = self.df
-        le = preprocessing.LabelEncoder()
-
-        def _string_to_index(value, args):
-            return le.fit_transform(value.astype(str))
-
-        return df.cols.apply(input_cols, _string_to_index, func_return_type=str,
-                             output_cols=output_cols,
-                             meta_action=Actions.STRING_TO_INDEX.value, mode="vectorized")
 
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):

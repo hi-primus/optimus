@@ -96,11 +96,8 @@ def save(self: DataFrame):
         def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
             raise NotImplementedError('Not implemented yet')
 
-        @staticmethod
-        def mongo(host, port=None, db_name=None, collection_name=None, parallelism=None):
-            raise NotImplementedError('Not implemented yet')
 
     return Save()
-
+print("DataFrame",type(DataFrame),DataFrame)
 
 DataFrame.save = property(save)

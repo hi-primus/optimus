@@ -5,10 +5,9 @@ from optimus.infer import is_list_of_tuples, is_
 
 class Create:
     def __init__(self, creator):
-        print("creator", creator)
         self.creator = creator
 
-    def data_frame(self, cols=None, rows=None, pdf=None, *args, **kwargs):
+    def data_frame(self, cols=None, rows=None, pdf=None, n_partitions =1 ,*args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
@@ -41,7 +40,7 @@ class Create:
         if creator == pd:
             df = self.creator.DataFrame(pdf, *args, **kwargs)
         else:
-            df = self.creator.from_pandas(pdf, *args, **kwargs)
+            df = self.creator.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs)
 
         df = df.meta.columns(df.cols.names())
         return df

@@ -1,17 +1,14 @@
 import re
 
-import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.base.functions import op_delayed
-from optimus.engines.jit import numba_histogram
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str, is_dict
+from optimus.infer import is_str
 
 DataFrame = pd.DataFrame
 
@@ -224,8 +221,6 @@ def cols(self: DataFrame):
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):
             pass
-
-
 
         @staticmethod
         def qcut(columns, num_buckets, handle_invalid="skip"):
