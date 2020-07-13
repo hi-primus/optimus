@@ -180,7 +180,7 @@ class Load:
     @staticmethod
     def file(path, *args, **kwargs):
 
-        full_path, file_name = prepare_path(path)
+        full_path, file_name = prepare_path(path)[0]
 
         file_ext = os.path.splitext(file_name)[1].replace(".", "")
 
