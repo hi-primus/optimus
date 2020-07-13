@@ -1,18 +1,17 @@
 import functools
 import operator
 
+import cudf
 import pandas as pd
+from cudf.core import DataFrame
 from multipledispatch import dispatch
 
-from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int
-
-from cudf.core import DataFrame
+from optimus.infer import is_list_of_str_or_int, is_list
 
 
 def rows(self):
@@ -24,31 +23,21 @@ def rows(self):
         def create_id(column="id") -> DataFrame:
             pass
 
-        @staticmethod
-        def append(rows) -> DataFrame:
+        def append(self, rows):
             """
-            Append a row or dataframe at the end of a dataframe
-            :param rows: List of tuples or dataframes to be appended
+
+            :param rows:
             :return:
             """
-            pass
+            df = self.df
 
-        @staticmethod
-        def append(rows) -> DataFrame:
-            pass
+            if is_list(rows):
+                rows = cudf.DataFrame(rows)
+            # Can not concatenate dataframe with not string columns names
 
-        @staticmethod
-        def select(condition) -> DataFrame:
-            """
-
-            :param condition: a condition like (df.A > 0) & (df.B <= 10)
-            :return:
-            """
-            df = self
-
-            df = df[condition]
-            df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
-
+            rows.columns = df.cols.names()
+            # df = cudf.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
+            df = cudf.concat([df, rows], axis=0, ignore_index=True)
             return df
 
 
@@ -101,7 +90,7 @@ def rows(self):
                 col_name = one_list_to_val(cs[0])
                 order = cs[1]
 
-                if order != "asc" and order != "asc":
+                if order != "asc" and order != "desc":
                     RaiseIt.value_error(order, ["asc", "desc"])
 
                 df = df.meta.preserve(self, Actions.SORT_ROW.value, col_name)
@@ -112,7 +101,6 @@ def rows(self):
                 df.set_index(col_name).reset_index()[c].head()
 
             return df
-
 
         @staticmethod
         def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
@@ -173,7 +161,6 @@ def rows(self):
             df = self
             return df
 
-
         @staticmethod
         def drop_duplicates(input_cols=None) -> DataFrame:
             """
@@ -209,8 +196,6 @@ def rows(self):
         def unnest(input_cols) -> DataFrame:
             df = self
             return df
-
-
 
     return Rows(self)
 

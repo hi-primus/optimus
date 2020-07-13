@@ -1,7 +1,6 @@
 from abc import abstractmethod, ABC
 
 # This implementation works for Spark, Dask, dask_cudf
-from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.infer import is_str
@@ -39,12 +38,19 @@ class BaseRows(ABC):
 
         return df.assign(**kw_columns)
 
-    @staticmethod
-    @abstractmethod
-    def select(condition):
-        pass
+    def select(self, condition):
+        """
 
+        :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        :return:
+        """
 
+        df = self.df
+        if is_str(condition):
+            condition = eval(condition)
+        df = df[condition]
+        df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
+        return df
 
     def count(self, compute=True) -> int:
         """

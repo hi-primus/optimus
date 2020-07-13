@@ -1,21 +1,21 @@
+
+from optimus.infer import is_list_of_tuples
+
 import pandas as pd
-
-from optimus.infer import is_list_of_tuples, is_
-
-
 class Create:
     def __init__(self, creator):
         self.creator = creator
 
-    def data_frame(self, cols=None, rows=None, pdf=None, n_partitions =1 ,*args, **kwargs):
+    def data_frame(self, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples with the same number and types that cols
         :param pdf: a pandas dataframe
+        :param n_partitions:
         :return: Dataframe
         """
-
+        creator = self.creator
         if pdf is None:
 
             # Process the rows
@@ -29,18 +29,24 @@ class Create:
                 _columns = cols
 
             # Process the columns
-            pdf = pd.DataFrame(columns=_columns, data=rows)
+            if creator.__name__ == "dask_cudf":
+                import cudf
+                pdf = cudf.DataFrame(columns=_columns, data=rows)
+            else:
+                pdf = pd.DataFrame(columns=_columns, data=rows)
 
             for col, dtype in zip(_columns, _dtypes):
                 pdf[col].astype(dtype)
 
-        # df = dd.from_pandas(pdf, npartitions=1)
         creator = self.creator
 
-        if creator == pd:
-            df = self.creator.DataFrame(pdf, *args, **kwargs)
-        else:
+        if creator.__name__ == "pandas" or creator.__name__ == "cudf":
+            df = creator.DataFrame(pdf, *args, **kwargs)
+        elif creator.__name__=="dask":
             df = self.creator.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs)
+        elif creator.__name__ == "dask_cudf":
+            df = self.creator.from_cudf(pdf, npartitions=n_partitions, *args, **kwargs)
+
 
         df = df.meta.columns(df.cols.names())
         return df

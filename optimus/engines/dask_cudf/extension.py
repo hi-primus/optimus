@@ -11,10 +11,17 @@ def ext(self):
     class Ext(BaseExt):
 
         # _name = None
+        def __init__(self, df):
+            super().__init__(df)
+            self.df = df
 
-        @staticmethod
-        def cache():
-            return self  # Dask.instance.persist(self)
+        def cache(self):
+            df = self.df
+            return df.persist()
+
+        def compute(self):
+            df = self.df
+            return df.compute()
 
         @staticmethod
         def sample(n=10, random=False):

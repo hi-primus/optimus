@@ -3,12 +3,13 @@ from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 from dask import dataframe as dd
 from optimus.bumblebee import Comm
+from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
-
+import dask_cudf
 DaskCUDF.instance = None
 Profiler.instance = None
 Comm.instance = None
@@ -37,8 +38,7 @@ class DaskCUDFEngine(BaseEngine):
             Comm.instance = comm
 
         self.engine = 'dask-cudf'
-
-        # self.create = Create()
+        self.create = Create(dask_cudf)
         self.load = Load()
         self.verbose(verbose)
 

@@ -20,7 +20,7 @@ class Load:
 
         :return:
         """
-        file, file_name = prepare_path(path, "json")
+        file, file_name = prepare_path(path, "json")[0]
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
@@ -63,7 +63,7 @@ class Load:
         :return dataFrame
         """
 
-        file, file_name = prepare_path(path, "csv")
+        file, file_name = prepare_path(path, "csv")[0]
 
         try:
             # print(charset)

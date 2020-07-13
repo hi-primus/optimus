@@ -53,20 +53,6 @@ def rows(self):
             df["__match__"] = condition
             return df
 
-        @staticmethod
-        def select(condition) -> DataFrame:
-            """
-
-            :param condition: a condition like (df.A > 0) & (df.B <= 10)
-            :return:
-            """
-            df = self
-            if is_str(condition):
-                condition = eval(condition)
-            df = df[condition]
-            df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
-
-            return df
 
         @staticmethod
         def to_list(input_cols):

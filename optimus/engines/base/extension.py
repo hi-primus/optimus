@@ -482,7 +482,7 @@ class BaseExt(ABC):
         :return:
         """
         df = self.df
-        df_data = df.to_json()
+        df_data = df.ext.to_json()
         df_schema = df.dtypes.to_json()
 
         return f"{df_schema}, {df_data}"

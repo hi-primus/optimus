@@ -17,18 +17,23 @@ class Load:
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
-        Return a dask dataframe from a json file.
+        Return a dataframe from a json file.
         :param path: path or location of the file.
         :param multiline:
 
         :return:
         """
-        file, file_name = prepare_path(path, "json")
 
+        local_file_names = prepare_path(path, "json")
         try:
-            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = cudf.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df_list = []
+
+            for file_name, j in local_file_names:
+                df = cudf.read_json(file_name, lines=multiline, *args, **kwargs)
+                df_list.append(df)
+
+            df = cudf.concat(df_list, axis=0, ignore_index=True)
+            df.meta.set("file_name", local_file_names[0])
 
         except IOError as error:
             logger.print(error)
@@ -71,7 +76,7 @@ class Load:
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")
+        file, file_name = prepare_path(path, "csv")[0]
 
         try:
             # TODO:  lineterminator=lineterminator seems to be broken
@@ -82,7 +87,6 @@ class Load:
             # else is_float(header):
             #     header = header
 
-            print("header",header)
             df = cudf.read_csv(file, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value)

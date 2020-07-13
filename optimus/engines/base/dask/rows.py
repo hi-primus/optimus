@@ -3,19 +3,17 @@ import operator
 
 import dask.array as da
 import dask.dataframe as  dd
-# from dask_cudf.core import DataFrame
+import pandas as pd
 from multipledispatch import dispatch
 
-from optimus.audf import filter_row_by_data_type as fbdt
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_str, is_list
+from optimus.infer import is_list_of_str_or_int, is_list
 
 
-# This implementation works for Spark, Dask, dask_cudf
 class DaskBaseRows(BaseRows):
     """Base class for all Rows implementations"""
 
@@ -37,7 +35,7 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.df
-        import pandas as pd
+
         if is_list(rows):
             rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
 
@@ -55,28 +53,8 @@ class DaskBaseRows(BaseRows):
         :return:
         """
 
-        # @dask.delayed
-        # def _limit(df, count):
-        #     return df.head(count)
-        #
-        # df = self.df
-        # return _limit(df, count)
         df = self.df
         return df.head(count)
-
-    def select(self, condition):
-        """
-
-        :param condition: a condition like (df.A > 0) & (df.B <= 10)
-        :return:
-        """
-        df = self.df
-        if is_str(condition):
-            condition = eval(condition)
-        df = df[condition]
-        df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
-
-        return df
 
     def to_list(self, input_cols):
         """
@@ -227,14 +205,6 @@ class DaskBaseRows(BaseRows):
         df = df.drop_duplicates(keep=keep, subset=subset)
 
         return df
-
-    # def limit(self, count):
-    #     """
-    #     Limit the number of rows
-    #     :param count:
-    #     :return:
-    #     """
-    #     pass
 
     def is_in(self, input_cols, values):
         df = self.df

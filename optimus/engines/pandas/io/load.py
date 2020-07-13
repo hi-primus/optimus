@@ -13,14 +13,13 @@ class Load:
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
-        Return a dask dataframe from a json file.
+        Return a dataframe from a json file.
         :param path: path or location of the file.
         :param multiline:
 
         :return:
         """
 
-        # print("file_names",file_names)
         local_file_names = prepare_path(path, "json")
         try:
             df_list = []
@@ -28,7 +27,7 @@ class Load:
             for file_name, j in local_file_names:
                 df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
                 df_list.append(df)
-            print("df_list",df_list)
+
             df = pd.concat(df_list, axis=0, ignore_index=True)
             df.meta.set("file_name", local_file_names[0])
 
