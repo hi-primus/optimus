@@ -80,7 +80,7 @@ def impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=
     """
     imputer = SimpleImputer(strategy=strategy, copy=False)
 
-    def _imputer(value, args):
+    def _imputer(value):
         return imputer.fit_transform(value.to_frame())[value.name]
 
     if data_type == "continuous":
@@ -104,7 +104,7 @@ def string_to_index(df, input_cols, output_cols=None, le=None, **kwargs):
     :return: Dataframe with indexed columns.
     """
 
-    def _string_to_index(value,args):
+    def _string_to_index(value):
         # Label encoder can not handle np.nan
         # value[value.isnull()] = 'NaN'
         return le.fit_transform(value.astype(str))
@@ -126,7 +126,7 @@ def index_to_string(df, input_cols, output_cols=None, le=None, **kwargs):
     :return: Dataframe with indexed columns.
     """
 
-    def _index_to_string(value, args):
+    def _index_to_string(value):
         return le.inverse_transform(value)
 
     return df.cols.apply(input_cols, _index_to_string, output_cols=output_cols,

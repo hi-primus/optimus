@@ -74,7 +74,6 @@ class Load:
 
         try:
             df_list = []
-            print("local_file_names", local_file_names)
 
             for file_name, _ in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, na_values=null_value,

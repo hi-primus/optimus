@@ -43,14 +43,13 @@ class ModifiedZScore(AbstractOutlierThreshold):
         mad = df.cols.mad(col_name, self.relative_error, True)
         m_z_col_name = name_col(col_name, "modified_z_score")
 
-        def func(pdf, arg):
-            median = arg[0]
-            mad = arg[1]
+        def func(pdf, *args):
+            median = args[0]
+            mad = args[1]
 
             return abs(0.6745 * (pdf - median) / mad)
 
-
-        df = df.cols.apply(col_name, func, args=(mad["median"], mad["mad"][col_name]), output_cols=m_z_col_name, set_index=True)
+        df = df.cols.apply(col_name, func, args=(mad["median"], mad["mad"]), output_cols=m_z_col_name, set_index=True)
         return df
 
         # return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))

@@ -1,7 +1,8 @@
-
 from optimus.infer import is_list_of_tuples
 
 import pandas as pd
+
+
 class Create:
     def __init__(self, creator):
         self.creator = creator
@@ -39,14 +40,12 @@ class Create:
                 pdf[col].astype(dtype)
 
         creator = self.creator
-
         if creator.__name__ == "pandas" or creator.__name__ == "cudf":
             df = creator.DataFrame(pdf, *args, **kwargs)
-        elif creator.__name__=="dask":
+        elif creator.__name__ == "dask.dataframe":
             df = self.creator.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs)
         elif creator.__name__ == "dask_cudf":
             df = self.creator.from_cudf(pdf, npartitions=n_partitions, *args, **kwargs)
-
 
         df = df.meta.columns(df.cols.names())
         return df

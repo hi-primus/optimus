@@ -62,6 +62,12 @@ op_to_series_func = {
         "da": da.log10
 
     },
+    "ceil": {
+        "cudf": "ceil",
+        "numpy": np.ceil,
+        "da": da.ceil
+
+    },
     "sin": {
         "cudf": "sin",
         "numpy": np.sin,
@@ -139,9 +145,8 @@ def call(series, *args, method_name=None):
     :param method_name:
     :return:
     """
-    # print("op_to_series_func[method_name]", op_to_series_func[method_name]["cudf"])
-    # print("series", dir(series), series)
-    # print("series", type(series), series)
+    # print("series",type(series),series)
+    series = series.ext.to_float()
     if is_pandas_series(series):
         method = op_to_series_func[method_name]["numpy"]
         result = method(series, *args)
@@ -167,18 +172,20 @@ def call(series, *args, method_name=None):
     return result
 
 
-def abs(series):
+def abs(series, *args):
     return series.ext.to_float().abs()
 
 
 def mad(df, columns, args):
     more = args[0]
     mad_value = {}
+
     for col_name in columns:
         casted_col = df.cols.select(col_name).cols.to_float()
         median_value = casted_col.cols.median(col_name)
-
-        # In all case all the values from the column are nan because can not be converted to number
+        # print(median_value)
+        # In all case all the values from the column
+        # are nan because can not be converted to number
         if not np.isnan(median_value):
             mad_value = (casted_col - median_value).abs().quantile(0.5)
         else:
@@ -329,23 +336,23 @@ def count_zeros(df, columns, *args):
 
 
 def percentile_agg(df, columns, args):
-    values = args[0]
-    result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
+    values = val_to_list(args[0])
+    # result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
+    result = [df[col_name].ext.to_float() for col_name in columns]
 
     @op_delayed(df)
     def to_dict(_result):
         ## In pandas if all values are non it return {} on dict
         _r = {}
         for col_name, r in zip(columns, _result):
-            r_dict = r.to_dict()
-            if r_dict.get(col_name):
-                _r[col_name] = r_dict
-            else:
+            # Dask raise an exception is all values in the seie are np.nan
+            if r.isnull().all():
                 _r[col_name] = np.nan
-            # {"percentile": {col_name: r.to_dict() }}
+            else:
+                _r[col_name] = r.quantile(values).ext.to_dict()
         return _r
 
-    return format_dict(to_dict(result))
+    return to_dict(result)
 
 
 def count_na(df, columns, args):
@@ -381,23 +388,23 @@ def years_between(series, date_format=None):
         return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
 
 
-def exp(series):
-    return call(series, method_name="exp")
+def exp(series, *args):
+    return series.ext.to_float().pow(2)
 
 
 def mod(series, *args):
-    return series.ext.to_float().mod(*args)
+    return series.ext.to_float().mod(args[0])
 
 
 def pow(series, *args):
-    return call(series, *args, method_name="pow")
+    return series.ext.to_float().pow(args[0])
 
 
-def ceil(series):
-    return series.ext.to_float().ceil()
+def ceil(series, *args):
+    return call(series, method_name="ceil")
 
 
-def sqrt(series):
+def sqrt(series, *args):
     return call(series, method_name="sqrt")
 
 
@@ -413,15 +420,15 @@ def radians(series):
     return series.ext.to_float().radians()
 
 
-def degrees(series):
+def degrees(series, *args):
     return call(series, method_name="degrees")
 
 
-def ln(series):
+def ln(series, *args):
     return call(series, method_name="ln")
 
 
-def log(series):
+def log(series, *args):
     return call(series, method_name="log")
 
 
@@ -438,7 +445,7 @@ def tan(series):
     return call(series, method_name="tan")
 
 
-def adsin(series):
+def asin(series):
     return call(series, method_name="asin")
 
 

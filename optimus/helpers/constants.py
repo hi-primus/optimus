@@ -50,6 +50,7 @@ class Actions(Enum):
     IMPUTE = "impute"
     EXTRACT = "extract"
     ABS = "abs"
+    MATH = "math"
     VARIANCE = "variance"
     SLICE = "slice"
     CLIP = "clip"

@@ -24,7 +24,7 @@ from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
-    is_int
+    is_int, is_tuple
 from optimus.profiler.constants import MAX_BUCKETS
 
 
@@ -164,25 +164,26 @@ class BaseColumns(ABC):
         columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
-        # check_column_numbers(input_cols, "*")
-
         kw_columns = {}
         output_ordered_columns = df.cols.names()
+        if args is None:
+            args = []
+        elif not is_tuple(args,):
+            args = (args,)
 
         for input_col, output_col in columns:
             if mode == "pandas" and (is_dask_dataframe(df)):
 
                 partitions = df.to_delayed()
-                delayed_parts = [dask.delayed(func)(part[input_col], args)
-                                 for part in partitions]
+                delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                 kw_columns[output_col] = from_delayed(delayed_parts)
 
             elif mode == "vectorized" or mode == "pandas":
-                kw_columns[output_col] = func(df[input_col], args)
+                kw_columns[output_col] = func(df[input_col], *args)
 
             elif mode == "map":
-                kw_columns[output_col] = df[input_col].map(func, args)
+                kw_columns[output_col] = df[input_col].map(func, *args)
 
             # Preserve column order
             if output_col not in df.cols.names():
@@ -393,19 +394,6 @@ class BaseColumns(ABC):
         columns = prepare_columns(df, input_cols, output_cols)
         for input_col, output_col in columns:
             df[output_col] = df[input_col].round(decimals)
-        return df
-
-    def ceil(self, input_cols, output_cols=None):
-        """
-
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-        columns = prepare_columns(df, input_cols, output_cols)
-        for input_col, output_col in columns:
-            df[output_col] = df[input_col].map(np.ceil)
         return df
 
     def floor(self, input_cols, output_cols=None):
@@ -674,7 +662,6 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
         funcs = [func(df, columns, args) for func in funcs]
-        # print("tidy",tidy)
         return format_dict(df.cols.exec_agg(funcs[0], compute), tidy)
 
     @staticmethod
@@ -683,8 +670,8 @@ class BaseColumns(ABC):
         pass
 
     def mad(self, columns, relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
-        # df = self.df
-        return self.agg_exprs(columns, F.mad, relative_error, more, compute=compute, tidy=True)
+        df = self.df
+        return df.cols.agg_exprs(columns, F.mad, relative_error, more, compute=compute, tidy=tidy)
 
     def min(self, columns, tidy=True, compute=True):
         df = self.df
@@ -705,40 +692,38 @@ class BaseColumns(ABC):
         df = self.df
 
         if values is None:
-            values = [0.25,0.5, 0.75]
+            values = [0.25, 0.5, 0.75]
         return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error, tidy=tidy, compute=True)
 
     def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
         return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error, tidy=tidy, compute=True)
 
-        # Descriptive Analytics
-
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-
     @abstractmethod
     def kurtosis(self, columns):
         pass
-
-    def mean(self, columns, tidy=True, compute=True):
-        df = self.df
-        return df.cols.agg_exprs(columns, F.mean, tidy=True, compute=True)
 
     @abstractmethod
     def skewness(self, columns):
         pass
 
+    def mean(self, columns, tidy=True, compute=True):
+        df = self.df
+        return df.cols.agg_exprs(columns, F.mean, tidy=tidy, compute=compute)
+
     def sum(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.sum, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.sum, tidy=tidy, compute=compute)
 
     def var(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.var, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, F.var, tidy=tidy, compute=compute)
 
     def std(self, columns, tidy=True, compute=True):
-        return self.agg_exprs(columns, F.std, tidy=True, compute=True)
+        return self.agg_exprs(columns, F.std, tidy=tidy, compute=compute)
 
+    # Math Operations
     def abs(self, input_cols, output_cols=None):
         """
         Apply abs to column
@@ -747,12 +732,171 @@ class BaseColumns(ABC):
         :return:
         """
 
-        def _abs(value, *args):
-            return F.abs(value)
+        # def _abs(value, *args):
+        #     return F.abs(value)
 
         df = self.df
-        return df.cols.apply(input_cols, _abs, func_return_type=str,
-                             output_cols=output_cols, meta_action=Actions.ABS.value, mode="vectorized")
+        return df.cols.apply(input_cols, F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
+                             mode="vectorized")
+
+    def exp(self, input_cols, output_cols=None):
+        """
+        Apply exp to column
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def mod(self, input_cols, other=2, output_cols=None):
+        """
+        Apply mod to column
+        :param input_cols:
+        :param other:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized", args=other)
+
+    def log(self, input_cols, output_cols=None):
+        """
+        Apply mod to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def ln(self, input_cols, output_cols=None):
+        """
+        Apply mod to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def pow(self, input_cols, other=2, output_cols=None):
+        """
+        Apply mod to column
+        :param other:
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized", args=other)
+
+    def sqrt(self, input_cols, output_cols=None):
+        """
+        Apply sqrt to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def ceil(self, input_cols, output_cols=None):
+        """
+        Apply ceil to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    # Trigonometric
+    def sin(self, input_cols, output_cols=None):
+        """
+        Apply sin to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def cos(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def tan(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def asin(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def acos(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def atan(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
 
     def extract(self, input_cols, output_cols=None):
         def _extract(value, *args):
@@ -797,15 +941,14 @@ class BaseColumns(ABC):
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
 
-        def _date_format(value, args):
-            _current_format = args[0]
-            _output_format = args[1]
+        def _date_format(value, *args):
+            _current_format, _output_format = args
             return F.date_format(value, _current_format, _output_format)
 
         df = self.df
-        return df.cols.apply(input_cols, _date_format, args=[current_format, output_format], func_return_type=str,
+        return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas")
+                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
 
     @staticmethod
     @abstractmethod
@@ -823,7 +966,7 @@ class BaseColumns(ABC):
 
     def remove_numbers(self, input_cols, output_cols=None):
 
-        def _remove_numbers(value, args):
+        def _remove_numbers(value):
             return value.astype(str).str.replace(r'\d+', '')
 
         df = self.df
@@ -833,7 +976,7 @@ class BaseColumns(ABC):
 
     def remove_white_spaces(self, input_cols, output_cols=None):
 
-        def _remove_white_spaces(value, args):
+        def _remove_white_spaces(value):
             return value.astype("str").str.replace(" ", "")
 
         df = self.df
@@ -842,7 +985,7 @@ class BaseColumns(ABC):
                              output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove_special_chars(self, input_cols, output_cols=None):
-        def _remove_special_chars(value, args):
+        def _remove_special_chars(value):
             return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
         df = self.df
@@ -965,7 +1108,7 @@ class BaseColumns(ABC):
         else:
             regex = str_regex
 
-        def _replace(series, args):
+        def _replace(series, *args):
             _str_regex, _replace_by = args
             return series.astype(str).str.replace(_str_regex, _replace_by)
 
@@ -992,8 +1135,9 @@ class BaseColumns(ABC):
         """
         df = self.df
 
-        def _fill_na(series, args):
-            value = args
+        def _fill_na(series, *args):
+
+            value = args[0]
             return series.fillna(value)
 
         return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
@@ -1006,11 +1150,10 @@ class BaseColumns(ABC):
         :return:
         """
 
-        def _is_na(value, args):
+        def _is_na(value):
             return value.isnull()
 
         df = self.df
-
         return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
 
     def count(self):
@@ -1021,6 +1164,8 @@ class BaseColumns(ABC):
         """
         Return the NAN and Null count in a Column
         :param columns: '*', list of columns names or a single column name.
+        :param tidy:
+        :param compute:
         :return:
         """
         df = self.df
@@ -1093,7 +1238,7 @@ class BaseColumns(ABC):
 
         df = self.df
 
-        def _z_score(value, args):
+        def _z_score(value):
             t = value.astype(float)
             return (t - t.mean()) / t.std(ddof=0)
 
@@ -1455,7 +1600,7 @@ class BaseColumns(ABC):
     def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
         df = self.df
 
-        def _clip(value, args):
+        def _clip(value):
             return F.clip(value, lower_bound, upper_bound)
 
         return df.cols.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value,

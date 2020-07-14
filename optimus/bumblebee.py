@@ -66,11 +66,11 @@ class Comm:
         direct_link = "<a target='_blank' href ='{FULL_DOMAIN}/?session={SESSION}&key={KEY}&view=0'>{FULL_DOMAIN}</a>".format(
             FULL_DOMAIN=self.app_url, SESSION=self.queue_name, KEY=self.key)
 
-        print_html(
-            "Open Bumblebee: " + direct_link +
-            "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
-
-        )
+        # print_html(
+        #     "Open Bumblebee: " + direct_link +
+        #     "<div>If you really care about privacy get your keys in bumblebee.ini and put them" + keys_link + "</div>"
+        #
+        # )
 
         self.token = None
         self.f = Fernet(self.key)

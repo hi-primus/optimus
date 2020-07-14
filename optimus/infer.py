@@ -80,9 +80,8 @@ def str_to_object(_value):
     # return str_to_data_type(_value, (dict, set))
 
 
-regex_int = r"^\d+$" # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
+regex_int = r"^\d+$"  # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
 regex_decimal = r"^\d+\.\d$"
-
 
 regex_boolean = r"\btrue\b|\bfalse\b"
 regex_boolean_compiled = re.compile(regex_boolean)
@@ -165,7 +164,7 @@ def str_to(value, regex, compiled_regex, compile=False):
             regex = compiled_regex
         else:
             regex = regex
-        result = bool(re.match(regex,value))
+        result = bool(re.match(regex, value))
     return result
 
 
@@ -179,6 +178,68 @@ def str_to_decimal(_value):
 
 def str_to_str(_value):
     return True if isinstance(_value, str) else False
+
+
+currencies = {"$": "dollar",
+              "¢": "cent",
+              "£": "point",
+              "€": "euro",
+              "¥": "yen",
+              "₹": "indian rupee",
+              "₽": "ruble",
+              "元": "yuan",
+              "¤": "currency",
+              "₠": "euro-currency",
+              "₡": "colon",
+              "₢": "cruzeiro",
+              "₣": "french franc",
+              "₤": "lira",
+              "₥": "mill",
+              "₦": "naira",
+              "₧": "peseta",
+              "₨": "rupee",
+              "₩": "won",
+              "₪": "new shequel",
+              "₫": "dong",
+              "₭": "kip",
+              "₮": "tugrik",
+              "₯": "drachma",
+              "₰": "german penny",
+              "₱": "peso",
+              "₲": "guarani",
+              "₳": "austral",
+              "₴": "hryvnia",
+              "₵": "cedi",
+              "₶": "livre tournois",
+              "₸": "tenge",
+              "₺": "turkish lira",
+              "₼": "manat",
+              "৲": "bengali rupee mark",
+              "৳": "bengali rupee sign",
+              "૱": "gujarati rupee sign",
+              "௹": "tamil rupee sign",
+              "฿": "thai currency bath",
+              "៛": "khmer currency reil",
+              "㍐": "square yuan",
+              "円": "yen character",
+              "圆": "yen/yuan character variant one",
+              "圎": "yen/yuan character variant two",
+              "圓": "yuan character, in hong kong and taiwan",
+              "圜": "yen/yuan character variant three",
+              "원": "won character",
+              "﷼": "rial sign",
+              "＄": "fullwidth dollar sign",
+              "￠": "fullwidth cent sign",
+              "￡": "fullwidth pound sign",
+              "￥": "fullwidth yen sign",
+              "￦": "fullwidth won sign"}
+
+regex_currencies = "|".join(list(currencies.keys()))
+regex_currencies_compiled = re.compile(regex_currencies)
+
+
+def str_to_currency(value, compile=False):
+    return str_to(value, regex_boolean, regex_boolean_compiled, compile)
 
 
 def parse_spark_class_dtypes(value):

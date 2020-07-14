@@ -196,7 +196,7 @@ class DaskBaseColumns(BaseColumns):
 
     def remove_accents(self, input_cols, output_cols=None):
 
-        def _remove_accents(value, args):
+        def _remove_accents(value):
             return value.str.normalize("NFKD")
 
         df = self.df
@@ -205,13 +205,11 @@ class DaskBaseColumns(BaseColumns):
                              output_cols=output_cols, mode="pandas", set_index=True)
 
     def reverse(self, input_cols, output_cols=None):
-        def _reverse(value, args):
+        def _reverse(value):
             return value.astype(str).str[::-1]
 
         df = self.df
-        return df.cols.apply(input_cols, _reverse, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
+        return df.cols.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -255,11 +253,15 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    def kurtosis(self, columns):
-        raise NotImplementedError("Not implemented yet")
+    def kurtosis(self, columns, tidy=True, compute=False):
+        from optimus.engines.dask import functions as F
+        df = self.df
+        return df.cols.agg_exprs(columns, F.kurtosis, tidy=tidy, compute=compute)
 
-    def skewness(self, columns):
-        raise NotImplementedError("Not implemented yet")
+    def skewness(self, columns, tidy=True, compute=False):
+        from optimus.engines.dask import functions as F
+        df = self.df
+        return df.cols.agg_exprs(columns, F.skewness, tidy=tidy, compute=compute)
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
         """

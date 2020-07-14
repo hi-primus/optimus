@@ -34,7 +34,7 @@ def save(self: DataFrame):
             #     print("Successfully created the directory %s" % path)
 
         @staticmethod
-        def csv(path, mode="w", return_path=False, **kwargs):
+        def csv(path, mode="wt", return_path=False, **kwargs):
             """
             Save data frame to a CSV file.
             :param path: path where the spark will be saved.

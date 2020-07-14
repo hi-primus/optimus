@@ -131,14 +131,13 @@ def columns_names(df):
     :param df:
     :return:
     """
+    # print("df",type(df),df)
     if is_spark_dataframe(df):
         columns_names = df.columns
-    elif is_pandas_dataframe(df):
-        columns_names = list(df.columns)
-    elif is_dask_dataframe(df):
+    elif is_pandas_dataframe(df) or is_dask_dataframe(df):
         columns_names = list(df.columns)
     else:
-        columns_names = list(df.columns)
+        columns_names = list(df.name)
 
     return columns_names
 

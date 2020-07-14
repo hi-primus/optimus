@@ -30,9 +30,8 @@ class MAD(AbstractOutlierBounds):
         :return:
         """
         mad_value = self.df.cols.mad(self.col_name, self.relative_error, more=True)
-        print("mad_value",mad_value)
-        lower_bound = mad_value["median"] - self.threshold * mad_value["mad"][self.col_name]
-        upper_bound = mad_value["median"] + self.threshold * mad_value["mad"][self.col_name]
+        lower_bound = mad_value["median"] - self.threshold * mad_value["mad"]
+        upper_bound = mad_value["median"] + self.threshold * mad_value["mad"]
 
         return {"lower_bound": lower_bound, "upper_bound": upper_bound}
 
