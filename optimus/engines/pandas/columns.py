@@ -88,19 +88,27 @@ def cols(self: DataFrame):
         #             df[output_col] = df[input_col].astype(str).replace(search, replace_by)
         #
         #     return df
+        def remove_accents(self, input_cols="*", output_cols=None):
+            def _remove_accents(value):
+                print(value.str.normalize("NFKD"))
+                return value.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
-        @staticmethod
-        def remove_accents(input_cols, output_cols=None):
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            output_cols = get_output_cols(input_cols, output_cols)
-            # cols = df.select_dtypes(include=[np.object]).columns
-
-            for input_col, output_col in zip(input_cols, output_cols):
-                if df[input_col].dtype == "object":
-                    df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
-                                                                                    errors='ignore').str.decode('utf-8')
-            return df
+            df = self.df
+            return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
+                                 filter_col_by_dtypes=df.constants.STRING_TYPES,
+                                 output_cols=output_cols, mode="pandas", set_index=True)
+        # @staticmethod
+        # def remove_accents(input_cols, output_cols=None):
+        #     df = self
+        #     input_cols = parse_columns(df, input_cols)
+        #     output_cols = get_output_cols(input_cols, output_cols)
+        #     # cols = df.select_dtypes(include=[np.object]).columns
+        #
+        #     for input_col, output_col in zip(input_cols, output_cols):
+        #         if df[input_col].dtype == "object":
+        #             df[output_col] = df[input_col].str.normalize('NFKD').str.encode('ascii',
+        #                                                                             errors='ignore').str.decode('utf-8')
+        #     return df
 
         # NLP
         @staticmethod

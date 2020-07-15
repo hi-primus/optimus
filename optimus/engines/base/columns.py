@@ -168,7 +168,7 @@ class BaseColumns(ABC):
         output_ordered_columns = df.cols.names()
         if args is None:
             args = []
-        elif not is_tuple(args,):
+        elif not is_tuple(args, ):
             args = (args,)
 
         for input_col, output_col in columns:
@@ -416,6 +416,7 @@ class BaseColumns(ABC):
         l = Any alpha char in lower case
         U = Any alpha char in upper case
         * = Any alphanumeric in lower or upper case
+        # = Any numeric
         ! = Any punctuation
 
         :param input_cols:
@@ -449,17 +450,11 @@ class BaseColumns(ABC):
         elif mode == 3:
             search_by = alpha_lower + alpha_upper + digits + punctuation
             replace_by = ["*"] * len(alpha_lower + alpha_upper + digits + punctuation)
+        else:
+            RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        df.cols.replace()
-        result = {}
-        columns = prepare_columns(df, input_cols, output_cols)
-
-        for input_col, output_col in columns:
-            print("search_by", search_by)
-            print("replace_by", replace_by)
-            result[input_col] = df[input_col].str.replace(search_by,
-                                                          replace_by).value_counts().ext.to_dict()
-        return result
+        return df.astype(str).cols.select(input_cols).cols.remove_accents().cols.replace(search=search_by,
+                                                                                         replace_by=replace_by).cols.frequency()["frequency"]
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
         """
@@ -948,7 +943,8 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas", set_index=True)
+                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas",
+                             set_index=True)
 
     @staticmethod
     @abstractmethod
@@ -1077,7 +1073,8 @@ class BaseColumns(ABC):
                              output_cols=output_cols,
                              meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
 
-    def replace(self, input_cols, search=None, replace_by=None, search_by="chars", ignore_case=False, output_cols=None):
+    def replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+                output_cols=None):
         """
         Replace a value, list of values by a specified string
         :param input_cols: '*', list of columns names or a single column name.
@@ -1110,7 +1107,12 @@ class BaseColumns(ABC):
 
         def _replace(series, *args):
             _str_regex, _replace_by = args
-            return series.astype(str).str.replace(_str_regex, _replace_by)
+            if is_list(replace_by):
+                for i, j in zip(search, replace_by):
+                    series = series.str.replace(i, j)
+                return series
+            else:
+                return series.astype(str).str.replace(_str_regex, _replace_by)
 
         return df.cols.apply(input_cols, _replace, args=(str_regex, replace_by), output_cols=output_cols,
                              mode="vectorized")
@@ -1136,7 +1138,6 @@ class BaseColumns(ABC):
         df = self.df
 
         def _fill_na(series, *args):
-
             value = args[0]
             return series.fillna(value)
 
@@ -1494,7 +1495,8 @@ class BaseColumns(ABC):
             cols_and_inferred_dtype[col_name] = r
         return cols_and_inferred_dtype
 
-    def frequency(self, columns, n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False, compute=True):
+    def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
+                  compute=True):
 
         df = self.df
         columns = parse_columns(df, columns)

@@ -2,13 +2,10 @@ import dask
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask_ml import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.ml.contants import INDEX_TO_STRING
-from optimus.helpers.columns import parse_columns, get_output_cols, \
-    prepare_columns
+from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_dict
@@ -115,7 +112,6 @@ class DaskBaseColumns(BaseColumns):
         df[columns] = df[columns].map_partitions(pd.qcut, num_buckets)
         return df
 
-
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):
         pass
@@ -194,10 +190,10 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def remove_accents(self, input_cols, output_cols=None):
-
+    def remove_accents(self, input_cols="*", output_cols=None):
         def _remove_accents(value):
-            return value.str.normalize("NFKD")
+            # print(value.str.normalize("NFKD"))
+            return value.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
         df = self.df
         return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
