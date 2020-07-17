@@ -96,11 +96,11 @@ def functions(self):
 
         def sinh(self):
             series = self.series
-            return 1 / 2 * (cudf.exp(series) - cudf.exp(-series))
+            return 1 / 2 * (cudf.exp(series) - cudf.exp(series))
 
         def cosh(self):
             series = self.series
-            return 1 / 2 * (cudf.exp(series) + cudf.exp(-series))
+            return 1 / 2 * (cudf.exp(series) + cudf.exp(series))
 
         def tanh(self):
             return self.sinh() / self.cosh()
