@@ -1,15 +1,5 @@
 from rply import LexerGenerator
 
-#
-# op_functions = {
-#     "ABS": {
-#         "type": "function",
-#         "description": "Absolute value of a columns",
-#         "params": "abs(column name)",
-#         "example": "ABS(COL_NAME)"
-#     }
-# }
-
 op_functions = {
     # Math functions
     "MOD": {
@@ -488,8 +478,7 @@ binary_operators = {
 }
 
 # functions = op_functions
-functions = list(op_functions.keys())
-reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
+reserved_words = {"functions": op_functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
 
 
 class Parser:
