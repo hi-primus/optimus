@@ -1,5 +1,5 @@
 from rply import LexerGenerator
-
+import json
 op_functions = {
     # Math functions
     "MOD": {
@@ -478,7 +478,7 @@ binary_operators = {
 }
 
 # functions = op_functions
-reserved_words = {"functions": op_functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
+reserved_words = json.dumps({"functions": op_functions, "operators": {"unary": unary_operators, "binary": binary_operators}})
 
 
 class Parser:
