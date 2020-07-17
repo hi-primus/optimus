@@ -1,4 +1,5 @@
 from rply import LexerGenerator
+
 #
 # op_functions = {
 #     "ABS": {
@@ -10,12 +11,61 @@ from rply import LexerGenerator
 # }
 
 op_functions = {
-    "MOD": {    # Math functions               # Numeric Transformations
-        "description": "MOD function description",
-        "example": "MOD(COL_NAME)"},
-    "ABS": "ABS function description",
-    "EXP": "EXP function description",
-    "LOG": "LOG function description",
+    # Math functions
+    "MOD": {
+        "description": "Returns the result of the modulo operator, the remainder after a division operation.",
+        "parameters": [
+            {
+                "type": "series",
+                "name": "series",
+                "description": "The number to be divided to find the remainder."
+            },
+            {
+                "type": "number",
+                "name": "divisor",
+                "description": "The number to divide by."
+            }
+        ],
+        "example": "MOD(10, 4)",
+        "text": "MOD",
+    },
+    "ABS": {
+        "description": "Returns the absolute value of a number.",
+        "parameters": [
+            {
+                "type": "series",
+                "name": "series",
+                "description": "The number of which to return the absolute value."
+            },
+        ],
+        "example": "ABS(-2)",
+        "text": "ABS",
+    },
+
+    "EXP": {
+        "description": "Returns Euler's number, e (~2.718) raised to a power.",
+        "parameters": [
+            {
+                "type": "series",
+                "name": "series",
+                "description": "The number of which to return the absolute value."
+            },
+        ],
+        "example": "ABS(-2)",
+        "text": "ABS",
+    },
+    "LOG": {
+        "description": "Returns the logarithm of a number with respect to a base.",
+        "parameters": [
+            {
+                "type": "series",
+                "name": "series",
+                "description": "The value for which to calculate the logarithm."
+            },
+        ],
+        "example": "LOG(128, 2)",
+        "text": "ABS",
+    },
     "LN": "LN function description",
     "POW": "POW function description",
     "CEILING": "CEILING function description",
@@ -36,7 +86,7 @@ op_functions = {
     "TANH": "TANH function description",
     "ACOSH": "ACOSH function description",
     "ATANH": "ATANH function description",
-    "UPPER": "ATANH function description",  # String Tranformations
+    "UPPER": "ATANH function description",  # String Transformations
     "LOWER": "ATANH function description",
     "PROPER": "ATANH function description",
     "TRIM": "ATANH function description",
@@ -49,7 +99,7 @@ op_functions = {
     "STARTS_WITH": "ATANH function description",
     "ENDS_WITH": "ATANH function description",
     "EXACT": "ATANH function description",
-    "YEAR": "ATANH function description",  # Date
+    "YEAR": "ATANH function description",  # Date Functions
     "MONTH": "ATANH function description",
     "DAY": "ATANH function description",
     "HOUR": "ATANH function description",
@@ -64,7 +114,6 @@ unary_operators = {
     "+": "+ function description",
     "-": "- function description",
 
-
 }
 binary_operators = {
     "+": "+ function description",
@@ -74,11 +123,9 @@ binary_operators = {
     "%": "- function description"
 }
 
-
-functions = op_functions
-
-reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
+# functions = op_functions
 functions = list(op_functions.keys())
+reserved_words = {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}
 
 
 class Parser:

@@ -1,252 +1,12 @@
-from datetime import datetime, timedelta
+from abc import abstractmethod, ABC
 
 import dask
-import dask.array as da
 import numpy as np
-import pandas as pd
-from dask import dataframe as dd
 
 # import cudf
-from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_cudf_dataframe, \
-    is_dask_dataframe
+from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_dataframe
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.helpers.raiseit import RaiseIt
-
-op_to_series_func = {
-    "abs": {
-        # "cudf": cudf.abs,
-        "numpy": np.abs,
-        # "da": da.abs
-    },
-    "exp": {
-        "cudf": "exp",
-        "numpy": np.exp,
-        "da": da.exp
-    },
-    "sqrt": {
-        "cudf": "sqrt",
-        "numpy": np.sqrt,
-        "da": da.sqrt
-    },
-    "mod": {
-        "cudf": "mod",
-        "numpy": np.mod,
-        "da": da.mod
-
-    },
-    "pow": {
-        "cudf": "pow",
-        "numpy": np.power,
-        "da": da.power
-    },
-    "radians": {
-        "cudf": "radians",
-        "numpy": np.radians,
-        "da": da.radians
-
-    },
-    "degrees": {
-        "cudf": "degrees",
-        # "numpy": np.degress,
-        "da": da.degrees
-    },
-    "ln": {
-        "cudf": "log",
-        "numpy": np.log,
-        "da": da.log
-    },
-    "log": {
-        "cudf": "log10",
-        "numpy": np.log10,
-        "da": da.log10
-
-    },
-    "ceil": {
-        "cudf": "ceil",
-        "numpy": np.ceil,
-        "da": da.ceil
-
-    },
-    "sin": {
-        "cudf": "sin",
-        "numpy": np.sin,
-        "da": da.sin
-    },
-    "cos": {
-        "cudf": "cos",
-        "numpy": np.cos,
-        "da": da.cos
-    },
-    "tan": {
-        "cudf": "tan",
-        "numpy": np.tan,
-        "da": da.tan
-    },
-    "asin": {
-        "cudf": "arcsin",
-        "numpy": np.arcsin,
-        "da": da.arcsin
-    },
-    "acos": {
-        "cudf": "arccos",
-        "numpy": np.arccos,
-        "da": da.arccos
-
-    },
-    "atan": {
-        "cudf": "arctan",
-        "numpy": np.arctan,
-        "da": da.arctan
-
-    },
-    "sinh": {
-        "cudf": None,
-        "numpy": np.sinh,
-        "da": da.sinh
-    },
-    "asinh": {
-        "cudf": None,
-        "numpy": np.arcsinh,
-        "da": da.arcsinh
-    },
-    "cosh": {
-        "cudf": None,
-        "numpy": np.cosh,
-        "da": da.cosh
-    }
-    ,
-    "acosh": {
-        "cudf": None,
-        "numpy": np.arccosh,
-        "da": da.arccosh
-
-    },
-    "tanh": {
-        "cudf": None,
-        "numpy": np.tanh,
-        "da": da.tanh
-
-    },
-    "atanh": {
-        "cudf": None,
-        "numpy": np.arctanh,
-        "da": da.arctanh
-    }
-
-}
-
-
-def call(series, *args, method_name=None):
-    """
-    Process a series or number with a function
-    :param series:
-    :param args:
-    :param method_name:
-    :return:
-    """
-    # print("series",type(series),series)
-    series = series.ext.to_float()
-    if is_pandas_series(series):
-        method = op_to_series_func[method_name]["numpy"]
-        result = method(series, *args)
-
-    elif is_dask_series(series):
-        method = op_to_series_func[method_name]["da"]
-        result = method(series, *args)
-
-    elif is_cudf_series(series):
-        import cudf
-        method = getattr(cudf, op_to_series_func[method_name]["cudf"])
-        result = method(series)
-
-    elif is_dask_cudf_dataframe(series):
-        def func(_series, _method, args):
-            return _method(_series, *args)
-
-        method = getattr(series, op_to_series_func[method_name]["cudf"])
-        result = dd.map_partitions(func, series, method, args, meta=float)
-    else:
-        raise RaiseIt.type_error(series, ["pandas series", "dask series", "cudf series", "dask cudf series"])
-
-    return result
-
-
-def abs(series, *args):
-    return series.ext.to_float().abs()
-
-
-def mad(df, columns, args):
-    more = args[0]
-    mad_value = {}
-
-    for col_name in columns:
-        casted_col = df.cols.select(col_name).cols.to_float()
-        median_value = casted_col.cols.median(col_name)
-        # print(median_value)
-        # In all case all the values from the column
-        # are nan because can not be converted to number
-        if not np.isnan(median_value):
-            mad_value = (casted_col - median_value).abs().quantile(0.5)
-        else:
-            mad_value[col_name] = np.nan
-
-    @op_delayed(df)
-    def to_dict(_mad_value, _median_value):
-        _mad_value = {"mad": _mad_value}
-
-        if more:
-            _mad_value.update({"median": _median_value})
-
-        return _mad_value
-
-    return to_dict(mad_value, median_value)
-
-
-def clip(series, lower_bound, upper_bound):
-    # if is_cudf_series(series):
-    #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
-    # else:
-    return series.ext.to_float().clip(lower_bound, upper_bound)
-
-
-def cut(series, bins):
-    # if is_cudf_series(series):
-    #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
-    # else:
-    if is_pandas_series(series):
-        return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
-    elif is_cudf_series(series):
-        raise NotImplementedError("Not implemented yet")
-
-
-def is_any_series(series):
-    if is_pandas_series(series):
-        return True
-
-    if is_dask_series(series):
-        return True
-    # if is_cudf_series(series):
-    #     return True
-
-
-# TODO: dask seems more efficient triggering multiple .min() task, one for every column
-# cudf seems to be calculate faster in on pass using df.min()
-# method_to_call = getattr(foo, 'bar')
-# result = method_to_call()
-
-def _base(ds, func_name, columns=None, tidy=True, args=None):
-    if is_any_series(ds):
-        result = [getattr(ds.ext.to_float(), func_name)()]
-        columns = val_to_list(ds.name)
-    else:
-        result = [getattr(ds[col_name].ext.to_float(), func_name)() for col_name in columns]
-
-    @op_delayed(ds)
-    def to_dict(_result):
-        return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}}, tidy=tidy)
-
-    return to_dict(result)
 
 
 def op_delayed(df):
@@ -261,349 +21,403 @@ def op_delayed(df):
     return inner
 
 
-# Reductions
-def min(ds, columns=None, tidy=True, *args):
-    return _base(ds, "min", columns, tidy, args)
+class Functions(ABC):
+    def __init__(self, series):
+        self.series = series
 
+    @staticmethod
+    def _base(ds, func_name, columns=None, tidy=True, args=None):
+        # if is_any_series(ds):
+        
+        result = [getattr(ds.ext.to_float(), func_name)()]
+        columns = val_to_list(ds.name)
 
-def max(ds, columns=None, args=None):
-    return _base(ds, "max", columns, args)
+        # else:
+        #     result = [getattr(ds[col_name].ext.to_float(), func_name)() for col_name in columns]
 
+        @op_delayed(ds)
+        def to_dict(_result):
+            return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}}, tidy=tidy)
 
-def mean(ds, columns=None, args=None):
-    return _base(ds, "mean", columns, args)
+        return to_dict(result)
 
+    @staticmethod
+    @op_delayed
+    def _flat_dict(key_name, ele):
+        return {key_name: {x: y for x, y in ele.items()}}
 
-def mode(ds, columns=None, args=None):
-    return _base(ds, "mode", columns, args)
+    # Aggregation
+    @staticmethod
+    def min(ds, columns=None, tidy=True, *args):
+        return Functions._base(ds, "min", columns, tidy, args)
 
+    @staticmethod
+    def max(ds, columns=None, args=None):
+        return Functions._base(ds, "max", columns, args)
 
-def std(ds, columns=None, args=None):
-    return _base(ds, "std", columns, args)
+    @staticmethod
+    def mean(ds, columns=None, args=None):
+        return Functions._base(ds, "mean", columns, args)
 
+    @staticmethod
+    def mode(ds, columns=None, args=None):
+        return Functions._base(ds, "mode", columns, args)
 
-def sum(ds, columns=None, args=None):
-    return _base(ds, "sum", columns, args)
+    @staticmethod
+    def std(ds, columns=None, args=None):
+        return Functions._base(ds, "std", columns, args)
 
+    @staticmethod
+    def sum(ds, columns=None, args=None):
+        return Functions._base(ds, "sum", columns, args)
 
-def var(ds, columns=None, args=None):
-    return _base(ds, "var", columns, args)
+    @staticmethod
+    def var(ds, columns=None, args=None):
+        return Functions._base(ds, "var", columns, args)
 
+    @staticmethod
+    def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
+        return Functions._flat_dict("count_uniques",
+                                    {col_name: df[col_name].astype(str).nunique() for col_name in columns})(df)
 
-def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
-    @op_delayed(df)
-    def flat_dict(ele):
-        return {"count_uniques": {x: y for x, y in ele.items()}}
-        # return {"count_uniques": {x: y for i in ele for x, y in i.items()}}
+    @staticmethod
+    def unique(df, columns):
+        # Cudf can not handle null so we fill it with non zero values.
+        return Functions._flat_dict("unique",
+                                    {col_name: list(df.cols.select(col_name)[col_name].astype(str).unique()) for
+                                     col_name in
+                                     columns})(
+            df)
 
-    return flat_dict({col_name: df[col_name].astype(str).nunique() for col_name in columns})
+    @staticmethod
+    def count_na(df, columns, args):
+        return Functions._flat_dict({col_name: df[col_name].isnull().sum() for col_name in columns})(df)
 
+        # return {"count_na": {col_name:  for col_name in columns}}
+        # return np.count_nonzero(_df[_serie].isnull().values.ravel())
+        # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
 
-def range(df, columns, *args):
-    return {
-        "range": {col_name: {"min": df.cols.min(col_name), "max": df.cols.max(col_name)}
-                  for col_name in columns}}
-    # @staticmethod
-    #     def range_agg(df, columns, args):
-    #         columns = parse_columns(df, columns)
-    #
-    #         @delayed
-    #         def _range_agg(_min, _max):
-    #             return {col_name: {"min": __min, "max": __max} for (col_name, __min), __max in
-    #                     zip(_min["min"].items(), _max["max"].values())}
-    #
-    #         return _range_agg(df.cols.min(columns), df.cols.max(columns))
+    def count_zeros(df, columns, *args):
+        # Cudf can not handle null so we fill it with non zero values.
+        non_zero_value = 1
+        return {
+            "zeros": {col_name: int((df.cols.select(col_name).cols.to_float().fillna(non_zero_value).values == 0).sum())
+                      for
+                      col_name in columns}}
 
+    @staticmethod
+    @abstractmethod
+    def kurtosis(series):
+        pass
 
-# return value.astype(str).unique().ext.to_dict()
+    @staticmethod
+    @abstractmethod
+    def skew(series):
+        pass
 
-def unique(df, columns, *args):
-    # Cudf can not handle null so we fill it with non zero values.
-    @op_delayed(df)
-    def flat_dict(ele):
-        r = {i: j for i, j in ele.items()}
-        return r
+    def mad(df, columns, args):
+        more = args[0]
+        mad_value = {}
 
-    return flat_dict({col_name: list(df.cols.select(col_name)[col_name].astype(str).unique()) for col_name in columns})
-
-
-def count_zeros(df, columns, *args):
-    # Cudf can not handle null so we fill it with non zero values.
-    non_zero_value = 1
-    return {
-        "zeros": {col_name: int((df.cols.select(col_name).cols.to_float().fillna(non_zero_value).values == 0).sum()) for
-                  col_name in columns}}
-
-
-def percentile_agg(df, columns, args):
-    values = val_to_list(args[0])
-    # result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
-    result = [df[col_name].ext.to_float() for col_name in columns]
-
-    @op_delayed(df)
-    def to_dict(_result):
-        ## In pandas if all values are non it return {} on dict
-        _r = {}
-        for col_name, r in zip(columns, _result):
-            # Dask raise an exception is all values in the seie are np.nan
-            if r.isnull().all():
-                _r[col_name] = np.nan
+        for col_name in columns:
+            casted_col = df.cols.select(col_name).cols.to_float()
+            median_value = casted_col.cols.median(col_name)
+            # print(median_value)
+            # In all case all the values from the column
+            # are nan because can not be converted to number
+            if not np.isnan(median_value):
+                mad_value = (casted_col - median_value).abs().quantile(0.5)
             else:
-                _r[col_name] = r.quantile(values).ext.to_dict()
-        return _r
-
-    return to_dict(result)
-
-
-def count_na(df, columns, args):
-    # estimate = args[0]
-    @op_delayed(df)
-    def flat_dict(ele):
-        r = {"count_na": {i: j for i, j in ele.items()}}
-        return r
-
-    return flat_dict({col_name: df[col_name].isnull().sum() for col_name in columns})
-
-    # return {"count_na": {col_name:  for col_name in columns}}
-    # return np.count_nonzero(_df[_serie].isnull().values.ravel())
-    # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
-
-
-def date_format(series, current_format=None, output_format=None):
-    if is_pandas_series(series):
-        return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
-    elif is_cudf_series(series):
-        import cudf
-        print("strftime will be available in https://github.com/rapidsai/cudf/issues/5583")
-        return cudf.to_datetime(series).astype('str', format=output_format)
-
-
-def years_between(series, date_format=None):
-    if is_pandas_series(series):
-        return (pd.to_datetime(series, format=date_format,
-                               errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
-    elif is_cudf_series(series):
-        import cudf
-        raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
-        return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
-
-
-def exp(series, *args):
-    return series.ext.to_float().pow(2)
-
-
-def mod(series, *args):
-    return series.ext.to_float().mod(args[0])
-
-
-def pow(series, *args):
-    return series.ext.to_float().pow(args[0])
-
-
-def ceil(series, *args):
-    return call(series, method_name="ceil")
-
-
-def sqrt(series, *args):
-    return call(series, method_name="sqrt")
-
-
-def floor(series):
-    return series.ext.to_float().floor()
-
-
-def trunc(series):
-    return series.ext.to_float().truncate()
-
-
-def radians(series):
-    return series.ext.to_float().radians()
-
-
-def degrees(series, *args):
-    return call(series, method_name="degrees")
-
-
-def ln(series, *args):
-    return call(series, method_name="ln")
-
-
-def log(series, *args):
-    return call(series, method_name="log")
-
-
-# Trigonometrics
-def sin(series):
-    return call(series, method_name="sin")
-
-
-def cos(series):
-    return call(series, method_name="cos")
-
-
-def tan(series):
-    return call(series, method_name="tan")
-
-
-def asin(series):
-    return call(series, method_name="asin")
-
-
-def acos(series):
-    return call(series, method_name="acos")
-
-
-def atan(series):
-    return call(series, method_name="atan")
-
-
-def sinh(series):
-    return call(series, method_name="sinh")
-
-
-def asinh(series):
-    return call(series, method_name="asinh")
-
-
-def cosh(series):
-    return call(series, method_name="cosh")
-
-
-def tanh(series):
-    return call(series, method_name="tanh")
-
-
-def acosh(series):
-    return call(series, method_name="acosh")
-
-
-def atanh(series):
-    return call(series, method_name="atanh")
-
-
-#
-# def sinh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-#
-# def asinh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-#
-# def cosh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-#
-# def tanh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-#
-# def acosh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-#
-#
-# def arctanh(self, series):
-#     raise NotImplementedError('Not implemented yet')
-
-
-# Strings
-def upper(series):
-    return series.astype(str).str.upper()
-
-
-def lower(series):
-    return series.astype(str).str.lower()
-
-
-def extract(series, regex):
-    return series.astype(str).str.extract(regex)
-
-
-def slice(series, start, stop, step):
-    return series.astype(str).str.slice(start, stop, step)
-
-
-def proper(series):
-    return series.astype(str).str.title()
-
-
-def trim(series):
-    return series.astype(str).str.strip()
-
-
-def remove_white_spaces(series):
-    return series.str.replace(" ", "")
-
-
-def remove_special_chars(series):
-    pass
-
-
-def len(series):
-    return series.str.len()
-
-
-def remove_accents(series):
-    pass
-
-
-def find(series, sub, start=0, end=None):
-    return series.astype(str).str.find(sub, start, end)
-
-
-def rfind(series, sub, start=0, end=None):
-    return series.astype(str).str.rfind(sub, start, end)
-
-
-def left(series, position):
-    return series.str[:position]
-
-
-def right(series, position):
-    return series.str[-1 * position:]
-
-
-def starts_with(series, pat):
-    return series.str.startswith(pat)
-
-
-def ends_with(series, pat):
-    return series.str.endswith(pat)
-
-
-def char(series):
-    pass
-
-
-def unicode(series):
-    pass
-
-
-def exact(series, pat):
-    return series == pat
-
-
-# dates
-def year(series, format):
-    # return series.ext.to_datetime(format=format).strftime('%Y').to_series().reset_index(drop=True)
-    return series.ext.to_datetime(format=format).dt.year
-
-
-def month(series, format):
-    return series.ext.to_datetime(format=format).dt.month
-
-
-def day(series, format):
-    return series.ext.to_datetime(format=format).dt.day
-
-
-def hour(series):
-    return series.ext.to_datetime(format=format).dt.hour
-
-
-def minute(series):
-    return series.ext.to_datetime(format=format).dt.minute
-
-
-def second(series):
-    return series.ext.to_datetime(format=format).dt.second
+                mad_value[col_name] = np.nan
+
+        @op_delayed(df)
+        def to_dict(_mad_value, _median_value):
+            _mad_value = {"mad": _mad_value}
+
+            if more:
+                _mad_value.update({"median": _median_value})
+
+            return _mad_value
+
+        return to_dict(mad_value, median_value)
+
+    def is_any_series(series):
+        if is_pandas_series(series):
+            return True
+
+        elif is_dask_series(series):
+            return True
+        # elif is_cudf_series(series):
+        #     return True
+
+    # TODO: dask seems more efficient triggering multiple .min() task, one for every column
+    # cudf seems to be calculate faster in on pass using df.min()
+    # method_to_call = getattr(foo, 'bar')
+    # result = method_to_call()
+
+    def range(df, columns, *args):
+        return {
+            "range": {col_name: {"min": df.cols.min(col_name), "max": df.cols.max(col_name)}
+                      for col_name in columns}}
+        # @staticmethod
+        #     def range_agg(df, columns, args):
+        #         columns = parse_columns(df, columns)
+        #
+        #         @delayed
+        #         def _range_agg(_min, _max):
+        #             return {col_name: {"min": __min, "max": __max} for (col_name, __min), __max in
+        #                     zip(_min["min"].items(), _max["max"].values())}
+        #
+        #         return _range_agg(df.cols.min(columns), df.cols.max(columns))
+
+    # return value.astype(str).unique().ext.to_dict()
+
+    def percentile_agg(df, columns, args):
+        values = val_to_list(args[0])
+        # result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
+        result = [df[col_name].ext.to_float() for col_name in columns]
+
+        @op_delayed(df)
+        def to_dict(_result):
+            ## In pandas if all values are non it return {} on dict
+            _r = {}
+            for col_name, r in zip(columns, _result):
+                # Dask raise an exception is all values in the series are np.nan
+                if r.isnull().all():
+                    _r[col_name] = np.nan
+                else:
+                    _r[col_name] = r.quantile(values).ext.to_dict()
+            return _r
+
+        return to_dict(result)
+
+    # def radians(series):
+    #     return series.ext.to_float().radians()
+    #
+    # def degrees(series, *args):
+    #     return call(series, method_name="degrees")
+
+    ###########################
+    @staticmethod
+    def abs(series):
+        return series.ext.to_float().abs()
+
+    @staticmethod
+    def clip(series, lower_bound, upper_bound):
+        return series.functions.clip(lower_bound, upper_bound)
+
+    @staticmethod
+    def cut(series, bins):
+        # if is_cudf_series(series):
+        #     raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+        # else:
+        if is_pandas_series(series):
+            return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+        elif is_cudf_series(series):
+            raise NotImplementedError("Not implemented yet")
+
+    @staticmethod
+    @abstractmethod
+    def exp(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def sqrt(series):
+        pass
+
+    def mod(self, other):
+        series = self.series
+        return series.ext.to_float().mod(other)
+
+    def pow(self, exponent):
+        series = self.series
+        return series.ext.to_float().pow(exponent)
+
+    def floor(self):
+        series = self.series
+        return series.ext.to_float().floor()
+
+    # def trunc(self):
+    #     series = self.series
+    #     return series.ext.to_float().truncate()
+
+    @staticmethod
+    @abstractmethod
+    def radians(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def degrees(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def ln(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def log(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def ceil(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def sin(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def cos(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def tan(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def asin(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def acos(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def atan(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def sinh(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def cosh(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def tanh(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def asinh(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def acosh(series):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def atanh(series):
+        pass
+
+    # Strings
+    def upper(self):
+        series = self.series
+        return series.astype(str).str.upper()
+
+    def lower(self):
+        series = self.series
+        return series.astype(str).str.lower()
+
+    def extract(self, regex):
+        series = self.series
+        return series.astype(str).str.extract(regex)
+
+    def slice(self, start, stop, step):
+        series = self.series
+        return series.astype(str).str.slice(start, stop, step)
+
+    def proper(self):
+        series = self.series
+        return series.astype(str).str.title()
+
+    def trim(self):
+        series = self.series
+        return series.astype(str).str.strip()
+
+    def remove_white_spaces(self):
+        series = self.series
+        return series.str.replace(" ", "")
+
+    def len(self):
+        series = self.series
+        return series.str.len()
+
+    def remove_accents(self):
+        pass
+
+    def find(self, sub, start=0, end=None):
+        series = self.series
+        return series.astype(str).str.find(sub, start, end)
+
+    def rfind(self, sub, start=0, end=None):
+        series = self.series
+        return series.astype(str).str.rfind(sub, start, end)
+
+    def left(self, position):
+        series = self.series
+        return series.str[:position]
+
+    def right(self, position):
+        series = self.series
+        return series.str[-1 * position:]
+
+    def starts_with(self, pat):
+        series = self.series
+        return series.str.startswith(pat)
+
+    def ends_with(self, pat):
+        series = self.series
+        return series.str.endswith(pat)
+
+    def char(self):
+        pass
+
+    def unicode(self):
+        pass
+
+    def exact(self, pat):
+        return self == pat
+
+    # dates
+    def year(self, format):
+        series = self.series
+        # return self.ext.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
+        return series.ext.to_datetime(format=format).dt.year
+
+    def month(self, format):
+        series = self.series
+        return series.ext.to_datetime(format=format).dt.month
+
+    def day(self, format):
+        series = self.series
+        return series.ext.to_datetime(format=format).dt.day
+
+    def hour(self):
+        series = self.series
+        return series.ext.to_datetime(format=format).dt.hour
+
+    def minute(self):
+        series = self.series
+        return series.ext.to_datetime(format=format).dt.minute
+
+    def second(self):
+        series = self.series
+        return series.ext.to_datetime(format=format).dt.second

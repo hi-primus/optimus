@@ -12,7 +12,6 @@ from optimus.infer import Infer, is_dict
 from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
-
 TOTAL_PREVIEW_ROWS = 30
 
 

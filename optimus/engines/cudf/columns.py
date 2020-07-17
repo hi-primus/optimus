@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
-# DataFrame = pd.DataFrame
 from optimus.helpers.constants import Actions
 
 

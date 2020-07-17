@@ -11,7 +11,7 @@ from dask.dataframe import from_delayed
 from glom import glom
 from multipledispatch import dispatch
 
-from optimus.engines.base import functions as F
+from optimus.engines.base.functions import Functions as F
 from optimus.engines.base.functions import op_delayed
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
@@ -646,17 +646,23 @@ class BaseColumns(ABC):
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
         """
         Create and run aggregation
-        :param compute:
         :param columns:
         :param funcs:
         :param args:
+        :param compute:
+        :param tidy:
         :return:
         """
         df = self.df
         columns = parse_columns(df, columns)
 
+        if args is None:
+            args = []
+        elif not is_tuple(args, ):
+            args = (args,)
+
         funcs = val_to_list(funcs)
-        funcs = [func(df, columns, args) for func in funcs]
+        funcs = [func(df, columns, *args) for func in funcs]
         return format_dict(df.cols.exec_agg(funcs[0], compute), tidy)
 
     @staticmethod
@@ -726,17 +732,13 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-
-        # def _abs(value, *args):
-        #     return F.abs(value)
-
         df = self.df
         return df.cols.apply(input_cols, F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
                              mode="vectorized")
 
     def exp(self, input_cols, output_cols=None):
         """
-        Apply exp to column
+        Returns Euler's number, e (~2.718) raised to a power.
         :param input_cols:
         :param output_cols:
         :return:
@@ -746,18 +748,18 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def mod(self, input_cols, other=2, output_cols=None):
+    def mod(self, input_cols, divisor=2, output_cols=None):
         """
         Apply mod to column
         :param input_cols:
-        :param other:
+        :param divisor:
         :param output_cols:
         :return:(
         """
 
         df = self.df
         return df.cols.apply(input_cols, F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized", args=other)
+                             mode="vectorized", args=divisor)
 
     def log(self, input_cols, output_cols=None):
         """
@@ -972,20 +974,15 @@ class BaseColumns(ABC):
 
     def remove_white_spaces(self, input_cols, output_cols=None):
 
-        def _remove_white_spaces(value):
-            return value.astype("str").str.replace(" ", "")
-
         df = self.df
-        return df.cols.apply(input_cols, _remove_white_spaces, func_return_type=str,
+        return df.cols.apply(input_cols, F.remove_white_spaces, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove_special_chars(self, input_cols, output_cols=None):
-        def _remove_special_chars(value):
-            return value.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
         df = self.df
-        return df.cols.apply(input_cols, _remove_special_chars, func_return_type=str,
+        return df.cols.apply(input_cols, F.remove_special_chars, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
@@ -1083,7 +1080,7 @@ class BaseColumns(ABC):
         :param search_by: Can be "full","words","chars" or "numeric".
         :param ignore_case: Ignore case when searching for match
         :param output_cols:
-        :return: Dask DataFrame
+        :return: DataFrame
         """
 
         df = self.df
@@ -1091,7 +1088,7 @@ class BaseColumns(ABC):
         search = val_to_list(search)
 
         if search_by == "chars":
-            # TODO: Maybe we could use replace_multi()
+            # TODO: Maybe we could use replace_multi(). It can handle to list df["OFFENSE_DESCRIPTION"].str.replace(["A","B"],["C","D"])
             str_regex = "|".join(map(re.escape, search))
         elif search_by == "words":
             str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))

@@ -2,7 +2,7 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe
+from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe, is_cudf_dataframe
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
@@ -134,7 +134,7 @@ def columns_names(df):
     # print("df",type(df),df)
     if is_spark_dataframe(df):
         columns_names = df.columns
-    elif is_pandas_dataframe(df) or is_dask_dataframe(df):
+    elif is_pandas_dataframe(df) or is_dask_dataframe(df) or is_cudf_dataframe(df):
         columns_names = list(df.columns)
     else:
         columns_names = list(df.name)

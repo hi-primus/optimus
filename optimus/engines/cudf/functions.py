@@ -1,45 +1,121 @@
-# This functions must handle one or multiple columns
-# Must return None if the data type can not be handle
-import cupy as cp
-import numpy as np
-from cudf.core import DataFrame
+# DataFrame = pd.DataFrame
 
-from optimus.helpers.core import val_to_list
+import cudf
+
+from optimus.engines.base.functions import Functions
 
 
 def functions(self):
-    class Functions:
+    class CUDFFunctions(Functions):
+        def __init__(self, df):
+            super(CUDFFunctions, self).__init__(df)
 
-        # def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
-        @staticmethod
-        def hist_agg(columns, args, df):
-            # {'OFFENSE_CODE': {'hist': [{'count': 169.0, 'lower': 111.0, 'upper': 297.0},
-            #                            {'count': 20809.0, 'lower': 3645.0, 'upper': 3831.0}]}}
+        def kurtosis(self):
+            series = self.series
+            return cudf.kurtosis(series.ext.to_float())
+
+        def skew(self):
+            series = self.series
+            return cudf.skew(series.ext.to_float())
+
+        def exp(self):
+            series = self.series
+            return cudf.exp(series.ext.to_float())
+
+        def sqrt(self):
+            series = self.series
+            return cudf.sqrt(series.ext.to_float())
+
+        # def mod(self, other):
+        #     series = self.series
+        #     return cudf.mod(series.ext.to_float(), other)
+
+        # def pow(self, other):
+        #     series = self.series
+        #     return cudf.power(series.ext.to_float(), other)
+
+        def radians(self):
+            series = self.series
+            return cudf.radians(series.ext.to_float())
+
+        def degrees(self):
+            series = self.series
+            return cudf.degrees(series.ext.to_float())
+
+        def ln(self):
+            series = self.series
+            return cudf.log(series.ext.to_float())
+
+        def log(self):
+            series = self.series
+            return cudf.log10(series.ext.to_float())
+
+        def ceil(self):
+            series = self.series
+            return cudf.ceil(series.ext.to_float())
+
+        def sin(self):
+            series = self.series
+            return cudf.sin(series.ext.to_float())
+
+        def cos(self):
+            series = self.series
+            return cudf.cos(series.ext.to_float())
+
+        def tan(self):
+            series = self.series
+            return cudf.tan(series.ext.to_float())
+
+        def asin(self):
+            series = self.series
+            return cudf.arcsin(series.ext.to_float())
+
+        def acos(self):
+            series = self.series
+            return cudf.arccos(series.ext.to_float())
+
+        def atan(self):
+            series = self.series
+            return cudf.arctan(series.ext.to_float())
+
+        def sinh(self):
+            series = self.series
+            return 1 / 2 * (cudf.exp(series) - cudf.exp(-series))
+
+        def cosh(self):
+            series = self.series
+            return 1 / 2 * (cudf.exp(series) + cudf.exp(-series))
+
+        def tanh(self):
+            return self.sinh() / self.cosh()
+
+        def asinh(self):
+            return 1 / self.sinh()
+
+        def acosh(self):
+            return 1 / self.cosh()
+
+        def atanh(self):
+            return 1 / self.tanh()
+
+        def clip(self, lower_bound, upper_bound):
+            raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+
+        def remove_special_chars(self):
+            series = self.series
+            # See https://github.com/rapidsai/cudf/issues/5520
+            return series.astype(str).str.replace_non_alphanumns(replacement_char='')
+
+        def date_format(self, current_format=None, output_format=None):
+            series = self.series
+            return cudf.to_datetime(series).astype('str', format=output_format)
+
+        def years_between(self, date_format=None):
+            series = self.series
+            raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
+            # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
+
+    return CUDFFunctions(self)
 
 
-            df = args[0]
-            buckets = args[1]
-            min_max = args[2]
-
-            # https://iscinumpy.gitlab.io/post/histogram-speeds-in-python/
-            # Fast histograms library https://github.com/astrofrog/fast-histogram
-
-            # @numba.njit
-            # def histogram1d(v, bins, range):
-            #     return np.histogram(v, bins, range)
-
-            # _serie = df[columns].to_numpy()
-            result = {}
-            for col_name in columns:
-                _serie = df[col_name]
-                if df[col_name].dtype == np.float64 or df[col_name].dtype == np.int64:
-                    arr = cp.fromDlpack(_serie.to_dlpack())
-                    i, j = cp.histogram(arr, buckets)
-                    # We need to convert from array to numeric
-                    result[col_name] = {"count": list([float(x) for x in i]), "bins": list([float(x) for x in j])}
-            return result
-
-    return Functions()
-
-
-DataFrame.functions = property(functions)
+Series.functions = property(functions)
