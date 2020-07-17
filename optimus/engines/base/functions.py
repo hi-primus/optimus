@@ -28,7 +28,7 @@ class Functions(ABC):
     @staticmethod
     def _base(ds, func_name, columns=None, tidy=True, args=None):
         # if is_any_series(ds):
-        
+
         result = [getattr(ds.ext.to_float(), func_name)()]
         columns = val_to_list(ds.name)
 
