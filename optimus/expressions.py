@@ -1,6 +1,6 @@
 from rply import LexerGenerator
 import json
-op_functions = {
+functions = {
     # Math functions
     "MOD": {
         "description": "Returns the result of the modulo operator, the remainder after a division operation.",
@@ -478,7 +478,7 @@ binary_operators = {
 }
 
 # functions = op_functions
-reserved_words = json.dumps({"functions": op_functions, "operators": {"unary": unary_operators, "binary": binary_operators}})
+reserved_words = json.dumps({"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}})
 
 
 class Parser:
