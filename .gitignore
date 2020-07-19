@@ -86,3 +86,21 @@ examples/data/star0000-1.csv
 examples/yellow_tripdata_2009-01.csv
 
 examples/yellow_tripdata_2009-02.csv
+
+tests/creator/dask-worker-space/
+
+examples/data/AllData.xlsx
+
+examples/data/jurgen.csv
+
+examples/data/linkedin.csv
+
+examples/data/netflix_titles.csv
+
+examples/data/personal_finance769k.csv
+
+examples/data/taa.csv
+
+examples/data/titanic3-1.xlsx
+
+examples/mydask.png
