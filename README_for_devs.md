@@ -100,17 +100,58 @@ Now install from test.pypi.org
 pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop
 ```
 
-### Compiling redis .jar file
+## Compiling redis .jar file
 This file can not be found to download and must be compiled.
 
-#### Install Maven
+### Install Maven
 
 Reference https://www.javahelps.com/2017/10/install-apache-maven-on-linux.html
 
-#### Compile the .jar file
+### Compile the .jar file
 Download spark-redis from GitHub https://github.com/RedisLabs/spark-redis (either git clone or download as a zip), and build it using Maven.
 
 ```
 $ cd spark-redis
 $ mvn clean package -DskipTests
 ```
+
+## Create a new database driver
+
+To add a new database driver to Optimus follow this steps: 
+
+Add the .jar driver to /jars/ folder
+
+In `/io/properties.py` add  the properties of the new database to the JSON
+
+For example for Mysql 
+```
+MYSQL = {
+    "name": "mysql",
+    "port": 3306,
+    "java_class": "",
+    "table_name": "table_name"
+}
+```
+ 
+Maybe it will be necessary to add some additional param to connect if Alluxio requires a specific param to make a connection.
+This can be added in `/optimus.py` connect()
+
+In io/factory.py you need to add the new Driver. Every driver has 5 function that needs to be implemented. You can find more info here /io/abstract_driver.py
+
+For implementing the functionality for the new database you can copy the MySQL driver (or whatever you think to fix better with the database you want to implement) an take it as a guide to implement it You need to create the implementation in  /io/name_of_new_database.py
+
+Then you can try something like:
+
+```
+db =  op.connect(
+    db_type=DB_TYPE,
+    host=HOST,
+    database= DATABASE,
+    user= USER,
+    password = PASSWORD,
+    port=PORT)
+
+db.tables(limit="all")
+```
+ 
+

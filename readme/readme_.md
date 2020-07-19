@@ -25,6 +25,8 @@ jupyter:
 [![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
 
 
+NOTE: We are working hard in version 3.0 https://github.com/ironmussa/Optimus/tree/develop-3.0. in which you could use Dask, Dask/cudf as backend using a unified API.
+
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ironmussa/Optimus/master)
