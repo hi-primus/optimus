@@ -1,5 +1,7 @@
-from rply import LexerGenerator
 import json
+
+from rply import LexerGenerator
+
 functions = {
     # Math functions
     "MOD": {
@@ -387,7 +389,7 @@ functions = {
     "STARTS_WITH": "ATANH function description",
     "ENDS_WITH": "ATANH function description",
     "EXACT": "ATANH function description",
-    "YEAR": {                                   # Date Functions
+    "YEAR": {  # Date Functions
         "description": "Returns the year specified by a given date.",
         "parameters": [
             {
@@ -396,7 +398,7 @@ functions = {
                 "description": "The date from which to extract the year."
             },
         ],
-        "example": "YEAR('7/20/1969')",
+        "example": "YEAR()",
         "text": "YEAR",
     },
     "MONTH": {
@@ -408,7 +410,7 @@ functions = {
                 "description": "The date from which to extract the month."
             },
         ],
-        "example": "MONTH('7/20/1969')",
+        "example": "MONTH()",
         "text": "MONTH",
     },
     "DAY": {
@@ -420,7 +422,7 @@ functions = {
                 "description": "The date from which to extract the day."
             },
         ],
-        "example": 'DAY("7/20/1969")',
+        "example": 'DAY()',
         "text": "DAY",
     },
     "HOUR": {
@@ -432,8 +434,8 @@ functions = {
                 "description": "The time from which to calculate the hour value."
             },
         ],
-        "example": 'DAY("7/20/1969")',
-        "text": "DAY",
+        "example": 'HOUR()',
+        "text": "HOUR",
     },
     "MINUTE": {
         "description": "Returns the minute component of a specific time, in numeric format.",
@@ -444,7 +446,7 @@ functions = {
                 "description": "The time from which to calculate the minute value."
             },
         ],
-        "example": 'MINUTE("11:40:59 AM")',
+        "example": 'MINUTE()',
         "text": "MINUTE",
     },
     "SECOND": {
@@ -456,7 +458,7 @@ functions = {
                 "description": "The time from which to calculate the second value"
             },
         ],
-        "example": 'SECOND("11:40:59 AM")',
+        "example": 'SECOND()',
         "text": "SECOND",
     },
 
@@ -478,7 +480,8 @@ binary_operators = {
 }
 
 # functions = op_functions
-reserved_words = json.dumps({"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}})
+reserved_words = json.dumps(
+    {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}, ensure_ascii=False)
 
 
 class Parser:
