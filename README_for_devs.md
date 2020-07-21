@@ -94,6 +94,10 @@ Now install from test.pypi.org
 !pip install --index-url https://test.pypi.org/simple optimuspyspark
 ```
 
+Upload to optimuspyspark
+```
+twine upload dist/*
+```
 ### Installing from github
 
 ```
@@ -114,8 +118,8 @@ Download spark-redis from GitHub https://github.com/RedisLabs/spark-redis (eithe
 $ cd spark-redis
 $ mvn clean package -DskipTests
 ```
-## Developing Optimus 3.0
-Because GPUs are not very commons you may want to use some external server like AWS or GCP.
+## Hacking Optimus 3.0
+Because GPUs are not very common you may want to use some external server like AWS, GCP or Azure.
 Here the workflow.
 
 ```
@@ -136,6 +140,37 @@ conda install pip
 cd Optimus 
 pip install -r requirements.txt
 ```
+### Deploying a remote Dask server
+For configuring a local server
+
+On Digital Ocean
+```
+sudo apt-get update
+sudo apt-get install -y python3-pip
+pip3 install dask[complete]
+```
+
+Run tmux to launch the scheduler and the worker
+```
+tmux
+```
+Use Ctrl + B + C to create a new window
+```
+dask scheduler
+dask worker 127.0.0.0.1
+```
+
+Be sure to install the external libraries in the remote server. You can clone the repo
+```
+git clone https://github.com/ironmussa/Optimus.git
+```
+and run
+```
+pip3 install -r requirements.txt
+```
+
+
+
 ### Adding functions
 The main way to work in Optimus is using .cols and .rows
 `.cols` is going to get and process data in a vertical way `.rows` in vertical.
