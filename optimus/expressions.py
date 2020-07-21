@@ -8,8 +8,8 @@ functions = {
         "description": "Returns the result of the modulo operator, the remainder after a division operation.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The number to be divided to find the remainder."
             },
             {
@@ -25,8 +25,8 @@ functions = {
         "description": "Returns the absolute value of a number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The number of which to return the absolute value."
             },
         ],
@@ -38,8 +38,8 @@ functions = {
         "description": "Returns Euler's number, e (~2.718) raised to a power.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The number of which to return the absolute value."
             },
         ],
@@ -50,8 +50,8 @@ functions = {
         "description": "Returns the logarithm of a number with respect to a base.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the logarithm."
             },
         ],
@@ -62,8 +62,8 @@ functions = {
         "description": "Returns the logarithm of a number, base e (Euler's number).",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the logarithm, base e."
             },
         ],
@@ -74,8 +74,8 @@ functions = {
         "description": "Returns a number raised to a power.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The number to raise to the exponent power."
             },
             {
@@ -91,8 +91,8 @@ functions = {
         "description": "Rounds a number up to the nearest integer multiple of specified significance factor.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value to round up to the nearest integer multiple of factor."
             },
 
@@ -104,8 +104,8 @@ functions = {
         "description": "Returns the positive square root of a positive number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The number for which to calculate the positive square root."
             },
 
@@ -117,8 +117,8 @@ functions = {
         "description": "Rounds a number down to the nearest integer multiple of specified significance factor.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value to round down to the nearest integer multiple of factor."
             },
 
@@ -145,8 +145,8 @@ functions = {
         "description": "Returns the sin of an angle provided in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The angle to find the sine of, in radians."
             },
 
@@ -158,8 +158,8 @@ functions = {
         "description": "Returns the cosine of an angle provided in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The angle to find the cosine of, in radians."
             },
 
@@ -171,8 +171,8 @@ functions = {
         "description": "Returns the tangent of an angle provided in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The angle to find the tangent of, in radians."
             },
 
@@ -184,8 +184,8 @@ functions = {
         "description": "Returns the inverse sine of a value, in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse sine. Must be between -1 and 1, inclusive."
             },
 
@@ -197,8 +197,8 @@ functions = {
         "description": "Returns the inverse cosine of a value, in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse cosine. Must be between -1 and 1, inclusive."
             },
 
@@ -210,8 +210,8 @@ functions = {
         "description": "Returns the inverse tangent of a value, in radians.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse tangent."
             },
 
@@ -223,8 +223,8 @@ functions = {
         "description": "Returns the hyperbolic sine of any real number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "Any real value to calculate the hyperbolic sine of."
             },
 
@@ -236,8 +236,8 @@ functions = {
         "description": "Returns the hyperbolic cosine of any real number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "Any real value to calculate the hyperbolic cosine of."
             },
 
@@ -250,8 +250,8 @@ functions = {
         "description": "Returns the hyperbolic tangent of any real number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "Any real value to calculate the hyperbolic tangent of."
             },
 
@@ -263,8 +263,8 @@ functions = {
         "description": "Returns the hyperbolic tangent of any real number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse hyperbolic sine."
             },
 
@@ -277,8 +277,8 @@ functions = {
         "description": "Returns the inverse hyperbolic cosine of a number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse hyperbolic cosine. Must be greater than or equal to 1."
             },
 
@@ -290,8 +290,8 @@ functions = {
         "description": "Returns the inverse hyperbolic tangent of a number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value for which to calculate the inverse hyperbolic tangent. Must be between -1 and 1, exclusive."
             },
 
@@ -303,8 +303,8 @@ functions = {
         "description": "Returns the inverse hyperbolic tangent of a number.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "Converts a specified string to uppercase."
             },
 
@@ -316,8 +316,8 @@ functions = {
         "description": "Converts a specified string to lowercase.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The string to convert to lowercase."
             },
 
@@ -329,8 +329,8 @@ functions = {
         "description": "Capitalizes each word in a specified string.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase."
             },
 
@@ -342,8 +342,8 @@ functions = {
         "description": "Removes leading, trailing, and repeated spaces in text.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The text or reference to a cell containing text to be trimmed."
             },
 
@@ -356,8 +356,8 @@ functions = {
         "description": "Returns the length of a string.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The string whose length will be returned."
             },
 
@@ -369,8 +369,8 @@ functions = {
         "description": "Returns the position at which a string is first found.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The string to look for."
             },
             {
@@ -384,8 +384,30 @@ functions = {
         "text": "LEN",
     },
     "RFIND": "ATANH function description",
-    "LEFT": "ATANH function description",
-    "RIGHT": "ATANH function description",
+    "LEFT": {
+        "description": "Returns a substring from the beginning of a specified string.",
+        "parameters": [
+            {
+                "type": ["column", "string"],
+                "name": "col_name",
+                "description": "The string from which the left portion will be returned."
+            },
+        ],
+        "example": "LEFT('Optimus', 2)",
+        "text": "LEN",
+    },
+    "RIGHT": {
+        "description": "Returns a substring from the end of a specified string.",
+        "parameters": [
+            {
+                "type": ["column", "string"],
+                "name": "col_name",
+                "description": "The string from which the right portion will be returned."
+            },
+        ],
+        "example": "LEN('optimus prime')",
+        "text": "LEN",
+    },
     "STARTS_WITH": "ATANH function description",
     "ENDS_WITH": "ATANH function description",
     "EXACT": "ATANH function description",
@@ -393,8 +415,8 @@ functions = {
         "description": "Returns the year specified by a given date.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The date from which to extract the year."
             },
         ],
@@ -405,8 +427,8 @@ functions = {
         "description": "Returns the month of the year a specific date falls in, in numeric format.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The date from which to extract the month."
             },
         ],
@@ -417,8 +439,8 @@ functions = {
         "description": "Returns the day of the month that a specific date falls on, in numeric format.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The date from which to extract the day."
             },
         ],
@@ -429,8 +451,8 @@ functions = {
         "description": "Returns the hour component of a specific time, in numeric format.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The time from which to calculate the hour value."
             },
         ],
@@ -441,8 +463,8 @@ functions = {
         "description": "Returns the minute component of a specific time, in numeric format.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The time from which to calculate the minute value."
             },
         ],
@@ -453,8 +475,8 @@ functions = {
         "description": "Returns the second component of a specific time, in numeric format.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "string"],
+                "name": "col_name",
                 "description": "The time from which to calculate the second value"
             },
         ],
