@@ -5,8 +5,8 @@ import numpy as np
 
 # import cudf
 from optimus.helpers.check import is_pandas_series, is_dask_series, is_cudf_series, is_dask_dataframe
-from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
+
 
 
 def op_delayed(df):

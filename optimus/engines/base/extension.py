@@ -571,7 +571,6 @@ class BaseExt(ABC):
             cols_to_profile = parse_columns(df, columns)
 
         columns = cols_to_profile
-        print("cols_to_profile",columns)
 
         profiler_data = df.meta.get("profile")
         if profiler_data is None:
@@ -595,7 +594,7 @@ class BaseExt(ABC):
 
             hist = None
             freq_uniques = None
-            print("numeric_cols, string_cols",numeric_cols, string_cols)
+
             if len(numeric_cols):
                 hist = df[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
                 freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute)
