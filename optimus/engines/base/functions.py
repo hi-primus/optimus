@@ -26,20 +26,22 @@ class Functions(ABC):
         self.series = series
 
     @staticmethod
-    def _base(ds, func_name, columns=None, tidy=True, args=None):
+    def _base(series, func_name, col_name=None, tidy=True, args=None):
         # if is_any_series(ds):
-
-        result = [getattr(ds.ext.to_float(), func_name)()]
-        columns = val_to_list(ds.name)
+        # print("ds",type(ds),ds)
+        series = series[col_name]
+        result = [getattr(series.ext.to_float(), func_name)()][0]
+        return {func_name: {col_name: result}}
+        # columns = val_to_list(ds.name)
 
         # else:
         #     result = [getattr(ds[col_name].ext.to_float(), func_name)() for col_name in columns]
 
-        @op_delayed(ds)
-        def to_dict(_result):
-            return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}}, tidy=tidy)
+        # @op_delayed(ds)
+        # def to_dict(_result):
+        #     return format_dict({func_name: {col_name: r for col_name, r in zip(columns, _result)}}, tidy=tidy)
 
-        return to_dict(result)
+        # return to_dict(result)
 
     @staticmethod
     @op_delayed
@@ -77,8 +79,7 @@ class Functions(ABC):
 
     @staticmethod
     def count_uniques(df, columns, estimate: bool = True, compute: bool = True):
-        return Functions._flat_dict("count_uniques",
-                                    {col_name: df[col_name].astype(str).nunique() for col_name in columns})(df)
+        return {"count_uniques": {columns: df[columns].astype(str).nunique()}}
 
     @staticmethod
     def unique(df, columns):
@@ -97,6 +98,7 @@ class Functions(ABC):
         # return np.count_nonzero(_df[_serie].isnull().values.ravel())
         # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
 
+    @staticmethod
     def count_zeros(df, columns, *args):
         # Cudf can not handle null so we fill it with non zero values.
         non_zero_value = 1
@@ -115,6 +117,7 @@ class Functions(ABC):
     def skew(series):
         pass
 
+    @staticmethod
     def mad(df, columns, args):
         more = args[0]
         mad_value = {}
@@ -227,12 +230,10 @@ class Functions(ABC):
         pass
 
     def mod(self, other):
-        series = self.series
-        return series.ext.to_float().mod(other)
+        return self.ext.to_float().mod(other)
 
     def pow(self, exponent):
-        series = self.series
-        return series.ext.to_float().pow(exponent)
+        return self.ext.to_float().pow(exponent)
 
     def floor(self):
         series = self.series
@@ -329,11 +330,12 @@ class Functions(ABC):
 
     # Strings
     def upper(self):
-        series = self.series
-        return series.astype(str).str.upper()
+        # series = self.series
+        return self.astype(str).str.upper()
 
-    def lower(self):
-        series = self.series
+    @staticmethod
+    def lower(series):
+        # series = self.series
         return series.astype(str).str.lower()
 
     def extract(self, regex):

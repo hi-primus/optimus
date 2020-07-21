@@ -615,8 +615,8 @@ class BaseExt(ABC):
                 if _hist is not None:
                     for _col_name, h in _hist["hist"].items():
                         _f[_col_name]["stats"]["hist"] = h
-                        print("freq_uniques",freq_uniques)
-                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques[_col_name]
+                        # print("freq_uniques",freq_uniques)
+                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques["count_uniques"][_col_name]
 
                 if _freq is not None:
                     for _col_name, f in _freq["frequency"].items():

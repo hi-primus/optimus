@@ -454,7 +454,8 @@ class BaseColumns(ABC):
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
         return df.astype(str).cols.select(input_cols).cols.remove_accents().cols.replace(search=search_by,
-                                                                                         replace_by=replace_by).cols.frequency()["frequency"]
+                                                                                         replace_by=replace_by).cols.frequency()[
+            "frequency"]
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
         """
@@ -662,8 +663,15 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        funcs = [func(df, columns, *args) for func in funcs]
-        return format_dict(df.cols.exec_agg(funcs[0], compute), tidy)
+        funcs = [func(df, col_name, *args) for col_name in columns for func in funcs]
+        a = df.cols.exec_agg(funcs, compute)
+        c = {}
+        for i in a:
+            for x, y in i.items():
+                c.setdefault(x, {}).update(y)
+        return c
+        # print(dd.compute(funcs))
+        # return df.cols.exec_agg(funcs, compute)
 
     @staticmethod
     @abstractmethod
@@ -912,28 +920,18 @@ class BaseColumns(ABC):
                              output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
     def lower(self, input_cols, output_cols=None):
-        def _lower(value, *args):
-            return F.lower(value)
-
         df = self.df
-        return df.cols.apply(input_cols, _lower, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
+        return df.cols.apply(input_cols, F.lower, func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized")
 
     def upper(self, input_cols, output_cols=None):
-        def _upper(value, *args):
-            return F.upper(value)
-
         df = self.df
-        return df.cols.apply(input_cols, _upper, func_return_type=str, output_cols=output_cols,
+        return df.cols.apply(input_cols, F.upper, func_return_type=str, output_cols=output_cols,
                              meta_action=Actions.UPPER.value, mode="vectorized")
 
     def trim(self, input_cols, output_cols=None):
-
-        def _trim(value, *args):
-            return F.trim(value)
-
         df = self.df
-        return df.cols.apply(input_cols, _trim, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
+        return df.cols.apply(input_cols, F.trim, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):

@@ -30,7 +30,8 @@ class DaskBaseColumns(BaseColumns):
         if is_dict(exprs):
             result = exprs
         else:
-            result = exprs.compute()
+            # result = exprs.compute()
+            result = dd.compute(exprs)[0]
 
         return result
 
