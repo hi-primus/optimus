@@ -570,7 +570,7 @@ class BaseExt(ABC):
         else:
             cols_to_profile = parse_columns(df, columns)
 
-        columns = cols_to_profile
+        columns = parse_columns(df, columns)
 
         profiler_data = df.meta.get("profile")
         if profiler_data is None:
@@ -631,7 +631,7 @@ class BaseExt(ABC):
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
-            updated_columns = merge(columns, hist, freq, mismatch, dtypes, freq_uniques)
+            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
             # print("profiler_data",profiler_data)
 
