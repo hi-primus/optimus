@@ -213,7 +213,6 @@ class BaseColumns(ABC):
         df = self.df
 
         columns, vfunc = set_function_parser(df, value, where, default)
-        print(columns, vfunc)
         # if df.cols.dtypes(input_col) == "category":
         #     try:
         #         # Handle error if the category already exist
@@ -373,7 +372,7 @@ class BaseColumns(ABC):
             elif arg == "str":
                 df = df.cols.to_string(input_col, output_col)
             else:
-                RaiseIt.value_error(str, ["float", "integer", "datetime", "bool", "string"])
+                RaiseIt.value_error(arg, ["float", "integer", "datetime", "bool", "string"])
 
         return df
 
@@ -555,7 +554,6 @@ class BaseColumns(ABC):
         :param ref_col: Column taken as reference
         :return: Spark DataFrame
         """
-        print("columns", column)
         df = self.df
         # Check that column is a string or a list
         column = parse_columns(df, column)
@@ -1478,6 +1476,7 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
         total_preview_rows = 30
         pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)
+
         cols_and_inferred_dtype = {}
         for col_name in columns:
             _value_counts = pdf[col_name].value_counts()
