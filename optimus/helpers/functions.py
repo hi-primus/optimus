@@ -555,7 +555,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     """
 
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
-
+    from optimus.engines.base.functions import Functions as F       # Used in eval
     df = pdf.cols.cast(col_names, parser)
     try:
         if where is None:
