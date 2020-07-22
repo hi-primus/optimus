@@ -18,6 +18,10 @@ def functions(self):
         def __init__(self, df):
             super(DaskFunctions, self).__init__(df)
 
+        def count_zeros(self, *args):
+            series = self.series
+            return int((series.ext.to_float().values == 0).sum())
+        
         def kurtosis(self):
             series = self.series
             return stats.kurtosis(series.ext.to_float())
@@ -113,6 +117,10 @@ def functions(self):
         def clip(self, lower_bound, upper_bound):
             series = self.series
             return series.clip(lower_bound, upper_bound)
+
+        def cut(self, bins):
+            series = self.series
+            return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
         def remove_special_chars(self):
             series = self.series

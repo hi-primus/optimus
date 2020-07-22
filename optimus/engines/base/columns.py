@@ -661,15 +661,16 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        funcs = [func(df, col_name, *args) for col_name in columns for func in funcs]
+        funcs = [{func.__name__: {col_name: func(df[col_name], *args)}} for col_name in columns for func in funcs]
         a = df.cols.exec_agg(funcs, compute)
+        # [func(df[col_name], *args) for col_name in columns for func in funcs]
+
         c = {}
         for i in a:
             for x, y in i.items():
                 c.setdefault(x, {}).update(y)
-        return c
-        # print(dd.compute(funcs))
-        # return df.cols.exec_agg(funcs, compute)
+
+        return format_dict(c, tidy)
 
     @staticmethod
     @abstractmethod
@@ -1172,7 +1173,6 @@ class BaseColumns(ABC):
 
     def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
         df = self.df
-
         return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
     def _math(self, columns, operator, output_col):
@@ -1406,7 +1406,7 @@ class BaseColumns(ABC):
 
         if is_dict(d):
             result = d
-        elif compute == True:
+        elif compute:
             result = d.compute()
         return result
 

@@ -10,6 +10,12 @@ def functions(self):
         def __init__(self, df):
             super(CUDFFunctions, self).__init__(df)
 
+        def count_zeros(self, *args):
+            # Cudf can not handle null so we fill it with non zero values.
+            series = self.series
+            non_zero_value = 1
+            return (series.ext.to_float().fillna(non_zero_value).values == 0).sum()
+
         def kurtosis(self):
             series = self.series
             return cudf.kurtosis(series.ext.to_float())
@@ -100,6 +106,9 @@ def functions(self):
 
         def clip(self, lower_bound, upper_bound):
             raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+
+        def cut(self, bins):
+            raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
         def remove_special_chars(self):
             series = self.series
