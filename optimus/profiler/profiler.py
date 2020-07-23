@@ -485,7 +485,7 @@ class Profiler:
                 exprs.extend(df.cols.create_exprs(cols, funcs))
 
                 # TODO: None in basic calculation
-                funcs = [df.functions.percentile_agg]
+                funcs = [df.functions.percentile]
                 exprs.extend(df.cols.create_exprs(cols, funcs, df, [0.05, 0.25, 0.5, 0.75, 0.95],
                                                   relative_error))
 

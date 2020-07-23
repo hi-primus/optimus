@@ -1,75 +1,94 @@
 # Aggregations
+from optimus.engines.base.functions import Functions
+
+
 def min(series):
-    return series.functions.min()
+    return Functions.min(series)
 
 
 def max(series):
-    return series.functions.max()
+    return Functions.max(series)
+
+
+def kurtosis(series):
+    return Functions.kurtosis(series)
+
+
+def skew(series):
+    return Functions.kurtosis(series)
 
 
 def mean(series):
-    return series.functions.mean()
+    return Functions.mean(series)
+
+
+def mad(series, *args):
+    return Functions.mad(series, *args)
 
 
 def mode(series):
-    return series.functions.mode()
+    return Functions.mode(series)
 
 
 def std(series):
-    return series.functions.std()
+    return Functions.std(series)
 
 
 def sum(series):
-    return series.functions.sum()
+    return Functions.sum(series)
 
 
 def var(series):
-    return series.functions.var()
+    return Functions.var(series)
 
 
 # Math
 def abs(series):
-    return series.functions.abs()
+    return Functions.abs(series)
 
 
 def exp(series):
-    return series.functions.exp()
+    return Functions.exp(series)
 
 
 def sqrt(series):
-    return series.functions.sqrt()
+    return Functions.sqrt(series)
 
 
 def mod(series):
-    return series.functions.mod()
+    return Functions.mod(series)
 
 
 def pow(series):
-    return series.functions.pow()
+    return Functions.pow(series)
 
 
 def floor(series):
-    return series.functions.floor()
+    return Functions.floor(series)
+
+
+def range(series):
+    return Functions.range(series)
 
 
 def radians(series):
-    return series.functions.radians()
+    return Functions.radians(series)
 
 
 def degrees(series):
-    return series.functions.degrees()
+    return Functions.degrees(series)
 
 
 def ln(series):
-    return series.functions.ln()
+    return Functions.ln(series)
 
 
 def log(series):
-    return series.functions.log()
+    return Functions.log(series)
 
 
 def ceil(series):
-    return series.functions.ceil()
+    return Functions.ceil(series)
 
 
 # Trigonometrics
@@ -110,110 +129,149 @@ def tanh(series):
 
 
 def asinh(series):
-    return series.functions.asin()
+    return series.functions.asinh()
 
 
 def acosh(series):
-    return series.functions.acos()
+    return series.functions.acosh()
 
 
 def atanh(series):
-    return series.functions.atan()
+    return series.functions.atanh()
 
 
 # strings
 def lower(series):
-    return series.functions.lower()
+    return Functions.lower(series)
 
 
 def upper(series):
-    return series.functions.upper()
+    return Functions.upper(series)
 
 
 def extract(series):
-    return series.functions.extract()
+    return Functions.extract(series)
 
 
 def slice(series):
-    return series.functions.slice()
+    return Functions.slice(series)
+
+
+def percentile(series, *args):
+    return Functions.percentile(series, *args)
 
 
 def proper(series):
-    return series.functions.proper()
+    return Functions.proper(series)
 
 
 def trim(series):
-    return series.functions.trim()
+    return Functions.trim(series)
 
 
 def remove_white_spaces(series):
-    return series.functions.remove_white_spaces()
+    return Functions.remove_white_spaces(series)
 
 
 def len(series):
-    return series.functions.len()
+    return Functions.len(series)
+
+
+def find(series):
+    return Functions.find(series)
+
+
+def rfind(series):
+    return Functions.rfind(series)
+
+
+def left(series):
+    return Functions.left(series)
+
+
+def right(series):
+    return Functions.right(series)
+
+
+def starts_with(series):
+    return Functions.starts_with(series)
+
+
+def ends_with(series):
+    return Functions.ends_with(series)
+
+
+def char(series):
+    return Functions.char(series)
+
+
+def unicode(series):
+    return Functions.unicode(series)
+
+
+def exact(series):
+    return Functions.exact(series)
+
+
+# dates
+
+def date_format(series, current_format=None, output_format=None):
+    return series.functions.date_format(current_format=current_format, output_format=output_format)
+
+
+def year(series):
+    return Functions.year(series)
+
+
+def month(series):
+    return Functions.month(series)
+
+
+def day(series):
+    return Functions.day(series)
+
+
+def hour(series):
+    return Functions.hour(series)
+
+
+def minute(series):
+    return Functions.minute(series)
+
+
+def second(series):
+    return Functions.second(series)
+
+
+def years_between(series, date_format):
+    return series.functions.years_between(date_format)
+
+
+# other
+def count_na(series):
+    return Functions.count_na(series)
+
+
+def count_zeros(series):
+    return Functions.count_zeros(series)
+
+
+def count_uniques(series, *args):
+    return Functions.count_uniques(series, *args)
+
+
+def unique(series, *args):
+    return Functions.unique(series, *args)
+
+
+def remove_special_chars(series, *args):
+    return series.functions.remove_special_chars()
+    # return Functions.remove_special_chars(series, *args)
 
 
 def remove_accents(series):
     return series.functions.remove_accents()
 
 
-def find(series):
-    return series.functions.find()
-
-
-def rfind(series):
-    return series.functions.rfind()
-
-
-def left(series):
-    return series.functions.left()
-
-
-def right(series):
-    return series.functions.right()
-
-
-def starts_with(series):
-    return series.functions.starts_with()
-
-
-def ends_with(series):
-    return series.functions.ends_with()
-
-
-def char(series):
-    return series.functions.char()
-
-
-def unicode(series):
-    return series.functions.unicode()
-
-
-def exact(series):
-    return series.functions.exact()
-
-
-# dates
-def year(series):
-    return series.functions.year()
-
-
-def month(series):
-    return series.functions.month()
-
-
-def day(series):
-    return series.functions.day()
-
-
-def hour(series):
-    return series.functions.hour()
-
-
-def minute(series):
-    return series.functions.minute()
-
-
-def second(series):
-    return series.functions.second()
+def clip(series, lower_bound, upper_bound):
+    return series.functions.clip(lower_bound, upper_bound)

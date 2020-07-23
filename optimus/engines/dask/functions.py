@@ -21,7 +21,7 @@ def functions(self):
         def count_zeros(self, *args):
             series = self.series
             return int((series.ext.to_float().values == 0).sum())
-        
+
         def kurtosis(self):
             series = self.series
             return stats.kurtosis(series.ext.to_float())
@@ -115,8 +115,9 @@ def functions(self):
             return da.arctanh(series.ext.to_float())
 
         def clip(self, lower_bound, upper_bound):
+
             series = self.series
-            return series.clip(lower_bound, upper_bound)
+            return series.ext.to_float().clip(lower_bound, upper_bound)
 
         def cut(self, bins):
             series = self.series
@@ -125,6 +126,10 @@ def functions(self):
         def remove_special_chars(self):
             series = self.series
             return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
+
+        def remove_accents(self):
+            series = self.series
+            return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
         def date_format(self, current_format=None, output_format=None):
             series = self.series

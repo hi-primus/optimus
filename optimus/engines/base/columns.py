@@ -11,7 +11,7 @@ from dask.dataframe import from_delayed
 from glom import glom
 from multipledispatch import dispatch
 
-from optimus.engines.base.functions import Functions as F
+from optimus.engines import functions as F
 from optimus.engines.base.functions import op_delayed
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
@@ -372,7 +372,7 @@ class BaseColumns(ABC):
             elif arg == "str":
                 df = df.cols.to_string(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, ["float", "integer", "datetime", "bool", "string"])
+                RaiseIt.value_error(arg, ["float", "integer", "datetime", "bool", "str"])
 
         return df
 
@@ -701,20 +701,20 @@ class BaseColumns(ABC):
 
         if values is None:
             values = [0.25, 0.5, 0.75]
-        return df.cols.agg_exprs(columns, F.percentile_agg, values, relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(columns, F.percentile, values, relative_error, tidy=tidy, compute=True)
 
     def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.percentile_agg, [0.5], relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(columns, F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    @abstractmethod
-    def kurtosis(self, columns):
-        pass
+    def kurtosis(self, columns, tidy=True, compute=False):
+        df = self.df
+        return df.cols.agg_exprs(columns, F.kurtosis, tidy=tidy, compute=compute)
 
-    @abstractmethod
-    def skewness(self, columns):
-        pass
+    def skew(self, columns, tidy=True, compute=False):
+        df = self.df
+        return df.cols.agg_exprs(columns, F.skew, tidy=tidy, compute=compute)
 
     def mean(self, columns, tidy=True, compute=True):
         df = self.df
@@ -902,6 +902,78 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
+    def sinh(self, input_cols, output_cols=None):
+        """
+        Apply sin to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def cosh(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def tanh(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def asinh(self, input_cols, output_cols=None):
+        """
+        Apply sin to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def acosh(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def atanh(self, input_cols, output_cols=None):
+        """
+        Apply cos to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        df = self.df
+        return df.cols.apply(input_cols, F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
     def extract(self, input_cols, output_cols=None):
         def _extract(value, *args):
             return F.extract(value, args)
@@ -954,10 +1026,13 @@ class BaseColumns(ABC):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
-    @staticmethod
-    @abstractmethod
-    def remove_accents(input_cols, output_cols=None):
-        pass
+    def remove_accents(self, input_cols, output_cols=None):
+        # print(value.str.normalize("NFKD"))
+        df =self.df
+
+        return df.cols.apply(input_cols, F.remove_accents, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def remove_numbers(self, input_cols, output_cols=None):
 
@@ -973,15 +1048,13 @@ class BaseColumns(ABC):
 
         df = self.df
         return df.cols.apply(input_cols, F.remove_white_spaces, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
+                             output_cols=output_cols, mode="vectorized")
 
     def remove_special_chars(self, input_cols, output_cols=None):
 
         df = self.df
         return df.cols.apply(input_cols, F.remove_special_chars, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
+                             output_cols=output_cols, mode="vectorized")
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -1169,7 +1242,7 @@ class BaseColumns(ABC):
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.unique, values, relative_error, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(columns, F.unique, tidy=tidy, compute=compute)
 
     def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
         df = self.df
@@ -1268,7 +1341,7 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)
+        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)["percentile"]
         for col_name in columns:
             q1 = quartile[col_name][0.25]
             q2 = quartile[col_name][0.5]

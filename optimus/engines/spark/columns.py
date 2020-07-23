@@ -522,7 +522,7 @@ def cols(self):
                                  self.functions.zeros_agg],
                        "timestamp": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance,
                                      F.approx_count_distinct,
-                                     self.functions.zeros_agg, self.functions.percentile_agg],
+                                     self.functions.zeros_agg, self.functions.percentile],
                        "null": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
                                 self.functions.zeros_agg],
                        "boolean": [F.stddev, F.kurtosis, F.mean, F.skewness, F.sum, F.variance, F.approx_count_distinct,
@@ -645,7 +645,7 @@ def cols(self):
             :return: percentiles per columns
             """
             values = [str(v) for v in values]
-            return Cols.agg_exprs(columns, self.functions.percentile_agg, self, values, relative_error)
+            return Cols.agg_exprs(columns, self.functions.percentile, self, values, relative_error)
 
         # Descriptive Analytics
         @staticmethod

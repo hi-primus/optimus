@@ -32,14 +32,6 @@ def functions(self):
             series = self.series
             return np.sqrt(series.ext.to_float())
 
-        # def mod(self, other):
-        #     series = self.series
-        #     return np.mod(series.ext.to_float(), other)
-
-        # def pow(self, other):
-        #     series = self.series
-        #     return np.power(series.ext.to_float(), other)
-
         def radians(self):
             series = self.series
             return np.radians(series.ext.to_float())
@@ -120,11 +112,16 @@ def functions(self):
             series = self.series
             return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
+        def remove_accents(self):
+            series = self.series
+            return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
+
         def date_format(self, current_format=None, output_format=None):
             series = self.series
             return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-        def years_between(series, date_format=None):
+        def years_between(self, date_format=None):
+            series = self.series
             return (pd.to_datetime(series, format=date_format,
                                    errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
 

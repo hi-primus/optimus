@@ -46,26 +46,6 @@ class DataFrameBaseColumns(BaseColumns):
     def max_abs_scaler(input_cols, output_cols=None):
         pass
 
-    def kurtosis(self, columns):
-        # Maybe we could contribute with this
-        # `nan_policy` other than 'propagate' have not been implemented.
-
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        def flat_dict(ele):
-            return {x: y for i in ele for x, y in i.items()}
-
-        return flat_dict(df.cols.select(col_name).cols.to_float().kurtosis().to_dict() for col_name in columns)
-
-    def skewness(self, columns):
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        def flat_dict(ele):
-            return {x: y for i in ele for x, y in i.items()}
-
-        return flat_dict(df.cols.select(col_name).cols.to_float().skew().to_dict() for col_name in columns)
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690

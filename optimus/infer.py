@@ -429,8 +429,9 @@ class Infer(object):
             (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
             (str_to_url, "url"),
             (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")]
-
-        if pd.isnull(value):
+        if isinstance(value, list):
+            _data_type = "array"
+        elif pd.isnull(value):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"

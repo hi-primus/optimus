@@ -5,7 +5,6 @@ import numpy as np
 
 # import cudf
 from optimus.helpers.check import is_dask_series, is_dask_dataframe
-from optimus.helpers.core import val_to_list
 
 
 def op_delayed(df):
@@ -44,7 +43,7 @@ class Functions(ABC):
 
     @staticmethod
     def mode(series):
-        return series.mode().ext.to_dict(index=False)
+        return series.ext.to_float().mode().ext.to_dict(index=False)
 
     @staticmethod
     def std(series):
@@ -58,12 +57,15 @@ class Functions(ABC):
     def var(series):
         return series.ext.to_float().var()
 
-    @staticmethod
-    def count_uniques(series, estimate: bool = True, compute: bool = True):
-        return series.astype(str).nunique()
+
+    # @staticmethod
+    def count_uniques(self, estimate: bool = True, compute: bool = True):
+        # series = self.series
+        return self.astype(str).nunique()
 
     @staticmethod
-    def unique(series):
+    def unique(series, *args):
+        # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
         return series.astype(str).unique().ext.to_dict(index=False)
 
@@ -91,72 +93,51 @@ class Functions(ABC):
         pass
 
     @staticmethod
-    def mad(df, columns, args):
-        more = args[0]
-        mad_value = {}
+    def mad(series, *args):
+        error, more = args
 
-        for col_name in columns:
-            casted_col = df.cols.select(col_name).cols.to_float()
-            median_value = casted_col.cols.median(col_name)
-            # print(median_value)
-            # In all case all the values from the column
-            # are nan because can not be converted to number
-            if not np.isnan(median_value):
-                mad_value = (casted_col - median_value).abs().quantile(0.5)
-            else:
-                mad_value[col_name] = np.nan
+        series = series.ext.to_float()
+        if series.isnull().any():
+            mad_value = np.nan
+            median_value = np.nan
+        else:
+            median_value = series.quantile(0.5)
+            mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
 
-        @op_delayed(df)
-        def to_dict(_mad_value, _median_value):
-            _mad_value = {"mad": _mad_value}
+        # median_value = series.quantile(0.5)
+        # # In all case all the values from the column
+        # # are nan because can not be converted to number
+        # if not np.isnan(median_value):
+        #     mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
+        # else:
+        #     mad_value = np.nan
 
-            if more:
-                _mad_value.update({"median": _median_value})
-
-            return _mad_value
-
-        return to_dict(mad_value, median_value)
+        if more:
+            mad_value.update({"median": median_value})
+        return mad_value
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
-    # method_to_call = getattr(foo, 'bar')
-    # result = method_to_call()
+    @staticmethod
+    def range(series):
+        series = series.ext.to_float()
+        return {"min": series.min(), "max": series.max()}
 
-    def range(df, columns, *args):
-        return {
-            "range": {col_name: {"min": df.cols.min(col_name), "max": df.cols.max(col_name)}
-                      for col_name in columns}}
-        # @staticmethod
-        #     def range_agg(df, columns, args):
-        #         columns = parse_columns(df, columns)
-        #
-        #         @delayed
-        #         def _range_agg(_min, _max):
-        #             return {col_name: {"min": __min, "max": __max} for (col_name, __min), __max in
-        #                     zip(_min["min"].items(), _max["max"].values())}
-        #
-        #         return _range_agg(df.cols.min(columns), df.cols.max(columns))
+    @staticmethod
+    def percentile(series, *args):
+        values, error = args
+        series = series.ext.to_float()
 
-    # return value.astype(str).unique().ext.to_dict()
-
-    def percentile_agg(df, columns, args):
-        values = val_to_list(args[0])
-        # result = [df.cols.select(col_name).cols.to_float().quantile(values) for col_name in columns]
-        result = [df[col_name].ext.to_float() for col_name in columns]
-
-        @op_delayed(df)
+        @op_delayed(series)
         def to_dict(_result):
             ## In pandas if all values are non it return {} on dict
-            _r = {}
-            for col_name, r in zip(columns, _result):
-                # Dask raise an exception is all values in the series are np.nan
-                if r.isnull().all():
-                    _r[col_name] = np.nan
-                else:
-                    _r[col_name] = r.quantile(values).ext.to_dict()
-            return _r
+            # Dask raise an exception is all values in the series are np.nan
+            if _result.isnull().all():
+                return np.nan
+            else:
+                return _result.quantile(values).ext.to_dict()
 
-        return to_dict(result)
+        return to_dict(series)
 
     # def radians(series):
     #     return series.ext.to_float().radians()
@@ -190,14 +171,16 @@ class Functions(ABC):
     def sqrt(series):
         pass
 
+    @staticmethod
     def mod(series, other):
         return series.ext.to_float().mod(other)
 
-    def pow(self, exponent):
-        return self.ext.to_float().pow(exponent)
+    @staticmethod
+    def pow(series, exponent):
+        return series.ext.to_float().pow(exponent)
 
-    def floor(self):
-        series = self.series
+    @staticmethod
+    def floor(series):
         return series.ext.to_float().floor()
 
     # def trunc(self):
@@ -316,13 +299,17 @@ class Functions(ABC):
 
     @staticmethod
     def remove_white_spaces(series):
-        return series.str.replace(" ", "")
+        return series.astype(str).str.replace(" ", "")
 
     @staticmethod
     def len(series):
         return series.str.len()
 
-    @staticmethod
+    @abstractmethod
+    def remove_special_chars(self):
+        pass
+
+    @abstractmethod
     def remove_accents(self):
         pass
 
@@ -388,3 +375,13 @@ class Functions(ABC):
     @staticmethod
     def second(series):
         return series.ext.to_datetime(format=format).dt.second
+
+    @staticmethod
+    @abstractmethod
+    def date_format(self, current_format=None, output_format=None):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def years_between(self, date_format=None):
+        pass
