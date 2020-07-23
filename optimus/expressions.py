@@ -3,7 +3,141 @@ import json
 from rply import LexerGenerator
 
 functions = {
+    # Aggregations
+    "MIN": {
+        "description": "Returns the minimum value in a numeric dataset.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "MIN(COL_NAME)",
+        "text": "MIN",
+    },
+    "MAX": {
+        "description": "Returns the maximum value in a numeric dataset.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "MIN(COL_NAME)",
+        "text": "MAX",
+    },
+    "MEAN": {
+        "description": "Returns the numerical average value in a dataset, ignoring text.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "MEAN(COL_NAME)",
+        "text": "MEAN",
+    },
+    "MODE": {
+        "description": "Returns the most commonly occurring value in a dataset.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "MODE(COL_NAME)",
+        "text": "MODE",
+    },
+    "STD": {
+        "description": "Calculates the standard deviation based on a sample.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "STD(COL_NAME)",
+        "text": "STD",
+    },
+    "SUM": {
+        "description": "Returns the sum of a series of numbers and/or cells.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "SUM(COL_NAME)",
+        "text": "SUM",
+    },
+    "VAR": {
+        "description": "Calculates the variance based on a sample.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "VAR(COL_NAME)",
+        "text": "VAR",
+    },
+    "KURTOSIS": {
+        "description": "Calculates the kurtosis of a dataset, which describes the shape, and in particular the 'peakedness' of that dataset.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "KURT(COL_NAME)",
+        "text": "KURT",
+    },
+    "SKEW": {
+        "description": "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value."
+            },
+        ],
+        "example": "SKEW(COL_NAME)",
+        "text": "SKEW",
+    },
+    "MAD": {
+        "description": "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "Column name or value"
+            },
+        ],
+        "example": "MAD(COL_NAME)",
+        "text": "MAD",
+    },
     # Math functions
+    "ABS": {
+        "description": "Returns the absolute value of a number.",
+        "parameters": [
+            {
+                "type": ["column", "number"],
+                "name": "col_name",
+                "description": "The number of which to return the absolute value."
+            },
+        ],
+        "example": "ABS(-2)",
+        "text": "ABS",
+    },
+
     "MOD": {
         "description": "Returns the result of the modulo operator, the remainder after a division operation.",
         "parameters": [
@@ -20,18 +154,6 @@ functions = {
         ],
         "example": "MOD(10, 4)",
         "text": "MOD",
-    },
-    "ABS": {
-        "description": "Returns the absolute value of a number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number of which to return the absolute value."
-            },
-        ],
-        "example": "ABS(-2)",
-        "text": "ABS",
     },
 
     "EXP": {
