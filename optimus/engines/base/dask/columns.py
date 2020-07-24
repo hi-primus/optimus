@@ -173,15 +173,6 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def remove_accents(self, input_cols="*", output_cols=None):
-        def _remove_accents(value):
-            # print(value.str.normalize("NFKD"))
-            return value.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
-
-        df = self.df
-        return df.cols.apply(input_cols, _remove_accents, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
