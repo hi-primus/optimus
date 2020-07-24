@@ -334,13 +334,11 @@ class BaseColumns(ABC):
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
         """
-        We have to ways to cast the data. Use the use the native .astype() this is faster but can not handle errors so are going to use
-        to numeric
-        Check is fast_numbers faster that to_numeric?
+        NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
+        trnasformation like string to number in which should output nan.
+
         is pendulum faster than pd.to_datatime
-
         We could use astype str and boolean
-
 
 
         Cast the elements inside a column or a list of columns to a specific data type.
@@ -361,6 +359,7 @@ class BaseColumns(ABC):
 
         columns = prepare_columns(df, input_cols, output_cols, args=dtype)
         for input_col, output_col, arg in columns:
+
             if arg == "float":
                 df = df.cols.to_float(input_col, output_col)
             elif arg == "int":
@@ -414,7 +413,7 @@ class BaseColumns(ABC):
         c = Any alpha char in lower or upper case
         l = Any alpha char in lower case
         U = Any alpha char in upper case
-        * = Any alphanumeric in lower or upper case
+        * = Any alphanumeric in lower or upper case. Used only in type 2 nd 3
         # = Any numeric
         ! = Any punctuation
 
@@ -452,7 +451,7 @@ class BaseColumns(ABC):
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
         return df.cols.select(input_cols).astype(str).cols.remove_accents(input_cols).cols.replace(search=search_by,
-                                                                                         replace_by=replace_by).cols.frequency()[
+                                                                                                   replace_by=replace_by).cols.frequency()[
             "frequency"]
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):

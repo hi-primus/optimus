@@ -555,8 +555,10 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     """
 
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
-    from optimus.engines.base.functions import Functions as F       # Used in eval
-    df = pdf.cols.cast(col_names, parser)
+    from optimus.engines import functions as F  # Used in eval
+
+    profiler_dtype_to_python = {"decimal": "float"}
+    df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
     try:
         if where is None:
             return eval(value)
@@ -611,6 +613,7 @@ def set_function_parser(df, value, where, default=None):
     if columns:
         first_columns = columns[0]
         column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
+
     else:
         if fastnumbers.fast_int(value):
             column_dtype = "int"
