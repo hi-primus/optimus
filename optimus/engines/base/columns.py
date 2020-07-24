@@ -408,10 +408,10 @@ class BaseColumns(ABC):
             df[output_col] = df[input_col].map(np.floor)
         return df
 
-    def patterns(self, input_cols, output_cols=None, mode=0):
+    def patterns(self, input_cols, mode=0):
         """
         Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
-        c = Any alpha char in lower or upper case form
+        c = Any alpha char in lower or upper case
         l = Any alpha char in lower case
         U = Any alpha char in upper case
         * = Any alphanumeric in lower or upper case
@@ -419,7 +419,6 @@ class BaseColumns(ABC):
         ! = Any punctuation
 
         :param input_cols:
-        :param output_cols:
         :param mode:
         0: Identify lower, upper, digits. Except spaces and special chars.
         1: Identify chars, digits. Except spaces and special chars
@@ -452,7 +451,7 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        return df.astype(str).cols.select(input_cols).cols.remove_accents().cols.replace(search=search_by,
+        return df.cols.select(input_cols).astype(str).cols.remove_accents(input_cols).cols.replace(search=search_by,
                                                                                          replace_by=replace_by).cols.frequency()[
             "frequency"]
 
@@ -1027,12 +1026,11 @@ class BaseColumns(ABC):
                             output_cols=output_cols)
 
     def remove_accents(self, input_cols, output_cols=None):
-        # print(value.str.normalize("NFKD"))
-        df =self.df
+        df = self.df
 
         return df.cols.apply(input_cols, F.remove_accents, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="pandas", set_index=True)
+                             output_cols=output_cols, mode="vectorized")
 
     def remove_numbers(self, input_cols, output_cols=None):
 
@@ -1341,7 +1339,8 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)["percentile"]
+        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
+            "percentile"]
         for col_name in columns:
             q1 = quartile[col_name][0.25]
             q2 = quartile[col_name][0.5]

@@ -127,7 +127,6 @@ def functions(self):
             return cudf.to_datetime(series).astype('str', format=output_format)
 
         def years_between(self, date_format=None):
-            series = self.series
             raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
             # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
 

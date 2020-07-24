@@ -128,8 +128,10 @@ def functions(self):
             return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
         def remove_accents(self):
+            print("hola")
             series = self.series
-            return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
+            # str.decode return a float column. We are forcing to return a string again
+            return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8').astype(str)
 
         def date_format(self, current_format=None, output_format=None):
             series = self.series
