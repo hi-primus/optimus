@@ -78,12 +78,10 @@ class Load:
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
         """
+        if cache is False:
+            prepare_path.cache_clear()
 
-        # if cache is False:
-        #     prepare_path.cache_clear()
-        #
-        # file, file_name = prepare_path(path, "csv")[0]
-
+        file, file_name = prepare_path(path, "csv")[0]
         try:
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
@@ -268,7 +266,7 @@ class Load:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
-                    df = Load.csv(full_path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
+                    df = Load.csv(path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
                                   **kwargs)
                 except Exception as err:
                     print(err)
