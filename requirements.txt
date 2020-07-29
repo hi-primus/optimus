@@ -36,7 +36,7 @@ dask[complete]>=2.18.0
 dask-ml[complete]>=1.5.1
 fast-histogram>=0.8
 python-magic>=0.4.15
-python-magic-bin>=0.4.14
+python-magic-bin>=0.4.14; platform_system == "Windows"
 gputil
 xlrd>=1.2.0
 string-grouper==0.1.0
