@@ -78,12 +78,14 @@ class Load:
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
         """
-        if cache is False:
-            prepare_path.cache_clear()
 
-        file, file_name = prepare_path(path, "csv")[0]
+        # if cache is False:
+        #     prepare_path.cache_clear()
+        #
+        # file, file_name = prepare_path(path, "csv")[0]
+
         try:
-            df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=encoding,
+            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=True, na_values=None, engine="c", *args,
                              **kwargs)
@@ -91,7 +93,7 @@ class Load:
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
             df.ext.reset()
-            df.meta.set("file_name", file_name)
+            df.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
