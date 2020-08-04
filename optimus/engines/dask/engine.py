@@ -44,10 +44,6 @@ class DaskEngine(BaseEngine):
                                    processes=processes,
                                    memory_limit=memory_limit, *args,
                                    **kwargs)
-            # a = Dask()
-            # b = a.create(n_workers=n_workers, threads_per_worker=threads_per_worker,
-            #              processes=processes, memory_limit=memory_limit, *args, **kwargs)
-            # Dask.instance = b
         else:
             Dask.instance = Dask().load(session)
 

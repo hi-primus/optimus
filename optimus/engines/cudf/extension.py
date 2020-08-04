@@ -22,6 +22,18 @@ def ext_series(self: Series):
             super(Ext, self).__init__(series)
             self.series = series
 
+        def to_dict(self, index=True):
+            """
+            Create a dict
+            :param index: Return the series index
+            :return:
+            """
+            series = self.series
+            if index is True:
+                return series.to_pandas().to_dict()
+            else:
+                return series.to_pandas().to_list()
+
         def to_float(self):
             series = self.series
             return to_float_cudf(series)

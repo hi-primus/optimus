@@ -450,8 +450,8 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        return df.cols.select(input_cols).astype(str).cols.remove_accents(input_cols).cols.replace(search=search_by,
-                                                                                                   replace_by=replace_by).cols.frequency()[
+        return df.cols.select(input_cols).astype(str).cols.remove_accents().cols.replace(search=search_by,
+                                                                                         replace_by=replace_by).cols.frequency()[
             "frequency"]
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
@@ -988,17 +988,17 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, _slice, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
-    def lower(self, input_cols, output_cols=None):
+    def lower(self, input_cols="*", output_cols=None):
         df = self.df
         return df.cols.apply(input_cols, F.lower, func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized")
 
-    def upper(self, input_cols, output_cols=None):
+    def upper(self, input_cols="*", output_cols=None):
         df = self.df
         return df.cols.apply(input_cols, F.upper, func_return_type=str, output_cols=output_cols,
                              meta_action=Actions.UPPER.value, mode="vectorized")
 
-    def trim(self, input_cols, output_cols=None):
+    def trim(self, input_cols="*", output_cols=None):
         df = self.df
         return df.cols.apply(input_cols, F.trim, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
@@ -1024,7 +1024,7 @@ class BaseColumns(ABC):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
-    def remove_accents(self, input_cols, output_cols=None):
+    def remove_accents(self, input_cols="*", output_cols=None):
         df = self.df
 
         return df.cols.apply(input_cols, F.remove_accents, func_return_type=str,
@@ -1041,13 +1041,13 @@ class BaseColumns(ABC):
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="pandas", set_index=True)
 
-    def remove_white_spaces(self, input_cols, output_cols=None):
+    def remove_white_spaces(self, input_cols="*", output_cols=None):
 
         df = self.df
         return df.cols.apply(input_cols, F.remove_white_spaces, func_return_type=str,
                              output_cols=output_cols, mode="vectorized")
 
-    def remove_special_chars(self, input_cols, output_cols=None):
+    def remove_special_chars(self, input_cols="*", output_cols=None):
 
         df = self.df
         return df.cols.apply(input_cols, F.remove_special_chars, func_return_type=str,
@@ -1152,34 +1152,18 @@ class BaseColumns(ABC):
 
         df = self.df
 
-        search = val_to_list(search)
-
         if search_by == "chars":
-            # TODO: Maybe we could use replace_multi(). It can handle to list df["OFFENSE_DESCRIPTION"].str.replace(["A","B"],["C","D"])
-            str_regex = "|".join(map(re.escape, search))
+            func = F.replace_string
         elif search_by == "words":
-            str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+            func = F.replace_words
+        elif search_by == "full":
+            func = F.replace_match
         else:
-            str_regex = (r'^\b%s\b$' % r'\b$|^\b'.join(map(re.escape, search)))
+            RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
-        if ignore_case is True:
-            # Cudf do not accept re.compile as argument for replace
-            # regex = re.compile(str_regex, re.IGNORECASE)
-            regex = str_regex
-        else:
-            regex = str_regex
-
-        def _replace(series, *args):
-            _str_regex, _replace_by = args
-            if is_list(replace_by):
-                for i, j in zip(search, replace_by):
-                    series = series.str.replace(i, j)
-                return series
-            else:
-                return series.astype(str).str.replace(_str_regex, _replace_by)
-
-        return df.cols.apply(input_cols, _replace, args=(str_regex, replace_by), output_cols=output_cols,
-                             mode="vectorized")
+        return df.cols.apply(input_cols, func, args=(search, replace_by), func_return_type=str,
+                             output_cols=output_cols,
+                             meta_action=Actions.REPLACE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod

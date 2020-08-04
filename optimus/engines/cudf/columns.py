@@ -34,7 +34,7 @@ def cols(self: DataFrame):
                                  meta_action=Actions.TO_FLOAT.value,
                                  mode="pandas")
 
-        def to_float(self, input_cols, output_cols=None):
+        def to_float(self, input_cols="*", output_cols=None):
 
             df = self.df
 
@@ -194,10 +194,6 @@ def cols(self: DataFrame):
             return result
 
             # return np.count_nonzero(df.isnull().values.ravel())
-
-        def remove_accents(self, input_cols, output_cols=None):
-            raise NotImplementedError(
-                'Not implemented yet. See https://github.com/rapidsai/cudf/issues/5527#issuecomment-650121132')
 
         @staticmethod
         def correlation(input_cols, method="pearson", output="json"):

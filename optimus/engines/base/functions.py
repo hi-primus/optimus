@@ -2,9 +2,10 @@ from abc import abstractmethod, ABC
 
 import dask
 import numpy as np
-
+import re
 # import cudf
 from optimus.helpers.check import is_dask_series, is_dask_dataframe
+from optimus.helpers.core import val_to_list
 
 
 def op_delayed(df):
@@ -57,17 +58,17 @@ class Functions(ABC):
     def var(series):
         return series.ext.to_float().var()
 
-
-    # @staticmethod
-    def count_uniques(self, estimate: bool = True, compute: bool = True):
+    @staticmethod
+    def count_uniques(series, estimate: bool = True, compute: bool = True):
         # series = self.series
-        return self.astype(str).nunique()
+        return series.astype(str).nunique()
 
     @staticmethod
     def unique(series, *args):
+
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
-        return series.astype(str).unique().ext.to_dict(index=False)
+        return series.astype(str).unique()
 
     @staticmethod
     def count_na(series):
@@ -296,6 +297,23 @@ class Functions(ABC):
     @staticmethod
     def trim(series):
         return series.astype(str).str.strip()
+
+    @staticmethod
+    @abstractmethod
+    def replace_string(series, search, replace_by):
+        pass
+
+    @staticmethod
+    def replace_words(series, search, replace_by):
+        search = val_to_list(search)
+        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        return series.astype(str).str.replace(str_regex, replace_by)
+
+    @staticmethod
+    def replace_match(series, search, replace_by):
+        search = val_to_list(search)
+        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        return series.astype(str).str.replace(str_regex, replace_by)
 
     @staticmethod
     def remove_white_spaces(series):

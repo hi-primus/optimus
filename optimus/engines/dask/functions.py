@@ -38,6 +38,11 @@ def functions(self):
             series = self.series
             return da.sqrt(series.ext.to_float())
 
+        def unique(self, *args):
+            # print("args",args)
+            # Cudf can not handle null so we fill it with non zero values.
+            return self.astype(str).unique().ext.to_dict(index=False)
+
         # def mod(self, other):
         #     series = self.series
         #     return da.mod(series.ext.to_float(), other)

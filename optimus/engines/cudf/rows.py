@@ -49,7 +49,7 @@ def rows(self):
             :return:
             """
             input_cols = parse_columns(self, input_cols)
-            df_list = self[input_cols].values.tolist()
+            df_list = self[input_cols].to_pandas().values.tolist()
 
             return df_list
 

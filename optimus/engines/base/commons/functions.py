@@ -4,7 +4,7 @@ import pandas as pd
 from dask_ml.impute import SimpleImputer
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
-# Some functions are commons for pandas and dask.
+# Some functions are commons to pandas and dask.
 from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
@@ -12,7 +12,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 def to_integer(value, *args):
     try:
-        # fastnumbers can only handle string or numerics values. Not None, dates or list
+        # fastnumbers can only handle string or numeric values. Not None, dates or list
         return fastnumbers.fast_int(value, default=0)
     except TypeError:
         return np.nan
@@ -28,11 +28,13 @@ def to_float(value, *args):
     except TypeError:
         return np.nan
 
-    # return fastnumbers.fast_float(value, default=np.nan)
-
 
 def to_datetime(value, format):
     return pd.to_datetime(value, format=format, errors="coerce")
+
+
+def hist(series, bins):
+    return np.histogram(series.ext.to_float(), bins=bins)
 
 
 def to_integer_cudf(value, *args):

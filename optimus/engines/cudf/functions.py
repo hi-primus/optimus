@@ -3,6 +3,7 @@
 import cudf
 
 from optimus.engines.base.functions import Functions
+from cudf import Series
 
 
 def functions(self):
@@ -31,6 +32,10 @@ def functions(self):
         def sqrt(self):
             series = self.series
             return cudf.sqrt(series.ext.to_float())
+
+        def unique(self, *args):
+            # Cudf can not handle null so we fill it with non zero values.
+            return self.astype(str).unique()
 
         # def mod(self, other):
         #     series = self.series
@@ -110,10 +115,21 @@ def functions(self):
         def cut(self, bins):
             raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
+        def replace_string(self, search, replace_by):
+            series = self.series
+            return series.str.replace(search, replace_by)
+
         def remove_special_chars(self):
             series = self.series
-            # See https://github.com/rapidsai/cudf/issues/5520
-            return series.astype(str).str.replace_non_alphanumns(replacement_char='')
+            return series.astype(str).str.filter_alphanum()
+
+        def remove_accents(self):
+            series = self.series
+            # print("series",type(series),series)
+            if not series.isnull().all():
+                return self.remove_white_spaces(series.astype(str).str.normalize_characters())
+            else:
+                return series
 
         def date_format(self, current_format=None, output_format=None):
             series = self.series

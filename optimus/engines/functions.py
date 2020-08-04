@@ -264,6 +264,18 @@ def unique(series, *args):
     return Functions.unique(series, *args)
 
 
+def replace_string(series, *args):
+    return series.functions.replace_string(*args)
+
+
+def replace_words(series, *args):
+    return Functions.replace_words(series, *args)
+
+
+def replace_match(series, *args):
+    return Functions.replace_match(series, *args)
+
+
 def remove_special_chars(series, *args):
     return series.functions.remove_special_chars()
     # return Functions.remove_special_chars(series, *args)

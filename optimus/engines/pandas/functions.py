@@ -1,10 +1,11 @@
 # DataFrame = pd.DataFrame
+from datetime import datetime, timedelta
+
 import numpy as np
+import pandas as pd
+from pandas import Series
 
 from optimus.engines.base.functions import Functions
-from pandas import Series
-import pandas as pd
-from datetime import datetime, timedelta
 
 
 def functions(self):
@@ -107,6 +108,19 @@ def functions(self):
         def cut(self, bins):
             series = self.series
             return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+
+        def replace_string(self, search, replace_by):
+            series = self.series
+            # if ignore_case is True:
+            #     # Cudf do not accept re.compile as argument for replace
+            #     # regex = re.compile(str_regex, re.IGNORECASE)
+            #     regex = str_regex
+            # else:
+            #     regex = str_regex
+
+            for i, j in zip(search, replace_by):
+                series = series.str.replace(i, j)
+            return series
 
         def remove_special_chars(self):
             series = self.series
