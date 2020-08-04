@@ -147,17 +147,21 @@ On Digital Ocean
 ```
 sudo apt-get update
 sudo apt-get install -y python3-pip
+sudo apt install libz-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext cmake gcc
+pip3 install --upgrade --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop-3.0
+
 pip3 install dask[complete]
+
 ```
 
-Run tmux to launch the scheduler and the worker
+Run tmux to launch the scheduler and the worker. Use the 'a' param to attach to and already created session.
 ```
-tmux
+tmux a
 ```
-Use Ctrl + B + C to create a new window
+Use `Ctrl + B + C` to create a new window, `Ctrl + B + N` to go to the next window
 ```
 dask scheduler
-dask worker 127.0.0.0.1
+dask worker 127.0.0.0.1 --nthreads=8
 ```
 
 Be sure to install the external libraries in the remote server. You can clone the repo
@@ -168,7 +172,6 @@ and run
 ```
 pip3 install -r requirements.txt
 ```
-
 
 
 ### Adding functions
@@ -230,11 +233,17 @@ Bumblebee does not do any operation over the data. Just receive data a present i
 Optimus is the python library that connects to Dask, cudf, Spark to process data.
 Bumblebee is a frontend interface to present data in a way that can be easily handled by the user.
 
+Install Jupyter Gateway
+```
+conda install -c conda-forge jupyter_kernel_gateway
+```
+
+
 ## About parsing data
 Dask try to infer the column datatype for every partition so it can cause problem the inferred datatype does not match. 
 Optimus will always parse the columns as object and the try to optimize the data type using the `.ext.optimize` function.
 
-##Infering datataypes
+##Infering data types
  
 ## About apply
 
