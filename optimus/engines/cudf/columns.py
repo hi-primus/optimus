@@ -1,6 +1,7 @@
 import re
 
 import cudf
+import cupy as cp
 from cudf.core import DataFrame
 from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
@@ -37,7 +38,6 @@ def cols(self: DataFrame):
         def to_float(self, input_cols="*", output_cols=None):
 
             df = self.df
-
             return df.cols.apply(input_cols, to_float_cudf, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
                                  mode="pandas")
 
@@ -183,6 +183,18 @@ def cols(self: DataFrame):
         @staticmethod
         def scatter(columns, buckets=10):
             pass
+
+        def hist(self, columns="*", buckets=20, compute=True):
+            df = self.df
+            columns = parse_columns(df, columns)
+
+            result = {}
+            for col_name in columns:
+                _count, _bins = cp.histogram(cp.array(df[col_name].ext.to_float().to_gpu_array()), buckets)
+                result[col_name] = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
+                                    for i in range(buckets)]
+
+            return result
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):

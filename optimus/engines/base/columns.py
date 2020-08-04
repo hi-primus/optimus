@@ -1414,7 +1414,7 @@ class BaseColumns(ABC):
     def scatter(columns, buckets=10):
         pass
 
-    def hist(self, columns, buckets=20, compute=True):
+    def hist(self, columns="*", buckets=20, compute=True):
 
         df = self.df
         columns = parse_columns(df, columns)

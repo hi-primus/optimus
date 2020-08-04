@@ -51,7 +51,8 @@ def to_float_cudf(value, *args):
     import cudf
     series_string = value.astype(str)
     # See https://github.com/rapidsai/cudf/issues/5345
-    series = cudf.Series(series_string.str.stof()).fillna(False)
+    # series = cudf.Series(series_string.str.stof()).fillna(False)
+    series = cudf.Series(cudf.core.column.string.str_cast.stof(series_string._column))
     series[
         ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
     return series
