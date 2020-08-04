@@ -190,11 +190,16 @@ def cols(self: DataFrame):
 
             result = {}
             for col_name in columns:
-                _count, _bins = cp.histogram(cp.array(df[col_name].ext.to_float().to_gpu_array()), buckets)
-                result[col_name] = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
-                                    for i in range(buckets)]
 
-            return result
+                df_numeric = cp.array(df[col_name].ext.to_float().to_gpu_array())
+
+                if len(df_numeric) > 0:
+                    _count, _bins = cp.histogram(df_numeric, buckets)
+                    result[col_name] = [
+                        {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
+                        for i in range(buckets)]
+
+            return {"hist":result}
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
