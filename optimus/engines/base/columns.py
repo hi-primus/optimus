@@ -380,33 +380,6 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
-    def round(self, input_cols, decimals=1, output_cols=None):
-        """
-
-        :param input_cols:
-        :param decimals:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-        columns = prepare_columns(df, input_cols, output_cols)
-        for input_col, output_col in columns:
-            df[output_col] = df[input_col].round(decimals)
-        return df
-
-    def floor(self, input_cols, output_cols=None):
-        """
-
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-        df = self.df
-        columns = prepare_columns(df, input_cols, output_cols)
-        for input_col, output_col in columns:
-            df[output_col] = df[input_col].map(np.floor)
-        return df
-
     def patterns(self, input_cols, mode=0):
         """
         Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
@@ -813,6 +786,29 @@ class BaseColumns(ABC):
 
         df = self.df
         return df.cols.apply(input_cols, F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized")
+
+    def round(self, input_cols, decimals=1, output_cols=None):
+        """
+
+        :param input_cols:
+        :param decimals:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        return df.cols.apply(input_cols, F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
+                             mode="vectorized", args=decimals)
+
+    def floor(self, input_cols, output_cols=None):
+        """
+
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        df = self.df
+        return df.cols.apply(input_cols, F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def ceil(self, input_cols, output_cols=None):

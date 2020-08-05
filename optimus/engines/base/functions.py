@@ -177,6 +177,10 @@ class Functions(ABC):
         return series.ext.to_float().mod(other)
 
     @staticmethod
+    def round(series, decimals):
+        return series.ext.to_float().round(decimals)
+
+    @staticmethod
     def pow(series, exponent):
         return series.ext.to_float().pow(exponent)
 

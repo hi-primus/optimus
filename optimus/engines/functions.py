@@ -70,6 +70,14 @@ def floor(series):
     return series.functions.floor()
 
 
+def ceil(series):
+    return series.functions.ceil()
+
+
+def round(series, decimals):
+    return Functions.round(series, decimals)
+
+
 def range(series):
     return series.functions.range()
 
@@ -88,10 +96,6 @@ def ln(series):
 
 def log(series):
     return series.functions.log()
-
-
-def ceil(series):
-    return series.functions.ceil()
 
 
 # Trigonometrics
