@@ -658,10 +658,10 @@ class Parser:
         l_g.add('STRINGS', r'"(.*?)"')  # Reference
 
         # Operators
-        l_g.add('SUM', r'\+')
-        l_g.add('SUB', r'\-')
-        l_g.add('MUL', r'\*')
-        l_g.add('DIV', r'\/')
+        l_g.add('SUM_OPERATOR', r'\+')
+        l_g.add('SUB_OPERATOR', r'\-')
+        l_g.add('MUL_OPERATOR', r'\*')
+        l_g.add('DIV_OPERATOR', r'\/')
 
         # Number
         l_g.add('NUMBER', r'\d+')
@@ -676,7 +676,6 @@ class Parser:
         :return:
         """
         tokens = self.lexer.lex(text_input)
-
         result = []
         for token in tokens:
             if token.name == "IDENTIFIER":
