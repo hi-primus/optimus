@@ -44,6 +44,8 @@ class DaskBaseJDBC:
 
         if port is None:
             self.port = self.driver_properties.value["port"]
+        else:
+            self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
         self.uri = self.driver_context.uri(
