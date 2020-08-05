@@ -11,11 +11,14 @@ def max(series):
 
 
 def kurtosis(series):
-    return Functions.kurtosis(series)
+    return series.functions.kurtosis()
+
+    # return Functions.kurtosis(series)
 
 
 def skew(series):
-    return Functions.kurtosis(series)
+    return series.functions.skew()
+    # return Functions.kurtosis(series)
 
 
 def mean(series):
@@ -48,47 +51,47 @@ def abs(series):
 
 
 def exp(series):
-    return Functions.exp(series)
+    return series.functions.exp()
 
 
 def sqrt(series):
-    return Functions.sqrt(series)
+    return series.functions.sqrt()
 
 
-def mod(series):
-    return Functions.mod(series)
+def mod(series, other):
+    return Functions.mod(series, other)
 
 
-def pow(series):
-    return Functions.pow(series)
+def pow(series, other):
+    return Functions.pow(series, other)
 
 
 def floor(series):
-    return Functions.floor(series)
+    return series.functions.floor()
 
 
 def range(series):
-    return Functions.range(series)
+    return series.functions.range()
 
 
 def radians(series):
-    return Functions.radians(series)
+    return series.functions.radian()
 
 
 def degrees(series):
-    return Functions.degrees(series)
+    return series.functions.degrees()
 
 
 def ln(series):
-    return Functions.ln(series)
+    return series.functions.ln()
 
 
 def log(series):
-    return Functions.log(series)
+    return series.functions.log()
 
 
 def ceil(series):
-    return Functions.ceil(series)
+    return series.functions.ceil()
 
 
 # Trigonometrics
