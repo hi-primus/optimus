@@ -1353,6 +1353,7 @@ class BaseColumns(ABC):
         :param splits: Number of columns splits.
         :param index: Return a specific index per columns. [1,2]
         :param drop:
+        :param mode:
         """
         df = self.df
 
@@ -1373,12 +1374,10 @@ class BaseColumns(ABC):
 
             if output_cols is None:
                 final_columns = [input_col + "_" + str(i) for i in range(splits)]
+            elif is_list_of_tuples(output_cols):
+                final_columns = output_cols[idx]
             else:
-                if is_list_of_tuples(output_cols):
-                    final_columns = output_cols[idx]
-
-                else:
-                    final_columns = output_cols
+                final_columns = [output_cols + "_" + str(i) for i in range(splits)]
 
             if mode == "string":
                 df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
@@ -1438,6 +1437,7 @@ class BaseColumns(ABC):
 
         @op_delayed(df)
         def _agg_hist(values):
+            print("values", values)
             _result = {}
             x = np.zeros(buckets - 1)
             for i in values:
