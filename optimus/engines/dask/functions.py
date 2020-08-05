@@ -120,7 +120,6 @@ def functions(self):
             return da.arctanh(series.ext.to_float())
 
         def clip(self, lower_bound, upper_bound):
-
             series = self.series
             return series.ext.to_float().clip(lower_bound, upper_bound)
 
@@ -145,6 +144,19 @@ def functions(self):
             series = self.series
             return (pd.to_datetime(series, format=date_format,
                                    errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+
+        def replace_string(self, search, replace_by):
+            series = self.series
+            # if ignore_case is True:
+            #     # Cudf do not accept re.compile as argument for replace
+            #     # regex = re.compile(str_regex, re.IGNORECASE)
+            #     regex = str_regex
+            # else:
+            #     regex = str_regex
+
+            for i, j in zip(search, replace_by):
+                series = series.str.replace(i, j)
+            return series
 
     return DaskFunctions(self)
 
