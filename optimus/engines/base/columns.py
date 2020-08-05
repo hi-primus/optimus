@@ -1389,7 +1389,8 @@ class BaseColumns(ABC):
                 else:
                     df_new = df[input_col].apply(pd.Series)
 
-            df_new.columns = final_columns
+            # If columns split is shorter than the number of splits
+            df_new.columns = final_columns[:len(df_new.columns)]
             if final_index:
                 df_new = df_new.cols.select(final_index[idx])
             df = df.cols.append(df_new)
