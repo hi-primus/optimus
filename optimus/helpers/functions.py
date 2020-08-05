@@ -557,7 +557,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
     from optimus.engines import functions as F  # Used in eval
 
-    profiler_dtype_to_python = {"decimal": "float"}
+    profiler_dtype_to_python = {"decimal": "float", "int": "int". "string": "str"}
     df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
     try:
         if where is None:
