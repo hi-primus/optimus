@@ -30,6 +30,7 @@ def functions(self):
             return np.exp(series.ext.to_float())
 
         def sqrt(self):
+
             series = self.series
             return np.sqrt(series.ext.to_float())
 

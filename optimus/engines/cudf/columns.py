@@ -199,7 +199,7 @@ def cols(self: DataFrame):
                         {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
                         for i in range(buckets)]
 
-            return {"hist":result}
+            return {"hist": result}
 
         @staticmethod
         def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
