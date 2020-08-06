@@ -105,38 +105,6 @@ class DaskBaseColumns(BaseColumns):
     #         result = b
     #     return result
 
-    def append_df(self, dfs, cols_map):
-        """
-        Appends 2 or more dataframes
-        :param dfs:
-        :param cols_map:
-        """
-
-        every_df = [self.df, *dfs]
-        
-        rename = [[] for dff in every_df]
-
-        for key in cols_map:
-            assert len(cols_map[key]) == len(every_df)
-
-            for i in range(len(cols_map[key])):
-                col_name = cols_map[key][i]
-                if col_name:
-                    rename[i] = [ *rename[i], ( col_name, key )]
-
-        for i in range(len(rename)):
-            every_df[i] = every_df[i].cols.rename(rename[i])
-            
-        df = every_df[0]
-
-        for i in range(len(every_df)):
-            if i==0: continue
-            df = df.append(every_df[i])
-            
-        df = df.cols.select([*cols_map.keys()])
-
-        return df.reset_index(drop=True)
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
         df = self.df
