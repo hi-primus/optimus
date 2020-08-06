@@ -44,7 +44,7 @@ def save(self: DataFrame):
                 # Dask reference
                 # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
                 # df.to_csv(filename=path)
-                df.to_csv(path, **kwargs)
+                df.to_csv(path, index=False, **kwargs)
 
             except IOError as error:
                 logger.print(error)

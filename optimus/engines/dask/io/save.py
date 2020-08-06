@@ -46,7 +46,7 @@ def save(self: DataFrame):
             df = self
             try:
                 os.makedirs(path, exist_ok=True)
-                df.to_csv(filename=path, mode=mode, **kwargs)
+                df.to_csv(filename=path, mode=mode, index=False, **kwargs)
             except IOError as error:
                 logger.print(error)
                 raise

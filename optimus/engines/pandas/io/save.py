@@ -48,7 +48,7 @@ def save(self: DataFrame):
                 # Dask reference
                 # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
                 # df.to_csv(filename=path)
-                df.to_csv(path, mode=mode)
+                df.to_csv(path, index=False, mode=mode)
 
             except IOError as error:
                 logger.print(error)
