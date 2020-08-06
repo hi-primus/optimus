@@ -34,8 +34,9 @@ def functions(self):
             return cudf.sqrt(series.ext.to_float())
 
         def unique(self, *args):
+            series = self.series
             # Cudf can not handle null so we fill it with non zero values.
-            return self.astype(str).unique()
+            return series.astype(str).unique()
 
         # def mod(self, other):
         #     series = self.series
