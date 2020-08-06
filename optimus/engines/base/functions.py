@@ -1,11 +1,12 @@
 from abc import abstractmethod, ABC
-
+import math
 import dask
 import numpy as np
 import re
 # import cudf
 from optimus.helpers.check import is_dask_series, is_dask_dataframe
 from optimus.helpers.core import val_to_list
+from optimus.infer import is_int, is_numeric
 
 
 def op_delayed(df):
@@ -182,6 +183,11 @@ class Functions(ABC):
 
     @staticmethod
     def pow(series, exponent):
+
+        if is_numeric(series):
+            series = float(series)
+            return math.pow(series, exponent)
+
         return series.ext.to_float().pow(exponent)
 
     @staticmethod
