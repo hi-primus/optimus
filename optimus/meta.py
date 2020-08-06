@@ -14,7 +14,6 @@ def meta(self):
     fire a column profiling
     """
     df_self = self
-    # print("======================================================================================================self",self.schema[-1].metadata)
     class Meta:
         @staticmethod
         def reset():
@@ -29,7 +28,6 @@ def meta(self):
             key = ACTIONS_KEY
 
             old_value = df.meta.get(key)
-            # print("APPEND ACTION 5555555555555555555555555555555555555555555555555555555555555555555555555555555", old_value, df)
             if old_value is None:
                 old_value = []
             old_value.append({action: value})
@@ -58,18 +56,16 @@ def meta(self):
             """
 
             df = self
-            # print("RENAME ++++++++++++++++++++++++++++++++++++++++++++++++++++", old_new_columns, df)
-            # print("META++++++++++++++++++++++++++++++++++++++++++++++++++++++++", df.meta.get())
             # assign(target, spec, value, missing=missing)
-            a = df.meta.get()
-            if a.get("transformations") is None:
-                df.meta.get()["transformations"] = {}
-
-                if a["transformations"].get("actions") is None:
-                    df.meta.get()["transformations"]["actions"] = {}
-
-            df.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
-            # df = df.meta.append_action("rename", old_new_columns)
+            # a = df.meta.get()
+            # if a.get("transformations") is None:
+            #     df.meta.get()["transformations"] = {}
+            #
+            #     if a["transformations"].get("actions") is None:
+            #         df.meta.get()["transformations"]["actions"] = {}
+            #
+            # df.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
+            df = df.meta.append_action("rename", old_new_columns)
 
             return df
 
@@ -111,8 +107,6 @@ def meta(self):
             :param value:
             :return:
             """
-            # print("-----------------------------------------------------------preserve ", key, old_df)
-            # print("///////////////////////////////////////////////////////////preserve ", self)
             old_meta = old_df.meta.get()
             new_meta = self.meta.get()
 
@@ -173,7 +167,6 @@ def meta(self):
                 data = value
 
             df = self
-            # print("SET /////////////////////////////////////////////////////////////", data, value, self)
             df.schema[-1].metadata = data
             return df
 
