@@ -1069,7 +1069,7 @@ class BaseColumns(ABC):
         df = self.df
 
         return df.cols.apply(input_cols, F.remove_accents, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES, meta=Actions.REMOVE_ACCENTS.value,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES, meta_action=Actions.REMOVE_ACCENTS.value,
                              output_cols=output_cols, mode="vectorized")
 
     def remove_numbers(self, input_cols, output_cols=None):
