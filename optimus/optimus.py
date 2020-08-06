@@ -97,6 +97,12 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         DaskCUDFDataFrame.meta = property(meta)
         DaskCUDFDataFrame.schema = [MetadataDask()]
 
+    if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
+        import rmm
+        import cupy
+        # Switch to RMM allocator
+        cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
+
     if engine == Engine.VAEX.value:
         from vaex import DataFrame as VaexDataFrame
         # import pandas as pd
