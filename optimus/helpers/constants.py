@@ -60,6 +60,8 @@ class Actions(Enum):
     TO_FLOAT = "to_float"
     TO_INTEGER = "to_integer"
     YEAR = "years"
+    APPEND = "append"
+
 
     # ROWS
     SELECT_ROW = "select_row"

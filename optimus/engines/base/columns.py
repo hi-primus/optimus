@@ -33,6 +33,9 @@ class BaseColumns(ABC):
 
     def __init__(self, df):
         self.df = df
+        self.df.schema[-1].metadata= df.schema[-1].metadata
+        # print("asdflkjahsdlkjfhasdkfjhasdfkjh",df, self.df.schema[-1].metadata.get("transformations"))
+
 
     @abstractmethod
     def append(self, dfs):
@@ -262,9 +265,19 @@ class BaseColumns(ABC):
                 if old_col_name != col_name:
                     df = df.rename(columns={old_col_name: new_column})
 
-                # df = df.meta.preserve(df, value=current_meta)
+                df = df.meta.preserve(df, value=current_meta)
+                a = self.df.schema[-1].metadata.copy()
+                if a.get("transformations") is None:
+                    a["transformations"] = {}
 
-                df = df.meta.rename({old_col_name: new_column})
+                    if a["transformations"].get("actions") is None:
+                        a["transformations"]["actions"] = []
+
+                a["transformations"]["actions"].append({old_col_name: new_column})
+
+                # df.meta.set(value=a)
+                self.df.schema[-1].metadata = a
+                # df = df.meta.rename({old_col_name: new_column})
 
         return df
 
@@ -1434,7 +1447,7 @@ class BaseColumns(ABC):
 
         @op_delayed(df)
         def _agg_hist(values):
-            print("values", values)
+            # print("values", values)
             _result = {}
             x = np.zeros(buckets - 1)
             for i in values:
