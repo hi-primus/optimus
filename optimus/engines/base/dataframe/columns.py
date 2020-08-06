@@ -132,56 +132,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df.assign(**kw_columns)
 
     # # TODO: Check if we must use * to select all the columns
-    # @dispatch(object, object)
-    # def rename(self, columns_old_new=None, func=None):
-    #     """"
-    #     Changes the name of a column(s) dataFrame.
-    #     :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
-    #     :param func: can be lower, upper or any string transformation function
-    #     """
-    #
-    #     df = self.df
-    #
-    #     # Apply a transformation function
-    #     if is_list_of_tuples(columns_old_new):
-    #         validate_columns_names(df, columns_old_new)
-    #         for col_name in columns_old_new:
-    #
-    #             old_col_name = col_name[0]
-    #             if is_int(old_col_name):
-    #                 old_col_name = df.schema.names[old_col_name]
-    #             if func:
-    #                 old_col_name = func(old_col_name)
-    #
-    #             current_meta = df.meta.get()
-    #             # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
-    #             # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
-    #
-    #             new_column = col_name[1]
-    #             if old_col_name != col_name:
-    #                 df = df.rename(columns={old_col_name: new_column})
-    #
-    #             df = df.meta.preserve(df, value=current_meta)
-    #
-    #             df = df.meta.rename({old_col_name: new_column})
-    #
-    #     return df
-    #
-    # @dispatch(list)
-    # def rename(self, columns_old_new=None):
-    #     return self.rename(columns_old_new, None)
-    #
-    # @dispatch(object)
-    # def rename(self, func=None):
-    #     return self.rename(None, func)
-    #
-    # @dispatch(str, str, object)
-    # def rename(self, old_column, new_column, func=None):
-    #     return self.rename([(old_column, new_column)], func)
-    #
-    # @dispatch(str, str)
-    # def rename(self, old_column, new_column):
-    #     return self.rename([(old_column, new_column)], None)
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
         df = self.df
