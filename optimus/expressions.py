@@ -248,19 +248,25 @@ functions = {
         "example": "FLOOR(23.25)",
         "text": "FLOOR",
     },
-    # "TRUNC": {
-    #     "description": "Truncates a number to a certain number of significant digits by omitting less significant digits.",
-    #     "parameters": [
-    #         {
-    #             "type": "series",
-    #             "name": "series",
-    #             "description": "The value to round down to the nearest integer multiple of factor."
-    #         },
-    #
-    #     ],
-    #     "example": "FLOOR(23.25)",
-    #     "text": "TRUNC",
-    # },
+    "ROUND": {
+        "description": "Rounds a number to a certain number of decimal places according to standard rules.",
+        "parameters": [
+            {
+                "type": "series",
+                "name": "series",
+                "description": "The value to round to places number of places."
+            },
+
+            {
+                "type": "number",
+                "name": "decimals",
+                "description": "The value to round to places number of places."
+            }
+
+        ],
+        "example": "ROUND(99.44, 1)",
+        "text": "ROUND",
+    },
     # "RADIANS": "RADIANS function description",  # Trigonometric Functions
     # "DEGREES": "DEGREES function description",
     "SIN": {
