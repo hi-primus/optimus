@@ -278,8 +278,7 @@ class Load:
 
         else:
             RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
-        print("1234526")
 
-        print(os.path.abspath(__file__))
+        # print(os.path.abspath(__file__))
         df.meta.update("mime_info", value=mime_info)
         return df
