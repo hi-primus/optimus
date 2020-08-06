@@ -111,7 +111,7 @@ class DaskBaseColumns(BaseColumns):
         :param cols_map:
         """
 
-        every_df = [self, *dfs]
+        every_df = [self.df, *dfs]
         
         rename = [[] for dff in every_df]
 
