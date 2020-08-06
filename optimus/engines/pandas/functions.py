@@ -30,7 +30,6 @@ def functions(self):
             return np.exp(series.ext.to_float())
 
         def sqrt(self):
-
             series = self.series
             return np.sqrt(series.ext.to_float())
 
@@ -120,7 +119,7 @@ def functions(self):
             #     regex = str_regex
 
             for i, j in zip(search, replace_by):
-                series = series.str.replace(i, j)
+                series = series.astype(str).str.replace(i, j)
             return series
 
         def remove_special_chars(self):

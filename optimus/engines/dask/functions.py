@@ -155,7 +155,7 @@ def functions(self):
             #     regex = str_regex
 
             for i, j in zip(search, replace_by):
-                series = series.str.replace(i, j)
+                series = series.astype(str).str.replace(i, j)
             return series
 
     return DaskFunctions(self)
