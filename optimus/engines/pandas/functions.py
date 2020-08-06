@@ -6,6 +6,7 @@ import pandas as pd
 from pandas import Series
 
 from optimus.engines.base.functions import Functions
+from optimus.helpers.core import val_to_list
 
 
 def functions(self):
@@ -117,7 +118,7 @@ def functions(self):
             #     regex = str_regex
             # else:
             #     regex = str_regex
-
+            replace_by = val_to_list(replace_by)
             for i, j in zip(search, replace_by):
                 series = series.astype(str).str.replace(i, j)
             return series

@@ -1037,7 +1037,7 @@ class BaseColumns(ABC):
         df = self.df
 
         return df.cols.apply(input_cols, F.remove_accents, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES, meta=Actions.REMOVE_ACCENTS.value,
                              output_cols=output_cols, mode="vectorized")
 
     def remove_numbers(self, input_cols, output_cols=None):
@@ -1538,6 +1538,8 @@ class BaseColumns(ABC):
         :return:Return a dict with the column and the inferred data type
         """
         df = self.df
+        print("columns",columns)
+        print("df.cols.names()",df.cols.names())
         columns = parse_columns(df, columns)
         total_preview_rows = 30
         pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)

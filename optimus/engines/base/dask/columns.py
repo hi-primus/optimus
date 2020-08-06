@@ -44,7 +44,7 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        df = df.meta.preserve(self, Actions.APPEND.value, df.cols.nanes())
+        df = df.meta.preserve(self, Actions.APPEND.value, df.cols.names())
         return df
 
     # def count_mismatch(self, columns_mismatch: dict = None, compute=True):
