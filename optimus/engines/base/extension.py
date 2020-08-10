@@ -5,14 +5,13 @@ import humanize
 import imgkit
 import jinja2
 import simplejson as json
-from dask import dataframe as dd, delayed
+from dask import dataframe as dd
 from glom import assign
 
 from optimus.bumblebee import Comm
 from optimus.engines.base.contants import SAMPLE_NUMBER
-from optimus.engines.base.functions import op_delayed
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
@@ -320,16 +319,23 @@ class BaseExt(ABC):
 
                         # Drop Keys
                         elif action_name == "drop":
+
                             for col_names in get_columns_by_action(action_name):
+                                # print("action_name, col_names", action_name, col_names)
+                                # print("profiler_columns",profiler_columns)
                                 profiler_columns.pop(col_names)
                         else:
                             modified_columns = modified_columns + get_columns_by_action(action_name)
-
                 # Actions applied to current columns
-                calculate_columns = modified_columns + new_columns
 
                 # Remove duplicated
-                calculate_columns = list(set(calculate_columns))
+                temp_calculate_columns = list(set(modified_columns + new_columns))
+                calculate_columns = []
+                # If after some  action the columns is dropped we need to remove it from the modified columns
+                for col_name in get_columns_by_action("drop"):
+                    for temp_calculate_column in temp_calculate_columns:
+                        if temp_calculate_column != col_name and (temp_calculate_column not in new_columns):
+                            calculate_columns.append(temp_calculate_column)
 
             elif not are_actions:
                 # Check if there are columns that have not beend profiler an that are not in the profiler buffer
@@ -342,6 +348,7 @@ class BaseExt(ABC):
         else:
             # Check if all the columns are calculated
             calculate_columns = parse_columns(df, columns)
+
         return calculate_columns
 
     def set_name(self, value=None):
