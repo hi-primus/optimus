@@ -2,7 +2,7 @@ import re
 import string
 from abc import abstractmethod, ABC
 from functools import reduce
-
+import time
 import dask
 import numpy as np
 import pandas as pd
@@ -33,9 +33,8 @@ class BaseColumns(ABC):
 
     def __init__(self, df):
         self.df = df
-        self.df.schema[-1].metadata= df.schema[-1].metadata
+        self.df.schema[-1].metadata = df.schema[-1].metadata
         # print("asdflkjahsdlkjfhasdkfjhasdfkjh",df, self.df.schema[-1].metadata.get("transformations"))
-
 
     @abstractmethod
     def append(self, dfs):
@@ -49,7 +48,7 @@ class BaseColumns(ABC):
         """
 
         every_df = [self.df, *dfs]
-        
+
         rename = [[] for dff in every_df]
 
         for key in cols_map:
@@ -58,17 +57,17 @@ class BaseColumns(ABC):
             for i in range(len(cols_map[key])):
                 col_name = cols_map[key][i]
                 if col_name:
-                    rename[i] = [ *rename[i], ( col_name, key )]
+                    rename[i] = [*rename[i], (col_name, key)]
 
         for i in range(len(rename)):
             every_df[i] = every_df[i].cols.rename(rename[i])
-            
+
         df = every_df[0]
 
         for i in range(len(every_df)):
-            if i==0: continue
+            if i == 0: continue
             df = df.append(every_df[i])
-            
+
         df = df.cols.select([*cols_map.keys()])
 
         return df.reset_index(drop=True)
@@ -468,9 +467,29 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        return df.cols.select(input_cols).astype(str).cols.remove_accents().cols.replace(search=search_by,
-                                                                                         replace_by=replace_by).cols.frequency()[
-            "frequency"]
+        df.meta.set("")
+        result = {}
+        input_cols = parse_columns(df, input_cols)
+        for input_col in input_cols:
+            column_modified_time = df.meta.get(f"profile.columns.{input_col}.modified")
+            patterns_update_time = df.meta.get(f"profile.columns.{input_col}.patterns.updated")
+            if column_modified_time is None:
+                column_modified_time = -1
+            if patterns_update_time is None:
+                patterns_update_time = 0
+
+            if column_modified_time > patterns_update_time or patterns_update_time == 0:
+                result[input_col] = \
+                    df.cols.select(input_col).astype(str).cols.remove_accents().cols.replace(search=search_by,
+                                                                                             replace_by=replace_by).cols.frequency()[
+                        "frequency"][input_col]
+                df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
+                df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
+
+            else:
+                result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns.values")
+
+        return result
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
         """
@@ -1570,8 +1589,6 @@ class BaseColumns(ABC):
         :return:Return a dict with the column and the inferred data type
         """
         df = self.df
-        print("columns",columns)
-        print("df.cols.names()",df.cols.names())
         columns = parse_columns(df, columns)
         total_preview_rows = 30
         pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)
