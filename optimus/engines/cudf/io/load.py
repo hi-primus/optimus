@@ -71,13 +71,13 @@ class Load:
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param null_value:
-        :param n_rows: 
+        :param n_rows:
         :param encoding:
         It requires one extra pass over the data. True default.
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")[0]
+        # file, file_name = prepare_path(path, "csv")[0]
 
         try:
             # TODO:  lineterminator=lineterminator seems to be broken
@@ -88,11 +88,11 @@ class Load:
             # else is_float(header):
             #     header = header
 
-            df = cudf.read_csv(file, sep=sep, header=header, encoding=encoding,
+            df = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows)
 
-            df.meta.set("file_name", file_name)
+            df.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
