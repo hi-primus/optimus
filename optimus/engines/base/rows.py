@@ -44,7 +44,7 @@ class BaseRows(ABC):
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self
+        df = self.df
         if is_str(condition):
             condition = eval(condition)
 
