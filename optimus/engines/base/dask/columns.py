@@ -47,64 +47,6 @@ class DaskBaseColumns(BaseColumns):
         df = df.meta.preserve(df, Actions.APPEND.value, df.cols.names())
         return df
 
-    # def count_mismatch(self, columns_mismatch: dict = None, compute=True):
-    #     df = self.df
-    #     if not is_dict(columns_mismatch):
-    #         columns_mismatch = parse_columns(df, columns_mismatch)
-    #     init = {0: 0, 1: 0, 2: 0}
-    #
-    #     @delayed
-    #     def count_dtypes(_df, _col_name, _func_dtype):
-    #
-    #         def _func(value):
-    #
-    #             # match data type
-    #             if _func_dtype(value):
-    #                 # ProfilerDataTypesQuality.MATCH.value
-    #                 return 2
-    #
-    #             elif pd.isnull(value):
-    #                 # ProfilerDataTypesQuality.MISSING.value
-    #                 return 1
-    #
-    #             # mismatch
-    #             else:
-    #                 # ProfilerDataTypesQuality.MISMATCH.value
-    #                 return 0
-    #
-    #         r = _df[_col_name].astype(str).map(_func).value_counts().ext.to_dict()
-    #
-    #         r = update_dict(init.copy(), r)
-    #         a = {_col_name: {"mismatch": r[0], "missing": r[1], "match": r[2]}}
-    #         return a
-    #
-    #     partitions = df.to_delayed()
-    #
-    #     delayed_parts = [count_dtypes(part, col_name, profiler_dtype_func(dtype, True)) for part in
-    #                      partitions for col_name, dtype in columns_mismatch.items()]
-    #
-    #     @delayed
-    #     def merge(_pdf):
-    #         columns = set(list(i.keys())[0] for i in _pdf)
-    #         r = {col_name: {"mismatch": 0, "missing": 0, "match": 0} for col_name in columns}
-    #
-    #         for l in _pdf:
-    #             for i, j in l.items():
-    #                 r[i]["mismatch"] = r[i]["mismatch"] + j["mismatch"]
-    #                 r[i]["missing"] = r[i]["missing"] + j["missing"]
-    #                 r[i]["match"] = r[i]["match"] + j["match"]
-    #
-    #         return r
-    #
-    #     # TODO: Maybe we can use a reduction here https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.Series.reduction
-    #     b = merge(delayed_parts)
-    #
-    #     if compute is True:
-    #         result = dd.compute(b)[0]
-    #     else:
-    #         result = b
-    #     return result
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
         df = self.df

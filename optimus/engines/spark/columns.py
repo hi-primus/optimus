@@ -1586,19 +1586,19 @@ def cols(self):
             # return result
 
         @staticmethod
-        def count_mismatch(columns_mismatch: dict = None):
+        def count_mismatch(columns_type: dict = None):
             """
             Return the num of mismatches
-            :param columns_mismatch: dict of {col_name:datatype}
+            :param columns_type: dict of {col_name:datatype}
             :return: 
             """
             df = self
-            columns = list(columns_mismatch.keys())
+            columns = list(columns_type.keys())
             columns = parse_columns(df, columns)
 
             _count = (df.select(columns).rdd
                       .flatMap(lambda x: x.asDict().items())
-                      .map(lambda x: Infer.mismatch(x, columns_mismatch))
+                      .map(lambda x: Infer.mismatch(x, columns_type))
                       .reduceByKey(lambda a, b: (a + b)))
 
             result = {}
