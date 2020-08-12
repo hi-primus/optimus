@@ -190,7 +190,7 @@ def cols(self: DataFrame):
             :param invert: Invert the match
             :return:
             """
-            df = self.
+            df = self
             columns = parse_columns(df, columns)
 
             f = profiler_dtype_func(dtype)
