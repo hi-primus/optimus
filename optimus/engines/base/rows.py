@@ -38,6 +38,19 @@ class BaseRows(ABC):
 
         return df.assign(**kw_columns)
 
+    def find(self, condition):
+        """
+
+        :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        :return:
+        """
+        df = self
+        if is_str(condition):
+            condition = eval(condition)
+
+        df["__match__"] = condition
+        return df
+
     def select(self, condition):
         """
 

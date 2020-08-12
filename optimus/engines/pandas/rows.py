@@ -40,21 +40,6 @@ def rows(self):
             return df
 
         @staticmethod
-        def find(condition) -> DataFrame:
-            """
-
-            :param condition: a condition like (df.A > 0) & (df.B <= 10)
-            :return:
-            """
-            df = self
-            if is_str(condition):
-                condition = eval(condition)
-
-            df["__match__"] = condition
-            return df
-
-
-        @staticmethod
         def to_list(input_cols):
             """
 
