@@ -573,7 +573,8 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
 
-        dtype = parse_dtypes(df, dtype)
+        # dtype = parse_dtypes(df, dtype)
+        print("dtype",dtype)
         f = profiler_dtype_func(dtype)
         if f is not None:
             for col_name in columns:
