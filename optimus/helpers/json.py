@@ -4,6 +4,7 @@ import simplejson as json
 import pandas as pd
 import numpy as np
 
+
 def json_converter(obj):
     """
     Custom converter to be used with json.dumps
@@ -18,7 +19,7 @@ def json_converter(obj):
         elif isinstance(obj, datetime.date):
             return obj.strftime('%Y-%m-%d')
 
-        elif isinstance(obj, np.int32):
+        elif isinstance(obj, (np.int32, np.int32, np.uint64,)):
             return int(obj)
 
 
