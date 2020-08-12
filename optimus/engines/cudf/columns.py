@@ -10,6 +10,7 @@ from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cud
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
+from optimus.infer import profiler_dtype_func
 
 
 def cols(self: DataFrame):
@@ -179,6 +180,25 @@ def cols(self: DataFrame):
 
             df["__match_positions__"] = df[input_cols].to_pandas().apply(get_match_positions, args=sub)
             return df
+
+        @staticmethod
+        def is_match(columns, dtype, invert=False):
+            """
+            Find the rows that match a data type
+            :param columns:
+            :param dtype: data type to match
+            :param invert: Invert the match
+            :return:
+            """
+            df = self.
+            columns = parse_columns(df, columns)
+
+            f = profiler_dtype_func(dtype)
+            if f is not None:
+                for col_name in columns:
+                    df = df[col_name].to_pandas().apply(f)
+                    df = ~df if invert is True else df
+                return df
 
         @staticmethod
         def scatter(columns, buckets=10):
