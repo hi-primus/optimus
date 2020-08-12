@@ -177,7 +177,7 @@ def cols(self: DataFrame):
                 length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
                 return length if len(length) > 0 else None
 
-            df["__match_positions__"] = df[input_cols].apply(get_match_positions, args=sub)
+            df["__match_positions__"] = df[input_cols].to_pandas().apply(get_match_positions, args=sub)
             return df
 
         @staticmethod
