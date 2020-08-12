@@ -81,7 +81,7 @@ class Load:
         if cache is False:
             prepare_path.cache_clear()
 
-        file, file_name = prepare_path(path, "csv")[0]
+        # file, file_name = prepare_path(path, "csv")[0]
         try:
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,

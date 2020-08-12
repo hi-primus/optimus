@@ -91,12 +91,11 @@ class Load:
             df = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows)
-
-            df.meta.set("file_name", path)
+            df.ext.reset()
+            df.meta.update("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
         return df
 
     @staticmethod
@@ -109,11 +108,11 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-
         file, file_name = prepare_path(path, "parquet")
 
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
+
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -222,7 +221,7 @@ class Load:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
-                    df = Load.csv(full_path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
+                    df = Load.csv(path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
                                   **kwargs)
                 except Exception as err:
                     print(err)
@@ -235,5 +234,6 @@ class Load:
         else:
             RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
 
+        # print(os.path.abspath(__file__))
         df.meta.update("mime_info", value=mime_info)
         return df
