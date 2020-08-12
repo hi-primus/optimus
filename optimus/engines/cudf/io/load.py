@@ -92,7 +92,7 @@ class Load:
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows)
             df.ext.reset()
-            df.meta.update("file_name", path)
+            df.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
