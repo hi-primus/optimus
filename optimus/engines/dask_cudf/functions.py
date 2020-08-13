@@ -5,9 +5,11 @@
 
 
 import cudf
-import math
+
 from optimus.engines.base.functions import Functions
-import numpy as np
+from dask_cudf import Series
+
+
 
 def functions(self):
     class DASKCUDFFunctions(Functions):
@@ -40,7 +42,7 @@ def functions(self):
             #                incols={'price': 'x'},
             #                outcols={'out': np.float64}).compute()
 
-            return cudf.pow(1/series.ext.to_float())
+            return cudf.pow(1 / series.ext.to_float())
 
         # def mod(self, other):
         #     series = self.series
