@@ -297,18 +297,7 @@ class BaseColumns(ABC):
                     df = df.rename(columns={old_col_name: new_column})
 
                 df = df.meta.preserve(df, value=current_meta)
-                a = self.df.schema[-1].metadata.copy()
-                if a.get("transformations") is None:
-                    a["transformations"] = {}
-
-                    if a["transformations"].get("actions") is None:
-                        a["transformations"]["actions"] = []
-
-                a["transformations"]["actions"].append({old_col_name: new_column})
-
-                # df.meta.set(value=a)
-                self.df.schema[-1].metadata = a
-                # df = df.meta.rename({old_col_name: new_column})
+                df = df.meta.rename({old_col_name: new_column})
 
         return df
 
@@ -424,7 +413,7 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
-    def patterns(self, input_cols="*", output_cols=None, mode=0):
+    def pattern(self, input_cols="*", output_cols=None, mode=0):
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
 
@@ -458,7 +447,7 @@ class BaseColumns(ABC):
 
         return df.assign(**result)
 
-    def patterns_counts(self, input_cols, mode=0):
+    def pattern_counts(self, input_cols, mode=0):
         """
         Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
         c = Any alpha char in lower or upper case
@@ -490,7 +479,7 @@ class BaseColumns(ABC):
                 patterns_update_time = 0
 
             if column_modified_time > patterns_update_time or patterns_update_time == 0:
-                result[input_col] = df.cols.patterns(input_col, mode=mode).cols.frequency()["frequency"][input_col]
+                result[input_col] = df.cols.pattern(input_col, mode=mode).cols.frequency()["frequency"][input_col]
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
 
