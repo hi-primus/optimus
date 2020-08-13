@@ -477,14 +477,14 @@ class BaseColumns(ABC):
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
-
             if column_modified_time > patterns_update_time or patterns_update_time == 0:
+
                 result[input_col] = df.cols.pattern(input_col, mode=mode).cols.frequency()["frequency"][input_col]
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
 
             else:
-                result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns.values")
+                result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns")
 
         return result
 
