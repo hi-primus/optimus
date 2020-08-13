@@ -86,8 +86,8 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
         if columns is not None:
-            df = df[columns]
-            result = df
+            result = df[columns]
+
         else:
             result = None
 
@@ -440,12 +440,12 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        result = {}
+        kw_columns = {}
         for input_col, output_col in columns:
-            result[input_col] = df.cols.select(input_col).astype(str).cols.remove_accents().cols.replace(
-                search=search_by, replace_by=replace_by)
+            kw_columns[output_col] = df.cols.select(input_col).astype(str).cols.remove_accents().cols.replace(
+                search=search_by, replace_by=replace_by)[input_col]
 
-        return df.assign(**result)
+        return df.assign(**kw_columns)
 
     def pattern_counts(self, input_cols, mode=0):
         """

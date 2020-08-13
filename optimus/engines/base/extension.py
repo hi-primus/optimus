@@ -640,7 +640,6 @@ class BaseExt(ABC):
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
-            # print("profiler_data",profiler_data)
 
             assign(profiler_data, "name", df.ext.get_name(), dict)
             assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
