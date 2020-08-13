@@ -1,8 +1,9 @@
 import re
 import string
+import time
 from abc import abstractmethod, ABC
 from functools import reduce
-import time
+
 import dask
 import numpy as np
 import pandas as pd
@@ -20,7 +21,6 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import collect_as_list, set_function_parser, set_func
-from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
@@ -424,25 +424,9 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
-    def patterns(self, input_cols, mode=0):
-        """
-        Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
-        c = Any alpha char in lower or upper case
-        l = Any alpha char in lower case
-        U = Any alpha char in upper case
-        * = Any alphanumeric in lower or upper case. Used only in type 2 nd 3
-        # = Any numeric
-        ! = Any punctuation
-
-        :param input_cols:
-        :param mode:
-        0: Identify lower, upper, digits. Except spaces and special chars.
-        1: Identify chars, digits. Except spaces and special chars
-        2: Identify Any alphanumeric. Except spaces and special chars
-        3: Identify alphanumeric and special chars. Except white spaces
-        :return:
-        """
+    def patterns(self, input_cols="*", output_cols=None, mode=0):
         df = self.df
+        columns = prepare_columns(df, input_cols, output_cols)
 
         def split(word):
             return [char for char in word]
@@ -467,7 +451,34 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
-        df.meta.set("")
+        result = {}
+        for input_col, output_col in columns:
+            result[input_col] = df.cols.select(input_col).astype(str).cols.remove_accents().cols.replace(
+                search=search_by, replace_by=replace_by)
+
+        return df.assign(**result)
+
+    def patterns_counts(self, input_cols, mode=0):
+        """
+        Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
+        c = Any alpha char in lower or upper case
+        l = Any alpha char in lower case
+        U = Any alpha char in upper case
+        * = Any alphanumeric in lower or upper case. Used only in type 2 nd 3
+        # = Any numeric
+        ! = Any punctuation
+
+        :param input_cols:
+        :param mode:
+        0: Identify lower, upper, digits. Except spaces and special chars.
+        1: Identify chars, digits. Except spaces and special chars
+        2: Identify Any alphanumeric. Except spaces and special chars
+        3: Identify alphanumeric and special chars. Except white spaces
+        :return:
+        """
+        df = self.df
+
+        # df.meta.set("")
         result = {}
         input_cols = parse_columns(df, input_cols)
         for input_col in input_cols:
@@ -479,10 +490,7 @@ class BaseColumns(ABC):
                 patterns_update_time = 0
 
             if column_modified_time > patterns_update_time or patterns_update_time == 0:
-                result[input_col] = \
-                    df.cols.select(input_col).astype(str).cols.remove_accents().cols.replace(search=search_by,
-                                                                                             replace_by=replace_by).cols.frequency()[
-                        "frequency"][input_col]
+                result[input_col] = df.cols.patterns(input_col, mode=mode).cols.frequency()["frequency"][input_col]
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
 
@@ -574,7 +582,7 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # dtype = parse_dtypes(df, dtype)
-        print("dtype",dtype)
+        print("dtype", dtype)
         f = profiler_dtype_func(dtype)
         if f is not None:
             for col_name in columns:
@@ -1527,21 +1535,21 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def count_mismatch(self, columns_mismatch: dict = None, **kwargs):
+    def count_mismatch(self, columns_type: dict = None, **kwargs):
         """
         Result {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
-        :param columns_mismatch:
+        :param columns_type:
         :return:
         """
         df = self.df
-        if not is_dict(columns_mismatch):
-            columns_mismatch = parse_columns(df, columns_mismatch)
+        if not is_dict(columns_type):
+            columns_type = parse_columns(df, columns_type)
 
         result = {}
         nulls = df.isnull().sum().ext.to_dict()
         total_rows = len(df)
-
-        func = {"int": regex_int,  # Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column))
+        # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
+        func = {"int": regex_int,
                 "decimal": regex_decimal,
                 "email": regex_email,
                 "ip": regex_ip,
@@ -1555,7 +1563,7 @@ class BaseColumns(ABC):
                 "array": r""
                 }
 
-        for col_name, dtype in columns_mismatch.items():
+        for col_name, dtype in columns_type.items():
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
             result[col_name]["missing"] = nulls.get(col_name)
             matches_count = {True: 0, False: 0}
@@ -1574,8 +1582,8 @@ class BaseColumns(ABC):
             result[col_name]["match"] = 0 if match is None else match
             result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
 
-        for col_name in columns_mismatch.keys():
-            result[col_name].update({"profiler_dtype": columns_mismatch[col_name]})
+        for col_name in columns_type.keys():
+            result[col_name].update({"profiler_dtype": columns_type[col_name]})
         return result
 
     @staticmethod

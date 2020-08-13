@@ -52,7 +52,6 @@ examples/test\.parquet/
 examples/test\.csv/
 examples/test\.json/
 examples/temp
-examples/data/mortage/
 
 node_modules
 
@@ -68,11 +67,7 @@ examples/sandbox.ipynb
 
 examples/dask-worker-space/
 
-examples/data/HIGGS.csv
 
-examples/data/Performance_2000Q4.csv
-
-examples/data/star0000-1.csv
 
 examples/yellow_tripdata_2009-01.csv
 
@@ -80,34 +75,19 @@ examples/yellow_tripdata_2009-02.csv
 
 examples/noncomm_use_subset/
 
-examples/data/noncomm_use_subset/
 
 examples/scheduling/dask-worker-space/
 
-examples/data/metadata.csv
-
-examples/data/noncomm_use_subset.tar.gz
 
 examples/corona.ipynb
 
-examples/data/AllData.xlsx
 
-examples/data/jurgen.csv
-
-examples/data/linkedin.csv
-
-examples/data/netflix_titles.csv
-
-examples/data/personal_finance769k.csv
-
-examples/data/taa.csv
-
-examples/data/titanic3-1.xlsx
 
 examples/mydask.png
 
-examples/data/dataset - customers.csv
+examples/data/
+server/
 
-examples/data/dataset - transactions.csv
+
 
 tests/creator/dask-worker-space/
