@@ -128,7 +128,9 @@ def functions(self):
             series = self.series
             # print("series",type(series),series)
             if not series.isnull().all():
-                return self.remove_white_spaces(series.astype(str).str.normalize_characters())
+                return self.remove_white_spaces(series.astype(str))
+                # TODO: Waiting for bug fix. Normalize is not working correctly https://github.com/rapidsai/cudf/issues/5812
+                # return self.remove_white_spaces(series.astype(str).str.normalize_characters())
             else:
                 return series
 
