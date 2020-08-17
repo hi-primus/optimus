@@ -202,7 +202,7 @@ class BaseExt(ABC):
 
         :return:
         """
-        return False if df.meta.get("profile") is None else True
+        return False if df.meta.get("profile.profiler_dtype") is None else True
 
     def to_delayed(self):
         return self.df.to_delayed()
