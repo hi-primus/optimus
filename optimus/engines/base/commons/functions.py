@@ -55,7 +55,11 @@ def to_float_cudf(value, *args):
     series = cudf.Series(cudf.core.column.string.str_cast.stof(series_string._column))
     series[
         ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-    return series
+
+    # TODO: after using to_float_cudf() the function .round() is not workiing(for some unclar reason).
+    #  I found to fixes apply astype(float) to the return or use str_cast.stod() instead of stof()
+
+    return series.astype(float)
 
 
 def to_datetime_cudf(value, format):
