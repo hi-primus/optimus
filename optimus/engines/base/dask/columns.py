@@ -1,6 +1,5 @@
 import dask
 import dask.dataframe as dd
-import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
@@ -116,7 +115,6 @@ class DaskBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return value.astype(str).str[::-1]
@@ -215,17 +213,3 @@ class DaskBaseColumns(BaseColumns):
         df = df.meta.preserve(df, Actions.NEST.value, list(kw_columns.values()))
 
         return df.cols.select(output_ordered_columns)
-
-    def is_numeric(self, col_name):
-        """
-        Check if a column is numeric
-        :param col_name:
-        :return:
-        """
-        df = self.df
-        # TODO: Check if this is the best way to check the data type
-        if np.dtype(df[col_name]).type in [np.int64, np.int32, np.float64]:
-            result = True
-        else:
-            result = False
-        return result

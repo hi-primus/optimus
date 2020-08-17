@@ -3,7 +3,6 @@ from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
 from optimus.engines.base.dask.columns import DaskBaseColumns
-from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 
 

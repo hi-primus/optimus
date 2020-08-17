@@ -25,8 +25,6 @@ class DataFrameBaseColumns(BaseColumns):
         """
         return exprs
 
-
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
         pass
 
@@ -45,7 +43,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def max_abs_scaler(input_cols, output_cols=None):
         pass
-
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
@@ -153,17 +150,3 @@ class DataFrameBaseColumns(BaseColumns):
             dfs = [df[input_col].astype(str) for input_col in input_cols]
             df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
         return df
-
-    # def is_numeric(self, col_name):
-    #     """
-    #     Check if a column is numeric
-    #     :param col_name:
-    #     :return:
-    #     """
-    #     df = self.df
-    #     # TODO: Check if this is the best way to check the data type
-    #     if np.dtype(df[col_name]).type in [np.int64, np.int32, np.float64]:
-    #         result = True
-    #     else:
-    #         result = False
-    #     return result
