@@ -108,12 +108,12 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-        file, file_name = prepare_path(path, "parquet")
+        # file, file_name = prepare_path(path, "parquet")
 
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
 
-            df.meta.set("file_name", file_name)
+            df.meta.set("file_name", path)
 
         except IOError as error:
             logger.print(error)
