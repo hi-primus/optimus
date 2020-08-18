@@ -226,28 +226,28 @@ def date_format(series, current_format=None, output_format=None):
     return series.functions.date_format(current_format=current_format, output_format=output_format)
 
 
-def year(series):
-    return Functions.year(series)
+def year(series, format):
+    return Functions.year(series, format)
 
 
-def month(series):
-    return Functions.month(series)
+def month(series, format):
+    return Functions.month(series, format)
 
 
-def day(series):
-    return Functions.day(series)
+def day(series, format):
+    return Functions.day(series, format)
 
 
-def hour(series):
-    return Functions.hour(series)
+def hour(series, format):
+    return Functions.hour(series, format)
 
 
-def minute(series):
-    return Functions.minute(series)
+def minute(series, format):
+    return Functions.minute(series, format)
 
 
-def second(series):
-    return Functions.second(series)
+def second(series, format):
+    return Functions.second(series, format)
 
 
 def years_between(series, date_format):

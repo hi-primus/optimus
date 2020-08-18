@@ -1,12 +1,14 @@
-from abc import abstractmethod, ABC
 import math
+import re
+from abc import abstractmethod, ABC
+
 import dask
 import numpy as np
-import re
+
 # import cudf
 from optimus.helpers.check import is_dask_series, is_dask_dataframe
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_int, is_numeric
+from optimus.infer import is_numeric
 
 
 def op_delayed(df):
@@ -393,15 +395,15 @@ class Functions(ABC):
         return series.ext.to_datetime(format=format).dt.day
 
     @staticmethod
-    def hour(series):
+    def hour(series, format):
         return series.ext.to_datetime(format=format).dt.hour
 
     @staticmethod
-    def minute(series):
+    def minute(series, format):
         return series.ext.to_datetime(format=format).dt.minute
 
     @staticmethod
-    def second(series):
+    def second(series, format):
         return series.ext.to_datetime(format=format).dt.second
 
     @staticmethod

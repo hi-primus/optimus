@@ -1155,7 +1155,7 @@ class BaseColumns(ABC):
         df = self.df
 
         def _hour(value, _format):
-            return F.day(value, _format)
+            return F.hour(value, _format)
 
         return df.cols.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
@@ -1163,7 +1163,7 @@ class BaseColumns(ABC):
         df = self.df
 
         def _minute(value, _format):
-            return F.day(value, _format)
+            return F.minute(value, _format)
 
         return df.cols.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
@@ -1171,7 +1171,7 @@ class BaseColumns(ABC):
         df = self.df
 
         def _second(value, _format):
-            return F.day(value, _format)
+            return F.second(value, _format)
 
         return df.cols.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
