@@ -383,6 +383,11 @@ class Functions(ABC):
     # dates
     @staticmethod
     def year(series, format):
+        """
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
         # return self.ext.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
         return series.ext.to_datetime(format=format).dt.year
 
@@ -405,6 +410,10 @@ class Functions(ABC):
     @staticmethod
     def second(series, format):
         return series.ext.to_datetime(format=format).dt.second
+
+    @staticmethod
+    def weekday(series, format):
+        return series.ext.to_datetime(format=format).dt.weekday
 
     @staticmethod
     @abstractmethod

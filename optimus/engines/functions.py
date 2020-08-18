@@ -250,6 +250,10 @@ def second(series, format):
     return Functions.second(series, format)
 
 
+def weekday(series, format):
+    return Functions.weekday(series, format)
+
+
 def years_between(series, date_format):
     return series.functions.years_between(date_format)
 

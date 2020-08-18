@@ -1177,13 +1177,11 @@ class BaseColumns(ABC):
 
     def weekday(self, input_cols, format=None, output_cols=None):
         df = self.df
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
 
-        def func(_df, _input_col, _format):
-            return _df.to_datetime(_df[_input_col], format=_format).dt.weekday
+        def _second(value, _format):
+            return F.weekday(value, _format)
 
-        return df.rows.apply(func, args=(one_list_to_val(input_cols), format), output_cols=output_cols)
+        return df.cols.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def years_between(self, input_cols, date_format=None, output_cols=None):
         df = self.df
