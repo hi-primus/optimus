@@ -108,7 +108,6 @@ class Load:
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-        # file, file_name = prepare_path(path, "parquet")
 
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)

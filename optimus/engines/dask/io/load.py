@@ -110,12 +110,10 @@ class Load:
         :return: Spark Dataframe
         """
 
-        file, file_name = prepare_path(path, "parquet")
-
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
             df.ext.reset()
-            df.meta.set("file_name", file_name)
+            df.meta.set("file_name", path)
 
         except IOError as error:
             logger.print(error)
