@@ -364,6 +364,7 @@ class BaseColumns(ABC):
                 df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
+        return df
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
         """
