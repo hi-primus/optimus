@@ -344,7 +344,8 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
         result = {}
         for col_name in columns:
-            column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
+            # column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
+            column_meta = df.meta.get(f"profile.columns.{col_name}")
             if column_meta is None:
                 result[col_name] = None
             else:
@@ -1556,10 +1557,8 @@ class BaseColumns(ABC):
                 # ProfilerDataTypes.USA_STATE.value: US_STATES
                 }
 
-        for i,j in df.cols.profilers_dtypes().items():
-            columns_type[i]= j
-
-
+        for i, j in df.cols.profilers_dtypes().items():
+            columns_type[i] = j
 
         for col_name, dtype in columns_type.items():
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
@@ -1592,7 +1591,7 @@ class BaseColumns(ABC):
 
     def infer_profiler_dtypes(self, columns):
         """
-        Infer datatypes from a sample
+        Infer datatypes in a dataframe from a sample
         :param columns:
         :return:Return a dict with the column and the inferred data type
         """
