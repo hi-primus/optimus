@@ -96,6 +96,12 @@ class ProfilerDataTypes(Enum):
     ZIP_CODE = "zip_code"
     MISSING = "missing"
     CATEGORICAL = "categorical"
+    PHONE_NUMBER = "phone_number"
+    SOCIAL_SECURITY_NUMBER = "social_security_number"
+    HTTP_CODE = "http_code"
+    US_STATE = "us_state"
+
+
 
     @staticmethod
     def list():
@@ -111,7 +117,8 @@ PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOL
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
                           ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
                           ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
-                          ProfilerDataTypes.ZIP_CODE.value]
+                          ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER, ProfilerDataTypes.SOCIAL_SECURITY_NUMBER,
+                          ProfilerDataTypes.HTTP_CODE, ProfilerDataTypes.USA_STATE]
 
 # Strings and Function Messages
 JUST_CHECKING = "Just check that all necessary environments vars are present..."

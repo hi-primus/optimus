@@ -56,7 +56,7 @@ def to_float_cudf(value, *args):
     series[
         ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
 
-    # TODO: after using to_float_cudf() the function .round() is not workiing(for some unclar reason).
+    # TODO: after using to_float_cudf() the function .round() is not working(for some unclear reason).
     #  I found to fixes apply astype(float) to the return or use str_cast.stod() instead of stof()
 
     return series.astype(float)

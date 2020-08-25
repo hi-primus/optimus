@@ -24,7 +24,7 @@ from optimus.helpers.functions import collect_as_list, set_function_parser, set_
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
-    is_int, is_tuple
+    is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES
 from optimus.profiler.constants import MAX_BUCKETS
 
 
@@ -1537,29 +1537,40 @@ class BaseColumns(ABC):
         nulls = df.isnull().sum().ext.to_dict()
         total_rows = len(df)
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
-        func = {"int": regex_int,
-                "decimal": regex_decimal,
-                "email": regex_email,
-                "ip": regex_ip,
-                "url": regex_url,
-                "gender": regex_gender,
-                "boolean": regex_boolean,
-                "zip_code": regex_zip_code,
-                "credit_card_number": regex_credit_card,
-                "date": r"",
-                "object": r"",
-                "array": r""
+        func = {ProfilerDataTypes.INT.value: regex_int,
+                ProfilerDataTypes.DECIMAL.value: regex_decimal,
+                # ProfilerDataTypes.STRING.value: None,
+                ProfilerDataTypes.EMAIL.value: regex_email,
+                ProfilerDataTypes.IP.value: regex_ip,
+                ProfilerDataTypes.URL.value: regex_url,
+                ProfilerDataTypes.GENDER.value: regex_gender,
+                ProfilerDataTypes.BOOLEAN.value: regex_boolean,
+                ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
+                ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card,
+                ProfilerDataTypes.DATE.value: r"",
+                ProfilerDataTypes.OBJECT.value: r"",
+                ProfilerDataTypes.ARRAY.value: r"",
+                ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
+                ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: regex_social_security_number,
+                ProfilerDataTypes.HTTP_CODE.value: regex_http_code,
+                # ProfilerDataTypes.USA_STATE.value: US_STATES
                 }
+
+        for i,j in df.cols.profilers_dtypes().items():
+            columns_type[i]= j
+
+
 
         for col_name, dtype in columns_type.items():
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
             result[col_name]["missing"] = nulls.get(col_name)
             matches_count = {True: 0, False: 0}
 
-            if dtype == "string":
+            if dtype == ProfilerDataTypes.STRING.value:
                 matches_count[True] = total_rows - nulls[col_name]
                 matches_count[False] = nulls[col_name]
-
+            elif dtype == ProfilerDataTypes.US_STATE.value:
+                matches_count = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().ext.to_dict()
             else:
                 matches_count = df[col_name].astype(str).str.match(func[dtype]).value_counts().ext.to_dict()
 

@@ -156,6 +156,156 @@ def str_to_missing(value, compile=False):
     return str_to(value, regex_missing, regex_missing_compiled, compile)
 
 
+regex_social_security_number = "^([1-9])(?!\1{2}-\1{2}-\1{4})[1-9]{2}-[1-9]{2}-[1-9]{4}"
+regex_social_security_number_compiled = re.compile(regex_social_security_number, re.IGNORECASE)
+
+
+def str_to_social_security_number(value, compile=False):
+    return str_to(value, regex_social_security_number, regex_social_security_number_compiled, compile)
+
+
+regex_http_code = "/^[1-5][0-9][0-9]$/"
+regex_http_code_compiled = re.compile(regex_http_code, re.IGNORECASE)
+
+
+def str_to_http_code(value, compile=False):
+    return str_to(value, regex_http_code, regex_http_code_compiled, compile)
+
+
+# Reference https://stackoverflow.com/questions/8634139/phone-validation-regex
+regex_phone_number = "/\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/"
+regex_phone_number_compiled = re.compile(regex_phone_number, re.IGNORECASE)
+
+
+def str_to_phone_number(value, compile=False):
+    return str_to(value, regex_phone_number, regex_phone_number_compiled, compile)
+
+
+# States
+US_STATES_NAMES = ["alabama",
+                   "alaska",
+                   "american samoa",
+                   "arizona",
+                   "arkansas",
+                   "california",
+                   "colorado",
+                   "connecticut",
+                   "delaware",
+                   "district of columbia",
+                   "federated states of micronesia",
+                   "florida",
+                   "georgia",
+                   "guam",
+                   "hawaii",
+                   "idaho",
+                   "illinois",
+                   "indiana",
+                   "iowa",
+                   "kansas",
+                   "kentucky",
+                   "louisiana",
+                   "maine",
+                   "marshall islands",
+                   "maryland",
+                   "massachusetts",
+                   "michigan",
+                   "minnesota",
+                   "mississippi",
+                   "missouri",
+                   "montana",
+                   "nebraska",
+                   "nevada",
+                   "new hampshire",
+                   "new jersey",
+                   "new mexico",
+                   "new york",
+                   "north carolina",
+                   "north dakota",
+                   "northern mariana islands",
+                   "ohio",
+                   "oklahoma",
+                   "oregon",
+                   "palau",
+                   "pennsylvania",
+                   "puerto rico",
+                   "rhode island",
+                   "south carolina",
+                   "south dakota",
+                   "tennessee",
+                   "texas",
+                   "utah",
+                   "vermont",
+                   "virgin islands",
+                   "virginia",
+                   "washington",
+                   "west virginia",
+                   "wisconsin",
+                   "wyoming"
+                   ]
+
+US_STATES_CODE = [
+    "al",
+    "ak",
+    "as",
+    "az",
+    "ar",
+    "ca",
+    "co",
+    "ct",
+    "de",
+    "dc",
+    "fm",
+    "fl",
+    "ga",
+    "gu",
+    "hi",
+    "id",
+    "il",
+    "in",
+    "ia",
+    "ks",
+    "ky",
+    "la",
+    "me",
+    "mh",
+    "md",
+    "ma",
+    "mi",
+    "mn",
+    "ms",
+    "mo",
+    "mt",
+    "ne",
+    "nv",
+    "nh",
+    "nj",
+    "nm",
+    "ny",
+    "nc",
+    "nd",
+    "mp",
+    "oh",
+    "ok",
+    "or",
+    "pw",
+    "pa",
+    "pr",
+    "ri",
+    "sc",
+    "sd",
+    "tn",
+    "tx",
+    "ut",
+    "vt",
+    "vi",
+    "va",
+    "wa",
+    "wv",
+    "wi",
+    "wy"
+]
+
+
 def str_to(value, regex, compiled_regex, compile=False):
     if value is None:
         result = False
@@ -273,7 +423,11 @@ class Infer(object):
                   "array": str_to_array, "object": str_to_object, "ip": str_to_ip,
                   "url": str_to_url, "email": str_to_email, "gender": str_to_gender,
                   "credit_card_number": str_to_credit_card, "zip_code": str_to_zip_code, "int": str_to_int,
-                  "decimal": str_to_decimal}
+                  "decimal": str_to_decimal,
+                  ProfilerDataTypes.PHONE_NUMBER.value: str_to_phone_number,
+                  ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: str_to_social_security_number,
+                  ProfilerDataTypes.HTTP_CODE.value: str_to_http_code,
+                  }
 
     @staticmethod
     def mismatch(value: tuple, dtypes: dict):
