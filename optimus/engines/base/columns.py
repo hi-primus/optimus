@@ -1557,7 +1557,7 @@ class BaseColumns(ABC):
                 # ProfilerDataTypes.USA_STATE.value: US_STATES
                 }
 
-        for i, j in df.cols.profilers_dtypes().items():
+        for i, j in df.cols.profiler_dtypes().items():
             columns_type[i] = j
 
         for col_name, dtype in columns_type.items():
