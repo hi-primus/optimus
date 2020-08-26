@@ -1560,7 +1560,7 @@ class BaseColumns(ABC):
         for i, j in df.cols.profiler_dtypes().items():
             if j is not None:
                 columns_type[i] = j
-
+                
         for col_name, dtype in columns_type.items():
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
             result[col_name]["missing"] = nulls.get(col_name)
