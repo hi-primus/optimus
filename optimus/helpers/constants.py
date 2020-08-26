@@ -117,8 +117,8 @@ PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOL
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
                           ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
                           ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
-                          ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER, ProfilerDataTypes.SOCIAL_SECURITY_NUMBER,
-                          ProfilerDataTypes.HTTP_CODE, ProfilerDataTypes.USA_STATE]
+                          ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER, ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value,
+                          ProfilerDataTypes.HTTP_CODE.value, ProfilerDataTypes.US_STATE.value]
 
 # Strings and Function Messages
 JUST_CHECKING = "Just check that all necessary environments vars are present..."
