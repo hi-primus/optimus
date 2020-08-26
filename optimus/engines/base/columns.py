@@ -1557,8 +1557,9 @@ class BaseColumns(ABC):
                 # ProfilerDataTypes.USA_STATE.value: US_STATES
                 }
 
-        for i, j in df.cols.profilers_dtypes().items():
-            columns_type[i] = j
+        for i, j in df.cols.profiler_dtypes().items():
+            if j is not None:
+                columns_type[i] = j
 
         for col_name, dtype in columns_type.items():
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
