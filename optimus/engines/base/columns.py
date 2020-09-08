@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from dask import dataframe as dd
 from dask.dataframe import from_delayed
-from glom import glom
 from multipledispatch import dispatch
 
 from optimus.engines import functions as F
@@ -359,7 +358,8 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        for col_name, dtype in columns.items():
+        for col_name, props in columns.items():
+            dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
                 df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
                 df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
@@ -573,7 +573,6 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # dtype = parse_dtypes(df, dtype)
-        print("dtype", dtype)
         f = profiler_dtype_func(dtype)
         if f is not None:
             for col_name in columns:
@@ -1531,8 +1530,8 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        if not is_dict(columns_type):
-            columns_type = parse_columns(df, columns_type)
+        # if not is_dict(columns_type):
+        #     columns_type = parse_columns(df, columns_type.keys())
 
         result = {}
         nulls = df.isnull().sum().ext.to_dict()
@@ -1557,11 +1556,12 @@ class BaseColumns(ABC):
                 # ProfilerDataTypes.USA_STATE.value: US_STATES
                 }
 
-        for i, j in df.cols.profiler_dtypes().items():
-            if j is not None:
-                columns_type[i] = j
-                
-        for col_name, dtype in columns_type.items():
+        # for i, j in df.cols.profiler_dtypes().items():
+        #     if j is not None:
+        #         columns_type[i] = j
+        for col_name, props in columns_type.items():
+            dtype = props["dtype"]
+
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
             result[col_name]["missing"] = nulls.get(col_name)
             matches_count = {True: 0, False: 0}
@@ -1599,18 +1599,26 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
         total_preview_rows = 30
+        # Infer the data type from every element in a Series.
+        # FIX: could this be vectorized
         pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
             _value_counts = pdf[col_name].value_counts()
-            if _value_counts.index[0] != "null" and _value_counts.index[0] != "missing":
-                r = _value_counts.index[0]
+            dtype = _value_counts.index[0]
+
+            if dtype != "null" and dtype != "missing":
+                r = dtype
             elif _value_counts[0] < len(pdf):
                 r = _value_counts.index[1]
             else:
                 r = "object"
-            cols_and_inferred_dtype[col_name] = r
+
+            cols_and_inferred_dtype[col_name] = {"dtype": r}
+            if dtype == "date":
+                cols_and_inferred_dtype[col_name].update({"format": "%Y %m %s"})
+
         return cols_and_inferred_dtype
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,

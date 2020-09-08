@@ -432,10 +432,9 @@ class Infer(object):
     @staticmethod
     def mismatch(value: tuple, dtypes: dict):
         """
-        UDF function.
+        Count the dataType that match, do not match, nulls and missing.
         For example if we have an string column we also need to pass the column type we want to match.
         Like credit card or postal code.
-        Count the dataType that match, do not match, nulls and missing.
         :param value: tuple(Column/Row, value)
         :param dtypes: dict {col_name:(dataType, mismatch)}
 

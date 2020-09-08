@@ -633,7 +633,7 @@ def set_function_parser(df, value, where, default=None):
 # value = "dd/MM/yyyy hh:mm:ss-sss MA"
 def match_date(value):
     """
-    Returns Create aregex from a string with a date format
+    Returns Create a regex from a string with a date format
     :param value:
     :return:
     """
