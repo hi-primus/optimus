@@ -25,7 +25,7 @@ from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_e
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
     is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES
 from optimus.profiler.constants import MAX_BUCKETS
-
+import dateinfer
 
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
@@ -33,7 +33,6 @@ class BaseColumns(ABC):
     def __init__(self, df):
         self.df = df
         self.df.schema[-1].metadata = df.schema[-1].metadata
-        # print("asdflkjahsdlkjfhasdkfjhasdfkjh",df, self.df.schema[-1].metadata.get("transformations"))
 
     @abstractmethod
     def append(self, dfs):
@@ -361,10 +360,11 @@ class BaseColumns(ABC):
         for col_name, props in columns.items():
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
-                df.meta.set(f"profile.columns.{col_name}.profiler_dtype", dtype)
+                df.meta.set(f"profile.columns.{col_name}.profiler_dtype", props)
                 df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
+
         return df
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
@@ -1601,24 +1601,24 @@ class BaseColumns(ABC):
         total_preview_rows = 30
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized
-        pdf = df.ext.head(columns, total_preview_rows).ext.to_pandas().applymap(Infer.parse_pandas)
+        sample = df.ext.head(columns, total_preview_rows).ext.to_pandas()
+        pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
             _value_counts = pdf[col_name].value_counts()
             dtype = _value_counts.index[0]
 
-            if dtype != "null" and dtype != "missing":
+            if dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
                 r = dtype
             elif _value_counts[0] < len(pdf):
                 r = _value_counts.index[1]
             else:
-                r = "object"
+                r = ProfilerDataTypes.OBJECT.value
 
             cols_and_inferred_dtype[col_name] = {"dtype": r}
             if dtype == "date":
-                cols_and_inferred_dtype[col_name].update({"format": "%Y %m %s"})
-
+                cols_and_inferred_dtype[col_name].update({"format": dateinfer.infer(sample[col_name].to_list())})
         return cols_and_inferred_dtype
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
