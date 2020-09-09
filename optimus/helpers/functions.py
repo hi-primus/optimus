@@ -612,7 +612,7 @@ def set_function_parser(df, value, where, default=None):
     columns = list(set(columns))
     if columns:
         first_columns = columns[0]
-        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]
+        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
 
     else:
         if fastnumbers.fast_int(value):
