@@ -13,7 +13,6 @@ from optimus.engines.spark.io.jdbc import JDBC
 from optimus.engines.spark.io.load import Load
 from optimus.engines.spark.ml.models import ML
 from optimus.engines.spark.spark import Spark
-from optimus.enricher import Enricher
 from optimus.helpers.constants import *
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path
