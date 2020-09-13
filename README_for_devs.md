@@ -235,14 +235,24 @@ conda create -n optimusbuild python=3.7
 conda activate optimusbuild
 conda install conda-build
 cd /conda/recipes/
-conda-build optimuspyspark -c conda-forge -c h2oai
+conda config --set anaconda_upload yes 
+conda-build optimus -c conda-forge -c h2oai
+```
+Search for the message 
+```
+anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
 ```
 
 then upload the package to Anaconda
 ```
 conda install anaconda-client
 anaconda login
+anaconda upload xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
 ```
+use your anaconda credentials for https://anaconda.org/
+
+Go to https://anaconda.org/ and check
+
 
 
 ## About Optimus and Bumblebee
