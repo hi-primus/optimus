@@ -1,4 +1,3 @@
-from kombu import Connection, Exchange, Queue, Producer
 from packaging import version
 from pyspark.sql import DataFrame
 
@@ -127,38 +126,6 @@ def save(self: DataFrame):
                 logger.print(e)
                 raise
 
-        @staticmethod
-        def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
-            """
-            Send a spark to a redis queue
-            # https://medium.com/python-pandemonium/talking-to-rabbitmq-with-python-and-kombu-6cbee93b1298
-            # https://medium.com/python-pandemonium/building-robust-rabbitmq-consumers-with-python-and-kombu-part-1-ccd660d17271
-            :return:
-            """
-            df = self
-            if parallelism:
-                df = df.coalesce(parallelism)
-
-            def _rabbit_mq(messages):
-                conn = Connection(host)
-                channel = conn.channel()
-
-                exchange = Exchange(exchange_name, type="direct")
-                queue = Queue(name=queue_name, exchange=exchange, routing_key=routing_key)
-
-                queue.maybe_bind(conn)
-                queue.declare()
-                producer = Producer(exchange=exchange, channel=channel, routing_key=routing_key)
-
-                for message in messages:
-                    # as_dict = message.asDict(recursive=True)
-                    producer.publish(message)
-
-                channel.close()
-                conn.release()
-                return messages
-
-            self.rdd.mapPartitions(_rabbit_mq).count()
 
     return Save()
 
