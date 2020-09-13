@@ -103,6 +103,10 @@ twine upload dist/*
 ```
 pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop
 ```
+Install infer date format library
+```
+pip install git+https://github.com/dimagalat/dateinfer
+```
 
 ### Compiling redis .jar file
 This file can not be found to download and must be compiled.
@@ -225,6 +229,21 @@ C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt
 ```
 
 From Anaconda Prompt
+Go to
+```
+conda create -n optimusbuild python=3.7
+conda activate optimusbuild
+conda install conda-build
+cd /conda/recipes/
+conda-build optimuspyspark -c conda-forge -c h2oai
+```
+
+then upload the package to Anaconda
+```
+conda install anaconda-client
+anaconda login
+```
+
 
 ## About Optimus and Bumblebee
 Bumblebee is just the frontend that interacts with Optimus via Jupyter Kernel Gateway.
