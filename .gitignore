@@ -74,7 +74,6 @@ server/
 
 
 tests/creator/dask-worker-space/
-optimus/jars/*
 
 conda/recipes/conda
 

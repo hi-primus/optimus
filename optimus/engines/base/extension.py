@@ -667,7 +667,6 @@ class BaseExt(ABC):
         df = df.meta.columns(df.cols.names())
         df.meta.set("transformations", value={})
         df.meta.set("profile", profiler_data)
-
         if cols_and_inferred_dtype is not None:
             df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
