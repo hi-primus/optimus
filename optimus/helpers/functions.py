@@ -555,7 +555,6 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     """
 
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
-    from optimus.engines import functions as F  # Used in eval
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str"}
     df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
@@ -777,3 +776,30 @@ def ipython_vars(globals_vars, dtype=None):
         _dtype = PandasDataFrame
 
     return [name for name, instance, aa in vars if is_(instance, _dtype)]
+
+
+# Taken from https://github.com/Kemaweyan/singleton_decorator/
+class _SingletonWrapper:
+    """
+    A singleton wrapper class. Its instances would be created
+    for each decorated class.
+    """
+
+    def __init__(self, cls):
+        self.__wrapped__ = cls
+        self._instance = None
+
+    def __call__(self, *args, **kwargs):
+        """Returns a single instance of decorated class"""
+        if self._instance is None:
+            self._instance = self.__wrapped__(*args, **kwargs)
+        return self._instance
+
+
+def singleton(cls):
+    """
+    A singleton decorator. Returns a wrapper objects. A call on that object
+    returns a single instance object of decorated class. Use the __wrapped__
+    attribute to access decorated class directly in unit tests
+    """
+    return _SingletonWrapper(cls)
