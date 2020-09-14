@@ -228,16 +228,31 @@ C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.
 C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt
 ```
 
+`string-group` library  is not available in conda so we need to use `grayskull` to generate the conda recipe
+
+```
+conda intall grayskull
+grayskull pypi string-grouper
+```
+
 From Anaconda Prompt
+
+To auto upload the package after the build you can use. NOTE: This can throw an permission error on Windows
+
+```
+conda config --set anaconda_upload yes 
+```
+
 Go to
 ```
 conda create -n optimusbuild python=3.7
 conda activate optimusbuild
 conda install conda-build
 cd /conda/recipes/
-conda config --set anaconda_upload yes 
-conda-build optimus -c conda-forge -c h2oai
+
+conda-build optimus -c rapidsai -c nvidia -c conda-forge -c defaults -c h2oai
 ```
+
 Search for the message 
 ```
 anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
@@ -247,13 +262,21 @@ then upload the package to Anaconda
 ```
 conda install anaconda-client
 anaconda login
-anaconda upload xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
+anaconda upload -u optimus xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
 ```
 use your anaconda credentials for https://anaconda.org/
 
-Go to https://anaconda.org/ and check
+Go to https://anaconda.org/ and check the file is available
 
+```
+conda install -c conda-forge -c argenisleon optimus 
+```
 
+##ODBC
+### Windows
+Search for odbc and look for `ODBC Data Sources`
+
+Mysql https://dev.mysql.com/doc/connector-odbc/en/connector-odbc-configuration-dsn-windows-5-2.html#:~:text=Open%20the%20ODBC%20Data%20Source%20Administrator%20.&text=To%20create%20a%20System%20DSN,Create%20New%20Data%20Source%22%20dialog.
 
 ## About Optimus and Bumblebee
 Bumblebee is just the frontend that interacts with Optimus via Jupyter Kernel Gateway.
@@ -292,3 +315,4 @@ https://rapidsai.github.io/projects/cudf/en/0.10.0/guide-to-udfs.html
 
 Spark
 https://spark.apache.org/docs/latest/sql-pyspark-pandas-with-arrow.html
+
