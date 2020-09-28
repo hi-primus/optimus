@@ -1,0 +1,46 @@
+{% set name = "string-grouper" %}
+{% set version = "0.1.1" %}
+
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/string_grouper-{{ version }}.tar.gz
+  sha256: b5c48d0783f52bd90024b88dc5162d93bc74d346d6229ce82ab39d59e9072dea
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+
+requirements:
+  host:
+    - pip
+    - python >=3.8
+  run:
+    - numpy
+    - pandas >=0.25.3
+    - python >=3.8
+    - scikit-learn
+    - scipy
+    - sparse_dot_topn >=0.2.6
+
+test:
+  imports:
+    - string_grouper
+  commands:
+    - pip check
+  requires:
+    - pip
+
+about:
+  home: https://github.com/Bergvca/string_grouper
+  summary: String grouper contains functions to do string matching using TF-IDF and the cossine similarity. Based on https://bergvca.github.io/2017/10/14/super-fast-string-matching.html
+  license: MIT
+  license_file: PLEASE_ADD_LICENSE_FILE
+
+extra:
+  recipe-maintainers:
+    - argenisleon
