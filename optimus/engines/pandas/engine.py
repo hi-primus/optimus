@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 from optimus.bumblebee import Comm
@@ -29,13 +28,11 @@ class PandasEngine(BaseEngine):
         self.load = Load()
         self.extract = Extract()
 
-        # self.read = self.spark.read
         self.verbose(verbose)
 
         Pandas.instance = pd
 
-        self.client = Pandas.instance
+        self.client = pd
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
-
