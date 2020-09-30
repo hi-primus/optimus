@@ -27,7 +27,6 @@ class MetadataDask:
 import importlib
 
 if importlib.util.find_spec("pandas") is not None:
-    print("pandas")
     import pandas as pd
     PandasDataFrame = pd.DataFrame
 
