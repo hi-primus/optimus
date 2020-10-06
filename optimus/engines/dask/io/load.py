@@ -58,7 +58,7 @@ class Load:
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, null_value=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -72,6 +72,7 @@ class Load:
         :param null_value:
         :param n_rows:
         :param quoting:
+        :param engine: 'python' or 'c'. 'python' slower but support better error handling
         :param lineterminator:
         :param error_bad_lines:
         :param keep_default_na:
@@ -85,7 +86,7 @@ class Load:
         try:
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=True, na_values=None, engine="c", *args,
+                             keep_default_na=True, na_values=None, engine=engine, *args,
                              **kwargs)
             # print(len(df))
             if n_rows > -1:
