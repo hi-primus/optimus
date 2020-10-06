@@ -237,11 +237,11 @@ class Load:
                 mime_info["encoding"] = "latin-1"
 
             file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
-
             # JSON
             # Try to infer if is a valid json
-            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD:
-                # print("sdf",file)
+
+            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD and (
+                    file[0] == "{" or file[0] == "["):
                 mime_info["file_type"] = "json"
                 df = Load.json(full_path, *args, **kwargs)
 
