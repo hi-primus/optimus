@@ -306,7 +306,7 @@ class Infer(object):
                 (str_to_url, "url"),
                 (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
             ]
-        print(dtypes)
+
         if dtypes[col_name] == "string" and infer is True:
 
             if isinstance(value, bool):
