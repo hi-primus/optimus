@@ -15,7 +15,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
-BYTES_SIZE = 4096
+BYTES_SIZE = 16384
 
 
 class Load:
