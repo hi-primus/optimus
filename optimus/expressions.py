@@ -660,7 +660,7 @@ class Parser:
         l_g.add('COMMA', r'\,')
 
         l_g.add('IDENTIFIER', r'{(.*?)}')  # Reference
-        l_g.add('IDENTIFIER', "[^\W0-9 ]\w*")  # Column names
+        l_g.add('IDENTIFIER', r'[^\W0-9 ]\w*')  # Column names
         l_g.add('STRINGS', r'"(.*?)"')  # Reference
 
         # Operators
@@ -670,7 +670,10 @@ class Parser:
         l_g.add('DIV_OPERATOR', r'\/')
 
         # Number
-        l_g.add('NUMBER', r'\d+')
+        l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
+        l_g.add('INTEGER', r'\d+')
+        # print("AAA")
+
 
         # Ignore spaces
         l_g.ignore('\s+')
@@ -683,17 +686,20 @@ class Parser:
         """
         tokens = self.lexer.lex(text_input)
         result = []
+        # for token in tokens:
+        #     print(token)
         for token in tokens:
+            # print(token)
+            token_value = token.value
             if token.name == "IDENTIFIER":
-                t = token.value
                 for r in (("{", ""), ("}", "")):
-                    t = t.replace(*r)
+                    token_value = token_value.replace(*r)
 
-                r = "df['" + t + "']"
+                result_element = "df['" + token_value + "']"
             elif token.name in functions:
-                r = "F." + token.value.lower()
+                result_element = "F." + token_value.lower()
             else:
-                r = token.value
-            result.append(r)
+                result_element = token_value
+            result.append(result_element)
         result = "".join(result)
         return result
