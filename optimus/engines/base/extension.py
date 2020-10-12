@@ -1,3 +1,4 @@
+import time
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
@@ -28,6 +29,9 @@ class BaseExt(ABC):
 
     def __init__(self, df):
         self.df = df
+        df._buffer = None
+        df._updated = None
+        # df._buffer= None
         # self.buffer_a = None
 
     @staticmethod
@@ -117,20 +121,31 @@ class BaseExt(ABC):
 
         pass
 
-    def set_buffer(self, columns, n=BUFFER_SIZE):
+    def set_buffer(self, columns="*", n=BUFFER_SIZE):
         df = self.df
         input_columns = parse_columns(df, columns)
         df._buffer = df.ext.head(input_columns, n)
+        df.meta.set("buffer_time", int(time.time()))
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
         df = self.df
         return df._buffer
 
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None):
-        df = self.df._buffer
+    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
-        df_length = len(df)
+        df = self.df
+        buffer_time = df.meta.get("buffer_time")
+        last_action_time = df.meta.get("last_action_time")
+
+        if buffer_time and last_action_time:
+            if buffer_time > last_action_time:
+                df.ext.set_buffer(columns, n)
+        elif df.buffer is None:
+            df.ext.set_buffer(columns, n)
+
+        df_buffer = df._buffer
+        df_length = len(df_buffer)
         if lower_bound is None:
             lower_bound = 0
 
@@ -149,8 +164,8 @@ class BaseExt(ABC):
             upper_bound = df_length
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
-        input_columns = parse_columns(df, columns)
-        return df[input_columns][lower_bound: upper_bound]
+        input_columns = parse_columns(df_buffer, columns)
+        return df_buffer[input_columns][lower_bound: upper_bound]
 
     def buffer_json(self, columns):
         df = self.df._buffer
@@ -207,9 +222,10 @@ class BaseExt(ABC):
     def to_delayed(self):
         return self.df.to_delayed()
 
-    def calculate_cols_to_profile(self, df, columns):
+    @staticmethod
+    def calculate_cols_to_profile(df, columns):
         """
-        Calculate the columns that needs to be profiled.
+        Get the columns that needs to be profiled.
         :return:
         """
         # Metadata
