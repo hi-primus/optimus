@@ -60,6 +60,13 @@ class DriverProperties(Enum):
         "java_class": "",
         "table_name": "table_name"
     }
+    BIGQUERY = {
+        "name": "bigquery",
+        "port": 5439,
+        "java_class": "",
+        "table_name": "table_name"
+    }
+
 
     @classmethod
     def list(cls):

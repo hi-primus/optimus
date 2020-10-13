@@ -9,6 +9,7 @@ from optimus.engines.spark.io.properties import DriverProperties
 from optimus.engines.base.io.drivers.redshift import RedshiftDriver
 from optimus.engines.base.io.drivers.sqlite import SQLiteDriver
 from optimus.engines.base.io.drivers.sqlserver import SQLServerDriver
+from optimus.engines.base.io.drivers.bigquery import BigQueryDriver
 
 
 class DriverFactory:
@@ -22,6 +23,7 @@ class DriverFactory:
         * Redshift
         * SQLite
         * SQLServer
+        * BigQuery
     """
 
     @staticmethod
@@ -48,5 +50,7 @@ class DriverFactory:
             return SQLiteDriver()
         elif driver_type == DriverProperties.SQLSERVER.value["name"]:
             return SQLServerDriver()
+        elif driver_type == DriverProperties.BIGQUERY.value["name"]:
+            return BigQueryDriver()
         else:
             RaiseIt.value_error(driver_type, [database["name"] for database in DriverProperties.list()])
