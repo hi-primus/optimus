@@ -5,6 +5,7 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import dask
+import dateinfer
 import numpy as np
 import pandas as pd
 from dask import dataframe as dd
@@ -25,7 +26,7 @@ from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_e
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
     is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES
 from optimus.profiler.constants import MAX_BUCKETS
-import dateinfer
+
 
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
@@ -367,7 +368,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None, on_error=None):
+    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         trnasformation like string to number in which should output nan.
@@ -387,7 +388,6 @@ class BaseColumns(ABC):
                 colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
                 The first parameter in each tuple is the column name, the second is the final datatype of column after
                 the transformation is made.
-        :return: Dask DataFrame
         """
 
         df = self.df
