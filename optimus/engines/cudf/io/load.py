@@ -197,7 +197,6 @@ class Load:
             # JSON
             # Try to infer if is a valid json
             if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD:
-                # print("sdf",file)
                 mime_info["file_type"] = "json"
                 df = Load.json(full_path, *args, **kwargs)
 

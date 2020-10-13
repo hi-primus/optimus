@@ -672,24 +672,21 @@ class Parser:
         # Number
         l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
         l_g.add('INTEGER', r'\d+')
-        # print("AAA")
-
 
         # Ignore spaces
         l_g.ignore('\s+')
 
-    def parse(self, text_input):
+    def parse(self, text_input, meta=None):
         """
 
-        :param text_input:
+        :param text_input: string to be parsed
+        :param meta: Column data used to better handle datatypes. For example when add or subs values to times
+
         :return:
         """
         tokens = self.lexer.lex(text_input)
         result = []
-        # for token in tokens:
-        #     print(token)
         for token in tokens:
-            # print(token)
             token_value = token.value
             if token.name == "IDENTIFIER":
                 for r in (("{", ""), ("}", "")):
