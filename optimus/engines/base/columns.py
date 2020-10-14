@@ -1613,7 +1613,7 @@ class BaseColumns(ABC):
 
             cols_and_inferred_dtype[col_name] = {"dtype": r}
             if dtype == "date":
-                cols_and_inferred_dtype[col_name].update({"format": dateinfer.infer(sample[col_name].to_list())})
+                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(sample[col_name].to_list())})
         return cols_and_inferred_dtype
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
