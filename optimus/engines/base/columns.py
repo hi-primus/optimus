@@ -5,7 +5,7 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import dask
-import dateinfer
+import pydateinfer
 import numpy as np
 import pandas as pd
 from dask import dataframe as dd
@@ -670,11 +670,6 @@ class BaseColumns(ABC):
             else:
                 result[col_name] = np.dtype(df[col_name]).type
         return format_dict(result)
-
-    # @staticmethod
-    # @abstractmethod
-    # def create_exprs(columns, funcs, *args):
-    #     pass
 
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
         """
