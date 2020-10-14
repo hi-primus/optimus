@@ -141,7 +141,7 @@ class BaseExt(ABC):
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
                 df.ext.set_buffer(columns, n)
-        elif df.buffer is None:
+        elif df._buffer is None:
             df.ext.set_buffer(columns, n)
 
         df_buffer = df._buffer
