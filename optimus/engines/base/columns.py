@@ -5,9 +5,9 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import dask
-import pydateinfer
 import numpy as np
 import pandas as pd
+import pydateinfer
 from dask import dataframe as dd
 from dask.dataframe import from_delayed
 from multipledispatch import dispatch
@@ -416,6 +416,23 @@ class BaseColumns(ABC):
         pass
 
     def pattern(self, input_cols="*", output_cols=None, mode=0):
+        """
+        Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
+        c = Any alpha char in lower or upper case
+        l = Any alpha char in lower case
+        U = Any alpha char in upper case
+        * = Any alphanumeric in lower or upper case. Used only in type 2 nd 3
+        # = Any numeric
+        ! = Any punctuation
+
+        :param input_cols:
+        :param mode:
+        0: Identify lower, upper, digits. Except spaces and special chars.
+        1: Identify chars, digits. Except spaces and special chars
+        2: Identify Any alphanumeric. Except spaces and special chars
+        3: Identify alphanumeric and special chars. Except white spaces
+        :return:
+        """
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
 
@@ -449,24 +466,15 @@ class BaseColumns(ABC):
 
         return df.assign(**kw_columns)
 
-    def pattern_counts(self, input_cols, mode=0):
+    def pattern_counts(self, input_cols, n=5, mode=0, flush=False):
         """
-        Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
-        c = Any alpha char in lower or upper case
-        l = Any alpha char in lower case
-        U = Any alpha char in upper case
-        * = Any alphanumeric in lower or upper case. Used only in type 2 nd 3
-        # = Any numeric
-        ! = Any punctuation
 
         :param input_cols:
+        :param n: top n number
         :param mode:
-        0: Identify lower, upper, digits. Except spaces and special chars.
-        1: Identify chars, digits. Except spaces and special chars
-        2: Identify Any alphanumeric. Except spaces and special chars
-        3: Identify alphanumeric and special chars. Except white spaces
         :return:
         """
+
         df = self.df
 
         # df.meta.set("")
@@ -479,9 +487,17 @@ class BaseColumns(ABC):
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
-            if column_modified_time > patterns_update_time or patterns_update_time == 0:
+            if column_modified_time > patterns_update_time or patterns_update_time == 0 or flush is True:
+                # Plus n + 1 so we can could let the user kwnow if there are more patterns
+                result[input_col] = df.cols.pattern(input_col, mode=mode).cols.frequency(n=n + 1)["frequency"][
+                    input_col]
 
-                result[input_col] = df.cols.pattern(input_col, mode=mode).cols.frequency()["frequency"][input_col]
+                if len(result[input_col]["values"]) > n:
+                    result[input_col].update({"more": True})
+
+                # Remove extra elemnt from list
+                result[input_col]["values"].pop()
+
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
 
@@ -1651,6 +1667,7 @@ class BaseColumns(ABC):
         value_counts = [df[col_name].astype(str).value_counts() for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
+        # print(n_largest)
 
         if count_uniques is True:
             count_uniques = [_value_counts.count() for _value_counts in value_counts]
