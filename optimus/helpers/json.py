@@ -14,13 +14,19 @@ def json_converter(obj):
 
     if not pd.isnull(obj):
         if isinstance(obj, datetime.datetime):
-            return obj.strftime('%Y-%m-%d %H:%M:%S')
+            # return obj.strftime('%Y-%m-%d %H:%M:%S')
+            return obj.isoformat()
 
         elif isinstance(obj, datetime.date):
-            return obj.strftime('%Y-%m-%d')
+            return obj.isoformat()
+            # return obj.strftime('%Y-%m-%d')
 
         elif isinstance(obj, (np.int32, np.int32, np.uint64,)):
             return int(obj)
+
+
+
+
 
 
 def json_enconding(obj):
