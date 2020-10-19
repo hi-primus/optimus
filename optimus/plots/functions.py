@@ -23,12 +23,12 @@ def plot_scatterplot(column_data=None, output=None, path=None):
     plt.xlabel(column_data["x"]["name"])
     plt.ylabel(column_data["y"]["name"])
 
-    if output is "base64":
+    if output == "base64":
         return output_base64(fig)
-    elif output is "image":
+    elif output == "image":
         output_image(fig, path)
         print_html("<img src='" + path + "'>")
-    elif output is "plot":
+    elif output == "plot":
         # Tweak spacing to prevent clipping of tick-labels
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
@@ -61,9 +61,9 @@ def plot_boxplot(column_data=None, output=None, path=None):
             # Tweak spacing to prevent clipping of tick-labels
 
         # Save as base64
-        if output is "base64":
+        if output == "base64":
             return output_base64(fig)
-        elif output is "image":
+        elif output == "image":
             output_image(fig, path)
             print_html("<img src='" + path + "'>")
 
@@ -101,12 +101,12 @@ def plot_frequency(column_data=None, output=None, path=None):
         plt.xticks(rotation=45, ha="right")
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
-        if output is "base64":
+        if output == "base64":
             return output_base64(fig)
-        elif output is "image":
+        elif output == "image":
             output_image(plt, path)
             print_html("<img src='" + path + "'>")
-        elif output is "plot":
+        elif output == "plot":
             # Tweak spacing to prevent clipping of tick-labels
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
@@ -154,15 +154,15 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
 
         # fig.tight_layout()
 
-        if output is "base64":
+        if output == "base64":
             return output_base64(fig)
-        elif output is "image":
+        elif output == "image":
             # Save image
             output_image(plt, path)
             print_html("<img src='" + path + "'>")
             # Print in jupyter notebook
 
-        elif output is "plot":
+        elif output == "plot":
             plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
@@ -180,11 +180,11 @@ def plot_correlation(cols_data, output=None, path=None):
     sns_plot = sns.heatmap(df, mask=np.zeros_like(cols_data["data"], dtype=np.bool),
                            cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
 
-    if output is "base64":
+    if output == "base64":
         # fig = sns.get_figure()
         fig = sns_plot.get_figure()
         return output_base64(fig)
-    elif output is "image":
+    elif output == "image":
         # Save image
         fig = sns_plot.get_figure()
         fig.savefig(path)
@@ -222,11 +222,11 @@ def plot_missing_values(column_data=None, output=None, path=None):
         plt.text(x=i - 0.5, y=val + (highest * 0.05), s="{}({})".format(val, label))
         i = i + 1
 
-    if output is "base64":
+    if output == "base64":
         return output_base64(fig)
-    elif output is "image":
+    elif output == "image":
         output_image(plt, path)
-    elif output is "plot":
+    elif output == "plot":
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
@@ -245,7 +245,7 @@ def plot_qqplot(col_name, sample_data, output="plot", path=None):
 
     plt.title("qqplot '" + col_name + "' ")
 
-    if output is "base64":
+    if output == "base64":
         return output_base64(fig)
-    elif output is "image":
+    elif output == "image":
         output_image(plt, path)

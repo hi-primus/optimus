@@ -251,7 +251,7 @@ class Table:
     def show(self, table_names="*", limit=None):
         db = self.db
 
-        if table_names is "*":
+        if table_names=="*":
             table_names = db.tables_names_to_json()
         else:
             table_names = val_to_list(table_names)

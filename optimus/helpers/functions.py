@@ -560,7 +560,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
-                                "bool":"bool"}
+                                "bool": "bool"}
     df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
     try:
         if where is None:

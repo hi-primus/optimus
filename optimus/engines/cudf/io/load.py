@@ -220,9 +220,9 @@ class Load:
 
                     mime_info.update(r)
                     df = Load.csv(path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
-                                  **kwargs)
+                                  **kwargs, engine="python")
                 except Exception as err:
-                    print(err)
+                    raise err
                     pass
 
         elif mime_info["file_ext"] == "xls" or mime_info["file_ext"] == "xlsx":
