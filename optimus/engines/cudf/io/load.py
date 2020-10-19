@@ -185,18 +185,17 @@ class Load:
 
         mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
         mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
-
-        if mime == "text/plain":
+        if mime == "text/plain" or "application/csv":
 
             # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
             if mime_info["encoding"] == "unknown-8bit":
                 mime_info["encoding"] = "latin-1"
 
             file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
-
             # JSON
             # Try to infer if is a valid json
-            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD:
+            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD and (
+                    file[0] == "{" or file[0] == "["):
                 mime_info["file_type"] = "json"
                 df = Load.json(full_path, *args, **kwargs)
 
