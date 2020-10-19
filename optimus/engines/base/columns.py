@@ -466,7 +466,7 @@ class BaseColumns(ABC):
 
         return df.assign(**kw_columns)
 
-    def pattern_counts(self, input_cols, n=5, mode=0, flush=False):
+    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
         """
 
         :param input_cols:
@@ -489,8 +489,9 @@ class BaseColumns(ABC):
                 patterns_update_time = 0
             if column_modified_time > patterns_update_time or patterns_update_time == 0 or flush is True:
                 # Plus n + 1 so we can could let the user kwnow if there are more patterns
-                result[input_col] = df.cols.pattern(input_col, mode=mode).cols.frequency(n=n + 1)["frequency"][
-                    input_col]
+                result[input_col] = \
+                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1)["frequency"][
+                        input_col]
 
                 if len(result[input_col]["values"]) > n:
                     result[input_col].update({"more": True})
