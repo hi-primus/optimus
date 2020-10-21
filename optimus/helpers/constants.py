@@ -27,6 +27,7 @@ class Actions(Enum):
     LOWER = "lower"
     UPPER = "upper"
     PROPER = "proper"
+    PAD = "pad"
     TRIM = "trim"
     REVERSE = "reverse"
     REMOVE_ACCENTS = "remove"

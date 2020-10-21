@@ -1101,11 +1101,11 @@ class BaseColumns(ABC):
         return df
 
     def mid(self, input_cols, start=0, n=1, output_cols=None):
-        def _right(_value, _start,_n):
+        def _min(_value, _start, _n):
             return _value.str[_start:_n]
 
         df = self.df
-        df = df.cols.apply(input_cols, _right, args=(start,n), func_return_type=str,
+        df = df.cols.apply(input_cols, _mid, args=(start, n), func_return_type=str,
                            filter_col_by_dtypes=df.constants.STRING_TYPES,
                            output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
@@ -1124,6 +1124,21 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.apply(input_cols, F.proper, func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized")
+
+    # def url_decode(self):
+    #     from urllib.parse import unquote
+    #     def title_parse(title):
+    #         title = unquote(title)
+    #         return title
+    #
+    #     # "apply" from pandas method will help to all the decode text in the csv
+    #     df['title'] = df.title.apply(title_parse)
+
+    def pad(self, input_cols="*", width=0, side="left", fillchar="0", output_cols=None, ):
+        df = self.df
+        return df.cols.apply(input_cols, F.pad, args=(width, side, fillchar,), func_return_type=str,
+                             output_cols=output_cols,
+                             meta_action=Actions.PAD.value, mode="vectorized")
 
     def trim(self, input_cols="*", output_cols=None):
         df = self.df

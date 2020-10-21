@@ -300,6 +300,10 @@ class Functions(ABC):
         return series.astype(str).str.title()
 
     @staticmethod
+    def pad(series, width, side, fillchar=""):
+        return series.astype(str).str.pad(width, side, fillchar)
+
+    @staticmethod
     def extract(series, regex):
         return series.astype(str).str.extract(regex)
 

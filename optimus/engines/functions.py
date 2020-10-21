@@ -1,6 +1,8 @@
 # Aggregations
 import math
+
 import numpy as np
+
 from optimus.engines.base.functions import Functions
 from optimus.infer import is_numeric
 
@@ -197,11 +199,15 @@ def upper(series):
     return Functions.upper(series)
 
 
+def pad(series, width, side, fillchar=""):
+    return Functions.pad(series, width, side, fillchar)
+
+
 def extract(series, regex):
     return Functions.extract(series, regex)
 
 
-def slice(series, start, stop,step):
+def slice(series, start, stop, step):
     return Functions.slice(series, start, stop, step)
 
 
