@@ -299,7 +299,8 @@ class BaseColumns(ABC):
 
                 current_meta = df.meta.get()
                 # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
-                # TODO: this seems to the only change in this function compare to pandas. Maybe this can be moved to a base class
+                # TODO: this seems to the only change in this function compare to pandas. Maybe this can
+                #  be moved to a base class
 
                 new_column = col_name[1]
                 if old_col_name != col_name:
@@ -436,6 +437,7 @@ class BaseColumns(ABC):
         ! = Any punctuation
 
         :param input_cols:
+        :param output_cols:
         :param mode:
         0: Identify lower, upper, digits. Except spaces and special chars.
         1: Identify chars, digits. Except spaces and special chars
@@ -443,6 +445,7 @@ class BaseColumns(ABC):
         3: Identify alphanumeric and special chars. Except white spaces
         :return:
         """
+
         df = self.df
         columns = prepare_columns(df, input_cols, output_cols)
 
@@ -478,16 +481,16 @@ class BaseColumns(ABC):
 
     def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
         """
-
+        Count how many equal patters there are in a columns. Handle cache to trigger the operation on if necessary
         :param input_cols:
         :param n: top n number
         :param mode:
+        :param flush: FLush cache to reprocess
         :return:
         """
 
         df = self.df
 
-        # df.meta.set("")
         result = {}
         input_cols = parse_columns(df, input_cols)
         for input_col in input_cols:
@@ -497,8 +500,11 @@ class BaseColumns(ABC):
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
-            if column_modified_time > patterns_update_time or patterns_update_time == 0 or flush is True:
-                # Plus n + 1 so we can could let the user kwnow if there are more patterns
+            cached = result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns")["values"]
+
+            if column_modified_time > patterns_update_time or patterns_update_time == 0 or flush is True or len(
+                    cached) != n:
+                # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = \
                     df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1)["frequency"][
                         input_col]
@@ -506,7 +512,7 @@ class BaseColumns(ABC):
                 if len(result[input_col]["values"]) > n:
                     result[input_col].update({"more": True})
 
-                # Remove extra elemnt from list
+                # Remove extra element from list
                 result[input_col]["values"].pop()
 
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
@@ -521,8 +527,9 @@ class BaseColumns(ABC):
         """
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns
-        :param by:
+        :param by: Column names
         :param agg:
+        :param order:
         :param args:
         :param kwargs:
         :return:
@@ -719,7 +726,6 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
         funcs = [{func.__name__: {col_name: func(df[col_name], *args)}} for col_name in columns for func in funcs]
         a = df.cols.exec_agg(funcs, compute)
-        # [func(df[col_name], *args) for col_name in columns for func in funcs]
 
         c = {}
         for i in a:
@@ -1305,8 +1311,8 @@ class BaseColumns(ABC):
         df = self.df
 
         def _fill_na(series, *args):
-            value = args[0]
-            return series.fillna(value)
+            _value = args[0]
+            return series.fillna(_value)
 
         return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
 
@@ -1467,7 +1473,8 @@ class BaseColumns(ABC):
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
-        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2), (output_col_2_1, output_col_2]
+        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
+        (output_col_2_1, output_col_2]
         :param separator: char or regex
         :param splits: Number of columns splits.
         :param index: Return a specific index per columns. [1,2]
@@ -1521,11 +1528,11 @@ class BaseColumns(ABC):
         if drop is True:
             df = df.drop(columns=input_cols)
             for input_col in input_cols:
-                if input_col in output_ordered_columns: output_ordered_columns.remove(input_col)
+                if input_col in output_ordered_columns:
+                    output_ordered_columns.remove(input_col)
 
         df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
 
-        # return df
         return df.cols.move(df_new.cols.names(), "after", input_cols)
 
     @staticmethod
@@ -1557,7 +1564,6 @@ class BaseColumns(ABC):
 
         @op_delayed(df)
         def _agg_hist(values):
-            # print("values", values)
             _result = {}
             x = np.zeros(buckets - 1)
             for i in values:
@@ -1692,14 +1698,14 @@ class BaseColumns(ABC):
         @op_delayed(df)
         def series_to_dict(_series, _total_freq_count=None):
 
-            result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
+            _result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
             if _total_freq_count is None:
-                result = {_series.name: {"values": result}}
+                _result = {_series.name: {"values": _result}}
             else:
-                result = {_series.name: {"values": result, "count_uniques": int(_total_freq_count)}}
+                _result = {_series.name: {"values": _result, "count_uniques": int(_total_freq_count)}}
 
-            return result
+            return _result
 
         @op_delayed(df)
         def flat_dict(top_n):
@@ -1730,10 +1736,11 @@ class BaseColumns(ABC):
 
         if percentage:
             c = freq_percentage(c, op_delayed(len)(df))
-        if is_dict(c):
-            result = c
-        elif compute is True:
+
+        if compute is True:
             result = dd.compute(c)[0]
+        else:
+            result = c
 
         return result
 
@@ -1806,3 +1813,104 @@ class BaseColumns(ABC):
     @abstractmethod
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
+
+    # URL methods
+    # reged references https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s11.html
+    def host(self, input_cols, output_cols=None):
+        """
+        From https://www.hi-bumblebee.com it returns www.hi-bumblebee.com
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        def _host(value):
+            return value.str.extract(r"([a-z0-9\-._~%]+)")
+
+        df = self.df
+        return df.cols.apply(input_cols, _host, output_cols=output_cols, meta_action=Actions.HOST.value,
+                             mode="vectorized")
+
+    def domain(self, input_cols, output_cols=None):
+        """
+        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        def _domain(value):
+            return value.str.extract(r"^([a-z][a-z0-9+\-.]*):")
+
+        df = self.df
+        return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN_SCHEME.value,
+                             mode="vectorized")
+
+    def domain_scheme(self, input_cols, output_cols=None):
+        def _domain_scheme(value):
+            return value.str.extract(r"^([a-z][a-z0-9+\-.]*):")
+
+        df = self.df
+        return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
+                             meta_action=Actions.DOMAIN_SCHEME.value,
+                             mode="vectorized")
+
+    def domain_params(self, input_cols, output_cols=None):
+        def _domain_params(value):
+            return value.str.extract(r"(\?[a-z0-9\-._~%!$&'()*+,;=:@/?]*)?")
+
+        df = self.df
+        return df.cols.apply(input_cols, _domain_params, output_cols=output_cols,
+                             meta_action=Actions.DOMAIN_PARAMS.value,
+                             mode="vectorized")
+
+    def domain_path(self, input_cols, output_cols=None):
+        def _domain_path(value):
+            return value.str.extract(r"(/[a-z0-9\-._~%!$&'()*+,;=:@]+)*/?")
+
+        df = self.df
+        return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.APPLY.value,
+                             mode="vectorized")
+
+    def port(self, input_cols, output_cols=None):
+        def _domain_port(value):
+            return value.str.extract(r":([0-9]+)")
+
+        df = self.df
+        return df.cols.apply(input_cols, _domain_port, output_cols=output_cols, meta_action=Actions.PORT.value,
+                             mode="vectorized")
+
+    def subdomain(self, input_cols, output_cols=None):
+        def _subdomain(value):
+            return value.str.extract(r"(/^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]$/)")
+
+        df = self.df
+        return df.cols.apply(input_cols, _subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
+                             mode="vectorized")
+
+    # Email functions
+    def email_user(self, input_cols, output_cols=None):
+        def _email_user(value):
+            return value.str.split('@').str[0]
+
+        df = self.df
+        return df.cols.apply(input_cols, _email_user, output_cols=output_cols, meta_action=Actions.EMAIL_USER.value,
+                             mode="vectorized")
+
+    def email_domain(self, input_cols, output_cols=None):
+        def _email_domain(value):
+            # return value.str.split('@').str[1]
+            return value.str.extract(r"@(.*)")
+
+        df = self.df
+        return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
+                             mode="vectorized")
+
+    def email_extension(self, input_cols, output_cols=None):
+        def _email_extension(value):
+            return value.str.split('@').str[1].str.split('.').str[0]
+
+        df = self.df
+        return df.cols.apply(input_cols, _email_extension, output_cols=output_cols,
+                             meta_action=Actions.EMAIL_DOMAIN.value,
+                             mode="vectorized")
