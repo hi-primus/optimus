@@ -35,6 +35,7 @@ class Functions(ABC):
     # Aggregation
     @staticmethod
     def min(series):
+        print("series",type(series),series)
         return series.ext.to_float().min()
 
     @staticmethod
@@ -293,6 +294,10 @@ class Functions(ABC):
     @staticmethod
     def upper(series):
         return series.astype(str).str.upper()
+
+    @staticmethod
+    def title(series):
+        return series.astype(str).str.title()
 
     @staticmethod
     def extract(series, regex):

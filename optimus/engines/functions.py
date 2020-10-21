@@ -197,12 +197,12 @@ def upper(series):
     return Functions.upper(series)
 
 
-def extract(series):
-    return Functions.extract(series)
+def extract(series, regex):
+    return Functions.extract(series, regex)
 
 
-def slice(series):
-    return Functions.slice(series)
+def slice(series, start, stop,step):
+    return Functions.slice(series, start, stop, step)
 
 
 def percentile(series, *args):

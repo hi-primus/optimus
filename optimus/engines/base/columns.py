@@ -152,7 +152,6 @@ class BaseColumns(ABC):
         Drop a list of columns
         :param columns: Columns to be dropped
         :param regex: Regex expression to select the columns
-        :param data_type:
         :return:
         """
         df = self.df
@@ -213,7 +212,16 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = from_delayed(delayed_parts)
 
             elif mode == "vectorized" or mode == "pandas":
-                kw_columns[output_col] = func(df[input_col], *args)
+                # print("func(df[input_col], *args)",type(func(df[input_col], *args)),func(df[input_col], *args))
+                _ddf = func(df[input_col], *args)
+
+                if is_dask_dataframe(_ddf):
+                    df = df.cols.append(_ddf)
+                    # print(df["0"].head())
+                    # print("output_cols",output_cols)
+                    # df= df.cols.rename("0", output_cols)
+                else:
+                    kw_columns[output_col] = func(df[input_col], *args)
 
             elif mode == "map":
                 kw_columns[output_col] = df[input_col].map(func, *args)
@@ -229,7 +237,9 @@ class BaseColumns(ABC):
         if set_index is True:
             df = df.reset_index()
 
-        df = df.assign(**kw_columns)
+        if kw_columns:
+            df = df.assign(**kw_columns)
+        # print("output_ordered_columns",output_ordered_columns)
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -1043,21 +1053,56 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def extract(self, input_cols, output_cols=None):
-        def _extract(value, *args):
-            return F.extract(value, args)
+    def extract(self, input_cols, regex, output_cols=None):
+        def _extract(_value, _regex):
+            return F.extract(_value, _regex)
 
         df = self.df
-        return df.cols.apply(input_cols, _extract, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
+        df = df.cols.apply(input_cols, _extract, args=(regex,), func_return_type=str,
+                           filter_col_by_dtypes=df.constants.STRING_TYPES,
+                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
+
+        # def replace_regex(input_cols, regex=None, value=None, output_cols=None):
+        return df
 
     def slice(self, input_cols, start, stop, step, output_cols=None):
-        def _slice(value, *args):
-            return F.slice(value, start, stop, step)
+        def _slice(value, _start, _stop, _step):
+            return F.slice(value, _start, _stop, _step)
 
         df = self.df
-        return df.cols.apply(input_cols, _slice, func_return_type=str, filter_col_by_dtypes=df.constants.STRING_TYPES,
+        return df.cols.apply(input_cols, _slice, args=(start, stop, step), func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
+
+    def left(self, input_cols, n, output_cols=None):
+        def _left(_value, _n):
+            return _value.str[:5]
+
+        df = self.df
+        df = df.cols.apply(input_cols, _left, args=(n,), func_return_type=str,
+                           filter_col_by_dtypes=df.constants.STRING_TYPES,
+                           output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
+        return df
+
+    def right(self, input_cols, n, output_cols=None):
+        def _right(_value, _n):
+            return _value.str[-_n:]
+
+        df = self.df
+        df = df.cols.apply(input_cols, _right, args=(n,), func_return_type=str,
+                           filter_col_by_dtypes=df.constants.STRING_TYPES,
+                           output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
+        return df
+
+    def mid(self, input_cols, start=0, n=1, output_cols=None):
+        def _right(_value, _start,_n):
+            return _value.str[_start:_n]
+
+        df = self.df
+        df = df.cols.apply(input_cols, _right, args=(start,n), func_return_type=str,
+                           filter_col_by_dtypes=df.constants.STRING_TYPES,
+                           output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
+        return df
 
     def lower(self, input_cols="*", output_cols=None):
         df = self.df
@@ -1068,6 +1113,11 @@ class BaseColumns(ABC):
         df = self.df
         return df.cols.apply(input_cols, F.upper, func_return_type=str, output_cols=output_cols,
                              meta_action=Actions.UPPER.value, mode="vectorized")
+
+    def proper(self, input_cols="*", output_cols=None):
+        df = self.df
+        return df.cols.apply(input_cols, F.proper, func_return_type=str,
+                             output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized")
 
     def trim(self, input_cols="*", output_cols=None):
         df = self.df
