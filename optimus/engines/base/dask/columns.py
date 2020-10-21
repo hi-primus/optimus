@@ -92,12 +92,11 @@ class DaskBaseColumns(BaseColumns):
         return df
 
     # Date operations
-
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
+    def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values
         :param input_cols: '*', list of columns names or a single column name.
@@ -109,10 +108,10 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
 
-        def _replace_regex(value, regex, replace):
-            return value.replace(regex, replace)
+        def _replace_regex(_value, _regex, _replace):
+            return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
+        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
