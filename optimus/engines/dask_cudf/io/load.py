@@ -1,5 +1,7 @@
+import csv
 import ntpath
-
+import magic
+import os
 import dask.bag as db
 import dask_cudf
 import pandas as pd
@@ -7,6 +9,11 @@ from dask import dataframe as dd
 
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
+
+XML_THRESHOLD = 10
+JSON_THRESHOLD = 20
+BYTES_SIZE = 16384
 
 
 class Load:
@@ -153,4 +160,65 @@ class Load:
             logger.print(error)
             raise
 
+        return df
+
+    @staticmethod
+    def file(path, *args, **kwargs):
+
+        full_path, file_name = prepare_path(path)[0]
+
+        file_ext = os.path.splitext(file_name)[1].replace(".", "")
+
+        mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
+        mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
+        print(mime)
+        if mime == "text/plain" or "application/csv":
+
+            # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
+            if mime_info["encoding"] == "unknown-8bit":
+                mime_info["encoding"] = "latin-1"
+
+            file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
+            # JSON
+            # Try to infer if is a valid json
+
+            if sum([file.count(i) for i in ['{', '}', '[', ']']]) > JSON_THRESHOLD and (
+                    file[0] == "{" or file[0] == "["):
+                mime_info["file_type"] = "json"
+                df = Load.json(full_path, *args, **kwargs)
+
+            # XML
+            elif sum([file.count(i) for i in ['<', '/>']]) > XML_THRESHOLD:
+                mime_info["file_type"] = "xml"
+
+            # CSV
+            else:
+                try:
+                    dialect = csv.Sniffer().sniff(file)
+                    mime_info["file_type"] = "csv"
+
+                    r = {"properties": {"delimiter": dialect.delimiter,
+                                        "doublequote": dialect.doublequote,
+                                        "escapechar": dialect.escapechar,
+                                        "lineterminator": dialect.lineterminator,
+                                        "quotechar": dialect.quotechar,
+                                        "quoting": dialect.quoting,
+                                        "skipinitialspace": dialect.skipinitialspace}}
+
+                    mime_info.update(r)
+                    df = Load.csv(path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
+                                  **kwargs, engine="python")
+                except Exception as err:
+                    raise err
+                    pass
+
+        elif mime_info["file_ext"] == "xls" or mime_info["file_ext"] == "xlsx":
+            mime_info["file_type"] = "excel"
+            df = Load.excel(full_path, **kwargs)
+
+        else:
+            RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
+
+        # print(os.path.abspath(__file__))
+        df.meta.update("mime_info", value=mime_info)
         return df

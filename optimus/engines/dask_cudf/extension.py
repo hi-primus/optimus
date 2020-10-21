@@ -1,6 +1,9 @@
 import imgkit
-from dask_cudf.core import DataFrame
+from dask_cudf import DataFrame as DaskCUDFDataFrame
+from dask_cudf import Series as DaskCUDFSeries
 
+from optimus.engines.base.commons.functions import to_float, to_integer, to_datetime
+from optimus.engines.base.dataframe.extension import DataFrameSeriesBaseExt
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.output import print_html
@@ -47,7 +50,7 @@ def ext(self):
             return self.sample(frac=fraction, random_state=seed)
 
         @staticmethod
-        def stratified_sample(col_name, seed: int = 1) -> DataFrame:
+        def stratified_sample(col_name, seed: int = 1):
             """
             Stratified Sampling
             :param col_name:
@@ -192,4 +195,39 @@ def ext(self):
     return Ext(self)
 
 
-DataFrame.ext = property(ext)
+def ext_series(self: DaskCUDFSeries):
+    class Ext(DataFrameSeriesBaseExt):
+
+        def to_dict(self, index=True):
+            """
+            Create a dict
+            :param index: Return the series index
+            :return:
+            """
+            series = self.series
+            if index is True:
+                return series.compute().to_dict()
+            else:
+                return series.compute().to_list()
+
+        def __init__(self, series):
+            super(Ext, self).__init__(series)
+            self.series = series
+
+        def to_float(self):
+            series = self.series
+            return series.map(to_float)
+
+        def to_integer(self):
+            series = self.series
+            return series.map(to_integer)
+
+        def to_datetime(self, format):
+            series = self.series
+            return to_datetime(series, format)
+
+    return Ext(self)
+
+
+DaskCUDFDataFrame.ext = property(ext)
+DaskCUDFSeries.ext = property(ext_series)
