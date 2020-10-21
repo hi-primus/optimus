@@ -35,7 +35,6 @@ class Functions(ABC):
     # Aggregation
     @staticmethod
     def min(series):
-        print("series",type(series),series)
         return series.ext.to_float().min()
 
     @staticmethod
