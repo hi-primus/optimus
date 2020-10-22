@@ -369,6 +369,10 @@ class Functions(ABC):
         return series.str[-1 * position:]
 
     @staticmethod
+    def mid(series, _start, _n):
+        return series.str[_start:_n]
+
+    @staticmethod
     def starts_with(series, pat):
         return series.str.startswith(pat)
 

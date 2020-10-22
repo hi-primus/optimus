@@ -239,12 +239,16 @@ def rfind(series):
     return Functions.rfind(series)
 
 
-def left(series):
-    return Functions.left(series)
+def left(series, n):
+    return Functions.left(series, n)
 
 
-def right(series):
-    return Functions.right(series)
+def right(series, n):
+    return Functions.right(series, n)
+
+
+def mid(series, start, n):
+    return Functions.mid(series, start, n)
 
 
 def starts_with(series):

@@ -1087,31 +1087,24 @@ class BaseColumns(ABC):
                              output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
     def left(self, input_cols, n, output_cols=None):
-        def _left(_value, _n):
-            return _value.str[:5]
 
         df = self.df
-        df = df.cols.apply(input_cols, _left, args=(n,), func_return_type=str,
+        df = df.cols.apply(input_cols, F.left, args=(n,), func_return_type=str,
                            filter_col_by_dtypes=df.constants.STRING_TYPES,
                            output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
         return df
 
     def right(self, input_cols, n, output_cols=None):
-        def _right(_value, _n):
-            return _value.str[-_n:]
-
         df = self.df
-        df = df.cols.apply(input_cols, _right, args=(n,), func_return_type=str,
+        df = df.cols.apply(input_cols, F.right, args=(n,), func_return_type=str,
                            filter_col_by_dtypes=df.constants.STRING_TYPES,
                            output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
     def mid(self, input_cols, start=0, n=1, output_cols=None):
-        def _min(_value, _start, _n):
-            return _value.str[_start:_n]
 
         df = self.df
-        df = df.cols.apply(input_cols, _mid, args=(start, n), func_return_type=str,
+        df = df.cols.apply(input_cols, F.mid, args=(start, n), func_return_type=str,
                            filter_col_by_dtypes=df.constants.STRING_TYPES,
                            output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
