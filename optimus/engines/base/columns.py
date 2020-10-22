@@ -500,10 +500,16 @@ class BaseColumns(ABC):
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
-            cached = result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns")["values"]
 
-            if column_modified_time > patterns_update_time or patterns_update_time == 0 or flush is True or len(
-                    cached) != n:
+            _patterns_values = df.meta.get(f"profile.columns.{input_col}.patterns.values")
+            if _patterns_values is not None:
+                cached = len(_patterns_values)
+
+            if column_modified_time > patterns_update_time \
+                    or patterns_update_time == 0 \
+                    or flush is True \
+                    or cached != n:
+
                 # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = \
                     df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1)["frequency"][
