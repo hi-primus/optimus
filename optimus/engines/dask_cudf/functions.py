@@ -10,6 +10,52 @@ from optimus.engines.base.functions import Functions
 from dask_cudf import Series
 
 
+import random
+import string
+def get_random_string(length):
+    # Random string with the combination of lower and upper case
+    letters = string.ascii_letters
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
+
+
+def create_apply_row(df, input_cols, output_cols, func):
+    # Create dict input cols
+    input_temp_names = [get_random_string(8) for _ in range(len(input_cols))]
+
+    _output_cols = ({output_col: np.float64 for output_col in output_cols})
+    _input_cols = (dict(zip(input_cols, input_temp_names)))
+
+    input_values = [x + "_value_" for x in input_cols]
+
+    if len(input_temp_names) == 1:
+        _enumerate = f"""enumerate({",".join(input_temp_names)})"""
+    else:
+        _enumerate = f"""enumerate(zip({",".join(input_temp_names)}))"""
+
+    _func = (f"""
+def __func({",".join(input_temp_names)},{",".join(output_cols)}):
+    for i,({",".join(input_values)}) in {_enumerate}:
+        {output_cols[0]}[i]={func}            
+    """)
+    exec(_func, globals())
+
+    return df.apply_rows(__func, incols=_input_cols, outcols=_output_cols)
+
+
+import numpy as np
+import math
+
+
+def create_func(_df, input_cols, output_cols, func, args=None):
+    #     return create_apply_row(_df, input_cols, output_cols,func(float(f"""{output_cols[0]}_value_"""),{str(*args)}))
+    if args is not None:
+        args = str(*args)
+        _func = f"""{func}(float({input_cols[0]}_value_),{args})"""
+    else:
+        _func = f"""{func}(float({input_cols[0]}_value_))"""
+
+    return create_apply_row(_df, input_cols, output_cols, _func)
 
 def functions(self):
     class DASKCUDFFunctions(Functions):
@@ -29,6 +75,17 @@ def functions(self):
             return cudf.exp(series.ext.to_float())
 
             # return cudf.pow(1 / series.ext.to_float())
+
+        def pow(_df, input_cols, output_cols, n):
+            return create_func(_df, input_cols, output_cols, "math.pow", args=(n,))
+
+        def sqrt(self, input_cols, output_cols):
+            series = self.series
+            return create_func(series, input_cols, output_cols, "math.sqrt")
+
+        def log(_df, input_cols, output_cols):
+            return create_func(_df, input_cols, output_cols, "math.log")
+
 
         def sqrt(self):
             series = self.series
