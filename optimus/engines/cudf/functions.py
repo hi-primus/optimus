@@ -19,11 +19,11 @@ def functions(self):
 
         def kurtosis(self):
             series = self.series
-            return cudf.kurtosis(series.ext.to_float())
+            return series.ext.to_float().kurt()
 
         def skew(self):
             series = self.series
-            return cudf.skew(series.ext.to_float())
+            return series.ext.to_float().skew()
 
         def exp(self):
             series = self.series
@@ -31,7 +31,7 @@ def functions(self):
 
         def sqrt(self):
             series = self.series
-            return cudf.sqrt(series.ext.to_float())
+            return series.ext.to_float().sqrt()
 
         def unique(self, *args):
             series = self.series
@@ -41,10 +41,6 @@ def functions(self):
         # def mod(self, other):
         #     series = self.series
         #     return cudf.mod(series.ext.to_float(), other)
-
-        # def pow(self, other):
-        #     series = self.series
-        #     return cudf.power(series.ext.to_float(), other)
 
         def radians(self):
             series = self.series
@@ -60,35 +56,39 @@ def functions(self):
 
         def log(self):
             series = self.series
-            return cudf.log10(series.ext.to_float())
+            return series.ext.to_float().log() / cudf.log(10)
 
         def ceil(self):
             series = self.series
-            return cudf.ceil(series.ext.to_float())
+            return series.ext.to_float().ceil()
+
+        def floor(self):
+            series = self.series
+            return series.ext.to_float().ceil()
 
         def sin(self):
             series = self.series
-            return cudf.sin(series.ext.to_float())
+            return series.ext.to_float().sin()
 
         def cos(self):
             series = self.series
-            return cudf.cos(series.ext.to_float())
+            return series.ext.to_float().cos()
 
         def tan(self):
             series = self.series
-            return cudf.tan(series.ext.to_float())
+            return series.ext.to_float().tan()
 
         def asin(self):
             series = self.series
-            return cudf.arcsin(series.ext.to_float())
+            return series.ext.to_float().asin()
 
         def acos(self):
             series = self.series
-            return cudf.arccos(series.ext.to_float())
+            return series.ext.to_float().acos()
 
         def atan(self):
             series = self.series
-            return cudf.arctan(series.ext.to_float())
+            return series.ext.to_float().atan()
 
         def sinh(self):
             series = self.series
@@ -111,7 +111,8 @@ def functions(self):
             return 1 / self.tanh()
 
         def clip(self, lower_bound, upper_bound):
-            raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+            series = self.series
+            return series.ext.to_float().clip(float(lower_bound), float(upper_bound))
 
         def cut(self, bins):
             raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
@@ -126,11 +127,8 @@ def functions(self):
 
         def remove_accents(self):
             series = self.series
-            # print("series",type(series),series)
             if not series.isnull().all():
-                return self.remove_white_spaces(series.astype(str))
-                # TODO: Waiting for bug fix. Normalize is not working correctly https://github.com/rapidsai/cudf/issues/5812
-                # return self.remove_white_spaces(series.astype(str).str.normalize_characters())
+                return series.astype(str).str.normalize_characters()
             else:
                 return series
 
@@ -147,3 +145,4 @@ def functions(self):
 
 
 Series.functions = property(functions)
+

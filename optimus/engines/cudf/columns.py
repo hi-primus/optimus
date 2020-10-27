@@ -98,9 +98,6 @@ def cols(self: DataFrame):
                 df[output_col] = df[input_col].str.replace_multi(regex, replace_by, regex=True)
             return df
 
-        def mode(self, columns):
-            raise NotImplementedError("Not implemented error. See https://github.com/rapidsai/cudf/issues/3677")
-
         # NLP
         @staticmethod
         def stem_words(input_col):

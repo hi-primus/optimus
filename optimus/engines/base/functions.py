@@ -6,7 +6,7 @@ import dask
 import numpy as np
 
 # import cudf
-from optimus.helpers.check import is_dask_series, is_dask_dataframe
+from optimus.helpers.check import is_dask_series, is_dask_dataframe, is_dask_cudf_series
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_numeric
 
@@ -14,7 +14,7 @@ from optimus.infer import is_numeric
 def op_delayed(df):
     def inner(func):
         def wrapper(*args, **kwargs):
-            if is_dask_dataframe(df) or is_dask_series(df):  # or is_dask_cudf_dataframe(df):
+            if is_dask_dataframe(df) or is_dask_series(df) or is_dask_cudf_series(df) or is_dask_cudf_series(df):
                 return dask.delayed(func)(*args, **kwargs)
             return func(*args, **kwargs)
 
@@ -166,9 +166,8 @@ class Functions(ABC):
         return series.ext.to_float().abs()
 
     @staticmethod
-    @abstractmethod
     def exp(series):
-        pass
+        return series.ext.to_float().exp()
 
     @staticmethod
     @abstractmethod
