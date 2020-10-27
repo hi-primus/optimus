@@ -48,7 +48,7 @@ class BaseColumns(ABC):
 
         every_df = [self.df, *dfs]
 
-        rename = [[] for dff in every_df]
+        rename = [[] for _ in every_df]
 
         for key in cols_map:
             assert len(cols_map[key]) == len(every_df)
@@ -64,8 +64,8 @@ class BaseColumns(ABC):
         df = every_df[0]
 
         for i in range(len(every_df)):
-            if i == 0: continue
-            df = df.append(every_df[i])
+            if i != 0:
+                df = df.append(every_df[i])
 
         df = df.cols.select([*cols_map.keys()])
 
@@ -1711,7 +1711,6 @@ class BaseColumns(ABC):
 
         @op_delayed(df)
         def series_to_dict(_series, _total_freq_count=None):
-
             _result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
             if _total_freq_count is None:
@@ -1723,7 +1722,6 @@ class BaseColumns(ABC):
 
         @op_delayed(df)
         def flat_dict(top_n):
-
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
         @op_delayed(df)
@@ -1738,7 +1736,6 @@ class BaseColumns(ABC):
         value_counts = [df[col_name].astype(str).value_counts() for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
-        # print(n_largest)
 
         if count_uniques is True:
             count_uniques = [_value_counts.count() for _value_counts in value_counts]
