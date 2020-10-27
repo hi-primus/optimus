@@ -86,6 +86,16 @@ if importlib.util.find_spec("dask_cudf") is not None:
     DaskCUDFDataFrame.meta = property(meta)
     DaskCUDFDataFrame.schema = [MetadataDask()]
 
+if importlib.util.find_spec("ibis") is not None:
+    from ibis.expr.types import TableExpr as IbisDataFrame
+    from optimus.engines.ibis import columns, rows, extension, functions
+    # from optimus.engines.base.ibis import constants
+    from optimus.engines.ibis.io import save
+
+    IbisDataFrame.outliers = property(outliers)
+    IbisDataFrame.meta = property(meta)
+    IbisDataFrame.schema = [MetadataDask()]
+
 # if importlib.util.find_spec("vaex") is not None:
 #     from vaex import DataFrame as VaexDataFrame
 #     # import pandas as pd
@@ -104,6 +114,7 @@ class Engine(Enum):
     DASK_CUDF = "dask_cudf"
     SPARK = "spark"
     VAEX = "vaex"
+    IBIS = "ibis"
 
     @classmethod
     def list(cls):
@@ -112,30 +123,6 @@ class Engine(Enum):
 
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     logger.print("ENGINE", engine)
-    # # Monkey Patching
-    # import pandas as pd
-    # PandasDataFrame = pd.DataFrame
-    # PandasDataFrame._lib = pd
-    #
-    # # from optimus.engines.pandas import rows, columns, extension, constants, functions
-    # from optimus.engines.pandas import rows, columns, extension, constants, functions
-    # from optimus.engines.pandas.io import save
-    #
-    # PandasDataFrame.outliers = property(outliers)
-    # PandasDataFrame.meta = property(meta)
-    # PandasDataFrame.schema = [MetadataDask()]
-    #
-    # # if engine == Engine.DASK.value or engine == Engine.DASK_CUDF.value:
-    # # We are using dask for all the database operations for cudf, das_cudf and dask
-    # from dask.dataframe.core import DataFrame as DaskDataFrame
-    #
-    # from optimus.engines.dask import columns, rows, extension, functions
-    # from optimus.engines.base.dask import constants
-    # from optimus.engines.dask.io import save
-    #
-    # DaskDataFrame.outliers = property(outliers)
-    # DaskDataFrame.meta = property(meta)
-    # DaskDataFrame.schema = [MetadataDask()]
 
     if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
         import rmm
@@ -167,5 +154,11 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     elif engine == Engine.DASK_CUDF.value:
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         return DaskCUDFEngine(*args, **kwargs)
+
+    elif engine == Engine.IBIS.value:
+        from optimus.engines.ibis.engine import IbisEngine
+        return IbisEngine(*args, **kwargs)
+
+
     else:
         RaiseIt.value_error(engine, Engine.list())
