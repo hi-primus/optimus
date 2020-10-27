@@ -2,7 +2,7 @@ from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, impute
-from optimus.engines.base.dask_cudf.columns import DaskBaseColumns
+from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
 from optimus.infer import Infer
 from optimus.profiler.functions import fill_missing_var_types
