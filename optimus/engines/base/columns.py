@@ -246,7 +246,7 @@ class BaseColumns(ABC):
 
     def set(self, where=None, value=None, output_cols=None, default=None):
         """
-        Set a column value using a number a string or a expression.
+        Set a column value using a number, string or a expression.
         :param where:
         :param value:
         :param output_cols:
@@ -504,7 +504,7 @@ class BaseColumns(ABC):
             _patterns_values = df.meta.get(f"profile.columns.{input_col}.patterns.values")
             if _patterns_values is not None:
                 cached = len(_patterns_values)
-
+            
             if column_modified_time > patterns_update_time \
                     or patterns_update_time == 0 \
                     or flush is True \
@@ -518,11 +518,12 @@ class BaseColumns(ABC):
                 if len(result[input_col]["values"]) > n:
                     result[input_col].update({"more": True})
 
-                # Remove extra element from list
-                result[input_col]["values"].pop()
+                    # Remove extra element from list
+                    result[input_col]["values"].pop()
 
                 df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
+
 
             else:
                 result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns")
