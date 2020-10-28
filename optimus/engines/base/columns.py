@@ -56,7 +56,7 @@ class BaseColumns(ABC):
             for i in range(len(cols_map[key])):
                 col_name = cols_map[key][i]
                 if col_name:
-                    rename[i] = [*rename[i], (col_name, key)]
+                    rename[i] = [*rename[i], (col_name, "__output_column__"+key)]
 
         for i in range(len(rename)):
             every_df[i] = every_df[i].cols.rename(rename[i])
@@ -66,6 +66,8 @@ class BaseColumns(ABC):
         for i in range(len(every_df)):
             if i != 0:
                 df = df.append(every_df[i])
+
+        df = df.cols.rename([("__output_column__"+key, key) for key in cols_map])
 
         df = df.cols.select([*cols_map.keys()])
 
