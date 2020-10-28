@@ -1,15 +1,17 @@
 # DataFrame = pd.DataFrame
 
 import cudf
+from cudf import Series
 
 from optimus.engines.base.functions import Functions
-from cudf import Series
 
 
 def functions(self):
     class CUDFFunctions(Functions):
         def __init__(self, df):
             super(CUDFFunctions, self).__init__(df)
+
+
 
         def count_zeros(self, *args):
             # Cudf can not handle null so we fill it with non zero values.
@@ -145,4 +147,3 @@ def functions(self):
 
 
 Series.functions = property(functions)
-

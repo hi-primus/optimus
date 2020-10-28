@@ -10,6 +10,13 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 
 
+def to_string(value, *args):
+    try:
+        return value.astype(str)
+    except TypeError:
+        return np.nan
+
+
 def to_integer(value, *args):
     try:
         # fastnumbers can only handle string or numeric values. Not None, dates or list
@@ -35,6 +42,10 @@ def to_datetime(value, format):
 
 def hist(series, bins):
     return np.histogram(series.ext.to_float(), bins=bins)
+
+
+def to_string_cudf(value, *args):
+    return value.astype(str)
 
 
 def to_integer_cudf(value, *args):

@@ -6,7 +6,8 @@ from cudf.core import DataFrame
 from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
-from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf, string_to_index, index_to_string
+from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf, string_to_index, index_to_string, \
+    to_string_cudf
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -31,6 +32,13 @@ def cols(self: DataFrame):
             df = self.df
             df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
             return df
+
+        def to_string(self, input_cols, output_cols=None):
+            df = self.df
+
+            return df.cols.apply(input_cols, to_string_cudf, output_cols=output_cols,
+                                 meta_action=Actions.TO_STRING.value,
+                                 mode="vectorized")
 
         def to_integer(self, input_cols, output_cols=None):
 
