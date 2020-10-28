@@ -322,9 +322,6 @@ def cols(self: DataFrame):
             if output_cols is None:
                 RaiseIt.value_error(output_cols, ["string"])
 
-            # if value is None:
-            #     RaiseIt.value_error(output_cols, ["string"])
-
             columns, vfunc = set_function_parser(df, value, where, default)
             # if df.cols.dtypes(input_col) == "category":
             #     try:
@@ -339,7 +336,7 @@ def cols(self: DataFrame):
             else:
                 final_value = df
             final_value = set_func(final_value, value=value, where=where, output_col=output_cols,
-                                   parser=vfunc, default=default, meta=object)
+                                   parser=vfunc, default=default)
 
             df.meta.preserve(df, Actions.SET.value, output_cols)
             kw_columns = {output_cols: final_value}

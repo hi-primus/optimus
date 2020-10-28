@@ -560,17 +560,18 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
-                                "bool": "bool"}
+                                "bool": "bool", "zip_code": "str"}
     df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
     try:
         if where is None:
             return eval(value)
         else:
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
+
             mask = (eval(where))
+
             if (output_col not in pdf.cols.names()) and (default is not None):
                 pdf[output_col] = pdf[default]
-
             pdf.loc[mask, output_col] = eval(value)
             return pdf[output_col]
 
@@ -583,7 +584,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
 
 def set_function_parser(df, value, where, default=None):
     """
-    We infer the data type that must be used to make a calculation using the set function
+    Infer the data type that must be used to make a calculation using the set function
     :param df:
     :param value:
     :param where:
