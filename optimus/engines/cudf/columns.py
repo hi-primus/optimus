@@ -10,7 +10,8 @@ from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cud
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
-from optimus.infer import profiler_dtype_func
+from optimus.helpers.core import val_to_list
+from optimus.infer import profiler_dtype_func, is_list_of_tuples
 
 
 def cols(self: DataFrame):
@@ -247,6 +248,63 @@ def cols(self: DataFrame):
             df = self.df
             le = preprocessing.LabelEncoder()
             return index_to_string(df, input_cols, output_cols, le)
+
+        def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False, mode="string"):
+
+            """
+            Split an array or string in different columns
+            :param input_cols: Columns to be un-nested
+            :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
+            (output_col_2_1, output_col_2]
+            :param separator: char or regex
+            :param splits: Number of columns splits.
+            :param index: Return a specific index per columns. [1,2]
+            :param drop:
+            :param mode:
+            """
+            df = self.df
+
+            # if separator is not None:
+            #     separator = re.escape(separator)
+
+            input_cols = parse_columns(df, input_cols)
+
+            index = val_to_list(index)
+            output_ordered_columns = df.cols.names()
+
+            for idx, input_col in enumerate(input_cols):
+
+                if is_list_of_tuples(index):
+                    final_index = index[idx]
+                else:
+                    final_index = index
+
+                if mode == "string":
+
+                    df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits)
+                    final_splits = df_new.cols.count()
+                    if output_cols is None:
+                        final_columns = [input_col + "_" + str(i) for i in range(final_splits)]
+                    elif is_list_of_tuples(output_cols):
+                        final_columns = output_cols[idx]
+                    else:
+                        final_columns = [output_cols + "_" + str(i) for i in range(final_splits)]
+
+                # If columns split is shorter than the number of splits
+                df_new.columns = final_columns[:len(df_new.columns)]
+                if final_index:
+                    df_new = df_new.cols.select(final_index[idx])
+                df = df.cols.append(df_new)
+
+            if drop is True:
+                df = df.drop(columns=input_cols)
+                for input_col in input_cols:
+                    if input_col in output_ordered_columns:
+                        output_ordered_columns.remove(input_col)
+
+            df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
+
+            return df.cols.move(df_new.cols.names(), "after", input_cols)
 
     return Cols(self)
 
