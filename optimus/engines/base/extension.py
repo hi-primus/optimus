@@ -36,6 +36,11 @@ class BaseExt(ABC):
 
     @staticmethod
     @abstractmethod
+    def delayed(func):
+        pass
+
+    @staticmethod
+    @abstractmethod
     def cache():
         pass
 
