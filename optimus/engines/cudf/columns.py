@@ -10,7 +10,9 @@ from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cud
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.functions import set_function_parser, set_func
+from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import profiler_dtype_func, is_list_of_tuples
 
 
@@ -34,7 +36,7 @@ def cols(self: DataFrame):
 
             df = self.df
             return df.cols.apply(input_cols, to_integer_cudf, output_cols=output_cols,
-                                 meta_action=Actions.TO_FLOAT.value,
+                                 meta_action=Actions.TO_INTEGER.value,
                                  mode="pandas")
 
         def to_float(self, input_cols="*", output_cols=None):
@@ -249,7 +251,8 @@ def cols(self: DataFrame):
             le = preprocessing.LabelEncoder()
             return index_to_string(df, input_cols, output_cols, le)
 
-        def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False, mode="string"):
+        def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False,
+                   mode="string"):
 
             """
             Split an array or string in different columns
@@ -305,6 +308,42 @@ def cols(self: DataFrame):
             df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
 
             return df.cols.move(df_new.cols.names(), "after", input_cols)
+
+        def set(self, where=None, value=None, output_cols=None, default=None):
+            """
+            Set a column value using a number, string or a expression.
+            :param where:
+            :param value:
+            :param output_cols:
+            :param default:
+            :return:
+            """
+            df = self.df
+            if output_cols is None:
+                RaiseIt.value_error(output_cols, ["string"])
+
+            # if value is None:
+            #     RaiseIt.value_error(output_cols, ["string"])
+
+            columns, vfunc = set_function_parser(df, value, where, default)
+            # if df.cols.dtypes(input_col) == "category":
+            #     try:
+            #         # Handle error if the category already exist
+            #         df[input_vcol] = df[input_col].cat.add_categories(val_to_list(value))
+            #     except ValueError:
+            #         pass
+
+            output_cols = one_list_to_val(output_cols)
+            if columns:
+                final_value = df[columns]
+            else:
+                final_value = df
+            final_value = set_func(final_value, value=value, where=where, output_col=output_cols,
+                                   parser=vfunc, default=default, meta=object)
+
+            df.meta.preserve(df, Actions.SET.value, output_cols)
+            kw_columns = {output_cols: final_value}
+            return df.assign(**kw_columns)
 
     return Cols(self)
 
