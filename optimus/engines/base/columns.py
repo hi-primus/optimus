@@ -13,7 +13,6 @@ from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
 from optimus.engines import functions as F
-from optimus.engines.base.functions import op_delayed
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
@@ -1566,7 +1565,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
 
-        @op_delayed(df)
+        @df.ext.delayed
         def _bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
                     col_name
@@ -1577,13 +1576,13 @@ class BaseColumns(ABC):
         _max = df.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @op_delayed(df)
+        @df.ext.delayed
         def _hist(pdf, col_name, _bins):
             _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
             # i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @op_delayed(df)
+        @df.ext.delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -1716,7 +1715,7 @@ class BaseColumns(ABC):
         df = self.df
         columns = parse_columns(df, columns)
 
-        @op_delayed(df)
+        @df.ext.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j} for i, j in _series.ext.to_dict().items()]
 
@@ -1727,11 +1726,11 @@ class BaseColumns(ABC):
 
             return _result
 
-        @op_delayed(df)
+        @df.ext.delayed
         def flat_dict(top_n):
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
-        @op_delayed(df)
+        @df.ext.delayed
         def freq_percentage(_value_counts, _total_rows):
 
             for i, j in _value_counts.items():
@@ -1753,7 +1752,7 @@ class BaseColumns(ABC):
         c = flat_dict(b)
 
         if percentage:
-            c = freq_percentage(c, op_delayed(len)(df))
+            c = freq_percentage(c, df.ext.delayed(len)(df))
 
         if compute is True:
             result = dd.compute(c)[0]
