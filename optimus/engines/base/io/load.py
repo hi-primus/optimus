@@ -58,7 +58,7 @@ class BaseLoad:
                                     "skipinitialspace": dialect.skipinitialspace}}
 
                 mime_info.update(r)
-                df = self.csv(path, encoding=mime_info["encoding"], dtype=object, **mime_info["properties"],
+                df = self.csv(path, encoding=mime_info["encoding"], dtype=str, **mime_info["properties"],
                               **kwargs, engine="python")
             except Exception as err:
                 raise err

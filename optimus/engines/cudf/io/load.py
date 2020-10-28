@@ -51,7 +51,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, dtype=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -80,12 +80,15 @@ class Load(BaseLoad):
                 header = 0
             elif header is False:
                 header = None
-            # else is_float(header):
+            # The str to ["str] is due to a bug in cudf https://github.com/rapidsai/cudf/issues/6606
+            if dtype is None or dtype == str:
+                dtype = ["str"]
+                # else is_float(header):
             #     header = header
 
             df = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
-                               keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows)
+                               keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows, dtype=dtype)
             df.ext.reset()
             df.meta.set("file_name", path)
         except IOError as error:
