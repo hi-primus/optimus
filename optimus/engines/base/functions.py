@@ -2,35 +2,15 @@ import math
 import re
 from abc import abstractmethod, ABC
 
-import dask
 import numpy as np
 
-# import cudf
-from optimus.helpers.check import is_dask_series, is_dask_dataframe, is_dask_cudf_series
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_numeric
-
-
-def op_delayed(df):
-    def inner(func):
-        def wrapper(*args, **kwargs):
-            if is_dask_dataframe(df) or is_dask_series(df) or is_dask_cudf_series(df) or is_dask_cudf_series(df):
-                return dask.delayed(func)(*args, **kwargs)
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return inner
 
 
 class Functions(ABC):
     def __init__(self, series):
         self.series = series
-
-    # @staticmethod
-    # @op_delayed
-    # def _flat_dict(key_name, ele):
-    #     return {key_name: {x: y for x, y in ele.items()}}
 
     # Aggregation
     @staticmethod
@@ -132,7 +112,7 @@ class Functions(ABC):
         values, error = args
         series = series.ext.to_float()
 
-        @op_delayed(series)
+        @series.ext.delayedyed
         def to_dict(_result):
             ## In pandas if all values are non it return {} on dict
             # Dask raise an exception is all values in the series are np.nan

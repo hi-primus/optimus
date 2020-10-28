@@ -1,3 +1,4 @@
+import dask
 import humanize
 from dask.dataframe.core import DataFrame
 from dask.dataframe.core import Series
@@ -17,6 +18,14 @@ def ext(self: DataFrame):
         def __init__(self, df):
             super().__init__(df)
             self.df = df
+
+        @staticmethod
+        def delayed(func):
+
+            def wrapper(*args, **kwargs):
+                return dask.delayed(func)(*args, **kwargs)
+
+            return wrapper
 
         def cache(self):
             df = self.df
@@ -197,6 +206,13 @@ def ext(self: DataFrame):
 
 def ext_series(self: Series):
     class Ext(DataFrameSeriesBaseExt):
+
+        @staticmethod
+        def delayed(func):
+            def wrapper(*args, **kwargs):
+                return dask.delayed(func)(*args, **kwargs)
+
+            return wrapper
 
         def to_dict(self, index=True):
             """
