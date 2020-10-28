@@ -8,6 +8,13 @@ class DataFrameBaseExt(BaseExt):
     def __init__(self, df):
         super(DataFrameBaseExt, self).__init__(df)
 
+    @staticmethod
+    def delayed(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
     def cache(self):
         return self.df
 
@@ -55,6 +62,13 @@ class DataFrameSeriesBaseExt(ABC):
     def __init__(self, series):
         self.series = series
         # super(SeriesBaseExt, self).__init__(series)
+
+    @staticmethod
+    def delayed(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
 
     def to_dict(self, index=True):
         """
