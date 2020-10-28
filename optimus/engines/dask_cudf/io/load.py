@@ -48,7 +48,8 @@ class Load(BaseLoad):
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema='true', encoding="UTF-8", null_value="None", *args, **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -58,19 +59,18 @@ class Load(BaseLoad):
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
         :param null_value:
-        :param charset:
+        :param encoding:
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
         """
 
         file, file_name = prepare_path(path, "csv")[0]
-
+        print(kwargs)
         try:
-            # print(charset)
-            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                    na_values=null_value,
-                                    *args, **kwargs)
+            df = dask_cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
+                                    quoting=quoting, error_bad_lines=error_bad_lines,
+                                    keep_default_na=keep_default_na, na_values=null_value)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)
