@@ -504,7 +504,7 @@ class BaseColumns(ABC):
             _patterns_values = df.meta.get(f"profile.columns.{input_col}.patterns.values")
             if _patterns_values is not None:
                 cached = len(_patterns_values)
-            
+
             if column_modified_time > patterns_update_time \
                     or patterns_update_time == 0 \
                     or flush is True \
@@ -1301,6 +1301,9 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
+        # Cudf raise and exception if both param are not the same type
+        search = val_to_list(search)
+        replace_by = val_to_list(replace_by)
         return df.cols.apply(input_cols, func, args=(search, replace_by), func_return_type=str,
                              output_cols=output_cols,
                              meta_action=Actions.REPLACE.value, mode="vectorized")

@@ -119,7 +119,7 @@ def functions(self):
 
         def replace_string(self, search, replace_by):
             series = self.series
-            return series.str.replace(search, replace_by)
+            return series.astype(str).str.replace(search, replace_by)
 
         def remove_special_chars(self):
             series = self.series
