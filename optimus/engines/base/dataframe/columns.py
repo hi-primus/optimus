@@ -96,6 +96,8 @@ class DataFrameBaseColumns(BaseColumns):
         # TODO Find a way to implement this in cudf. This could be slow when big operations.
         if is_cudf_dataframe(df):
             _df = df.to_pandas()
+        else:
+            _df = df
 
         columns = parse_columns(df, columns)
         sub = val_to_list(sub)
