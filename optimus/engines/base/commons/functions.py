@@ -41,7 +41,8 @@ def to_integer_cudf(value, *args):
     import cudf
     series_string = value.astype(str)
     # See https://github.com/rapidsai/cudf/issues/5345
-    series = cudf.Series(series_string.str.stoi()).fillna(False)
+    # series = cudf.Series(series_string.str.stoi()).fillna(False)
+    series = cudf.Series(cudf.core.column.string.str_cast.stoi(series_string._column))
     series[
         ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
     return series
