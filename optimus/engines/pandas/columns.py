@@ -118,40 +118,7 @@ def cols(self: DataFrame):
         #             df = df[df[col_name].apply(f)]
         #         return df
 
-        @staticmethod
-        def find(columns, sub, ignore_case=False):
-            """
-            Find the start and end position for a char or substring
-            :param columns:
-            :param ignore_case:
-            :param sub:
-            :return:
-            """
-            df = self
-            columns = parse_columns(df, columns)
-            sub = val_to_list(sub)
 
-            def get_match_positions(_value, _separator):
-
-                result = None
-                if is_str(_value):
-                    # Using re.IGNORECASE in finditer not seems to work
-                    if ignore_case is True:
-                        _separator = _separator + [s.lower() for s in _separator]
-                    regex = re.compile('|'.join(_separator))
-
-                    length = [[match.start(), match.end()] for match in
-                              regex.finditer(_value)]
-                    result = length if len(length) > 0 else None
-                return result
-
-            for col_name in columns:
-                # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
-                # That could happened if we try to split a categorical column
-                # df[col_name] = df[col_name].astype("object")
-                df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
-                                                                                           args=(sub,))
-            return df
 
         @staticmethod
         def scatter(columns, buckets=10):

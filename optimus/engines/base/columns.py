@@ -1302,6 +1302,7 @@ class BaseColumns(ABC):
             RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
         # Cudf raise and exception if both param are not the same type
+        # For example [] ValueError: Cannot convert value of type list  to cudf scalar
         search = val_to_list(search)
         replace_by = val_to_list(replace_by)
         return df.cols.apply(input_cols, func, args=(search, replace_by), func_return_type=str,

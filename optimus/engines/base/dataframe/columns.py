@@ -1,12 +1,13 @@
+import re
 from functools import reduce
 
 import dask.dataframe as dd
 
 from optimus.engines.base.columns import BaseColumns
-# from optimus.engines.base.functions import to_numeric
+from optimus.helpers.check import is_cudf_dataframe
 from optimus.helpers.columns import parse_columns, get_output_cols
-from optimus.helpers.core import one_list_to_val
-from optimus.helpers.functions import set_function_parser, set_func
+from optimus.helpers.core import val_to_list
+from optimus.infer import is_str
 
 
 class DataFrameBaseColumns(BaseColumns):
@@ -65,7 +66,7 @@ class DataFrameBaseColumns(BaseColumns):
 
         return df
 
-    def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
+    def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values
         :param input_cols: '*', list of columns names or a single column name.
@@ -77,11 +78,53 @@ class DataFrameBaseColumns(BaseColumns):
 
         df = self.df
 
-        def _replace_regex(value, regex, replace):
-            return value.replace(regex, replace)
+        def _replace_regex(_value, _regex, _replace):
+            return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=[regex, value], output_cols=output_cols,
+        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+
+    def find(self, columns, sub, ignore_case=False):
+        """
+        Find the start and end position for a char or substring
+        :param columns:
+        :param ignore_case:
+        :param sub:
+        :return:
+        """
+        df = self.df
+        # TODO Find a way to implement this in cudf. This could be slow when big operations.
+        if is_cudf_dataframe(df):
+            _df = df.to_pandas()
+
+        columns = parse_columns(df, columns)
+        sub = val_to_list(sub)
+
+        def get_match_positions(_value, _separator):
+            result = None
+            if is_str(_value):
+                # Using re.IGNORECASE in finditer not seems to work
+                if ignore_case is True:
+                    _separator = _separator + [s.lower() for s in _separator]
+                regex = re.compile('|'.join(_separator))
+
+                length = [[match.start(), match.end()] for match in
+                          regex.finditer(_value)]
+                result = length if len(length) > 0 else None
+            return result
+
+        for col_name in columns:
+            # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
+            # That could happened if we try to split a categorical column
+            # df[col_name] = df[col_name].astype("object")
+            _df[col_name + "__match_positions__"] = _df[col_name].astype("object").apply(get_match_positions,
+                                                                                       args=(sub,))
+
+        if is_cudf_dataframe(df):
+            import cudf
+            df = cudf.from_pandas(_df)
+
+        return df
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
@@ -103,32 +146,6 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
-
-    def set(self, where=None, value=None, output_cols=None, default=None):
-
-        df = self.df
-
-        columns, vfunc = set_function_parser(df, value, where, default)
-        # if df.cols.dtypes(input_col) == "category":
-        #     try:
-        #         # Handle error if the category already exist
-        #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-        #     except ValueError:
-        #         pass
-
-        output_cols = one_list_to_val(output_cols)
-
-        if columns:
-            final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
-                                   default=default)
-        else:
-            final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
-                                   default=default)
-
-        kw_columns = {output_cols: final_value}
-        return df.assign(**kw_columns)
-
-    # # TODO: Check if we must use * to select all the columns
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
         df = self.df

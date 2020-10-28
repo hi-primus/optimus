@@ -164,22 +164,6 @@ def cols(self: DataFrame):
         def max_abs_scaler(input_cols, output_cols=None):
             pass
 
-        @staticmethod
-        def find(input_cols, sub):
-            """
-            Find the position for a char or substring
-            :param input_cols:
-            :param sub:
-            :return:
-            """
-            df = self
-
-            def get_match_positions(_value, _separator):
-                length = [[match.start(), match.end()] for match in re.finditer(_separator, _value)]
-                return length if len(length) > 0 else None
-
-            df["__match_positions__"] = df[input_cols].to_pandas().apply(get_match_positions, args=sub)
-            return df
 
         @staticmethod
         def is_match(columns, dtype, invert=False):
