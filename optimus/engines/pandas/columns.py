@@ -1,14 +1,9 @@
-import re
-
 import pandas as pd
 from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
+from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list
-from optimus.infer import is_str
 
 DataFrame = pd.DataFrame
 
@@ -29,6 +24,17 @@ def cols(self: DataFrame):
             df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
             return df
 
+        def find(self, columns, sub, ignore_case=False):
+            """
+            Find the start and end position for a char or substring
+            :param columns:
+            :param ignore_case:
+            :param sub:
+            :return:
+            """
+            df = self.df
+            return find(df, columns, sub, ignore_case)
+
         @staticmethod
         def to_timestamp(input_cols, date_format=None, output_cols=None):
             pass
@@ -40,7 +46,6 @@ def cols(self: DataFrame):
                                  mode="vectorized")
 
         def to_integer(self, input_cols, output_cols=None):
-
             df = self.df
 
             return df.cols.apply(input_cols, to_integer, output_cols=output_cols, meta_action=Actions.TO_INTEGER.value,
@@ -118,15 +123,12 @@ def cols(self: DataFrame):
         #             df = df[df[col_name].apply(f)]
         #         return df
 
-
-
         @staticmethod
         def scatter(columns, buckets=10):
             pass
 
         @staticmethod
         def count_by_dtypes(columns, dtype):
-
             df = self
             result = {}
             df_len = len(df)

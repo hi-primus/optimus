@@ -1,7 +1,7 @@
 import time
 from abc import abstractmethod, ABC
 from collections import OrderedDict
-
+import re
 import humanize
 import imgkit
 import jinja2
@@ -15,10 +15,11 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
-from optimus.infer import is_list_of_str, is_dict
+from optimus.infer import is_list_of_str, is_dict, is_str
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -67,6 +68,8 @@ class BaseExt(ABC):
             result = json.dumps(df.ext.to_dict(), ensure_ascii=False, default=json_converter)
 
         return result
+
+
 
     def to_dict(self):
         """

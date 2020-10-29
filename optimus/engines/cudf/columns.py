@@ -1,5 +1,3 @@
-import re
-
 import cudf
 import cupy as cp
 from cudf.core import DataFrame
@@ -7,7 +5,7 @@ from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.commons.functions import to_integer_cudf, to_float_cudf, string_to_index, index_to_string, \
-    to_string_cudf
+    to_string_cudf, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -32,6 +30,22 @@ def cols(self: DataFrame):
             df = self.df
             df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
             return df
+
+        def find(self, columns, sub, ignore_case=False):
+            """
+            Find the start and end position for a char or substring
+            :param columns:
+            :param ignore_case:
+            :param sub:
+            :return:
+            """
+            import cudf
+            df = self.df
+            _df = cudf.to_pandas(df)
+
+            _df = find(_df, columns, sub, ignore_case)
+
+            return _df.to_pandas()
 
         def to_string(self, input_cols, output_cols=None):
             df = self.df
@@ -171,7 +185,6 @@ def cols(self: DataFrame):
         @staticmethod
         def max_abs_scaler(input_cols, output_cols=None):
             pass
-
 
         @staticmethod
         def is_match(columns, dtype, invert=False):

@@ -15,6 +15,9 @@ class DataFrameBaseExt(BaseExt):
 
         return wrapper
 
+    def find(self, columns, sub, ignore_case=False):
+        pass
+
     def cache(self):
         return self.df
 
