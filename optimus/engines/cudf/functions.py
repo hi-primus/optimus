@@ -136,7 +136,7 @@ def functions(self):
 
         def date_format(self, current_format=None, output_format=None):
             series = self.series
-            return cudf.to_datetime(series).astype('str', format=output_format)
+            return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
         def years_between(self, date_format=None):
             series = self.series
