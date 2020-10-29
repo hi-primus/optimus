@@ -1,3 +1,4 @@
+from optimus.engines.base.contants import LIMIT_TABLE, NUM_PARTITIONS
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import collect_as_list
 from optimus.helpers.logger import logger
@@ -8,9 +9,6 @@ from optimus.engines.spark.spark import Spark
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
-LIMIT = 1000
-LIMIT_TABLE = 10
-NUM_PARTITIONS = 10
 
 
 class JDBC:

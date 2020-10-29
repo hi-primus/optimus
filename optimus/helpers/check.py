@@ -33,7 +33,6 @@ def is_column_a(df, column=None, dtypes="str"):
 
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
-    # print("DTYPES", dtypes)
     data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
     column = one_list_to_val(column)
 
