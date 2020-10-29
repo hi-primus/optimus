@@ -41,11 +41,12 @@ def cols(self: DataFrame):
             """
             import cudf
             df = self.df
-            _df = cudf.to_pandas(df)
+            # TODO: This could be slow try to implement the find function in cudf
+            df = df.to_pandas()
 
-            _df = find(_df, columns, sub, ignore_case)
+            df = find(df, columns, sub, ignore_case)
 
-            return _df.to_pandas()
+            return cudf.from_pandas(df)
 
         def to_string(self, input_cols, output_cols=None):
             df = self.df
