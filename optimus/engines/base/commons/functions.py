@@ -1,3 +1,5 @@
+import re
+
 import fastnumbers
 import numpy as np
 import pandas as pd
@@ -6,8 +8,11 @@ from dask_ml.impute import SimpleImputer
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
 from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
+from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_str
 
 
 def to_string(value, *args):
@@ -152,6 +157,41 @@ def index_to_string(df, input_cols, output_cols=None, le=None, **kwargs):
                          meta_action=Actions.INDEX_TO_STRING.value,
                          mode="vectorized", default=INDEX_TO_STRING)
 
+
+def find(df, columns, sub, ignore_case=False):
+    """
+    Find the start and end position for a char or substring
+    :param columns:
+    :param ignore_case:
+    :param sub:
+    :return:
+    """
+
+    columns = parse_columns(df, columns)
+    sub = val_to_list(sub)
+
+    def get_match_positions(_value, _separator):
+        result = None
+        if is_str(_value):
+            # Using re.IGNORECASE in finditer not seems to work
+            if ignore_case is True:
+                _separator = _separator + [s.lower() for s in _separator]
+            regex = re.compile('|'.join(_separator))
+
+            length = [[match.start(), match.end()] for match in
+                      regex.finditer(_value)]
+            result = length if len(length) > 0 else None
+        return result
+
+    for col_name in columns:
+        # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
+        # That could happened if we try to split a categorical column
+        # df[col_name] = df[col_name].astype("object")
+        df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
+                                                                                   args=(sub,))
+
+
+    return df
 # def _cast_date(value, format="YYYY-MM-DD"):
 #     if pd.isnull(value):
 #         return np.nan

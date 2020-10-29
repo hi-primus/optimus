@@ -84,50 +84,6 @@ class DataFrameBaseColumns(BaseColumns):
         return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def find(self, columns, sub, ignore_case=False):
-        """
-        Find the start and end position for a char or substring
-        :param columns:
-        :param ignore_case:
-        :param sub:
-        :return:
-        """
-        df = self.df
-        # TODO Find a way to implement this in cudf. This could be slow when big operations.
-        if is_cudf_dataframe(df):
-            _df = df.to_pandas()
-        else:
-            _df = df
-
-        columns = parse_columns(df, columns)
-        sub = val_to_list(sub)
-
-        def get_match_positions(_value, _separator):
-            result = None
-            if is_str(_value):
-                # Using re.IGNORECASE in finditer not seems to work
-                if ignore_case is True:
-                    _separator = _separator + [s.lower() for s in _separator]
-                regex = re.compile('|'.join(_separator))
-
-                length = [[match.start(), match.end()] for match in
-                          regex.finditer(_value)]
-                result = length if len(length) > 0 else None
-            return result
-
-        for col_name in columns:
-            # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
-            # That could happened if we try to split a categorical column
-            # df[col_name] = df[col_name].astype("object")
-            _df[col_name + "__match_positions__"] = _df[col_name].astype("object").apply(get_match_positions,
-                                                                                       args=(sub,))
-
-        if is_cudf_dataframe(df):
-            import cudf
-            df = cudf.from_pandas(_df)
-
-        return df
-
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
