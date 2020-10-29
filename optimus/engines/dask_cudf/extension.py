@@ -216,11 +216,11 @@ def ext_series(self: DaskCUDFSeries):
 
         def to_float(self):
             series = self.series
-            return series.map(to_float)
+            return series.map_partitions(to_float_cudf)
 
         def to_integer(self):
             series = self.series
-            return series.map(to_integer)
+            return series.map_partitions(to_integer_cudf)
 
         def to_datetime(self, format):
             series = self.series
