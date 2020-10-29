@@ -33,9 +33,9 @@ class Actions(Enum):
     REMOVE_ACCENTS = "remove"
     REMOVE_SPECIAL_CHARS = "remove"
     REMOVE_WHITE_SPACES = "remove"
-    LEFT="left"
-    RIGHT="right"
-    MID="mid"
+    LEFT = "left"
+    RIGHT = "right"
+    MID = "mid"
     REPLACE = "replace"
     REPLACE_REGEX = "replace"
     FILL_NA = "fill_na"
@@ -64,9 +64,27 @@ class Actions(Enum):
     CUT = "cut"
     TO_FLOAT = "to_float"
     TO_INTEGER = "to_integer"
+    TO_STRING = "to_string"
     YEAR = "years"
     APPEND = "append"
+    PORT = "port"
 
+    # URL Example	http://search.somedb.com:8080/history?era=darkages
+    # scheme	http
+    # hostname	search.somedb.com
+    # port	    8080
+    # origin	http://search.somedb.com:8080
+    # path	    /history
+    # query	    ?era=darkages
+    DOMAIN = "domain"
+    DOMAIN_SCHEME = "domain_scheme"
+    SUBDOMAIN = "subdomain"
+    HOST = "host"
+    DOMAIN_PARAMS = "domain_params"
+    DOMAIN_PATH = "domain_path"
+
+    EMAIL_DOMAIN = "email_domain"
+    EMAIL_USER = "email_user"
 
     # ROWS
     SELECT_ROW = "select_row"
@@ -106,8 +124,6 @@ class ProfilerDataTypes(Enum):
     HTTP_CODE = "http_code"
     US_STATE = "us_state"
 
-
-
     @staticmethod
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))
@@ -122,7 +138,8 @@ PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOL
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
                           ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
                           ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
-                          ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER, ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value,
+                          ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER,
+                          ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value,
                           ProfilerDataTypes.HTTP_CODE.value, ProfilerDataTypes.US_STATE.value]
 
 # Strings and Function Messages

@@ -99,6 +99,8 @@ def str_to_gender(value, compile=False):
     return str_to(value, regex_gender, regex_gender_compiled, compile)
 
 
+regex_full_url = r"^((.*)://)?((\w+)\.)?([A-Za-z0-9\-\.]+)?:?([0-9]+)?(/(\w+)?\??(\+)?(.+)?)$"
+
 regex_url = "(http|https|ftp|s3):\/\/.?[a-zA-Z]*.\w*.[a-zA-Z0-9]*\/?[a-zA-z_-]*.?[a-zA-Z]*\/?"
 regex_url_compiled = re.compile(regex_url, re.IGNORECASE)
 

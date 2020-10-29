@@ -23,7 +23,7 @@ from optimus.helpers.functions import collect_as_list, set_function_parser, set_
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
     regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
-    is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES
+    is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
 
@@ -1832,22 +1832,6 @@ class BaseColumns(ABC):
         pass
 
     # URL methods
-    # reged references https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s11.html
-    def host(self, input_cols, output_cols=None):
-        """
-        From https://www.hi-bumblebee.com it returns www.hi-bumblebee.com
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-
-        def _host(value):
-            return value.str.extract(r"([a-z0-9\-._~%]+)")
-
-        df = self.df
-        return df.cols.apply(input_cols, _host, output_cols=output_cols, meta_action=Actions.HOST.value,
-                             mode="vectorized")
-
     def domain(self, input_cols, output_cols=None):
         """
         From https://www.hi-bumblebee.com it returns hi-bumblebee.com
@@ -1857,15 +1841,15 @@ class BaseColumns(ABC):
         """
 
         def _domain(value):
-            return value.str.extract(r"^([a-z][a-z0-9+\-.]*):")
+            return value.str.extract(regex_full_url)[4]
 
         df = self.df
-        return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN_SCHEME.value,
+        return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
     def domain_scheme(self, input_cols, output_cols=None):
         def _domain_scheme(value):
-            return value.str.extract(r"^([a-z][a-z0-9+\-.]*):")
+            return value.str.extract(regex_full_url)[1]
 
         df = self.df
         return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
@@ -1874,7 +1858,7 @@ class BaseColumns(ABC):
 
     def domain_params(self, input_cols, output_cols=None):
         def _domain_params(value):
-            return value.str.extract(r"(\?[a-z0-9\-._~%!$&'()*+,;=:@/?]*)?")
+            return value.str.extract(regex_full_url)[9]
 
         df = self.df
         return df.cols.apply(input_cols, _domain_params, output_cols=output_cols,
@@ -1883,32 +1867,32 @@ class BaseColumns(ABC):
 
     def domain_path(self, input_cols, output_cols=None):
         def _domain_path(value):
-            return value.str.extract(r"(/[a-z0-9\-._~%!$&'()*+,;=:@]+)*/?")
+            return value.str.extract(regex_full_url)[7]
 
         df = self.df
-        return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.APPLY.value,
+        return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.DOMAIN_PATH.value,
                              mode="vectorized")
 
     def port(self, input_cols, output_cols=None):
-        def _domain_port(value):
-            return value.str.extract(r":([0-9]+)")
+        def _port(value):
+            return value.str.extract(regex_full_url)[5]
 
         df = self.df
-        return df.cols.apply(input_cols, _domain_port, output_cols=output_cols, meta_action=Actions.PORT.value,
+        return df.cols.apply(input_cols, _port, output_cols=output_cols, meta_action=Actions.PORT.value,
                              mode="vectorized")
 
     def subdomain(self, input_cols, output_cols=None):
         def _subdomain(value):
-            return value.str.extract(r"(/^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]$/)")
+            return value.str.extract(regex_full_url)[3]
 
         df = self.df
         return df.cols.apply(input_cols, _subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
                              mode="vectorized")
 
     # Email functions
-    def email_user(self, input_cols, output_cols=None):
+    def email_username(self, input_cols, output_cols=None):
         def _email_user(value):
-            return value.str.split('@').str[0]
+            return value.str.split('@')[0]
 
         df = self.df
         return df.cols.apply(input_cols, _email_user, output_cols=output_cols, meta_action=Actions.EMAIL_USER.value,
@@ -1917,17 +1901,9 @@ class BaseColumns(ABC):
     def email_domain(self, input_cols, output_cols=None):
         def _email_domain(value):
             # return value.str.split('@').str[1]
-            return value.str.extract(r"@(.*)")
+            # return value.str.extract(r"@(.*)")
+            return value.str.split('@')[1]
 
         df = self.df
         return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
-                             mode="vectorized")
-
-    def email_extension(self, input_cols, output_cols=None):
-        def _email_extension(value):
-            return value.str.split('@').str[1].str.split('.').str[0]
-
-        df = self.df
-        return df.cols.apply(input_cols, _email_extension, output_cols=output_cols,
-                             meta_action=Actions.EMAIL_DOMAIN.value,
                              mode="vectorized")
