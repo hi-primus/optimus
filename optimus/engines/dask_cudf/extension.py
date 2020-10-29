@@ -2,7 +2,7 @@ import imgkit
 from dask_cudf import DataFrame as DaskCUDFDataFrame
 from dask_cudf import Series as DaskCUDFSeries
 
-from optimus.engines.base.commons.functions import to_float, to_integer, to_datetime
+from optimus.engines.base.commons.functions import to_datetime, to_float_cudf, to_integer_cudf
 from optimus.engines.base.dataframe.extension import DataFrameSeriesBaseExt
 from optimus.engines.base.extension import BaseExt
 from optimus.helpers.functions import random_int, absolute_path
@@ -206,9 +206,9 @@ def ext_series(self: DaskCUDFSeries):
             """
             series = self.series
             if index is True:
-                return series.compute().to_dict()
+                return series.compute().to_pandas().to_dict()
             else:
-                return series.compute().to_list()
+                return series.compute().to_arrow().to_pylist()
 
         def __init__(self, series):
             super(Ext, self).__init__(series)
