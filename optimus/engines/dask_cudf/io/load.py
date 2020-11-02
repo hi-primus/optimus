@@ -56,8 +56,12 @@ class Load(BaseLoad):
 
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
+        :param keep_default_na:
+        :param error_bad_lines:
+        :param lineterminator:
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
+        :param quoting:
         :param null_value:
         :param encoding:
         It requires one extra pass over the data. 'true' default.
@@ -66,9 +70,8 @@ class Load(BaseLoad):
         """
 
         file, file_name = prepare_path(path, "csv")[0]
-        print(kwargs)
         try:
-            df = dask_cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
+            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                     quoting=quoting, error_bad_lines=error_bad_lines,
                                     keep_default_na=keep_default_na, na_values=null_value)
             df.meta.set("file_name", file_name)
