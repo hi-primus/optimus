@@ -1,3 +1,4 @@
+import dask
 import imgkit
 from dask_cudf import DataFrame as DaskCUDFDataFrame
 from dask_cudf import Series as DaskCUDFSeries
@@ -17,6 +18,13 @@ def ext(self):
         def __init__(self, df):
             super().__init__(df)
             self.df = df
+
+        @staticmethod
+        def delayed(func):
+            def wrapper(*args, **kwargs):
+                return dask.delayed(func)(*args, **kwargs)
+
+            return wrapper
 
         def cache(self):
             df = self.df
@@ -197,6 +205,12 @@ def ext(self):
 
 def ext_series(self: DaskCUDFSeries):
     class Ext(DataFrameSeriesBaseExt):
+        @staticmethod
+        def delayed(func):
+            def wrapper(*args, **kwargs):
+                return dask.delayed(func)(*args, **kwargs)
+
+            return wrapper
 
         def to_dict(self, index=True):
             """
