@@ -21,7 +21,6 @@ def ext(self: DataFrame):
 
         @staticmethod
         def delayed(func):
-
             def wrapper(*args, **kwargs):
                 return dask.delayed(func)(*args, **kwargs)
 

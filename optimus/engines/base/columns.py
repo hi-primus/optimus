@@ -480,6 +480,7 @@ class BaseColumns(ABC):
 
         return df.assign(**kw_columns)
 
+    # TODO: Consider implement lru_cache for caching
     def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
         """
         Count how many equal patters there are in a columns. Handle cache to trigger the operation on if necessary
