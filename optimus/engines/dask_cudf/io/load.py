@@ -49,7 +49,8 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, *args, **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=False, *args,
+            **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -73,7 +74,7 @@ class Load(BaseLoad):
         try:
             df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                     quoting=quoting, error_bad_lines=error_bad_lines,
-                                    keep_default_na=keep_default_na, na_values=null_value)
+                                    keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
             df.meta.set("file_name", file_name)
         except IOError as error:
             logger.print(error)

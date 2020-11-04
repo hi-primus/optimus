@@ -52,7 +52,7 @@ class Load:
 
     @staticmethod
     def csv(path, sep=",", header=True, infer_schema=True, encoding="UTF-8", null_value="None", quoting=3,
-            lineterminator="\n", error_bad_lines=False, cache=False, *args, **kwargs):
+            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -63,6 +63,7 @@ class Load:
         :param infer_schema: infers the input schema automatically from data.
         :param null_value:
         :param charset:
+        :param na_filter:
         :param lineterminator:
         :param error_bad_lines:
         It requires one extra pass over the data. True default.
@@ -78,8 +79,7 @@ class Load:
             for file_name, _ in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, na_values=null_value,
                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                 *args,
-                                 **kwargs)
+                                 na_filter=na_filter, *args, **kwargs)
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)

@@ -59,7 +59,7 @@ class BaseLoad:
 
                 mime_info.update(r)
                 df = self.csv(path, encoding=mime_info["encoding"], dtype=str, **mime_info["properties"],
-                              **kwargs, engine="python")
+                              **kwargs, engine="python", na_values='nan')
             except Exception as err:
                 raise err
                 pass

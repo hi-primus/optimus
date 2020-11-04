@@ -50,8 +50,9 @@ class Load(BaseLoad):
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, null_value=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False, *args,
+    def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False,
+            na_filter=False, *args,
             **kwargs):
 
         """
@@ -63,7 +64,7 @@ class Load(BaseLoad):
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
         :param encoding:
-        :param null_value:
+        :param na_values:
         :param n_rows:
         :param quoting:
         :param engine: 'python' or 'c'. 'python' slower but support better error handling
@@ -78,9 +79,12 @@ class Load(BaseLoad):
 
         # file, file_name = prepare_path(path, "csv")[0]
         try:
+            # From the panda docs using na_filter
+            # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
+            # passing na_filter=False can improve the performance of reading a large file.
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=True, na_values=None, engine=engine, *args,
+                             keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
                              **kwargs)
             # print(len(df))
             if n_rows > -1:
