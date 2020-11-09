@@ -591,14 +591,24 @@ class BaseColumns(ABC):
         df_right[right_on] = df_right[right_on].astype(str)
         df_right.set_index(right_on)
 
-        l_c = df_left.cols.names()[-1]
+        left_names = df_left.cols.names()
+        right_names = df_right.cols.names()
+
+        last_column_name = left_names[-1]
         # Use to reorder de output
         df_left = df_left.merge(df_right, how=how, on=on, left_on=left_on, right_on=right_on,
                                 suffixes=(suffix_left, suffix_right))
 
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
-            df_left = df_left.cols.move(left_on, "before", l_c)
+            names = df_left.cols.names()
+            last_column_name = last_column_name if last_column_name in names else last_column_name+suffix_left
+            left_on = left_on if left_on in names else left_on+suffix_left
+            right_on = right_on if right_on in names else right_on+suffix_right
+            if left_on in names:
+                df_left = df_left.cols.move(left_on, "before", last_column_name)
+            if right_on in names:
+                df_left = df_left.cols.move(right_on, "before", last_column_name)
 
         return df_left
 
