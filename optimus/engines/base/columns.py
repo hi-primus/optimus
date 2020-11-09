@@ -598,8 +598,6 @@ class BaseColumns(ABC):
 
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
-            if left_on != right_on:
-                df_left = df_left.cols.drop(right_on)
             df_left = df_left.cols.move(left_on, "before", l_c)
 
         return df_left
