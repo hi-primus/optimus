@@ -1,13 +1,11 @@
-import re
 from functools import reduce
 
 import dask.dataframe as dd
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.check import is_cudf_dataframe
 from optimus.helpers.columns import parse_columns, get_output_cols
-from optimus.helpers.core import val_to_list
-from optimus.infer import is_str
+from optimus.helpers.core import one_list_to_val
+from optimus.helpers.functions import set_function_parser, set_func
 
 
 class DataFrameBaseColumns(BaseColumns):
@@ -36,6 +34,30 @@ class DataFrameBaseColumns(BaseColumns):
     @staticmethod
     def scatter(columns, buckets=10):
         pass
+
+    def set(self, where=None, value=None, output_cols=None, default=None):
+
+        df = self.df
+
+        columns, vfunc = set_function_parser(df, value, where, default)
+        # if df.cols.dtypes(input_col) == "category":
+        #     try:
+        #         # Handle error if the category already exist
+        #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
+        #     except ValueError:
+        #         pass
+
+        output_cols = one_list_to_val(output_cols)
+
+        if columns:
+            final_value = set_func(df[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
+                                   default=default)
+        else:
+            final_value = set_func(df, value=value, where=where, output_col=output_cols, parser=vfunc,
+                                   default=default)
+
+        kw_columns = {output_cols: final_value}
+        return df.assign(**kw_columns)
 
     @staticmethod
     def standard_scaler(self, input_cols, output_cols=None):

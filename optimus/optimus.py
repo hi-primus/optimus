@@ -85,16 +85,16 @@ if importlib.util.find_spec("dask_cudf") is not None:
     DaskCUDFDataFrame.outliers = property(outliers)
     DaskCUDFDataFrame.meta = property(meta)
     DaskCUDFDataFrame.schema = [MetadataDask()]
-
-if importlib.util.find_spec("ibis") is not None:
-    from ibis.expr.types import TableExpr as IbisDataFrame
-    from optimus.engines.ibis import columns, rows, extension, functions
-    # from optimus.engines.base.ibis import constants
-    from optimus.engines.ibis.io import save
-
-    IbisDataFrame.outliers = property(outliers)
-    IbisDataFrame.meta = property(meta)
-    IbisDataFrame.schema = [MetadataDask()]
+#
+# if importlib.util.find_spec("ibis") is not None:
+#     from ibis.expr.types import TableExpr as IbisDataFrame
+#     from optimus.engines.ibis import columns, rows, extension, functions
+#     # from optimus.engines.base.ibis import constants
+#     from optimus.engines.ibis.io import save
+#
+#     IbisDataFrame.outliers = property(outliers)
+#     IbisDataFrame.meta = property(meta)
+#     IbisDataFrame.schema = [MetadataDask()]
 
 # if importlib.util.find_spec("vaex") is not None:
 #     from vaex import DataFrame as VaexDataFrame
