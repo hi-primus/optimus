@@ -1,7 +1,7 @@
 import time
 from abc import abstractmethod, ABC
 from collections import OrderedDict
-import re
+
 import humanize
 import imgkit
 import jinja2
@@ -15,23 +15,22 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
 from optimus.helpers.converter import any_dataframe_to_pandas
-from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
-from optimus.infer import is_list_of_str, is_dict, is_str
+from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
 
 
 class BaseExt(ABC):
-    _name = None
+    # _name = None
 
-    def __init__(self, df):
-        self.df = df
-        df._buffer = None
-        df._updated = None
+    def __init__(self, parent):
+        self.buffer = None
+        self.updated = None
+        self.parent = parent
         # df._buffer= None
         # self.buffer_a = None
 
@@ -69,15 +68,14 @@ class BaseExt(ABC):
 
         return result
 
-
-
     def to_dict(self):
         """
         Return a dict from a Collect result
         [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
         :return:
         """
-        df = self.df
+        df = self.parent.data
+        print("df", type(df), df)
         return collect_as_dict(df)
 
     @staticmethod
@@ -86,12 +84,13 @@ class BaseExt(ABC):
         pass
 
     def to_pandas(self):
-        df = self.df
+        df = self.parent.data
         return any_dataframe_to_pandas(df)
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
         Stratified Sampling
+        columns_type = parse_columns(df, columns_type.keys())
         :param col_name:
         :param seed:
         :return:
@@ -228,10 +227,9 @@ class BaseExt(ABC):
         return False if df.meta.get("profile.profiler_dtype") is None else True
 
     def to_delayed(self):
-        return self.df.to_delayed()
+        return self.parent.data.to_delayed()
 
-    @staticmethod
-    def calculate_cols_to_profile(df, columns):
+    def calculate_cols_to_profile(self, df, columns):
         """
         Get the columns that needs to be profiled.
         :return:
@@ -239,8 +237,8 @@ class BaseExt(ABC):
         # Metadata
         # If not empty the profiler already run.
         # So process the dataframe's metadata to get which columns need to be profiled
-
-        actions = df.meta.get("transformations.actions")
+        odf = self.parent
+        actions = odf.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
         # print("are actions", are_actions)
@@ -258,7 +256,7 @@ class BaseExt(ABC):
             return result
 
         # Process actions to check if any column must be processed
-        if BaseExt.is_cached(df):
+        if BaseExt.is_cached(odf):
             if are_actions:
 
                 def get_columns_by_action(action):
@@ -440,12 +438,11 @@ class BaseExt(ABC):
         :return:
         """
 
-        df = self.df
-
-        columns = parse_columns(df, columns)
+        columns = parse_columns(self.parent.data, columns)
         if limit is None:
             limit = 10
 
+        df = self.parent
         if limit == "all":
             data = df.cols.select(columns).ext.to_dict()
         else:
@@ -468,12 +465,10 @@ class BaseExt(ABC):
 
         if count is True:
             total_rows = df.rows.approx_count()
-        else:
-            count = None
+        # else:
+        #     count = None
 
-        if limit == "all":
-            limit = total_rows
-        elif total_rows < limit:
+        if limit == "all" or total_rows < limit:
             limit = total_rows
 
         total_rows = humanize.intword(total_rows)
@@ -496,7 +491,7 @@ class BaseExt(ABC):
         self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
-        df = self.df
+        df = self.parent
         try:
             if __IPYTHON__:
                 # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
@@ -505,7 +500,7 @@ class BaseExt(ABC):
             else:
                 df.ext.show()
         except NameError:
-            df.show()
+            self.parent.data.head()
 
     def export(self):
         """
@@ -533,20 +528,9 @@ class BaseExt(ABC):
 
         :return:
         """
-        df = self.df
-        columns = parse_columns(df, columns)
-        return df[columns].head(n)
-
-    # @staticmethod
-    # @abstractmethod
-    # def create_id(column="id"):
-    #     """
-    #     Create a unique id for every row.
-    #     :param column: Columns to be processed
-    #     :return:
-    #     """
-    #
-    #     pass
+        odf = self.parent
+        columns = parse_columns(odf.data, columns)
+        return odf.data[columns].head(n)
 
     def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
              advanced_stats: bool = True,
@@ -580,11 +564,11 @@ class BaseExt(ABC):
             raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
     def reset(self):
-        df = self.df
-        df = df.meta.set(None, {})
+        # df = self.parent.df
+        df = self.parent.meta.set(None, {})
         return df
 
-    def profile(self, columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         """
         Return profiler info
         :param columns:
@@ -595,26 +579,23 @@ class BaseExt(ABC):
         :return:
         """
 
-        df = self.df
+        odf = self.parent
         if flush is False:
-            cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
+            cols_to_profile = self.calculate_cols_to_profile(odf.data, columns)
         else:
-            cols_to_profile = parse_columns(df, columns)
+            cols_to_profile = parse_columns(odf.data, columns)
 
-        columns = parse_columns(df, columns)
-
-        profiler_data = df.meta.get("profile")
+        profiler_data = odf.meta.get("profile")
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
 
-        if cols_to_profile or not BaseExt.is_cached(df) or flush is True:
-            df_length = len(df)
+        if cols_to_profile or not BaseExt.is_cached(odf) or flush is True:
             numeric_cols = []
             string_cols = []
-            cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
+            cols_and_inferred_dtype = odf.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
-            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
+            mismatch = odf.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
@@ -627,12 +608,12 @@ class BaseExt(ABC):
             freq_uniques = None
 
             if len(numeric_cols):
-                hist = df[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
-                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
+                hist = odf[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
+                freq_uniques = odf.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
 
             freq = None
             if len(string_cols):
-                freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
+                freq = odf.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
             # print(numeric_cols, string_cols)
 
@@ -658,44 +639,45 @@ class BaseExt(ABC):
             # Nulls
             total_count_na = 0
 
-            dtypes = df.cols.dtypes("*")
+            dtypes = odf.cols.dtypes("*")
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
-            assign(profiler_data, "name", df.ext.get_name(), dict)
-            assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
+            # assign(profiler_data, "name", odf.ext.get_name(), dict)
+            assign(profiler_data, "file_name", odf.meta.get("file_name"), dict)
 
-            data_set_info = {'cols_count': len(df.columns),
-                             'rows_count': df.rows.count(),
+            data_set_info = {'cols_count': odf.cols.count(),
+                             'rows_count': odf.rows.count(),
                              }
             if size is True:
-                data_set_info.update({'size': df.ext.size(format="human")})
+                data_set_info.update({'size': odf.ext.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            dtypes_list = list(set(df.cols.dtypes("*").values()))
+            dtypes_list = list(set(odf.cols.dtypes("*").values()))
             assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
             assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(total_count_na / df_length * 100, 2))
+            # assign(profiler_data, "summary.p_missing", round(total_count_na / df_length * 100, 2))
 
         actual_columns = profiler_data["columns"]
 
         # Order columns
+        columns = parse_columns(odf.data, columns)
         profiler_data["columns"] = dict(OrderedDict(
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.meta.columns(df.cols.names())
-        df.meta.set("transformations", value={})
-        df.meta.set("profile", profiler_data)
+        odf.meta.columns(odf.cols.names())
+        odf.meta.set("transformations", value={})
+        odf.meta.set("profile", profiler_data)
         if cols_and_inferred_dtype is not None:
-            df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+            odf.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
         # Reset Actions
-        df.meta.reset()
+        odf.meta.reset()
 
         if output == "json":
             profiler_data = dump_json(profiler_data)

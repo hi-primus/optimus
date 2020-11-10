@@ -9,8 +9,8 @@ from optimus.infer import is_numeric
 
 
 class Functions(ABC):
-    def __init__(self, series):
-        self.series = series
+    # def __init__(self, series):
+    #     self.series = series
 
     # Aggregation
     @staticmethod
@@ -322,12 +322,10 @@ class Functions(ABC):
     def len(series):
         return series.str.len()
 
-    @abstractmethod
-    def remove_special_chars(self):
+    def to_datetime(self, series, format):
         pass
 
-    @abstractmethod
-    def remove_accents(self):
+    def remove_accents(self, series):
         pass
 
     @staticmethod
@@ -372,15 +370,18 @@ class Functions(ABC):
         return series == pat
 
     # dates
-    @staticmethod
-    def year(series, format):
+
+    def to_datetime(self, series, format):
+        pass
+
+    def year(self, series, format):
         """
         :param series:
         :param format: "%Y-%m-%d HH:mm:ss"
         :return:
         """
         # return self.ext.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
-        return series.ext.to_datetime(format=format).dt.year
+        return self.to_datetime(series, format=format).dt.year
 
     @staticmethod
     def month(series, format):

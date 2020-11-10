@@ -106,20 +106,17 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        df = self.df
-
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+        return self.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+                          filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return value.astype(str).str[::-1]
 
-        df = self.df
-        return df.cols.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
 
     @staticmethod
     def astype(*args, **kwargs):

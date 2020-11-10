@@ -17,8 +17,10 @@ from optimus.infer import is_list_of_str_or_int, is_list
 class DaskBaseRows(BaseRows):
     """Base class for all Rows implementations"""
 
-    def __init__(self, df):
-        super(DaskBaseRows, self).__init__(df)
+    def __init__(self, parent):
+        # self.parent = parent
+        super().__init__(parent)
+        # super(DaskBaseRows, self).__init__(parent)
 
     def create_id(self, column="id"):
         # Reference https://github.com/dask/dask/issues/1426
@@ -53,7 +55,7 @@ class DaskBaseRows(BaseRows):
         :return:
         """
 
-        df = self.df
+        df = self.parent.data
         return df.head(count)
 
     def to_list(self, input_cols):
@@ -219,5 +221,5 @@ class DaskBaseRows(BaseRows):
         Aprox rows count
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.rows.count()

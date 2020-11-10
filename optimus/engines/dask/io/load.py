@@ -9,6 +9,7 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.new_optimus import DaskDataFrame
 
 
 class Load(BaseLoad):
@@ -52,13 +53,13 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False,
-            na_filter=False, *args,
-            **kwargs):
+            na_filter=False, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
+        :param na_filter:
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
@@ -86,16 +87,17 @@ class Load(BaseLoad):
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
                              **kwargs)
-            # print(len(df))
+            odf = DaskDataFrame(df)
+
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
-            df.ext.reset()
-            df.meta.set("file_name", path)
+            # odf.ext.reset()
+            odf.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
 
-        return df
+        return odf
 
     @staticmethod
     def parquet(path, columns=None, engine="pyarrow", *args, **kwargs):

@@ -134,7 +134,10 @@ def columns_names(df):
     # print("df",type(df),df)
     if is_spark_dataframe(df):
         columns_names = df.columns
-    elif is_pandas_dataframe(df) or is_dask_dataframe(df) or is_cudf_dataframe(df):
+    elif is_pandas_dataframe(df) or is_dask_dataframe(df):
+        columns_names = list(df.columns)
+    elif is_cudf_dataframe(df):
+
         columns_names = list(df.columns)
     else:
         columns_names = list(df.name)

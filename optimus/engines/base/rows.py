@@ -9,8 +9,8 @@ from optimus.infer import is_str
 class BaseRows(ABC):
     """Base class for all Rows implementations"""
 
-    def __init__(self, df):
-        self.df = df
+    def __init__(self, parent):
+        self.parent = parent
 
     @staticmethod
     @abstractmethod
@@ -69,7 +69,7 @@ class BaseRows(ABC):
         """
         Count dataframe rows
         """
-        df = self.df
+        df = self.parent
         if compute is True:
             result = len(df.ext.compute())
         else:
