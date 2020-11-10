@@ -26,6 +26,8 @@ from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_e
     is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
+INFER_ROWS_NUMBER = 30
+
 
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
@@ -55,7 +57,7 @@ class BaseColumns(ABC):
             for i in range(len(cols_map[key])):
                 col_name = cols_map[key][i]
                 if col_name:
-                    rename[i] = [*rename[i], (col_name, "__output_column__"+key)]
+                    rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
 
         for i in range(len(rename)):
             every_df[i] = every_df[i].cols.rename(rename[i])
@@ -66,7 +68,7 @@ class BaseColumns(ABC):
             if i != 0:
                 df = df.append(every_df[i])
 
-        df = df.cols.rename([("__output_column__"+key, key) for key in cols_map])
+        df = df.cols.rename([("__output_column__" + key, key) for key in cols_map])
 
         df = df.cols.select([*cols_map.keys()])
 
@@ -602,9 +604,9 @@ class BaseColumns(ABC):
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
             names = df_left.cols.names()
-            last_column_name = last_column_name if last_column_name in names else last_column_name+suffix_left
-            left_on = left_on if left_on in names else left_on+suffix_left
-            right_on = right_on if right_on in names else right_on+suffix_right
+            last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
+            left_on = left_on if left_on in names else left_on + suffix_left
+            right_on = right_on if right_on in names else right_on + suffix_right
             if left_on in names:
                 df_left = df_left.cols.move(left_on, "before", last_column_name)
             if right_on in names:
@@ -1695,27 +1697,34 @@ class BaseColumns(ABC):
         """
         df = self.df
         columns = parse_columns(df, columns)
-        total_preview_rows = 30
+
         # Infer the data type from every element in a Series.
-        # FIX: could this be vectorized
-        sample = df.ext.head(columns, total_preview_rows).ext.to_pandas()
+        # FIX: could this be vectorized?
+        sample = df.ext.head(columns, INFER_ROWS_NUMBER).ext.to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            _value_counts = pdf[col_name].value_counts()
-            dtype = _value_counts.index[0]
+            infer_value_counts = pdf[col_name].value_counts()
+
+            dtype = infer_value_counts.index[0]
+            pdf_dict = infer_value_counts.to_dict()
 
             if dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
-                r = dtype
-            elif _value_counts[0] < len(pdf):
-                r = _value_counts.index[1]
+                if ProfilerDataTypes.INT.value in pdf_dict and ProfilerDataTypes.DECIMAL.value in pdf_dict:
+                    # In case we have integers and decimal values no matter if we have more integer we cast to decimal
+                    r = ProfilerDataTypes.INT.value
+                else:
+                    r = dtype
+            elif infer_value_counts[0] < len(pdf):
+                r = infer_value_counts.index[1]
             else:
                 r = ProfilerDataTypes.OBJECT.value
 
             cols_and_inferred_dtype[col_name] = {"dtype": r}
-            if dtype == "date":
+            if dtype == ProfilerDataTypes.DATE.value:
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(sample[col_name].to_list())})
+        print("cols_and_inferred_dtype", cols_and_inferred_dtype)
         return cols_and_inferred_dtype
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,

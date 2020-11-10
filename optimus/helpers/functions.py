@@ -584,7 +584,7 @@ def set_func(pdf, value, where, output_col, parser, default=None):
 
 def set_function_parser(df, value, where, default=None):
     """
-    Infer the data type that must be used to make a calculation using the set function
+    Infer the data type that must be used to make result calculation using the set function
     :param df:
     :param value:
     :param where:
@@ -595,18 +595,18 @@ def set_function_parser(df, value, where, default=None):
 
     def prepare_columns(cols):
         """
-        Extract the columns names from the value and where clauses
+        Extract the columns names from the value and where params
         :param cols:
         :return:
         """
         if cols is not None:
             r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
                              re.findall(r"(df\['[A-Za-z0-9_ -]*'\])", cols.replace("\"", "'"))])
-            a = [re.findall(r"'([^']*)'", i)[0] for i in r]
+            result = [re.findall(r"'([^']*)'", i)[0] for i in r]
 
         else:
-            a = []
-        return a
+            result = []
+        return result
 
     if default is None:
         default = []
