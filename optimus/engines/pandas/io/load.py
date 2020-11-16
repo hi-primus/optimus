@@ -77,9 +77,10 @@ class Load:
             df_list = []
 
             for file_name, _ in local_file_names:
-                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, na_values=null_value,
+                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding,
+                                 na_values=null_value,
                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                 na_filter=na_filter, *args, **kwargs)
+                                 na_filter=na_filter, index=False, *args, **kwargs)
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)

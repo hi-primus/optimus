@@ -1,8 +1,7 @@
 import ibis
 
-from optimus.engines.base.contants import LIMIT_TABLE
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-from optimus.helpers.converter import dask_dataframe_to_dask_cudf
+from optimus.new_optimus import IbisDataFrame
 
 
 class JDBC(DaskBaseJDBC):
@@ -21,13 +20,5 @@ class JDBC(DaskBaseJDBC):
         return con.list_tables()
 
     def table_to_df(self, table_name, columns="*", limit=None):
-        con = ibis.mysql.connect(url=self.uri)
-        print(table_name, LIMIT_TABLE, self.uri)
-        return con.table(table_name)
-
-
-        # return dask_dataframe_to_dask_cudf(super().table_to_df(table_name, columns, limit))
-
-    # def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
-    #             table_name=None):
-    #     return super().execute(query, limit, num_partitions, partition_column, table_name).compute()
+        db = ibis.mysql.connect(url=self.uri)
+        return IbisDataFrame(db.table(table_name))

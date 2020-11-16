@@ -1596,7 +1596,7 @@ class BaseColumns(ABC):
 
         @df.ext.delayed
         def _hist(pdf, col_name, _bins):
-            _count, bins_edges = np.histogram(pdf[col_name].ext.to_float(), bins=_bins[col_name])
+            _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
             # i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 

@@ -12,7 +12,7 @@ class Ext(BaseExt):
 
     def __init__(self, df):
         super().__init__(df)
-        self.df = df
+        self.parent = df
 
     @staticmethod
     def delayed(func):

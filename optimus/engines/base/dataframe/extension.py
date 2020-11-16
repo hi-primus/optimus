@@ -31,7 +31,7 @@ class DataFrameBaseExt(BaseExt):
         pass
 
     def to_delayed(self):
-        return [self.df]
+        return [self.parent]
 
     def query(self, sql_expression):
         pass

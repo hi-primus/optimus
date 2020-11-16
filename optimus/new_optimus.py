@@ -28,8 +28,8 @@ class PandasDataFrame:
 
     @property
     def functions(self):
-        from optimus.engines.pandas.functions import DaskFunctions
-        return DaskFunctions(self)
+        from optimus.engines.pandas.functions import PandasFunctions
+        return PandasFunctions(self)
 
     @property
     def ext(self):
@@ -39,6 +39,7 @@ class PandasDataFrame:
     @property
     def meta(self):
         return Meta(self)
+
 
 class DaskDataFrame:
     def __init__(self, df):
@@ -109,7 +110,7 @@ class SparkDataFrame:
     def constants(self):
         from optimus.engines.spark.constants import Constants
         return Constants()
-    
+
     @property
     def functions(self):
         from optimus.engines.spark.functions import SparkFunctions
@@ -118,6 +119,46 @@ class SparkDataFrame:
     @property
     def ext(self):
         from optimus.engines.spark.extension import Ext
+        return Ext(self)
+
+    @property
+    def meta(self):
+        return Meta(self)
+
+
+class IbisDataFrame:
+    def __init__(self, df):
+        self.data = df
+        self.meta_data = {}
+
+    def __getitem__(self, item):
+        return self.cols.select(item)
+
+    # def __repr__(self):
+    #     self.ext.display()
+    #     return str(type(self))
+
+    def new(self, df):
+        return IbisDataFrame(df)
+
+    @property
+    def rows(self):
+        from optimus.engines.ibis.rows import Rows
+        return Rows(self)
+
+    @property
+    def cols(self):
+        from optimus.engines.ibis.columns import Cols
+        return Cols(self)
+
+    @property
+    def functions(self):
+        from optimus.engines.ibis.functions import IbisFunctions
+        return IbisFunctions(self)
+
+    @property
+    def ext(self):
+        from optimus.engines.ibis.extension import Ext
         return Ext(self)
 
     @property
