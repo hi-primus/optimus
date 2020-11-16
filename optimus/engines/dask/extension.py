@@ -22,7 +22,7 @@ class Ext(BaseExt):
         return wrapper
 
     def cache(self):
-        df = self.df
+        df = self.parent.data
         return df.persist()
 
     def compute(self):
@@ -57,14 +57,14 @@ class Ext(BaseExt):
 
         return f"{df_schema}, {df_data}"
 
-    @staticmethod
-    def sample(n=10, random=False):
+    def sample(self, n=10, random=False):
         """
         Return a n number of sample from a dataFrame
         :param n: Number of samples
         :param random: if true get a semi random sample
         :return:
         """
+        odf = self.parent
         if random is True:
             seed = random_int()
         elif random is False:
@@ -72,13 +72,13 @@ class Ext(BaseExt):
         else:
             RaiseIt.value_error(random, ["True", "False"])
 
-        rows_count = self.rows.count()
+        rows_count = odf.rows.count()
         if n < rows_count:
             # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1
             fraction = (n / rows_count) * 1.1
         else:
             fraction = 1.0
-        return self.sample(frac=fraction, random_state=seed)
+        return odf.sample(frac=fraction, random_state=seed)
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -182,7 +182,7 @@ class Ext(BaseExt):
         """
         odf = self.parent
         columns = parse_columns(odf.data, columns)
-        return self.parent.new(odf.data[columns].head(n, npartitions=-1))
+        return odf.data[columns].head(n, npartitions=-1)
 
     @staticmethod
     def create_id(column="id"):
@@ -194,17 +194,21 @@ class Ext(BaseExt):
 
         raise NotImplementedError
 
-    def to_dict(self, index=True):
+    def to_dict(self, orient="records", index=True):
         """
         Create a dict
         :param index: Return the series index
         :return:
         """
+
         series = self.parent.data
         if index is True:
-            return series.compute().to_dict()
+            return series.compute().to_dict(orient)
         else:
             return series.compute().to_list()
+
+    def to_pandas(self):
+        return self.parent.data.compute()
 
 # return Ext(self)
 #

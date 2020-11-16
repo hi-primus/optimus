@@ -9,37 +9,40 @@ from optimus.infer import is_numeric
 
 
 class Functions(ABC):
-    # def __init__(self, series):
-    #     self.series = series
+    def __init__(self, parent):
+        self.parent = parent
+
+    def to_float(self, series):
+        pass
 
     # Aggregation
-    @staticmethod
-    def min(series):
-        return series.ext.to_float().min()
+    # @staticmethod
+    def min(self, series):
+        # print(self)
+        return self.parent.new(series).cols.to_float().data.min()
+        # return series.min()
 
-    @staticmethod
-    def max(series):
-        return series.ext.to_float().max()
+    # @staticmethod
+    def max(self, series):
+        return self.parent.new(series).cols.to_float().data.max()
+        # return series.ext.to_float().max()
 
-    @staticmethod
-    def mean(series):
-        return series.ext.to_float().max()
+    def mean(self, series):
+        return self.parent.new(series).cols.to_float().data.mean()
 
-    @staticmethod
-    def mode(series):
-        return series.ext.to_float().mode().ext.to_dict(index=False)
+    def mode(self, series):
+        return self.parent.new(series).cols.to_float().data.mode()
+        # return series.ext.to_float().mode().ext.to_dict(index=False)
 
-    @staticmethod
-    def std(series):
-        return series.ext.to_float().std()
+    def std(self, series):
+        return self.parent.new(series).cols.to_float().data.std()
 
     @staticmethod
     def sum(series):
         return series.ext.to_float().sum()
 
-    @staticmethod
-    def var(series):
-        return series.ext.to_float().var()
+    def var(self, series):
+        return self.parent.new(series).cols.to_float().data.var()
 
     @staticmethod
     def count_uniques(series, estimate: bool = True, compute: bool = True):
@@ -112,7 +115,7 @@ class Functions(ABC):
         values, error = args
         series = series.ext.to_float()
 
-        @series.ext.delayedyed
+        @series.ext.delayed
         def to_dict(_result):
             ## In pandas if all values are non it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
@@ -309,7 +312,7 @@ class Functions(ABC):
         return series.astype(str).str.replace(str_regex, replace_by)
 
     @staticmethod
-    def replace_match(series, search, replace_by):
+    def replace_full(series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return series.astype(str).str.replace(str_regex, replace_by)

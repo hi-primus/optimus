@@ -9,6 +9,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
+from optimus.new_optimus import SparkDataFrame
 
 
 def has_(value, _type):
@@ -37,9 +38,10 @@ def is_column_a(df, column=None, dtypes="str"):
     column = one_list_to_val(column)
 
     # Filter columns by data type
+    # print("df",type(df),df)
     v = df.cols.schema_dtype(column)
 
-    if is_spark_dataframe(df):
+    if is_spark_dataframe(df.data):
         result = isinstance(v, data_type)
     elif is_dask_dataframe(df):
         result = v in data_type

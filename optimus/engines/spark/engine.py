@@ -339,7 +339,7 @@ class SparkEngine:
     # Jar
     def _add_jars(self, jar):
         for j in val_to_list(jar):
-            optimus.helpers.functions_spark.append(j)
+            self.jars.append(j)
 
     def _setup_jars(self):
         if self.jars:
@@ -351,7 +351,7 @@ class SparkEngine:
     def _add_driver_class_path(self, driver_class_path):
 
         for d in val_to_list(driver_class_path):
-            optimus.helpers.functions_spark.append(d)
+            self.driver_class_path.append(d)
 
     def _setup_driver_class_path(self):
 

@@ -23,8 +23,6 @@ from string_grouper import match_strings
 from optimus import ROOT_DIR
 from optimus.engines import functions as F  # Used in eval
 from optimus.helpers.check import is_url
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -43,71 +41,6 @@ def random_int(n=5):
 
 def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
-
-
-def collect_as_dict(df, limit=None):
-    """
-    Return a dict from a Collect result
-    [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-    :return:
-    """
-
-    dict_result = []
-
-    df = any_dataframe_to_pandas(df)
-
-    # if there is only an element in the dict just return the value
-    if len(dict_result) == 1:
-        dict_result = next(iter(dict_result.values()))
-    else:
-        col_names = parse_columns(df, "*")
-
-        # Because asDict can return messed columns names we order
-        for index, row in df.iterrows():
-            # _row = row.asDict()
-            r = collections.OrderedDict()
-            # for col_name, value in row.iteritems():
-            for col_name in col_names:
-                r[col_name] = row[col_name]
-            dict_result.append(r)
-    return dict_result
-
-
-# def collect_as_dict(df, limit=None):
-#     """
-#     Return a dict from a Collect result
-#     :param df:
-#     :return:
-#     """
-#     # # Explore this approach seems faster
-#     # use_unicode = True
-#     # from pyspark.serializers import UTF8Deserializer
-#     # from pyspark.rdd import RDD
-#     # rdd = df._jdf.toJSON()
-#     # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
-#     # if limit is None:
-#     #     r.collect()
-#     # else:
-#     #     r.take(limit)
-#     # return r
-#     #
-#     from optimus.helpers.columns import parse_columns
-#     dict_result = []
-#
-#     # if there is only an element in the dict just return the value
-#     if len(dict_result) == 1:
-#         dict_result = next(iter(dict_result.values()))
-#     else:
-#         col_names = parse_columns(df, "*")
-#
-#         # Because asDict can return messed columns names we order
-#         for row in df.collect():
-#             _row = row.asDict()
-#             r = collections.OrderedDict()
-#             for col in col_names:
-#                 r[col] = _row[col]
-#             dict_result.append(r)
-#     return dict_result
 
 
 def filter_list(val, index=0):
@@ -210,7 +143,8 @@ def is_pyarrow_installed():
     try:
         import pyarrow
         have_arrow = True
-    except ImportError:
+    except ImportError as e:
+        print(e)
         have_arrow = False
     return have_arrow
 

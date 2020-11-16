@@ -62,7 +62,7 @@ class Load:
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")
+        # file, file_name = prepare_path(path, "csv")
 
         try:
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,

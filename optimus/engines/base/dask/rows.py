@@ -9,6 +9,7 @@ from multipledispatch import dispatch
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
+from optimus.helpers.converter import pandas_to_dask_dataframe
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list
@@ -56,7 +57,10 @@ class DaskBaseRows(BaseRows):
         """
 
         df = self.parent.data
-        return df.head(count)
+        # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
+        # return self.parent.new(df.sample(frac=count/len(df)))
+        # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client..
+        return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
 
     def to_list(self, input_cols):
         """

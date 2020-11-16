@@ -5,13 +5,15 @@ import zipfile
 import pandas as pd
 from packaging import version
 
+from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.new_optimus import SparkDataFrame
 
 
-class Load:
+class Load(BaseLoad):
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
@@ -52,13 +54,12 @@ class Load:
 
         :return:
         """
-        df = Load.csv(path, sep='\t', header='true' if header else 'false',
-                      infer_schema='true' if infer_schema else 'false', charset=charset, *args, **kwargs)
+        df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
         df.ext.reset()
         return df
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
+    def csv(path, sep=',', header=True, infer_schema=True, encoding="UTF-8", null_value="None", n_rows=-1,
             error_bad_lines=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -68,7 +69,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
-        :param charset: Charset file encoding
+        :param encoding: Charset file encoding
         :param error_bad_lines:
         :param null_value: value to convert the string to a None value
         :param n_rows:
@@ -76,7 +77,7 @@ class Load:
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")
+        # file, file_name = prepare_path(path, "csv")
 
         try:
             read = (Spark.instance.spark.read
@@ -84,25 +85,27 @@ class Load:
                     .options(delimiter=sep)
                     .options(inferSchema='true' if infer_schema else 'false')
                     .options(nullValue=null_value)
-                    .option("charset", charset))
+                    # .options(quote=null_value)
+                    # .options(escape=escapechar)
+                    .option("charset", encoding))
 
             if error_bad_lines is True:
                 read.options(mode="FAILFAST")
             else:
                 read.options(mode="DROPMALFORMED")
 
-            df = read.csv(file, *args, **kwargs)
+            df = read.csv(path)
 
             if n_rows > -1:
                 df = df.limit(n_rows)
-
-            df.meta.set("file_name", file_name)
+            odf = SparkDataFrame(df)
+            odf.meta.set("file_name", path)
         except IOError as error:
             print(error)
             raise
-        df = replace_columns_special_characters(df)
-        df.ext.reset()
-        return df
+        odf = replace_columns_special_characters(odf)
+
+        return odf
 
     @staticmethod
     def parquet(path, *args, **kwargs):

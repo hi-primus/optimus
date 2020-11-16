@@ -17,15 +17,6 @@ class Cols(DaskBaseColumns):
         le = preprocessing.LabelEncoder()
         return index_to_string(self, input_cols, output_cols, le)
 
-    def to_float(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
-
-    def to_integer(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, to_integer, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
-                          mode="map")
-
-    def to_string(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, str, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
 
     # def hist(self, columns="*", buckets=20, compute=True):
     #     df = self.df

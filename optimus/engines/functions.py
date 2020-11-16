@@ -343,9 +343,7 @@
 #     return Functions.replace_words(series, *args)
 #
 #
-# def replace_match(series, *args):
-#     return Functions.replace_match(series, *args)
-#
+
 #
 # def remove_special_chars(series, *args):
 #     return series.functions.remove_special_chars()

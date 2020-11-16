@@ -12,7 +12,7 @@ from dask import dataframe as dd
 from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
-from optimus.engines.dask.functions import DaskFunctions as F
+# from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
@@ -32,6 +32,7 @@ class BaseColumns(ABC):
 
     def __init__(self, parent):
         self.parent = parent
+        self.F = self.parent.functions
         # self.df.schema[-1].metadata = df.schema[-1].metadata
 
     @abstractmethod
@@ -187,7 +188,7 @@ class BaseColumns(ABC):
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None):
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
 
         df = self.parent.data
 
@@ -278,16 +279,16 @@ class BaseColumns(ABC):
         :param func: can be lower, upper or any string transformation function
         """
 
-        df = self.df
+        df = self.parent
 
         # Apply a transformation function
         if is_list_of_tuples(columns_old_new):
-            validate_columns_names(df, columns_old_new)
+            validate_columns_names(df.data, columns_old_new)
             for col_name in columns_old_new:
 
                 old_col_name = col_name[0]
                 if is_int(old_col_name):
-                    old_col_name = df.schema.names[old_col_name]
+                    old_col_name = df.cols.names()[old_col_name]
                 if func:
                     old_col_name = func(old_col_name)
 
@@ -298,7 +299,7 @@ class BaseColumns(ABC):
 
                 new_column = col_name[1]
                 if old_col_name != col_name:
-                    df = df.rename(columns={old_col_name: new_column})
+                    df = df.data.rename(columns={old_col_name: new_column})
 
                 df = df.meta.preserve(df, value=current_meta)
                 df = df.meta.rename({old_col_name: new_column})
@@ -599,9 +600,9 @@ class BaseColumns(ABC):
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
             names = df_left.cols.names()
-            last_column_name = last_column_name if last_column_name in names else last_column_name+suffix_left
-            left_on = left_on if left_on in names else left_on+suffix_left
-            right_on = right_on if right_on in names else right_on+suffix_right
+            last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
+            left_on = left_on if left_on in names else left_on + suffix_left
+            right_on = right_on if right_on in names else right_on + suffix_right
             if left_on in names:
                 df_left = df_left.cols.move(left_on, "before", last_column_name)
             if right_on in names:
@@ -738,13 +739,13 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        funcs = [{func.__name__: {col_name: func(df[col_name], *args)}} for col_name in columns for func in funcs]
+        funcs = [{func.__name__: {col_name: func(df[[col_name]], *args)}} for col_name in columns for func in funcs]
         a = self.exec_agg(funcs, compute)
 
         c = {}
         for i in a:
             for x, y in i.items():
-                c.setdefault(x, {}).update(y)
+                c.setdefault(x, {}).update(list(y.values())[0])
 
         return format_dict(c, tidy)
 
@@ -755,57 +756,57 @@ class BaseColumns(ABC):
 
     def mad(self, columns, relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.parent.data
-        return df.cols.agg_exprs(columns, F.mad, relative_error, more, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(columns, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
     def min(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.min, compute=compute, tidy=tidy)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=tidy)
 
     def max(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.max, compute=compute, tidy=tidy)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.max, compute=compute, tidy=tidy)
 
     def mode(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.mode, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.mode, compute=compute,tidy=tidy)
 
     def range(self, columns, tidy=True, compute=True):
-        return self.agg_exprs(columns, F.range, compute=compute, tidy=tidy)
+        return self.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
 
     def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
-        df = self.parent.data
+        df = self.parent
 
         if values is None:
             values = [0.25, 0.5, 0.75]
-        return df.cols.agg_exprs(columns, F.percentile, values, relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(columns, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
 
     def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def kurtosis(self, columns, tidy=True, compute=False):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.kurtosis, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.kurtosis, tidy=tidy, compute=compute)
 
     def skew(self, columns, tidy=True, compute=False):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.skew, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.skew, tidy=tidy, compute=compute)
 
     def mean(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.mean, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.mean, tidy=tidy, compute=compute)
 
     def sum(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.sum, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.sum, tidy=tidy, compute=compute)
 
     def var(self, columns, tidy=True, compute=True):
-        df = self.parent.data
-        return df.cols.agg_exprs(columns, F.var, tidy=tidy, compute=compute)
+        df = self.parent
+        return df.cols.agg_exprs(columns, self.F.var, tidy=tidy, compute=compute)
 
     def std(self, columns, tidy=True, compute=True):
-        return self.agg_exprs(columns, F.std, tidy=tidy, compute=compute)
+        return self.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
 
     # Math Operations
     def abs(self, input_cols, output_cols=None):
@@ -816,7 +817,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        return df.cols.apply(input_cols, F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
+        return df.cols.apply(input_cols, self.F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
                              mode="vectorized")
 
     def exp(self, input_cols, output_cols=None):
@@ -828,7 +829,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def mod(self, input_cols, divisor=2, output_cols=None):
@@ -841,7 +842,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=divisor)
 
     def log(self, input_cols, output_cols=None):
@@ -853,7 +854,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def ln(self, input_cols, output_cols=None):
@@ -865,7 +866,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def pow(self, input_cols, other=2, output_cols=None):
@@ -878,7 +879,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=other)
 
     def sqrt(self, input_cols, output_cols=None):
@@ -889,8 +890,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
-        return df.cols.apply(input_cols, F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def round(self, input_cols, decimals=1, output_cols=None):
@@ -902,7 +902,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        return df.cols.apply(input_cols, F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=decimals)
 
     def floor(self, input_cols, output_cols=None):
@@ -913,7 +913,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
-        return df.cols.apply(input_cols, F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def ceil(self, input_cols, output_cols=None):
@@ -925,7 +925,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     # Trigonometric
@@ -938,7 +938,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def cos(self, input_cols, output_cols=None):
@@ -950,7 +950,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def tan(self, input_cols, output_cols=None):
@@ -962,7 +962,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def asin(self, input_cols, output_cols=None):
@@ -974,7 +974,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def acos(self, input_cols, output_cols=None):
@@ -986,7 +986,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def atan(self, input_cols, output_cols=None):
@@ -998,7 +998,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def sinh(self, input_cols, output_cols=None):
@@ -1010,7 +1010,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def cosh(self, input_cols, output_cols=None):
@@ -1022,7 +1022,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def tanh(self, input_cols, output_cols=None):
@@ -1034,7 +1034,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def asinh(self, input_cols, output_cols=None):
@@ -1046,7 +1046,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def acosh(self, input_cols, output_cols=None):
@@ -1058,7 +1058,7 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def atanh(self, input_cols, output_cols=None):
@@ -1070,12 +1070,12 @@ class BaseColumns(ABC):
         """
 
         df = self.df
-        return df.cols.apply(input_cols, F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(input_cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     def extract(self, input_cols, regex, output_cols=None):
         def _extract(_value, _regex):
-            return F.extract(_value, _regex)
+            return self.F.extract(_value, _regex)
 
         return self.apply(input_cols, _extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
@@ -1084,40 +1084,53 @@ class BaseColumns(ABC):
 
     def slice(self, input_cols, start, stop, step, output_cols=None):
         def _slice(value, _start, _stop, _step):
-            return F.slice(value, _start, _stop, _step)
+            return self.F.slice(value, _start, _stop, _step)
 
         return self.apply(input_cols, _slice, args=(start, stop, step), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
     def left(self, input_cols, n, output_cols=None):
 
-        df = self.apply(input_cols, F.left, args=(n,), func_return_type=str,
+        df = self.apply(input_cols, self.F.left, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
         return df
 
     def right(self, input_cols, n, output_cols=None):
-        df = self.apply(input_cols, F.right, args=(n,), func_return_type=str,
+        df = self.apply(input_cols, self.F.right, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
     def mid(self, input_cols, start=0, n=1, output_cols=None):
 
-        df = self.apply(input_cols, F.mid, args=(start, n), func_return_type=str,
+        df = self.apply(input_cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
+    def to_float(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.to_float, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="map")
+
+    def to_integer(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.to_integer, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="map")
+
+    def to_string(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.to_string, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
+                          func_type="column_exp")
+
     def lower(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, F.lower, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized")
+        return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
     def upper(self, input_cols="*", output_cols=None):
-
-        return self.apply(input_cols, F.upper, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.UPPER.value, mode="vectorized")
+        return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
 
     def proper(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, F.proper, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized")
+        return self.apply(input_cols, self.F.proper, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
+                          func_type="column_expr")
 
     # def url_decode(self):
     #     from urllib.parse import unquote
@@ -1130,19 +1143,19 @@ class BaseColumns(ABC):
 
     def pad(self, input_cols="*", width=0, side="left", fillchar="0", output_cols=None, ):
 
-        return self.apply(input_cols, F.pad, args=(width, side, fillchar,), func_return_type=str,
+        return self.apply(input_cols, self.F.pad, args=(width, side, fillchar,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.PAD.value, mode="vectorized")
 
     def trim(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, F.trim, func_return_type=str,
+        return self.apply(input_cols, self.F.trim, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
 
         def _date_format(value, *args):
             _current_format, _output_format = args
-            return F.date_format(value, _current_format, _output_format)
+            return self.F.date_format(value, _current_format, _output_format)
 
         df = self.df
         return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
@@ -1166,7 +1179,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, F().remove_accents, func_return_type=str,
+        return self.apply(input_cols, self.F.remove_accents, func_return_type=str,
                           meta_action=Actions.REMOVE_ACCENTS.value,
                           output_cols=output_cols, mode="vectorized")
 
@@ -1192,7 +1205,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, F.remove_white_spaces, func_return_type=str,
+        return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
     def remove_special_chars(self, input_cols="*", output_cols=None):
@@ -1203,7 +1216,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, F.remove_special_chars, func_return_type=str,
+        return self.apply(input_cols, self.F.remove_special_chars, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
     def to_datetime(self, input_cols, format, output_cols=None):
@@ -1238,51 +1251,47 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, F.month(), args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def day(self, input_cols, format=None, output_cols=None):
 
-        return self.apply(input_cols, F.day, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def hour(self, input_cols, format=None, output_cols=None):
-        df = self.df
 
         def _hour(value, _format):
-            return F.hour(value, _format)
+            return self.F.hour(value, _format)
 
-        return df.cols.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def minute(self, input_cols, format=None, output_cols=None):
-        df = self.df
 
         def _minute(value, _format):
-            return F.minute(value, _format)
+            return self.F.minute(value, _format)
 
-        return df.cols.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def second(self, input_cols, format=None, output_cols=None):
-        df = self.df
+
 
         def _second(value, _format):
-            return F.second(value, _format)
+            return self.F.second(value, _format)
 
-        return df.cols.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def weekday(self, input_cols, format=None, output_cols=None):
-        df = self.df
 
         def _second(value, _format):
-            return F.weekday(value, _format)
+            return self.F.weekday(value, _format)
 
-        return df.cols.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
 
     def years_between(self, input_cols, date_format=None, output_cols=None):
-        df = self.df
 
         def _years_between(value, args):
-            return F.years_between(value, *args)
+            return self.F.years_between(value, *args)
 
-        return df.cols.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
+        return self.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
                              output_cols=output_cols,
                              meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
 
@@ -1299,14 +1308,15 @@ class BaseColumns(ABC):
         :return: DataFrame
         """
 
-        df = self.parent
+        # df = self.parent
 
         if search_by == "chars":
-            func = F().replace_string
+            # print("F", type(F), F)
+            func = self.F.replace_string
         elif search_by == "words":
-            func = F().replace_words
+            func = self.F.replace_words
         elif search_by == "full":
-            func = F().replace_match
+            func = self.F.replace_full
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
@@ -1314,9 +1324,9 @@ class BaseColumns(ABC):
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
         search = val_to_list(search)
         replace_by = val_to_list(replace_by)
-        return df.cols.apply(input_cols, func, args=(search, replace_by), func_return_type=str,
-                             output_cols=output_cols,
-                             meta_action=Actions.REPLACE.value, mode="vectorized")
+        return self.apply(input_cols, func, args=(search, replace_by), func_return_type=str,
+                          output_cols=output_cols,
+                          meta_action=Actions.REPLACE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod
@@ -1371,16 +1381,16 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.parent
-        return df.cols.agg_exprs(columns, F.count_na, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
 
-        return df.cols.agg_exprs(columns, F.unique, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(columns, self.F.unique, tidy=tidy, compute=compute)
 
     def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.count_uniques, values, estimate, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(columns, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
     def _math(self, columns, operator, output_col):
 
@@ -1570,8 +1580,8 @@ class BaseColumns(ABC):
 
     def hist(self, columns="*", buckets=20, compute=True):
 
-        df = self.df
-        columns = parse_columns(df, columns)
+        df = self.parent
+        columns = parse_columns(df.data, columns)
 
         @df.ext.delayed
         def _bins_col(_columns, _min, _max):
@@ -1626,8 +1636,6 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.parent
-        # if not is_dict(columns_type):
-        #     columns_type = parse_columns(df, columns_type.keys())
 
         result = {}
         nulls = df.cols.count_na()
@@ -1643,7 +1651,7 @@ class BaseColumns(ABC):
                 ProfilerDataTypes.BOOLEAN.value: regex_boolean,
                 ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
                 ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card,
-                ProfilerDataTypes.DATE.value: r"",
+                ProfilerDataTypes.DATE.value: r".",
                 ProfilerDataTypes.OBJECT.value: r"",
                 ProfilerDataTypes.ARRAY.value: r"",
                 ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
@@ -1652,9 +1660,6 @@ class BaseColumns(ABC):
                 # ProfilerDataTypes.US_STATE.value: US_STATES
                 }
 
-        # for i, j in df.cols.profiler_dtypes().items():
-        #     if j is not None:
-        #         columns_type[i] = j
         for col_name, props in columns_type.items():
             dtype = props["dtype"]
 
@@ -1668,16 +1673,14 @@ class BaseColumns(ABC):
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 matches_count = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().ext.to_dict()
             else:
-                # odf = self.parent.new(df)
-                matches_count = df.cols.select(col_name).cols.to_string().ext.to_dict()
-
-                matches_count = df.cols.select(col_name).cols.to_string().cols.match(col_name, func[dtype]).cols.frequency()
+                # print("func[dtype]",func[dtype], dtype)
+                matches_count = df.cols.select(col_name).cols.to_string().cols.match(col_name,
+                                                                                     func[dtype]).cols.frequency()
 
                 # = self.parent.new(df).ext.to_dict()
 
             match = matches_count.get(True)
             mismatch = matches_count.get(False)
-            # print("mismatch", mismatch, match, matches_count)
 
             result[col_name]["match"] = 0 if match is None else match
             result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
@@ -1702,7 +1705,7 @@ class BaseColumns(ABC):
         total_preview_rows = 30
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized
-        sample = df.ext.head(columns, total_preview_rows).ext.to_pandas()
+        sample = df.cols.select(columns).rows.limit(total_preview_rows).ext.to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
@@ -1722,10 +1725,10 @@ class BaseColumns(ABC):
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(sample[col_name].to_list())})
         return cols_and_inferred_dtype
 
-    def match(self, input_cols, func):
+    def match(self, input_cols, regex):
         df = self.parent.data
 
-        return self.parent.new(df[input_cols].str.match(func).to_frame())
+        return self.parent.new(df[input_cols].str.match(regex).to_frame())
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True):
@@ -1815,7 +1818,7 @@ class BaseColumns(ABC):
 
     def count_zeros(self, columns, tidy=True, compute=True):
         df = self.df
-        return df.cols.agg_exprs(columns, F.count_zeros, tidy=True, compute=True)
+        return df.cols.agg_exprs(columns, self.F.count_zeros, tidy=True, compute=True)
 
     @staticmethod
     @abstractmethod
@@ -1826,7 +1829,7 @@ class BaseColumns(ABC):
         df = self.df
 
         def _cut(value, args):
-            return F.cut(value, bins)
+            return self.F.cut(value, bins)
 
         return df.cols.apply(input_cols, _cut, output_cols=output_cols, meta_action=Actions.CUT.value,
                              mode="vectorized")
@@ -1835,7 +1838,7 @@ class BaseColumns(ABC):
         df = self.df
 
         def _clip(value):
-            return F.clip(value, lower_bound, upper_bound)
+            return self.F.clip(value, lower_bound, upper_bound)
 
         return df.cols.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value,
                              mode="vectorized")

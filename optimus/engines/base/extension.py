@@ -14,8 +14,7 @@ from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
-from optimus.helpers.converter import any_dataframe_to_pandas
-from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
+from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
@@ -68,15 +67,13 @@ class BaseExt(ABC):
 
         return result
 
-    def to_dict(self):
+    def to_dict(self, orient="records", limit=None):
         """
-        Return a dict from a Collect result
-        [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-        :return:
+            Return a dict from a Collect result
+            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
+            :return:
         """
-        df = self.parent.data
-        print("df", type(df), df)
-        return collect_as_dict(df)
+        return self.parent.ext.to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
@@ -84,8 +81,7 @@ class BaseExt(ABC):
         pass
 
     def to_pandas(self):
-        df = self.parent.data
-        return any_dataframe_to_pandas(df)
+        pass
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -129,19 +125,20 @@ class BaseExt(ABC):
         pass
 
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        df = self.df
-        input_columns = parse_columns(df, columns)
-        df._buffer = df.ext.head(input_columns, n)
+        df = self.parent
+        input_cols = parse_columns(df.data, columns)
+        # df._buffer = df.ext.head(input_cols, n)
+        df._buffer = df.cols.select(input_cols).rows.limit(n).ext.to_dict("list")
         df.meta.set("buffer_time", int(time.time()))
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
-        df = self.df
-        return df._buffer
+        # df = self.parent
+        return self.parent._buffer
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
-        df = self.df
+        df = self.parent
         buffer_time = df.meta.get("buffer_time")
         last_action_time = df.meta.get("last_action_time")
 
@@ -446,8 +443,7 @@ class BaseExt(ABC):
         if limit == "all":
             data = df.cols.select(columns).ext.to_dict()
         else:
-            data = collect_as_dict(df.cols.select(columns).rows.limit(limit))
-
+            data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -487,7 +483,6 @@ class BaseExt(ABC):
 
     def display(self, limit=None, columns=None, title=None, truncate=True):
         # TODO: limit, columns, title, truncate
-
         self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
@@ -499,8 +494,9 @@ class BaseExt(ABC):
                 print_html(result)
             else:
                 df.ext.show()
-        except NameError:
-            self.parent.data.head()
+        except NameError as e:
+            print(e)
+            df.ext.show()
 
     def export(self):
         """
@@ -595,6 +591,7 @@ class BaseExt(ABC):
             string_cols = []
             cols_and_inferred_dtype = odf.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
+            # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
             mismatch = odf.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram

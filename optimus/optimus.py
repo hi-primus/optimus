@@ -4,30 +4,30 @@ from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 # from optimus.engines.base.meta import meta
 from optimus.outliers.outliers import outliers
-from optimus.plots import plots
+
 
 # Monkey Patching
 # import pandas as pd
 
 
 # This class emulate how spark metadata handling works.
-class MetadataDask:
-    def __init__(self):
-        self._metadata = {}
-
-    @property
-    def metadata(self):
-        return self._metadata
-
-    @metadata.setter
-    def metadata(self, value):
-        self._metadata = value
+# class MetadataDask:
+#     def __init__(self):
+#         self._metadata = {}
+#
+#     @property
+#     def metadata(self):
+#         return self._metadata
+#
+#     @metadata.setter
+#     def metadata(self, value):
+#         self._metadata = value
 
 
 import importlib
 
 if importlib.util.find_spec("pandas") is not None:
-    import pandas as pd
+    pass
     # PandasDataFrame = pd.DataFrame
     #
     # from optimus.engines.pandas import rows, columns, extension, constants, functions
@@ -37,18 +37,6 @@ if importlib.util.find_spec("pandas") is not None:
     # # PandasDataFrame.meta = property(meta)
     # PandasDataFrame.schema = [MetadataDask()]
 
-if importlib.util.find_spec("dask") is not None:
-    # We are using dask for all the database operations for cudf, dask_cudf and dask
-    from dask.dataframe.core import DataFrame as DaskDataFrame
-
-    # from optimus.engines.dask import columns, rows, extension, functions
-    # from optimus.engines.base.dask import constants
-    # from optimus.engines.dask.io import save
-    #
-    # DaskDataFrame.outliers = property(outliers)
-    # # DaskDataFrame.meta = property(meta)
-    # DaskDataFrame.schema = [MetadataDask()]
-
 if importlib.util.find_spec("spark") is not None:
     from pyspark.sql import DataFrame as SparkDataFrame
 
@@ -57,19 +45,12 @@ if importlib.util.find_spec("spark") is not None:
 
     patch()
 
-    from optimus.engines.spark import rows, columns, extension, constants, functions
-    from optimus.engines.spark.io import save
-
     SparkDataFrame.outliers = property(outliers)
     SparkDataFrame.meta = property(meta)
 
 if importlib.util.find_spec("cudf") is not None:
     import cudf
     from cudf.core import DataFrame as CUDFDataFrame
-
-    from optimus.engines.cudf import columns, rows, extension, functions, constants
-
-    from optimus.engines.cudf.io import save
 
     CUDFDataFrame.outliers = property(outliers)
     CUDFDataFrame.meta = property(meta)
@@ -78,13 +59,11 @@ if importlib.util.find_spec("cudf") is not None:
 
 if importlib.util.find_spec("dask_cudf") is not None:
     from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-    from optimus.engines.dask_cudf import columns, rows, extension, functions
-    from optimus.engines.base.dask import constants
-    from optimus.engines.dask_cudf.io import save
 
     DaskCUDFDataFrame.outliers = property(outliers)
     DaskCUDFDataFrame.meta = property(meta)
     DaskCUDFDataFrame.schema = [MetadataDask()]
+
 
 # if importlib.util.find_spec("ibis") is not None:
 #     from ibis.expr.types import TableExpr as IbisDataFrame
@@ -130,7 +109,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         # Switch to RMM allocator
         cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
 
-
     # Dummy so pycharm not complain about not used imports
     # columns, rows, constants, extension, functions, save, plots
 
@@ -158,7 +136,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     elif engine == Engine.IBIS.value:
         from optimus.engines.ibis.engine import IbisEngine
         return IbisEngine(*args, **kwargs)
-
 
     else:
         RaiseIt.value_error(engine, Engine.list())

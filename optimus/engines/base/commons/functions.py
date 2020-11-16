@@ -25,7 +25,7 @@ def to_string(value, *args):
 def to_integer(value, *args):
     try:
         # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return fastnumbers.fast_int(value, default=0)
+        return fastnumbers.fast_forceint(value, default=0)
     except TypeError:
         return np.nan
 

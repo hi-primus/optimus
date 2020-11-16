@@ -131,13 +131,12 @@ def columns_names(df):
     :param df:
     :return:
     """
-    # print("df",type(df),df)
+
     if is_spark_dataframe(df):
         columns_names = df.columns
     elif is_pandas_dataframe(df) or is_dask_dataframe(df):
         columns_names = list(df.columns)
     elif is_cudf_dataframe(df):
-
         columns_names = list(df.columns)
     else:
         columns_names = list(df.name)
@@ -164,10 +163,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     :return: A list of columns string names
     """
 
-    attrs = None
-
     # if columns value is * get all dataframes columns
-
+    attrs = None
     df_columns = columns_names(df)
 
     if is_regex is True:
@@ -207,11 +204,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     columns_residual = None
 
     # If necessary filter the columns by data type
-
     if filter_by_column_dtypes:
         # Get columns for every data type
-        # print("filter", filter_by_column_dtypes)
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
+
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 

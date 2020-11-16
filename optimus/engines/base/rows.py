@@ -69,9 +69,10 @@ class BaseRows(ABC):
         """
         Count dataframe rows
         """
-        df = self.parent
+        df = self.parent.data
+        # TODO: Be sure that we need the compute param
         if compute is True:
-            result = len(df.ext.compute())
+            result = len(df)
         else:
             result = len(df)
         return result
@@ -120,10 +121,10 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        df = self.df
-        subset = parse_columns(df, subset)
+        df = self.parent
+        subset = parse_columns(df.data, subset)
         df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
-        return df.dropna(how=how, subset=subset)
+        return self.parent.new(df.dropna(how=how, subset=subset))
 
     @staticmethod
     @abstractmethod

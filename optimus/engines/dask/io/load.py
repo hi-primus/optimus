@@ -78,7 +78,6 @@ class Load(BaseLoad):
         if cache is False:
             prepare_path.cache_clear()
 
-        # file, file_name = prepare_path(path, "csv")[0]
         try:
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
@@ -87,11 +86,11 @@ class Load(BaseLoad):
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
                              **kwargs)
-            odf = DaskDataFrame(df)
 
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
             # odf.ext.reset()
+            odf = DaskDataFrame(df)
             odf.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)

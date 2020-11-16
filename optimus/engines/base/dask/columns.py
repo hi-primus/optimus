@@ -31,7 +31,6 @@ class DaskBaseColumns(BaseColumns):
         else:
             # result = exprs.compute()
             result = dd.compute(exprs)[0]
-
         return result
 
     def append(self, dfs):
