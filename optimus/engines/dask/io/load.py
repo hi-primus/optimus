@@ -84,8 +84,8 @@ class Load(BaseLoad):
             # passing na_filter=False can improve the performance of reading a large file.
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
-                             **kwargs)
+                             keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, index=False,
+                             *args, **kwargs)
             # print(len(df))
             if n_rows > -1:
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
