@@ -1,5 +1,6 @@
 import ibis
 
+from optimus.engines.base.contants import LIMIT_TABLE
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.new_optimus import IbisDataFrame
 
@@ -21,4 +22,6 @@ class JDBC(DaskBaseJDBC):
 
     def table_to_df(self, table_name, columns="*", limit=None):
         db = ibis.mysql.connect(url=self.uri)
-        return IbisDataFrame(db.table(table_name))
+        if limit is None:
+            limit = LIMIT_TABLE
+        return IbisDataFrame(db.table(table_name).limit(limit))

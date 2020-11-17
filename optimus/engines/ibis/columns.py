@@ -4,12 +4,12 @@ import pandas as pd
 from ibis.expr.types import TableExpr
 from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string
+from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str
+from optimus.infer import is_str, is_tuple
 
 DataFrame = TableExpr
 
@@ -18,6 +18,9 @@ class Cols(DataFrameBaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
+    def _names(self):
+        return self.parent.data.columns
+
     def append(self, dfs):
         """
 
@@ -25,7 +28,7 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.df
+        df = self.parent.data
         df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
@@ -33,14 +36,28 @@ class Cols(DataFrameBaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.df
+        df = self.parent.data
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     @staticmethod
     def astype(*args, **kwargs):
         pass
+
+    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
+        columns = prepare_columns(self.parent, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                  accepts_missing_cols=True, default=default)
+        kw_columns = {}
+        if args is None:
+            args = (None,)
+        elif not is_tuple(args, ):
+            args = (args,)
+
+        for input_col, output_col in columns:
+            kw_columns.update({output_col: func(self.parent.data[input_col], *args)})
+        return self.parent.new(self.parent.data.mutate(**kw_columns))
 
     @staticmethod
     def find(columns, sub, ignore_case=False):
@@ -81,10 +98,9 @@ class Cols(DataFrameBaseColumns):
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    def count_by_dtypes(columns, dtype):
+    def count_by_dtypes(self, columns, dtype):
 
-        df = self
+        df = self.parent
         result = {}
         df_len = len(df)
         for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():

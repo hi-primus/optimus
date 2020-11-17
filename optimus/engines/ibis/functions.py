@@ -1,18 +1,43 @@
 # DataFrame = pd.DataFrame
+import re
 from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-from pandas import Series
 
 from optimus.engines.base.functions import Functions
-from optimus.helpers.core import val_to_list
-
+from optimus.helpers.core import val_to_list, one_list_to_val
 
 
 class IbisFunctions(Functions):
     def __init__(self, df):
         super(IbisFunctions, self).__init__(df)
+
+    def lower(self, series, *args):
+        return series.cast("string").lower()
+
+    def upper(self, series, *args):
+        return series.cast("string").upper()
+
+    #
+    # def replace(self, series, *args):
+    #     return series.cast("string").upper()
+
+    def replace_chars(self, series, search, replace_by):
+        # print("search, replace_by", search, replace_by)
+        search = one_list_to_val(search)
+        replace_by = one_list_to_val(replace_by)
+        return series.cast("string").replace(search, replace_by)
+
+    def replace_words(self, series, search, replace_by):
+        search = val_to_list(search)
+        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        return series.cast("string").replace(str_regex, replace_by)
+
+    def replace_full(self, series, search, replace_by):
+        search = val_to_list(search)
+        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        return series.cast("string").replace(str_regex, replace_by)
 
     def count_zeros(self, *args):
         series = self.series
@@ -139,4 +164,3 @@ class IbisFunctions(Functions):
         series = self.series
         return (pd.to_datetime(series, format=date_format,
                                errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
-
