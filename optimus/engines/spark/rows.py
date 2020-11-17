@@ -289,7 +289,7 @@ class Rows(DaskBaseRows):
         """
         print("Asdf")
         odf = self.parent
-        columns = parse_columns(odf.data, columns)
+        columns = parse_columns(odf, columns)
         return odf.data[columns].limit(n)
 
     def limit(self, count):

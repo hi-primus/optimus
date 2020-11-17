@@ -125,11 +125,12 @@ class BaseExt(ABC):
         pass
 
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        df = self.parent
-        input_cols = parse_columns(df.data, columns)
+        odf = self.parent
+        input_cols = parse_columns(odf, columns)
         # df._buffer = df.ext.head(input_cols, n)
-        df._buffer = df.cols.select(input_cols).rows.limit(n).ext.to_dict("list")
-        df.meta.set("buffer_time", int(time.time()))
+        
+        odf._buffer = odf.cols.select(input_cols).rows.limit(n).ext.to_pandas()
+        odf.meta.set("buffer_time", int(time.time()))
 
     def get_buffer(self):
         # return self.df._buffer.values.tolist()
@@ -138,17 +139,17 @@ class BaseExt(ABC):
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
-        df = self.parent
-        buffer_time = df.meta.get("buffer_time")
-        last_action_time = df.meta.get("last_action_time")
+        odf = self.parent
+        buffer_time = odf.meta.get("buffer_time")
+        last_action_time = odf.meta.get("last_action_time")
 
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
-                df.ext.set_buffer(columns, n)
-        elif df._buffer is None:
-            df.ext.set_buffer(columns, n)
+                odf.ext.set_buffer(columns, n)
+        elif odf._buffer is None:
+            odf.ext.set_buffer(columns, n)
 
-        df_buffer = df._buffer
+        df_buffer = odf._buffer
         df_length = len(df_buffer)
         if lower_bound is None:
             lower_bound = 0
@@ -168,7 +169,7 @@ class BaseExt(ABC):
             upper_bound = df_length
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
-        input_columns = parse_columns(df_buffer, columns)
+        input_columns = parse_columns(odf, columns)
         return df_buffer[input_columns][lower_bound: upper_bound]
 
     def buffer_json(self, columns):
@@ -435,7 +436,7 @@ class BaseExt(ABC):
         :return:
         """
 
-        columns = parse_columns(self.parent.data, columns)
+        columns = parse_columns(self.parent, columns)
         if limit is None:
             limit = 10
 
@@ -525,7 +526,7 @@ class BaseExt(ABC):
         :return:
         """
         odf = self.parent
-        columns = parse_columns(odf.data, columns)
+        columns = parse_columns(odf, columns)
         return odf.data[columns].head(n)
 
     def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
@@ -577,7 +578,7 @@ class BaseExt(ABC):
 
         odf = self.parent
         if flush is False:
-            cols_to_profile = self.calculate_cols_to_profile(odf.data, columns)
+            cols_to_profile = self.calculate_cols_to_profile(odf, columns)
         else:
             cols_to_profile = parse_columns(odf.data, columns)
 
@@ -662,7 +663,7 @@ class BaseExt(ABC):
         actual_columns = profiler_data["columns"]
 
         # Order columns
-        columns = parse_columns(odf.data, columns)
+        columns = parse_columns(odf, columns)
         profiler_data["columns"] = dict(OrderedDict(
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))

@@ -15,6 +15,9 @@ class Functions(ABC):
     def to_float(self, series):
         pass
 
+    def to_string(self, series):
+        pass
+
     # Aggregation
     # @staticmethod
     def min(self, series):
@@ -268,9 +271,9 @@ class Functions(ABC):
         pass
 
     # Strings
-    @staticmethod
-    def lower(series):
-        return series.astype(str).str.lower()
+    def lower(self, series):
+        return self.parent.new(series).cols.to_string().data.lower()
+        # return series.astype(str).str.lower()
 
     @staticmethod
     def upper(series):

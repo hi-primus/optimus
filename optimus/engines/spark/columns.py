@@ -59,6 +59,9 @@ ENGINE = "spark"
 
 class Cols(BaseColumns):
 
+    def _names(self):
+        return self.parent.data.columns
+
     @staticmethod
     @dispatch(str, object)
     def append(col_name=None, value=None):
@@ -139,8 +142,7 @@ class Cols(BaseColumns):
     #
     #     return df
 
-    @staticmethod
-    def copy(input_cols, output_cols=None, columns=None):
+    def copy(self, input_cols, output_cols=None, columns=None):
         """
         Copy one or multiple columns
         :param input_cols: Source column to be copied
@@ -148,7 +150,7 @@ class Cols(BaseColumns):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        df = self
+        df = self.parent
 
         if is_list_of_str(columns):
             output_cols = [col_name + "_copy" for col_name in columns]
@@ -161,8 +163,8 @@ class Cols(BaseColumns):
             columns = list(zip(input_cols, output_cols))
 
         for input_col, output_col in columns:
-            current_meta = self.meta.get()
-            df = df.withColumn(output_col, F.col(input_col))
+            current_meta = df.meta.get()
+            df = self.parent.data.withColumn(output_col, F.col(input_col))
             df = df.meta.set(value=current_meta)
             df = df.meta.copy({input_col: output_col})
         return df
@@ -203,11 +205,9 @@ class Cols(BaseColumns):
         True or False
         :param meta_action: Metadata transformation to a dataframe
         """
-        # print("func_return_type0", func_return_type)
         func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
-        print("func_return_type1", func_return_type)
         odf = self.parent
-        columns = prepare_columns(odf.data, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(odf, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
         def expr(_when):
@@ -345,11 +345,12 @@ class Cols(BaseColumns):
                 the transformation is made.
         :return: Spark DataFrame
         """
-        df = self.parent.data
+        odf = self.parent
+        df = odf.data
         _dtype = []
         # Parse params
         if columns is None:
-            input_cols = parse_columns(df, input_cols)
+            input_cols = parse_columns(odf, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
 
                 output_cols = get_output_cols(input_cols, output_cols)
@@ -489,7 +490,7 @@ class Cols(BaseColumns):
         :param args:
         :return:
         """
-        df = self.parent.data
+        df = self.parent
         columns = parse_columns(df, columns)
         funcs = val_to_list(funcs)
         exprs = []
@@ -959,7 +960,7 @@ class Cols(BaseColumns):
             _search = attr[0]
             return F.when(F.col(_input_cols).rlike(_search), True).otherwise(False)
 
-        return self.apply(input_cols, func=_match, args=(regex,), output_cols=output_cols,
+        return self.apply(input_cols, func=_match, args=(regex,), func_type="column_exp", func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.REPLACE_REGEX.value)
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -1542,7 +1543,6 @@ class Cols(BaseColumns):
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
         # return result
 
-
     @staticmethod
     def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
         """
@@ -1589,9 +1589,10 @@ class Cols(BaseColumns):
         :param total_rows: Total rows to calculate the percentage. If not provided is calculated
         :return:
         """
-        df = self.parent.data
-        columns = parse_columns(df, columns)
+        odf = self.parent
+        columns = parse_columns(odf, columns)
 
+        df = odf.data
         if columns is not None:
 
             # Convert non compatible columns(non str, int or float) to string
@@ -1614,8 +1615,9 @@ class Cols(BaseColumns):
             for f in freq.collect():
                 result[f[0]] = {"count_uniques": "N/A", "values": [{"value": kv[0], "count": kv[1]} for kv in f[1]]}
 
-            if count_uniques:
-                print(df.count())
+            # if count_uniques:
+            #     print(df.count())
+
             if percentage:
                 if total_rows is None:
                     total_rows = df.count()
@@ -1693,9 +1695,9 @@ class Cols(BaseColumns):
         :param columns: Columns to be processed
         :return:
         """
-        df = self.parent.data
-        columns = parse_columns(df, columns)
-        return format_dict([df.schema[col_name].dataType for col_name in columns])
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+        return format_dict([odf.data.schema[col_name].dataType for col_name in columns])
 
     # @staticmethod
     # def dtypes(columns="*"):

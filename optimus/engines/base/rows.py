@@ -29,7 +29,7 @@ class BaseRows(ABC):
         :param func:
         :return:
         """
-        df = self.df
+        df = self.parent.data
         kw_columns = {}
 
         for output_col in output_cols:

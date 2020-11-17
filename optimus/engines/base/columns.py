@@ -35,6 +35,9 @@ class BaseColumns(ABC):
         self.F = self.parent.functions
         # self.df.schema[-1].metadata = df.schema[-1].metadata
 
+    # def _names(self):
+    #     return self.parent.data.columns
+
     @abstractmethod
     def append(self, dfs):
         pass
@@ -83,15 +86,16 @@ class BaseColumns(ABC):
         :param accepts_missing_cols:
         :return:
         """
-        df = self.parent.data
-        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+
+        columns = parse_columns(self.parent, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
+        df = self.parent.data
         if columns is not None:
             df = df[columns]
 
         return self.parent.new(df)
 
-    def copy(self, input_cols=None, output_cols=None, columns=None):
+    def copy(self, input_cols, output_cols=None, columns=None):
         """
         Copy one or multiple columns
         :param input_cols: Source column to be copied
@@ -190,9 +194,7 @@ class BaseColumns(ABC):
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
 
-        df = self.parent.data
-
-        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(self.parent, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
         kw_columns = {}
@@ -202,6 +204,7 @@ class BaseColumns(ABC):
         elif not is_tuple(args, ):
             args = (args,)
 
+        df = self.parent.data
         for input_col, output_col in columns:
             if mode == "pandas" and (is_dask_dataframe(df)):
 
@@ -211,6 +214,7 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = from_delayed(delayed_parts)
 
             elif mode == "vectorized" or mode == "pandas":
+
                 _ddf = func(df[input_col], *args)
 
                 if is_dask_dataframe(_ddf):
@@ -345,12 +349,12 @@ class BaseColumns(ABC):
         :param columns:
         :return:
         """
-        df = self.df
-        columns = parse_columns(df, columns)
+        odf = self.parent
+        columns = parse_columns(odf, columns)
         result = {}
         for col_name in columns:
             # column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
-            column_meta = df.meta.get(f"profile.columns.{col_name}")
+            column_meta = odf.meta.get(f"profile.columns.{col_name}")
             if column_meta is None:
                 result[col_name] = None
             else:
@@ -699,9 +703,9 @@ class BaseColumns(ABC):
         :param columns: Columns to be processed
         :return:
         """
-        df = self.parent.data
-        columns = parse_columns(df, columns)
-        data_types = ({k: str(v) for k, v in dict(df.dtypes).items()})
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+        data_types = ({k: str(v) for k, v in dict(odf.data.dtypes).items()})
         return {col_name: data_types[col_name] for col_name in columns}
 
     def schema_dtype(self, columns="*"):
@@ -768,7 +772,7 @@ class BaseColumns(ABC):
 
     def mode(self, columns, tidy=True, compute=True):
         df = self.parent
-        return df.cols.agg_exprs(columns, self.F.mode, compute=compute,tidy=tidy)
+        return df.cols.agg_exprs(columns, self.F.mode, compute=compute, tidy=tidy)
 
     def range(self, columns, tidy=True, compute=True):
         return self.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
@@ -891,7 +895,7 @@ class BaseColumns(ABC):
         """
 
         return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def round(self, input_cols, decimals=1, output_cols=None):
         """
@@ -1251,7 +1255,8 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="pandas",
+                          set_index=True)
 
     def day(self, input_cols, format=None, output_cols=None):
 
@@ -1273,7 +1278,6 @@ class BaseColumns(ABC):
 
     def second(self, input_cols, format=None, output_cols=None):
 
-
         def _second(value, _format):
             return self.F.second(value, _format)
 
@@ -1292,8 +1296,8 @@ class BaseColumns(ABC):
             return self.F.years_between(value, *args)
 
         return self.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
-                             output_cols=output_cols,
-                             meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
+                          output_cols=output_cols,
+                          meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
 
     def replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                 output_cols=None):
@@ -1312,7 +1316,7 @@ class BaseColumns(ABC):
 
         if search_by == "chars":
             # print("F", type(F), F)
-            func = self.F.replace_string
+            func = self.F.replace_chars
         elif search_by == "words":
             func = self.F.replace_words
         elif search_by == "full":
@@ -1580,27 +1584,27 @@ class BaseColumns(ABC):
 
     def hist(self, columns="*", buckets=20, compute=True):
 
-        df = self.parent
-        columns = parse_columns(df.data, columns)
+        odf = self.parent
+        columns = parse_columns(odf, columns)
 
-        @df.ext.delayed
+        @odf.ext.delayed
         def _bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
                     col_name
                     in
                     _columns}
 
-        _min = df.cols.min(columns, compute=False, tidy=False)
-        _max = df.cols.max(columns, compute=False, tidy=False)
+        _min = odf.cols.min(columns, compute=False, tidy=False)
+        _max = odf.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @df.ext.delayed
+        @odf.ext.delayed
         def _hist(pdf, col_name, _bins):
             _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
             # i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @df.ext.delayed
+        @odf.ext.delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -1618,7 +1622,7 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        partitions = df.ext.to_delayed()
+        partitions = odf.ext.to_delayed()
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
@@ -1700,12 +1704,14 @@ class BaseColumns(ABC):
         :param columns:
         :return:Return a dict with the column and the inferred data type
         """
-        df = self.parent
-        columns = parse_columns(df.data, columns)
+        odf = self.parent
+
+        columns = parse_columns(odf, columns)
         total_preview_rows = 30
+
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized
-        sample = df.cols.select(columns).rows.limit(total_preview_rows).ext.to_pandas()
+        sample = odf.cols.select(columns).rows.limit(total_preview_rows).ext.to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
@@ -1734,7 +1740,7 @@ class BaseColumns(ABC):
                   compute=True):
 
         odf = self.parent
-        columns = parse_columns(odf.data, columns)
+        columns = parse_columns(odf, columns)
 
         @odf.ext.delayed
         def series_to_dict(_series, _total_freq_count=None):
@@ -1811,9 +1817,12 @@ class BaseColumns(ABC):
             return stats
         pass
 
+    def _names(self):
+        pass
+
     def names(self, col_names="*", by_dtypes=None, invert=False):
 
-        columns = parse_columns(self.parent.data, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
+        columns = parse_columns(self.parent, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
         return columns
 
     def count_zeros(self, columns, tidy=True, compute=True):

@@ -165,7 +165,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
     # if columns value is * get all dataframes columns
     attrs = None
-    df_columns = columns_names(df)
+    df_columns = df.cols._names()
 
     if is_regex is True:
         r = re.compile(cols_args[0])
@@ -350,7 +350,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    _col_names = columns_names(df)
+    _col_names = df.cols._names()
     missing_columns = list(OrderedSet(col_names) - OrderedSet(_col_names))
 
     if len(missing_columns) > 0:
