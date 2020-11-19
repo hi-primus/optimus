@@ -71,9 +71,9 @@ class DaskBaseRows(BaseRows):
         :param input_cols:
         :return:
         """
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
-        df = df[input_cols].compute().values.tolist()
+        odf = self.parent
+        input_cols = parse_columns(odf, input_cols)
+        df = odf.data[input_cols].compute().values.tolist()
 
         return df
 
@@ -122,7 +122,7 @@ class DaskBaseRows(BaseRows):
 
             df = df.map_partitions(func)
 
-            df = df.meta.preserve(df, Actions.SORT_ROW.value, col_name)
+            df = df.meta.action(Actions.SORT_ROW.value, col_name)
 
             # c = df.cols.names()
             # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
