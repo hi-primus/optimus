@@ -26,7 +26,7 @@ def abstract_udf(col, func, func_return_type=None, args=None, func_type=None):
     # elif func_type is None and is_pyarrow_installed() is True:
     #     func_type = "pandas_udf"
 
-    types = ["column_exp", "udf", "pandas_udf"]
+    types = ["column_expr", "udf", "pandas_udf"]
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
@@ -98,7 +98,7 @@ def func_factory(func_type=None, func_return_type=None):
     elif func_type is "udf":
         return udf_func
 
-    elif func_type is "column_exp":
+    elif func_type is "column_expr":
         return expression_func
 
 

@@ -1,9 +1,8 @@
 import pandas as pd
 from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import to_integer, to_float, impute, string_to_index, index_to_string, find
+from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.helpers.constants import Actions
 
 DataFrame = pd.DataFrame
 
@@ -11,6 +10,9 @@ DataFrame = pd.DataFrame
 class Cols(DataFrameBaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
+
+    def _names(self):
+        return list(self.parent.data.columns)
 
     def append(self, dfs):
         """

@@ -18,6 +18,7 @@ from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_di
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
+from optimus.new_optimus import PandasDataFrame
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -57,13 +58,13 @@ class BaseExt(ABC):
         :return:
         """
 
-        df = self.df
+        odf = self.parent
         if format == "bumblebee":
-            columns = parse_columns(df, columns)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
+            columns = parse_columns(odf, columns)
+            result = {"sample": {"columns": [{"title": col_name} for col_name in odf.cols.select(columns).cols.names()],
+                                 "value": odf.rows.to_list(columns)}}
         else:
-            result = json.dumps(df.ext.to_dict(), ensure_ascii=False, default=json_converter)
+            result = json.dumps(odf.ext.to_dict(), ensure_ascii=False, default=json_converter)
 
         return result
 
@@ -170,7 +171,7 @@ class BaseExt(ABC):
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(odf, columns)
-        return df_buffer[input_columns][lower_bound: upper_bound]
+        return PandasDataFrame(df_buffer[input_columns][lower_bound: upper_bound])
 
     def buffer_json(self, columns):
         df = self.df.buffer

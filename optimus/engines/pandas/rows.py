@@ -44,27 +44,26 @@ class Rows(BaseRows):
         :param input_cols:
         :return:
         """
-        df = self.parent
-        input_cols = parse_columns(df.data, input_cols)
-        df_list = df[input_cols].values.tolist()
+        odf = self.parent
+        input_cols = parse_columns(odf, input_cols)
+        df_list = odf.data[input_cols].values.tolist()
 
         return df_list
 
-    @staticmethod
     @dispatch(str, str)
-    def sort(input_cols) -> DataFrame:
-        input_cols = parse_columns(self, input_cols)
-        return self.rows.sort([(input_cols, "desc",)])
+    def sort(self, input_cols) -> DataFrame:
+        odf = self.parent
+        input_cols = parse_columns(odf, input_cols)
+        return odf.rows.sort([(input_cols, "desc",)])
 
-    @staticmethod
     @dispatch(str, str)
-    def sort(columns, order="desc") -> DataFrame:
+    def sort(self, columns, order="desc") -> DataFrame:
         """
         Sort column by row
         """
-        columns = parse_columns(self, columns)
-        return self.rows.sort([(columns, order,)])
-
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+        return odf.rows.sort([(columns, order,)])
 
     @dispatch(list)
     def sort(self, col_sort) -> DataFrame:

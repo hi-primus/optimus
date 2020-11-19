@@ -1121,7 +1121,7 @@ class BaseColumns(ABC):
     def to_string(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_string, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
-                          func_type="column_exp")
+                          func_type="column_expr")
 
     def lower(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,

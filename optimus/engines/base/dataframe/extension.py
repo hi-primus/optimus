@@ -43,7 +43,7 @@ class DataFrameBaseExt(BaseExt):
         pass
 
     def repartition(self, n=None, *args, **kwargs):
-        return self.df
+        return self.parent
 
     def show(self):
         df = self
