@@ -23,28 +23,28 @@ class Ext(BaseExt):
 
     def cache(self):
         df = self.parent.data
-        return df.persist()
+        return self.parent.new(df.persist(), meta=self.parent)
 
     def compute(self):
         df = self.parent.data
         return df.compute()
 
-    @staticmethod
-    def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
-        """
-        Helper function to infer, cast and profile a dataframe.
-        :param columns:
-        :param bins:
-        :param output:
-        :param flush:
-        :param size:
-        :return:
-        """
-        df = self
-        cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
-        df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
-        result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
-        return df, result
+    # @staticmethod
+    # def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    #     """
+    #     Helper function to infer, cast and profile a dataframe.
+    #     :param columns:
+    #     :param bins:
+    #     :param output:
+    #     :param flush:
+    #     :param size:
+    #     :return:
+    #     """
+    #     df = self
+    #     cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
+    #     df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
+    #     result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
+    #     return df, result
 
     def export(self):
         """

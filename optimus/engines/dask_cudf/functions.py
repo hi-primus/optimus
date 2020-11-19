@@ -183,7 +183,7 @@ def functions(self):
             raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
             # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
 
-        def replace_string(self, search, replace_by):
+        def replace_chars(self, search, replace_by):
             series = self.series
             # if ignore_case is True:
             #     # Cudf do not accept re.compile as argument for replace

@@ -111,7 +111,7 @@ class DaskBaseJDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name, columns="*", limit=None):
+    def table_to_df(self, table_name: str, columns="*", limit=None):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
@@ -443,7 +443,7 @@ class Table:
     def show(self, table_names="*", limit=None):
         db = self.db
 
-        if table_names=="*":
+        if table_names == "*":
             table_names = db.tables_names_to_json()
         else:
             table_names = val_to_list(table_names)

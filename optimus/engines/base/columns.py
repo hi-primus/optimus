@@ -93,7 +93,7 @@ class BaseColumns(ABC):
         if columns is not None:
             df = df[columns]
 
-        return self.parent.new(df)
+        return self.parent.new(df, self.parent)
 
     def copy(self, input_cols, output_cols=None, columns=None):
         """
@@ -136,19 +136,18 @@ class BaseColumns(ABC):
         :param data_type:
         :return:
         """
-        df = self.df
+        odf = self.parent
         if regex:
             r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(r, c)]
+            columns = [c for c in list(odf.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
+        columns = parse_columns(odf, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        df = df.drop(columns=columns)
+        df = odf.data.drop(columns=columns)
 
-        df = df.meta.preserve(df, Actions.DROP.value, columns)
-
-        return df
+        odf.meta.action(Actions.DROP.value, columns)
+        return self.parent.new(df,odf)
 
     def keep(self, columns=None, regex=None):
         """
@@ -238,7 +237,7 @@ class BaseColumns(ABC):
             df = df.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
-        df = self.parent.new(df)
+        df = self.parent.new(df, self.parent)
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -400,7 +399,7 @@ class BaseColumns(ABC):
                 the transformation is made.
         """
 
-        df = self.df
+        df = self.parent
 
         columns = prepare_columns(df, input_cols, output_cols, args=dtype)
         for input_col, output_col, arg in columns:
@@ -446,7 +445,7 @@ class BaseColumns(ABC):
         """
 
         df = self.parent
-        columns = prepare_columns(df.data, input_cols, output_cols)
+        columns = prepare_columns(df, input_cols, output_cols)
 
         def split(word):
             return [char for char in word]
@@ -496,7 +495,7 @@ class BaseColumns(ABC):
         df = self.parent
 
         result = {}
-        input_cols = parse_columns(df.data, input_cols)
+        input_cols = parse_columns(df, input_cols)
         for input_col in input_cols:
             column_modified_time = df.meta.get(f"profile.columns.{input_col}.modified")
             patterns_update_time = df.meta.get(f"profile.columns.{input_col}.patterns.updated")
@@ -734,8 +733,8 @@ class BaseColumns(ABC):
         :param tidy:
         :return:
         """
-        df = self.parent.data
-        columns = parse_columns(df, columns)
+        odf = self.parent
+        columns = parse_columns(odf, columns)
 
         if args is None:
             args = []
@@ -743,15 +742,16 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        funcs = [{func.__name__: {col_name: func(df[[col_name]], *args)}} for col_name in columns for func in funcs]
+        funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args)}} for col_name in columns for func in funcs]
         a = self.exec_agg(funcs, compute)
+        result = {}
 
-        c = {}
+        # Reformat aggregation
         for i in a:
             for x, y in i.items():
-                c.setdefault(x, {}).update(list(y.values())[0])
+                result.setdefault(x, {}).update(y)
 
-        return format_dict(c, tidy)
+        return format_dict(result, tidy)
 
     @staticmethod
     @abstractmethod
@@ -1385,7 +1385,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.parent
-        return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
+        return self.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.df
@@ -1668,26 +1668,26 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
 
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-            result[col_name]["missing"] = nulls.get(col_name)
-            matches_count = {True: 0, False: 0}
+            result[col_name]["missing"] = int(nulls.get(col_name))
 
             if dtype == ProfilerDataTypes.STRING.value:
-                matches_count[True] = total_rows - nulls[col_name]
-                matches_count[False] = nulls[col_name]
+                match = total_rows - nulls[col_name]
+                mismatch = nulls[col_name]
+
             elif dtype == ProfilerDataTypes.US_STATE.value:
-                matches_count = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().ext.to_dict()
+                match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().ext.to_dict()
+                mismatch = total_rows - match
             else:
-                # print("func[dtype]",func[dtype], dtype)
-                matches_count = df.cols.select(col_name).cols.to_string().cols.match(col_name,
-                                                                                     func[dtype]).cols.frequency()
+                match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
+                                                                             func[dtype]).cols.frequency()
 
-                # = self.parent.new(df).ext.to_dict()
+                v = {list(j.values())[0]: list(j.values())[1] for j in match["frequency"][col_name]["values"]}
 
-            match = matches_count.get(True)
-            mismatch = matches_count.get(False)
+                match = v.get("True")
+                mismatch = v.get("False")
 
-            result[col_name]["match"] = 0 if match is None else match
-            result[col_name]["mismatch"] = 0 if mismatch is None else mismatch
+            result[col_name]["match"] = 0 if match is None else int(match)
+            result[col_name]["mismatch"] = 0 if mismatch is None else int(mismatch)
 
         for col_name in columns_type.keys():
             result[col_name].update({"profiler_dtype": columns_type[col_name]})
@@ -1712,10 +1712,13 @@ class BaseColumns(ABC):
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized
         sample = odf.cols.select(columns).rows.limit(total_preview_rows).ext.to_pandas()
+        # print("sample",sample)
         pdf = sample.applymap(Infer.parse_pandas)
+        # print("pdf", pdf)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
+            # print("pdf",pdf)
             _value_counts = pdf[col_name].value_counts()
             dtype = _value_counts.index[0]
 
@@ -1737,7 +1740,7 @@ class BaseColumns(ABC):
         return self.parent.new(df[input_cols].str.match(regex).to_frame())
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
-                  compute=True):
+                  compute=True, tidy=False):
 
         odf = self.parent
         columns = parse_columns(odf, columns)
@@ -1786,6 +1789,8 @@ class BaseColumns(ABC):
         else:
             result = c
 
+        # if tidy is True:
+        #     format_dict(result)
         return result
 
     @staticmethod
@@ -1835,13 +1840,13 @@ class BaseColumns(ABC):
         pass
 
     def cut(self, input_cols, bins, output_cols=None):
-        df = self.df
+        df = self.parent
 
         def _cut(value, args):
             return self.F.cut(value, bins)
 
-        return df.cols.apply(input_cols, _cut, output_cols=output_cols, meta_action=Actions.CUT.value,
-                             mode="vectorized")
+        return self.apply(input_cols, _cut, output_cols=output_cols, meta_action=Actions.CUT.value,
+                          mode="vectorized")
 
     def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
         df = self.df

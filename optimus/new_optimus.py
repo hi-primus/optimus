@@ -45,16 +45,20 @@ class DaskDataFrame:
     def __init__(self, df):
         self.data = df
         self.meta_data = {}
+        self.buffer = None
 
     def __getitem__(self, item):
         return self.cols.select(item)
 
-    def __repr__(self):
-        self.ext.display()
-        return str(type(self))
+    # def __repr__(self):
+    #     self.ext.display()
+    #     return str(type(self))
 
-    def new(self, df):
-        return DaskDataFrame(df)
+    def new(self, df, meta=None):
+        new_df = DaskDataFrame(df)
+        if meta is not None:
+            new_df.meta.set(value=meta.meta.get())
+        return new_df
 
     @property
     def rows(self):
@@ -93,8 +97,11 @@ class SparkDataFrame:
         self.ext.display()
         return str(type(self))
 
-    def new(self, df):
-        return SparkDataFrame(df)
+    def new(self, df, meta=None):
+        new_df = SparkDataFrame(df)
+        if meta is not None:
+            new_df.meta.set(value=meta.meta.get())
+        return new_df
 
     @property
     def rows(self):

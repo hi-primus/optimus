@@ -30,7 +30,7 @@ class BaseExt(ABC):
         self.buffer = None
         self.updated = None
         self.parent = parent
-        # df._buffer= None
+        # df.buffer= None
         # self.buffer_a = None
 
     @staticmethod
@@ -127,15 +127,15 @@ class BaseExt(ABC):
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
         odf = self.parent
         input_cols = parse_columns(odf, columns)
-        # df._buffer = df.ext.head(input_cols, n)
+        # df.buffer = df.ext.head(input_cols, n)
         
-        odf._buffer = odf.cols.select(input_cols).rows.limit(n).ext.to_pandas()
+        odf.buffer = odf.cols.select(input_cols).rows.limit(n).ext.to_pandas()
         odf.meta.set("buffer_time", int(time.time()))
 
     def get_buffer(self):
-        # return self.df._buffer.values.tolist()
+        # return self.df.buffer.values.tolist()
         # df = self.parent
-        return self.parent._buffer
+        return self.parent.buffer
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
@@ -146,10 +146,10 @@ class BaseExt(ABC):
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
                 odf.ext.set_buffer(columns, n)
-        elif odf._buffer is None:
+        elif odf.ext.get_buffer() is None:
             odf.ext.set_buffer(columns, n)
 
-        df_buffer = odf._buffer
+        df_buffer = odf.ext.get_buffer()
         df_length = len(df_buffer)
         if lower_bound is None:
             lower_bound = 0
@@ -173,7 +173,7 @@ class BaseExt(ABC):
         return df_buffer[input_columns][lower_bound: upper_bound]
 
     def buffer_json(self, columns):
-        df = self.df._buffer
+        df = self.df.buffer
         columns = parse_columns(df, columns)
 
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
@@ -387,13 +387,6 @@ class BaseExt(ABC):
 
         # self.createOrReplaceTempView(value)
 
-    def get_name(self):
-        """
-        Get dataframe name
-        :return:
-        """
-        df = self.df
-        return df.ext._name
 
     @staticmethod
     @abstractmethod
@@ -405,9 +398,9 @@ class BaseExt(ABC):
         raise NotImplementedError
 
     def repartition(self, n=None, *args, **kwargs):
-        df = self.df
+        df = self.parent.data
         df = df.repartition(npartitions=n, *args, **kwargs)
-        return df
+        return self.parent.new(df, meta=self.parent)
 
     @staticmethod
     def table_image(path, limit=10):
@@ -577,10 +570,11 @@ class BaseExt(ABC):
         """
 
         odf = self.parent
+
         if flush is False:
             cols_to_profile = self.calculate_cols_to_profile(odf, columns)
         else:
-            cols_to_profile = parse_columns(odf.data, columns)
+            cols_to_profile = parse_columns(odf, columns)
 
         profiler_data = odf.meta.get("profile")
         if profiler_data is None:
@@ -644,7 +638,7 @@ class BaseExt(ABC):
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
-            # assign(profiler_data, "name", odf.ext.get_name(), dict)
+            assign(profiler_data, "name", odf.meta.get("name"), dict)
             assign(profiler_data, "file_name", odf.meta.get("file_name"), dict)
 
             data_set_info = {'cols_count': odf.cols.count(),
@@ -658,7 +652,7 @@ class BaseExt(ABC):
             assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
             assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            # assign(profiler_data, "summary.p_missing", round(total_count_na / df_length * 100, 2))
+            assign(profiler_data, "summary.p_missing", round(total_count_na / odf.rows.count() * 100, 2))
 
         actual_columns = profiler_data["columns"]
 

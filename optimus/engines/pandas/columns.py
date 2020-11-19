@@ -126,9 +126,8 @@ class Cols(DataFrameBaseColumns):
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    def count_by_dtypes(columns, dtype):
-        df = self
+    def count_by_dtypes(self, columns, dtype):
+        df = self.parent.data
         result = {}
         df_len = len(df)
         for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():

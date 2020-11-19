@@ -136,7 +136,7 @@ class DaskFunctions(Functions):
     def to_datetime(self, series, format):
         return pd.to_datetime(series, format=format, errors="coerce")
 
-    def replace_string(self, series, search, replace_by):
+    def replace_chars(self, series, search, replace_by):
         # if ignore_case is True:
         #     # Cudf do not accept re.compile as argument for replace
         #     # regex = re.compile(str_regex, re.IGNORECASE)

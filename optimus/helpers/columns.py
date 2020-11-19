@@ -174,14 +174,15 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
 
-    # In case we have a list of tuples we use the first element of the tuple is taken as the column name
-    # and the rest as params. We can use the param in a custom function as follow
-    # def func(attrs): attrs return (1,2) and (3,4)
-    #   return attrs[0] + 1
-    # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
-
-    # Verify if we have a list with tuples
     elif is_tuple(cols_args) or is_list_of_tuples(cols_args):
+        # In case we have a list of tuples we use the first element of the tuple is taken as the column name
+        # and the rest as params. We can use the param in a custom function as follow
+        # def func(attrs): attrs return (1,2) and (3,4)
+        #   return attrs[0] + 1
+        # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
+
+        # Verify if we have a list with tuples
+
         cols_args = val_to_list(cols_args)
         # Extract a specific position in the tuple
         cols = [(i[0:1][0]) for i in cols_args]

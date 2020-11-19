@@ -326,7 +326,7 @@ class Profiler:
 
                 output_columns = update_dict(output_columns, updated_columns)
 
-                assign(output_columns, "name", df.ext.get_name(), dict)
+                assign(output_columns, "name", df.meta.get("name"), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 # Add the General data summary to the output
@@ -343,6 +343,7 @@ class Profiler:
                     total_count_na = total_count_na + v["stats"]["count_na"]
 
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
+                print("asdafsasdfasdfa")
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
             # TODO: drop, rename and move operation must affect the sample

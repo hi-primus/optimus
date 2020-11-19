@@ -58,9 +58,12 @@ class DaskBaseRows(BaseRows):
 
         df = self.parent.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
-        # return self.parent.new(df.sample(frac=count/len(df)))
-        # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client..
-        return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
+        limit = count / len(df)
+        limit = 1 if limit > 1 else limit
+
+        return self.parent.new(df.sample(frac=limit))
+        # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
+        # return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
 
     def to_list(self, input_cols):
         """

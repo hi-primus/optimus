@@ -22,8 +22,8 @@ class Functions(ABC):
     # @staticmethod
     def min(self, series):
         # print(self)
-        return self.parent.new(series).cols.to_float().data.min()
-        # return series.min()
+        # return self.parent.new(series).cols.to_float().data.min()
+        return series.astype(float).min()
 
     # @staticmethod
     def max(self, series):
@@ -305,7 +305,7 @@ class Functions(ABC):
 
     @staticmethod
     @abstractmethod
-    def replace_string(series, search, replace_by):
+    def replace_chars(series, search, replace_by):
         pass
 
     @staticmethod

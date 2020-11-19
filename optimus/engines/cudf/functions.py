@@ -119,7 +119,7 @@ def functions(self):
         def cut(self, bins):
             raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
-        def replace_string(self, search, replace_by):
+        def replace_chars(self, search, replace_by):
             series = self.series
             return series.astype(str).str.replace(search, replace_by)
 

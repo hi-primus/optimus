@@ -335,7 +335,7 @@
 #     return Functions.unique(series, *args)
 #
 #
-# def replace_string(series, *args):
+# def replace_chars(series, *args):
 #     return series.functions.replace_string(*args)
 #
 #

@@ -131,13 +131,6 @@ def ext(self):
             # if len(value) == 0:
             #     RaiseIt.value_error(value, ["> 0"])
 
-        @staticmethod
-        def get_name():
-            """
-            Get dataframe name
-            :return:
-            """
-            return self.ext._name
 
         @staticmethod
         def partitions():

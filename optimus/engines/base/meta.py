@@ -33,7 +33,7 @@ class Meta:
         :param value:
         :return:
         """
-        df = self.parent.data
+        df = self.parent
         key = ACTIONS_KEY
 
         old_value = df.meta.get(key)
@@ -98,7 +98,7 @@ class Meta:
         value = val_to_list(value)
 
         for _value in value:
-            df = df.meta.append_action(name, _value)
+            df = self.parent.meta.append_action(name, _value)
 
         return df
 

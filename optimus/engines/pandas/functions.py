@@ -94,7 +94,7 @@ class PandasFunctions(Functions):
     def cut(self, series, bins):
         return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-    def replace_string(self, series, search, replace_by):
+    def replace_chars(self, series, search, replace_by):
         # if ignore_case is True:
         #     # Cudf do not accept re.compile as argument for replace
         #     # regex = re.compile(str_regex, re.IGNORECASE)
