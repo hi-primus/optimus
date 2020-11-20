@@ -15,7 +15,7 @@ from optimus.infer import is_numeric
 class SparkFunctions(Functions):
 
     @staticmethod
-    def replace_string(col, search, replace_by):
+    def replace_chars(col, search, replace_by):
         return F.col(col).cast("float")
 
     @staticmethod
@@ -161,7 +161,7 @@ class SparkFunctions(Functions):
         pass
 
     @staticmethod
-    def replace_string(series, search, replace_by):
+    def replace_chars(series, search, replace_by):
         pass
 
     @staticmethod

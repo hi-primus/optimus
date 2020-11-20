@@ -10,7 +10,7 @@ from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import SparkDataFrame
+from optimus.new_optimus import SparkDataFrame, PandasDataFrame
 
 
 class Load(BaseLoad):

@@ -92,16 +92,6 @@ class Rows(DaskBaseRows):
         return self.filter(*args, **kwargs)
 
     @staticmethod
-    def to_list(input_cols):
-        """
-        Output rows as list
-        :param input_cols:
-        :return:
-        """
-        input_cols = parse_columns(self, input_cols)
-        return self.select(input_cols).rdd.map(lambda x: [v for v in x.asDict().values()]).collect()
-
-    @staticmethod
     @dispatch(str)
     def sort(input_cols) -> DataFrame:
         """
@@ -155,14 +145,13 @@ class Rows(DaskBaseRows):
         df = df.sort(*func)
         return df
 
-    @staticmethod
-    def drop(where=None) -> DataFrame:
+    def drop(self,where=None) -> DataFrame:
         """
         Drop a row depending on a dataframe expression
         :param where: Expression used to drop the row
         :return: Spark DataFrame
         """
-        df = self
+        df = self.paren.data
         df = df.where(~where)
         df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
         return df

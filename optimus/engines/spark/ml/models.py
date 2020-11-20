@@ -10,6 +10,7 @@ from optimus.helpers.columns import parse_columns, name_col
 from optimus.engines.base.ml.contants import STRING_TO_INDEX
 from optimus.engines.spark.ml.encoding import string_to_index, vector_assembler
 from optimus.engines.spark.spark import Spark
+from optimus.infer import is_str
 
 
 class ML:
@@ -51,7 +52,6 @@ class ML:
         df = vector_assembler(df, input_cols=feats, output_col="features")
 
         model = RandomForestClassifier(**kwargs)
-        df.ext.table()
         df = df.cols.rename(name_col(input_col, STRING_TO_INDEX), "label")
 
         rf_model = model.fit(df)

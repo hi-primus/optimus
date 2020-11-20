@@ -24,8 +24,8 @@ class Ext(BaseExt):
     # _name = None
 
     def cache(self):
-        df = self.df
-        return self.cache()
+        df = self.parent.data
+        return self.parent.new(df.cache(), meta=self.parent)
 
     @staticmethod
     def roll_out():
@@ -245,13 +245,6 @@ class Ext(BaseExt):
 
         self.createOrReplaceTempView(value)
 
-    @staticmethod
-    def get_name():
-        """
-        Get dataframe name
-        :return:
-        """
-        return self.ext._name
 
     def to_pandas(self):
         df = self.parent.data
@@ -274,14 +267,12 @@ class Ext(BaseExt):
         """
         return self.rdd.partitioner
 
-    # @add_attr(DataFrame)
-    # def glom(self):
-    #     """
-    #
-    #     :param self: Spark Dataframe
-    #     :return:
-    #     """
-    #     return collect_as_dict(self.rdd.glom().collect()[0])
+
+
+    def repartition(self, n=None, *args, **kwargs):
+        df = self.parent.data
+        df = df.repartition(n, *args, **kwargs)
+        return self.parent.new(df, meta=self.parent)
 
     def h_repartition(self, partitions_number=None, col_name=None):
         """

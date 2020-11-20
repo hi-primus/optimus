@@ -71,7 +71,8 @@ class SparkEngine:
         :type jars: (list[str])
 
         """
-
+        self.engine = 'spark'
+        self.client = session
         self.preserve = False
 
         if comm is True:

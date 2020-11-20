@@ -383,7 +383,7 @@ class Cols(BaseColumns):
             # Parse standard data types
             elif parse_spark_class_dtypes(cls):
 
-                _func_type = "column_exp"
+                _func_type = "column_expr"
 
                 def _cast_to(col_name, attr):
                     return F.col(col_name).cast(parse_spark_class_dtypes(cls))
@@ -415,52 +415,7 @@ class Cols(BaseColumns):
         """
         return Cols.cast(*args, **kwargs)
 
-    # @staticmethod
-    # def keep(columns=None, regex=None):
-    #     """
-    #     Only keep the columns specified
-    #     :param columns: Columns to Keep in the dataFrame
-    #     :param regex: Regular expression to filter
-    #     :return: Spark DataFrame
-    #     """
-    #
-    #     df = self
-    #     if regex:
-    #         r = re.compile(regex)
-    #         columns = list((r.match, self.columns))
-    #
-    #     columns = parse_columns(self, columns)
-    #
-    #     df = df.cols.select(columns)
-    #     df = df.meta.action("keep", columns)
-    #     return df
-
-    # @staticmethod
-    # # TODO: Create a function to sort by datatype?
-    # def sort(order="asc", columns=None):
-    #     """
-    #     Sort data frames columns asc or desc
-    #     :param order: 'asc' or 'desc' accepted
-    #     :param columns:
-    #     :return: Spark DataFrame
-    #     """
-    #     df = self
-    #     if columns is None:
-    #         _reverse = None
-    #         if order == "asc":
-    #             _reverse = False
-    #         elif order == "desc":
-    #             _reverse = True
-    #         else:
-    #             RaiseIt.value_error(order, ["asc", "desc"])
-    #
-    #         columns = df.cols.names()
-    #         columns.sort(key=lambda v: v.upper(), reverse=_reverse)
-    #
-    #     return df.cols.select(columns)
-
-    @staticmethod
-    def drop(columns=None, regex=None, data_type=None):
+    def drop(self, columns=None, regex=None, data_type=None):
         """
         Drop a list of columns
         :param columns: Columns to be dropped
@@ -468,19 +423,18 @@ class Cols(BaseColumns):
         :param data_type:
         :return:
         """
-        df = self
+        odf = self.parent
         if regex:
             r = re.compile(regex)
-            columns = list((r.match, self.columns))
+            columns = [c for c in list(odf.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(self, columns, filter_by_column_dtypes=data_type)
+        columns = parse_columns(odf, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        df = df.drop(*columns)
+        df = odf.data.drop(*columns)
 
-        df = df.meta.preserve(self, "drop", columns)
-
-        return df
+        odf.meta.action(Actions.DROP.value, columns)
+        return self.parent.new(df, odf)
 
     def create_exprs(self, columns, funcs, *args):
         """
@@ -960,7 +914,7 @@ class Cols(BaseColumns):
             _search = attr[0]
             return F.when(F.col(_input_cols).rlike(_search), True).otherwise(False)
 
-        return self.apply(input_cols, func=_match, args=(regex,), func_type="column_exp", func_return_type=str, output_cols=output_cols,
+        return self.apply(input_cols, func=_match, args=(regex,), func_type="column_expr", func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.REPLACE_REGEX.value)
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
