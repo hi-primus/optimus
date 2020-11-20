@@ -8,6 +8,7 @@ from dask import dataframe as dd
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.new_optimus import DaskCUDFDataFrame
 
 
 class Load(BaseLoad):
@@ -49,7 +50,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=False, *args,
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, *args,
             **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -64,23 +65,25 @@ class Load(BaseLoad):
         :param infer_schema: infers the input schema automatically from data.
         :param quoting:
         :param null_value:
+        :param na_filter:
         :param encoding:
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
         """
 
-        file, file_name = prepare_path(path, "csv")[0]
         try:
             df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                     quoting=quoting, error_bad_lines=error_bad_lines,
                                     keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
-            df.meta.set("file_name", file_name)
+            odf = DaskCUDFDataFrame(df)
+            odf.meta.set("file_name", path)
+            odf.meta.set("name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
-        return df
+
+        return odf
 
     @staticmethod
     def parquet(path, columns=None, *args, **kwargs):

@@ -6,6 +6,7 @@
 
 import cudf
 
+from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
 from dask_cudf import Series
 
@@ -61,142 +62,141 @@ def create_func(_df, input_cols, output_cols, func, args=None):
     return create_apply_row(_df, input_cols, output_cols, _func)
 
 
-def functions(self):
-    class DASKCUDFFunctions(Functions):
-        def __init__(self, df):
-            super(DASKCUDFFunctions, self).__init__(df)
+class DaskCUDFFunctions(Functions):
+    def __init__(self, df):
+        super(DaskCUDFFunctions, self).__init__(df)
 
-        def count_zeros(self, *args):
-            series = self.series
-            return int((series.ext.to_float().values == 0).sum())
+    def to_float(self, series, *args):
+        return series.map_partitions(to_float_cudf, meta=float)
 
-        def kurtosis(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.kurtosis())
+    def to_integer(self, series, *args):
+        return series.map_partitions(to_integer_cudf, meta=int)
 
-        def skew(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.skew())
+    def to_string(self, series):
+        return series.astype(str)
 
-        def sqrt(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.sqrt())
+    def count_zeros(self, *args):
+        series = self.series
+        return int((series.ext.to_float().values == 0).sum())
 
-        def exp(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.exp())
+    def kurtosis(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.kurtosis())
 
-        def log(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.log()/cudf.log(10))
+    def skew(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.skew())
 
-        def radians(self):
-            series = self.series
-            return cudf.radians(series.ext.to_float())
+    def sqrt(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.sqrt())
 
-        def degrees(self):
-            series = self.series
-            return cudf.degrees(series.ext.to_float())
+    def exp(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.exp())
 
-        def ln(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.log())
+    def log(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.log() / cudf.log(10))
 
-        def ceil(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.ceil())
+    def radians(self):
+        series = self.series
+        return cudf.radians(series.ext.to_float())
 
-        def floor(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.floor())
+    def degrees(self):
+        series = self.series
+        return cudf.degrees(series.ext.to_float())
 
-        def sin(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.sin())
+    def ln(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.log())
 
-        def cos(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.cos())
+    def ceil(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.ceil())
 
-        def tan(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.tan())
+    def floor(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.floor())
 
-        def asin(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.asin())
+    def sin(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.sin())
 
-        def acos(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.acos())
+    def cos(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.cos())
 
-        def atan(self):
-            series = self.series
-            return series.map_partitions(lambda _series: _series.atan())
+    def tan(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.tan())
 
-        def sinh(self):
-            series = self.series
-            return 1 / 2 * (self.exp() - self.exp())
+    def asin(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.asin())
 
-        def cosh(self):
-            series = self.series
-            return 1 / 2 * (self.exp() + self.exp())
+    def acos(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.acos())
 
-        def tanh(self):
-            return self.sinh() / self.cosh()
+    def atan(self):
+        series = self.series
+        return series.map_partitions(lambda _series: _series.atan())
 
-        def asinh(self):
-            return 1 / self.sinh()
+    def sinh(self):
+        series = self.series
+        return 1 / 2 * (self.exp() - self.exp())
 
-        def acosh(self):
-            return 1 / self.cosh()
+    def cosh(self):
+        series = self.series
+        return 1 / 2 * (self.exp() + self.exp())
 
-        def atanh(self):
-            return 1 / self.tanh()
+    def tanh(self):
+        return self.sinh() / self.cosh()
 
-        def clip(self, lower_bound, upper_bound):
-            raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
+    def asinh(self):
+        return 1 / self.sinh()
 
-        def cut(self, bins):
-            series = self.series
-            return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+    def acosh(self):
+        return 1 / self.cosh()
 
-        # def remove_special_chars(self):
-        #     series = self.series
-        #     return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
+    def atanh(self):
+        return 1 / self.tanh()
 
-        def remove_accents(self):
-            series = self.series
-            # str.decode return a float column. We are forcing to return a string again
-            return series.astype(str).str.normalize_characters()
+    def clip(self, lower_bound, upper_bound):
+        raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
 
-        def remove_special_chars(self):
-            series = self.series
-            # See https://github.com/rapidsai/cudf/issues/5520
-            return series.astype(str).str.replace_non_alphanumns(replacement_char='')
+    def cut(self, bins):
+        series = self.series
+        return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-        def date_format(self, current_format=None, output_format=None):
-            series = self.series
-            return cudf.to_datetime(series).astype('str', format=output_format)
+    # def remove_special_chars(self):
+    #     series = self.series
+    #     return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
-        def years_between(self, date_format=None):
-            raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
-            # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
+    def remove_accents(self, series):
+        # str.decode return a float column. We are forcing to return a string again
+        return series.astype(str).str.normalize_characters()
 
-        def replace_chars(self, search, replace_by):
-            series = self.series
-            # if ignore_case is True:
-            #     # Cudf do not accept re.compile as argument for replace
-            #     # regex = re.compile(str_regex, re.IGNORECASE)
-            #     regex = str_regex
-            # else:
-            #     regex = str_regex
-            replace_by = val_to_list(replace_by)
-            for i, j in zip(search, replace_by):
-                series = series.astype(str).str.replace(i, j)
-            return series
+    def remove_special_chars(self, series):
+        # See https://github.com/rapidsai/cudf/issues/5520
+        return series.astype(str).str.replace_non_alphanumns(replacement_char='')
 
-    return DASKCUDFFunctions(self)
+    def date_format(self, series, current_format=None, output_format=None):
+        return cudf.to_datetime(series).astype('str', format=output_format)
 
+    def years_between(self, date_format=None):
+        raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
+        # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
 
-Series.functions = property(functions)
+    def replace_chars(self, series, search, replace_by):
+        # if ignore_case is True:
+        #     # Cudf do not accept re.compile as argument for replace
+        #     # regex = re.compile(str_regex, re.IGNORECASE)
+        #     regex = str_regex
+        # else:
+        #     regex = str_regex
+        replace_by = val_to_list(replace_by)
+        for i, j in zip(search, replace_by):
+            series = series.astype(str).str.replace(i, j)
+        return series
