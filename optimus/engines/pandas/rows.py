@@ -38,7 +38,6 @@ class Rows(BaseRows):
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
         return self.parent.new(df)
 
-
         return df_list
 
     @dispatch(str, str)
@@ -210,15 +209,14 @@ class Rows(BaseRows):
 
         return self.parent.new(df)
 
-    @staticmethod
-    def limit(count) -> DataFrame:
+    def limit(self, count) -> DataFrame:
         """
         Limit the number of rows
         :param count:
         :return:
         """
-
-        return self[:count - 1]
+        df = self.parent.data
+        return df[:count - 1]
 
     @staticmethod
     def is_in(input_cols, values) -> DataFrame:

@@ -16,7 +16,6 @@ from optimus.helpers.functions_spark import traverse
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
-from optimus.profiler.profiler import Profiler
 
 
 class Ext(BaseExt):
@@ -245,8 +244,8 @@ class Ext(BaseExt):
 
         self.createOrReplaceTempView(value)
 
-
     def to_pandas(self):
+
         df = self.parent.data
         return df.toPandas()
 
@@ -266,8 +265,6 @@ class Ext(BaseExt):
         :return:
         """
         return self.rdd.partitioner
-
-
 
     def repartition(self, n=None, *args, **kwargs):
         df = self.parent.data

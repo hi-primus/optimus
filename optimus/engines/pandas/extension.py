@@ -11,3 +11,6 @@ class Ext(DataFrameBaseExt):
 
     def __init__(self, df):
         super().__init__(df)
+
+    def to_pandas(self):
+        return self.parent.data

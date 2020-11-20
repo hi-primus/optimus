@@ -4,11 +4,13 @@ import ntpath
 import dask.bag as db
 import pandas as pd
 
+from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.new_optimus import PandasDataFrame
 
 
-class Load:
+class Load(BaseLoad):
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
@@ -75,21 +77,24 @@ class Load:
 
         try:
             df_list = []
+            # Pandas do not support \r\n terminator .
+            if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
+                lineterminator = None
 
             for file_name, _ in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding,
-                                 na_values=null_value,
-                                 quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                 na_filter=na_filter, index=False, *args, **kwargs)
+                                 na_values=True, quoting=quoting, lineterminator=lineterminator,
+                                 error_bad_lines=error_bad_lines, na_filter=na_filter)
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)
+            df = PandasDataFrame(df)
             df.meta.set("file_name", local_file_names[0])
 
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
+
         return df
 
     @staticmethod

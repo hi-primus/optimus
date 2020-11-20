@@ -1739,6 +1739,9 @@ class BaseColumns(ABC):
 
         return self.parent.new(df[input_cols].str.match(regex).to_frame())
 
+    def _series_to_dict(self, series):
+        return series.to_dict()
+
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):
 
@@ -1747,7 +1750,7 @@ class BaseColumns(ABC):
 
         @odf.ext.delayed
         def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j} for i, j in _series.to_pandas().to_dict().items()]
+            _result = [{"value": i, "count": j} for i, j in self._series_to_dict(_series).items()]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}

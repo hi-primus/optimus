@@ -14,6 +14,9 @@ class Cols(DaskBaseColumns):
     def _names(self):
         return list(self.parent.data.columns)
 
+    def _series_to_dict(self, series):
+        return series.to_pandas().to_dict()
+
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):
         df = self.parent
         le = preprocessing.LabelEncoder()
@@ -23,6 +26,7 @@ class Cols(DaskBaseColumns):
         df = self.parent
         le = preprocessing.LabelEncoder()
         return index_to_string(df, input_cols, output_cols, le)
+
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.parent
