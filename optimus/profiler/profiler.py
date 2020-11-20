@@ -343,7 +343,6 @@ class Profiler:
                     total_count_na = total_count_na + v["stats"]["count_na"]
 
                 assign(output_columns, "summary.missing_count", total_count_na, dict)
-                print("asdafsasdfasdfa")
                 assign(output_columns, "summary.p_missing", round(total_count_na / self.rows_count * 100, 2))
 
             # TODO: drop, rename and move operation must affect the sample
