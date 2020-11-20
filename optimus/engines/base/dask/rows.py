@@ -9,7 +9,6 @@ from multipledispatch import dispatch
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.converter import pandas_to_dask_dataframe
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list
@@ -55,7 +54,6 @@ class DaskBaseRows(BaseRows):
         :param count:
         :return:
         """
-
         df = self.parent.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
         limit = count / len(df)
@@ -64,18 +62,6 @@ class DaskBaseRows(BaseRows):
         return self.parent.new(df.sample(frac=limit))
         # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
         # return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
-
-    def to_list(self, input_cols):
-        """
-
-        :param input_cols:
-        :return:
-        """
-        odf = self.parent
-        input_cols = parse_columns(odf, input_cols)
-        df = odf.data[input_cols].compute().values.tolist()
-
-        return df
 
     @dispatch(str, str)
     def sort(self, input_cols):
@@ -101,7 +87,7 @@ class DaskBaseRows(BaseRows):
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
-        df = self.df
+        df = self.parent
 
         t = []
         if is_list_of_str_or_int(col_sort):

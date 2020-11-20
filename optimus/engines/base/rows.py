@@ -77,10 +77,17 @@ class BaseRows(ABC):
             result = len(df)
         return result
 
-    @staticmethod
-    @abstractmethod
-    def to_list(input_cols):
-        pass
+    def to_list(self, input_cols):
+        """
+
+        :param input_cols:
+        :return:
+        """
+        odf = self.parent
+        input_cols = parse_columns(odf, input_cols)
+        df = odf[input_cols].ext.to_pandas().values.tolist()
+
+        return df
 
     @staticmethod
     @abstractmethod
@@ -94,12 +101,12 @@ class BaseRows(ABC):
         :return: Spark DataFrame
         :return:
         """
-        df = self.df
+        df = self.parent
         if is_str(where):
             where = eval(where)
 
         df = df[~where]
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
+        df = df.meta.action(Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
