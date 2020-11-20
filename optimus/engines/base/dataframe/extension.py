@@ -19,7 +19,7 @@ class DataFrameBaseExt(BaseExt):
         pass
 
     def cache(self):
-        return self.df
+        return self.parent
 
     def sample(self, n=10, random=False):
         pass
