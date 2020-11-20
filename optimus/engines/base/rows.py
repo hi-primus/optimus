@@ -44,11 +44,11 @@ class BaseRows(ABC):
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self.df
+        df = self.parent
         if is_str(condition):
             condition = eval(condition)
 
-        df["__match__"] = condition
+        df.data["__match__"] = condition
         return df
 
     def select(self, condition):
