@@ -5,7 +5,6 @@ from optimus.engines.base.extension import BaseExt
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.constants import MAX_BUCKETS
 
 
 class Ext(BaseExt):
@@ -51,7 +50,7 @@ class Ext(BaseExt):
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.df
+        df = self.parent
         df_data = df.ext.to_json()
         df_schema = df.cols.dtypes()
 
@@ -87,7 +86,7 @@ class Ext(BaseExt):
         :param seed:
         :return:
         """
-        df = self.df
+        df = self.parent
         n = min(5, df[col_name].value_counts().min())
         df = df.groupby(col_name).apply(lambda x: x.sample(2))
         # df_.index = df_.index.droplevel(0)
@@ -159,12 +158,11 @@ class Ext(BaseExt):
         print("Dask not support custom partitioner")
         raise NotImplementedError
 
-    @staticmethod
-    def show():
+    def show(self):
         """
         :return:
         """
-        df = self
+        df = self.parent.data
         return df.compute()
 
     @staticmethod
@@ -209,49 +207,3 @@ class Ext(BaseExt):
 
     def to_pandas(self):
         return self.parent.data.compute()
-
-# return Ext(self)
-#
-#
-# def ext_series(self: Series):
-#     class Ext(DataFrameSeriesBaseExt):
-#
-#         @staticmethod
-#         def delayed(func):
-#             def wrapper(*args, **kwargs):
-#                 return dask.delayed(func)(*args, **kwargs)
-#
-#             return wrapper
-#
-#         def to_dict(self, index=True):
-#             """
-#             Create a dict
-#             :param index: Return the series index
-#             :return:
-#             """
-#             series = self.series
-#             if index is True:
-#                 return series.compute().to_dict()
-#             else:
-#                 return series.compute().to_list()
-#
-#         def __init__(self, series):
-#             super(Ext, self).__init__(series)
-#             self.series = series
-#
-#         def to_float(self):
-#             series = self.series
-#             return series.map(to_float)
-#
-#         def to_integer(self):
-#             series = self.series
-#             return series.map(to_integer)
-#
-#         def to_datetime(self, format):
-#             series = self.series
-#             return to_datetime(series, format)
-#
-#     return Ext(self)
-
-
-# Series.ext = property(ext_series)

@@ -479,10 +479,10 @@ def prepare_path(path, file_format=None):
     return r
 
 
-def set_func(pdf, value, where, output_col, parser, default=None):
+def set_func(odf, value, where, output_col, parser, default=None):
     """
     Core implementation of the set function
-    :param pdf:
+    :param odf:
     :param value:
     :param where:
     :param output_col:
@@ -491,11 +491,13 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     :return:
     """
 
-    col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
+    col_names = list(filter(lambda x: x != "__match__", odf.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
                                 "bool": "bool", "zip_code": "str"}
-    df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
+
+    df = odf.cols.cast(col_names, profiler_dtype_to_python[parser])
+    F = odf.fucntions
     try:
         if where is None:
             return eval(value)
@@ -504,10 +506,10 @@ def set_func(pdf, value, where, output_col, parser, default=None):
 
             mask = (eval(where))
 
-            if (output_col not in pdf.cols.names()) and (default is not None):
-                pdf[output_col] = pdf[default]
-            pdf.loc[mask, output_col] = eval(value)
-            return pdf[output_col]
+            if (output_col not in odf.cols.names()) and (default is not None):
+                odf[output_col] = odf[default]
+            odf.loc[mask, output_col] = eval(value)
+            return odf[output_col]
 
     except (ValueError, TypeError) as e:
         logger.print(e)

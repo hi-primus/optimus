@@ -8,7 +8,6 @@ import dask.array as da
 import pandas as pd
 from dask.array import stats
 
-# DataFrame = pd.DataFrame
 from optimus.engines.base.commons.functions import to_float, to_integer, to_string
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
@@ -19,99 +18,95 @@ class DaskFunctions(Functions):
         super(DaskFunctions, self).__init__(parent)
 
     def to_float(self, series, *args):
-        return to_float(series)
+        return series.map(to_float)
 
     def to_integer(self, series, *args):
-        return to_integer(series)
+        return series.map(to_integer)
 
     def to_string(self, series, *args):
-        return to_string(series)
+        return series.astype(str)
 
-    def count_zeros(self, *args):
-        series = self.series
-        return int((series.ext.to_float().values == 0).sum())
+    def count_zeros(self, series, *args):
+        return int((self.to_float(series).values == 0).sum())
 
     def kurtosis(self, series):
-        return stats.kurtosis(series.ext.to_float())
+        return stats.kurtosis(self.to_float(series))
 
     def skew(self, series):
-        return stats.skew(series.ext.to_float())
+        return stats.skew(self.to_float(series))
 
     def exp(self, series):
-        return da.exp(series.ext.to_float())
+        return da.exp(self.to_float(series))
 
     def sqrt(self, series):
-        print("series",type(series),series)
-        # s = self.parent.new(series).cols.min()
-        return self.parent.new(series).cols.to_float().data
-        # return
+        return da.sqrt(self.to_float(series))
 
     def unique(self, series, *args):
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
-        return series.astype(str).unique().ext.to_dict(index=False)
+        return self.to_string(series).unique().ext.to_dict(index=False)
 
     # def mod(self, other):
     #     series = self.series
-    #     return da.mod(series.ext.to_float(), other)
+    #     return da.mod(self.to_float(series), other)
 
     # def pow(self, other):
     #     series = self.series
-    #     return da.power(series.ext.to_float(), other)
+    #     return da.power(self.to_float(series), other)
 
     def radians(self, series):
-        return da.radians(series.ext.to_float())
+        return da.radians(self.to_float(series))
 
     def degrees(self, series):
-        return da.degrees(series.ext.to_float())
+        return da.degrees(self.to_float(series))
 
     def ln(self, series):
-        return da.log(series.ext.to_float())
+        return da.log(self.to_float(series))
 
     def log(self, series):
-        return da.log10(series.ext.to_float())
+        return da.log10(self.to_float(series))
 
     def ceil(self, series):
-        return da.ceil(series.ext.to_float())
+        return da.ceil(self.to_float(series))
 
     def sin(self, series):
-        return da.sin(series.ext.to_float())
+        return da.sin(self.to_float(series))
 
     def cos(self, series):
-        return da.cos(series.ext.to_float())
+        return da.cos(self.to_float(series))
 
     def tan(self, series):
-        return da.tan(series.ext.to_float())
+        return da.tan(self.to_float(series))
 
     def asin(self, series):
-        return da.arcsin(series.ext.to_float())
+        return da.arcsin(self.to_float(series))
 
     def acos(self, series):
-        return da.arccos(series.ext.to_float())
+        return da.arccos(self.to_float(series))
 
     def atan(self, series):
-        return da.arctan(series.ext.to_float())
+        return da.arctan(self.to_float(series))
 
     def sinh(self, series):
-        return da.arcsinh(series.ext.to_float())
+        return da.arcsinh(self.to_float(series))
 
     def cosh(self, series):
-        return da.cosh(series.ext.to_float())
+        return da.cosh(self.to_float(series))
 
     def tanh(self, series):
-        return da.tanh(series.ext.to_float())
+        return da.tanh(self.to_float(series))
 
     def asinh(self, series):
-        return da.arcsinh(series.ext.to_float())
+        return da.arcsinh(self.to_float(series))
 
     def acosh(self, series):
-        return da.arccosh(series.ext.to_float())
+        return da.arccosh(self.to_float(series))
 
     def atanh(self, series):
-        return da.arctanh(series.ext.to_float())
+        return da.arctanh(self.to_float(series))
 
     def clip(self, series, lower_bound, upper_bound):
-        return series.ext.to_float().clip(lower_bound, upper_bound)
+        return self.to_float(series).clip(lower_bound, upper_bound)
 
     def cut(self, series, bins):
         return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))

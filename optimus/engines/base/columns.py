@@ -147,7 +147,7 @@ class BaseColumns(ABC):
         df = odf.data.drop(columns=columns)
 
         odf.meta.action(Actions.DROP.value, columns)
-        return self.parent.new(df,odf)
+        return self.parent.new(df, odf)
 
     def keep(self, columns=None, regex=None):
         """
@@ -869,7 +869,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -882,7 +882,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=other)
 
@@ -905,7 +905,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=decimals)
 
@@ -916,7 +916,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -928,7 +928,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -941,7 +941,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -953,7 +953,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -965,7 +965,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -977,7 +977,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -989,7 +989,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1001,7 +1001,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1013,7 +1013,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1025,7 +1025,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1037,7 +1037,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1049,7 +1049,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1061,7 +1061,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1073,7 +1073,7 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
@@ -1161,7 +1161,7 @@ class BaseColumns(ABC):
             _current_format, _output_format = args
             return self.F.date_format(value, _current_format, _output_format)
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas",
                              set_index=True)
@@ -1350,7 +1350,7 @@ class BaseColumns(ABC):
         :param value: value to replace the nan/None values
         :return:
         """
-        df = self.df
+        df = self.parent
 
         def _fill_na(series, *args):
             _value = args[0]
@@ -1369,7 +1369,7 @@ class BaseColumns(ABC):
         def _is_na(value):
             return value.isnull()
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
 
     def count(self):
@@ -1388,12 +1388,12 @@ class BaseColumns(ABC):
         return self.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
-        df = self.df
+        df = self.parent
 
         return df.cols.agg_exprs(columns, self.F.unique, tidy=tidy, compute=compute)
 
     def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
-        df = self.df
+        df = self.parent
         return df.cols.agg_exprs(columns, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
     def _math(self, columns, operator, output_col):
@@ -1404,7 +1404,7 @@ class BaseColumns(ABC):
         :param operator: A lambda function
         :return:
         """
-        df = self.df
+        df = self.parent
         columns = parse_columns(df, columns)
         expr = reduce(operator, [df[col_name].ext.to_float().fillna(0) for col_name in columns])
         return df.assign(**{output_col: expr})
@@ -1416,7 +1416,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols._math(columns, lambda x, y: x + y, output_col)
 
     def sub(self, columns, output_col="sub"):
@@ -1426,7 +1426,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols._math(columns, lambda x, y: x - y, output_col)
 
     def mul(self, columns, output_col="mul"):
@@ -1436,7 +1436,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols._math(columns, lambda x, y: x * y, output_col)
 
     def div(self, columns, output_col="div"):
@@ -1446,12 +1446,12 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.df
+        df = self.parent
         return df.cols._math(columns, lambda x, y: x / y, output_col)
 
     def z_score(self, input_cols, output_cols=None):
 
-        df = self.df
+        df = self.parent
 
         def _z_score(value):
             t = value.astype(float)
@@ -1484,7 +1484,7 @@ class BaseColumns(ABC):
         :param relative_error:
         :return:
         """
-        df = self.df
+        df = self.parent
         iqr_result = {}
         columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
@@ -1523,7 +1523,7 @@ class BaseColumns(ABC):
         :param drop:
         :param mode:
         """
-        df = self.df
+        df = self.parent
 
         if separator is not None:
             separator = re.escape(separator)
@@ -1747,7 +1747,7 @@ class BaseColumns(ABC):
 
         @odf.ext.delayed
         def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
+            _result = [{"value": i, "count": j} for i, j in _series.to_pandas().to_dict().items()]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
@@ -1804,7 +1804,7 @@ class BaseColumns(ABC):
         :param columns: Columns to be processed
         :return:
         """
-        df = self.df
+        df = self.parent
         columns = parse_columns(df, columns)
 
         for col_name in columns:
@@ -1831,7 +1831,7 @@ class BaseColumns(ABC):
         return columns
 
     def count_zeros(self, columns, tidy=True, compute=True):
-        df = self.df
+        df = self.parent
         return df.cols.agg_exprs(columns, self.F.count_zeros, tidy=True, compute=True)
 
     @staticmethod
@@ -1849,7 +1849,7 @@ class BaseColumns(ABC):
                           mode="vectorized")
 
     def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
-        df = self.df
+        df = self.parent
 
         def _clip(value):
             return self.F.clip(value, lower_bound, upper_bound)
@@ -1879,7 +1879,7 @@ class BaseColumns(ABC):
         def _domain(value):
             return value.str.extract(regex_full_url)[4]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
@@ -1887,7 +1887,7 @@ class BaseColumns(ABC):
         def _domain_scheme(value):
             return value.str.extract(regex_full_url)[1]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_SCHEME.value,
                              mode="vectorized")
@@ -1896,7 +1896,7 @@ class BaseColumns(ABC):
         def _domain_params(value):
             return value.str.extract(regex_full_url)[9]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _domain_params, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_PARAMS.value,
                              mode="vectorized")
@@ -1905,7 +1905,7 @@ class BaseColumns(ABC):
         def _domain_path(value):
             return value.str.extract(regex_full_url)[7]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.DOMAIN_PATH.value,
                              mode="vectorized")
 
@@ -1913,7 +1913,7 @@ class BaseColumns(ABC):
         def _port(value):
             return value.str.extract(regex_full_url)[5]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _port, output_cols=output_cols, meta_action=Actions.PORT.value,
                              mode="vectorized")
 
@@ -1921,7 +1921,7 @@ class BaseColumns(ABC):
         def _subdomain(value):
             return value.str.extract(regex_full_url)[3]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
                              mode="vectorized")
 
@@ -1930,7 +1930,7 @@ class BaseColumns(ABC):
         def _email_user(value):
             return value.str.split('@')[0]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _email_user, output_cols=output_cols, meta_action=Actions.EMAIL_USER.value,
                              mode="vectorized")
 
@@ -1940,6 +1940,6 @@ class BaseColumns(ABC):
             # return value.str.extract(r"@(.*)")
             return value.str.split('@')[1]
 
-        df = self.df
+        df = self.parent
         return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
                              mode="vectorized")

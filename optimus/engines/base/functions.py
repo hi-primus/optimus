@@ -15,6 +15,9 @@ class Functions(ABC):
     def to_float(self, series):
         pass
 
+    def to_integer(self, series):
+        pass
+
     def to_string(self, series):
         pass
 
@@ -23,29 +26,28 @@ class Functions(ABC):
     def min(self, series):
         # print(self)
         # return self.parent.new(series).cols.to_float().data.min()
-        return series.astype(float).min()
+        return self.to_float(series).min()
 
     # @staticmethod
     def max(self, series):
-        return self.parent.new(series).cols.to_float().data.max()
+        return self.to_float(series).max()
         # return series.ext.to_float().max()
 
     def mean(self, series):
-        return self.parent.new(series).cols.to_float().data.mean()
+        return self.to_float(series).mean()
 
     def mode(self, series):
-        return self.parent.new(series).cols.to_float().data.mode()
+        return self.to_float(series).mode()
         # return series.ext.to_float().mode().ext.to_dict(index=False)
 
     def std(self, series):
-        return self.parent.new(series).cols.to_float().data.std()
+        return self.to_float(series).std()
 
-    @staticmethod
-    def sum(series):
-        return series.ext.to_float().sum()
+    def sum(self, series):
+        return self.to_float(series).sum()
 
     def var(self, series):
-        return self.parent.new(series).cols.to_float().data.var()
+        return self.to_float(series).var()
 
     @staticmethod
     def count_uniques(series, estimate: bool = True, compute: bool = True):
@@ -272,7 +274,7 @@ class Functions(ABC):
 
     # Strings
     def lower(self, series):
-        return self.parent.new(series).cols.to_string().data.lower()
+        return self.to_string(series).str.lower()
         # return series.astype(str).str.lower()
 
     @staticmethod
