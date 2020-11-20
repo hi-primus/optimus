@@ -53,7 +53,7 @@ class Load(BaseLoad):
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=",", header=True, infer_schema=True, encoding="UTF-8", null_value="None", quoting=3,
+    def csv(path, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None, null_value="None", quoting=3,
             lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -63,6 +63,7 @@ class Load(BaseLoad):
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
+        :param n_rows:
         :param null_value:
         :param charset:
         :param na_filter:
@@ -82,9 +83,10 @@ class Load(BaseLoad):
                 lineterminator = None
 
             for file_name, _ in local_file_names:
-                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding,
-                                 na_values=True, quoting=quoting, lineterminator=lineterminator,
-                                 error_bad_lines=error_bad_lines, na_filter=na_filter)
+                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
+                                 na_values=null_value,
+                                 quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                 na_filter=na_filter, *args, **kwargs)
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)
