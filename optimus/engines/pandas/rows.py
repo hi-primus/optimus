@@ -38,15 +38,6 @@ class Rows(BaseRows):
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
         return self.parent.new(df)
 
-    def to_list(self, input_cols):
-        """
-
-        :param input_cols:
-        :return:
-        """
-        odf = self.parent
-        input_cols = parse_columns(odf, input_cols)
-        df_list = odf.data[input_cols].values.tolist()
 
         return df_list
 

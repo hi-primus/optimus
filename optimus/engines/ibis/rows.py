@@ -39,17 +39,7 @@ class Rows(BaseRows):
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
         return df
 
-    @staticmethod
-    def to_list(input_cols):
-        """
 
-        :param input_cols:
-        :return:
-        """
-        input_cols = parse_columns(self, input_cols)
-        df_list = self[input_cols].values.tolist()
-
-        return df_list
 
     @staticmethod
     @dispatch(str, str)
