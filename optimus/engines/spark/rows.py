@@ -61,18 +61,18 @@ class Rows(DaskBaseRows):
 
         return df_result
 
-    @staticmethod
-    def select(condition) -> DataFrame:
+    def select(self, condition):
         """
         Alias of Spark filter function. Return rows that match a expression
         :param condition:
         :return: Spark DataFrame
         """
-        df = self
+        df = self.parent.data
         df = df.filter(condition)
-        df = df.meta.preserve(self, Actions.SORT_ROW.value, df.cols.names())
+        odf = self.parent.new(df)
+        odf.meta.preserve(self, Actions.SORT_ROW.value, df.cols.names())
 
-        return df
+        return odf
 
     def count(self, compute=True) -> int:
         """
@@ -89,7 +89,7 @@ class Rows(DaskBaseRows):
         :param kwargs:
         :return: Spark DataFrame
         """
-        return self.filter(*args, **kwargs)
+        return self.parent.data.filter(*args, **kwargs)
 
     @staticmethod
     @dispatch(str)

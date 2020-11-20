@@ -44,11 +44,11 @@ class BaseRows(ABC):
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self.df
+        df = self.parent
         if is_str(condition):
             condition = eval(condition)
 
-        df["__match__"] = condition
+        df.data["__match__"] = condition
         return df
 
     def select(self, condition):
@@ -58,12 +58,13 @@ class BaseRows(ABC):
         :return:
         """
 
-        df = self.df
+        df = self.parent.data
         if is_str(condition):
             condition = eval(condition)
         df = df[condition]
-        df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
-        return df
+        odf = self.parent.new(df)
+        odf.meta.action(Actions.SORT_ROW.value, df.cols.names())
+        return odf
 
     def count(self, compute=True) -> int:
         """
