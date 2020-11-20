@@ -5,6 +5,7 @@ import cudf
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.new_optimus import CUDFDataFrame
 
 
 class Load(BaseLoad):
@@ -51,7 +52,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=False, dtype=None,
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, dtype=None,
             *args, **kwargs):
 
         """
@@ -89,12 +90,12 @@ class Load(BaseLoad):
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows, na_filter=na_filter,
                                dtype=dtype)
-            df.ext.reset()
-            df.meta.set("file_name", path)
+            odf = CUDFDataFrame(df)
+            odf.meta.set("file_name", path)
         except IOError as error:
             logger.print(error)
             raise
-        return df
+        return odf
 
     @staticmethod
     def parquet(path, columns=None, *args, **kwargs):

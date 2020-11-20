@@ -14,190 +14,168 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list
 
 
-def rows(self):
-    class Rows(BaseRows):
-        def __init__(self, df):
-            super(Rows, self).__init__(df)
+class Rows(BaseRows):
+    def __init__(self, df):
+        super(Rows, self).__init__(df)
 
-        @staticmethod
-        def create_id(column="id") -> DataFrame:
-            pass
+    @staticmethod
+    def create_id(column="id") -> DataFrame:
+        pass
 
-        def append(self, rows):
-            """
+    def append(self, rows):
+        """
 
-            :param rows:
-            :return:
-            """
-            df = self.df
+        :param rows:
+        :return:
+        """
+        df = self.parent
 
-            if is_list(rows):
-                rows = cudf.DataFrame(rows)
-            # Can not concatenate dataframe with not string columns names
+        if is_list(rows):
+            rows = cudf.DataFrame(rows)
+        # Can not concatenate dataframe with not string columns names
 
-            rows.columns = df.cols.names()
-            # df = cudf.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
-            df = cudf.concat([df, rows], axis=0, ignore_index=True)
-            return df
+        rows.columns = df.cols.names()
+        # df = cudf.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
+        df = cudf.concat([df, rows], axis=0, ignore_index=True)
+        return df
 
+    @staticmethod
+    @dispatch(str, str)
+    def sort(input_cols) -> DataFrame:
+        input_cols = parse_columns(self, input_cols)
+        return self.rows.sort([(input_cols, "desc",)])
 
-        @staticmethod
-        def to_list(input_cols):
-            """
+    @staticmethod
+    @dispatch(str, str)
+    def sort(columns, order="desc") -> DataFrame:
+        """
+        Sort column by row
+        """
+        columns = parse_columns(self, columns)
+        return self.rows.sort([(columns, order,)])
 
-            :param input_cols:
-            :return:
-            """
-            input_cols = parse_columns(self, input_cols)
-            df_list = self[input_cols].to_pandas().values.tolist()
+    @staticmethod
+    @dispatch(list)
+    def sort(col_sort) -> DataFrame:
+        """
+        Sort rows taking into account multiple columns
+        :param col_sort: column and sort type combination (col_name, "asc")
+        :type col_sort: list of tuples
+        """
+        # If a list of columns names are given order this by desc. If you need to specify the order of every
+        # column use a list of tuples (col_name, "asc")
+        df = self
 
-            return df_list
+        t = []
+        if is_list_of_str_or_int(col_sort):
+            for col_name in col_sort:
+                t.append(tuple([col_name, "desc"]))
+            col_sort = t
 
-        @staticmethod
-        @dispatch(str, str)
-        def sort(input_cols) -> DataFrame:
-            input_cols = parse_columns(self, input_cols)
-            return self.rows.sort([(input_cols, "desc",)])
+        for cs in col_sort:
+            col_name = one_list_to_val(cs[0])
+            order = cs[1]
 
-        @staticmethod
-        @dispatch(str, str)
-        def sort(columns, order="desc") -> DataFrame:
-            """
-            Sort column by row
-            """
-            columns = parse_columns(self, columns)
-            return self.rows.sort([(columns, order,)])
+            if order != "asc" and order != "desc":
+                RaiseIt.value_error(order, ["asc", "desc"])
 
-        @staticmethod
-        @dispatch(list)
-        def sort(col_sort) -> DataFrame:
-            """
-            Sort rows taking into account multiple columns
-            :param col_sort: column and sort type combination (col_name, "asc")
-            :type col_sort: list of tuples
-            """
-            # If a list of columns names are given order this by desc. If you need to specify the order of every
-            # column use a list of tuples (col_name, "asc")
-            df = self
+            df = df.meta.preserve(self, Actions.SORT_ROW.value, col_name)
 
-            t = []
-            if is_list_of_str_or_int(col_sort):
-                for col_name in col_sort:
-                    t.append(tuple([col_name, "desc"]))
-                col_sort = t
+            c = df.cols.names()
+            # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
+            # We should fins a way to make it work desc and form multiple columns
+            df.set_index(col_name).reset_index()[c].head()
 
-            for cs in col_sort:
-                col_name = one_list_to_val(cs[0])
-                order = cs[1]
+        return df
 
-                if order != "asc" and order != "desc":
-                    RaiseIt.value_error(order, ["asc", "desc"])
+    @staticmethod
+    def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
+                bounds=None) -> DataFrame:
+        """
+        Trim values at input thresholds
+        :param upper_bound:
+        :param lower_bound:
+        :param columns: Columns to be trimmed
+        :param invert:
+        :param equal:
+        :param bounds:
+        :return:
+        """
+        # TODO: should process string or dates
+        columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+        if bounds is None:
+            bounds = [(lower_bound, upper_bound)]
 
-                df = df.meta.preserve(self, Actions.SORT_ROW.value, col_name)
+        def _between(_col_name):
 
-                c = df.cols.names()
-                # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
-                # We should fins a way to make it work desc and form multiple columns
-                df.set_index(col_name).reset_index()[c].head()
+            if invert is False and equal is False:
+                op1 = operator.gt
+                op2 = operator.lt
+                opb = operator.__and__
 
-            return df
+            elif invert is False and equal is True:
+                op1 = operator.ge
+                op2 = operator.le
+                opb = operator.__and__
 
-        @staticmethod
-        def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
-                    bounds=None) -> DataFrame:
-            """
-            Trim values at input thresholds
-            :param upper_bound:
-            :param lower_bound:
-            :param columns: Columns to be trimmed
-            :param invert:
-            :param equal:
-            :param bounds:
-            :return:
-            """
-            # TODO: should process string or dates
-            columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
-            if bounds is None:
-                bounds = [(lower_bound, upper_bound)]
+            elif invert is True and equal is False:
+                op1 = operator.lt
+                op2 = operator.gt
+                opb = operator.__or__
 
-            def _between(_col_name):
+            elif invert is True and equal is True:
+                op1 = operator.le
+                op2 = operator.ge
+                opb = operator.__or__
 
-                if invert is False and equal is False:
-                    op1 = operator.gt
-                    op2 = operator.lt
-                    opb = operator.__and__
+            sub_query = []
+            for bound in bounds:
+                _lower_bound, _upper_bound = bound
+                sub_query.append(opb(op1(df[_col_name], _lower_bound), op2(df[_col_name], _upper_bound)))
+            query = functools.reduce(operator.__or__, sub_query)
 
-                elif invert is False and equal is True:
-                    op1 = operator.ge
-                    op2 = operator.le
-                    opb = operator.__and__
+            return query
 
-                elif invert is True and equal is False:
-                    op1 = operator.lt
-                    op2 = operator.gt
-                    opb = operator.__or__
+        df = self
+        for col_name in columns:
+            df = df.rows.select(_between(col_name))
+        df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+        return df
 
-                elif invert is True and equal is True:
-                    op1 = operator.le
-                    op2 = operator.ge
-                    opb = operator.__or__
+    @staticmethod
+    def drop_by_dtypes(input_cols, data_type=None):
+        df = self
+        return df
 
-                sub_query = []
-                for bound in bounds:
-                    _lower_bound, _upper_bound = bound
-                    sub_query.append(opb(op1(df[_col_name], _lower_bound), op2(df[_col_name], _upper_bound)))
-                query = functools.reduce(operator.__or__, sub_query)
+    def drop_duplicates(self, input_cols=None) -> DataFrame:
+        """
+        Drop duplicates values in a dataframe
+        :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
+        :return: Return a new DataFrame with duplicate rows removed
+        :param input_cols:
+        :return:
+        """
+        df = self.parent.data
+        input_cols = parse_columns(df, input_cols)
+        input_cols = val_to_list(input_cols)
+        df = df.drop_duplicates(subset=input_cols)
 
-                return query
+        return self.parent.new(df)
 
-            df = self
-            for col_name in columns:
-                df = df.rows.select(_between(col_name))
-            df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
-            return df
+    def limit(self, count) -> DataFrame:
+        """
+        Limit the number of rows
+        :param count:
+        :return:
+        """
 
-        @staticmethod
-        def drop_by_dtypes(input_cols, data_type=None):
-            df = self
-            return df
+        return self.parent.new(self.parent.data[:count - 1])
 
-        @staticmethod
-        def drop_duplicates(input_cols=None) -> DataFrame:
-            """
-            Drop duplicates values in a dataframe
-            :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
-            :return: Return a new DataFrame with duplicate rows removed
-            :param input_cols:
-            :return:
-            """
-            df = self
-            input_cols = parse_columns(df, input_cols)
-            input_cols = val_to_list(input_cols)
-            df = df.drop_duplicates(subset=input_cols)
+    def is_in(self, input_cols, values) -> DataFrame:
+        df = self.parent
+        return df
 
-            return df
-
-        @staticmethod
-        def limit(count) -> DataFrame:
-            """
-            Limit the number of rows
-            :param count:
-            :return:
-            """
-
-            return self[:count - 1]
-
-        @staticmethod
-        def is_in(input_cols, values) -> DataFrame:
-            df = self
-            return df
-
-        @staticmethod
-        def unnest(input_cols) -> DataFrame:
-            df = self
-            return df
-
-    return Rows(self)
-
-
-DataFrame.rows = property(rows)
+    @staticmethod
+    def unnest(input_cols) -> DataFrame:
+        df = self
+        return df
