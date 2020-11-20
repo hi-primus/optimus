@@ -216,7 +216,7 @@ class Rows(BaseRows):
         :return:
         """
         df = self.parent.data
-        return df[:count - 1]
+        return self.parent.new(df[:count - 1])
 
     @staticmethod
     def is_in(input_cols, values) -> DataFrame:
