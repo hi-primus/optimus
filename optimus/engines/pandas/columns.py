@@ -33,7 +33,7 @@ class Cols(DataFrameBaseColumns):
         :param sub:
         :return:
         """
-        df = self.df
+        df = self.parent.data
         return find(df, columns, sub, ignore_case)
 
     @staticmethod

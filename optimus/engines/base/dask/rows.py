@@ -7,7 +7,7 @@ import pandas as pd
 from multipledispatch import dispatch
 
 from optimus.engines.base.rows import BaseRows
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
@@ -201,9 +201,23 @@ class DaskBaseRows(BaseRows):
 
         return df
 
-    def is_in(self, input_cols, values):
-        df = self.df
-        return df
+    def is_in(self, input_cols, values, output_cols=None):
+
+        # return self.apply()
+        def _is_in(value, *args):
+            _values = args
+            return  value.isin(_values)
+        df = self.parent
+        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols, args=None)
+
+        # df = self.parent.data
+        # columns = prepare_columns(self.parent, input_cols, output_cols, accepts_missing_cols=True)
+        # kw_columns ={}
+        # for input_col, output_col in columns:
+        #     kw_columns[output_col]= df[input_col].isin(values)
+        #
+        # df = df.assign(**kw_columns)
+        # return self.parent.new(df)
 
     def unnest(self, input_cols):
         df = self.df

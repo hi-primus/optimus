@@ -44,12 +44,12 @@ class BaseRows(ABC):
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self.parent
+        df = self.parent.data
         if is_str(condition):
             condition = eval(condition)
 
-        df.data["__match__"] = condition
-        return df
+        df["__match__"] = condition
+        return self.parent.new(df)
 
     def select(self, condition):
         """
@@ -63,7 +63,7 @@ class BaseRows(ABC):
             condition = eval(condition)
         df = df[condition]
         odf = self.parent.new(df)
-        odf.meta.action(Actions.SORT_ROW.value, df.cols.names())
+        odf.meta.action(Actions.SORT_ROW.value, odf.cols.names())
         return odf
 
     def count(self, compute=True) -> int:
@@ -102,13 +102,14 @@ class BaseRows(ABC):
         :return: Spark DataFrame
         :return:
         """
-        df = self.parent
+        df = self.parent.data
         if is_str(where):
             where = eval(where)
 
         df = df[~where]
-        df = df.meta.action(Actions.DROP_ROW.value, df.cols.names())
-        return df
+        odf = self.parent.new(df)
+        odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
+        return odf
 
     @staticmethod
     @abstractmethod
@@ -159,7 +160,7 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
-    def is_in(input_cols, values):
+    def is_in(input_cols, values, output_cols=None):
         pass
 
     @staticmethod
