@@ -133,7 +133,7 @@ class BaseDataFrame(ABC):
         pass
 
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        odf = self.data
+        odf = self
         input_cols = parse_columns(odf, columns)
         # df.buffer = df.head(input_cols, n)
 
@@ -143,7 +143,7 @@ class BaseDataFrame(ABC):
     def get_buffer(self):
         # return self.df.buffer.values.tolist()
         # df = self.parent
-        return self.data.buffer
+        return self.buffer
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
