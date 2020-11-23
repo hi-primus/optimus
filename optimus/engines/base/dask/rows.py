@@ -208,7 +208,7 @@ class DaskBaseRows(BaseRows):
             _values = args
             return  value.isin(_values)
         df = self.parent
-        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols, args=None)
+        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols)
 
         # df = self.parent.data
         # columns = prepare_columns(self.parent, input_cols, output_cols, accepts_missing_cols=True)
