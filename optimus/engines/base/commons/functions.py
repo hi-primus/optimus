@@ -1,6 +1,6 @@
 import re
 
-import cudf
+
 import fastnumbers
 import numpy as np
 import pandas as pd
@@ -17,6 +17,7 @@ from optimus.infer import is_str
 
 
 def to_float_cudf(series):
+    import cudf
     series_string = series.astype(str)
     # See https://github.com/rapidsai/cudf/issues/5345
     # series = cudf.Series(series_string.str.stof()).fillna(False)
