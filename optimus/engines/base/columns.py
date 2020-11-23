@@ -1136,9 +1136,24 @@ class BaseColumns(ABC):
         #     return df
 
     def to_string(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_string, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
-                          func_type="column_expr")
+        filtered_columns = []
+        df = self.parent
+
+        input_cols = parse_columns(df, input_cols)
+        for col_name in input_cols:
+
+            # print("df.data[col_name].dtype",df.data[col_name].dtype)
+            if df.data[col_name].dtype != np.object:
+                print("aaaa", col_name,df.data[col_name].dtype)
+                filtered_columns.append(col_name)
+
+        # print("filtered_columns", filtered_columns)
+        if len(filtered_columns) > 0:
+            return self.apply(input_cols, self.F.to_string, func_return_type=str,
+                              output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
+                              func_type="column_expr")
+        else:
+            return df
 
     def lower(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
@@ -1617,7 +1632,8 @@ class BaseColumns(ABC):
         @odf.delayed
         def _hist(pdf, col_name, _bins):
             # import cupy as cp
-            _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
+            _count, bins_edges = np.histogram(pd.to_numeric(pdf, errors='coerce'), bins=_bins[col_name])
+            # _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
             # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
@@ -1639,8 +1655,9 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
+        # print("odf.data",type(odf.data),odf.data)
         partitions = odf.to_delayed()
-        c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
+        c = [_hist(part[col_name], col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
 
@@ -1736,8 +1753,8 @@ class BaseColumns(ABC):
 
         return self.parent.new(df[input_cols].str.match(regex).to_frame())
 
-    def _series_to_dict(self, series):
-        return series.to_dict()
+    # def _series_to_dict(series):
+    #     return series.to_dict()
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):
@@ -1747,7 +1764,7 @@ class BaseColumns(ABC):
 
         @odf.delayed
         def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j} for i, j in self._series_to_dict(_series).items()]
+            _result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
@@ -1769,7 +1786,7 @@ class BaseColumns(ABC):
 
             return _value_counts
 
-        value_counts = [odf.data[col_name].astype(str).value_counts() for col_name in columns]
+        value_counts = [odf.cols.to_string().data[col_name].value_counts() for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 

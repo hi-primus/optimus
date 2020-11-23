@@ -20,7 +20,9 @@ class DaskBaseColumns(BaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def _map(self, df, input_col, output_col, func, args, kw_columns):
-        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+        # def _func(value):
+        #     return value.map(func)
+        kw_columns[output_col] = df[input_col].map(func, *args)
         return kw_columns
 
     @staticmethod

@@ -22,6 +22,7 @@ class DaskFunctions(Functions):
 
     def to_float(self, series):
         return to_float(series)
+        # return pd.to_numeric(series, errors="coerce")
 
     def _to_integer(self, value):
         return value.map(to_integer)

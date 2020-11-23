@@ -192,4 +192,8 @@ class Ext(BaseDataFrame):
         return self.data
 
     def to_delayed(self):
-        return self.data
+        return [self.data]
+
+    def repartition(self, n=None, *args, **kwargs):
+        df = self.data
+        return self.root.new(df, meta=self.root)

@@ -178,7 +178,7 @@ class BaseDataFrame(ABC):
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(odf, columns)
-        return df_buffer[input_columns][lower_bound: upper_bound]
+        return self.root.new(df_buffer[input_columns][lower_bound: upper_bound])
 
     def buffer_json(self, columns):
         df = self.df.buffer

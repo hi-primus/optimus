@@ -69,7 +69,7 @@ class Cols(DataFrameBaseColumns):
 
         df = self.parent
         return df.cols.apply(input_cols, to_float_cudf, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
-                             mode="pandas")
+                             mode="map")
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
