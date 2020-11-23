@@ -162,7 +162,7 @@ class Ext(BaseDataFrame):
         """
         odf = self.root
         columns = parse_columns(odf, columns)
-        return odf.data[columns].head(n, npartitions=-1)
+        return odf.data[columns].head(n)
 
     @staticmethod
     def create_id(column="id"):
