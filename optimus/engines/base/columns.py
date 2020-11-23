@@ -13,7 +13,7 @@ from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
-from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
+from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
@@ -188,6 +188,9 @@ class BaseColumns(ABC):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
+    def _map(self, df, input_col, output_col, func, args, kw_columns):
+        pass
+
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
@@ -204,7 +207,6 @@ class BaseColumns(ABC):
 
         df = self.parent.data
         if mode == "whole":
-            print("ASDASDASD")
             df = func(df)
         else:
             for input_col, output_col in columns:
@@ -224,10 +226,8 @@ class BaseColumns(ABC):
                     else:
                         kw_columns[output_col] = func(df[input_col], *args)
                 elif mode == "map":
-                    if is_dask_cudf_dataframe(df):
-                        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
-                    else:
-                        kw_columns[output_col] = df[input_col].map(func, *args)
+                    kw_columns = self._map(df, input_col, output_col, func, args, kw_columns)
+
                 # Preserve column order
                 if output_col not in self.names():
                     col_index = output_ordered_columns.index(input_col) + 1
@@ -1131,7 +1131,7 @@ class BaseColumns(ABC):
         # print("filtered_columns", filtered_columns)
         # if len(filtered_columns) > 0:
         return self.apply(input_cols, self.F.to_integer, func_return_type=int,
-                              output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
         # else:
         #     return df
 

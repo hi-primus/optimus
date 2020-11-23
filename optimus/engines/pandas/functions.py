@@ -13,14 +13,17 @@ class PandasFunctions(Functions):
     def __init__(self, df):
         super(PandasFunctions, self).__init__(df)
 
-    def to_float(self, series, *args):
+    def _to_float(self, value):
+        return value.map(to_float)
+
+    def to_float(self, series):
         return to_float(series)
 
-    def to_integer(self, series, *args):
-        return to_integer(series)
+    def _to_integer(self, value):
+        return value.map(to_integer)
 
-    def to_string(self, series, *args):
-        return to_string(series)
+    def to_integer(self, series):
+        return to_integer(series)
 
     def count_zeros(self, series, *args):
         return int((series.to_float().values == 0).sum())

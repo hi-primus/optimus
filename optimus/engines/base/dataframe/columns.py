@@ -11,6 +11,10 @@ class DataFrameBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
+    def _map(self, df, input_col, output_col, func, args, kw_columns):
+        kw_columns[output_col] = df[input_col].map(func, *args)
+        return kw_columns
+
     @staticmethod
     def exec_agg(exprs, compute=None):
         """

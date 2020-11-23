@@ -190,3 +190,6 @@ class Ext(BaseDataFrame):
 
     def to_pandas(self):
         return self.data
+
+    def to_delayed(self):
+        return self.data

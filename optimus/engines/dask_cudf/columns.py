@@ -16,6 +16,11 @@ class Cols(DaskBaseColumns):
     def _names(self):
         return list(self.parent.data.columns)
 
+    def _map(self, df, input_col, output_col, func, args, kw_columns):
+        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+        return kw_columns
+
     def _series_to_dict(self, series):
         return series.to_pandas().to_dict()
 
@@ -82,8 +87,8 @@ class Cols(DaskBaseColumns):
 
         for col_name in columns:
             r = odf.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
-                                             chunk_kwargs={
-                                                 '_bins': _bins[col_name]})
+                                                                     chunk_kwargs={
+                                                                         '_bins': _bins[col_name]})
             reductions.append(format(r, _bins[col_name]))
 
         d = dask.delayed(reductions)

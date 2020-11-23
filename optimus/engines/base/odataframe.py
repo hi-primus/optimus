@@ -147,7 +147,7 @@ class BaseDataFrame(ABC):
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
-        odf = self.data
+        odf = self.root
         buffer_time = odf.meta.get("buffer_time")
         last_action_time = odf.meta.get("last_action_time")
 
@@ -178,7 +178,7 @@ class BaseDataFrame(ABC):
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(odf, columns)
-        return self.data.new(df_buffer[input_columns][lower_bound: upper_bound])
+        return df_buffer[input_columns][lower_bound: upper_bound]
 
     def buffer_json(self, columns):
         df = self.df.buffer
