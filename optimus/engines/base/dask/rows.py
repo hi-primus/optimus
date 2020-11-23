@@ -7,7 +7,7 @@ import pandas as pd
 from multipledispatch import dispatch
 
 from optimus.engines.base.rows import BaseRows
-from optimus.helpers.columns import parse_columns, prepare_columns
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt

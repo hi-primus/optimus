@@ -67,7 +67,8 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        odf = self.data
+        odf = self
+        print("odf",type(odf),odf)
         if format == "bumblebee":
             columns = parse_columns(odf, columns)
             result = {"sample": {"columns": [{"title": col_name} for col_name in odf.cols.select(columns).cols.names()],

@@ -151,7 +151,7 @@ class BaseRows(ABC):
         """
         odf = self.parent
         input_cols = parse_columns(odf, input_cols)
-        df = odf[input_cols].to_pandas().values.tolist()
+        df = odf.cols.select(input_cols).to_pandas().values.tolist()
 
         return df
 
