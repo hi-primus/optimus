@@ -24,7 +24,7 @@ class DaskBaseRows(BaseRows):
 
     def create_id(self, column="id"):
         # Reference https://github.com/dask/dask/issues/1426
-        df = self.df
+        df = self.parent.data
         # print(df)
         a = da.arange(df.divisions[-1] + 1, chunks=df.divisions[1:])
         df[column] = dd.from_dask_array(a)
@@ -36,7 +36,7 @@ class DaskBaseRows(BaseRows):
         :param rows:
         :return:
         """
-        df = self.df
+        df = self.parent.data
 
         if is_list(rows):
             rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
@@ -56,8 +56,19 @@ class DaskBaseRows(BaseRows):
         """
         df = self.parent.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
-        limit = count / len(df)
-        limit = 1 if limit > 1 else limit
+
+        if count is None:
+            return df
+
+        length_df = len(df)
+
+        if length_df == 0:
+            limit = 0
+        else:
+            limit = count / length_df
+
+            # Param frac can not be greater than 1
+            limit = 1 if limit > 1 else limit
 
         return self.parent.new(df.sample(frac=limit))
         # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
@@ -65,7 +76,7 @@ class DaskBaseRows(BaseRows):
 
     @dispatch(str, str)
     def sort(self, input_cols):
-        df = self.df
+        df = self.parent.data
         input_cols = parse_columns(df, input_cols)
         return df.rows.sort([(input_cols, "desc",)])
 
@@ -74,7 +85,7 @@ class DaskBaseRows(BaseRows):
         """
         Sort column by row
         """
-        df = self.df
+        df = self.parent.data
         columns = parse_columns(df, columns)
         return df.rows.sort([(columns, order,)])
 
@@ -125,7 +136,7 @@ class DaskBaseRows(BaseRows):
         :param upper_bound:
         :return:
         """
-        df = self.df
+        df = self.parent.data
         columns = parse_columns(df, columns)
         return df[lower_bound: upper_bound][columns]
 
@@ -141,9 +152,10 @@ class DaskBaseRows(BaseRows):
         :param bounds:
         :return:
         """
-        df = self.df
+        df = self.parent
         # TODO: should process string or dates
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]
 
@@ -177,14 +189,13 @@ class DaskBaseRows(BaseRows):
 
             return query
 
-        # df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
+        df.meta.action(Actions.DROP_ROW.value, df.cols.names())
         return df
 
     def drop_by_dtypes(self, input_cols, data_type=None):
-        df = self
+        df = self.parent.data
         return df
 
     def drop_duplicates(self, keep="first", subset=None):
@@ -194,21 +205,22 @@ class DaskBaseRows(BaseRows):
         :return: Return a new DataFrame with duplicate rows removed
         :return:
         """
-        df = self.df
+        df = self.parent.data
         subset = parse_columns(df, subset)
         subset = val_to_list(subset)
         df = df.drop_duplicates(keep=keep, subset=subset)
 
-        return df
+        return self.parent.new(df)
 
     def is_in(self, input_cols, values, output_cols=None):
 
         # return self.apply()
         def _is_in(value, *args):
             _values = args
-            return  value.isin(_values)
+            return value.isin(_values)
+
         df = self.parent
-        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols, args=None)
+        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols)
 
         # df = self.parent.data
         # columns = prepare_columns(self.parent, input_cols, output_cols, accepts_missing_cols=True)
@@ -220,7 +232,7 @@ class DaskBaseRows(BaseRows):
         # return self.parent.new(df)
 
     def unnest(self, input_cols):
-        df = self.df
+        df = self.parent.data
         return df
 
     def approx_count(self):

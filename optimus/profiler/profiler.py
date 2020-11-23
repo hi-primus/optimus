@@ -110,7 +110,7 @@ class Profiler:
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        # self.html = html + df.ext.display_html(10)
+        # self.html = html + df.display_html(10)
         self.html = html
 
         # Display HTML
@@ -332,7 +332,7 @@ class Profiler:
                 # Add the General data summary to the output
                 data_set_info = {'cols_count': cols_count,
                                  'rows_count': rows_count,
-                                 'size': humanize.naturalsize(df.ext.size()),
+                                 'size': humanize.naturalsize(df.size()),
                                  'sample_size': sample}
 
                 assign(output_columns, "summary", data_set_info, dict)

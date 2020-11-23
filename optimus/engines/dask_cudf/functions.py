@@ -4,15 +4,13 @@
 # from dask_cudf.core import DataFrame as DaskCUDFDataFrame
 
 
+import random
+import string
+
 import cudf
 
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
-from dask_cudf import Series
-
-import random
-import string
-
 from optimus.helpers.core import val_to_list
 
 
@@ -48,7 +46,6 @@ def __func({",".join(input_temp_names)},{",".join(output_cols)}):
 
 
 import numpy as np
-import math
 
 
 def create_func(_df, input_cols, output_cols, func, args=None):
@@ -66,25 +63,32 @@ class DaskCUDFFunctions(Functions):
     def __init__(self, df):
         super(DaskCUDFFunctions, self).__init__(df)
 
-    def to_float(self, series, *args):
+    def _to_float(self, series, *args):
         return series.map_partitions(to_float_cudf, meta=float)
 
-    def to_integer(self, series, *args):
+    def _to_integer(self, series, *args):
         return series.map_partitions(to_integer_cudf, meta=int)
 
+    def to_float(self, series):
+        return to_float_cudf(series)
+
+    def to_integer(self, series):
+        return to_integer_cudf(series)
+
     def to_string(self, series):
+        print(series.dtype)
         return series.astype(str)
 
     def count_zeros(self, *args):
         series = self.series
-        return int((series.ext.to_float().values == 0).sum())
+        return int((series.to_float().values == 0).sum())
 
     def kurtosis(self):
         series = self.series
         return series.map_partitions(lambda _series: _series.kurtosis())
 
-    def skew(self):
-        series = self.series
+    def skew(self, series):
+        # series = self.series
         return series.map_partitions(lambda _series: _series.skew())
 
     def sqrt(self):
@@ -101,11 +105,11 @@ class DaskCUDFFunctions(Functions):
 
     def radians(self):
         series = self.series
-        return cudf.radians(series.ext.to_float())
+        return cudf.radians(series.to_float())
 
     def degrees(self):
         series = self.series
-        return cudf.degrees(series.ext.to_float())
+        return cudf.degrees(series.to_float())
 
     def ln(self):
         series = self.series
@@ -168,7 +172,7 @@ class DaskCUDFFunctions(Functions):
 
     def cut(self, bins):
         series = self.series
-        return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+        return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
     # def remove_special_chars(self):
     #     series = self.series

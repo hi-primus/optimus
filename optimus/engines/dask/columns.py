@@ -26,7 +26,7 @@ class Cols(DaskBaseColumns):
     #     result = {}
     #     for col_name in columns:
     #
-    #         df_numeric = df[col_name].ext.to_float()
+    #         df_numeric = df[col_name].to_float()
     #
     #         if len(df_numeric) > 0:
     #             _count, _bins = da.histogram(df["id"].astype(int), bins=buckets, range=[1, 19])

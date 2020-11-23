@@ -178,7 +178,7 @@ source_df.cols.min("rank")
 
 t.create(None, "cols.range", None, "json", None, numeric_col)
 
-source_df.ext.display()
+source_df.display()
 
 t.create(None, "cols.range", "all_columns", "json", None, "*")
 
@@ -238,14 +238,14 @@ t.create(None, "cols.variance", None, "json",None, numeric_col)
 t.create(None, "cols.variance", "all_columns", "json", None, "*")
 t.run()
 
-source_df.ext.table()
+source_df.table()
 
 t.create(None, "cols.abs", None, "df", None, "weight(t)")
 t.run()
 
 t.create(None, "cols.abs", "all_columns", "df", None, "*")
 
-source_df.ext.table()
+source_df.table()
 
 source_df.mode(dropna=True)
 
@@ -323,7 +323,7 @@ t.create(None, "cols.iqr", "all_columns", "json", None, "*")
 
 t.run()
 
-source_df.ext.display()
+source_df.display()
 
 t.create(None, "cols.lower", None, "df", None, string_col)
 
@@ -349,7 +349,7 @@ t.create(None, "cols.remove_accents", None, "df", None, string_col)
 
 t.create(None, "cols.remove_accents", "all_columns", "df", None,string_col)
 
-source_df.ext.table()
+source_df.table()
 
 t.create(None, "cols.remove_special_chars", None, "df", None, string_col)
 
@@ -466,7 +466,7 @@ t.run()
 # t.create(None, "cols.append", "number", "df", None, new_col, 1)
 # -
 
-df_col.ext.to_json()
+df_col.to_json()
 
 t.delete(None, "cols.append", "dataframes", "df", None, df_col)
 t.run()
@@ -500,7 +500,7 @@ t.run()
 # t.delete(None, "cols.cast", "vector", "df", array_col, Vectors)
 # -
 
-source_df.cols.keep(numeric_col_B).ext.display()
+source_df.cols.keep(numeric_col_B).display()
 
 t.create(None, "cols.keep", None, "df", None, numeric_col_B)
 
@@ -765,7 +765,7 @@ t.create(None, "save.json", None, None, None, "test.json")
 
 t.run()
 
-source_df.ext.table()
+source_df.table()
 
 # # Ouliers
 
@@ -791,13 +791,13 @@ new_col = "new col"
 array_col = "attributes"
 # -
 
-source_df.ext.table()
+source_df.table()
 
 # ## Tukey
 
 t.create(None, "outliers.tukey", None, "df", "select", numeric_col)
 
-source_df.outliers.tukey(numeric_col).drop().ext.table()
+source_df.outliers.tukey(numeric_col).drop().table()
 
 t.create(None, "outliers.tukey", None, "df", "drop", numeric_col)
 
@@ -883,7 +883,7 @@ source_df = op.load.csv("../../examples/data/random.csv", header=True, sep=";", 
        'PAGINI': 'object',
        'cCodigoPostal': 'object'})
 
-source_df.ext.table()
+source_df.table()
 
 # +
 t = Test(op, source_df, "df_keycollision_dask", imports=["import numpy as np",

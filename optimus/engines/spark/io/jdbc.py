@@ -71,7 +71,7 @@ class JDBC:
             schema = self.schema
         query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
-        return df.ext.display(limit)
+        return df.display(limit)
 
     def tables_names_to_json(self, schema=None):
         """
@@ -84,7 +84,7 @@ class JDBC:
         query = self.driver_context.table_name_query(schema=schema, database=self.database)
         table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i[table_name] for i in df.ext.to_dict()]
+        return [i[table_name] for i in df.to_dict()]
 
     @property
     def table(self):
@@ -133,7 +133,7 @@ class JDBC:
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        df = df.ext.run()
+        df = df.run()
         return df
 
     def _build_conf(self, query=None, limit=None):

@@ -85,7 +85,7 @@ class DaskBaseJDBC:
         #     schema = self.schema
         # query = self.driver_context.table_names_query(schema=schema, database=database)
         # df = self.execute(query, limit)
-        # return df.ext.display(limit)
+        # return df.display(limit)
 
         engine = create_engine(self.uri)
         return engine.table_names()
@@ -101,7 +101,7 @@ class DaskBaseJDBC:
         query = self.driver_context.table_name_query(schema=schema, database=self.database)
         table_name = self.driver_properties.value["table_name"]
         df = self.execute(query, "all")
-        return [i[table_name] for i in df.ext.to_dict()]
+        return [i[table_name] for i in df.to_dict()]
 
     @property
     def table(self):
@@ -140,7 +140,7 @@ class DaskBaseJDBC:
         df = self.execute(query, limit)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        # df = df.ext.run()
+        # df = df.run()
         # df = dask_pandas_to_dask_cudf(df)
         return df
 

@@ -9,7 +9,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.new_optimus import SparkDataFrame
+# from optimus.new_optimus import SparkDataFrame
 
 
 def has_(value, _type):
@@ -72,24 +72,24 @@ def is_column_a(df, column=None, dtypes="str"):
 # def is_cudf_series(value):
 #     return cudf.core.series.Series
 
-def is_cudf_dataframe(value):
-    from cudf.core import DataFrame as CUDFDataFrame
-    return isinstance(value, CUDFDataFrame)
-
-
-def is_cudf_series(value):
-    import cudf
-    return isinstance(value, cudf.core.series.Series)
-
-
+# def is_cudf_dataframe(value):
+#     from cudf.core import DataFrame as CUDFDataFrame
+#     return isinstance(value, CUDFDataFrame)
+#
+#
+# def is_cudf_series(value):
+#     import cudf
+#     return isinstance(value, cudf.core.series.Series)
+#
+#
 def is_dask_cudf_dataframe(value):
     from dask_cudf.core import DataFrame as DaskCUDFDataFrame
     return isinstance(value, DaskCUDFDataFrame)
 
-
-def is_dask_cudf_series(value):
-    from dask_cudf.core import Series as DaskCUDFSeries
-    return isinstance(value, DaskCUDFSeries)
+#
+# def is_dask_cudf_series(value):
+#     from dask_cudf.core import Series as DaskCUDFSeries
+#     return isinstance(value, DaskCUDFSeries)
 
 
 def is_dask_dataframe(value):

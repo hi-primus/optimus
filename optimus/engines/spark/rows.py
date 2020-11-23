@@ -89,7 +89,7 @@ class Rows(DaskBaseRows):
         :param kwargs:
         :return: Spark DataFrame
         """
-        return self.parent.data.filter(*args, **kwargs)
+        return self.root.data.filter(*args, **kwargs)
 
     @staticmethod
     @dispatch(str)

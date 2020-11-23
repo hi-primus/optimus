@@ -333,7 +333,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
 
     # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
 
-    start_mem_usg = df.ext.size()
+    start_mem_usg = df.size()
 
     ints = df.applymap(isint).sum().compute().to_dict()
     floats = df.applymap(isfloat).sum().compute().to_dict()
@@ -393,7 +393,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     #             final[col_name] = "category"
 
     df = df.astype(final)
-    mem_usg = df.ext.size()
+    mem_usg = df.size()
 
     if verbose is True:
         print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))

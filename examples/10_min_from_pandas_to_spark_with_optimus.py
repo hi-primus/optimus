@@ -98,7 +98,7 @@ df = op.create.df(
         ("Metroplex_)^$", 300.0, "Battle Station", 8, None, ["Metroflex"], None, [91.44, None]),
 
     ]).h_repartition(1)
-df.ext.display()
+df.display()
 
 # Creating a spark by passing a list of tuples specifyng the column data type. You can specify as data type an string or a Spark Datatypes. https://spark.apache.org/docs/2.3.1/api/java/org/apache/spark/sql/types/package-summary.html
 #
@@ -123,7 +123,7 @@ df = op.create.df(
         ("Megatron", None, "None", None),
 
     ])
-df.ext.display()
+df.display()
 
 # Creating a spark and specify if the column accepts null values
 
@@ -142,7 +142,7 @@ df = op.create.df(
         ("Megatron", None, "None", None),
 
     ])
-df.ext.display()
+df.display()
 
 # Creating a Daframe using a pandas spark
 
@@ -158,13 +158,13 @@ labels = ["names", "height", "function", "rank"]
 pdf = pd.DataFrame.from_records(data, columns=labels)
 
 df = op.create.df(pdf=pdf)
-df.ext.display()
+df.display()
 # -
 
 # ## Viewing data
 # Here is how to View the first 10 elements in a spark.
 
-df.ext.display(10)
+df.display(10)
 
 # ## About Spark
 # Spark and Optimus work differently than pandas or R. If you are not familiar with Spark, we recommend taking the time to take a look at the links below.
@@ -319,11 +319,11 @@ optimus.helpers.functions_spark.append([df, df_new], "rows").table()
 # Operations like `join` and `group` are handle using Spark directly
 
 # + {"inputHidden": false, "outputHidden": false}
-df_melt = df.ext.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
-df.ext.display()
+df_melt = df.melt(id_vars=["names"], value_vars=["height", "function", "rank"])
+df.display()
 # -
 
-df_melt.ext.pivot("names", "variable", "value").table()
+df_melt.pivot("names", "variable", "value").table()
 
 # ## Ploting
 
@@ -337,13 +337,13 @@ df.plot.frequency("*", 10)
 df.cols.names()
 
 # + {"inputHidden": false, "outputHidden": false}
-df.ext.to_json()
+df.to_json()
 
 # + {"inputHidden": false, "outputHidden": false}
 df.schema
 # -
 
-df.ext.display()
+df.display()
 
 # + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height", infer=True)
@@ -356,13 +356,13 @@ df_json.table()
 
 df_csv.save.csv("test.csv")
 
-df.ext.display()
+df.display()
 
 # ## Enrichment
 
 df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
 
-df.ext.display()
+df.display()
 
 # +
 import requests

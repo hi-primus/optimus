@@ -62,7 +62,7 @@ df = op.create.df(
         (None, 3, "eagle", "glass", "lion-pc", "c", "4", ["baby 3", "sorry 3"], [7, 8])
     ])
 
-df.ext.display()
+df.display()
 # -
 
 # ## Create Columns
@@ -77,9 +77,9 @@ df.ext.display()
 # ### Create a column with a constant value
 
 df = optimus.helpers.functions_spark.append("new_col_1", 1)
-df.ext.display()
+df.display()
 
-df.ext.display()
+df.display()
 
 # ### Append 2 or multiples dataframes columns like
 
@@ -121,7 +121,7 @@ optimus.helpers.functions_spark.append([
 # ### Pandas
 # * You can not select columns by string and index at the same time
 
-df.ext.display()
+df.display()
 columns = ["words", 1, "animals", 3]
 df.cols.select(columns).table()
 
@@ -206,7 +206,7 @@ from pyspark.sql.functions import *
 
 df.withColumn("num", col("num").cast(StringType()))
 
-df.ext.display()
+df.display()
 df.cols.keep("num").table()
 
 # ## Move columns
@@ -251,7 +251,7 @@ df2.table()
 df2 = df.cols.drop(["num", "words"])
 df2.table()
 
-df.ext.display()
+df.display()
 
 # ## Chaining
 #
@@ -261,7 +261,7 @@ df.ext.display()
 #
 # The past transformations were done step by step, but this can be achieved by chaining all operations into one line of code, like the cell below. This way is much more efficient and scalable because it uses all optimization issues from the lazy evaluation approach.
 
-df.ext.display()
+df.display()
 optimus.helpers.functions_spark.append("new_col_1", 1) \
     .cols.sort(order="desc") \
     .rows.drop(df["num 2"] == 3) \
@@ -277,7 +277,7 @@ optimus.helpers.functions_spark.append("new_col_1", 1) \
 # ### Pandas
 # via str.split()
 
-df.ext.display()
+df.display()
 df.cols.unnest("two strings", "-") \
     .table()
 
@@ -358,7 +358,7 @@ df.cols.select_by_dtypes("int").table()
 # ### Pandas
 # Almost the same behavior that Optimus
 
-df.ext.display()
+df.display()
 
 
 # ### Create a function that only apply to string value in column filter
@@ -507,7 +507,7 @@ df.cols.count_uniques("*")
 # ### Pandas
 # Similar behavior than pandas
 
-df.ext.display()
+df.display()
 
 df_distinct = op.create.df(
     [
@@ -535,7 +535,7 @@ df.cols.dtypes('*')
 
 # ## Replace
 
-df.ext.display()
+df.display()
 
 # ### Replace "dog","cat" in column "animals" by the word "animals"
 
@@ -601,7 +601,7 @@ df.cols.nest(["animals", "two strings", "num 2"], output_col="col_nested", shape
 
 df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
 
-df.ext.display()
+df.display()
 
 df.cols.hist("price", 10)
 
@@ -647,7 +647,7 @@ print(df.cols.mode(["price", "billingId"]))
 
 # ## String Operations
 
-df.ext.display()
+df.display()
 
 df \
     .cols.trim("lastName") \

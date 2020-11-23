@@ -139,9 +139,9 @@ class Rows(BaseRows):
         df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
         return self.parent.new(df)
 
-    @staticmethod
-    def drop_by_dtypes(input_cols, data_type=None):
-        df = self
+
+    def drop_by_dtypes(self,input_cols, data_type=None):
+        df = self.parent
         return df
 
     def tag_nulls(self, how="all", subset=None, output_col=None):

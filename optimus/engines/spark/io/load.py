@@ -39,7 +39,7 @@ class Load(BaseLoad):
         df = replace_columns_special_characters(df)
 
         df = df.meta.add_action("columns", df.cols.names())
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -55,7 +55,7 @@ class Load(BaseLoad):
         :return:
         """
         df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -126,7 +126,7 @@ class Load(BaseLoad):
         except IOError as error:
             print(error)
             raise
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -151,7 +151,7 @@ class Load(BaseLoad):
         except IOError as error:
             print(error)
             raise
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -188,7 +188,7 @@ class Load(BaseLoad):
             raise
 
         df = replace_columns_special_characters(df)
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -215,6 +215,6 @@ class Load(BaseLoad):
             result = files_data
         else:
             result = files_data[file_name]
-        df.ext.reset()
+        df.reset()
         return result
 

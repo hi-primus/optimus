@@ -84,7 +84,7 @@ class Load(BaseLoad):
 
             for file_name, _ in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
-                                 na_values=null_value,
+
                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                                  na_filter=na_filter, *args, **kwargs)
                 df_list.append(df)

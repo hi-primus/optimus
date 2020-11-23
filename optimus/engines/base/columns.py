@@ -13,7 +13,7 @@ from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
-from optimus.helpers.check import is_dask_dataframe
+from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
@@ -21,9 +21,8 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import collect_as_list, set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, regex_int, \
-    regex_decimal, regex_email, regex_ip, regex_url, regex_gender, regex_boolean, regex_zip_code, regex_credit_card, \
-    is_int, is_tuple, regex_social_security_number, regex_http_code, regex_phone_number, US_STATES_NAMES, regex_full_url
+from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, is_int, \
+    is_tuple, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
 
@@ -204,37 +203,44 @@ class BaseColumns(ABC):
             args = (args,)
 
         df = self.parent.data
-        for input_col, output_col in columns:
-            if mode == "pandas" and (is_dask_dataframe(df)):
+        if mode == "whole":
+            print("ASDASDASD")
+            df = func(df)
+        else:
+            for input_col, output_col in columns:
+                if mode == "pandas" and (is_dask_dataframe(df)):
 
-                partitions = df.to_delayed()
-                delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
+                    partitions = df.to_delayed()
+                    delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
-                kw_columns[output_col] = from_delayed(delayed_parts)
+                    kw_columns[output_col] = from_delayed(delayed_parts)
 
-            elif mode == "vectorized" or mode == "pandas":
+                elif mode == "vectorized" or mode == "pandas":
 
-                _ddf = func(df[input_col], *args)
+                    _ddf = func(df[input_col], *args)
 
-                if is_dask_dataframe(_ddf):
-                    df = df.cols.append(_ddf)
-                else:
-                    kw_columns[output_col] = func(df[input_col], *args)
-            elif mode == "map":
-                kw_columns[output_col] = df[input_col].map(func, *args)
-            # Preserve column order
-            if output_col not in self.names():
-                col_index = output_ordered_columns.index(input_col) + 1
-                output_ordered_columns[col_index:col_index] = [output_col]
+                    if is_dask_dataframe(_ddf):
+                        df = df.cols.append(_ddf)
+                    else:
+                        kw_columns[output_col] = func(df[input_col], *args)
+                elif mode == "map":
+                    if is_dask_cudf_dataframe(df):
+                        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+                    else:
+                        kw_columns[output_col] = df[input_col].map(func, *args)
+                # Preserve column order
+                if output_col not in self.names():
+                    col_index = output_ordered_columns.index(input_col) + 1
+                    output_ordered_columns[col_index:col_index] = [output_col]
 
-            # Preserve actions for the profiler
-            self.parent.meta.preserve(df, meta_action, output_col)
+                # Preserve actions for the profiler
+                self.parent.meta.preserve(df, meta_action, output_col)
 
-        if set_index is True:
-            df = df.reset_index()
+            if set_index is True:
+                df = df.reset_index()
 
-        if kw_columns:
-            df = df.assign(**kw_columns)
+            if kw_columns:
+                df = df.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
         df = self.parent.new(df, self.parent)
@@ -471,6 +477,7 @@ class BaseColumns(ABC):
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
         kw_columns = {}
+
         for input_col, output_col in columns:
             kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.remove_accents().cols.replace(
                 search=search_by, replace_by=replace_by).data[input_col]
@@ -681,7 +688,7 @@ class BaseColumns(ABC):
         :param columns:
         :return: DataFrame
         """
-        df = self.df
+        df = self.parent
         if columns is None:
             _reverse = None
             if order == "asc":
@@ -713,8 +720,9 @@ class BaseColumns(ABC):
         :param columns: Columns to be processed
         :return:
         """
-        df = self.df
-        columns = parse_columns(df, columns)
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+        df = odf.data
         result = {}
         for col_name in columns:
             if df[col_name].dtype.name == "category":
@@ -758,73 +766,73 @@ class BaseColumns(ABC):
     def exec_agg(exprs, compute):
         pass
 
-    def mad(self, columns, relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
+    def mad(self, columns="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.parent.data
         return df.cols.agg_exprs(columns, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
-    def min(self, columns, tidy=True, compute=True):
+    def min(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=tidy)
 
-    def max(self, columns, tidy=True, compute=True):
+    def max(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.max, compute=compute, tidy=tidy)
 
-    def mode(self, columns, tidy=True, compute=True):
+    def mode(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.mode, compute=compute, tidy=tidy)
 
-    def range(self, columns, tidy=True, compute=True):
+    def range(self, columns="*", tidy=True, compute=True):
         return self.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
 
-    def percentile(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def percentile(self, columns="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.parent
 
         if values is None:
             values = [0.25, 0.5, 0.75]
         return df.cols.agg_exprs(columns, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
 
-    def median(self, columns, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def median(self, columns="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def kurtosis(self, columns, tidy=True, compute=False):
+    def kurtosis(self, columns="*", tidy=True, compute=False):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.kurtosis, tidy=tidy, compute=compute)
 
-    def skew(self, columns, tidy=True, compute=False):
+    def skew(self, columns="*", tidy=True, compute=False):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.skew, tidy=tidy, compute=compute)
 
-    def mean(self, columns, tidy=True, compute=True):
+    def mean(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.mean, tidy=tidy, compute=compute)
 
-    def sum(self, columns, tidy=True, compute=True):
+    def sum(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.sum, tidy=tidy, compute=compute)
 
-    def var(self, columns, tidy=True, compute=True):
+    def var(self, columns="*", tidy=True, compute=True):
         df = self.parent
         return df.cols.agg_exprs(columns, self.F.var, tidy=tidy, compute=compute)
 
-    def std(self, columns, tidy=True, compute=True):
+    def std(self, columns="*", tidy=True, compute=True):
         return self.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
 
     # Math Operations
-    def abs(self, input_cols, output_cols=None):
+    def abs(self, input_cols="*", output_cols=None):
         """
         Apply abs to column
         :param input_cols:
         :param output_cols:
         :return:
         """
-        df = self.df
-        return df.cols.apply(input_cols, self.F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
-                             mode="vectorized")
 
-    def exp(self, input_cols, output_cols=None):
+        return self.apply(input_cols, self.F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
+                          mode="vectorized")
+
+    def exp(self, input_cols="*", output_cols=None):
         """
         Returns Euler's number, e (~2.718) raised to a power.
         :param input_cols:
@@ -832,11 +840,10 @@ class BaseColumns(ABC):
         :return:
         """
 
-        df = self.df
-        return df.cols.apply(input_cols, self.F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized")
+        return self.apply(input_cols, self.F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized")
 
-    def mod(self, input_cols, divisor=2, output_cols=None):
+    def mod(self, input_cols="*", divisor=2, output_cols=None):
         """
         Apply mod to column
         :param input_cols:
@@ -845,11 +852,10 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
-        return df.cols.apply(input_cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized", args=divisor)
+        return self.apply(input_cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized", args=divisor)
 
-    def log(self, input_cols, output_cols=None):
+    def log(self, input_cols="*", output_cols=None):
         """
         Apply mod to column
         :param input_cols:
@@ -857,11 +863,10 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.df
-        return df.cols.apply(input_cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized")
+        return self.apply(input_cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized")
 
-    def ln(self, input_cols, output_cols=None):
+    def ln(self, input_cols="*", output_cols=None):
         """
         Apply mod to column
         :param input_cols:
@@ -869,11 +874,10 @@ class BaseColumns(ABC):
         :return:(
         """
 
-        df = self.parent
-        return df.cols.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized")
+        return self.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized")
 
-    def pow(self, input_cols, other=2, output_cols=None):
+    def pow(self, input_cols="*", other=2, output_cols=None):
         """
         Apply mod to column
         :param other:
@@ -886,7 +890,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=other)
 
-    def sqrt(self, input_cols, output_cols=None):
+    def sqrt(self, input_cols="*", output_cols=None):
         """
         Apply sqrt to column
         :param input_cols:
@@ -897,7 +901,7 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def round(self, input_cols, decimals=1, output_cols=None):
+    def round(self, input_cols="*", decimals=1, output_cols=None):
         """
 
         :param input_cols:
@@ -909,7 +913,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=decimals)
 
-    def floor(self, input_cols, output_cols=None):
+    def floor(self, input_cols="*", output_cols=None):
         """
 
         :param input_cols:
@@ -920,7 +924,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def ceil(self, input_cols, output_cols=None):
+    def ceil(self, input_cols="*", output_cols=None):
         """
         Apply ceil to column
         :param input_cols:
@@ -933,7 +937,7 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     # Trigonometric
-    def sin(self, input_cols, output_cols=None):
+    def sin(self, input_cols="*", output_cols=None):
         """
         Apply sin to column
         :param input_cols:
@@ -945,7 +949,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def cos(self, input_cols, output_cols=None):
+    def cos(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -957,7 +961,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def tan(self, input_cols, output_cols=None):
+    def tan(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -969,7 +973,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def asin(self, input_cols, output_cols=None):
+    def asin(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -981,7 +985,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def acos(self, input_cols, output_cols=None):
+    def acos(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -993,7 +997,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def atan(self, input_cols, output_cols=None):
+    def atan(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -1005,7 +1009,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def sinh(self, input_cols, output_cols=None):
+    def sinh(self, input_cols="*", output_cols=None):
         """
         Apply sin to column
         :param input_cols:
@@ -1017,7 +1021,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def cosh(self, input_cols, output_cols=None):
+    def cosh(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -1029,7 +1033,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def tanh(self, input_cols, output_cols=None):
+    def tanh(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -1041,7 +1045,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def asinh(self, input_cols, output_cols=None):
+    def asinh(self, input_cols="*", output_cols=None):
         """
         Apply sin to column
         :param input_cols:
@@ -1053,7 +1057,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def acosh(self, input_cols, output_cols=None):
+    def acosh(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -1065,7 +1069,7 @@ class BaseColumns(ABC):
         return df.cols.apply(input_cols, self.F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def atanh(self, input_cols, output_cols=None):
+    def atanh(self, input_cols="*", output_cols=None):
         """
         Apply cos to column
         :param input_cols:
@@ -1112,11 +1116,24 @@ class BaseColumns(ABC):
 
     def to_float(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_float, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
 
     def to_integer(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_integer, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.LOWER.value, mode="map")
+        # Filter columns that are not integer
+        # filtered_columns = []
+        # df = self.parent
+        #
+        # input_cols = parse_columns(df, input_cols)
+        # for col_name in input_cols:
+        #     if df.data[col_name].dtype != np.int64:
+        #         filtered_columns.append(col_name)
+        #
+        # print("filtered_columns", filtered_columns)
+        # if len(filtered_columns) > 0:
+        return self.apply(input_cols, self.F.to_integer, func_return_type=int,
+                              output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
+        # else:
+        #     return df
 
     def to_string(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_string, func_return_type=str,
@@ -1231,7 +1248,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(input_cols, F().to_datetime, func_return_type=str,
+        return self.apply(input_cols, self.F().to_datetime, func_return_type=str,
                           output_cols=output_cols, args=format, mode="pandas")
 
     def year(self, input_cols, format=None, output_cols=None):
@@ -1243,7 +1260,8 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, F().year, args=format, output_cols=output_cols, meta_action=Actions.YEAR.value,
+        return self.apply(input_cols, self.F().year, args=format, output_cols=output_cols,
+                          meta_action=Actions.YEAR.value,
                           mode="pandas", set_index=True)
 
     def month(self, input_cols, format=None, output_cols=None):
@@ -1406,7 +1424,7 @@ class BaseColumns(ABC):
         """
         df = self.parent
         columns = parse_columns(df, columns)
-        expr = reduce(operator, [df[col_name].ext.to_float().fillna(0) for col_name in columns])
+        expr = reduce(operator, [df[col_name].to_float().fillna(0) for col_name in columns])
         return df.assign(**{output_col: expr})
 
     def add(self, columns, output_col="sum"):
@@ -1587,24 +1605,23 @@ class BaseColumns(ABC):
         odf = self.parent
         columns = parse_columns(odf, columns)
 
-        @odf.ext.delayed
+        @odf.delayed
         def _bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
-                    col_name
-                    in
-                    _columns}
+                    col_name in _columns}
 
         _min = odf.cols.min(columns, compute=False, tidy=False)
         _max = odf.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @odf.ext.delayed
+        @odf.delayed
         def _hist(pdf, col_name, _bins):
+            # import cupy as cp
             _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
-            # i, j = cp.histogram(cp.array(_series.to_gpu_array()), _buckets)
+            # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @odf.ext.delayed
+        @odf.delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -1622,7 +1639,7 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        partitions = odf.ext.to_delayed()
+        partitions = odf.to_delayed()
         c = [_hist(part, col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
@@ -1635,9 +1652,9 @@ class BaseColumns(ABC):
 
     def count_mismatch(self, columns_type: dict = None, **kwargs):
         """
-        Result {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
+        Count mismatches values in columns
         :param columns_type:
-        :return:
+        :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
         df = self.parent
 
@@ -1645,24 +1662,6 @@ class BaseColumns(ABC):
         nulls = df.cols.count_na()
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
-        func = {ProfilerDataTypes.INT.value: regex_int,
-                ProfilerDataTypes.DECIMAL.value: regex_decimal,
-                # ProfilerDataTypes.STRING.value: None,
-                ProfilerDataTypes.EMAIL.value: regex_email,
-                ProfilerDataTypes.IP.value: regex_ip,
-                ProfilerDataTypes.URL.value: regex_url,
-                ProfilerDataTypes.GENDER.value: regex_gender,
-                ProfilerDataTypes.BOOLEAN.value: regex_boolean,
-                ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
-                ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card,
-                ProfilerDataTypes.DATE.value: r".",
-                ProfilerDataTypes.OBJECT.value: r"",
-                ProfilerDataTypes.ARRAY.value: r"",
-                ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
-                ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: regex_social_security_number,
-                ProfilerDataTypes.HTTP_CODE.value: regex_http_code,
-                # ProfilerDataTypes.US_STATE.value: US_STATES
-                }
 
         for col_name, props in columns_type.items():
             dtype = props["dtype"]
@@ -1675,11 +1674,12 @@ class BaseColumns(ABC):
                 mismatch = nulls[col_name]
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
-                match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().ext.to_dict()
+                match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
             else:
                 match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
-                                                                             func[dtype]).cols.frequency()
+                                                                             Infer.ProfilerDataTypesFunctions[
+                                                                                 dtype]).cols.frequency()
 
                 v = {list(j.values())[0]: list(j.values())[1] for j in match["frequency"][col_name]["values"]}
 
@@ -1711,14 +1711,11 @@ class BaseColumns(ABC):
 
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized
-        sample = odf.cols.select(columns).rows.limit(total_preview_rows).ext.to_pandas()
-        # print("sample",sample)
+        sample = odf.cols.select(columns).rows.limit(total_preview_rows).to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
-        # print("pdf", pdf)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            # print("pdf",pdf)
             _value_counts = pdf[col_name].value_counts()
             dtype = _value_counts.index[0]
 
@@ -1748,7 +1745,7 @@ class BaseColumns(ABC):
         odf = self.parent
         columns = parse_columns(odf, columns)
 
-        @odf.ext.delayed
+        @odf.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j} for i, j in self._series_to_dict(_series).items()]
 
@@ -1759,11 +1756,11 @@ class BaseColumns(ABC):
 
             return _result
 
-        @odf.ext.delayed
+        @odf.delayed
         def flat_dict(top_n):
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
-        @odf.ext.delayed
+        @odf.delayed
         def freq_percentage(_value_counts, _total_rows):
 
             for i, j in _value_counts.items():
@@ -1785,7 +1782,7 @@ class BaseColumns(ABC):
         c = flat_dict(b)
 
         if percentage:
-            c = freq_percentage(c, odf.ext.delayed(len)(odf))
+            c = freq_percentage(c, odf.delayed(len)(odf))
 
         if compute is True:
             result = dd.compute(c)[0]

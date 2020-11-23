@@ -27,7 +27,7 @@ def str_to_date(_value, date_format=None):
         # date_format = "DD/MM/YYYY"
         pendulum.parse(_value, strict=False)
         return True
-    except:
+    except ValueError:
         return False
 
 
@@ -36,7 +36,7 @@ def str_to_date_format(_value, date_format):
     try:
         pendulum.from_format(_value, date_format)
         return True
-    except:
+    except ValueError:
         return False
 
 
@@ -60,6 +60,7 @@ def str_to_data_type(_value, _dtypes):
     Check if value can be parsed to a tuple or and list.
     Because Spark can handle tuples we will try to transform tuples to arrays
     :param _value:
+    :param _dtypes:
     :return:
     """
     # return True if isinstance(_value, str) else False
@@ -101,7 +102,7 @@ def str_to_gender(value, compile=False):
 
 regex_full_url = r"^((.*)://)?((\w+)\.)?([A-Za-z0-9\-\.]+)?:?([0-9]+)?(/(\w+)?\??(\+)?(.+)?)$"
 
-regex_url = "(http|https|ftp|s3):\/\/.?[a-zA-Z]*.\w*.[a-zA-Z0-9]*\/?[a-zA-z_-]*.?[a-zA-Z]*\/?"
+regex_url = r"(http|https|ftp|s3):\/\/.?[a-zA-Z]*.\w*.[a-zA-Z0-9]*\/?[a-zA-z_-]*.?[a-zA-Z]*\/?"
 regex_url_compiled = re.compile(regex_url, re.IGNORECASE)
 
 
@@ -175,7 +176,7 @@ def str_to_http_code(value, compile=False):
 
 
 # Reference https://stackoverflow.com/questions/8634139/phone-validation-regex
-regex_phone_number = "/\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/"
+regex_phone_number = r"/\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/"
 regex_phone_number_compiled = re.compile(regex_phone_number, re.IGNORECASE)
 
 
@@ -421,6 +422,25 @@ class Infer(object):
     """
     This functions return True or False if match and specific dataType
     """
+    ProfilerDataTypesFunctions = {ProfilerDataTypes.INT.value: regex_int,
+                                  ProfilerDataTypes.DECIMAL.value: regex_decimal,
+                                  ProfilerDataTypes.STRING.value: r".",
+                                  ProfilerDataTypes.EMAIL.value: regex_email,
+                                  ProfilerDataTypes.IP.value: regex_ip,
+                                  ProfilerDataTypes.URL.value: regex_url,
+                                  ProfilerDataTypes.GENDER.value: regex_gender,
+                                  ProfilerDataTypes.BOOLEAN.value: regex_boolean,
+                                  ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
+                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card,
+                                  ProfilerDataTypes.DATE.value: r".",
+                                  ProfilerDataTypes.OBJECT.value: r"",
+                                  ProfilerDataTypes.ARRAY.value: r"",
+                                  ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
+                                  ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: regex_social_security_number,
+                                  ProfilerDataTypes.HTTP_CODE.value: regex_http_code,
+                                  # ProfilerDataTypes.US_STATE.value: US_STATES
+                                  }
+
     DTYPE_FUNC = {"string": str_to_str, "boolean": str_to_boolean, "date": str_to_date,
                   "array": str_to_array, "object": str_to_object, "ip": str_to_ip,
                   "url": str_to_url, "email": str_to_email, "gender": str_to_gender,
@@ -431,34 +451,34 @@ class Infer(object):
                   ProfilerDataTypes.HTTP_CODE.value: str_to_http_code,
                   }
 
-    @staticmethod
-    def mismatch(value: tuple, dtypes: dict):
-        """
-        Count the dataType that match, do not match, nulls and missing.
-        For example if we have an string column we also need to pass the column type we want to match.
-        Like credit card or postal code.
-        :param value: tuple(Column/Row, value)
-        :param dtypes: dict {col_name:(dataType, mismatch)}
-
-        :return:
-        """
-        col_name, value = value
-
-        _data_type = ""
-        dtype = dtypes[col_name]
-
-        if Infer.DTYPE_FUNC[dtype](value) is True:
-            _data_type = dtype
-        else:
-            if is_null(value) is True:
-                _data_type = "null"
-            elif str_to_missing(value) is True:
-                _data_type = "missing"
-            else:
-                _data_type = "mismatch"
-
-        result = (col_name, _data_type), 1
-        return result
+    # @staticmethod
+    # def mismatch(value: tuple, dtypes: dict):
+    #     """
+    #     Count the dataType that match, do not match, nulls and missing.
+    #     For example if we have an string column we also need to pass the column type we want to match.
+    #     Like credit card or postal code.
+    #     :param value: tuple(Column/Row, value)
+    #     :param dtypes: dict {col_name:(dataType, mismatch)}
+    #
+    #     :return:
+    #     """
+    #     col_name, value = value
+    #
+    #     _data_type = ""
+    #     dtype = dtypes[col_name]
+    #
+    #     if Infer.DTYPE_FUNC[dtype](value) is True:
+    #         _data_type = dtype
+    #     else:
+    #         if is_null(value) is True:
+    #             _data_type = "null"
+    #         elif str_to_missing(value) is True:
+    #             _data_type = "missing"
+    #         else:
+    #             _data_type = "mismatch"
+    #
+    #     result = (col_name, _data_type), 1
+    #     return result
 
     @staticmethod
     def to_spark(value):

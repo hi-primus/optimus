@@ -18,21 +18,30 @@ from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_di
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
-from optimus.new_optimus import PandasDataFrame
 from optimus.profiler.constants import MAX_BUCKETS
-from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
+from .meta import Meta
 
 
-class BaseExt(ABC):
-    # _name = None
+class BaseDataFrame(ABC):
 
-    def __init__(self, parent):
+    def __init__(self, root, data):
+        self.data = data
         self.buffer = None
         self.updated = None
-        self.parent = parent
-        # df.buffer= None
-        # self.buffer_a = None
+        self.root = root
+        self.meta_data = {}
+
+    # def __repr__(self):
+    #     self.display()
+    #     return str(type(self))
+
+    def __getitem__(self, item):
+        return self.data.cols.select(item)
+
+    @property
+    def meta(self):
+        return Meta(self)
 
     @staticmethod
     @abstractmethod
@@ -58,13 +67,13 @@ class BaseExt(ABC):
         :return:
         """
 
-        odf = self.parent
+        odf = self.data
         if format == "bumblebee":
             columns = parse_columns(odf, columns)
             result = {"sample": {"columns": [{"title": col_name} for col_name in odf.cols.select(columns).cols.names()],
                                  "value": odf.rows.to_list(columns)}}
         else:
-            result = json.dumps(odf.ext.to_dict(), ensure_ascii=False, default=json_converter)
+            result = json.dumps(odf.to_dict(), ensure_ascii=False, default=json_converter)
 
         return result
 
@@ -74,7 +83,7 @@ class BaseExt(ABC):
             [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
         """
-        return self.parent.ext.to_pandas().to_dict(orient)
+        return self.data.rows.limit(limit).to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
@@ -92,8 +101,8 @@ class BaseExt(ABC):
         :param seed:
         :return:
         """
-        df = self.df
-        n = min(5, df[col_name].value_counts().min())
+        df = self.data
+        # n = min(5, df[col_name].value_counts().min())
         df = df.groupby(col_name).apply(lambda x: x.sample(2))
         # df_.index = df_.index.droplevel(0)
         return df
@@ -126,31 +135,31 @@ class BaseExt(ABC):
         pass
 
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        odf = self.parent
+        odf = self.data
         input_cols = parse_columns(odf, columns)
-        # df.buffer = df.ext.head(input_cols, n)
-        
-        odf.buffer = odf.cols.select(input_cols).rows.limit(n).ext.to_pandas()
+        # df.buffer = df.head(input_cols, n)
+
+        odf.buffer = odf.cols.select(input_cols).rows.limit(n).to_pandas()
         odf.meta.set("buffer_time", int(time.time()))
 
     def get_buffer(self):
         # return self.df.buffer.values.tolist()
         # df = self.parent
-        return self.parent.buffer
+        return self.data.buffer
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
-        odf = self.parent
+        odf = self.data
         buffer_time = odf.meta.get("buffer_time")
         last_action_time = odf.meta.get("last_action_time")
 
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
-                odf.ext.set_buffer(columns, n)
-        elif odf.ext.get_buffer() is None:
-            odf.ext.set_buffer(columns, n)
+                odf.set_buffer(columns, n)
+        elif odf.get_buffer() is None:
+            odf.set_buffer(columns, n)
 
-        df_buffer = odf.ext.get_buffer()
+        df_buffer = odf.get_buffer()
         df_length = len(df_buffer)
         if lower_bound is None:
             lower_bound = 0
@@ -171,7 +180,7 @@ class BaseExt(ABC):
             # RaiseIt.value_error(df_length, str(df_length - 1))
 
         input_columns = parse_columns(odf, columns)
-        return PandasDataFrame(df_buffer[input_columns][lower_bound: upper_bound])
+        return self.data.new(df_buffer[input_columns][lower_bound: upper_bound])
 
     def buffer_json(self, columns):
         df = self.df.buffer
@@ -226,7 +235,7 @@ class BaseExt(ABC):
         return False if df.meta.get("profile.profiler_dtype") is None else True
 
     def to_delayed(self):
-        return self.parent.data.to_delayed()
+        return self.data.to_delayed()
 
     def calculate_cols_to_profile(self, df, columns):
         """
@@ -236,7 +245,7 @@ class BaseExt(ABC):
         # Metadata
         # If not empty the profiler already run.
         # So process the dataframe's metadata to get which columns need to be profiled
-        odf = self.parent
+        odf = self
         actions = odf.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
@@ -255,7 +264,7 @@ class BaseExt(ABC):
             return result
 
         # Process actions to check if any column must be processed
-        if BaseExt.is_cached(odf):
+        if self.is_cached(odf):
             if are_actions:
 
                 def get_columns_by_action(action):
@@ -372,22 +381,21 @@ class BaseExt(ABC):
 
         return calculate_columns
 
-    def set_name(self, value=None):
-        """
-        Create a temp view for a data frame also used in the json output profiling
-        :param value:
-        :return:
-        """
-        df = self.df
-        df.ext._name = value
-        # if not is_str(value):
-        #     RaiseIt.type_error(value, ["string"])
-
-        # if len(value) == 0:
-        #     RaiseIt.value_error(value, ["> 0"])
-
-        # self.createOrReplaceTempView(value)
-
+    # def set_name(self, value=None):
+    #     """
+    #     Create a temp view for a data frame also used in the json output profiling
+    #     :param value:
+    #     :return:
+    #     """
+    #     df = self.df
+    #     df._name = value
+    #     # if not is_str(value):
+    #     #     RaiseIt.type_error(value, ["string"])
+    #
+    #     # if len(value) == 0:
+    #     #     RaiseIt.value_error(value, ["> 0"])
+    #
+    #     # self.createOrReplaceTempView(value)
 
     @staticmethod
     @abstractmethod
@@ -399,12 +407,11 @@ class BaseExt(ABC):
         raise NotImplementedError
 
     def repartition(self, n=None, *args, **kwargs):
-        df = self.parent.data
+        df = self.data
         df = df.repartition(npartitions=n, *args, **kwargs)
-        return self.parent.new(df, meta=self.parent)
+        return self.root.new(df, meta=self.root)
 
-    @staticmethod
-    def table_image(path, limit=10):
+    def table_image(self, path, limit=10):
         """
         Output table as image
         :param limit:
@@ -414,7 +421,7 @@ class BaseExt(ABC):
 
         css = absolute_path("/css/styles.css")
 
-        imgkit.from_string(BaseExt.table_html(limit=limit, full=True), path, css=css)
+        imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
     def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True):
@@ -430,15 +437,15 @@ class BaseExt(ABC):
         :return:
         """
 
-        columns = parse_columns(self.parent, columns)
+        columns = parse_columns(self, columns)
         if limit is None:
             limit = 10
 
-        df = self.parent
+        df = self
         if limit == "all":
-            data = df.cols.select(columns).ext.to_dict()
+            data = df.cols.select(columns).to_dict()
         else:
-            data = df.cols.select(columns).rows.limit(limit).ext.to_dict()
+            data = df.cols.select(columns).rows.limit(limit).to_dict()
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -454,17 +461,17 @@ class BaseExt(ABC):
                 if i[0] == j:
                     final_columns.append(i)
 
-        if count is True:
-            total_rows = df.rows.approx_count()
+        # if count is True:
+
         # else:
         #     count = None
-
+        total_rows = df.rows.approx_count()
         if limit == "all" or total_rows < limit:
             limit = total_rows
 
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
-        total_partitions = df.ext.partitions()
+        total_partitions = df.partitions()
 
         # print(data)
         df_type = type(df)
@@ -481,26 +488,25 @@ class BaseExt(ABC):
         self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
-        df = self.parent
+        df = self.data
         try:
             if __IPYTHON__:
                 # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
-                result = df.ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:
-                df.ext.show()
+                df.show()
         except NameError as e:
             print(e)
-            df.ext.show()
+            df.show()
 
     def export(self):
         """
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.df
-        df_data = df.ext.to_json()
-        df_schema = df.dtypes.to_json()
+        df_data = self.to_json()
+        df_schema = self.data.dtypes.to_json()
 
         return f"{df_schema}, {df_data}"
 
@@ -519,44 +525,44 @@ class BaseExt(ABC):
 
         :return:
         """
-        odf = self.parent
+        odf = self
         columns = parse_columns(odf, columns)
         return odf.data[columns].head(n)
 
-    def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
-             advanced_stats: bool = True,
-             output: str = "http", sample=SAMPLE_NUMBER):
-        """
-        Profile and send the data to the queue
-        :param name: Specified a name for the view/spark
-        :param infer:
-        :param mismatch:
-        :param stats:
-        :param advanced_stats: Process advance stats
-        :param output: 'json' or 'dict'
-        :param sample: Number of data sample returned
-        :return:
-        """
-        df = self.df
-        if name is not None:
-            df.ext.set_name(name)
-
-        message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                            approx_count=True,
-                                            sample=sample,
-                                            stats=stats,
-                                            format="json",
-                                            advanced_stats=advanced_stats,
-                                            mismatch=mismatch
-                                            )
-        if Comm.instance:
-            return Comm.instance.send(message, output=output)
-        else:
-            raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+    # def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
+    #          advanced_stats: bool = True,
+    #          output: str = "http", sample=SAMPLE_NUMBER):
+    #     """
+    #     Profile and send the data to the queue
+    #     :param name: Specified a name for the view/spark
+    #     :param infer:
+    #     :param mismatch:
+    #     :param stats:
+    #     :param advanced_stats: Process advance stats
+    #     :param output: 'json' or 'dict'
+    #     :param sample: Number of data sample returned
+    #     :return:
+    #     """
+    #     df = self.data
+    #     if name is not None:
+    #         df.set_name(name)
+    # 
+    #     message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
+    #                                         approx_count=True,
+    #                                         sample=sample,
+    #                                         stats=stats,
+    #                                         format="json",
+    #                                         advanced_stats=advanced_stats,
+    #                                         mismatch=mismatch
+    #                                         )
+    #     if Comm.instance:
+    #         return Comm.instance.send(message, output=output)
+    #     else:
+    #         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
 
     def reset(self):
-        # df = self.parent.df
-        df = self.parent.meta.set(None, {})
+        # df = self.df
+        df = self.meta.set(None, {})
         return df
 
     def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -570,10 +576,10 @@ class BaseExt(ABC):
         :return:
         """
 
-        odf = self.parent
+        odf = self
 
         if flush is False:
-            cols_to_profile = self.calculate_cols_to_profile(odf, columns)
+            cols_to_profile = odf.calculate_cols_to_profile(odf, columns)
         else:
             cols_to_profile = parse_columns(odf, columns)
 
@@ -582,7 +588,7 @@ class BaseExt(ABC):
             profiler_data = {}
         cols_and_inferred_dtype = None
 
-        if cols_to_profile or not BaseExt.is_cached(odf) or flush is True:
+        if cols_to_profile or not self.is_cached(odf) or flush is True:
             numeric_cols = []
             string_cols = []
             cols_and_inferred_dtype = odf.cols.infer_profiler_dtypes(cols_to_profile)
@@ -592,7 +598,7 @@ class BaseExt(ABC):
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
-                if x in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
+                if x["dtype"] in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
                     numeric_cols.append(col_name)
                 else:
                     string_cols.append(col_name)
@@ -601,7 +607,7 @@ class BaseExt(ABC):
             freq_uniques = None
 
             if len(numeric_cols):
-                hist = odf[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
+                hist = odf.cols.hist(numeric_cols, buckets=bins, compute=compute)
                 freq_uniques = odf.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
 
             freq = None
@@ -646,7 +652,7 @@ class BaseExt(ABC):
                              'rows_count': odf.rows.count(),
                              }
             if size is True:
-                data_set_info.update({'size': odf.ext.size(format="human")})
+                data_set_info.update({'size': odf.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
             dtypes_list = list(set(odf.cols.dtypes("*").values()))

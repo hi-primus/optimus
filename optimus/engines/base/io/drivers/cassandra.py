@@ -6,7 +6,7 @@ from optimus.engines.base.io.drivers.abstract_driver import AbstractDriver
 from optimus.engines.spark.io.properties import DriverProperties
 
 
-@singleton
+# @singleton
 class CassandraDriver(AbstractDriver):
     """Cassandra Database"""
 

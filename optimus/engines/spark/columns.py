@@ -530,7 +530,7 @@ class Cols(BaseColumns):
         if len(exprs) > 0:
             df = odf.data.agg(*exprs)
             odf = SparkDataFrame(df)
-            result = parse_col_names_funcs_to_keys(odf.ext.to_dict())
+            result = parse_col_names_funcs_to_keys(odf.to_dict())
         else:
             result = None
 
@@ -1159,7 +1159,7 @@ class Cols(BaseColumns):
 
         result = {}
         for col_name in columns:
-            result.update(compress_list(self.select(col_name).distinct().ext.to_dict()))
+            result.update(compress_list(self.select(col_name).distinct().to_dict()))
         return result
 
     @staticmethod
@@ -1387,7 +1387,7 @@ class Cols(BaseColumns):
             elif is_column_a(df, input_col, "array"):
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(df.ext.agg(F.max(F.size(input_col))).ext.to_dict())
+                    splits = format_dict(df.agg(F.max(F.size(input_col))).to_dict())
 
                 expr = F.col(input_col)
                 final_columns = _final_columns(index, splits, output_col)
@@ -1401,7 +1401,7 @@ class Cols(BaseColumns):
 
                 # Try to infer the array length using the first row
                 if infer_splits is True:
-                    splits = format_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).ext.to_dict())
+                    splits = format_dict(df.agg(F.max(F.size(F.split(F.col(input_col), separator)))).to_dict())
 
                 expr = F.split(F.col(input_col), separator)
                 final_columns = _final_columns(index, splits, output_col)

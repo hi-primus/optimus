@@ -32,6 +32,9 @@ class Cols(DataFrameBaseColumns):
         df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
+    def _series_to_dict(self, series):
+        return series.to_pandas().to_dict()
+
     def find(self, columns, sub, ignore_case=False):
         """
         Find the start and end position for a char or substring

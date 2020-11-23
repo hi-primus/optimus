@@ -1,17 +1,19 @@
 import dask
 import humanize
 
-from optimus.engines.base.extension import BaseExt
+from optimus.engines.base.odataframe import BaseDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 
 
-class Ext(BaseExt):
+class Ext(BaseDataFrame):
 
-    def __init__(self, df):
-        super().__init__(df)
-        self.parent = df
+    def __init__(self, root, data):
+        super().__init__(root, data)
+
+    def new(self, df, meta):
+        pass
 
     @staticmethod
     def delayed(func):
@@ -21,37 +23,20 @@ class Ext(BaseExt):
         return wrapper
 
     def cache(self):
-        df = self.parent.data
-        return self.parent.new(df.persist(), meta=self.parent)
+        df = self.data
+        return self.new(df.persist(), meta=self)
 
     def compute(self):
-        df = self.parent.data
+        df = self.data
         return df.compute()
-
-    # @staticmethod
-    # def cast_and_profile(columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
-    #     """
-    #     Helper function to infer, cast and profile a dataframe.
-    #     :param columns:
-    #     :param bins:
-    #     :param output:
-    #     :param flush:
-    #     :param size:
-    #     :return:
-    #     """
-    #     df = self
-    #     cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(columns)
-    #     df = df.cols.cast_to_profiler_dtypes(columns=cols_and_inferred_dtype).persist()
-    #     result = df.ext.profile(columns=columns, bins=bins, output=output, flush=flush, size=size)
-    #     return df, result
 
     def export(self):
         """
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.parent
-        df_data = df.ext.to_json()
+        df = self.data
+        df_data = df.to_json()
         df_schema = df.cols.dtypes()
 
         return f"{df_schema}, {df_data}"
@@ -63,7 +48,7 @@ class Ext(BaseExt):
         :param random: if true get a semi random sample
         :return:
         """
-        odf = self.parent
+        odf = self.root
         if random is True:
             seed = random_int()
         elif random is False:
@@ -77,7 +62,7 @@ class Ext(BaseExt):
             fraction = (n / rows_count) * 1.1
         else:
             fraction = 1.0
-        return odf.sample(frac=fraction, random_state=seed)
+        return self.root.new(odf.data.sample(frac=fraction, random_state=seed))
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -86,11 +71,11 @@ class Ext(BaseExt):
         :param seed:
         :return:
         """
-        df = self.parent
+        df = self.data
         n = min(5, df[col_name].value_counts().min())
         df = df.groupby(col_name).apply(lambda x: x.sample(2))
         # df_.index = df_.index.droplevel(0)
-        return df
+        return self.root.new(df)
 
     @staticmethod
     def pivot(index, column, values):
@@ -122,7 +107,7 @@ class Ext(BaseExt):
         Get the size of a dask in bytes
         :return:
         """
-        df = self.df
+        df = self.data
         result = df.memory_usage(index=True, deep=deep).sum().compute()
         if format == "human":
             result = humanize.naturalsize(result)
@@ -141,7 +126,7 @@ class Ext(BaseExt):
 
         :return:
         """
-        df = self.df
+        df = self.data
         df.cache().count()
         return df
 
@@ -150,7 +135,7 @@ class Ext(BaseExt):
         raise NotImplementedError
 
     def partitions(self):
-        df = self.parent.data
+        df = self.data
         return df.npartitions
 
     @staticmethod
@@ -162,7 +147,7 @@ class Ext(BaseExt):
         """
         :return:
         """
-        df = self.parent.data
+        df = self.data
         return df.compute()
 
     @staticmethod
@@ -178,7 +163,7 @@ class Ext(BaseExt):
 
         :return:
         """
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
         return odf.data[columns].head(n, npartitions=-1)
 
@@ -195,15 +180,16 @@ class Ext(BaseExt):
     def to_dict(self, orient="records", index=True):
         """
         Create a dict
+        :param orient:
         :param index: Return the series index
         :return:
         """
 
-        series = self.parent.data
+        series = self.data
         if index is True:
             return series.compute().to_dict(orient)
         else:
             return series.compute().to_list()
 
     def to_pandas(self):
-        return self.parent.data.compute()
+        return self.data.compute()

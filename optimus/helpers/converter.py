@@ -3,8 +3,8 @@ from ast import literal_eval
 import dateutil
 from dask import dataframe as dd
 
-from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
-    is_pandas_dataframe, is_cudf_series
+# from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
+#     is_pandas_dataframe, is_cudf_series
 from optimus.infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
 
 
@@ -118,23 +118,23 @@ def any_dataframe_to_pandas(df):
 
     return result
 
-
-def cudf_series_to_pandas(serie):
-    return serie.to_pandas()
-
-
-def dask_dataframe_to_dask_cudf(df):
-    import cudf
-    return df.map_partitions(cudf.DataFrame.from_pandas)
-
-
-# To cudf
-def dask_dataframe_to_cudf(df):
-    return pandas_to_cudf(dask_dataframe_to_pandas(df))
-
-
-def dask_cudf_to_cudf(df):
-    return df.compute()
+#
+# def cudf_series_to_pandas(serie):
+#     return serie.to_pandas()
+#
+#
+# def dask_dataframe_to_dask_cudf(df):
+#     import cudf
+#     return df.map_partitions(cudf.DataFrame.from_pandas)
+#
+#
+# # To cudf
+# def dask_dataframe_to_cudf(df):
+#     return pandas_to_cudf(dask_dataframe_to_pandas(df))
+#
+#
+# def dask_cudf_to_cudf(df):
+#     return df.compute()
 
 
 # To Pandas
@@ -153,29 +153,29 @@ def dask_dataframe_to_pandas(df):
 def cudf_to_pandas(df):
     return df.to_pandas()
 
-
-def cudf_to_dask_cudf(df, n_partitions=1):
-    import dask_cudf
-    return dask_cudf.from_cudf(df, npartitions=1)
-
-
-def cudf_to_cupy_arr(df):
-    import cupy as cp
-    return cp.fromDlpack(df.to_dlpack())
-
-
-def pandas_to_cudf(df):
-    import cudf
-    return cudf.from_pandas(df)
+#
+# def cudf_to_dask_cudf(df, n_partitions=1):
+#     import dask_cudf
+#     return dask_cudf.from_cudf(df, npartitions=1)
+#
+#
+# def cudf_to_cupy_arr(df):
+#     import cupy as cp
+#     return cp.fromDlpack(df.to_dlpack())
+#
+#
+# def pandas_to_cudf(df):
+#     import cudf
+#     return cudf.from_pandas(df)
 
 
 def pandas_to_dask_dataframe(df, n_partitions=1):
     return dd.from_pandas(df, npartitions=n_partitions)
 
-
-def pandas_to_dask_cudf(df, n_partitions=1):
-    import dask_cudf
-    import cudf
-    # Seems that from_cudf also accepts pandas
-    df = cudf.DataFrame.from_pandas(df)
-    return dask_cudf.from_cudf(df, npartitions=n_partitions)
+#
+# def pandas_to_dask_cudf(df, n_partitions=1):
+#     import dask_cudf
+#     import cudf
+#     # Seems that from_cudf also accepts pandas
+#     df = cudf.DataFrame.from_pandas(df)
+#     return dask_cudf.from_cudf(df, npartitions=n_partitions)

@@ -57,9 +57,9 @@ df = op.create.df(
         (None, 3, "eagle", "glass", "lion-pc", "c", "4", ["baby 3", "sorry 3"], [7, 8])
     ])
 
-# df.ext.display()
+# df.display()
 # -
 
-df.ext.display()
+df.display()
 
 

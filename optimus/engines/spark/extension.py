@@ -8,7 +8,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import ArrayType
 
-from optimus.engines.base.extension import BaseExt
+from optimus.engines.base.dataframe import BaseExt
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, absolute_path
@@ -19,8 +19,6 @@ from optimus.infer import is_str
 
 
 class Ext(BaseExt):
-
-    # _name = None
 
     def cache(self):
         df = self.parent.data
@@ -235,7 +233,7 @@ class Ext(BaseExt):
         :param value:
         :return:
         """
-        self.ext._name = value
+        self._name = value
         if not is_str(value):
             RaiseIt.type_error(value, ["string"])
 

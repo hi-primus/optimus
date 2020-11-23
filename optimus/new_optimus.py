@@ -1,19 +1,13 @@
+from optimus.engines.base.dataframe.extension import Ext as PandasExtension
 from optimus.engines.base.meta import Meta
 
 
-# class BaseDataFrame():
+# from optimus.engines.base.odataframe import BaseDataFrame
 
-class PandasDataFrame:
-    def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
 
-    def __getitem__(self, item):
-        return self.cols.select(item)
-
-    def __repr__(self):
-        self.ext.display()
-        return str(type(self))
+class PandasDataFrame(PandasExtension):
+    def __init__(self, data):
+        super().__init__(self, data)
 
     def new(self, df, meta=None):
         new_df = PandasDataFrame(df)
@@ -36,27 +30,13 @@ class PandasDataFrame:
         from optimus.engines.pandas.functions import PandasFunctions
         return PandasFunctions(self)
 
-    @property
-    def ext(self):
-        from optimus.engines.pandas.extension import Ext
-        return Ext(self)
 
-    @property
-    def meta(self):
-        return Meta(self)
+from optimus.engines.cudf.extension import Ext as CUDFExtension
 
 
-class CUDFDataFrame:
-    def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
-
-    def __getitem__(self, item):
-        return self.cols.select(item)
-
-    # def __repr__(self):
-    #     self.ext.display()
-    #     return str(type(self))
+class CUDFDataFrame(CUDFExtension):
+    def __init__(self, data):
+        super().__init__(self, data)
 
     def new(self, df, meta=None):
         new_df = CUDFDataFrame(df)
@@ -79,28 +59,33 @@ class CUDFDataFrame:
         from optimus.engines.cudf.functions import CUDFFunctions
         return CUDFFunctions(self)
 
-    @property
-    def ext(self):
-        from optimus.engines.cudf.extension import Ext
-        return Ext(self)
 
-    @property
-    def meta(self):
-        return Meta(self)
+from optimus.engines.base.dask.extension import Ext as DaskExtension
 
 
-class DaskDataFrame:
-    def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
-        self.buffer = None
+class DaskDataFrame(DaskExtension):
+    def __init__(self, data):
+        super().__init__(self, data)
 
-    def __getitem__(self, item):
-        return self.cols.select(item)
+    @staticmethod
+    def pivot(index, column, values):
+        pass
 
-    def __repr__(self):
-        self.ext.display()
-        return str(type(self))
+    @staticmethod
+    def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
+        pass
+
+    @staticmethod
+    def query(sql_expression):
+        pass
+
+    @staticmethod
+    def debug():
+        pass
+
+    @staticmethod
+    def create_id(column="id"):
+        pass
 
     def new(self, df, meta=None):
         new_df = DaskDataFrame(df)
@@ -123,28 +108,13 @@ class DaskDataFrame:
         from optimus.engines.dask.functions import DaskFunctions
         return DaskFunctions(self)
 
-    @property
-    def ext(self):
-        from optimus.engines.dask.extension import Ext
-        return Ext(self)
 
-    @property
-    def meta(self):
-        return Meta(self)
+from optimus.engines.dask_cudf.extension import Ext as DaskCUDFExtension
 
 
-class DaskCUDFDataFrame:
-    def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
-        self.buffer = None
-
-    def __getitem__(self, item):
-        return self.cols.select(item)
-
-    def __repr__(self):
-        self.ext.display()
-        return str(type(self))
+class DaskCUDFDataFrame(DaskCUDFExtension):
+    def __init__(self, data):
+        super().__init__(self, data)
 
     def new(self, df, meta=None):
         new_df = DaskCUDFDataFrame(df)
@@ -168,27 +138,13 @@ class DaskCUDFDataFrame:
         return DaskCUDFFunctions(self)
 
     @property
-    def ext(self):
-        from optimus.engines.dask_cudf.extension import Ext
-        return Ext(self)
-
-    @property
     def meta(self):
         return Meta(self)
 
 
 class SparkDataFrame:
     def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
-        self.buffer = None
-
-    def __getitem__(self, item):
-        return self.cols.select(item)
-
-    def __repr__(self):
-        self.ext.display()
-        return str(type(self))
+        super().__init__(df)
 
     def new(self, df, meta=None):
         new_df = SparkDataFrame(df)
@@ -217,26 +173,13 @@ class SparkDataFrame:
         return SparkFunctions(self)
 
     @property
-    def ext(self):
-        from optimus.engines.spark.extension import Ext
-        return Ext(self)
-
-    @property
     def meta(self):
         return Meta(self)
 
 
 class IbisDataFrame:
     def __init__(self, df):
-        self.data = df
-        self.meta_data = {}
-
-    def __getitem__(self, item):
-        return self.cols.select(item)
-
-    # def __repr__(self):
-    #     self.ext.display()
-    #     return str(type(self))
+        super().__init__(df)
 
     def new(self, df):
         return IbisDataFrame(df)
@@ -255,11 +198,6 @@ class IbisDataFrame:
     def functions(self):
         from optimus.engines.ibis.functions import IbisFunctions
         return IbisFunctions(self)
-
-    @property
-    def ext(self):
-        from optimus.engines.ibis.extension import Ext
-        return Ext(self)
 
     @property
     def meta(self):

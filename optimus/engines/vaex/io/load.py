@@ -67,7 +67,7 @@ class Load:
         try:
             df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
                              **kwargs)
-            partitions = df.ext.partitions()
+            partitions = df.partitions()
             if n_rows > -1:
                 df = df.head(n_rows)
                 df = dd.from_pandas(df, npartitions=partitions)
@@ -77,7 +77,7 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod

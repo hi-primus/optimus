@@ -63,7 +63,7 @@ class Test:
 
         # Global Dataframe
         if self.df is not None:
-            source_df = "source_df=op.create.df(" + self.df.ext.export() + ")\n"
+            source_df = "source_df=op.create.df(" + self.df.export() + ")\n"
             test_file.write(source_df)
 
         # Class name
@@ -143,7 +143,7 @@ class Test:
             df_func = self.df
         elif isinstance(obj, pyspark.sql.dataframe.DataFrame):
 
-            source_df = "\tsource_df=op.create.df(" + obj.ext.export() + ")\n"
+            source_df = "\tsource_df=op.create.df(" + obj.export() + ")\n"
             df_func = obj
             add_buffer(source_df)
         else:
@@ -171,7 +171,7 @@ class Test:
             elif is_function(v):
                 _args.append(v.__qualname__)
             elif is_dask_dataframe(v):
-                _args.append("op.create.df('"+v.ext.export()+"')")
+                _args.append("op.create.df('"+v.export()+"')")
             else:
 
                 # _args.append(get_var_name(v))
@@ -225,8 +225,8 @@ class Test:
         if additional_method is not None:
             df_result = getattr(df_result, additional_method)()
         if output == "df":
-            df_result.ext.table()
-            expected = "\texpected_df = op.create.df(" + df_result.ext.export() + ")\n"
+            df_result.table()
+            expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
 
         elif output == "json":
             if is_str(df_result):

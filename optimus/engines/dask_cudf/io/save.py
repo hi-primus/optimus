@@ -1,7 +1,8 @@
 # from pyspark.sql import DataFrame
 # from dask.dataframe.core import DataFrame
-from dask_cudf.core import DataFrame as DaskCUDFDataFrame
+
 from optimus.helpers.logger import logger
+from optimus.new_optimus import DaskCUDFDataFrame
 
 
 def save(self: DaskCUDFDataFrame):
@@ -27,8 +28,7 @@ def save(self: DaskCUDFDataFrame):
                 logger.print(e)
                 raise
 
-        @staticmethod
-        def csv(path, mode="rb", **kwargs):
+        def csv(self,path, mode="rb", **kwargs):
             """
             Save data frame to a CSV file.
             :param path: path where the spark will be saved.
@@ -38,7 +38,7 @@ def save(self: DaskCUDFDataFrame):
             """
 
             try:
-                df = self
+                df = self.parent
                 # columns = parse_columns(self, "*",
                 #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
                 # df = df.cols.cast(columns, "str").repartition(num_partitions)

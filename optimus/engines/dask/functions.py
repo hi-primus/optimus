@@ -8,7 +8,7 @@ import dask.array as da
 import pandas as pd
 from dask.array import stats
 
-from optimus.engines.base.commons.functions import to_float, to_integer, to_string
+from optimus.engines.base.commons.functions import to_float, to_integer
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
 
@@ -17,11 +17,17 @@ class DaskFunctions(Functions):
     def __init__(self, parent):
         super(DaskFunctions, self).__init__(parent)
 
-    def to_float(self, series, *args):
-        return series.map(to_float)
+    def _to_float(self, value):
+        return value.map(to_float)
 
-    def to_integer(self, series, *args):
-        return series.map(to_integer)
+    def to_float(self, series):
+        return to_float(series)
+
+    def _to_integer(self, value):
+        return value.map(to_integer)
+
+    def to_integer(self, series):
+        return to_integer(series)
 
     def to_string(self, series, *args):
         return series.astype(str)
@@ -44,7 +50,7 @@ class DaskFunctions(Functions):
     def unique(self, series, *args):
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
-        return self.to_string(series).unique().ext.to_dict(index=False)
+        return self.to_string(series).unique().to_dict(index=False)
 
     # def mod(self, other):
     #     series = self.series
@@ -109,7 +115,7 @@ class DaskFunctions(Functions):
         return self.to_float(series).clip(lower_bound, upper_bound)
 
     def cut(self, series, bins):
-        return series.ext.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+        return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
     def to_datetime(self, series, format):
         return pd.to_datetime(series, format=format, errors="coerce")

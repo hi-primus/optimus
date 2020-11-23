@@ -3,7 +3,7 @@ from abc import abstractmethod, ABC
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.infer import is_str
+from optimus.infer import is_str, Infer
 
 
 class BaseRows(ABC):
@@ -21,6 +21,71 @@ class BaseRows(ABC):
     @abstractmethod
     def append(rows):
         pass
+
+    #
+    def greater_than(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] > value])
+
+    def greater_than_equal(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] >= value])
+
+    def less_than(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] < value])
+
+    def less_than_equal(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] <= value])
+
+    def equal(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] == value])
+
+    def not_equal(self, input_col, value):
+
+        df = self.parent.data
+        return self.parent.new(df[df[input_col] != value])
+
+    def missing(self, col_name):
+        """
+        Return missing values
+        :param col_name:
+        :return:
+        """
+        df = self.parent.data
+
+        mask_null = df[col_name].isnull()
+        return self.parent.new(df[~mask_null])
+
+    def mismatch(self, col_name, dtype):
+        """
+        Return mismatches values
+        :param col_name:
+        :param dtype:
+        :return:
+        """
+        df = self.parent.data
+        mask = df[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
+        mask_null = df[col_name].isnull()
+        return self.parent.new(df[~mask & ~mask_null])
+
+    def match(self, col_name, dtype):
+        """
+        Return Match values
+        :param col_name:
+        :param dtype:
+        :return:
+        """
+        df = self.parent.data
+        mask = df[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
+        return self.parent.new(df[mask])
 
     def apply(self, func, args=None, output_cols=None):
         """
@@ -86,7 +151,7 @@ class BaseRows(ABC):
         """
         odf = self.parent
         input_cols = parse_columns(odf, input_cols)
-        df = odf[input_cols].ext.to_pandas().values.tolist()
+        df = odf[input_cols].to_pandas().values.tolist()
 
         return df
 

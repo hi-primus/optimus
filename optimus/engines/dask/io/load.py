@@ -10,7 +10,7 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 from optimus.new_optimus import DaskDataFrame
-import ntpath
+
 
 class Load(BaseLoad):
 
@@ -28,7 +28,7 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.ext.reset()
+            df.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -53,7 +53,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False,
-            na_filter=False, *args, **kwargs):
+            na_filter=False, null_value=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -114,7 +114,7 @@ class Load(BaseLoad):
 
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
-            df.ext.reset()
+            df.reset()
             df.meta.set("file_name", path)
 
         except IOError as error:
@@ -159,7 +159,7 @@ class Load(BaseLoad):
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
+        df.reset()
         return df
 
     @staticmethod
@@ -175,7 +175,7 @@ class Load(BaseLoad):
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.ext.reset()
+            df.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -213,7 +213,7 @@ class Load(BaseLoad):
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
-        df.ext.reset()
+        df.reset()
         df.meta.set("file_name", ntpath.basename(file_name))
         df.meta.set("sheet_names", sheet_names)
 
