@@ -9,11 +9,9 @@ import simplejson as json
 from dask import dataframe as dd
 from glom import assign
 
-from optimus.bumblebee import Comm
-from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
-from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
@@ -61,14 +59,13 @@ class BaseDataFrame(ABC):
         # With this we expect to abstract the behavior and just use compute() a value from operation
         pass
 
-    def to_json(self, columns="*", format="bumblebee"):
+    def to_json(self, columns="*", format=None):
         """
         Return a json from a Dataframe
         :return:
         """
 
-        odf = self
-        print("odf",type(odf),odf)
+        odf = self.root
         if format == "bumblebee":
             columns = parse_columns(odf, columns)
             result = {"sample": {"columns": [{"title": col_name} for col_name in odf.cols.select(columns).cols.names()],
