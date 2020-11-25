@@ -9,72 +9,66 @@ from optimus.infer import is_str, Infer
 class BaseRows(ABC):
     """Base class for all Rows implementations"""
 
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, root):
+        self.root = root
 
     @staticmethod
     @abstractmethod
     def create_id(column="id"):
         pass
 
-    @staticmethod
     @abstractmethod
-    def append(rows):
+    def append(self, odfs, cols_map):
         pass
 
     #
     def greater_than(self, input_col, value):
 
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] > value])
+        df = self.root.data
+        return self.root.new(df[self.root.greather_than(input_col, value)])
 
     def greater_than_equal(self, input_col, value):
 
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] >= value])
+        df = self.root.data
+        return self.root.new(df[self.root.greater_than_equal(input_col, value)])
 
     def less_than(self, input_col, value):
 
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] < value])
+        df = self.root.data
+        return self.root.new(df[self.root.less_than(input_col, value)])
 
     def less_than_equal(self, input_col, value):
 
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] <= value])
+        df = self.root.data
+        return self.root.new(df[self.root.less_than_equal(input_col, value)])
 
     def equal(self, input_col, value):
-
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] == value])
+        df = self.root.data
+        return self.root.new(df[self.root.mask.is_equal(input_col, value)])
 
     def not_equal(self, input_col, value):
 
-        df = self.parent.data
-        return self.parent.new(df[df[input_col] != value])
+        df = self.root.data
+        return self.root.new(df[self.root.mask.not_equal(input_col, value)])
 
-    def missing(self, col_name):
+    def missing(self, input_col):
         """
         Return missing values
-        :param col_name:
+        :param input_col:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
+        return self.root.new(df[self.root.mask.missing(input_col)])
 
-        mask_null = df[col_name].isnull()
-        return self.parent.new(df[~mask_null])
-
-    def mismatch(self, col_name, dtype):
+    def mismatch(self, input_col, dtype):
         """
         Return mismatches values
-        :param col_name:
+        :param input_col:
         :param dtype:
         :return:
         """
-        df = self.parent.data
-        mask = df[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
-        mask_null = df[col_name].isnull()
-        return self.parent.new(df[~mask & ~mask_null])
+        df = self.root.data
+        return self.root.new(df[self.root.mask.miasmatch(input_col, dtype)])
 
     def match(self, col_name, dtype):
         """
@@ -83,9 +77,8 @@ class BaseRows(ABC):
         :param dtype:
         :return:
         """
-        df = self.parent.data
-        mask = df[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
-        return self.parent.new(df[mask])
+        df = self.root.data
+        return self.root.new(df[self.root.mask.match(col_name, dtype)])
 
     def apply(self, func, args=None, output_cols=None):
         """
@@ -94,7 +87,7 @@ class BaseRows(ABC):
         :param func:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         kw_columns = {}
 
         for output_col in output_cols:
@@ -103,18 +96,18 @@ class BaseRows(ABC):
 
         return df.assign(**kw_columns)
 
-    def find(self, condition):
+    def find(self, condition, output_col):
         """
 
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         if is_str(condition):
             condition = eval(condition)
 
-        df["__match__"] = condition
-        return self.parent.new(df)
+        df[output_col] = condition
+        return self.root.new(df)
 
     def select(self, condition):
         """
@@ -123,11 +116,11 @@ class BaseRows(ABC):
         :return:
         """
 
-        df = self.parent.data
+        df = self.root.data
         if is_str(condition):
             condition = eval(condition)
         df = df[condition]
-        odf = self.parent.new(df)
+        odf = self.root.new(df)
         odf.meta.action(Actions.SORT_ROW.value, odf.cols.names())
         return odf
 
@@ -135,7 +128,7 @@ class BaseRows(ABC):
         """
         Count dataframe rows
         """
-        df = self.parent.data
+        df = self.root.data
         # TODO: Be sure that we need the compute param
         if compute is True:
             result = len(df)
@@ -149,7 +142,7 @@ class BaseRows(ABC):
         :param input_cols:
         :return:
         """
-        odf = self.parent
+        odf = self.root
         input_cols = parse_columns(odf, input_cols)
         df = odf.cols.select(input_cols).to_pandas().values.tolist()
 
@@ -167,12 +160,12 @@ class BaseRows(ABC):
         :return: Spark DataFrame
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         if is_str(where):
             where = eval(where)
 
         df = df[~where]
-        odf = self.parent.new(df)
+        odf = self.root.new(df)
         odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
         return odf
 
@@ -195,10 +188,10 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        df = self.parent
+        df = self.root
         subset = parse_columns(df.data, subset)
         df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
-        return self.parent.new(df.dropna(how=how, subset=subset))
+        return self.root.new(df.dropna(how=how, subset=subset))
 
     @staticmethod
     @abstractmethod

@@ -25,6 +25,9 @@ class PandasFunctions(Functions):
     def to_integer(self, series):
         return to_integer(series)
 
+    def to_string(self, series):
+        return to_string(series)
+
     def count_zeros(self, series, *args):
         return int((series.to_float().values == 0).sum())
 

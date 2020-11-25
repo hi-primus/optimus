@@ -497,7 +497,7 @@ def set_func(odf, value, where, output_col, parser, default=None):
                                 "bool": "bool", "zip_code": "str"}
 
     df = odf.cols.cast(col_names, profiler_dtype_to_python[parser])
-    F = odf.fucntions
+    F = odf.functions
     try:
         if where is None:
             return eval(value)

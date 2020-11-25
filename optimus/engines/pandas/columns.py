@@ -40,24 +40,6 @@ class Cols(DataFrameBaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    # def to_string(self, input_cols, output_cols=None):
-    #     df = self.df
-    #
-    #     return df.cols.apply(input_cols, str, output_cols=output_cols, meta_action=Actions.TO_STRING.value,
-    #                          mode="vectorized")
-
-    # def to_integer(self, input_cols, output_cols=None):
-    #     df = self.df
-    #
-    #     return df.cols.apply(input_cols, to_integer, output_cols=output_cols, meta_action=Actions.TO_INTEGER.value,
-    #                          mode="map")
-    #
-    # def to_float(self, input_cols="*", output_cols=None):
-    #     df = self.df
-    #
-    #     return df.cols.apply(input_cols, to_float, output_cols=output_cols, meta_action=Actions.TO_FLOAT.value,
-    #                          mode="map")
-
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         df = self.df
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)

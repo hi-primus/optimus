@@ -320,7 +320,7 @@ def check_column_numbers(columns, number=0):
     # elif isinstance(columns,zip):
 
 
-def validate_columns_names(df, col_names, index=0):
+def validate_columns_names(df, col_names: [str, list], index=0):
     """
     Check if a string or list of string are valid spark columns
     :param df: Data frame to be analyzed

@@ -24,29 +24,54 @@ class DaskBaseRows(BaseRows):
 
     def create_id(self, column="id"):
         # Reference https://github.com/dask/dask/issues/1426
-        df = self.parent.data
+        df = self.root.data
         # print(df)
         a = da.arange(df.divisions[-1] + 1, chunks=df.divisions[1:])
         df[column] = dd.from_dask_array(a)
         return df
 
-    def append(self, rows):
+    def append(self, odfs, cols_map):
         """
-
-        :param rows:
-        :return:
+        Appends 2 or more dataframes
+        :param dfs:
+        :param cols_map:
         """
-        df = self.parent.data
+        every_odf = [self.root, *odfs]
+        rename = [[] for _ in self.root]
+        for key in cols_map:
+            assert len(cols_map[key]) == len(every_odf)
+            for i in range(len(cols_map[key])):
+                col_name = cols_map[key][i]
+                if col_name:
+                    rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
+        for i in range(len(rename)):
+            every_odf[i] = every_odf[i].cols.rename(rename[i])
+        df = every_odf[0].data
+        for i in range(len(every_odf)):
+            if i != 0:
+                df = df.append(every_odf[i].data)
+        odf = self.root.new(df)
+        odf = odf.cols.rename([("__output_column__" + key, key) for key in cols_map])
+        odf = odf.cols.select([*cols_map.keys()])
+        return odf.reset_index(drop=True)
 
-        if is_list(rows):
-            rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
-
-        # Can not concatenate dataframe with not string columns names
-        rows.columns = df.columns
-
-        df = dd.concat([df, rows], axis=0, interleave_partitions=True)
-
-        return df
+    # def append(self, rows):
+    #     """
+    #
+    #     :param rows:
+    #     :return:
+    #     """
+    #     df = self.root.data
+    #
+    #     if is_list(rows):
+    #         rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
+    #
+    #     # Can not concatenate dataframe with not string columns names
+    #     rows.columns = df.columns
+    #
+    #     df = dd.concat([df, rows], axis=0, interleave_partitions=True)
+    #
+    #     return df
 
     def limit(self, count):
         """
@@ -54,7 +79,7 @@ class DaskBaseRows(BaseRows):
         :param count:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
 
         if count is None:
@@ -70,13 +95,13 @@ class DaskBaseRows(BaseRows):
             # Param frac can not be greater than 1
             limit = 1 if limit > 1 else limit
 
-        return self.parent.new(df.sample(frac=limit))
+        return self.root.new(df.sample(frac=limit))
         # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
         # return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
 
     @dispatch(str, str)
     def sort(self, input_cols):
-        df = self.parent.data
+        df = self.root.data
         input_cols = parse_columns(df, input_cols)
         return df.rows.sort([(input_cols, "desc",)])
 
@@ -85,7 +110,7 @@ class DaskBaseRows(BaseRows):
         """
         Sort column by row
         """
-        df = self.parent.data
+        df = self.root.data
         columns = parse_columns(df, columns)
         return df.rows.sort([(columns, order,)])
 
@@ -98,7 +123,7 @@ class DaskBaseRows(BaseRows):
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
-        df = self.parent
+        df = self.root
 
         t = []
         if is_list_of_str_or_int(col_sort):
@@ -136,7 +161,7 @@ class DaskBaseRows(BaseRows):
         :param upper_bound:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         columns = parse_columns(df, columns)
         return df[lower_bound: upper_bound][columns]
 
@@ -152,7 +177,7 @@ class DaskBaseRows(BaseRows):
         :param bounds:
         :return:
         """
-        df = self.parent
+        df = self.root
         # TODO: should process string or dates
         # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         columns = parse_columns(df, columns)
@@ -195,7 +220,7 @@ class DaskBaseRows(BaseRows):
         return df
 
     def drop_by_dtypes(self, input_cols, data_type=None):
-        df = self.parent.data
+        df = self.root.data
         return df
 
     def drop_duplicates(self, keep="first", subset=None):
@@ -205,12 +230,12 @@ class DaskBaseRows(BaseRows):
         :return: Return a new DataFrame with duplicate rows removed
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         subset = parse_columns(df, subset)
         subset = val_to_list(subset)
         df = df.drop_duplicates(keep=keep, subset=subset)
 
-        return self.parent.new(df)
+        return self.root.new(df)
 
     def is_in(self, input_cols, values, output_cols=None):
 
@@ -219,7 +244,7 @@ class DaskBaseRows(BaseRows):
             _values = args
             return value.isin(_values)
 
-        df = self.parent
+        df = self.root
         return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols)
 
         # df = self.parent.data
@@ -232,7 +257,7 @@ class DaskBaseRows(BaseRows):
         # return self.parent.new(df)
 
     def unnest(self, input_cols):
-        df = self.parent.data
+        df = self.root.data
         return df
 
     def approx_count(self):
@@ -240,5 +265,5 @@ class DaskBaseRows(BaseRows):
         Aprox rows count
         :return:
         """
-        df = self.parent
+        df = self.root
         return df.rows.count()

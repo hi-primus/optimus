@@ -67,9 +67,9 @@ class Rows(DaskBaseRows):
         :param condition:
         :return: Spark DataFrame
         """
-        df = self.parent.data
+        df = self.root.data
         df = df.filter(condition)
-        odf = self.parent.new(df)
+        odf = self.root.new(df)
         odf.meta.preserve(self, Actions.SORT_ROW.value, df.cols.names())
 
         return odf
@@ -79,7 +79,7 @@ class Rows(DaskBaseRows):
         Count dataframe rows
         """
 
-        return self.parent.data.count()
+        return self.root.data.count()
 
     @staticmethod
     def select(*args, **kwargs) -> DataFrame:
@@ -277,7 +277,7 @@ class Rows(DaskBaseRows):
         :return:
         """
         print("Asdf")
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
         return odf.data[columns].limit(n)
 
@@ -287,8 +287,8 @@ class Rows(DaskBaseRows):
         :param count:
         :return:
         """
-        df = self.parent.data
-        return self.parent.new(df.limit(count))
+        df = self.root.data
+        return self.root.new(df.limit(count))
 
     # TODO: Merge with select
     @staticmethod
@@ -331,5 +331,5 @@ class Rows(DaskBaseRows):
         :param confidence:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         return df.rdd.countApprox(timeout, confidence)

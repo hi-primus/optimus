@@ -1,8 +1,10 @@
 from optimus.engines.base.dataframe.extension import Ext as PandasExtension
 from optimus.engines.base.meta import Meta
-
+import time
 
 # from optimus.engines.base.odataframe import BaseDataFrame
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import BUFFER_SIZE
 
 
 class PandasDataFrame(PandasExtension):
@@ -108,6 +110,53 @@ class DaskDataFrame(DaskExtension):
         from optimus.engines.dask.functions import DaskFunctions
         return DaskFunctions(self)
 
+    @property
+    def mask(self):
+        from optimus.engines.base.mask import Mask
+        return Mask(self)
+
+    def set_buffer(self, columns="*", n=BUFFER_SIZE):
+        odf = self
+        input_cols = parse_columns(odf, columns)
+        # df.buffer = df.head(input_cols, n)
+
+        odf.buffer = PandasDataFrame(odf.cols.select(input_cols).rows.limit(n).to_pandas())
+        odf.meta.set("buffer_time", int(time.time()))
+
+    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+
+        odf = self.root
+        buffer_time = odf.meta.get("buffer_time")
+        last_action_time = odf.meta.get("last_action_time")
+
+        if buffer_time and last_action_time:
+            if buffer_time > last_action_time:
+                odf.set_buffer(columns, n)
+        elif odf.get_buffer() is None:
+            odf.set_buffer(columns, n)
+
+        df_buffer = odf.get_buffer()
+        df_length = df_buffer.rows.count()
+        if lower_bound is None:
+            lower_bound = 0
+
+        if lower_bound < 0:
+            lower_bound = 0
+
+        if upper_bound is None:
+            upper_bound = df_length
+
+        if upper_bound > df_length:
+            upper_bound = df_length
+
+        if lower_bound >= df_length:
+            diff = upper_bound - lower_bound
+            lower_bound = df_length - diff
+            upper_bound = df_length
+            # RaiseIt.value_error(df_length, str(df_length - 1))
+
+        input_columns = parse_columns(odf, columns)
+        return PandasDataFrame(df_buffer.data[input_columns][lower_bound: upper_bound])
 
 from optimus.engines.dask_cudf.extension import Ext as DaskCUDFExtension
 

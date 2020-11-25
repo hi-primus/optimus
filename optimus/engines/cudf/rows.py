@@ -28,7 +28,7 @@ class Rows(BaseRows):
         :param rows:
         :return:
         """
-        df = self.parent
+        df = self.root
 
         if is_list(rows):
             rows = cudf.DataFrame(rows)
@@ -155,12 +155,12 @@ class Rows(BaseRows):
         :param input_cols:
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         input_cols = parse_columns(df, input_cols)
         input_cols = val_to_list(input_cols)
         df = df.drop_duplicates(subset=input_cols)
 
-        return self.parent.new(df)
+        return self.root.new(df)
 
     def limit(self, count) -> DataFrame:
         """
@@ -169,10 +169,10 @@ class Rows(BaseRows):
         :return:
         """
 
-        return self.parent.new(self.parent.data[:count - 1])
+        return self.root.new(self.root.data[:count - 1])
 
     def is_in(self, input_cols, values) -> DataFrame:
-        df = self.parent
+        df = self.root
         return df
 
     @staticmethod

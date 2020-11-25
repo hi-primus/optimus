@@ -28,7 +28,7 @@ class Rows(BaseRows):
         :param rows:
         :return:
         """
-        df = self.parent
+        df = self.root
 
         if is_list(rows):
             rows = pd.DataFrame(rows)
@@ -36,13 +36,13 @@ class Rows(BaseRows):
 
         rows.columns = df.cols.names()
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
-        return self.parent.new(df)
+        return self.root.new(df)
 
         return df_list
 
     @dispatch(str, str)
     def sort(self, input_cols) -> DataFrame:
-        odf = self.parent
+        odf = self.root
         input_cols = parse_columns(odf, input_cols)
         return odf.rows.sort([(input_cols, "desc",)])
 
@@ -51,7 +51,7 @@ class Rows(BaseRows):
         """
         Sort column by row
         """
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
         return odf.rows.sort([(columns, order,)])
 
@@ -64,7 +64,7 @@ class Rows(BaseRows):
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
-        df = self.parent
+        df = self.root
 
         t = []
         if is_list_of_str_or_int(col_sort):
@@ -97,7 +97,7 @@ class Rows(BaseRows):
         :param bounds:
         :return:
         """
-        df = self.parent
+        df = self.root
         # TODO: should process string or dates
         columns = parse_columns(df.data, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         if bounds is None:
@@ -137,11 +137,11 @@ class Rows(BaseRows):
         for col_name in columns:
             df = df.rows.select(_between(col_name))
         df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
-        return self.parent.new(df)
+        return self.root.new(df)
 
 
     def drop_by_dtypes(self,input_cols, data_type=None):
-        df = self.parent
+        df = self.root
         return df
 
     def tag_nulls(self, how="all", subset=None, output_col=None):
@@ -153,7 +153,7 @@ class Rows(BaseRows):
         :return:
         """
 
-        df = self.parent.data
+        df = self.root.data
 
         if subset is not None:
             subset = val_to_list(subset)
@@ -169,7 +169,7 @@ class Rows(BaseRows):
         else:
             df[output_col] = subset_df.isnull().any(axis=1)
 
-        return self.parent.new(df)
+        return self.root.new(df)
 
     def tag_duplicated(self, keep="first", subset=None, output_col=None):
         """
@@ -181,7 +181,7 @@ class Rows(BaseRows):
         :return:
         """
 
-        df = self.parent.data
+        df = self.root.data
         if subset is not None:
             subset = val_to_list(subset)
             subset_df = df[subset]
@@ -193,7 +193,7 @@ class Rows(BaseRows):
 
         df[output_col] = subset_df.duplicated(keep=keep, subset=subset)
 
-        return self.parent.new(df)
+        return self.root.new(df)
 
     def drop_duplicates(self, subset=None) -> DataFrame:
         """
@@ -202,12 +202,12 @@ class Rows(BaseRows):
         :return: Return a new DataFrame with duplicate rows removed
         :return:
         """
-        df = self.parent.data
+        df = self.root.data
         subset = parse_columns(df, subset)
         subset = val_to_list(subset)
         df = df.drop_duplicates(subset=subset)
 
-        return self.parent.new(df)
+        return self.root.new(df)
 
     def limit(self, count) -> DataFrame:
         """
@@ -215,8 +215,8 @@ class Rows(BaseRows):
         :param count:
         :return:
         """
-        df = self.parent.data
-        return self.parent.new(df[:count - 1])
+        df = self.root.data
+        return self.root.new(df[:count - 1])
 
     @staticmethod
     def is_in(input_cols, values) -> DataFrame:

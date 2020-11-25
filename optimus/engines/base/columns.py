@@ -32,48 +32,15 @@ class BaseColumns(ABC):
     def __init__(self, parent):
         self.parent = parent
         self.F = self.parent.functions
-        # self.df.schema[-1].metadata = df.schema[-1].metadata
 
-    # def _names(self):
-    #     return self.parent.data.columns
+    def _names(self):
+        pass
 
     @abstractmethod
     def append(self, dfs):
         pass
 
-    def append_df(self, dfs, cols_map):
-        """
-        Appends 2 or more dataframes
-        :param dfs:
-        :param cols_map:
-        """
 
-        every_df = [self.parent.data, *dfs]
-
-        rename = [[] for _ in every_df]
-
-        for key in cols_map:
-            assert len(cols_map[key]) == len(every_df)
-
-            for i in range(len(cols_map[key])):
-                col_name = cols_map[key][i]
-                if col_name:
-                    rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
-
-        for i in range(len(rename)):
-            every_df[i] = every_df[i].cols.rename(rename[i])
-
-        df = every_df[0]
-
-        for i in range(len(every_df)):
-            if i != 0:
-                df = df.append(every_df[i])
-
-        df = df.cols.rename([("__output_column__" + key, key) for key in cols_map])
-
-        df = df.cols.select([*cols_map.keys()])
-
-        return df.reset_index(drop=True)
 
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
@@ -211,7 +178,6 @@ class BaseColumns(ABC):
         else:
             for input_col, output_col in columns:
                 if mode == "pandas" and (is_dask_dataframe(df)):
-
                     partitions = df.to_delayed()
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
@@ -276,7 +242,7 @@ class BaseColumns(ABC):
         final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
                                                  parser=vfunc, default=default, meta=object)
 
-        df.meta.preserve(df, Actions.SET.value, output_cols)
+        df.meta.action(Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
         return df.assign(**kw_columns)
 
@@ -1115,7 +1081,7 @@ class BaseColumns(ABC):
         return df
 
     def to_float(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_float, func_return_type=str,
+        return self.apply(input_cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
 
     def to_integer(self, input_cols="*", output_cols=None):
@@ -1141,13 +1107,11 @@ class BaseColumns(ABC):
 
         input_cols = parse_columns(df, input_cols)
         for col_name in input_cols:
+            dtype = df.data[col_name].dtype
 
-            # print("df.data[col_name].dtype",df.data[col_name].dtype)
-            if df.data[col_name].dtype != np.object:
-                print("aaaa", col_name,df.data[col_name].dtype)
+            if dtype != np.object:
                 filtered_columns.append(col_name)
 
-        # print("filtered_columns", filtered_columns)
         if len(filtered_columns) > 0:
             return self.apply(input_cols, self.F.to_string, func_return_type=str,
                               output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
@@ -1839,8 +1803,6 @@ class BaseColumns(ABC):
             return stats
         pass
 
-    def _names(self):
-        pass
 
     def names(self, col_names="*", by_dtypes=None, invert=False):
 
@@ -1960,3 +1922,8 @@ class BaseColumns(ABC):
         df = self.parent
         return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
                              mode="vectorized")
+
+    # Mask functions
+    def missing(self, input_cols, output_cols=None):
+        return self.append(self.parent.mask.missing())
+
