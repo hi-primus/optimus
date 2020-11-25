@@ -121,8 +121,8 @@ class BaseRows(ABC):
             condition = eval(condition)
         df = df[condition]
         odf = self.root.new(df)
-        odf.meta.action(Actions.SORT_ROW.value, odf.cols.names())
-        return odf
+        meta = odf.meta.action(Actions.SORT_ROW.value, odf.cols.names())
+        return self.root.new(odf.data, meta=meta)
 
     def count(self, compute=True) -> int:
         """
@@ -166,8 +166,8 @@ class BaseRows(ABC):
 
         df = df[~where]
         odf = self.root.new(df)
-        odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
-        return odf
+        meta = odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
+        return self.root.new(odf.data, meta=meta)
 
     @staticmethod
     @abstractmethod
@@ -190,7 +190,7 @@ class BaseRows(ABC):
         """
         df = self.root
         subset = parse_columns(df.data, subset)
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
+        df.meta.set(df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names()).get())
         return self.root.new(df.dropna(how=how, subset=subset))
 
     @staticmethod

@@ -47,7 +47,7 @@ class Create:
         elif creator.__name__ == "dask_cudf":
             df = self.creator.from_cudf(pdf, npartitions=n_partitions, *args, **kwargs)
 
-        df = df.meta.columns(df.cols.names())
+        df.meta.set(value=df.meta.columns(df.cols.names()).get())
         return df
 
     df = data_frame

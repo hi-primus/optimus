@@ -320,10 +320,10 @@ def check_column_numbers(columns, number=0):
     # elif isinstance(columns,zip):
 
 
-def validate_columns_names(df, col_names: [str, list], index=0):
+def validate_columns_names(odf, col_names: [str, list], index=0):
     """
     Check if a string or list of string are valid spark columns
-    :param df: Data frame to be analyzed
+    :param odf: Dataframe to be analyzed
     :param col_names: columns names to be checked
     :param index:
     :return:
@@ -339,19 +339,19 @@ def validate_columns_names(df, col_names: [str, list], index=0):
     if is_list_of_strings(columns):
         columns = OrderedSet(columns)
 
-    check_for_missing_columns(df, columns)
+    check_for_missing_columns(odf, columns)
 
     return True
 
 
-def check_for_missing_columns(df, col_names):
+def check_for_missing_columns(odf, col_names):
     """
     Check if the columns you want to select exits in the dataframe
-    :param df: Dataframe to be checked
+    :param odf: Dataframe to be checked
     :param col_names: cols names to
     :return:
     """
-    _col_names = df.cols._names()
+    _col_names = odf.cols._names()
     missing_columns = list(OrderedSet(col_names) - OrderedSet(_col_names))
 
     if len(missing_columns) > 0:

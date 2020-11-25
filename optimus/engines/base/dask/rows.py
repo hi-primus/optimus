@@ -123,7 +123,8 @@ class DaskBaseRows(BaseRows):
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
-        df = self.root
+        odf = self.root
+        meta = odf.meta
 
         t = []
         if is_list_of_str_or_int(col_sort):
@@ -142,16 +143,16 @@ class DaskBaseRows(BaseRows):
             def func(pdf):
                 return pdf.sort_values(col_name, ascending=True if order == "asc" else False)
 
-            df = df.map_partitions(func)
+            odf = odf.map_partitions(func)
 
-            df = df.meta.action(Actions.SORT_ROW.value, col_name)
+            meta = meta.action(Actions.SORT_ROW.value, col_name)
 
-            # c = df.cols.names()
+            # c = odf.cols.names()
             # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
             # We should fins a way to make it work desc and form multiple columns
-            # df = df.set_index(col_name).reset_index()[c]
+            # odf = odf.set_index(col_name).reset_index()[c]
 
-        return df
+        return odf.new(odf.data, meta=meta)
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """
@@ -177,10 +178,10 @@ class DaskBaseRows(BaseRows):
         :param bounds:
         :return:
         """
-        df = self.root
+        odf = self.root
         # TODO: should process string or dates
-        # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        columns = parse_columns(df, columns)
+        # columns = parse_columns(odf, columns, filter_by_column_dtypes=odf.constants.NUMERIC_TYPES)
+        columns = parse_columns(odf, columns)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]
 
@@ -209,15 +210,15 @@ class DaskBaseRows(BaseRows):
             sub_query = []
             for bound in bounds:
                 _lower_bound, _upper_bound = bound
-                sub_query.append(opb(op1(df[_col_name], _lower_bound), op2(df[_col_name], _upper_bound)))
+                sub_query.append(opb(op1(odf[_col_name], _lower_bound), op2(odf[_col_name], _upper_bound)))
             query = functools.reduce(operator.__or__, sub_query)
 
             return query
 
         for col_name in columns:
-            df = df.rows.select(_between(col_name))
-        df.meta.action(Actions.DROP_ROW.value, df.cols.names())
-        return df
+            odf = odf.rows.select(_between(col_name))
+        meta = odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
+        return odf.new(odf.data, meta=meta)
 
     def drop_by_dtypes(self, input_cols, data_type=None):
         df = self.root.data

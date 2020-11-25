@@ -24,7 +24,7 @@ class Ext(BaseDataFrame):
 
     def cache(self):
         df = self.data
-        return self.new(df, meta=self)
+        return self.new(df, meta=self.meta)
 
     def compute(self):
         return self.data
@@ -196,4 +196,4 @@ class Ext(BaseDataFrame):
 
     def repartition(self, n=None, *args, **kwargs):
         df = self.data
-        return self.root.new(df, meta=self.root)
+        return self.root.new(df, meta=self.root.meta)

@@ -22,7 +22,7 @@ class Ext(BaseExt):
 
     def cache(self):
         df = self.parent.data
-        return self.parent.new(df.cache(), meta=self.parent)
+        return self.parent.new(df.cache(), meta=self.parent.meta)
 
     @staticmethod
     def roll_out():
@@ -267,7 +267,7 @@ class Ext(BaseExt):
     def repartition(self, n=None, *args, **kwargs):
         df = self.parent.data
         df = df.repartition(n, *args, **kwargs)
-        return self.parent.new(df, meta=self.parent)
+        return self.parent.new(df, meta=self.parent.meta)
 
     def h_repartition(self, partitions_number=None, col_name=None):
         """

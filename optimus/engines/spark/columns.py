@@ -135,7 +135,7 @@ class Cols(BaseColumns):
     #     if columns is not None:
     #         df = df.select(columns)
     #         # Metadata get lost when using select(). So we copy here again.
-    #         df = df.meta.preserve(self)
+    #         df.meta.set(value=df.meta.preserve(None).get())
     #
     #     else:
     #         df = None
@@ -150,7 +150,7 @@ class Cols(BaseColumns):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        df = self.parent
+        odf = self.parent
 
         if is_list_of_str(columns):
             output_cols = [col_name + "_copy" for col_name in columns]
@@ -164,10 +164,11 @@ class Cols(BaseColumns):
 
         for input_col, output_col in columns:
             current_meta = df.meta.get()
-            df = self.parent.data.withColumn(output_col, F.col(input_col))
-            df = df.meta.set(value=current_meta)
-            df = df.meta.copy({input_col: output_col})
-        return df
+            df = odf.data.withColumn(output_col, F.col(input_col))
+            meta.set(value=current_meta)
+            meta = meta.copy({input_col: output_col})
+        
+        return odf.new(df, meta=meta)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -271,7 +272,7 @@ class Cols(BaseColumns):
             RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
         df = df.withColumn(output_col, expr)
-        df = df.meta.preserve(self, Actions.SET.value, columns)
+        df.meta.set(value=df.meta.preserve(None, Actions.SET.value, columns).get())
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -283,12 +284,14 @@ class Cols(BaseColumns):
         :param func: can be lower, upper or any string transformation function
         """
 
-        df = self.parent
+        odf = self.parent
+        df = odf.meta
+        meta = odf.meta
 
         # Apply a transformation function
         if is_function(func):
-            exprs = [F.col(c).alias(func(c)) for c in df.columns]
-            df = df.select(exprs)
+            exprs = [F.col(c).alias(func(c)) for c in odf.columns]
+            odf = odf.select(exprs)
 
         elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
@@ -298,8 +301,6 @@ class Cols(BaseColumns):
                 old_col_name = col_name[0]
                 new_col_name = col_name[1]
 
-                current_meta = self.meta.get()
-
                 if is_str(old_col_name):
                     df = df.withColumnRenamed(old_col_name, new_col_name)
                 elif is_int(old_col_name):
@@ -307,9 +308,9 @@ class Cols(BaseColumns):
                     df = df.withColumnRenamed(old_col_name, new_col_name)
 
                 # df = df.rename_meta([(old_col_name, new_col_name)])
-                df = df.meta.preserve(self, value=current_meta)
+                meta = meta.rename((old_col_name, new_col_name))
 
-                df = df.meta.rename((old_col_name, new_col_name))
+        odf = odf.new(df, meta=meta)
 
         return df
 
@@ -433,8 +434,8 @@ class Cols(BaseColumns):
 
         df = odf.data.drop(*columns)
 
-        odf.meta.action(Actions.DROP.value, columns)
-        return self.parent.new(df, odf)
+        meta = odf.meta.action(Actions.DROP.value, columns)
+        return self.parent.new(df, meta=meta)
 
     def create_exprs(self, columns, funcs, *args):
         """
@@ -1001,7 +1002,7 @@ class Cols(BaseColumns):
         for input_col, output_col in columns:
             df = func(df, input_col, output_col, search, replace_by)
 
-            df = df.meta.preserve(self, Actions.REPLACE.value, output_col)
+            df.meta.set(value=df.meta.preserve(None, Actions.REPLACE.value, output_col).get())
         df = self.parent.new(df)
         return df
 
@@ -1307,7 +1308,7 @@ class Cols(BaseColumns):
 
             df = vector_assembler.transform(df)
 
-            df = df.meta.preserve(self, Actions.NEST.value, output_col)
+            df.meta.set(value=df.meta.preserve(None, Actions.NEST.value, output_col).get())
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
@@ -1321,7 +1322,7 @@ class Cols(BaseColumns):
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
-        df = df.meta.preserve(self, Actions.NEST.value, output_col)
+        df.meta.set(value=df.meta.preserve(None, Actions.NEST.value, output_col).get())
         return df
 
     @staticmethod
@@ -1430,7 +1431,7 @@ class Cols(BaseColumns):
 
             else:
                 RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-            df = df.meta.preserve(self, Actions.UNNEST.value, [v for k, v in final_columns])
+            df.meta.set(value=df.meta.preserve(None, Actions.UNNEST.value, [v for k, v in final_columns]).get())
         return df
 
     @staticmethod

@@ -59,7 +59,7 @@ class BaseColumns(ABC):
         if columns is not None:
             df = df[columns]
 
-        return self.parent.new(df, self.parent)
+        return self.parent.new(df, meta=self.parent.meta)
 
     def copy(self, input_cols, output_cols=None, columns=None):
         """
@@ -69,11 +69,11 @@ class BaseColumns(ABC):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        df = self.parent
-        output_ordered_columns = df.cols.names()
+        odf = self.parent
+        output_ordered_columns = odf.cols.names()
 
         if columns is None:
-            input_cols = parse_columns(df, input_cols)
+            input_cols = parse_columns(odf, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
                 output_cols = get_output_cols(input_cols, output_cols)
 
@@ -88,11 +88,18 @@ class BaseColumns(ABC):
                 output_ordered_columns[col_index:col_index] = [output_col]
 
         kw_columns = {}
+
+        df = odf.data
+        meta = odf.meta
+
         for input_col, output_col in zip(input_cols, output_cols):
             kw_columns[output_col] = df[input_col]
-            df = df.meta.copy({input_col: output_col})
+            meta = meta.copy({input_col: output_col})
         df = df.assign(**kw_columns)
-        return df.cols.select(output_ordered_columns)
+
+        odf = odf.new(df, meta=meta)
+
+        return odf.cols.select(output_ordered_columns)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -111,9 +118,9 @@ class BaseColumns(ABC):
         check_column_numbers(columns, "*")
 
         df = odf.data.drop(columns=columns)
+        meta = odf.meta.action(Actions.DROP.value, columns)
 
-        odf.meta.action(Actions.DROP.value, columns)
-        return self.parent.new(df, odf)
+        return self.parent.new(df, meta=meta)
 
     def keep(self, columns=None, regex=None):
         """
@@ -132,7 +139,7 @@ class BaseColumns(ABC):
 
         df = df.drop(columns=list(set(df.columns) - set(columns)))
 
-        df = df.meta.preserve(df, Actions.KEEP.value, columns)
+        df.meta.set(value=df.meta.preserve(df, Actions.KEEP.value, columns).get())
 
         return df
 
@@ -159,6 +166,64 @@ class BaseColumns(ABC):
         pass
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
+
+        columns = prepare_columns(self.parent, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+                                  accepts_missing_cols=True, default=default)
+
+        kw_columns = {}
+        output_ordered_columns = self.names()
+        if args is None:
+            args = []
+        elif not is_tuple(args, ):
+            args = (args,)
+
+        odf = self.parent
+        df = odf.data
+
+        if mode == "whole":
+            df = func(df)
+        else:
+            for input_col, output_col in columns:
+                if mode == "pandas" and (is_dask_dataframe(df)):
+                    partitions = df.to_delayed()
+                    delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
+
+                    kw_columns[output_col] = from_delayed(delayed_parts)
+
+                elif mode == "vectorized" or mode == "pandas":
+
+                    _ddf = func(df[input_col], *args)
+
+                    if is_dask_dataframe(_ddf):
+                        odf = odf.cols.append(_ddf)
+                    else:
+                        kw_columns[output_col] = func(df[input_col], *args)
+                elif mode == "map":
+                    kw_columns = self._map(df, input_col, output_col, func, args, kw_columns)
+
+                # Preserve column order
+                if output_col not in self.names():
+                    col_index = output_ordered_columns.index(input_col) + 1
+                    output_ordered_columns[col_index:col_index] = [output_col]
+
+                # Preserve actions for the profiler
+                odf.meta.preserve(odf, meta_action, output_col)
+
+            if set_index is True:
+                df = df.reset_index()
+            if kw_columns:
+                df = df.assign(**kw_columns)          
+
+        # Dataframe to Optimus dataframe
+        
+        odf = odf.new(df, meta=odf.meta)  
+        odf = odf.cols.select(output_ordered_columns)
+
+        return odf
+
+    def old_apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
 
@@ -223,7 +288,7 @@ class BaseColumns(ABC):
         :param default:
         :return:
         """
-        df = self.df
+        odf = self.df
 
         columns, vfunc = set_function_parser(df, value, where, default)
         # if df.cols.dtypes(input_col) == "category":
@@ -236,15 +301,15 @@ class BaseColumns(ABC):
         output_cols = one_list_to_val(output_cols)
 
         if columns:
-            final_value = df[columns]
+            final_value = odf[columns]
         else:
-            final_value = df
+            final_value = odf
         final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
                                                  parser=vfunc, default=default, meta=object)
 
-        df.meta.action(Actions.SET.value, output_cols)
+        meta = odf.meta.action(Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
-        return df.assign(**kw_columns)
+        return odf.new(odf.data.assign(**kw_columns), meta=meta)
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None):
@@ -254,32 +319,36 @@ class BaseColumns(ABC):
         :param func: can be lower, upper or any string transformation function
         """
 
-        df = self.parent
+        odf = self.parent
+        df = odf.data
+        meta = odf.meta
 
         # Apply a transformation function
         if is_list_of_tuples(columns_old_new):
-            validate_columns_names(df.data, columns_old_new)
+            validate_columns_names(odf, columns_old_new)
             for col_name in columns_old_new:
 
                 old_col_name = col_name[0]
                 if is_int(old_col_name):
-                    old_col_name = df.cols.names()[old_col_name]
+                    old_col_name = odf.cols.names()[old_col_name]
                 if func:
                     old_col_name = func(old_col_name)
 
-                current_meta = df.meta.get()
                 # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
                 # TODO: this seems to the only change in this function compare to pandas. Maybe this can
                 #  be moved to a base class
 
-                new_column = col_name[1]
+                new_col_name = col_name[1]
                 if old_col_name != col_name:
-                    df = df.data.rename(columns={old_col_name: new_column})
+                    df = df.rename(columns={old_col_name: new_col_name})
+                    meta = meta.rename({old_col_name: new_col_name})
 
-                df = df.meta.preserve(df, value=current_meta)
-                df = df.meta.rename({old_col_name: new_column})
+        odf = odf.new(df, meta=meta)
 
-        return df
+        meta = meta.preserve(None, value=meta.get())
+
+        return odf.new(odf.data, meta=meta)
+
 
     @dispatch(list)
     def rename(self, columns_old_new=None):
@@ -1570,7 +1639,7 @@ class BaseColumns(ABC):
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        df = df.meta.preserve(df, Actions.UNNEST.value, final_columns)
+        df.meta.set(value=df.meta.preserve(df, Actions.UNNEST.value, final_columns).get())
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
 

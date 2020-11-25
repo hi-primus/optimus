@@ -48,7 +48,7 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.df
         df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        df = df.meta.preserve(df, Actions.APPEND.value, df.cols.names())
+        df.meta.set(value=df.meta.preserve(df, Actions.APPEND.value, df.cols.names()).get())
         return df
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
@@ -211,6 +211,6 @@ class DaskBaseColumns(BaseColumns):
         col_index = output_ordered_columns.index(input_cols[-1]) + 1
         output_ordered_columns[col_index:col_index] = [output_col]
 
-        df = df.meta.preserve(df, Actions.NEST.value, list(kw_columns.values()))
+        df.meta.set(value=df.meta.preserve(df, Actions.NEST.value, list(kw_columns.values())).get())
 
         return df.cols.select(output_ordered_columns)

@@ -429,7 +429,7 @@ class BaseDataFrame(ABC):
     def repartition(self, n=None, *args, **kwargs):
         df = self.data
         df = df.repartition(npartitions=n, *args, **kwargs)
-        return self.root.new(df, meta=self.root)
+        return self.root.new(df, meta=self.root.meta)
 
     def table_image(self, path, limit=10):
         """
@@ -582,7 +582,8 @@ class BaseDataFrame(ABC):
 
     def reset(self):
         # df = self.df
-        df = self.meta.set(None, {})
+        df = self
+        df.meta.set(None, {})
         return df
 
     def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -689,9 +690,10 @@ class BaseDataFrame(ABC):
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        odf.meta.columns(odf.cols.names())
+        odf.meta.set(value=odf.meta.columns(odf.cols.names()).get())
         odf.meta.set("transformations", value={})
         odf.meta.set("profile", profiler_data)
+        
         if cols_and_inferred_dtype is not None:
             odf.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 

@@ -38,7 +38,7 @@ class Load(BaseLoad):
             raise
         df = replace_columns_special_characters(df)
 
-        df = df.meta.add_action("columns", df.cols.names())
+        df.meta.set(value=df.meta.add_action("columns", df.cols.names()).get())
         df.reset()
         return df
 

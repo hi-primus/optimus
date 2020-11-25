@@ -79,7 +79,7 @@ class Rows(BaseRows):
             if order != "asc" and order != "desc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df = df.meta.preserve(Actions.SORT_ROW.value, col_name)
+            df.meta.set(value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
 
             df = df.sort_values(col_name, ascending=True if order == "asc" else False)
 
@@ -136,7 +136,7 @@ class Rows(BaseRows):
         # df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df = df.meta.preserve(self, Actions.DROP_ROW.value, df.cols.names())
+        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return self.root.new(df)
 
 

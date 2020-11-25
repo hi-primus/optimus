@@ -357,8 +357,8 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.meta.set(value={})
-        df = df.meta.columns(df.cols.names())
+        df.meta.set(value={})
+        df.meta.set(value=df.meta.columns(df.cols.names()).get())
 
         # col_names = output_columns["columns"].keys()
         if format == "json":

@@ -12,8 +12,11 @@ class Ext(BaseDataFrame):
     def __init__(self, root, data):
         super().__init__(root, data)
 
-    def new(self, df, meta):
-        pass
+    def new(self, df, meta=None):
+        new_df = self.__class__(df)
+        if meta is not None:
+            new_df.meta.set(value=meta.get())
+        return new_df
 
     @staticmethod
     def delayed(func):
@@ -24,7 +27,7 @@ class Ext(BaseDataFrame):
 
     def cache(self):
         df = self.data
-        return self.new(df.persist(), meta=self)
+        return self.new(df.persist(), meta=self.meta)
 
     def compute(self):
         df = self.data

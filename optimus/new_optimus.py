@@ -11,12 +11,6 @@ class PandasDataFrame(PandasExtension):
     def __init__(self, data):
         super().__init__(self, data)
 
-    def new(self, df, meta=None):
-        new_df = PandasDataFrame(df)
-        if meta is not None:
-            new_df.meta.set(value=meta.meta.get())
-        return new_df
-
     @property
     def rows(self):
         from optimus.engines.pandas.rows import Rows
@@ -39,12 +33,6 @@ from optimus.engines.cudf.extension import Ext as CUDFExtension
 class CUDFDataFrame(CUDFExtension):
     def __init__(self, data):
         super().__init__(self, data)
-
-    def new(self, df, meta=None):
-        new_df = CUDFDataFrame(df)
-        if meta is not None:
-            new_df.meta.set(value=meta.meta.get())
-        return new_df
 
     @property
     def rows(self):
@@ -88,12 +76,6 @@ class DaskDataFrame(DaskExtension):
     @staticmethod
     def create_id(column="id"):
         pass
-
-    def new(self, df, meta=None):
-        new_df = DaskDataFrame(df)
-        if meta is not None:
-            new_df.meta.set(value=meta.meta.get())
-        return new_df
 
     @property
     def rows(self):
@@ -165,12 +147,6 @@ class DaskCUDFDataFrame(DaskCUDFExtension):
     def __init__(self, data):
         super().__init__(self, data)
 
-    def new(self, df, meta=None):
-        new_df = DaskCUDFDataFrame(df)
-        if meta is not None:
-            new_df.meta.set(value=meta.meta.get())
-        return new_df
-
     @property
     def rows(self):
         from optimus.engines.dask_cudf.rows import Rows
@@ -194,12 +170,6 @@ class DaskCUDFDataFrame(DaskCUDFExtension):
 class SparkDataFrame:
     def __init__(self, df):
         super().__init__(df)
-
-    def new(self, df, meta=None):
-        new_df = SparkDataFrame(df)
-        if meta is not None:
-            new_df.meta.set(value=meta.meta.get())
-        return new_df
 
     @property
     def rows(self):

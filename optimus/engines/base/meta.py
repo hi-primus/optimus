@@ -1,5 +1,7 @@
 from glom import glom, assign
 
+import copy
+
 from optimus.helpers.core import val_to_list
 
 ACTIONS_KEY = "transformations.actions"
@@ -22,95 +24,96 @@ class Meta:
         Reset the data frame metadata
         :return:
         """
-
-        df = self.set(ACTIONS_KEY, [])
-        return df
+        meta = self
+        meta.set(ACTIONS_KEY, [])
 
     def append_action(self, action, value):
         """
         Shortcut to append actions to a dataframe.
         :param action:
         :param value:
-        :return:
+        :return: Meta
         """
-        df = self.parent
+        meta = copy.deepcopy(self)
         key = ACTIONS_KEY
 
-        old_value = df.meta.get(key)
+        old_value = meta.get(key)
         if old_value is None:
             old_value = []
         old_value.append({action: value})
-        df = df.meta.set(key, old_value)
-        return df
+        meta.set(key, old_value)
+
+        return meta
 
     def copy(self, old_new_columns):
         """
         Shortcut to add copy transformations to a dataframe
         :param old_new_columns:
-        :return:
+        :return: Meta
         """
 
-        df = self.parent.data
-        df = df.meta.append_action("copy", old_new_columns)
+        meta = copy.deepcopy(self)
+        meta = meta.append_action("copy", old_new_columns)
 
-        return df
+        return meta
 
     def rename(self, old_new_columns):
         """
         Shortcut to add rename transformations to a dataframe
         :param old_new_columns:
-        :return:
+        :return: Meta
         """
 
-        df = self.parent.data
+        meta = self
         # assign(target, spec, value, missing=missing)
-        # a = df.meta.get()
+        # a = odf.meta.get()
         # if a.get("transformations") is None:
-        #     df.meta.get()["transformations"] = {}
+        #     odf.meta.get()["transformations"] = {}
         #
         #     if a["transformations"].get("actions") is None:
-        #         df.meta.get()["transformations"]["actions"] = {}
+        #         odf.meta.get()["transformations"]["actions"] = {}
         #
-        # df.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
-        df = df.meta.append_action("rename", old_new_columns)
+        # odf.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
+        meta = meta.append_action("rename", old_new_columns)
 
-        return df
+        return meta
 
     def columns(self, value):
         """
         Shortcut to cache the columns in a dataframe
         :param value:
-        :return:
+        :return: Meta
         """
+        meta = copy.deepcopy(self)
         value = val_to_list(value)
         for v in value:
-            df = self.update("transformations.columns", v, list)
-        return df
+            meta = meta.update("transformations.columns", v, list)
+        return meta
 
     def action(self, name, value):
         """
         Shortcut to add actions to a dataframe
         :param name:
         :param value:
-        :return:
+        :return: Meta
         """
-        df = self.parent.data
+        meta = copy.deepcopy(self)
         value = val_to_list(value)
 
         for _value in value:
-            df = self.parent.meta.append_action(name, _value)
+            meta = meta.append_action(name, _value)
 
-        return df
+        return meta
 
-    def preserve(self, old_df, key=None, value=None):
+    def preserve(self, old_df=None, key=None, value=None):
         """
         In some cases we need to preserve metadata actions before a destructive dataframe transformation.
         :param old_df: The Spark dataframe you want to copy the metadata
         :param key:
         :param value:
-        :return:
+        :return: Meta
         """
-        pass
+        return self
         # old_meta = old_df.meta.get()
         # new_meta = self.parent.meta.get()
         #
@@ -121,18 +124,45 @@ class Meta:
         #
         #     return self.parent.meta.set(value=new_meta).meta.action(key, value)
 
+    def new_preserve(self, old_odf=None, key=None, value=None):
+        """
+        In some cases we need to preserve metadata actions before a destructive dataframe transformation.
+        :param old_odf: The Spark dataframe you want to copy the metadata
+        :param key:
+        :param value:
+        :return: Meta
+        """
+        meta = copy.deepcopy(self)
+
+        new_meta = meta.get()
+        
+        if old_odf is None:
+            pass
+        else:
+            old_meta = old_odf.meta.get()
+            new_meta.update(old_meta)
+        
+        meta.set(value=new_meta)
+
+        if key is None:
+            meta.set(value=value)
+        else:
+            meta.set(value=value, spec=key)
+
+        return meta
+
     def update(self, path, value, default=list):
         """
         Update meta data in a key
         :param path:
         :param value:
         :param default:
-        :return:
+        :return: Meta
         """
 
-        df = self.parent
+        meta = copy.deepcopy(self)
 
-        new_meta = df.meta.get()
+        new_meta = meta.get()
         if new_meta is None:
             new_meta = {}
 
@@ -150,8 +180,8 @@ class Meta:
             else:
                 result = result[ele]
 
-        df = df.meta.set(value=new_meta)
-        return df
+        meta.set(value=new_meta)
+        return meta
 
     def set(self, spec=None, value=None, missing=dict):
         """
@@ -163,7 +193,7 @@ class Meta:
         """
         # df = self.parent.data
         if spec is not None:
-            target = self.parent.meta.get()
+            target = self.get()
             data = assign(target, spec, value, missing=missing)
         else:
             data = value
@@ -174,7 +204,7 @@ class Meta:
         """
         Get metadata from a dataframe column
         :param spec: path to the key to be modified
-        :return:
+        :return: dict
         """
         # print("meta", self.meta_data)
         if spec is not None:
