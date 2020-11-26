@@ -1,6 +1,4 @@
 import numpy as np
-from dask.dataframe.core import DataFrame
-
 
 def constants(self):
     class Constants:
@@ -53,4 +51,3 @@ def constants(self):
 
 
 STARTING_DASK = "Starting or setting Dask Client..."
-DataFrame.constants = property(constants)

@@ -196,3 +196,8 @@ class Ext(BaseDataFrame):
 
     def to_pandas(self):
         return self.data.compute()
+
+    @property
+    def constants(self):
+        from optimus.engines.base.dask.constants import constants
+        return constants(self)

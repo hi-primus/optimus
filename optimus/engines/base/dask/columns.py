@@ -117,7 +117,7 @@ class DaskBaseColumns(BaseColumns):
             return _value.replace(_regex, _replace, regex=True)
 
         return self.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                          filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+                          filter_col_by_dtypes=self.parent.constants.STRING_TYPES + self.parent.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):

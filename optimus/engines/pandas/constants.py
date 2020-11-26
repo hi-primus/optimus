@@ -1,8 +1,4 @@
 import numpy as np
-import pandas as pd
-
-DataFrame = pd.DataFrame
-
 
 def constants(self):
     class Constants:
@@ -53,5 +49,3 @@ def constants(self):
 
     return Constants()
 
-
-DataFrame.constants = property(constants)

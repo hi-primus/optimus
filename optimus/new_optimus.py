@@ -26,6 +26,11 @@ class PandasDataFrame(PandasExtension):
         from optimus.engines.pandas.functions import PandasFunctions
         return PandasFunctions(self)
 
+    @property
+    def constants(self):
+        from optimus.engines.pandas.constants import constants
+        return constants(self)
+
 
 from optimus.engines.cudf.extension import Ext as CUDFExtension
 
@@ -48,6 +53,11 @@ class CUDFDataFrame(CUDFExtension):
     def functions(self):
         from optimus.engines.cudf.functions import CUDFFunctions
         return CUDFFunctions(self)
+
+    @property
+    def constants(self):
+        from optimus.engines.cudf.constants import constants
+        return constants(self)
 
 
 from optimus.engines.base.dask.extension import Ext as DaskExtension

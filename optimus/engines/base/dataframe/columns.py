@@ -76,21 +76,21 @@ class DataFrameBaseColumns(BaseColumns):
         :return:
         """
 
-        df = self.df
+        odf = self.parent
 
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+        return odf.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+                             filter_col_by_dtypes=odf.constants.STRING_TYPES + odf.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
 
-        df = self.df
-        return df.cols.apply(input_cols, _reverse, func_return_type=str,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES,
+        odf = self.parent
+        return odf.cols.apply(input_cols, _reverse, func_return_type=str,
+                             filter_col_by_dtypes=odf.constants.STRING_TYPES,
                              output_cols=output_cols, set_index=True)
 
     @staticmethod
