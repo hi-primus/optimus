@@ -106,12 +106,14 @@ class DataFrameBaseColumns(BaseColumns):
         pass
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
-        df = self.df
+        odf = self.parent
+
+        df = odf.data
 
         if output_col is None:
-            output_col = "_".join(input_cols)
+            RaiseIt.type_error(output_col, ["str"])
 
-        input_cols = parse_columns(df, input_cols)
+        input_cols = parse_columns(odf, input_cols)
 
         # cudf do nor support apply or agg join for this operation
         if shape == "vector" or shape == "array":
@@ -124,4 +126,5 @@ class DataFrameBaseColumns(BaseColumns):
         elif shape == "string":
             dfs = [df[input_col].astype(str) for input_col in input_cols]
             df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
-        return df
+
+        return odf.new(df)
