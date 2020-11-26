@@ -682,13 +682,13 @@ class BaseColumns(ABC):
         :param ref_col: Column taken as reference
         :return: Spark DataFrame
         """
-        df = self.df
+        odf = self.parent
         # Check that column is a string or a list
-        column = parse_columns(df, column)
-        ref_col = parse_columns(df, ref_col)
+        column = parse_columns(odf, column)
+        ref_col = parse_columns(odf, ref_col)
 
         # Get dataframe columns
-        all_columns = df.cols.names()
+        all_columns = odf.cols.names()
 
         # Get source and reference column index position
         new_index = all_columns.index(ref_col[0])
@@ -714,7 +714,7 @@ class BaseColumns(ABC):
         for col_name in column:
             all_columns.insert(new_index, all_columns.pop(all_columns.index(col_name)))  # insert and delete a element
             # new_index = new_index + 1
-        return df[all_columns]
+        return odf[all_columns]
 
     def sort(self, order: [str, list] = "asc", columns=None):
         """
@@ -1589,15 +1589,17 @@ class BaseColumns(ABC):
         :param drop:
         :param mode:
         """
-        df = self.parent
+        odf = self.parent
 
         if separator is not None:
             separator = re.escape(separator)
 
-        input_cols = parse_columns(df, input_cols)
+        input_cols = parse_columns(odf, input_cols)
 
         index = val_to_list(index)
-        output_ordered_columns = df.cols.names()
+        output_ordered_columns = odf.cols.names()
+
+        df = odf.data
 
         for idx, input_col in enumerate(input_cols):
 
@@ -1629,19 +1631,23 @@ class BaseColumns(ABC):
 
             # If columns split is shorter than the number of splits
             df_new.columns = final_columns[:len(df_new.columns)]
+            odf_new = odf.new(df_new)
             if final_index:
-                df_new = df_new.cols.select(final_index[idx])
-            df = df.cols.append(df_new)
+                odf_new = odf_new.cols.select(final_index[idx])
+            odf = odf.cols.append(odf_new)
 
         if drop is True:
-            df = df.drop(columns=input_cols)
+            odf = odf.drop(columns=input_cols)
             for input_col in input_cols:
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        df.meta.set(value=df.meta.preserve(df, Actions.UNNEST.value, final_columns).get())
-
-        return df.cols.move(df_new.cols.names(), "after", input_cols)
+        meta = odf.meta
+        meta = meta.preserve(odf, Actions.UNNEST.value, final_columns)
+        
+        odf = odf.cols.move(odf_new.cols.names(), "after", input_cols)
+        
+        return odf
 
     @staticmethod
     @abstractmethod

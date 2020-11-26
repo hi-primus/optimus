@@ -21,9 +21,9 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.df
-        df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        return df
+        odf = self.parent
+        df = pd.concat([dfs.data.reset_index(drop=True), odf.data.reset_index(drop=True)], axis=1)
+        return odf.new(df)
 
     def find(self, columns, sub, ignore_case=False):
         """
