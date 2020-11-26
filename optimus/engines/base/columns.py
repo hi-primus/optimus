@@ -181,6 +181,7 @@ class BaseColumns(ABC):
 
         odf = self.parent
         df = odf.data
+        meta = odf.meta
 
         if mode == "whole":
             df = func(df)
@@ -209,7 +210,7 @@ class BaseColumns(ABC):
                     output_ordered_columns[col_index:col_index] = [output_col]
 
                 # Preserve actions for the profiler
-                odf.meta.preserve(odf, meta_action, output_col)
+                meta = meta.preserve(odf, meta_action, output_col)
 
             if set_index is True:
                 df = df.reset_index()
@@ -217,8 +218,7 @@ class BaseColumns(ABC):
                 df = df.assign(**kw_columns)          
 
         # Dataframe to Optimus dataframe
-        
-        odf = odf.new(df, meta=odf.meta)  
+        odf = odf.new(df, meta=odf.meta)
         odf = odf.cols.select(output_ordered_columns)
 
         return odf

@@ -157,16 +157,17 @@ def index_to_string(df, input_cols, output_cols=None, le=None, **kwargs):
                          mode="vectorized", default=INDEX_TO_STRING)
 
 
-def find(df, columns, sub, ignore_case=False):
+def find(odf, columns, sub, ignore_case=False):
     """
     Find the start and end position for a char or substring
+    :param odf: Dataframe to be transformed.
     :param columns:
     :param ignore_case:
     :param sub:
     :return:
     """
 
-    columns = parse_columns(df, columns)
+    columns = parse_columns(odf, columns)
     sub = val_to_list(sub)
 
     def get_match_positions(_value, _separator):
@@ -182,6 +183,8 @@ def find(df, columns, sub, ignore_case=False):
             result = length if len(length) > 0 else None
         return result
 
+    df = odf.data
+
     for col_name in columns:
         # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
         # That could happened if we try to split a categorical column
@@ -189,4 +192,4 @@ def find(df, columns, sub, ignore_case=False):
         df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
                                                                                    args=(sub,))
 
-    return df
+    return odf.new(df)

@@ -33,8 +33,8 @@ class Cols(DataFrameBaseColumns):
         :param sub:
         :return:
         """
-        df = self.parent.data
-        return find(df, columns, sub, ignore_case)
+        odf = self.parent
+        return find(odf, columns, sub, ignore_case)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
