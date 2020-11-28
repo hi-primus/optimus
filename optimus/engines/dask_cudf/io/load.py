@@ -8,7 +8,7 @@ from dask import dataframe as dd
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import DaskCUDFDataFrame
+from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
 
 
 class Load(BaseLoad):

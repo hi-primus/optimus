@@ -9,7 +9,7 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import DaskDataFrame
+from optimus.engines.dask.dataframe import DaskDataFrame
 
 
 class Load(BaseLoad):
@@ -28,7 +28,6 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -92,8 +91,7 @@ class Load(BaseLoad):
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
 
             odf = DaskDataFrame(df)
-            odf.meta.set("file_name", path)
-            odf.meta.set("name", ntpath.basename(path))
+            odf.meta = {"file_name": path, "name": ntpath.basename(path)}
         except IOError as error:
             logger.print(error)
             raise
@@ -114,7 +112,6 @@ class Load(BaseLoad):
 
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
-            df.reset()
             df.meta.set("file_name", path)
 
         except IOError as error:
@@ -159,7 +156,6 @@ class Load(BaseLoad):
         except IOError as error:
             logger.print(error)
             raise
-        df.reset()
         return df
 
     @staticmethod
@@ -175,7 +171,6 @@ class Load(BaseLoad):
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.reset()
             df.meta.set("file_name", file_name)
 
         except IOError as error:
@@ -213,7 +208,6 @@ class Load(BaseLoad):
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
-        df.reset()
         df.meta.set("file_name", ntpath.basename(file_name))
         df.meta.set("sheet_names", sheet_names)
 

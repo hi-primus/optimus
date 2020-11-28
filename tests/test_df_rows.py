@@ -2,15 +2,9 @@ from pyspark.sql.types import *
 
 import optimus.helpers.functions_spark
 from optimus import Optimus
-from optimus.helpers.json import json_enconding
-from optimus.helpers.functions import deep_sort
 import unittest
-from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector
 import numpy as np
 nan = np.nan
-from optimus.audf import abstract_udf as audf
-import datetime
-from pyspark.sql import functions as F
 op = Optimus(master='local')
 source_df=op.create.df([('words', StringType(), True),('num', IntegerType(), True),('animals', StringType(), True),('thing', StringType(), True),('second', IntegerType(), True),('filter', StringType(), True)], [('  I like     fish  ', 1, 'dog dog', 'housé', 5, 'a'), ('    zombies', 2, 'cat', 'tv', 6, 'b'), ('simpsons   cat lady', 2, 'frog', 'table', 7, '1'), (None, 3, 'eagle', 'glass', 8, 'c')])
 class Test_df_rows(unittest.TestCase):

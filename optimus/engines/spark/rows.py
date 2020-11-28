@@ -7,7 +7,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 
 # Helpers
-from optimus.audf import filter_row_by_data_type as fbdt
+from optimus.engines.spark.audf import filter_row_by_data_type as fbdt
 from optimus.engines.base.dask.rows import DaskBaseRows
 from optimus.engines.spark.create import Create
 from optimus.helpers.check import is_spark_dataframe

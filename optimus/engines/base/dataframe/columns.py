@@ -57,10 +57,8 @@ class DataFrameBaseColumns(BaseColumns):
 
         # _df = df[input_cols]
         scaler.fit(df[input_cols])
-        # print(type(scaler.transform(_df)))
         arr = scaler.transform(df[input_cols])
         darr = dd.from_array(arr)
-        # print(type(darr))
         darr.name = 'z'
         df = df.merge(darr)
 

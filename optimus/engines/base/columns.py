@@ -13,6 +13,7 @@ from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
+from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
@@ -40,8 +41,6 @@ class BaseColumns(ABC):
     def append(self, dfs):
         pass
 
-
-
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
         """
         Select columns using index, column name, regex to data type
@@ -52,14 +51,15 @@ class BaseColumns(ABC):
         :param accepts_missing_cols:
         :return:
         """
-
-        columns = parse_columns(self.parent, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+        odf = self.parent
+        columns = parse_columns(odf, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
-        df = self.parent.data
+        meta = odf.meta
+        df = odf.data
         if columns is not None:
             df = df[columns]
 
-        return self.parent.new(df, meta=self.parent.meta)
+        return self.parent.new(df, meta=meta)
 
     def copy(self, input_cols, output_cols=None, columns=None):
         """
@@ -208,76 +208,21 @@ class BaseColumns(ABC):
                 if output_col not in self.names():
                     col_index = output_ordered_columns.index(input_col) + 1
                     output_ordered_columns[col_index:col_index] = [output_col]
+                from optimus.engines.base.meta import Meta as Meta
 
                 # Preserve actions for the profiler
-                meta = meta.preserve(odf, meta_action, output_col)
+                meta = Meta.action(meta, meta_action, output_col)
 
             if set_index is True:
                 df = df.reset_index()
-            if kw_columns:
-                df = df.assign(**kw_columns)          
-
-        # Dataframe to Optimus dataframe
-        odf = odf.new(df, meta=odf.meta)
-        odf = odf.cols.select(output_ordered_columns)
-
-        return odf
-
-    def old_apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
-
-        columns = prepare_columns(self.parent, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
-                                  accepts_missing_cols=True, default=default)
-
-        kw_columns = {}
-        output_ordered_columns = self.names()
-        if args is None:
-            args = []
-        elif not is_tuple(args, ):
-            args = (args,)
-
-        df = self.parent.data
-        if mode == "whole":
-            df = func(df)
-        else:
-            for input_col, output_col in columns:
-                if mode == "pandas" and (is_dask_dataframe(df)):
-                    partitions = df.to_delayed()
-                    delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
-
-                    kw_columns[output_col] = from_delayed(delayed_parts)
-
-                elif mode == "vectorized" or mode == "pandas":
-
-                    _ddf = func(df[input_col], *args)
-
-                    if is_dask_dataframe(_ddf):
-                        df = df.cols.append(_ddf)
-                    else:
-                        kw_columns[output_col] = func(df[input_col], *args)
-                elif mode == "map":
-                    kw_columns = self._map(df, input_col, output_col, func, args, kw_columns)
-
-                # Preserve column order
-                if output_col not in self.names():
-                    col_index = output_ordered_columns.index(input_col) + 1
-                    output_ordered_columns[col_index:col_index] = [output_col]
-
-                # Preserve actions for the profiler
-                self.parent.meta.preserve(df, meta_action, output_col)
-
-            if set_index is True:
-                df = df.reset_index()
-
             if kw_columns:
                 df = df.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
-        df = self.parent.new(df, self.parent)
-        df = df.cols.select(output_ordered_columns)
+        odf = odf.new(df, meta=meta)
+        odf = odf.cols.select(output_ordered_columns)
 
-        return df
+        return odf
 
     def set(self, where=None, value=None, output_cols=None, default=None):
         """
@@ -349,7 +294,6 @@ class BaseColumns(ABC):
 
         return odf.new(odf.data, meta=meta)
 
-
     @dispatch(list)
     def rename(self, columns_old_new=None):
         return self.rename(columns_old_new, None)
@@ -407,16 +351,18 @@ class BaseColumns(ABC):
         :param columns: A dict with the form {"col_name": profiler dtype}
         :return:
         """
-        df = self.parent
+        odf = self.parent
+        meta = odf.meta
+
         for col_name, props in columns.items():
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
-                df.meta.set(f"profile.columns.{col_name}.profiler_dtype", props)
-                df.meta.preserve(df, Actions.PROFILER_DTYPE.value, col_name)
+                Meta.set(meta, f"profile.columns.{col_name}.profiler_dtype", props)
+                Meta.action(meta, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
-        return df
+        return odf
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
@@ -1644,9 +1590,9 @@ class BaseColumns(ABC):
 
         meta = odf.meta
         meta = meta.preserve(odf, Actions.UNNEST.value, final_columns)
-        
+
         odf = odf.cols.move(odf_new.cols.names(), "after", input_cols)
-        
+
         return odf
 
     @staticmethod
@@ -1878,7 +1824,6 @@ class BaseColumns(ABC):
             return stats
         pass
 
-
     def names(self, col_names="*", by_dtypes=None, invert=False):
 
         columns = parse_columns(self.parent, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
@@ -2001,4 +1946,3 @@ class BaseColumns(ABC):
     # Mask functions
     def missing(self, input_cols, output_cols=None):
         return self.append(self.parent.mask.missing())
-

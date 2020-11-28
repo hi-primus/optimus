@@ -7,7 +7,7 @@ import pandas as pd
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import PandasDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class Load(BaseLoad):

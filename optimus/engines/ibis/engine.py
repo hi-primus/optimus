@@ -1,4 +1,3 @@
-from optimus.bumblebee import Comm
 from optimus.engines.base.engine import BaseEngine
 # from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 # from optimus.engines.dask_cudf.io.load import Load
@@ -7,17 +6,12 @@ from optimus.profiler.profiler import Profiler
 
 # DaskCUDF.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 
 class IbisEngine(BaseEngine):
     # __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         self.engine = 'ibis'
         # self.create = Create(pd)

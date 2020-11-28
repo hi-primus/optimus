@@ -10,7 +10,8 @@ from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import SparkDataFrame, PandasDataFrame
+from optimus.engines.spark.dataframe import SparkDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class Load(BaseLoad):
@@ -39,7 +40,6 @@ class Load(BaseLoad):
         df = replace_columns_special_characters(df)
 
         df.meta.set(value=df.meta.add_action("columns", df.cols.names()).get())
-        df.reset()
         return df
 
     @staticmethod
@@ -55,7 +55,6 @@ class Load(BaseLoad):
         :return:
         """
         df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
-        df.reset()
         return df
 
     @staticmethod
@@ -126,7 +125,6 @@ class Load(BaseLoad):
         except IOError as error:
             print(error)
             raise
-        df.reset()
         return df
 
     @staticmethod
@@ -151,7 +149,6 @@ class Load(BaseLoad):
         except IOError as error:
             print(error)
             raise
-        df.reset()
         return df
 
     @staticmethod
@@ -188,7 +185,6 @@ class Load(BaseLoad):
             raise
 
         df = replace_columns_special_characters(df)
-        df.reset()
         return df
 
     @staticmethod
@@ -215,6 +211,5 @@ class Load(BaseLoad):
             result = files_data
         else:
             result = files_data[file_name]
-        df.reset()
         return result
 

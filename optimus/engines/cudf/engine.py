@@ -1,6 +1,5 @@
 import cudf
 
-from optimus.bumblebee import Comm
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.cudf.cudf import CUDF
@@ -11,17 +10,12 @@ from dask import dataframe as dd
 
 CUDF.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 
 class CUDFEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         self.engine = 'cudf'
 

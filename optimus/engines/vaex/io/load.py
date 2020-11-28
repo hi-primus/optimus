@@ -77,7 +77,6 @@ class Load:
         except IOError as error:
             logger.print(error)
             raise
-        df.reset()
         return df
 
     @staticmethod

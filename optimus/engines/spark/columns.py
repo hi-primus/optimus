@@ -36,7 +36,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, parse_col_names_funcs_to_keys, \
     compress_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.new_optimus import SparkDataFrame
+from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.profiler.functions import fill_missing_var_types, parse_profiler_dtypes
 
 # Add the directory containing your module to the Python path (wants absolute paths)
@@ -48,9 +48,9 @@ from infer import Infer
 
 from optimus.infer import is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
     is_list_of_spark_dataframes, is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int, \
-    parse_spark_class_dtypes, PYTHON_TYPES
+    parse_spark_class_dtypes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
-from optimus.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
+from optimus.engines.spark.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 
 # Functions
 

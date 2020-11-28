@@ -26,15 +26,10 @@ import sys
 sys.path.append("../..")
 # -
 
-from optimus import Optimus
 from optimus.helpers.test import Test
 
 from optimus import Optimus
 op = Optimus("dask", n_workers=1, threads_per_worker=8, processes=False, memory_limit="3G", comm=True)
-
-import numpy as np
-import pandas as pd
-
 
 # +
 import pandas as pd
@@ -688,8 +683,6 @@ t.create(None, "cols.is_na", None, "df", None, numeric_col)
 t.run()
 
 # +
-from optimus import Optimus
-from optimus.helpers.json import json_enconding
 
 import numpy as np
 # -
@@ -982,7 +975,7 @@ source_df = op.create.df([
         (None, 3, "eagle", "glass", 8, "c"),
     ])
 
-from optimus.audf import abstract_udf as audf
+from optimus.engines.spark.audf import abstract_udf as audf
 
 t = Test(op, source_df, "df_rows_dask", imports=["import numpy as np",
                                             "nan = np.nan",                                            

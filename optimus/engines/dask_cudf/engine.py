@@ -2,7 +2,6 @@ import GPUtil
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 from dask import dataframe as dd
-from optimus.bumblebee import Comm
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
@@ -12,7 +11,6 @@ from optimus.profiler.profiler import Profiler
 import dask_cudf
 DaskCUDF.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 BIG_NUMBER = 100000
 
@@ -32,10 +30,6 @@ class DaskCUDFEngine(BaseEngine):
         :param kwargs:
         """
 
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         self.engine = 'dask-cudf'
         self.create = Create(dask_cudf)

@@ -2,7 +2,7 @@
 # from dask.dataframe.core import DataFrame
 
 from optimus.helpers.logger import logger
-from optimus.new_optimus import DaskCUDFDataFrame
+from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
 
 
 def save(self: DaskCUDFDataFrame):

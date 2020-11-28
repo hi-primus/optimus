@@ -2,7 +2,7 @@ import ibis
 
 from optimus.engines.base.contants import LIMIT_TABLE
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-from optimus.new_optimus import IbisDataFrame
+from optimus.engines.ibis.dataframe import IbisDataFrame
 
 
 class JDBC(DaskBaseJDBC):

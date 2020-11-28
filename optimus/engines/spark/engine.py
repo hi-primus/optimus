@@ -7,7 +7,6 @@ from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 import optimus.helpers.functions_spark
-from optimus.bumblebee import Comm
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
 from optimus.engines.spark.io.load import Load
@@ -26,7 +25,6 @@ from optimus.version import __version__
 # Singletons
 Spark.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 
 class SparkEngine:
@@ -75,10 +73,6 @@ class SparkEngine:
         self.client = session
         self.preserve = False
 
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         if jars is None:
             jars = []

@@ -5,7 +5,7 @@ import cudf
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.new_optimus import CUDFDataFrame
+from optimus.engines.cudf.dataframe import CUDFDataFrame
 
 
 class Load(BaseLoad):

@@ -2,7 +2,6 @@ import dask
 from dask import dataframe as dd
 from dask.distributed import Client
 
-from optimus.bumblebee import Comm
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
@@ -12,7 +11,6 @@ from optimus.version import __version__
 
 Dask.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 
 class DaskEngine(BaseEngine):
@@ -21,11 +19,6 @@ class DaskEngine(BaseEngine):
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
                  memory_limit='4GB', verbose=False, comm=None, coiled_token=None, coiled_gpu=False, *args, **kwargs):
-
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         self.engine = 'dask'
 

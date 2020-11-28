@@ -12,12 +12,6 @@ class Ext(BaseDataFrame):
     def __init__(self, root, data):
         super().__init__(root, data)
 
-    def new(self, odf, meta=None):
-        new_odf = self.__class__(odf)
-        if meta is not None:
-            new_odf.meta.set(value=meta.get())
-        return new_odf
-
     @staticmethod
     def delayed(func):
         def wrapper(*args, **kwargs):

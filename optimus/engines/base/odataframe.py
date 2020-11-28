@@ -9,7 +9,6 @@ from dask import dataframe as dd
 from glom import assign
 
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
@@ -17,91 +16,87 @@ from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
+from .columns import BaseColumns
+import operator
+
 from .meta import Meta
 
 
 class BaseDataFrame(ABC):
+    """
+    Optimus DataFrame
+    """
 
     def __init__(self, root, data):
         self.data = data
         self.buffer = None
         self.updated = None
         self.root = root
-        self.meta_data = {}
+        self.meta = {}
 
-    # def __repr__(self):
-    #     self.display()
-    #     return str(type(self))
+    def __repr__(self):
+        self.display()
+        return str(type(self))
 
     def __getitem__(self, item):
         return self.cols.select(item)
 
-    def __add__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new(self.data + o)
+    def new(self, odf, meta=None):
+        new_odf = self.__class__(odf)
+        if meta is not None:
+            new_odf.meta = meta
+        return new_odf
 
-    def __sub__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new(self.data - o)
+    def operation(self, df1, df2, opb):
+        """
+        Helper to process binary operations
+        :param df1:
+        :param df2:
+        :param opb:
+        :return:
+        """
+        if isinstance(df2, (BaseDataFrame,)):
+            col2 = df2.cols.names(0)[0]
+            df2 = df2.data[col2]
 
-    def __eq__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            col2 = o.cols.names(0)
-            o = o.data[col2]
+        col1 = df1.cols.names(0)[0]
+        return self.root.new(opb(df1.data[col1], df2).to_frame())
 
-        col1 = self.cols.names(0)
+    def __add__(self, df2):
+        return self.operation(self, df2, operator.add)
 
-        return self.root.new((self.data[col1] == o))
+    def __sub__(self, df2):
+        return self.operation(self, df2, operator.sub)
 
-    def __gt__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data > o))
+    def __eq__(self, df2):
+        return self.operation(self, df2, operator.eq)
 
-    def __lt__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data < o))
+    def __gt__(self, df2):
+        return self.operation(self, df2, operator.gt)
 
-    def __ne__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data != o))
+    def __lt__(self, df2):
+        return self.operation(self, df2, operator.lt)
 
-    def __ge__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data >= o))
+    def __ne__(self, df2):
+        return self.operation(self, df2, operator.ne)
 
-    def __le__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data <= o))
+    def __ge__(self, df2):
+        return self.operation(self, df2, operator.ge)
 
-    def __and__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data & o))
+    def __le__(self, df2):
+        return self.operation(self, df2, operator.le)
 
-    def __or__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            col2 = o.cols.names(0)[0]
-            o = o.data[col2]
+    def __and__(self, df2):
+        return self.operation(self, df2, operator.__and__)
 
-        col1 = self.cols.names(0)[0]
+    def __or__(self, df2):
+        return self.operation(self, df2, operator.__or__)
 
-        return self.root.new((self.data[col1] | o).to_frame())
+    def __xor__(self, df2):
+        return self.operation(self, df2, operator.__xor__)
 
-    def __xor__(self, o):
-        if isinstance(o, (BaseDataFrame,)):
-            o = o.data
-        return self.root.new((self.data ^ o))
-
-    @property
-    def meta(self):
-        return Meta(self)
+    def cols(self):
+        return BaseColumns
 
     @staticmethod
     @abstractmethod
@@ -194,13 +189,10 @@ class BaseDataFrame(ABC):
 
         pass
 
-
-
     def get_buffer(self):
         # return self.df.buffer.values.tolist()
         # df = self.parent
         return self.buffer
-
 
     def buffer_json(self, columns):
         df = self.df.buffer
@@ -583,7 +575,7 @@ class BaseDataFrame(ABC):
     def reset(self):
         # df = self.df
         df = self
-        df.meta.set(None, {})
+        df.meta= {}
         return df
 
     def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -598,13 +590,14 @@ class BaseDataFrame(ABC):
         """
 
         odf = self
+        meta = self.root.meta
 
         if flush is False:
             cols_to_profile = odf.calculate_cols_to_profile(odf, columns)
         else:
             cols_to_profile = parse_columns(odf, columns)
 
-        profiler_data = odf.meta.get("profile")
+        profiler_data = Meta.get(meta,"profile")
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
@@ -690,16 +683,18 @@ class BaseDataFrame(ABC):
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        odf.meta.set(value=odf.meta.columns(odf.cols.names()).get())
-        odf.meta.set("transformations", value={})
-        odf.meta.set("profile", profiler_data)
-        
+        odf.meta = {}
+        meta = Meta.columns(meta,odf.cols.names())
+
+        meta = Meta.set(meta,"transformations", value={})
+        meta = Meta.set(meta,"profile", profiler_data)
+
         if cols_and_inferred_dtype is not None:
             odf.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
         # Reset Actions
-        odf.meta.reset()
-
+        meta = Meta.reset_actions(meta)
+        odf.meta =meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
 
