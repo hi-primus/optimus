@@ -138,7 +138,7 @@ class BaseDataFrame(ABC):
             [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
         """
-        return self.data.rows.limit(limit).to_pandas().to_dict(orient)
+        return self.root.rows.limit(limit).to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
