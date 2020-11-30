@@ -162,7 +162,7 @@ class Rows(BaseRows):
 
         return self.root.new(df)
 
-    def limit(self, count) -> DataFrame:
+    def limit(self, count=10) -> DataFrame:
         """
         Limit the number of rows
         :param count:
