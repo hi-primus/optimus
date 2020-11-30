@@ -92,7 +92,7 @@ class Load(BaseLoad):
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
 
             odf = DaskDataFrame(df)
-            odf.meta = Meta.set(odf.meta, {"file_name": path, "name": ntpath.basename(path)})
+            odf.meta = Meta.set(odf.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
             raise

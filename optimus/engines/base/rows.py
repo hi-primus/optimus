@@ -132,9 +132,9 @@ class BaseRows(ABC):
         df = self.root.data
         # TODO: Be sure that we need the compute param
         if compute is True:
-            result = df.count()
+            result = len(df.index)
         else:
-            result = df.count()
+            result = len(df.index)
         return result
 
     def to_list(self, input_cols):

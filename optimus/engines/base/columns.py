@@ -731,7 +731,7 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        all_funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args).compute()}} for col_name in columns for
+        all_funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args)}} for col_name in columns for
                      func in
                      funcs]
         a = self.exec_agg(all_funcs, compute)
