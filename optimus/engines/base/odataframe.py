@@ -541,36 +541,7 @@ class BaseDataFrame(ABC):
         columns = parse_columns(odf, columns)
         return odf.data[columns].head(n)
 
-    # def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
-    #          advanced_stats: bool = True,
-    #          output: str = "http", sample=SAMPLE_NUMBER):
-    #     """
-    #     Profile and send the data to the queue
-    #     :param name: Specified a name for the view/spark
-    #     :param infer:
-    #     :param mismatch:
-    #     :param stats:
-    #     :param advanced_stats: Process advance stats
-    #     :param output: 'json' or 'dict'
-    #     :param sample: Number of data sample returned
-    #     :return:
-    #     """
-    #     df = self.data
-    #     if name is not None:
-    #         df.set_name(name)
-    # 
-    #     message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-    #                                         approx_count=True,
-    #                                         sample=sample,
-    #                                         stats=stats,
-    #                                         format="json",
-    #                                         advanced_stats=advanced_stats,
-    #                                         mismatch=mismatch
-    #                                         )
-    #     if Comm.instance:
-    #         return Comm.instance.send(message, output=output)
-    #     else:
-    #         raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+
 
     def reset(self):
         # df = self.df
