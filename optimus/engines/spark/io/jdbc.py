@@ -1,11 +1,12 @@
 from optimus.engines.base.contants import LIMIT_TABLE, NUM_PARTITIONS
-from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import collect_as_list
-from optimus.helpers.logger import logger
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.engines.spark.spark import Spark
+from optimus.helpers.core import val_to_list
+from optimus.helpers.functions import collect_as_list
+from optimus.helpers.logger import logger
+
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -249,7 +250,7 @@ class Table:
     def show(self, table_names="*", limit=None):
         db = self.db
 
-        if table_names=="*":
+        if table_names == "*":
             table_names = db.tables_names_to_json()
         else:
             table_names = val_to_list(table_names)

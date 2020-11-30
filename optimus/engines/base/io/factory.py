@@ -1,3 +1,4 @@
+from optimus.engines.base.io.drivers.impala import ImpalaDriver
 from optimus.helpers.raiseit import RaiseIt
 from optimus.engines.base.io.drivers.abstract_driver import AbstractDriver
 from optimus.engines.base.io.drivers.cassandra import CassandraDriver
@@ -52,5 +53,7 @@ class DriverFactory:
             return SQLServerDriver()
         elif driver_type == DriverProperties.BIGQUERY.value["name"]:
             return BigQueryDriver()
+        elif driver_type == DriverProperties.IMPALA.value["name"]:
+            return ImpalaDriver()
         else:
             RaiseIt.value_error(driver_type, [database["name"] for database in DriverProperties.list()])

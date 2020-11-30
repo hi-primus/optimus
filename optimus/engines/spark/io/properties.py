@@ -66,6 +66,12 @@ class DriverProperties(Enum):
         "java_class": "",
         "table_name": "table_name"
     }
+    IMPALA = {
+        "name": "impala",
+        "port": 10000,
+        "java_class": "",
+        "table_name": "table_name"
+    }
 
 
     @classmethod
