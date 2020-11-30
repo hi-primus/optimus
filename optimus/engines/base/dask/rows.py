@@ -99,6 +99,18 @@ class DaskBaseRows(BaseRows):
         # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
         # return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
 
+    def count(self, compute=True) -> int:
+        """
+        Count dataframe rows
+        """
+        df = self.root.data
+        # TODO: Be sure that we need the compute param
+        if compute is True:
+            result = len(df.index)
+        else:
+            result = len(df.index)
+        return result
+
     @dispatch(str, str)
     def sort(self, input_cols):
         df = self.root.data
