@@ -131,9 +131,9 @@ class BaseRows(ABC):
         df = self.root.data
         # TODO: Be sure that we need the compute param
         if compute is True:
-            result = len(df)
+            result = df.count()
         else:
-            result = len(df)
+            result = df.count()
         return result
 
     def to_list(self, input_cols):
@@ -231,4 +231,4 @@ class BaseRows(ABC):
         Aprox count
         :return:
         """
-        return self.count()
+        return self.root.rows.count()
