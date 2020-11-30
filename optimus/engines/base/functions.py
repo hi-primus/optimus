@@ -286,6 +286,10 @@ class Functions(ABC):
         return series.astype(str).str.title()
 
     @staticmethod
+    def capitalize(series):
+        return series.astype(str).str.capitalize()
+
+    @staticmethod
     def pad(series, width, side, fillchar=""):
         return series.astype(str).str.pad(width, side, fillchar)
 
