@@ -12,7 +12,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list
-
+from optimus.engines.base.meta import Meta
 
 class Rows(BaseRows):
     def __init__(self, df):
@@ -79,7 +79,7 @@ class Rows(BaseRows):
             if order != "asc" and order != "desc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df.meta.set(value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
+            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
 
             c = df.cols.names()
             # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
@@ -139,7 +139,7 @@ class Rows(BaseRows):
         df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod

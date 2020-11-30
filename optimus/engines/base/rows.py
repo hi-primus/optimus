@@ -4,6 +4,7 @@ from abc import abstractmethod, ABC
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.infer import is_str, Infer
+from optimus.engines.base.meta import Meta
 
 
 class BaseRows(ABC):
@@ -190,7 +191,7 @@ class BaseRows(ABC):
         """
         df = self.root
         subset = parse_columns(df.data, subset)
-        df.meta.set(df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names()).get())
         return self.root.new(df.dropna(how=how, subset=subset))
 
     @staticmethod

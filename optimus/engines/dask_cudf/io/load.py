@@ -9,6 +9,7 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
+from optimus.engines.base.meta import Meta
 
 
 class Load(BaseLoad):
@@ -27,7 +28,7 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -77,8 +78,8 @@ class Load(BaseLoad):
                                     quoting=quoting, error_bad_lines=error_bad_lines,
                                     keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
             odf = DaskCUDFDataFrame(df)
-            odf.meta.set("file_name", path)
-            odf.meta.set("name", ntpath.basename(path))
+            odf.meta = Meta.set(odf.meta, "file_name", path)
+            odf.meta = Meta.set(odf.meta, "name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
@@ -100,7 +101,7 @@ class Load(BaseLoad):
 
         try:
             df = dask_cudf.read_parquet(path, columns=columns, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -121,7 +122,7 @@ class Load(BaseLoad):
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -157,7 +158,7 @@ class Load(BaseLoad):
 
             # Create spark data frame
             df = dd.from_pandas(pdf, npartitions=3)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise

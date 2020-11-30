@@ -10,6 +10,7 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 from optimus.engines.dask.dataframe import DaskDataFrame
+from optimus.engines.base.meta import Meta
 
 
 class Load(BaseLoad):
@@ -28,7 +29,7 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -91,7 +92,7 @@ class Load(BaseLoad):
                 df = dd.from_pandas(df.head(n_rows), npartitions=1)
 
             odf = DaskDataFrame(df)
-            odf.meta = {"file_name": path, "name": ntpath.basename(path)}
+            odf.meta = Meta.set(odf.meta, {"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
             raise
@@ -112,7 +113,7 @@ class Load(BaseLoad):
 
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
-            df.meta.set("file_name", path)
+            df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
             logger.print(error)
@@ -152,7 +153,7 @@ class Load(BaseLoad):
             if n_rows > -1:
                 df = df.head(n_rows)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -171,7 +172,7 @@ class Load(BaseLoad):
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -208,7 +209,7 @@ class Load(BaseLoad):
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
-        df.meta.set("file_name", ntpath.basename(file_name))
-        df.meta.set("sheet_names", sheet_names)
+        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
         return df

@@ -13,6 +13,8 @@ from optimus.helpers.logger import logger
 from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 
+from optimus.engines.base.meta import Meta
+
 
 class Load(BaseLoad):
 
@@ -32,14 +34,14 @@ class Load(BaseLoad):
                 .option("mode", "PERMISSIVE") \
                 .json(file, *args, **kwargs)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             print(error)
             raise
         df = replace_columns_special_characters(df)
 
-        df.meta.set(value=df.meta.add_action("columns", df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.add_action("columns", df.cols.names()).get())
         return df
 
     @staticmethod
@@ -98,7 +100,7 @@ class Load(BaseLoad):
             if n_rows > -1:
                 df = df.limit(n_rows)
             odf = SparkDataFrame(df)
-            odf.meta.set("file_name", path)
+            odf.meta = Meta.set(odf.meta, "file_name", path)
         except IOError as error:
             print(error)
             raise
@@ -120,7 +122,7 @@ class Load(BaseLoad):
 
         try:
             df = Spark.instance.spark.read.parquet(file, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             print(error)
@@ -145,7 +147,7 @@ class Load(BaseLoad):
                 avro_version = "avro "
             df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             print(error)
             raise
@@ -179,7 +181,7 @@ class Load(BaseLoad):
 
             # Create spark data frame
             df = Spark.instance.spark.createDataFrame(pdf)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             print(error)
             raise

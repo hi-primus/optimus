@@ -139,7 +139,7 @@ class BaseColumns(ABC):
 
         df = df.drop(columns=list(set(df.columns) - set(columns)))
 
-        df.meta.set(value=df.meta.preserve(df, Actions.KEEP.value, columns).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(df, Actions.KEEP.value, columns).get())
 
         return df
 
@@ -208,7 +208,7 @@ class BaseColumns(ABC):
                 if output_col not in self.names():
                     col_index = output_ordered_columns.index(input_col) + 1
                     output_ordered_columns[col_index:col_index] = [output_col]
-                from optimus.engines.base.meta import Meta as Meta
+                from optimus.engines.base.meta import Meta
 
                 # Preserve actions for the profiler
                 meta = Meta.action(meta, meta_action, output_col)
@@ -512,8 +512,8 @@ class BaseColumns(ABC):
                     # Remove extra element from list
                     result[input_col]["values"].pop()
 
-                df.meta.set(f"profile.columns.{input_col}.patterns", result[input_col])
-                df.meta.set(f"profile.columns.{input_col}.patterns.updated", time.time())
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
 
 
             else:
@@ -1675,6 +1675,8 @@ class BaseColumns(ABC):
         result = {}
         nulls = df.cols.count_na()
         total_rows = df.rows.count()
+        print('total_rows')
+        print(total_rows)
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
@@ -1686,20 +1688,24 @@ class BaseColumns(ABC):
             if dtype == ProfilerDataTypes.STRING.value:
                 match = total_rows - nulls[col_name]
                 mismatch = nulls[col_name]
+                print(1)
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
+                print(2)
             else:
                 match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
                                                                                  dtype]).cols.frequency()
+                print(3)
 
                 v = {list(j.values())[0]: list(j.values())[1] for j in match["frequency"][col_name]["values"]}
 
                 match = v.get("True")
                 mismatch = v.get("False")
 
+            print([match, mismatch])
             result[col_name]["match"] = 0 if match is None else int(match)
             result[col_name]["mismatch"] = 0 if mismatch is None else int(mismatch)
 

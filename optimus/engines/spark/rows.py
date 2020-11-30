@@ -18,6 +18,7 @@ from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_spark_dataframes, is_list_of_tuples, is_list_of_str_or_int
 
+from optimus.engines.base.meta import Meta
 
 class Rows(DaskBaseRows):
 
@@ -70,7 +71,7 @@ class Rows(DaskBaseRows):
         df = self.root.data
         df = df.filter(condition)
         odf = self.root.new(df)
-        odf.meta.set(value=odf.meta.preserve(None, Actions.SORT_ROW.value, df.cols.names()).get())
+        odf.meta = Meta.set(odf.meta, value=odf.meta.preserve(None, Actions.SORT_ROW.value, df.cols.names()).get())
 
         return odf
 
@@ -140,7 +141,7 @@ class Rows(DaskBaseRows):
                 RaiseIt.value_error(sort_func, ["asc", "desc"])
 
             func.append(sort_func(col_name))
-            df.meta.set(value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
+            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
 
         df = df.sort(*func)
         return df
@@ -153,7 +154,7 @@ class Rows(DaskBaseRows):
         """
         df = self.paren.data
         df = df.where(~where)
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
@@ -206,7 +207,7 @@ class Rows(DaskBaseRows):
         df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
@@ -220,7 +221,7 @@ class Rows(DaskBaseRows):
         df = self
         input_cols = parse_columns(df, input_cols)
         df = df.rows.drop(fbdt(input_cols, data_type))
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
@@ -238,7 +239,7 @@ class Rows(DaskBaseRows):
         input_cols = parse_columns(self, input_cols)
 
         df = df.dropna(how, subset=input_cols)
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
@@ -257,7 +258,7 @@ class Rows(DaskBaseRows):
         df = self
         input_cols = parse_columns(self, input_cols)
         df = df.drop_duplicates(subset=input_cols)
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
@@ -268,7 +269,7 @@ class Rows(DaskBaseRows):
         """
         df = self
         df = df.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     def head(self, columns="*", n=10):
@@ -308,7 +309,7 @@ class Rows(DaskBaseRows):
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
         df = df.rows.select(expr)
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
         return df
 
     @staticmethod
@@ -321,7 +322,7 @@ class Rows(DaskBaseRows):
         input_cols = parse_columns(self, input_cols)[0]
         df = self
         df = df.withColumn(input_cols, F.explode(input_cols))
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
         return df
 
     def approx_count(self, timeout=1000, confidence=0.90) -> DataFrame:

@@ -4,12 +4,13 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 
+from optimus.engines.base.meta import Meta
 
 def _set_buffer(odf, columns="*", n=BUFFER_SIZE):
     input_cols = parse_columns(odf, columns)
 
     odf.buffer = PandasDataFrame(odf.cols.select(input_cols).rows.limit(n).to_pandas())
-    odf.meta.set("buffer_time", int(time.time()))
+    Meta.set(odf.meta, "buffer_time", int(time.time()))
 
 
 def _buffer_windows(odf, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
@@ -19,10 +20,13 @@ def _buffer_windows(odf, columns=None, lower_bound=None, upper_bound=None, n=BUF
     if buffer_time and last_action_time:
         if buffer_time > last_action_time:
             odf.set_buffer(columns, n)
-    elif odf.get_buffer() is None:
-        odf.set_buffer(columns, n)
-
+    
     df_buffer = odf.get_buffer()
+    
+    if df_buffer is None:
+        odf.set_buffer(columns, n)
+        df_buffer = odf.get_buffer()
+
     df_length = df_buffer.rows.count()
     if lower_bound is None:
         lower_bound = 0

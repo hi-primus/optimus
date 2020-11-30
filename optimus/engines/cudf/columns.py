@@ -12,6 +12,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import profiler_dtype_func, is_list_of_tuples
+from optimus.engines.base.meta import Meta
 
 
 class Cols(DataFrameBaseColumns):
@@ -302,7 +303,7 @@ class Cols(DataFrameBaseColumns):
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        df.meta.set(value=df.meta.preserve(df, Actions.UNNEST.value, final_columns).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(df, Actions.UNNEST.value, final_columns).get())
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
 

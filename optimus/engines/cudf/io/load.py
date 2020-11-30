@@ -6,7 +6,7 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 from optimus.engines.cudf.dataframe import CUDFDataFrame
-
+from optimus.engines.base.meta import Meta
 
 class Load(BaseLoad):
 
@@ -29,7 +29,7 @@ class Load(BaseLoad):
                 df_list.append(df)
 
             df = cudf.concat(df_list, axis=0, ignore_index=True)
-            df.meta.set("file_name", local_file_names[0])
+            df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
 
         except IOError as error:
             logger.print(error)
@@ -91,7 +91,7 @@ class Load(BaseLoad):
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows, na_filter=na_filter,
                                dtype=dtype)
             odf = CUDFDataFrame(df)
-            odf.meta.set("file_name", path)
+            odf.meta = Meta.set(odf.meta, "file_name", path)
         except IOError as error:
             logger.print(error)
             raise
@@ -111,7 +111,7 @@ class Load(BaseLoad):
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
 
-            df.meta.set("file_name", path)
+            df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
             logger.print(error)
@@ -132,7 +132,7 @@ class Load(BaseLoad):
 
         try:
             df = cudf.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -168,7 +168,7 @@ class Load(BaseLoad):
 
             # Create spark data frame
             df = cudf.from_pandas(pdf, npartitions=3)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise

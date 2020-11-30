@@ -1,5 +1,7 @@
 from optimus.infer import is_list_of_tuples
 
+from optimus.engines.base.meta import Meta
+
 import pandas as pd
 
 
@@ -47,7 +49,7 @@ class Create:
         elif creator.__name__ == "dask_cudf":
             df = self.creator.from_cudf(pdf, npartitions=n_partitions, *args, **kwargs)
 
-        df.meta.set(value=df.meta.columns(df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.columns(df.cols.names()).get())
         return df
 
     df = data_frame

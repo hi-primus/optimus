@@ -17,6 +17,8 @@ from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 
+from optimus.engines.base.meta import Meta
+
 
 class Ext(BaseExt):
 
@@ -353,6 +355,6 @@ class Ext(BaseExt):
     #     :return:
     #     """
     #     df = self.parent
-    #     df.meta.set("transformations.actions", {})
+    #     df.meta = Meta.set(df.meta, "transformations.actions", {})
     #     Profiler.instance.output_columns = {}
     #     return df

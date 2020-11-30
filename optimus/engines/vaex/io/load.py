@@ -7,6 +7,7 @@ from dask import dataframe as dd
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 
+from optimus.engines.base.meta import Meta
 
 class Load:
 
@@ -24,7 +25,7 @@ class Load:
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -73,7 +74,7 @@ class Load:
                 df = dd.from_pandas(df, npartitions=partitions)
                 # print(type(df))
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
@@ -94,7 +95,7 @@ class Load:
 
         try:
             df = dd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -115,7 +116,7 @@ class Load:
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -151,7 +152,7 @@ class Load:
 
             # Create spark data frame
             df = dd.from_pandas(pdf, npartitions=3)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise

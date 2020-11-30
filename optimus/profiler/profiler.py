@@ -21,8 +21,8 @@ from optimus.plots.functions import plot_frequency, plot_missing_values, plot_hi
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
-
 from optimus.profiler.constants import MAX_BUCKETS, BATCH_SIZE
+from optimus.engines.base.meta import Meta
 
 
 class Profiler:
@@ -357,8 +357,8 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df.meta.set(value={})
-        df.meta.set(value=df.meta.columns(df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value={})
+        df.meta = Meta.set(df.meta, value=df.meta.columns(df.cols.names()).get())
 
         # col_names = output_columns["columns"].keys()
         if format == "json":
@@ -367,7 +367,7 @@ class Profiler:
             result = output_columns
 
         self.output_columns = output_columns
-        df.meta.set("transformations.actions", {})
+        df.meta = Meta.set(df.meta, "transformations.actions", {})
 
         return result
 

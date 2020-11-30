@@ -10,6 +10,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_str, is_list
+from optimus.engines.base.meta import Meta
 
 DataFrame = pd.DataFrame
 
@@ -91,7 +92,7 @@ class Rows(BaseRows):
             if order != "asc" and order != "desc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df.meta.set(value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
+            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
 
             df = df.sort_values(col_name, ascending=True if order == "asc" else False)
 
@@ -148,7 +149,7 @@ class Rows(BaseRows):
         df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df.meta.set(value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
 
     @staticmethod
