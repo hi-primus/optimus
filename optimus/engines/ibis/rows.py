@@ -14,7 +14,6 @@ from optimus.infer import is_list_of_str_or_int, is_str, is_list
 DataFrame = pd.DataFrame
 
 
-
 class Rows(BaseRows):
     def __init__(self, df):
         super(Rows, self).__init__(df)
@@ -22,6 +21,19 @@ class Rows(BaseRows):
     @staticmethod
     def create_id(column="id") -> DataFrame:
         pass
+
+    def count(self, compute=True) -> int:
+        """
+        Count dataframe rows
+        """
+        df = self.root.data
+        # TODO: Be sure that we need the compute param
+        if compute is True:
+            result = df.count().execute()
+        else:
+            result = df.count()
+        return result
+
 
     def append(self, rows):
         """
@@ -38,8 +50,6 @@ class Rows(BaseRows):
         rows.columns = df.cols.names()
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
         return df
-
-
 
     @staticmethod
     @dispatch(str, str)
@@ -213,15 +223,14 @@ class Rows(BaseRows):
 
         return df
 
-    @staticmethod
-    def limit(count) -> DataFrame:
+    def limit(self, count=10) -> DataFrame:
         """
         Limit the number of rows
         :param count:
         :return:
         """
 
-        return self[:count - 1]
+        return self.root.new(self.root.data[:10 - 1])
 
     @staticmethod
     def is_in(input_cols, values) -> DataFrame:
@@ -232,4 +241,3 @@ class Rows(BaseRows):
     def unnest(input_cols) -> DataFrame:
         df = self
         return df
-

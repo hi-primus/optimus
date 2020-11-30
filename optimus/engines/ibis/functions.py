@@ -13,12 +13,23 @@ class IbisFunctions(Functions):
     def __init__(self, df):
         super(IbisFunctions, self).__init__(df)
 
+    def _to_float(self, series, *args):
+        return series.cast("float64")
+
+    # def _to_float(self, series, *args):
+    #     return series.map_partitions(to_float_cudf, meta=float)
+
     def lower(self, series, *args):
         return series.cast("string").lower()
 
     def upper(self, series, *args):
         return series.cast("string").upper()
 
+    def capitalize(self, series, *args):
+        return series.cast("string").capitalize()
+
+    def title(self, series, *args):
+        raise NotImplementedError("Not implemented yet")
     #
     # def replace(self, series, *args):
     #     return series.cast("string").upper()
@@ -43,21 +54,17 @@ class IbisFunctions(Functions):
         series = self.series
         return int((series.to_float().values == 0).sum())
 
-    def kurtosis(self):
-        series = self.series
-        return series.kurtosis(series.to_float())
+    def kurtosis(self, series, *args):
+        return self._to_float(series).kurt()
 
-    def skew(self):
-        series = self.series
-        return series.skew(series.to_float())
+    def skew(self, series, *args):
+        return self._to_float(series).skew()
 
-    def exp(self):
-        series = self.series
-        return np.exp(series.to_float())
+    def exp(self, series, *args):
+        return self._to_float(series).exp()
 
-    def sqrt(self):
-        series = self.series
-        return np.sqrt(series.to_float())
+    def sqrt(self, series, *args):
+        return self._to_float(series).sqrt()
 
     def radians(self):
         series = self.series
@@ -67,25 +74,21 @@ class IbisFunctions(Functions):
         series = self.series
         return np.degrees(series.to_float())
 
-    def ln(self):
-        series = self.series
-        return np.log(series.to_float())
+    def ln(self, series, *args):
+        return self._to_float(series).ln()
 
-    def log(self):
-        series = self.series
-        return np.log10(series.to_float())
+    def log(self, series, *args):
+        return self._to_float(series).log10()
 
-    def ceil(self):
-        series = self.series
-        return np.ceil(series.to_float())
+    def ceil(self, series, *args):
+        return self._to_float(series).ceil()
 
     def sin(self):
         series = self.series
         return np.sin(series.to_float())
 
-    def cos(self):
-        series = self.series
-        return np.cos(series.to_float())
+    def cos(self, series, *args):
+        return self._to_float(series).cos()
 
     def tan(self):
         series = self.series

@@ -8,8 +8,9 @@ from optimus.engines.base.commons.functions import impute, string_to_index, inde
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, prepare_columns
 from optimus.helpers.constants import Actions
+from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str, is_tuple
+from optimus.infer import is_str, is_tuple, is_dict
 
 DataFrame = TableExpr
 
@@ -19,7 +20,7 @@ class Cols(DataFrameBaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     def _names(self):
-        return self.parent.data.columns
+        return list(self.parent.data.columns)
 
     def append(self, dfs):
         """
@@ -31,6 +32,42 @@ class Cols(DataFrameBaseColumns):
         df = self.parent.data
         df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
+
+    def dtypes(self, columns="*"):
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+        return dict(odf.data[columns].schema().items())
+
+    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
+        odf = self.parent
+        columns = parse_columns(odf, columns)
+
+        funcs = val_to_list(funcs)
+        all_funcs = []
+
+        for col_name in columns:
+            for func in funcs:
+                all_funcs.append({func.__name__: {col_name: self.exec_agg(func(odf.data[col_name], *args))}})
+
+        result = {}
+        for i in all_funcs:
+            for x, y in i.items():
+                result.setdefault(x, {}).update(y)
+
+        return format_dict(result, tidy)
+
+    @staticmethod
+    def exec_agg(exprs, compute=None):
+        """
+        Execute an aggregation
+        :param exprs: Aggreagtion function to process
+        :return:
+        """
+        if is_dict(exprs):
+            result = exprs
+        else:
+            result = exprs.execute()
+        return result
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -56,6 +93,7 @@ class Cols(DataFrameBaseColumns):
             args = (args,)
 
         for input_col, output_col in columns:
+            # print("args",args)
             kw_columns.update({output_col: func(self.parent.data[input_col], *args)})
         return self.parent.new(self.parent.data.mutate(**kw_columns))
 
