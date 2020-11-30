@@ -1,6 +1,8 @@
 from optimus.engines.base.dask.extension import Ext as DaskExtension
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.engines.buffer import _set_buffer, _buffer_windows
+from optimus.engines.cudf.dataframe import CUDFDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.helpers.constants import BUFFER_SIZE
 
 
 class DaskDataFrame(DaskExtension):
@@ -52,3 +54,9 @@ class DaskDataFrame(DaskExtension):
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
         return _buffer_windows(self, columns=columns, lower_bound=lower_bound, upper_bound=upper_bound, n=n)
+
+    def to_optimus_pandas(self):
+        return PandasDataFrame(self.root.to_pandas())
+
+    def to_optimus_cudf(self):
+        return CUDFDataFrame(self.root.to_pandas())
