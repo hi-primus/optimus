@@ -20,7 +20,8 @@ class Meta:
         :return:
         """
         if spec is not None:
-            data = assign(meta, spec, value, missing=missing)
+            data = copy.deepcopy(meta)
+            _ = assign(data, spec, value, missing=missing)
         else:
             data = value
 
