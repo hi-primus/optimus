@@ -688,7 +688,7 @@ class BaseColumns(ABC):
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
-        :return:
+        :return: {col_name: dtype}
         """
         odf = self.parent
         columns = parse_columns(odf, columns)
@@ -731,8 +731,10 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args)}} for col_name in columns for func in funcs]
-        a = self.exec_agg(funcs, compute)
+        all_funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args).compute()}} for col_name in columns for
+                     func in
+                     funcs]
+        a = self.exec_agg(all_funcs, compute)
         result = {}
 
         # Reformat aggregation
@@ -1141,6 +1143,16 @@ class BaseColumns(ABC):
     def upper(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
+
+    def title(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.title, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
+                          func_type="column_expr")
+
+    def capitalize(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.capitalize, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
+                          func_type="column_expr")
 
     def proper(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.proper, func_return_type=str,
