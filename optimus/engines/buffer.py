@@ -28,6 +28,7 @@ def _buffer_windows(odf, columns=None, lower_bound=None, upper_bound=None, n=BUF
         df_buffer = odf.get_buffer()
 
     df_length = df_buffer.rows.count()
+    
     if lower_bound is None:
         lower_bound = 0
 
