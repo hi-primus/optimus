@@ -1675,8 +1675,6 @@ class BaseColumns(ABC):
         result = {}
         nulls = df.cols.count_na()
         total_rows = df.rows.count()
-        print('total_rows')
-        print(total_rows)
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
@@ -1688,24 +1686,20 @@ class BaseColumns(ABC):
             if dtype == ProfilerDataTypes.STRING.value:
                 match = total_rows - nulls[col_name]
                 mismatch = nulls[col_name]
-                print(1)
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
-                print(2)
             else:
                 match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
                                                                                  dtype]).cols.frequency()
-                print(3)
 
                 v = {list(j.values())[0]: list(j.values())[1] for j in match["frequency"][col_name]["values"]}
 
                 match = v.get("True")
                 mismatch = v.get("False")
 
-            print([match, mismatch])
             result[col_name]["match"] = 0 if match is None else int(match)
             result[col_name]["mismatch"] = 0 if mismatch is None else int(mismatch)
 
