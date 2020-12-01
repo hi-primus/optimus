@@ -3,6 +3,7 @@ import os
 
 import magic
 
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.raiseit import RaiseIt
 
@@ -12,6 +13,9 @@ BYTES_SIZE = 16384
 
 
 class BaseLoad:
+    def to_optimus_pandas(self,df):
+        return PandasDataFrame(df.to_pandas())
+
     def csv(self, full_path, *args, **kwargs):
         pass
 
