@@ -15,8 +15,6 @@ class PandasEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
-
-
         self.engine = 'pandas'
         self.create = Create(pd)
         self.load = Load()

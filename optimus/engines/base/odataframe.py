@@ -541,12 +541,10 @@ class BaseDataFrame(ABC):
         columns = parse_columns(odf, columns)
         return odf.data[columns].head(n)
 
-
-
     def reset(self):
         # df = self.df
         df = self
-        df.meta= {}
+        df.meta = {}
         return df
 
     def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
@@ -568,7 +566,7 @@ class BaseDataFrame(ABC):
         else:
             cols_to_profile = parse_columns(odf, columns)
 
-        profiler_data = Meta.get(meta,"profile")
+        profiler_data = Meta.get(meta, "profile")
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
@@ -655,17 +653,17 @@ class BaseDataFrame(ABC):
              _cols_name in list(actual_columns.keys())}))
 
         odf.meta = {}
-        meta = Meta.columns(meta,odf.cols.names())
+        meta = Meta.columns(meta, odf.cols.names())
 
-        meta = Meta.set(meta,"transformations", value={})
-        meta = Meta.set(meta,"profile", profiler_data)
+        meta = Meta.set(meta, "transformations", value={})
+        meta = Meta.set(meta, "profile", profiler_data)
 
         if cols_and_inferred_dtype is not None:
             odf.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
-        odf.meta =meta
+        odf.meta = meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
 
