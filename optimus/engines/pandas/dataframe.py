@@ -45,14 +45,16 @@ class PandasDataFrame(PandasExtension):
         input_columns = parse_columns(self, columns)
 
         if lower_bound == 0 and upper_bound == df_length:
-            return self[input_columns]
+            result = self[input_columns]
+        else:
+            if upper_bound > df_length:
+                upper_bound = df_length
 
-        if upper_bound > df_length:
-            upper_bound = df_length
+            if lower_bound >= df_length:
+                diff = upper_bound - lower_bound
+                lower_bound = df_length - diff
+                upper_bound = df_length
 
-        if lower_bound >= df_length:
-            diff = upper_bound - lower_bound
-            lower_bound = df_length - diff
-            upper_bound = df_length
+            result = PandasDataFrame(self.data[input_columns][lower_bound: upper_bound])
 
-        return PandasDataFrame(self.data[input_columns][lower_bound: upper_bound])
+        return result
