@@ -88,8 +88,7 @@ class Rows(BaseRows):
 
         return df
 
-    @staticmethod
-    def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
+    def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None) -> DataFrame:
         """
         Trim values at input thresholds
