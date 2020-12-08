@@ -1754,13 +1754,15 @@ class BaseColumns(ABC):
 
             cols_and_inferred_dtype[col_name] = {"dtype": r}
             if dtype == "date":
-                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(sample[col_name].to_list())})
+                # pydatainfer do not accepts None value so we must filter tham
+                filtered_dates = [i for i in sample[col_name].to_list() if i]
+                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(filtered_dates)})
         return cols_and_inferred_dtype
 
     def match(self, input_cols, regex):
-        df = self.parent.data
+        df = self.root.data
 
-        return self.parent.new(df[input_cols].str.match(regex).to_frame())
+        return self.root.new(df[input_cols].str.match(regex).to_frame())
 
     # def _series_to_dict(series):
     #     return series.to_dict()
