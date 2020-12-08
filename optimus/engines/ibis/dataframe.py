@@ -71,3 +71,6 @@ class IbisDataFrame(BaseDataFrame):
 
     def to_pandas(self):
         return self.root.data.execute()
+
+    def to_optimus_dataframe(self):
+        return
