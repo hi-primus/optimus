@@ -1,10 +1,10 @@
 import dask
-from dask import dataframe as dd
 from dask.distributed import Client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
+from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
@@ -16,6 +16,10 @@ Profiler.instance = None
 class DaskEngine(BaseEngine):
     __version__ = __version__
 
+    def dataframe(self, pdf, n_partitions=1, *args, **kwargs):
+        from dask import dataframe as dd
+        return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
+
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
                  memory_limit='4GB', verbose=False, comm=None, coiled_token=None, coiled_gpu=False, *args, **kwargs):
@@ -26,7 +30,7 @@ class DaskEngine(BaseEngine):
             import psutil
             threads_per_worker = psutil.cpu_count() * 4
 
-        self.create = Create(dd)
+        self.create = Create(self)
         self.load = Load()
         self.verbose(verbose)
 
