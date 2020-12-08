@@ -1682,7 +1682,7 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
 
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-            result[col_name]["missing"] = int(nulls.get(col_name))
+            result[col_name]["missing"] = int(nulls["count_na"].get(col_name))
 
             if dtype == ProfilerDataTypes.STRING.value:
                 match = total_rows - nulls[col_name]
