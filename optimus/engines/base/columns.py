@@ -1713,19 +1713,30 @@ class BaseColumns(ABC):
     def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
         pass
 
-    def infer_profiler_dtypes(self, columns):
+    def quality(self, columns="*"):
+        """
+        Infer the datatype and return the match. mismatch and profiler datatype  for every column.
+        In case of date it returns also the format datatype
+        :param columns:
+        :return:
+        """
+        odf = self.root
+        a = odf.cols.infer_profiler_dtypes(columns)
+        return odf.cols.count_mismatch(a)
+
+    def infer_profiler_dtypes(self, columns="*"):
         """
         Infer datatypes in a dataframe from a sample
         :param columns:
         :return:Return a dict with the column and the inferred data type
         """
-        odf = self.parent
+        odf = self.root
 
         columns = parse_columns(odf, columns)
         total_preview_rows = 30
 
         # Infer the data type from every element in a Series.
-        # FIX: could this be vectorized
+        # FIX: could this be vectorized?
         sample = odf.cols.select(columns).rows.limit(total_preview_rows).to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
