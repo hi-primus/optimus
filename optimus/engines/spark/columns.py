@@ -61,7 +61,7 @@ ENGINE = "spark"
 class Cols(BaseColumns):
 
     def _names(self):
-        return self.parent.data.columns
+        return self.root.data.columns
 
     @staticmethod
     @dispatch(str, object)
@@ -151,7 +151,7 @@ class Cols(BaseColumns):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        odf = self.parent
+        odf = self.root
 
         if is_list_of_str(columns):
             output_cols = [col_name + "_copy" for col_name in columns]
@@ -208,7 +208,7 @@ class Cols(BaseColumns):
         :param meta_action: Metadata transformation to a dataframe
         """
         func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
-        odf = self.parent
+        odf = self.root
         columns = prepare_columns(odf, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
@@ -224,8 +224,8 @@ class Cols(BaseColumns):
         for input_col, output_col in columns:
             # print("expr(when)",type(expr(when)),expr(when))
             df = df.withColumn(output_col, expr(when))
-            self.parent.meta.preserve(self, meta_action, output_col)
-        df = self.parent.new(df)
+            self.root.meta.preserve(self, meta_action, output_col)
+        df = self.root.new(df)
 
         return df
 
@@ -285,7 +285,7 @@ class Cols(BaseColumns):
         :param func: can be lower, upper or any string transformation function
         """
 
-        odf = self.parent
+        odf = self.root
         df = odf.meta
         meta = odf.meta
 
@@ -347,7 +347,7 @@ class Cols(BaseColumns):
                 the transformation is made.
         :return: Spark DataFrame
         """
-        odf = self.parent
+        odf = self.root
         df = odf.data
         _dtype = []
         # Parse params
@@ -425,7 +425,7 @@ class Cols(BaseColumns):
         :param data_type:
         :return:
         """
-        odf = self.parent
+        odf = self.root
         if regex:
             r = re.compile(regex)
             columns = [c for c in list(odf.cols.names()) if re.match(r, c)]
@@ -436,7 +436,7 @@ class Cols(BaseColumns):
         df = odf.data.drop(*columns)
 
         meta = odf.meta.action(Actions.DROP.value, columns)
-        return self.parent.new(df, meta=meta)
+        return self.root.new(df, meta=meta)
 
     def create_exprs(self, columns, funcs, *args):
         """
@@ -446,7 +446,7 @@ class Cols(BaseColumns):
         :param args:
         :return:
         """
-        df = self.parent
+        df = self.root
         columns = parse_columns(df, columns)
         funcs = val_to_list(funcs)
         exprs = []
@@ -528,7 +528,7 @@ class Cols(BaseColumns):
         :param exprs:
         :return:
         """
-        odf = self.parent
+        odf = self.root
         if len(exprs) > 0:
             df = odf.data.agg(*exprs)
             odf = SparkDataFrame(df)
@@ -818,7 +818,7 @@ class Cols(BaseColumns):
         :return:
         """
 
-        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.parent.constants.STRING_TYPES)
+        input_cols = parse_columns(self, input_cols, filter_by_column_dtypes=self.root.constants.STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
         df = self.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
@@ -836,7 +836,7 @@ class Cols(BaseColumns):
             return F.regexp_replace(F.col(col_name), " ", "")
 
         return self.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-                          filter_col_by_dtypes=self.parent.constants.NOT_ARRAY_TYPES,
+                          filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
                           meta_action=Actions.REMOVE_WHITE_SPACES.value)
 
     @staticmethod
@@ -990,7 +990,7 @@ class Cols(BaseColumns):
 
         filter_dtype = None
 
-        odf = self.parent
+        odf = self.root
 
         if search_by in ["chars", "words", "full"]:
             filter_dtype = [odf.constants.STRING_TYPES]
@@ -1004,7 +1004,7 @@ class Cols(BaseColumns):
             df = func(df, input_col, output_col, search, replace_by)
 
             df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.REPLACE.value, output_col).get())
-        df = self.parent.new(df)
+        df = self.root.new(df)
         return df
 
     @staticmethod
@@ -1475,7 +1475,7 @@ class Cols(BaseColumns):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     def hist(self, columns="*", buckets=20, compute=True):
-        df = self.parent
+        df = self.root
         return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
 
         # result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets)
@@ -1545,7 +1545,7 @@ class Cols(BaseColumns):
         :param total_rows: Total rows to calculate the percentage. If not provided is calculated
         :return:
         """
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
 
         df = odf.data
@@ -1555,7 +1555,7 @@ class Cols(BaseColumns):
             non_compatible_columns = self.names(columns)
 
             if non_compatible_columns is not None:
-                df = self.parent.cols.cast(non_compatible_columns, "str").data
+                df = self.root.cols.cast(non_compatible_columns, "str").data
 
             freq = (df.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
@@ -1651,7 +1651,7 @@ class Cols(BaseColumns):
         :param columns: Columns to be processed
         :return:
         """
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
         return format_dict([odf.data.schema[col_name].dataType for col_name in columns])
 

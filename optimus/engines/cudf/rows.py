@@ -101,8 +101,9 @@ class Rows(BaseRows):
         :param bounds:
         :return:
         """
+        odf = self.root
         # TODO: should process string or dates
-        columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+        columns = parse_columns(odf, columns, filter_by_column_dtypes=odf.constants.NUMERIC_TYPES)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]
 

@@ -1,15 +1,13 @@
-from optimus.infer import is_list_of_tuples
+import pandas as pd
 
 from optimus.engines.base.meta import Meta
 
-import pandas as pd
-
 
 class Create:
-    def __init__(self, creator):
-        self.creator = creator
+    def __init__(self, root):
+        self.root = root
 
-    def data_frame(self, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null

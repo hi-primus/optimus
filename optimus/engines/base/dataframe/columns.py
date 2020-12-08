@@ -74,7 +74,7 @@ class DataFrameBaseColumns(BaseColumns):
         :return:
         """
 
-        odf = self.parent
+        odf = self.root
 
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
@@ -86,7 +86,7 @@ class DataFrameBaseColumns(BaseColumns):
         def _reverse(value):
             return str(value)[::-1]
 
-        odf = self.parent
+        odf = self.root
         return odf.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=odf.constants.STRING_TYPES,
                              output_cols=output_cols, set_index=True)
@@ -104,7 +104,7 @@ class DataFrameBaseColumns(BaseColumns):
         pass
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
-        odf = self.parent
+        odf = self.root
 
         df = odf.data
 

@@ -14,7 +14,7 @@ class Cols(DaskBaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def _names(self):
-        return list(self.parent.data.columns)
+        return list(self.root.data.columns)
 
     def _map(self, df, input_col, output_col, func, args, kw_columns):
         kw_columns[output_col] = df[input_col].map_partitions(func, *args)
@@ -25,17 +25,17 @@ class Cols(DaskBaseColumns):
         return series.to_pandas().to_dict()
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):
-        df = self.parent
+        df = self.root
         le = preprocessing.LabelEncoder()
         return string_to_index(df, input_cols, output_cols, le)
 
     def index_to_string(self, input_cols=None, output_cols=None, columns=None):
-        df = self.parent
+        df = self.root
         le = preprocessing.LabelEncoder()
         return index_to_string(df, input_cols, output_cols, le)
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-        df = self.parent
+        df = self.root
         columns = parse_columns(df, columns)
         dtypes = df.cols.dtypes()
 
@@ -55,12 +55,12 @@ class Cols(DaskBaseColumns):
         return result
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.parent
+        df = self.root
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     def hist(self, columns="*", buckets=20, compute=True):
 
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
 
         def _bins_col(_columns, _min, _max):

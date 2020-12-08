@@ -46,7 +46,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        odf = self.parent
+        odf = self.root
         meta = odf.meta
         df = dd.concat([dfs.data.reset_index(drop=True), odf.data.reset_index(drop=True)], axis=1)
         
@@ -117,7 +117,7 @@ class DaskBaseColumns(BaseColumns):
             return _value.replace(_regex, _replace, regex=True)
 
         return self.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                          filter_col_by_dtypes=self.parent.constants.STRING_TYPES + self.parent.constants.NUMERIC_TYPES)
+                          filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
@@ -177,7 +177,7 @@ class DaskBaseColumns(BaseColumns):
         :return: Dask DataFrame
         """
 
-        odf = self.parent
+        odf = self.root
         input_cols = parse_columns(odf, input_cols)
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)

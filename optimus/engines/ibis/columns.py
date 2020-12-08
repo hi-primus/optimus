@@ -20,7 +20,7 @@ class Cols(DataFrameBaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     def _names(self):
-        return list(self.parent.data.columns)
+        return list(self.root.data.columns)
 
     def append(self, dfs):
         """
@@ -29,17 +29,17 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.parent.data
+        df = self.root.data
         df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
     def dtypes(self, columns="*"):
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
         return dict(odf.data[columns].schema().items())
 
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
 
         funcs = val_to_list(funcs)
@@ -74,7 +74,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.parent.data
+        df = self.root.data
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     @staticmethod
@@ -84,7 +84,7 @@ class Cols(DataFrameBaseColumns):
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
-        columns = prepare_columns(self.parent, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
         kw_columns = {}
         if args is None:
@@ -94,8 +94,8 @@ class Cols(DataFrameBaseColumns):
 
         for input_col, output_col in columns:
             # print("args",args)
-            kw_columns.update({output_col: func(self.parent.data[input_col], *args)})
-        return self.parent.new(self.parent.data.mutate(**kw_columns))
+            kw_columns.update({output_col: func(self.root.data[input_col], *args)})
+        return self.root.new(self.root.data.mutate(**kw_columns))
 
     @staticmethod
     def find(columns, sub, ignore_case=False):
@@ -138,7 +138,7 @@ class Cols(DataFrameBaseColumns):
 
     def count_by_dtypes(self, columns, dtype):
 
-        df = self.parent
+        df = self.root
         result = {}
         df_len = len(df)
         for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():

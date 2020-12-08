@@ -20,7 +20,7 @@ class Cols(DataFrameBaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     def _names(self):
-        return list(self.parent.data.columns)
+        return list(self.root.data.columns)
 
     def append(self, dfs):
         """
@@ -29,7 +29,7 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.parent
+        df = self.root
         df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
         return df
 
@@ -45,7 +45,7 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.parent
+        df = self.root
         # TODO: This could be slow try to implement the find function in cudf
         df = df.to_pandas()
 
@@ -54,14 +54,14 @@ class Cols(DataFrameBaseColumns):
         return cudf.from_pandas(df)
 
     def to_string(self, input_cols="*", output_cols=None):
-        df = self.parent
+        df = self.root
         return df.cols.apply(input_cols, to_string_cudf, output_cols=output_cols,
                              meta_action=Actions.TO_STRING.value,
                              mode="vectorized")
 
     def to_integer(self, input_cols="*", output_cols=None):
 
-        df = self.parent
+        df = self.root
         return df.cols.apply(input_cols, to_integer_cudf, output_cols=output_cols,
                              meta_action=Actions.TO_INTEGER.value,
                              mode="pandas")
@@ -115,7 +115,7 @@ class Cols(DataFrameBaseColumns):
     #     return df
 
     def replace_regex(self, input_cols, regex=None, replace_by=None, output_cols=None):
-        df = self.parent
+        df = self.root
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
@@ -127,7 +127,7 @@ class Cols(DataFrameBaseColumns):
         raise NotImplementedError('Not implemented yet')
 
     def lemmatize_verbs(self, input_cols, output_cols=None):
-        df = self.parent
+        df = self.root
 
         def func(value, args=None):
             return value + "aaa"
@@ -140,7 +140,7 @@ class Cols(DataFrameBaseColumns):
         raise NotImplementedError('Not implemented yet')
 
     def strip_html(self):
-        df = self.parent
+        df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")
         # self.text = soup.get_text()
         raise NotImplementedError('Not implemented yet')
@@ -150,7 +150,7 @@ class Cols(DataFrameBaseColumns):
 
     def standard_scaler(self, input_cols, output_cols=None):
 
-        df = self.parent
+        df = self.root
         scaler = StandardScaler()
         for input_col, output_col in zip(input_cols, output_cols):
             data = df[input_col]
@@ -191,7 +191,7 @@ class Cols(DataFrameBaseColumns):
         :param invert: Invert the match
         :return:
         """
-        df = self.parent
+        df = self.root
         columns = parse_columns(df, columns)
 
         f = profiler_dtype_func(dtype)
@@ -206,7 +206,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):
-        odf = self.parent
+        odf = self.root
         columns = parse_columns(odf, columns)
 
         result = {}
@@ -223,7 +223,7 @@ class Cols(DataFrameBaseColumns):
         return {"hist": result}
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None):
-        df = self.parent
+        df = self.root
         result = {}
         df_len = len(df)
         for col_name, na in df.cols.count_na(columns).items():
@@ -240,12 +240,12 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):
-        df = self.parent
+        df = self.root
         le = preprocessing.LabelEncoder()
         return string_to_index(df, input_cols, output_cols, le)
 
     def index_to_string(self, input_cols=None, output_cols=None, columns=None):
-        df = self.parent
+        df = self.root
         le = preprocessing.LabelEncoder()
         return index_to_string(df, input_cols, output_cols, le)
 
@@ -263,7 +263,7 @@ class Cols(DataFrameBaseColumns):
         :param drop:
         :param mode:
         """
-        odf = self.parent
+        odf = self.root
 
         # if separator is not None:
         #     separator = re.escape(separator)
@@ -316,7 +316,7 @@ class Cols(DataFrameBaseColumns):
         :param default:
         :return:
         """
-        df = self.parent
+        df = self.root
         if output_cols is None:
             RaiseIt.value_error(output_cols, ["string"])
 

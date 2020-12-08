@@ -9,7 +9,7 @@ class Cols(DaskBaseColumns):
         super(DaskBaseColumns, self).__init__(df)
 
     def _names(self):
-        return list(self.parent.data.columns)
+        return list(self.root.data.columns)
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):
         le = preprocessing.LabelEncoder()
@@ -38,5 +38,5 @@ class Cols(DaskBaseColumns):
     #     return {"hist":result}
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.parent.data
+        df = self.root.data
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)

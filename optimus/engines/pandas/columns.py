@@ -12,7 +12,7 @@ class Cols(DataFrameBaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     def _names(self):
-        return list(self.parent.data.columns)
+        return list(self.root.data.columns)
 
     def append(self, dfs):
         """
@@ -21,7 +21,7 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        odf = self.parent
+        odf = self.root
         df = pd.concat([dfs.data.reset_index(drop=True), odf.data.reset_index(drop=True)], axis=1)
         return odf.new(df)
 
@@ -33,7 +33,7 @@ class Cols(DataFrameBaseColumns):
         :param sub:
         :return:
         """
-        odf = self.parent
+        odf = self.root
         return find(odf, columns, sub, ignore_case)
 
     @staticmethod
@@ -111,7 +111,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def count_by_dtypes(self, columns, dtype):
-        df = self.parent.data
+        df = self.root.data
         result = {}
         df_len = len(df)
         for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():
