@@ -1671,7 +1671,8 @@ class BaseColumns(ABC):
         :param columns_type:
         :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
-        df = self.root
+        odf = self.root
+        df = odf.data
 
         result = {}
         nulls = df.cols.count_na(tidy=False)["count_na"]
@@ -1692,7 +1693,7 @@ class BaseColumns(ABC):
                 match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
             else:
-                match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
+                match = odf.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
                                                                                  dtype]).cols.frequency()
 

@@ -577,7 +577,7 @@ class BaseDataFrame(ABC):
             cols_and_inferred_dtype = odf.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
             # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
-            mismatch = odf.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
+            mismatch = odf.cols.count_mismatch(cols_and_inferred_dtype)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
