@@ -1665,7 +1665,7 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def count_mismatch(self, columns_type: dict = None):
+    def count_mismatch(self, columns_type: dict = None, compute=True):
         """
         Count mismatches values in columns
         :param columns_type:
@@ -1674,7 +1674,7 @@ class BaseColumns(ABC):
         df = self.root
 
         result = {}
-        nulls = df.cols.count_na(tidy=False)
+        nulls = df.cols.count_na(tidy=False)["count_na"]
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
@@ -1682,10 +1682,10 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
 
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-            result[col_name]["missing"] = int(nulls["count_na"].get(col_name))
+            result[col_name]["missing"] = int(nulls.get(col_name))
 
             if dtype == ProfilerDataTypes.STRING.value:
-                match = total_rows - nulls[col_name]
+                match = total_rows - nulls.get(col_name)
                 mismatch = nulls[col_name]
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
