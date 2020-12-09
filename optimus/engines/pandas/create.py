@@ -1,6 +1,6 @@
 import pandas as pd
 
-from optimus.engines.base.meta import Meta
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class Create:
@@ -16,9 +16,9 @@ class Create:
         :param n_partitions:
         :return: Dataframe
         """
-        if dict:
-            pdf = pd.DataFrame(dict)
 
-        odf = self.root.dataframe(pdf, n_partitions)
+        cdf = pd.DataFrame(dict)
+
+        odf = PandasDataFrame(cdf)
+        print("ASdf")
         return odf
-

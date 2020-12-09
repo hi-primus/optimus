@@ -1,6 +1,6 @@
-import pandas as pd
+import cudf
 
-from optimus.engines.base.meta import Meta
+from optimus.engines.cudf.dataframe import CUDFDataFrame
 
 
 class Create:
@@ -16,9 +16,8 @@ class Create:
         :param n_partitions:
         :return: Dataframe
         """
-        if dict:
-            pdf = pd.DataFrame(dict)
 
-        odf = self.root.dataframe(pdf, n_partitions)
+        cdf = cudf.DataFrame(dict)
+
+        odf = CUDFDataFrame(cdf)
         return odf
-

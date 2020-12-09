@@ -27,3 +27,15 @@ class BaseEngine:
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                     presto_catalog, cassandra_keyspace, cassandra_table, bigquery_project, bigquery_dataset)
+
+    @abstractmethod
+    def create(self):
+        pass
+
+    @abstractmethod
+    def load(self):
+        pass
+
+    @abstractmethod
+    def engine(self):
+        pass
