@@ -767,7 +767,9 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, self.F.mode, compute=compute, tidy=tidy)
 
     def range(self, columns="*", tidy=True, compute=True):
-        return self.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
+        
 
     def percentile(self, columns="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.root
@@ -802,7 +804,8 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, self.F.var, tidy=tidy, compute=compute)
 
     def std(self, columns="*", tidy=True, compute=True):
-        return self.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
 
     # Math Operations
     def abs(self, input_cols="*", output_cols=None):
@@ -1410,7 +1413,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        return self.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
     def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.root
