@@ -1678,8 +1678,8 @@ class BaseColumns(ABC):
         df = odf.data
 
         result = {}
-        nulls = df.cols.count_na(tidy=False)["count_na"]
-        total_rows = df.rows.count()
+        nulls = odf.cols.count_na(tidy=False)["count_na"]
+        total_rows = odf.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
