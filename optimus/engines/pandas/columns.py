@@ -41,7 +41,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.df
+        df = self.root
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     @staticmethod
