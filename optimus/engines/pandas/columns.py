@@ -111,9 +111,9 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def count_by_dtypes(self, columns, dtype):
-        df = self.root.data
+        df = self.root
         result = {}
-        df_len = len(df)
+        df_len = len(df.data)
         for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():
             # for i, j in df.constants.DTYPES_DICT.items():
             #     if j == df[col_name].dtype.type:
