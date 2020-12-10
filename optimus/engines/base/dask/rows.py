@@ -113,7 +113,7 @@ class DaskBaseRows(BaseRows):
 
     @dispatch(str, str)
     def sort(self, input_cols):
-        df = self.root.data
+        df = self.root
         input_cols = parse_columns(df, input_cols)
         return df.rows.sort([(input_cols, "desc",)])
 
@@ -122,7 +122,7 @@ class DaskBaseRows(BaseRows):
         """
         Sort column by row
         """
-        df = self.root.data
+        df = self.root
         columns = parse_columns(df, columns)
         return df.rows.sort([(columns, order,)])
 
