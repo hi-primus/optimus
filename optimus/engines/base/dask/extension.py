@@ -45,7 +45,7 @@ class Ext(BaseDataFrame):
         :param random: if true get a semi random sample
         :return:
         """
-        odf = self.root
+        df = self.root
         if random is True:
             seed = random_int()
         elif random is False:
@@ -53,13 +53,13 @@ class Ext(BaseDataFrame):
         else:
             RaiseIt.value_error(random, ["True", "False"])
 
-        rows_count = odf.rows.count()
+        rows_count = df.rows.count()
         if n < rows_count:
             # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1
             fraction = (n / rows_count) * 1.1
         else:
             fraction = 1.0
-        return self.root.new(odf.data.sample(frac=fraction, random_state=seed))
+        return self.root.new(df.data.sample(frac=fraction, random_state=seed))
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -160,9 +160,9 @@ class Ext(BaseDataFrame):
 
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        return odf.data[columns].head(n, npartitions=-1)
+        df = self.root
+        columns = parse_columns(df, columns)
+        return df.data[columns].head(n, npartitions=-1)
 
     @staticmethod
     def create_id(column="id"):

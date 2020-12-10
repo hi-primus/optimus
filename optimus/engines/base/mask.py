@@ -6,28 +6,28 @@ class Mask:
         self.root = root
 
     def greater_than(self, col_name, value):
-        df = self.root.data
-        return self.root.new(df[col_name] > value)
+        dfd = self.root.data
+        return self.root.new(dfd[col_name] > value)
 
     def greater_than_equal(self, col_name, value):
-        df = self.root.data
-        return self.root.new(df[col_name] >= value)
+        dfd = self.root.data
+        return self.root.new(dfd[col_name] >= value)
 
     def less_than(self, col_name, value):
-        df = self.root.data
-        return self.root.new(df[col_name] < value)
+        dfd = self.root.data
+        return self.root.new(dfd[col_name] < value)
 
     def less_than_equal(self, col_name, value):
-        df = self.root.data
-        return self.root.new(df[col_name] <= value)
+        dfd = self.root.data
+        return self.root.new(dfd[col_name] <= value)
 
     def equal(self, col_name, value):
-        df = self.root.data
-        return self.root.new((df[col_name] == value).to_frame())
+        dfd = self.root.data
+        return self.root.new((dfd[col_name] == value).to_frame())
 
     def not_equal(self, col_name, value):
-        df = self.root.data
-        return self.root.new(df[col_name] != value)
+        dfd = self.root.data
+        return self.root.new(dfd[col_name] != value)
 
     def missing(self, col_name):
         """
@@ -35,8 +35,8 @@ class Mask:
         :param col_name:
         :return:
         """
-        df = self.root.data
-        return self.root.new(df[col_name].isnull())
+        dfd = self.root.data
+        return self.root.new(dfd[col_name].isnull())
 
     def mismatch(self, col_name, dtype):
         """

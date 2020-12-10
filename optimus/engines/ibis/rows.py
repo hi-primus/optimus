@@ -27,12 +27,12 @@ class Rows(BaseRows):
         """
         Count dataframe rows
         """
-        df = self.root.data
+        dfd = self.root.data
         # TODO: Be sure that we need the compute param
         if compute is True:
-            result = df.count().execute()
+            result = dfd.count().execute()
         else:
-            result = df.count()
+            result = dfd.count()
         return result
 
 

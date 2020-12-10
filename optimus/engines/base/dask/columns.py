@@ -46,12 +46,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        odf = self.root
-        meta = odf.meta
-        df = dd.concat([dfs.data.reset_index(drop=True), odf.data.reset_index(drop=True)], axis=1)
+        df = self.root
+        meta = df.meta
+        dfd = dd.concat([dfds.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
         
-        meta = meta.preserve(odf, Actions.APPEND.value, odf.cols.names())
-        return odf.new(df, meta=meta)
+        meta = meta.preserve(df, Actions.APPEND.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
@@ -177,16 +177,16 @@ class DaskBaseColumns(BaseColumns):
         :return: Dask DataFrame
         """
 
-        odf = self.root
-        input_cols = parse_columns(odf, input_cols)
+        df = self.root
+        input_cols = parse_columns(df, input_cols)
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)
         if output_col is None:
             RaiseIt.type_error(output_col, ["str"])
 
-        # output_col = parse_columns(odf, output_col, accepts_missing_cols=True)
+        # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
 
-        output_ordered_columns = odf.cols.names()
+        output_ordered_columns = df.cols.names()
 
         def _nest_string(row):
             v = row[input_cols[0]].astype(str)
@@ -208,14 +208,14 @@ class DaskBaseColumns(BaseColumns):
         else:
             kw_columns = {output_col: _nest_array}
 
-        df = odf.data.assign(**kw_columns)
+        dfd = df.data.assign(**kw_columns)
 
         col_index = output_ordered_columns.index(input_cols[-1]) + 1
         output_ordered_columns[col_index:col_index] = [output_col]
 
 
-        meta = odf.meta.preserve(df, Actions.NEST.value, list(kw_columns.values()))
+        meta = df.meta.preserve(dfd, Actions.NEST.value, list(kw_columns.values()))
 
-        odf = odf.new(df, meta=meta)
+        df = self.root.new(dfd, meta=meta)
 
-        return odf.cols.select(output_ordered_columns)
+        return df.cols.select(output_ordered_columns)

@@ -29,25 +29,25 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        df = self.root.data
-        df = pd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        return df
+        dfd = self.root.data
+        dfd = pd.concat([dfs.data.reset_index(drop=True), dfd.reset_index(drop=True)], axis=1)
+        return self.root.new(dfd)
 
     def dtypes(self, columns="*"):
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        return dict(odf.data[columns].schema().items())
+        df = self.root
+        columns = parse_columns(df, columns)
+        return dict(df.data[columns].schema().items())
 
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
         funcs = val_to_list(funcs)
         all_funcs = []
 
         for col_name in columns:
             for func in funcs:
-                all_funcs.append({func.__name__: {col_name: self.exec_agg(func(odf.data[col_name], *args))}})
+                all_funcs.append({func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args))}})
 
         result = {}
         for i in all_funcs:
@@ -74,7 +74,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
-        df = self.root.data
+        df = self.root
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     @staticmethod

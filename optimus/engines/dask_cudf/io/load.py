@@ -74,17 +74,17 @@ class Load(BaseLoad):
         """
 
         try:
-            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+            dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                     quoting=quoting, error_bad_lines=error_bad_lines,
                                     keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
-            odf = DaskCUDFDataFrame(df)
-            odf.meta = Meta.set(odf.meta, "file_name", path)
-            odf.meta = Meta.set(odf.meta, "name", ntpath.basename(path))
+            df = DaskCUDFDataFrame(dcdf)
+            df.meta = Meta.set(df.meta, "file_name", path)
+            df.meta = Meta.set(df.meta, "name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
 
-        return odf
+        return df
 
     @staticmethod
     def parquet(path, columns=None, *args, **kwargs):

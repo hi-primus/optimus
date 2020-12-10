@@ -41,11 +41,11 @@ class BaseDataFrame(ABC):
     def __getitem__(self, item):
         return self.cols.select(item)
 
-    def new(self, odf, meta=None):
-        new_odf = self.__class__(odf)
+    def new(self, df, meta=None):
+        new_df = self.__class__(df)
         if meta is not None:
-            new_odf.meta = meta
-        return new_odf
+            new_df.meta = meta
+        return new_df
 
     def operation(self, df1, df2, opb):
         """
@@ -122,13 +122,13 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        odf = self.root
+        df = self.root
         if format == "bumblebee":
-            columns = parse_columns(odf, columns)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in odf.cols.select(columns).cols.names()],
-                                 "value": odf.rows.to_list(columns)}}
+            columns = parse_columns(df, columns)
+            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                                 "value": df.rows.to_list(columns)}}
         else:
-            result = json.dumps(odf.to_dict(), ensure_ascii=False, default=json_converter)
+            result = json.dumps(df.to_dict(), ensure_ascii=False, default=json_converter)
 
         return result
 
@@ -257,8 +257,8 @@ class BaseDataFrame(ABC):
         # Metadata
         # If not empty the profiler already run.
         # So process the dataframe's metadata to get which columns need to be profiled
-        odf = self
-        actions = odf.meta.get("transformations.actions")
+        df = self
+        actions = df.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
         # print("are actions", are_actions)
@@ -276,7 +276,7 @@ class BaseDataFrame(ABC):
             return result
 
         # Process actions to check if any column must be processed
-        if self.is_cached(odf):
+        if self.is_cached(df):
             if are_actions:
 
                 def get_columns_by_action(action):
@@ -537,9 +537,9 @@ class BaseDataFrame(ABC):
 
         :return:
         """
-        odf = self
-        columns = parse_columns(odf, columns)
-        return odf.data[columns].head(n)
+        df = self
+        columns = parse_columns(df, columns)
+        return df.data[columns].head(n)
 
     def reset(self):
         # df = self.df
@@ -558,26 +558,26 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        odf = self
+        df = self
         meta = self.root.meta
 
         if flush is False:
-            cols_to_profile = odf.calculate_cols_to_profile(odf, columns)
+            cols_to_profile = df.calculate_cols_to_profile(df, columns)
         else:
-            cols_to_profile = parse_columns(odf, columns)
+            cols_to_profile = parse_columns(df, columns)
 
         profiler_data = Meta.get(meta, "profile")
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
 
-        if cols_to_profile or not self.is_cached(odf) or flush is True:
+        if cols_to_profile or not self.is_cached(df) or flush is True:
             numeric_cols = []
             string_cols = []
-            cols_and_inferred_dtype = odf.cols.infer_profiler_dtypes(cols_to_profile)
+            cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
             # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
-            mismatch = odf.cols.count_mismatch(cols_and_inferred_dtype)
+            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
@@ -590,12 +590,12 @@ class BaseDataFrame(ABC):
             freq_uniques = None
 
             if len(numeric_cols):
-                hist = odf.cols.hist(numeric_cols, buckets=bins, compute=compute)
-                freq_uniques = odf.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
+                hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
+                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
 
             freq = None
             if len(string_cols):
-                freq = odf.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
+                freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
             # print(numeric_cols, string_cols)
 
@@ -621,49 +621,49 @@ class BaseDataFrame(ABC):
             # Nulls
             total_count_na = 0
 
-            dtypes = odf.cols.dtypes("*")
+            dtypes = df.cols.dtypes("*")
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
-            assign(profiler_data, "name", odf.meta.get("name"), dict)
-            assign(profiler_data, "file_name", odf.meta.get("file_name"), dict)
+            assign(profiler_data, "name", df.meta.get("name"), dict)
+            assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
 
-            data_set_info = {'cols_count': odf.cols.count(),
-                             'rows_count': odf.rows.count(),
+            data_set_info = {'cols_count': df.cols.count(),
+                             'rows_count': df.rows.count(),
                              }
             if size is True:
-                data_set_info.update({'size': odf.size(format="human")})
+                data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            dtypes_list = list(set(odf.cols.dtypes("*").values()))
+            dtypes_list = list(set(df.cols.dtypes("*").values()))
             assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
             assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(total_count_na / odf.rows.count() * 100, 2))
+            assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
         actual_columns = profiler_data["columns"]
 
         # Order columns
-        columns = parse_columns(odf, columns)
+        columns = parse_columns(df, columns)
         profiler_data["columns"] = dict(OrderedDict(
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        odf.meta = {}
-        meta = Meta.columns(meta, odf.cols.names())
+        df.meta = {}
+        meta = Meta.columns(meta, df.cols.names())
 
         meta = Meta.set(meta, "transformations", value={})
         meta = Meta.set(meta, "profile", profiler_data)
 
         if cols_and_inferred_dtype is not None:
-            odf.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+            df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
-        odf.meta = meta
+        df.meta = meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
 

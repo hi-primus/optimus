@@ -151,25 +151,25 @@ class Cols(BaseColumns):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        odf = self.root
+        df = self.root
 
         if is_list_of_str(columns):
             output_cols = [col_name + "_copy" for col_name in columns]
             output_cols = get_output_cols(columns, output_cols)
             columns = zip(columns, output_cols)
         else:
-            input_cols = parse_columns(df, input_cols)
+            input_cols = parse_columns(dfd, input_cols)
             output_cols = get_output_cols(input_cols, output_cols)
 
             columns = list(zip(input_cols, output_cols))
 
         for input_col, output_col in columns:
-            current_meta = df.meta.get()
-            df = odf.data.withColumn(output_col, F.col(input_col))
+            current_meta = dfd.meta.get()
+            dfd = df.data.withColumn(output_col, F.col(input_col))
             meta.set(value=current_meta)
             meta = meta.copy({input_col: output_col})
         
-        return odf.new(df, meta=meta)
+        return self.root.new(dfd, meta=meta)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
@@ -208,8 +208,8 @@ class Cols(BaseColumns):
         :param meta_action: Metadata transformation to a dataframe
         """
         func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
-        odf = self.root
-        columns = prepare_columns(odf, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        df = self.root
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
         def expr(_when):
@@ -220,14 +220,14 @@ class Cols(BaseColumns):
 
             return main_query
 
-        df = odf.data
+        dfd = df.data
         for input_col, output_col in columns:
             # print("expr(when)",type(expr(when)),expr(when))
-            df = df.withColumn(output_col, expr(when))
+            dfd = dfd.withColumn(output_col, expr(when))
             self.root.meta.preserve(self, meta_action, output_col)
-        df = self.root.new(df)
+        dfd = self.root.new(dfd)
 
-        return df
+        return self.root.new(dfd)
 
     @staticmethod
     def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
@@ -285,14 +285,14 @@ class Cols(BaseColumns):
         :param func: can be lower, upper or any string transformation function
         """
 
-        odf = self.root
-        df = odf.meta
-        meta = odf.meta
+        df = self.root
+        dfd = df.meta
+        meta = df.meta
 
         # Apply a transformation function
         if is_function(func):
-            exprs = [F.col(c).alias(func(c)) for c in odf.columns]
-            odf = odf.select(exprs)
+            exprs = [F.col(c).alias(func(c)) for c in df.columns]
+            df = df.select(exprs)
 
         elif is_list_of_tuples(columns_old_new):
             # Check that the 1st element in the tuple is a valid set of columns
@@ -303,17 +303,15 @@ class Cols(BaseColumns):
                 new_col_name = col_name[1]
 
                 if is_str(old_col_name):
-                    df = df.withColumnRenamed(old_col_name, new_col_name)
+                    dfd = dfd.withColumnRenamed(old_col_name, new_col_name)
                 elif is_int(old_col_name):
                     old_col_name = self.schema.names[old_col_name]
-                    df = df.withColumnRenamed(old_col_name, new_col_name)
+                    dfd = dfd.withColumnRenamed(old_col_name, new_col_name)
 
-                # df = df.rename_meta([(old_col_name, new_col_name)])
+                # dfd = dfd.rename_meta([(old_col_name, new_col_name)])
                 meta = meta.rename((old_col_name, new_col_name))
 
-        odf = odf.new(df, meta=meta)
-
-        return df
+        return self.root.new(dfd, meta=meta)
 
     # @dispatch(list)
     # def rename(self, columns_old_new=None):
@@ -347,12 +345,12 @@ class Cols(BaseColumns):
                 the transformation is made.
         :return: Spark DataFrame
         """
-        odf = self.root
-        df = odf.data
+        df = self.root
+        dfd = df.data
         _dtype = []
         # Parse params
         if columns is None:
-            input_cols = parse_columns(odf, input_cols)
+            input_cols = parse_columns(df, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
 
                 output_cols = get_output_cols(input_cols, output_cols)
@@ -398,14 +396,14 @@ class Cols(BaseColumns):
 
             return _func_return_type, _cast_to, _func_type
 
-        df = self
+        dfd = self
 
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
-            df = self.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
+            dfd = self.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
                             output_cols=output_col, meta_action=Actions.CAST.value)
 
-        return df
+        return dfd
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -425,18 +423,18 @@ class Cols(BaseColumns):
         :param data_type:
         :return:
         """
-        odf = self.root
+        df = self.root
         if regex:
             r = re.compile(regex)
-            columns = [c for c in list(odf.cols.names()) if re.match(r, c)]
+            columns = [c for c in list(df.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(odf, columns, filter_by_column_dtypes=data_type)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        df = odf.data.drop(*columns)
+        dfd = df.data.drop(*columns)
 
-        meta = odf.meta.action(Actions.DROP.value, columns)
-        return self.root.new(df, meta=meta)
+        meta = df.meta.action(Actions.DROP.value, columns)
+        return self.root.new(dfd, meta=meta)
 
     def create_exprs(self, columns, funcs, *args):
         """
@@ -528,11 +526,11 @@ class Cols(BaseColumns):
         :param exprs:
         :return:
         """
-        odf = self.root
+        df = self.root
         if len(exprs) > 0:
-            df = odf.data.agg(*exprs)
-            odf = SparkDataFrame(df)
-            result = parse_col_names_funcs_to_keys(odf.to_dict())
+            dfd = df.data.agg(*exprs)
+            df = SparkDataFrame(dfd)
+            result = parse_col_names_funcs_to_keys(df.to_dict())
         else:
             result = None
 
@@ -990,22 +988,21 @@ class Cols(BaseColumns):
 
         filter_dtype = None
 
-        odf = self.root
+        df = self.root
 
         if search_by in ["chars", "words", "full"]:
-            filter_dtype = [odf.constants.STRING_TYPES]
+            filter_dtype = [df.constants.STRING_TYPES]
         elif search_by == "numeric":
-            filter_dtype = [odf.constants.NUMERIC_TYPES]
+            filter_dtype = [df.constants.NUMERIC_TYPES]
 
-        columns = prepare_columns(odf.data, input_cols, output_cols)
-        # columns = prepare_columns(odf.data, input_cols, output_cols, filter_by_column_dtypes=filter_dtype)
-        df = odf.data
+        columns = prepare_columns(df.data, input_cols, output_cols)
+        # columns = prepare_columns(df.data, input_cols, output_cols, filter_by_column_dtypes=filter_dtype)
+        dfd = df.data
         for input_col, output_col in columns:
-            df = func(df, input_col, output_col, search, replace_by)
+            dfd = func(dfd, input_col, output_col, search, replace_by)
 
-            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.REPLACE.value, output_col).get())
-        df = self.root.new(df)
-        return df
+            dfd.meta = Meta.set(dfd.meta, value=dfd.meta.preserve(None, Actions.REPLACE.value, output_col).get())
+        return self.root.new(dfd)
 
     @staticmethod
     def replace_regex(input_cols, regex=None, value=None, output_cols=None):
@@ -1545,19 +1542,19 @@ class Cols(BaseColumns):
         :param total_rows: Total rows to calculate the percentage. If not provided is calculated
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
-        df = odf.data
+        dfd = df.data
         if columns is not None:
 
             # Convert non compatible columns(non str, int or float) to string
             non_compatible_columns = self.names(columns)
 
             if non_compatible_columns is not None:
-                df = self.root.cols.cast(non_compatible_columns, "str").data
+                dfd = self.root.cols.cast(non_compatible_columns, "str").data
 
-            freq = (df.select(columns).rdd
+            freq = (dfd.select(columns).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: (x, 1))
                     .reduceByKey(lambda a, b: a + b)
@@ -1572,11 +1569,11 @@ class Cols(BaseColumns):
                 result[f[0]] = {"count_uniques": "N/A", "values": [{"value": kv[0], "count": kv[1]} for kv in f[1]]}
 
             # if count_uniques:
-            #     print(df.count())
+            #     print(dfd.count())
 
             if percentage:
                 if total_rows is None:
-                    total_rows = df.count()
+                    total_rows = dfd.count()
 
                     RaiseIt.type_error(total_rows, ["int"])
                 for col_name in columns:
@@ -1651,9 +1648,9 @@ class Cols(BaseColumns):
         :param columns: Columns to be processed
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        return format_dict([odf.data.schema[col_name].dataType for col_name in columns])
+        df = self.root
+        columns = parse_columns(df, columns)
+        return format_dict([df.data.schema[col_name].dataType for col_name in columns])
 
     # @staticmethod
     # def dtypes(columns="*"):

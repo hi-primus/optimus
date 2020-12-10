@@ -19,6 +19,6 @@ class Create:
         if dict:
             pdf = pd.DataFrame(dict)
 
-        odf = self.root.dataframe(pdf, n_partitions)
-        return odf
+        df = self.root.dataframe(pdf, n_partitions)
+        return df
 

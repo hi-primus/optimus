@@ -100,9 +100,9 @@ class Rows(BaseRows):
         :param bounds:
         :return:
         """
-        odf = self.root
+        df = self.root
         # TODO: should process string or dates
-        columns = parse_columns(odf, columns, filter_by_column_dtypes=odf.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]
 
@@ -136,7 +136,7 @@ class Rows(BaseRows):
 
             return query
 
-        df = self
+        df = self.root
         for col_name in columns:
             df = df.rows.select(_between(col_name))
         df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
@@ -155,12 +155,12 @@ class Rows(BaseRows):
         :param input_cols:
         :return:
         """
-        df = self.root.data
-        input_cols = parse_columns(df, input_cols)
+        dfd = self.root.data
+        input_cols = parse_columns(dfd, input_cols)
         input_cols = val_to_list(input_cols)
-        df = df.drop_duplicates(subset=input_cols)
+        dfd = dfd.drop_duplicates(subset=input_cols)
 
-        return self.root.new(df)
+        return self.root.new(dfd)
 
     def limit(self, count=10) -> DataFrame:
         """

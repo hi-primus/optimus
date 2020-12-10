@@ -21,9 +21,9 @@ class Cols(DataFrameBaseColumns):
         :return:
         """
 
-        odf = self.root
-        df = pd.concat([dfs.data.reset_index(drop=True), odf.data.reset_index(drop=True)], axis=1)
-        return odf.new(df)
+        df = self.root
+        dfd = pd.concat([dfds.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
+        return self.root.new(dfd)
 
     def find(self, columns, sub, ignore_case=False):
         """
@@ -33,8 +33,8 @@ class Cols(DataFrameBaseColumns):
         :param sub:
         :return:
         """
-        odf = self.root
-        return find(odf, columns, sub, ignore_case)
+        df = self.root
+        return find(df, columns, sub, ignore_case)
 
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):

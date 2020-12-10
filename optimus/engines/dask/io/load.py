@@ -83,21 +83,21 @@ class Load(BaseLoad):
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+            ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
                              **kwargs)
 
             if n_rows > -1:
-                df = dd.from_pandas(df.head(n_rows), npartitions=1)
+                ddf = dd.from_pandas(ddf.head(n_rows), npartitions=1)
 
-            odf = DaskDataFrame(df)
-            odf.meta = Meta.set(odf.meta, value={"file_name": path, "name": ntpath.basename(path)})
+            df = DaskDataFrame(ddf)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
             raise
 
-        return odf
+        return df
 
     @staticmethod
     def parquet(path, columns=None, engine="pyarrow", *args, **kwargs):

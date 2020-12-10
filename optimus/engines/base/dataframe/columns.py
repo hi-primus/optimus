@@ -74,21 +74,21 @@ class DataFrameBaseColumns(BaseColumns):
         :return:
         """
 
-        odf = self.root
+        df = self.root
 
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return odf.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                             filter_col_by_dtypes=odf.constants.STRING_TYPES + odf.constants.NUMERIC_TYPES)
+        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
 
-        odf = self.root
-        return odf.cols.apply(input_cols, _reverse, func_return_type=str,
-                             filter_col_by_dtypes=odf.constants.STRING_TYPES,
+        df = self.root
+        return df.cols.apply(input_cols, _reverse, func_return_type=str,
+                             filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, set_index=True)
 
     @staticmethod
@@ -104,25 +104,25 @@ class DataFrameBaseColumns(BaseColumns):
         pass
 
     def nest(self, input_cols, shape="string", separator="", output_col=None):
-        odf = self.root
+        df = self.root
 
-        df = odf.data
+        dfd = df.data
 
         if output_col is None:
             RaiseIt.type_error(output_col, ["str"])
 
-        input_cols = parse_columns(odf, input_cols)
+        input_cols = parse_columns(df, input_cols)
 
-        # cudf do nor support apply or agg join for this operation
+        # cudfd do nor support apply or agg join for this operation
         if shape == "vector" or shape == "array":
             raise NotImplementedError("Not implemented yet")
             # https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
             # t['combined'] = t.values.tolist()
 
-            dfs = [df[input_col] for input_col in input_cols]
-            df[output_col] = df[input_cols].values.tolist()
+            dfds = [dfd[input_col] for input_col in input_cols]
+            dfd[output_col] = dfd[input_cols].values.tolist()
         elif shape == "string":
-            dfs = [df[input_col].astype(str) for input_col in input_cols]
-            df[output_col] = reduce((lambda x, y: x + separator + y), dfs)
+            dfds = [dfd[input_col].astype(str) for input_col in input_cols]
+            dfd[output_col] = reduce((lambda x, y: x + separator + y), dfds)
 
-        return odf.new(df)
+        return self.root.new(dfd)

@@ -6,27 +6,27 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 
 
-def _set_buffer(odf, columns="*", n=BUFFER_SIZE):
-    input_cols = parse_columns(odf, columns)
+def _set_buffer(df, columns="*", n=BUFFER_SIZE):
+    input_cols = parse_columns(df, columns)
 
-    odf.buffer = PandasDataFrame(odf.cols.select(input_cols).rows.limit(n).to_pandas())
-    Meta.set(odf.meta, "buffer_time", int(time.time()))
+    df.buffer = PandasDataFrame(df.cols.select(input_cols).rows.limit(n).to_pandas())
+    Meta.set(df.meta, "buffer_time", int(time.time()))
 
 
-def _buffer_windows(odf, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
-    meta = odf.meta
+def _buffer_windows(df, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+    meta = df.meta
     buffer_time = Meta.get(meta, "buffer_time")
     last_action_time = Meta.get(meta, "last_action_time")
 
     if buffer_time and last_action_time:
         if buffer_time > last_action_time:
-            odf.set_buffer(columns, n)
+            df.set_buffer(columns, n)
 
-    df_buffer = odf.get_buffer()
+    df_buffer = df.get_buffer()
 
     if df_buffer is None:
-        odf.set_buffer(columns, n)
-        df_buffer = odf.get_buffer()
+        df.set_buffer(columns, n)
+        df_buffer = df.get_buffer()
 
     df_length = df_buffer.rows.count()
 
@@ -48,5 +48,5 @@ def _buffer_windows(odf, columns=None, lower_bound=None, upper_bound=None, n=BUF
         upper_bound = df_length
         # RaiseIt.value_error(df_length, str(df_length - 1))
 
-    input_columns = parse_columns(odf, columns)
+    input_columns = parse_columns(df, columns)
     return PandasDataFrame(df_buffer.data[input_columns][lower_bound: upper_bound])

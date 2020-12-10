@@ -25,32 +25,32 @@ class BaseRows(ABC):
     #
     def greater_than(self, input_col, value):
 
-        df = self.root.data
-        return self.root.new(df[self.root.greather_than(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.greather_than(input_col, value)])
 
     def greater_than_equal(self, input_col, value):
 
-        df = self.root.data
-        return self.root.new(df[self.root.greater_than_equal(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.greater_than_equal(input_col, value)])
 
     def less_than(self, input_col, value):
 
-        df = self.root.data
-        return self.root.new(df[self.root.less_than(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.less_than(input_col, value)])
 
     def less_than_equal(self, input_col, value):
 
-        df = self.root.data
-        return self.root.new(df[self.root.less_than_equal(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.less_than_equal(input_col, value)])
 
     def equal(self, input_col, value):
-        df = self.root.data
-        return self.root.new(df[self.root.mask.is_equal(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.is_equal(input_col, value)])
 
     def not_equal(self, input_col, value):
 
-        df = self.root.data
-        return self.root.new(df[self.root.mask.not_equal(input_col, value)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.not_equal(input_col, value)])
 
     def missing(self, input_col):
         """
@@ -58,8 +58,8 @@ class BaseRows(ABC):
         :param input_col:
         :return:
         """
-        df = self.root.data
-        return self.root.new(df[self.root.mask.missing(input_col)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.missing(input_col)])
 
     def mismatch(self, input_col, dtype):
         """
@@ -68,8 +68,8 @@ class BaseRows(ABC):
         :param dtype:
         :return:
         """
-        df = self.root.data
-        return self.root.new(df[self.root.mask.miasmatch(input_col, dtype)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.miasmatch(input_col, dtype)])
 
     def match(self, col_name, dtype):
         """
@@ -78,8 +78,8 @@ class BaseRows(ABC):
         :param dtype:
         :return:
         """
-        df = self.root.data
-        return self.root.new(df[self.root.mask.match(col_name, dtype)])
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.match(col_name, dtype)])
 
     def apply(self, func, args=None, output_cols=None):
         """
@@ -88,14 +88,14 @@ class BaseRows(ABC):
         :param func:
         :return:
         """
-        df = self.root.data
+        dfd = self.root.data
         kw_columns = {}
 
         for output_col in output_cols:
-            result = func(df, *args)
+            result = func(dfd, *args)
             kw_columns = {output_col: result}
 
-        return df.assign(**kw_columns)
+        return self.root.new(dfd.assign(**kw_columns))
 
     def find(self, condition, output_col):
         """
@@ -103,38 +103,38 @@ class BaseRows(ABC):
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
         :return:
         """
-        df = self.root.data
+        dfd = self.root.data
         if is_str(condition):
             condition = eval(condition)
 
-        df[output_col] = condition
-        return self.root.new(df)
+        dfd[output_col] = condition
+        return self.root.new(dfd)
 
     def select(self, condition):
         """
 
-        :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        :param condition: a condition like (dfd.A > 0) & (dfd.B <= 10)
         :return:
         """
 
-        df = self.root.data
+        dfd = self.root.data
         if is_str(condition):
             condition = eval(condition)
-        df = df[condition]
-        odf = self.root.new(df)
-        meta = odf.meta.action(Actions.SORT_ROW.value, odf.cols.names())
-        return self.root.new(odf.data, meta=meta)
+        dfd = dfd[condition]
+        df = self.root.new(dfd)
+        meta = df.meta.action(Actions.SORT_ROW.value, df.cols.names())
+        return self.root.new(df.data, meta=meta)
 
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
         """
-        df = self.root.data
+        dfd = self.root.data
         # TODO: Be sure that we need the compute param
         if compute is True:
-            result = len(df.index)
+            result = len(dfd.index)
         else:
-            result = len(df.index)
+            result = len(dfd.index)
         return result
 
     def to_list(self, input_cols):
@@ -143,11 +143,11 @@ class BaseRows(ABC):
         :param input_cols:
         :return:
         """
-        odf = self.root
-        input_cols = parse_columns(odf, input_cols)
-        df = odf.cols.select(input_cols).to_pandas().values.tolist()
+        df = self.root
+        input_cols = parse_columns(df, input_cols)
+        value = df.cols.select(input_cols).to_pandas().values.tolist()
 
-        return df
+        return value
 
     @staticmethod
     @abstractmethod
@@ -161,14 +161,14 @@ class BaseRows(ABC):
         :return: Spark DataFrame
         :return:
         """
-        df = self.root.data
+        dfd = self.root.data
         if is_str(where):
             where = eval(where)
 
-        df = df[~where]
-        odf = self.root.new(df)
-        meta = odf.meta.action(Actions.DROP_ROW.value, odf.cols.names())
-        return self.root.new(odf.data, meta=meta)
+        dfd = dfd[~where]
+        df = self.root.new(dfd)
+        meta = df.meta.action(Actions.DROP_ROW.value, df.cols.names())
+        return self.root.new(df.data, meta=meta)
 
     @staticmethod
     @abstractmethod

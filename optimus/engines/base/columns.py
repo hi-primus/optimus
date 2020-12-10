@@ -51,15 +51,15 @@ class BaseColumns(ABC):
         :param accepts_missing_cols:
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+        df = self.root
+        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
-        meta = odf.meta
-        df = odf.data
+        meta = df.meta
+        dfd = df.data
         if columns is not None:
-            df = df[columns]
+            dfd = dfd[columns]
 
-        return self.root.new(df, meta=meta)
+        return self.root.new(dfd, meta=meta)
 
     def copy(self, input_cols, output_cols=None, columns=None):
         """
@@ -69,11 +69,11 @@ class BaseColumns(ABC):
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
-        odf = self.root
-        output_ordered_columns = odf.cols.names()
+        df = self.root
+        output_ordered_columns = df.cols.names()
 
         if columns is None:
-            input_cols = parse_columns(odf, input_cols)
+            input_cols = parse_columns(df, input_cols)
             if is_list(input_cols) or is_one_element(input_cols):
                 output_cols = get_output_cols(input_cols, output_cols)
 
@@ -89,17 +89,17 @@ class BaseColumns(ABC):
 
         kw_columns = {}
 
-        df = odf.data
-        meta = odf.meta
+        dfd = df.data
+        meta = df.meta
 
         for input_col, output_col in zip(input_cols, output_cols):
-            kw_columns[output_col] = df[input_col]
+            kw_columns[output_col] = dfd[input_col]
             meta = meta.copy({input_col: output_col})
-        df = df.assign(**kw_columns)
+        dfd = dfd.assign(**kw_columns)
 
-        odf = odf.new(df, meta=meta)
+        df = self.root.new(dfd, meta=meta)
 
-        return odf.cols.select(output_ordered_columns)
+        return df.cols.select(output_ordered_columns)
 
     def drop(self, columns=None, regex=None, data_type=None):
         """
@@ -109,18 +109,18 @@ class BaseColumns(ABC):
         :param data_type:
         :return:
         """
-        odf = self.root
+        df = self.root
         if regex:
             r = re.compile(regex)
-            columns = [c for c in list(odf.cols.names()) if re.match(r, c)]
+            columns = [c for c in list(df.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(odf, columns, filter_by_column_dtypes=data_type)
+        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
         check_column_numbers(columns, "*")
 
-        df = odf.data.drop(columns=columns)
-        meta = odf.meta.action(Actions.DROP.value, columns)
+        dfd = df.data.drop(columns=columns)
+        meta = df.meta.action(Actions.DROP.value, columns)
 
-        return self.root.new(df, meta=meta)
+        return self.root.new(dfd, meta=meta)
 
     def keep(self, columns=None, regex=None):
         """
@@ -130,6 +130,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
+        dfd = df.data
         if regex:
             # r = re.compile(regex)
             columns = [c for c in list(df.columns) if re.match(regex, c)]
@@ -137,11 +138,11 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
         check_column_numbers(columns, "*")
 
-        df = df.drop(columns=list(set(df.columns) - set(columns)))
+        dfd = dfd.drop(columns=list(set(df.columns) - set(columns)))
 
         df.meta = Meta.set(df.meta, value=df.meta.preserve(df, Actions.KEEP.value, columns).get())
 
-        return df
+        return self.root.new(dfd, meta=meta)
 
     def word_count(self, input_cols, output_cols=None):
         """
@@ -151,11 +152,13 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.df
+        dfd = df.data
+
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
         for input_col, output_col in zip(input_cols, output_cols):
-            df[output_col] = df[input_col].str.split().str.len()
-        return df
+            dfd[output_col] = dfd[input_col].str.split().str.len()
+        return self.root.new(dfd)
 
     @staticmethod
     @abstractmethod
@@ -179,30 +182,30 @@ class BaseColumns(ABC):
         elif not is_tuple(args, ):
             args = (args,)
 
-        odf = self.root
-        df = odf.data
-        meta = odf.meta
+        df = self.root
+        dfd = df.data
+        meta = df.meta
 
         if mode == "whole":
-            df = func(df)
+            dfd = func(dfd)
         else:
             for input_col, output_col in columns:
-                if mode == "pandas" and (is_dask_dataframe(df)):
-                    partitions = df.to_delayed()
+                if mode == "pandas" and (is_dask_dataframe(dfd)):
+                    partitions = dfd.to_delayed()
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
 
                 elif mode == "vectorized" or mode == "pandas":
 
-                    _ddf = func(df[input_col], *args)
+                    _ddf = func(dfd[input_col], *args)
 
                     if is_dask_dataframe(_ddf):
-                        odf = odf.cols.append(_ddf)
+                        df = df.cols.append(_ddf)
                     else:
-                        kw_columns[output_col] = func(df[input_col], *args)
+                        kw_columns[output_col] = func(dfd[input_col], *args)
                 elif mode == "map":
-                    kw_columns = self._map(df, input_col, output_col, func, args, kw_columns)
+                    kw_columns = self._map(dfd, input_col, output_col, func, args, kw_columns)
 
                 # Preserve column order
                 if output_col not in self.names():
@@ -214,15 +217,15 @@ class BaseColumns(ABC):
                 meta = Meta.action(meta, meta_action, output_col)
 
             if set_index is True:
-                df = df.reset_index()
+                dfd = dfd.reset_index()
             if kw_columns:
-                df = df.assign(**kw_columns)
+                dfd = dfd.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
-        odf = odf.new(df, meta=meta)
-        odf = odf.cols.select(output_ordered_columns)
+        df = self.root.new(dfd, meta=meta)
+        df = df.cols.select(output_ordered_columns)
 
-        return odf
+        return df
 
     def set(self, where=None, value=None, output_cols=None, default=None):
         """
@@ -233,29 +236,29 @@ class BaseColumns(ABC):
         :param default:
         :return:
         """
-        odf = self.root
-        df = odf.data
+        df = self.root
+        dfd = df.data
 
-        columns, vfunc = set_function_parser(odf, value, where, default)
-        # if df.cols.dtypes(input_col) == "category":
+        columns, vfunc = set_function_parser(df, value, where, default)
+        # if dfd.cols.dtypes(input_col) == "category":
         #     try:
         #         # Handle error if the category already exist
-        #         df[input_vcol] = df[input_col].cat.add_categories(val_to_list(value))
+        #         dfd[input_vcol] = dfd[input_col].cat.add_categories(val_to_list(value))
         #     except ValueError:
         #         pass
 
         output_cols = one_list_to_val(output_cols)
 
         if columns:
-            final_value = df[columns]
+            final_value = dfd[columns]
         else:
-            final_value = df
+            final_value = dfd
         final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
                                                  parser=vfunc, default=default, meta=object)
 
-        meta = Meta.action(odf.meta, Actions.SET.value, output_cols)
+        meta = Meta.action(df.meta, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
-        return odf.new(df.assign(**kw_columns), meta=meta)
+        return self.root.new(dfd.assign(**kw_columns), meta=meta)
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None):
@@ -265,18 +268,18 @@ class BaseColumns(ABC):
         :param func: can be lower, upper or any string transformation function
         """
 
-        odf = self.root
-        df = odf.data
-        meta = odf.meta
+        df = self.root
+        dfd = df.data
+        meta = df.meta
 
         # Apply a transformation function
         if is_list_of_tuples(columns_old_new):
-            validate_columns_names(odf, columns_old_new)
+            validate_columns_names(df, columns_old_new)
             for col_name in columns_old_new:
 
                 old_col_name = col_name[0]
                 if is_int(old_col_name):
-                    old_col_name = odf.cols.names()[old_col_name]
+                    old_col_name = df.cols.names()[old_col_name]
                 if func:
                     old_col_name = func(old_col_name)
 
@@ -286,14 +289,14 @@ class BaseColumns(ABC):
 
                 new_col_name = col_name[1]
                 if old_col_name != col_name:
-                    df = df.rename(columns={old_col_name: new_col_name})
+                    dfd = dfd.rename(columns={old_col_name: new_col_name})
                     meta = meta.rename({old_col_name: new_col_name})
 
-        odf = odf.new(df, meta=meta)
+        df = self.root.new(dfd, meta=meta)
 
         meta = meta.preserve(None, value=meta.get())
 
-        return odf.new(odf.data, meta=meta)
+        return self.root.new(df.data, meta=meta)
 
     @dispatch(list)
     def rename(self, columns_old_new=None):
@@ -334,13 +337,13 @@ class BaseColumns(ABC):
         :param columns:
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
         result = {}
 
         for col_name in columns:
             # column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
-            column_meta = odf.meta.get(f"profile.columns.{col_name}")
+            column_meta = df.meta.get(f"profile.columns.{col_name}")
             if column_meta is None:
                 result[col_name] = None
             else:
@@ -353,8 +356,8 @@ class BaseColumns(ABC):
         :param columns: A dict with the form {"col_name": profiler datatype}
         :return:
         """
-        odf = self.root
-        meta = odf.meta
+        df = self.root
+        meta = df.meta
 
         for col_name, props in columns.items():
             dtype = props["dtype"]
@@ -364,7 +367,7 @@ class BaseColumns(ABC):
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
-        return odf
+        return df
 
     def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
         """
@@ -468,8 +471,8 @@ class BaseColumns(ABC):
         return df.cols.assign(kw_columns)
 
     def assign(self, kw_columns):
-        df = self.root.data
-        return self.root.new(df.assign(**kw_columns))
+        dfd = self.root.data
+        return self.root.new(dfd.assign(**kw_columns))
 
     # TODO: Consider implement lru_cache for caching
     def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
@@ -611,16 +614,17 @@ class BaseColumns(ABC):
         :param invert: Invert the match
         :return:
         """
-        df = self.root.data
+        df = self.root
+        dfd = df.data
         columns = parse_columns(df, columns)
 
-        # dtype = parse_dtypes(df, dtype)
+        # dtype = parse_dtypes(dfd, dtype)
         f = profiler_dtype_func(dtype)
         if f is not None:
             for col_name in columns:
-                df = df[col_name].apply(f)
-                df = ~df if invert is True else df
-            return df
+                dfd = dfd[col_name].apply(f)
+                dfd = ~dfd if invert is True else dfd
+        return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None):
         """
@@ -630,13 +634,13 @@ class BaseColumns(ABC):
         :param ref_col: Column taken as reference
         :return: Spark DataFrame
         """
-        odf = self.root
+        df = self.root
         # Check that column is a string or a list
-        column = parse_columns(odf, column)
-        ref_col = parse_columns(odf, ref_col)
+        column = parse_columns(df, column)
+        ref_col = parse_columns(df, ref_col)
 
         # Get dataframe columns
-        all_columns = odf.cols.names()
+        all_columns = df.cols.names()
 
         # Get source and reference column index position
         new_index = all_columns.index(ref_col[0])
@@ -662,7 +666,7 @@ class BaseColumns(ABC):
         for col_name in column:
             all_columns.insert(new_index, all_columns.pop(all_columns.index(col_name)))  # insert and delete a element
             # new_index = new_index + 1
-        return odf[all_columns]
+        return df[all_columns]
 
     def sort(self, order: [str, list] = "asc", columns=None):
         """
@@ -692,9 +696,9 @@ class BaseColumns(ABC):
         :param columns: Columns to be processed
         :return: {col_name: dtype}
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        data_types = ({k: str(v) for k, v in dict(odf.data.dtypes).items()})
+        df = self.root
+        columns = parse_columns(df, columns)
+        data_types = ({k: str(v) for k, v in dict(df.data.dtypes).items()})
         return {col_name: data_types[col_name] for col_name in columns}
 
     def schema_dtype(self, columns="*"):
@@ -703,15 +707,15 @@ class BaseColumns(ABC):
         :param columns: Columns to be processed
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        df = odf.data
+        df = self.root
+        columns = parse_columns(df, columns)
+        dfd = df.data
         result = {}
         for col_name in columns:
-            if df[col_name].dtype.name == "category":
+            if dfd[col_name].dtype.name == "category":
                 result[col_name] = "category"
             else:
-                result[col_name] = np.dtype(df[col_name]).type
+                result[col_name] = np.dtype(dfd[col_name]).type
         return format_dict(result)
 
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
@@ -724,8 +728,8 @@ class BaseColumns(ABC):
         :param tidy:
         :return:
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
         if args is None:
             args = []
@@ -733,7 +737,7 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        all_funcs = [{func.__name__: {col_name: func(odf.data[col_name], *args)}} for col_name in columns for
+        all_funcs = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
                      func in
                      funcs]
         a = self.exec_agg(all_funcs, compute)
@@ -1552,17 +1556,17 @@ class BaseColumns(ABC):
         :param drop:
         :param mode:
         """
-        odf = self.root
+        df = self.root
 
         if separator is not None:
             separator = re.escape(separator)
 
-        input_cols = parse_columns(odf, input_cols)
+        input_cols = parse_columns(df, input_cols)
 
         index = val_to_list(index)
-        output_ordered_columns = odf.cols.names()
+        output_ordered_columns = df.cols.names()
 
-        df = odf.data
+        dfd = df.data
 
         for idx, input_col in enumerate(input_cols):
 
@@ -1579,38 +1583,38 @@ class BaseColumns(ABC):
                 final_columns = [output_cols + "_" + str(i) for i in range(splits)]
 
             if mode == "string":
-                df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
+                dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
 
             elif mode == "array":
-                if is_dask_dataframe(df):
+                if is_dask_dataframe(dfd):
                     def func(value):
                         pdf = value.apply(pd.Series)
                         pdf.columns = final_columns
                         return pdf
 
-                    df_new = df[input_col].map_partitions(func, meta={c: object for c in final_columns})
+                    dfd_new = dfd[input_col].map_partitions(func, meta={c: object for c in final_columns})
                 else:
-                    df_new = df[input_col].apply(pd.Series)
+                    dfd_new = dfd[input_col].apply(pd.Series)
 
             # If columns split is shorter than the number of splits
-            df_new.columns = final_columns[:len(df_new.columns)]
-            odf_new = odf.new(df_new)
+            dfd_new.columns = final_columns[:len(dfd_new.columns)]
+            df_new = df.new(dfd_new)
             if final_index:
-                odf_new = odf_new.cols.select(final_index[idx])
-            odf = odf.cols.append(odf_new)
+                df_new = df_new.cols.select(final_index[idx])
+            df = df.cols.append(df_new)
 
         if drop is True:
-            odf = odf.drop(columns=input_cols)
+            df = df.drop(columns=input_cols)
             for input_col in input_cols:
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        meta = odf.meta
-        meta = meta.preserve(odf, Actions.UNNEST.value, final_columns)
+        meta = df.meta
+        meta = meta.preserve(df, Actions.UNNEST.value, final_columns)
 
-        odf = odf.cols.move(odf_new.cols.names(), "after", input_cols)
+        df = df.cols.move(df_new.cols.names(), "after", input_cols)
 
-        return odf
+        return df
 
     @staticmethod
     @abstractmethod
@@ -1619,19 +1623,19 @@ class BaseColumns(ABC):
 
     def hist(self, columns="*", buckets=20, compute=True):
 
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
-        @odf.delayed
+        @df.delayed
         def _bins_col(_columns, _min, _max):
             return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
                     col_name in _columns}
 
-        _min = odf.cols.min(columns, compute=False, tidy=False)
-        _max = odf.cols.max(columns, compute=False, tidy=False)
+        _min = df.cols.min(columns, compute=False, tidy=False)
+        _max = df.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @odf.delayed
+        @df.delayed
         def _hist(pdf, col_name, _bins):
             # import cupy as cp
             _count, bins_edges = np.histogram(pd.to_numeric(pdf, errors='coerce'), bins=_bins[col_name])
@@ -1639,7 +1643,7 @@ class BaseColumns(ABC):
             # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @odf.delayed
+        @df.delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -1657,8 +1661,8 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        # print("odf.data",type(odf.data),odf.data)
-        partitions = odf.to_delayed()
+        # print("df.data",type(df.data),df.data)
+        partitions = df.to_delayed()
         c = [_hist(part[col_name], col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
@@ -1675,12 +1679,12 @@ class BaseColumns(ABC):
         :param columns_type:
         :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
-        odf = self.root
-        df = odf.data
+        df = self.root
+        dfd = df.data
 
         result = {}
-        nulls = odf.cols.count_na(tidy=False)["count_na"]
-        total_rows = odf.rows.count()
+        nulls = df.cols.count_na(tidy=False)["count_na"]
+        total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
@@ -1694,10 +1698,10 @@ class BaseColumns(ABC):
                 mismatch = nulls[col_name]
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
-                match = df[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
+                match = dfd[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
             else:
-                match = odf.cols.select(col_name).cols.to_string().cols.match(col_name,
+                match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
                                                                                  dtype]).cols.frequency()
 
@@ -1725,9 +1729,9 @@ class BaseColumns(ABC):
         :param columns:
         :return:
         """
-        odf = self.root
-        a = odf.cols.infer_profiler_dtypes(columns)
-        return odf.cols.count_mismatch(a)
+        df = self.root
+        a = df.cols.infer_profiler_dtypes(columns)
+        return df.cols.count_mismatch(a)
 
     def infer_profiler_dtypes(self, columns="*"):
         """
@@ -1735,14 +1739,14 @@ class BaseColumns(ABC):
         :param columns:
         :return:Return a dict with the column and the inferred data type
         """
-        odf = self.root
+        df = self.root
 
-        columns = parse_columns(odf, columns)
+        columns = parse_columns(df, columns)
         total_preview_rows = 30
 
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized?
-        sample = odf.cols.select(columns).rows.limit(total_preview_rows).to_pandas()
+        sample = df.cols.select(columns).rows.limit(total_preview_rows).to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
@@ -1765,9 +1769,9 @@ class BaseColumns(ABC):
         return cols_and_inferred_dtype
 
     def match(self, input_cols, regex):
-        df = self.root.data
+        dfd = self.root.data
 
-        return self.root.new(df[input_cols].str.match(regex).to_frame())
+        return self.root.new(dfd[input_cols].str.match(regex).to_frame())
 
     # def _series_to_dict(series):
     #     return series.to_dict()
@@ -1775,10 +1779,10 @@ class BaseColumns(ABC):
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):
 
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
-        @odf.delayed
+        @df.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
 
@@ -1789,11 +1793,11 @@ class BaseColumns(ABC):
 
             return _result
 
-        @odf.delayed
+        @df.delayed
         def flat_dict(top_n):
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
-        @odf.delayed
+        @df.delayed
         def freq_percentage(_value_counts, _total_rows):
 
             for i, j in _value_counts.items():
@@ -1802,7 +1806,7 @@ class BaseColumns(ABC):
 
             return _value_counts
 
-        value_counts = [odf.cols.to_string().data[col_name].value_counts() for col_name in columns]
+        value_counts = [df.cols.to_string().data[col_name].value_counts() for col_name in columns]
 
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
@@ -1815,7 +1819,7 @@ class BaseColumns(ABC):
         c = flat_dict(b)
 
         if percentage:
-            c = freq_percentage(c, odf.delayed(len)(odf))
+            c = freq_percentage(c, df.delayed(len)(df))
 
         if compute is True:
             result = dd.compute(c)[0]

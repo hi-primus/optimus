@@ -19,5 +19,5 @@ class Create:
 
         cdf = cudf.DataFrame(dict)
 
-        odf = CUDFDataFrame(cdf)
-        return odf
+        df = CUDFDataFrame(cdf)
+        return df

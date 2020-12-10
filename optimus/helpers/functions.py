@@ -477,10 +477,10 @@ def prepare_path(path, file_format=None):
     return r
 
 
-def set_func(odf, value, where, output_col, parser, default=None):
+def set_func(df, value, where, output_col, parser, default=None):
     """
     Core implementation of the set function
-    :param odf:
+    :param df:
     :param value:
     :param where:
     :param output_col:
@@ -489,13 +489,13 @@ def set_func(odf, value, where, output_col, parser, default=None):
     :return:
     """
 
-    col_names = list(filter(lambda x: x != "__match__", odf.cols.names()))
+    col_names = list(filter(lambda x: x != "__match__", df.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
                                 "bool": "bool", "zip_code": "str"}
 
-    df = odf.cols.cast(col_names, profiler_dtype_to_python[parser])
-    F = odf.functions
+    df = df.cols.cast(col_names, profiler_dtype_to_python[parser])
+    F = df.functions
     try:
         if where is None:
             return eval(value)
@@ -504,10 +504,10 @@ def set_func(odf, value, where, output_col, parser, default=None):
 
             mask = (eval(where))
 
-            if (output_col not in odf.cols.names()) and (default is not None):
-                odf[output_col] = odf[default]
-            odf.loc[mask, output_col] = eval(value)
-            return odf[output_col]
+            if (output_col not in df.cols.names()) and (default is not None):
+                df[output_col] = df[default]
+            df.loc[mask, output_col] = eval(value)
+            return df[output_col]
 
     except (ValueError, TypeError) as e:
         logger.print(e)
@@ -516,10 +516,10 @@ def set_func(odf, value, where, output_col, parser, default=None):
         return np.nan
 
 
-def set_function_parser(odf, value, where, default=None):
+def set_function_parser(df, value, where, default=None):
     """
     Infer the data type that must be used to make a calculation using the set function
-    :param odf:
+    :param df:
     :param value:
     :param where:
     :return:
@@ -550,7 +550,7 @@ def set_function_parser(odf, value, where, default=None):
     columns = list(set(columns))
     if columns:
         first_columns = columns[0]
-        column_dtype = odf.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
+        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
 
     else:
         if fastnumbers.fast_int(value):

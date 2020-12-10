@@ -95,18 +95,18 @@ class Load(BaseLoad):
             else:
                 read.options(mode="DROPMALFORMED")
 
-            df = read.csv(path)
+            sdf = read.csv(path)
 
             if n_rows > -1:
-                df = df.limit(n_rows)
-            odf = SparkDataFrame(df)
-            odf.meta = Meta.set(odf.meta, "file_name", path)
+                sdf = sdf.limit(n_rows)
+            df = SparkDataFrame(sdf)
+            df.meta = Meta.set(df.meta, "file_name", path)
         except IOError as error:
             print(error)
             raise
-        odf = replace_columns_special_characters(odf)
+        df = replace_columns_special_characters(df)
 
-        return odf
+        return df
 
     @staticmethod
     def parquet(path, *args, **kwargs):

@@ -43,18 +43,18 @@ class Rows(BaseRows):
 
     @dispatch(str, str)
     def sort(self, input_cols) -> DataFrame:
-        odf = self.root
-        input_cols = parse_columns(odf, input_cols)
-        return odf.rows.sort([(input_cols, "desc",)])
+        df = self.root
+        input_cols = parse_columns(df, input_cols)
+        return df.rows.sort([(input_cols, "desc",)])
 
     @dispatch(str, str)
     def sort(self, columns, order="desc") -> DataFrame:
         """
         Sort column by row
         """
-        odf = self.root
-        columns = parse_columns(odf, columns)
-        return odf.rows.sort([(columns, order,)])
+        df = self.root
+        columns = parse_columns(df, columns)
+        return df.rows.sort([(columns, order,)])
 
     @dispatch(list)
     def sort(self, col_sort) -> DataFrame:
@@ -154,23 +154,23 @@ class Rows(BaseRows):
         :return:
         """
 
-        df = self.root.data
+        dfd = self.root.data
 
         if subset is not None:
             subset = val_to_list(subset)
-            subset_df = df[subset]
+            subset_df = dfd[subset]
         else:
-            subset_df = df
+            subset_df = dfd
 
         if output_col is None:
             output_col = "__nulls__"
 
         if how == "all":
-            df[output_col] = subset_df.isnull().all(axis=1)
+            dfd[output_col] = subset_df.isnull().all(axis=1)
         else:
-            df[output_col] = subset_df.isnull().any(axis=1)
+            dfd[output_col] = subset_df.isnull().any(axis=1)
 
-        return self.root.new(df)
+        return self.root.new(dfd)
 
     def tag_duplicated(self, keep="first", subset=None, output_col=None):
         """
@@ -182,19 +182,19 @@ class Rows(BaseRows):
         :return:
         """
 
-        df = self.root.data
+        dfd = self.root.data
         if subset is not None:
             subset = val_to_list(subset)
-            subset_df = df[subset]
+            subset_df = dfd[subset]
         else:
-            subset_df = df
+            subset_df = dfd
 
         if output_col is None:
             output_col = "__duplicated__"
 
-        df[output_col] = subset_df.duplicated(keep=keep, subset=subset)
+        dfd[output_col] = subset_df.duplicated(keep=keep, subset=subset)
 
-        return self.root.new(df)
+        return self.root.new(dfd)
 
     def drop_duplicates(self, subset=None) -> DataFrame:
         """
@@ -217,8 +217,8 @@ class Rows(BaseRows):
         :param count:
         :return:
         """
-        df = self.root.data
-        return self.root.new(df[:count - 1])
+        dfd = self.root.data
+        return self.root.new(dfd[:count - 1])
 
     @staticmethod
     def is_in(input_cols, values) -> DataFrame:

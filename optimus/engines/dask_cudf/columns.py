@@ -60,15 +60,15 @@ class Cols(DaskBaseColumns):
 
     def hist(self, columns="*", buckets=20, compute=True):
 
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
         def _bins_col(_columns, _min, _max):
             return {col_name: cp.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets) for
                     col_name in _columns}
 
-        _min = odf.cols.min(columns, compute=False, tidy=False)
-        _max = odf.cols.max(columns, compute=False, tidy=False)
+        _min = df.cols.min(columns, compute=False, tidy=False)
+        _max = df.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
         def chunk(pdf, _bins):
@@ -86,7 +86,7 @@ class Cols(DaskBaseColumns):
             return result
 
         for col_name in columns:
-            r = odf.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
+            r = df.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
                                                                      chunk_kwargs={
                                                                          '_bins': _bins[col_name]})
             reductions.append(format(r, _bins[col_name]))

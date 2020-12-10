@@ -206,13 +206,13 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):
-        odf = self.root
-        columns = parse_columns(odf, columns)
+        df = self.root
+        columns = parse_columns(df, columns)
 
         result = {}
         for col_name in columns:
 
-            df_numeric = cp.array(to_float_cudf(odf.data[col_name]).to_gpu_array())
+            df_numeric = cp.array(to_float_cudf(df.data[col_name]).to_gpu_array())
 
             if len(df_numeric) > 0:
                 _count, _bins = cp.histogram(df_numeric, buckets)
@@ -317,27 +317,27 @@ class Cols(DataFrameBaseColumns):
         :param default:
         :return:
         """
-        odf = self.root
+        df = self.root
         if output_cols is None:
             RaiseIt.value_error(output_cols, ["string"])
 
-        columns, vfunc = set_function_parser(odf, value, where, default)
-        # if df.cols.dtypes(input_col) == "category":
+        columns, vfunc = set_function_parser(df, value, where, default)
+        # if dfd.cols.dtypes(input_col) == "category":
         #     try:
         #         # Handle error if the category already exist
-        #         df[input_vcol] = df[input_col].cat.add_categories(val_to_list(value))
+        #         dfd[input_vcol] = dfd[input_col].cat.add_categories(val_to_list(value))
         #     except ValueError:
         #         pass
 
         output_cols = one_list_to_val(output_cols)
         if columns:
-            final_value = odf[columns]
+            final_value = df[columns]
         else:
-            final_value = odf
+            final_value = df
         final_value = set_func(final_value, value=value, where=where, output_col=output_cols,
                                parser=vfunc, default=default)
 
-        meta = Meta.preserve(odf.meta, Actions.SET.value, output_cols)
+        meta = Meta.preserve(df.meta, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
 
-        return odf.new(odf.data.assign(**kw_columns), meta=meta)
+        return self.root.new(df.data.assign(**kw_columns), meta=meta)

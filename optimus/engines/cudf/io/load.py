@@ -86,16 +86,16 @@ class Load(BaseLoad):
             if dtype is None or dtype == str:
                 dtype = ["str"]
 
-            df = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
+            cdf = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
                                quoting=quoting, error_bad_lines=error_bad_lines,
                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows, na_filter=na_filter,
                                dtype=dtype)
-            odf = CUDFDataFrame(df)
-            odf.meta = Meta.set(odf.meta, "file_name", path)
+            df = CUDFDataFrame(cdf)
+            df.meta = Meta.set(df.meta, "file_name", path)
         except IOError as error:
             logger.print(error)
             raise
-        return odf
+        return df
 
     @staticmethod
     def parquet(path, columns=None, *args, **kwargs):
