@@ -203,12 +203,13 @@ class Rows(BaseRows):
         :return: Return a new DataFrame with duplicate rows removed
         :return:
         """
-        df = self.root.data
+        df = self.root
+        dfd = df.data
         subset = parse_columns(df, subset)
         subset = val_to_list(subset)
-        df = df.drop_duplicates(subset=subset)
+        dfd = dfd.drop_duplicates(subset=subset)
 
-        return self.root.new(df)
+        return self.root.new(dfd)
 
     def limit(self, count) -> DataFrame:
         """
