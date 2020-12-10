@@ -233,9 +233,10 @@ class BaseColumns(ABC):
         :param default:
         :return:
         """
-        odf = self.df
+        odf = self.root
+        df = odf.data
 
-        columns, vfunc = set_function_parser(df, value, where, default)
+        columns, vfunc = set_function_parser(odf, value, where, default)
         # if df.cols.dtypes(input_col) == "category":
         #     try:
         #         # Handle error if the category already exist
@@ -246,15 +247,15 @@ class BaseColumns(ABC):
         output_cols = one_list_to_val(output_cols)
 
         if columns:
-            final_value = odf[columns]
+            final_value = df[columns]
         else:
-            final_value = odf
+            final_value = df
         final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
                                                  parser=vfunc, default=default, meta=object)
 
-        meta = odf.meta.action(Actions.SET.value, output_cols)
+        meta = Meta.action(odf.meta, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
-        return odf.new(odf.data.assign(**kw_columns), meta=meta)
+        return odf.new(df.assign(**kw_columns), meta=meta)
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None):

@@ -516,10 +516,10 @@ def set_func(odf, value, where, output_col, parser, default=None):
         return np.nan
 
 
-def set_function_parser(df, value, where, default=None):
+def set_function_parser(odf, value, where, default=None):
     """
     Infer the data type that must be used to make a calculation using the set function
-    :param df:
+    :param odf:
     :param value:
     :param where:
     :return:
@@ -550,7 +550,7 @@ def set_function_parser(df, value, where, default=None):
     columns = list(set(columns))
     if columns:
         first_columns = columns[0]
-        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
+        column_dtype = odf.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
 
     else:
         if fastnumbers.fast_int(value):

@@ -316,11 +316,11 @@ class Cols(DataFrameBaseColumns):
         :param default:
         :return:
         """
-        df = self.root
+        odf = self.root
         if output_cols is None:
             RaiseIt.value_error(output_cols, ["string"])
 
-        columns, vfunc = set_function_parser(df, value, where, default)
+        columns, vfunc = set_function_parser(odf, value, where, default)
         # if df.cols.dtypes(input_col) == "category":
         #     try:
         #         # Handle error if the category already exist
@@ -330,12 +330,13 @@ class Cols(DataFrameBaseColumns):
 
         output_cols = one_list_to_val(output_cols)
         if columns:
-            final_value = df[columns]
+            final_value = odf[columns]
         else:
-            final_value = df
+            final_value = odf
         final_value = set_func(final_value, value=value, where=where, output_col=output_cols,
                                parser=vfunc, default=default)
 
-        df.meta.preserve(df, Actions.SET.value, output_cols)
+        meta = Meta.preserve(odf.meta, Actions.SET.value, output_cols)
         kw_columns = {output_cols: final_value}
-        return df.assign(**kw_columns)
+
+        return odf.new(odf.data.assign(**kw_columns), meta=meta)
