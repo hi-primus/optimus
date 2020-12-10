@@ -1039,7 +1039,7 @@ class Cols(BaseColumns):
         or "mode" for categorical columns
         :return: Dataframe object (DF with columns that has the imputed values).
         """
-        df = self
+        df = self.root
 
         if data_type == "continuous":
             input_cols = parse_columns(self, input_cols,
