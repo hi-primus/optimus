@@ -752,7 +752,7 @@ class BaseColumns(ABC):
         pass
 
     def mad(self, columns="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
-        df = self.root.data
+        df = self.root
         return df.cols.agg_exprs(columns, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
     def min(self, columns="*", tidy=True, compute=True):
