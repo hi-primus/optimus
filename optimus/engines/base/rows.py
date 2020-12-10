@@ -1,10 +1,12 @@
 from abc import abstractmethod, ABC
 
+import pandas as pd
+
+from optimus.engines.base.meta import Meta
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.infer import is_str, Infer
-from optimus.engines.base.meta import Meta
+from optimus.infer import is_str
 
 
 class BaseRows(ABC):
@@ -97,33 +99,46 @@ class BaseRows(ABC):
 
         return self.root.new(dfd.assign(**kw_columns))
 
-    def find(self, condition, output_col):
+    def find(self, condition, output_col, expr=None):
         """
 
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        :param output_col:
+        :param expr:
         :return:
         """
-        dfd = self.root.data
-        if is_str(condition):
-            condition = eval(condition)
 
-        dfd[output_col] = condition
+        df = self.root
+        dfd = df.data
+
+        if is_str(condition):
+            condition = df[condition]
+        elif expr:
+            condition = pd.eval(expr)
+            # dfd = dfd[condition]
+        dfd.assing({output_col: condition.data[condition.cols.names()[0]]})
+
         return self.root.new(dfd)
 
-    def select(self, condition):
+    def select(self, condition, expr=None):
         """
 
         :param condition: a condition like (dfd.A > 0) & (dfd.B <= 10)
+        :param expr:
         :return:
         """
 
-        dfd = self.root.data
+        df = self.root
+        dfd = df.data
+
         if is_str(condition):
-            condition = eval(condition)
-        dfd = dfd[condition]
-        df = self.root.new(dfd)
-        meta = df.meta.action(Actions.SORT_ROW.value, df.cols.names())
-        return self.root.new(df.data, meta=meta)
+            condition = df[condition]
+        elif expr:
+            condition = pd.eval(expr)
+        # dfd = dfd[condition]
+        dfd = dfd[condition.data[condition.cols.names()[0]]]
+        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     def count(self, compute=True) -> int:
         """
@@ -154,21 +169,24 @@ class BaseRows(ABC):
     def sort(input_cols):
         pass
 
-    def drop(self, where=None):
+    def drop(self, where=None, expr=None):
         """
         Drop a row depending on a dataframe expression
         :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
         :return: Spark DataFrame
         :return:
         """
-        dfd = self.root.data
-        if is_str(where):
-            where = eval(where)
+        df = self.root
+        dfd = df.data
 
-        dfd = dfd[~where]
-        df = self.root.new(dfd)
-        meta = df.meta.action(Actions.DROP_ROW.value, df.cols.names())
-        return self.root.new(df.data, meta=meta)
+        if is_str(where):
+            condition = df[where]
+        elif expr:
+            condition = pd.eval(expr)
+        # dfd = dfd[condition]
+        dfd = dfd[~where.data[condition.cols.names()[0]]]
+        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     @staticmethod
     @abstractmethod
