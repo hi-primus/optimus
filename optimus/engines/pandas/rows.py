@@ -4,13 +4,13 @@ import operator
 import pandas as pd
 from multipledispatch import dispatch
 
+from optimus.engines.base.meta import Meta
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list
-from optimus.engines.base.meta import Meta
 
 DataFrame = pd.DataFrame
 
@@ -140,61 +140,9 @@ class Rows(BaseRows):
         df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return self.root.new(df)
 
-
-    def drop_by_dtypes(self,input_cols, data_type=None):
+    def drop_by_dtypes(self, input_cols, data_type=None):
         df = self.root
         return df
-
-    def tag_nulls(self, how="all", subset=None, output_col=None):
-        """
-        Find the rows that have null values
-        :param how:
-        :param subset:
-        :param output_col:
-        :return:
-        """
-
-        dfd = self.root.data
-
-        if subset is not None:
-            subset = val_to_list(subset)
-            subset_df = dfd[subset]
-        else:
-            subset_df = dfd
-
-        if output_col is None:
-            output_col = "__nulls__"
-
-        if how == "all":
-            dfd[output_col] = subset_df.isnull().all(axis=1)
-        else:
-            dfd[output_col] = subset_df.isnull().any(axis=1)
-
-        return self.root.new(dfd)
-
-    def tag_duplicated(self, keep="first", subset=None, output_col=None):
-        """
-        Find the rows that have null values
-
-        :param keep:
-        :param subset:
-        :param output_col:
-        :return:
-        """
-
-        dfd = self.root.data
-        if subset is not None:
-            subset = val_to_list(subset)
-            subset_df = dfd[subset]
-        else:
-            subset_df = dfd
-
-        if output_col is None:
-            output_col = "__duplicated__"
-
-        dfd[output_col] = subset_df.duplicated(keep=keep, subset=subset)
-
-        return self.root.new(dfd)
 
     def drop_duplicates(self, subset=None) -> DataFrame:
         """
