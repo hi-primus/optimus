@@ -263,15 +263,15 @@ class Cols(DataFrameBaseColumns):
         :param drop:
         :param mode:
         """
-        odf = self.root
+        df = self.root
 
         # if separator is not None:
         #     separator = re.escape(separator)
 
-        input_cols = parse_columns(odf, input_cols)
+        input_cols = parse_columns(df, input_cols)
 
         index = val_to_list(index)
-        output_ordered_columns = odf.cols.names()
+        output_ordered_columns = df.cols.names()
 
         for idx, input_col in enumerate(input_cols):
 
@@ -282,8 +282,8 @@ class Cols(DataFrameBaseColumns):
 
             if mode == "string":
 
-                df_new = df[input_col].astype(str).str.split(separator, expand=True, n=splits)
-                final_splits = df_new.cols.count()
+                dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits)
+                final_splits = dfd_new.cols.count()
                 if output_cols is None:
                     final_columns = [input_col + "_" + str(i) for i in range(final_splits)]
                 elif is_list_of_tuples(output_cols):
@@ -292,18 +292,19 @@ class Cols(DataFrameBaseColumns):
                     final_columns = [output_cols + "_" + str(i) for i in range(final_splits)]
 
             # If columns split is shorter than the number of splits
-            df_new.columns = final_columns[:len(df_new.columns)]
+            dfd_new.columns = final_columns[:len(dfd_new.columns)]
             if final_index:
-                df_new = df_new.cols.select(final_index[idx])
-            df = df.cols.append(df_new)
+                dfd_new = dfd_new.cols.select(final_index[idx])
+            df_new = self.root.new(dfd_new)
+            df = self.root.new(dfd).cols.append(df_new)
 
         if drop is True:
-            df = df.drop(columns=input_cols)
+            df = df.cols.drop(columns=input_cols)
             for input_col in input_cols:
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(df, Actions.UNNEST.value, final_columns).get())
+        df.meta = Meta.set(df.meta, value=dfd.meta.preserve(dfd, Actions.UNNEST.value, final_columns).get())
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
 
