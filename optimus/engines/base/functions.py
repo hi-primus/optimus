@@ -9,10 +9,8 @@ from optimus.infer import is_numeric
 
 
 class Functions(ABC):
-    def __init__(self, parent):
-        self.parent = parent
-
-    def _to_float(self, series):
+    @staticmethod
+    def _to_float(series):
         pass
 
     def to_integer(self, series):

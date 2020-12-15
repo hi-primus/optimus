@@ -60,8 +60,6 @@ def create_func(_df, input_cols, output_cols, func, args=None):
 
 
 class DaskCUDFFunctions(Functions):
-    def __init__(self, df):
-        super(DaskCUDFFunctions, self).__init__(df)
 
     def _to_float(self, series, *args):
         return series.map_partitions(to_float_cudf, meta=float)

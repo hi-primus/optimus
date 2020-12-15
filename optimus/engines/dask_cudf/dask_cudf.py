@@ -1,5 +1,5 @@
 from dask.distributed import Client
-from dask_cuda import LocalCUDACluster
+# from dask_cuda import LocalCUDACluster
 
 from optimus.engines.base.dask.constants import STARTING_DASK
 from optimus.helpers.constants import JUST_CHECKING

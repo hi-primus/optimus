@@ -10,8 +10,6 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 
 
 class IbisFunctions(Functions):
-    def __init__(self, df):
-        super(IbisFunctions, self).__init__(df)
 
     def _to_float(self, series, *args):
         return series.cast("float64")
@@ -30,6 +28,7 @@ class IbisFunctions(Functions):
 
     def title(self, series, *args):
         raise NotImplementedError("Not implemented yet")
+
     #
     # def replace(self, series, *args):
     #     return series.cast("string").upper()

@@ -7,8 +7,6 @@ from optimus.engines.base.functions import Functions
 
 
 class CUDFFunctions(Functions):
-    def __init__(self, df):
-        super(CUDFFunctions, self).__init__(df)
 
     def to_float(self, series):
         return to_float_cudf(series)

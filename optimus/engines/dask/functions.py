@@ -14,8 +14,6 @@ from optimus.helpers.core import val_to_list
 
 
 class DaskFunctions(Functions):
-    def __init__(self, parent):
-        super(DaskFunctions, self).__init__(parent)
 
     def _to_float(self, value):
         return value.map(to_float)
