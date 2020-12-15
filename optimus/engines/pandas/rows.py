@@ -168,10 +168,6 @@ class Rows(BaseRows):
         dfd = self.root.data
         return self.root.new(dfd[:count - 1])
 
-    @staticmethod
-    def is_in(input_cols, values) -> DataFrame:
-        df = self
-        return df
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:

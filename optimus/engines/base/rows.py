@@ -235,10 +235,14 @@ class BaseRows(ABC):
 
         pass
 
-    @staticmethod
-    @abstractmethod
-    def is_in(input_cols, values, output_cols=None):
-        pass
+    def is_in(self, input_cols, values, output_cols=None):
+
+        def _is_in(value, *args):
+            _values = args
+            return value.isin(_values)
+
+        df = self.root
+        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols)
 
     @staticmethod
     @abstractmethod
