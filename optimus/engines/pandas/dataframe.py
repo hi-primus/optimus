@@ -1,4 +1,5 @@
 from optimus.engines.base.dataframe.extension import Ext as PandasExtension
+from optimus.engines.pandas.io.save import Save
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import pandas_to_dask_dataframe
 
@@ -18,9 +19,13 @@ class PandasDataFrame(PandasExtension):
         return Cols(self)
 
     @property
+    def save(self):
+        return Save(self)
+
+    @property
     def functions(self):
         from optimus.engines.pandas.functions import PandasFunctions
-        return PandasFunctions(self)
+        return PandasFunctions()
 
     @property
     def constants(self):

@@ -2,6 +2,7 @@ from optimus.engines.base.dask.extension import Ext as DaskExtension
 from optimus.engines.buffer import _set_buffer, _buffer_windows
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.engines.dask.io.save import Save
 from optimus.helpers.constants import BUFFER_SIZE
 
 
@@ -38,6 +39,10 @@ class DaskDataFrame(DaskExtension):
     def cols(self):
         from optimus.engines.dask.columns import Cols
         return Cols(self)
+
+    @property
+    def save(self):
+        return Save(self)
 
     @property
     def functions(self):

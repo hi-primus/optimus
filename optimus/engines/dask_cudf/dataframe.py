@@ -1,4 +1,5 @@
 from optimus.engines.dask_cudf.extension import Ext as DaskCUDFExtension
+from optimus.engines.dask_cudf.io.save import Save
 
 
 class DaskCUDFDataFrame(DaskCUDFExtension):
@@ -21,5 +22,5 @@ class DaskCUDFDataFrame(DaskCUDFExtension):
         return DaskCUDFFunctions(self)
 
     @property
-    def meta(self):
-        return Meta(self)
+    def save(self):
+        return Save(self)
