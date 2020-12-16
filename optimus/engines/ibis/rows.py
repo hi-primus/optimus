@@ -233,10 +233,6 @@ class Rows(BaseRows):
 
         return self.root.new(self.root.data[:10 - 1])
 
-    @staticmethod
-    def is_in(input_cols, values) -> DataFrame:
-        df = self
-        return df
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:
