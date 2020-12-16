@@ -10,8 +10,8 @@ from optimus.helpers.core import val_to_list
 
 
 class PandasFunctions(Functions):
-    def __init__(self, df):
-        super(PandasFunctions, self).__init__(df)
+    # def __init__(self, ):
+    #     super(PandasFunctions, self).__init__(df)
 
     def _to_float(self, value):
         return value.map(to_float)
@@ -32,67 +32,67 @@ class PandasFunctions(Functions):
         return int((series.to_float().values == 0).sum())
 
     def kurtosis(self, series):
-        return series.kurtosis(series.to_float())
+        return series.kurtosis(self._to_float(series))
 
     def skew(self, series):
-        return series.skew(series.to_float())
+        return series.skew(self._to_float(series))
 
     def exp(self, series):
-        return np.exp(series.to_float())
+        return np.exp(self._to_float(series))
 
     def sqrt(self, series):
-        return np.sqrt(series.to_float())
+        return np.sqrt(self._to_float(series))
 
     def radians(self, series):
-        return np.radians(series.to_float())
+        return np.radians(self._to_float(series))
 
     def degrees(self, series):
-        return np.degrees(series.to_float())
+        return np.degrees(self._to_float(series))
 
     def ln(self, series):
-        return np.log(series.to_float())
+        return np.log(self._to_float(series))
 
     def log(self, series):
-        return np.log10(series.to_float())
+        return np.log10(self._to_float(series))
 
     def ceil(self, series):
-        return np.ceil(series.to_float())
+        return np.ceil(self._to_float(series))
 
     def sin(self, series):
-        return np.sin(series.to_float())
+        return np.sin(self._to_float(series))
 
     def cos(self, series):
-        return np.cos(series.to_float())
+        return np.cos(self._to_float(series))
 
     def tan(self, series):
-        return np.tan(series.to_float())
+        return np.tan(self._to_float(series))
 
     def asin(self, series):
-        return np.arcsin(series.to_float())
+        return np.arcsin(self._to_float(series))
 
     def acos(self, series):
-        return np.arccos(series.to_float())
+        return np.arccos(self._to_float(series))
 
     def atan(self, series):
-        return np.arctan(series.to_float())
+        return np.arctan(self._to_float(series))
 
     def sinh(self, series):
-        return np.arcsinh(series.to_float())
+        return np.arcsinh(self._to_float(series))
 
     def cosh(self, series):
-        return np.cosh(series.to_float())
+        return np.cosh(self._to_float(series))
 
     def tanh(self, series):
-        return np.tanh(series.to_float())
+        return np.tanh(self._to_float(series))
 
     def asinh(self, series):
-        return np.arcsinh(series.to_float())
+        return np.arcsinh(self._to_float(series))
 
     def acosh(self, series):
-        return np.arccosh(series.to_float())
+        return np.arccosh(self._to_float(series))
 
     def atanh(self, series):
-        return np.arctanh(series.to_float())
+        return np.arctanh(self._to_float(series))
 
     def clip(self, series, lower_bound, upper_bound):
         return series.clip(lower_bound, upper_bound)
