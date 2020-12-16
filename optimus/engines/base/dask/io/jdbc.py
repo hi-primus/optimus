@@ -9,6 +9,7 @@ from sqlalchemy.sql import elements
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
+from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
@@ -90,19 +91,6 @@ class DaskBaseJDBC:
         engine = create_engine(self.uri)
         return engine.table_names()
 
-    def tables_names_to_json(self, schema=None):
-        """
-        Get the table names from a database in json format
-        :return:
-        """
-
-        # Override the schema used in the constructors
-        if schema is None: schema = self.schema
-        query = self.driver_context.table_name_query(schema=schema, database=self.database)
-        table_name = self.driver_properties.value["table_name"]
-        df = self.execute(query, "all")
-        return [i[table_name] for i in df.to_dict()]
-
     @property
     def table(self):
         """
@@ -137,12 +125,12 @@ class DaskBaseJDBC:
 
         logger.print(query)
 
-        df = self.execute(query, limit)
+        ddf = self.execute(query, limit)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        # df = df.run()
-        # df = dask_pandas_to_dask_cudf(df)
-        return df
+        # ddf = ddf.run()
+        # ddf = dask_pandas_to_dask_cudf(ddf)
+        return DaskDataFrame(ddf)
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
@@ -444,7 +432,7 @@ class Table:
         db = self.db
 
         if table_names == "*":
-            table_names = db.tables_names_to_json()
+            table_names = db.tables()
         else:
             table_names = val_to_list(table_names)
 

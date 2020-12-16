@@ -74,19 +74,6 @@ class JDBC:
         df = self.execute(query, limit)
         return df.display(limit)
 
-    def tables_names_to_json(self, schema=None):
-        """
-        Get the table names from a database in json format
-        :return:
-        """
-
-        # Override the schema used in the constructors
-        if schema is None: schema = self.schema
-        query = self.driver_context.table_name_query(schema=schema, database=self.database)
-        table_name = self.driver_properties.value["table_name"]
-        df = self.execute(query, "all")
-        return [i[table_name] for i in df.to_dict()]
-
     @property
     def table(self):
         """
@@ -251,7 +238,7 @@ class Table:
         db = self.db
 
         if table_names == "*":
-            table_names = db.tables_names_to_json()
+            table_names = db.tables()
         else:
             table_names = val_to_list(table_names)
 

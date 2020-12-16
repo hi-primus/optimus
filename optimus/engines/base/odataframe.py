@@ -116,21 +116,13 @@ class BaseDataFrame(ABC):
         # With this we expect to abstract the behavior and just use compute() a value from operation
         pass
 
-    def to_json(self, columns="*", format=None):
+    def to_json(self, columns="*"):
         """
         Return a json from a Dataframe
         :return:
         """
 
-        df = self.root
-        if format == "bumblebee":
-            columns = parse_columns(df, columns)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
-        else:
-            result = json.dumps(df.to_dict(), ensure_ascii=False, default=json_converter)
-
-        return result
+        return json.dumps(self.root.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
 
     def to_dict(self, orient="records", limit=None):
         """
@@ -144,6 +136,16 @@ class BaseDataFrame(ABC):
     @abstractmethod
     def sample(n=10, random=False):
         pass
+
+    def columns_sample(self, columns="*"):
+        """
+        Return a dict of the sample of a Dataframe
+        :return:
+        """
+        df = self.root
+
+        return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                "value": df.rows.to_list(columns)}
 
     def to_pandas(self):
         pass
