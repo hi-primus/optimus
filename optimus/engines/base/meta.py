@@ -120,9 +120,7 @@ class Meta:
             if old_value is None:
                 old_value = []
             old_value.append({name: value})
-            Meta.set(meta, key, old_value)
-
-            return meta
+            meta = Meta.update(meta, key, old_value)
 
         return meta
 
