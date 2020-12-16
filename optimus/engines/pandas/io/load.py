@@ -75,7 +75,7 @@ class Load(BaseLoad):
         :return dataFrame
         """
 
-        local_file_names = prepare_path(path, "json")
+        local_file_names = prepare_path(path, "csv")
 
         try:
             df_list = []
@@ -92,7 +92,7 @@ class Load(BaseLoad):
 
             df = pd.concat(df_list, axis=0, ignore_index=True)
             df = PandasDataFrame(df)
-            df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
             logger.print(error)
