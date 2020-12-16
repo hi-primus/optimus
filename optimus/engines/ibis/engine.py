@@ -1,6 +1,6 @@
+import ibis
+
 from optimus.engines.base.engine import BaseEngine
-# from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
-# from optimus.engines.dask_cudf.io.load import Load
 from optimus.engines.ibis.io.jdbc import JDBC
 from optimus.profiler.profiler import Profiler
 
@@ -12,17 +12,11 @@ class IbisEngine(BaseEngine):
     # __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
-
         self.engine = 'ibis'
-        # self.create = Create(pd)
-        # self.load = Load()
-        # self.extract = Extract()
 
         self.verbose(verbose)
 
-        # Pandas.instance = pd
-
-        # self.client = pd
+        self.client = ibis
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
