@@ -19,7 +19,7 @@ class DaskCUDFDataFrame(DaskCUDFExtension):
     @property
     def functions(self):
         from optimus.engines.dask_cudf.functions import DaskCUDFFunctions
-        return DaskCUDFFunctions(self)
+        return DaskCUDFFunctions()
 
     @property
     def save(self):

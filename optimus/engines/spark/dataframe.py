@@ -20,7 +20,7 @@ class SparkDataFrame:
     @property
     def functions(self):
         from optimus.engines.spark.functions import SparkFunctions
-        return SparkFunctions(self)
+        return SparkFunctions()
 
     @property
     def meta(self):
