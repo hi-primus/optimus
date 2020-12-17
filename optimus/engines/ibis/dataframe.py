@@ -19,7 +19,7 @@ class IbisDataFrame(BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.ibis.functions import IbisFunctions
-        return IbisFunctions(self)
+        return IbisFunctions()
 
     @staticmethod
     def delayed(func):
