@@ -26,9 +26,8 @@ class IbisDataFrame(BaseDataFrame):
     def delayed(func):
         pass
 
-    @staticmethod
-    def execute():
-        pass
+    def execute(self):
+        return self.root
 
     @staticmethod
     def compute():
@@ -57,6 +56,9 @@ class IbisDataFrame(BaseDataFrame):
     @staticmethod
     def partitioner():
         pass
+
+    def repartition(self, n=None, *args, **kwargs):
+        return self.root
 
     @staticmethod
     def show():
