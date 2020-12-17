@@ -23,8 +23,8 @@ from optimus.engines.base.meta import Meta
 class Ext(BaseExt):
 
     def execute(self):
-        df = self.parent.data
-        return self.parent.new(df.cache(), meta=self.parent.meta)
+        dfd = self.parent.data
+        return self.parent.new(dfd.cache(), meta=self.parent.meta)
 
     @staticmethod
     def roll_out():
