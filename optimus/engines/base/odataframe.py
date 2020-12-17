@@ -105,7 +105,7 @@ class BaseDataFrame(ABC):
 
     @staticmethod
     @abstractmethod
-    def cache():
+    def execute():
         pass
 
     @staticmethod

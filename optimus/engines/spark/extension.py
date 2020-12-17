@@ -22,7 +22,7 @@ from optimus.engines.base.meta import Meta
 
 class Ext(BaseExt):
 
-    def cache(self):
+    def execute(self):
         df = self.parent.data
         return self.parent.new(df.cache(), meta=self.parent.meta)
 

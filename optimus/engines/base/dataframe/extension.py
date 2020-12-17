@@ -19,7 +19,7 @@ class Ext(BaseDataFrame):
 
         return wrapper
 
-    def cache(self):
+    def execute(self):
         df = self.data
         return self.new(df, meta=self.meta)
 

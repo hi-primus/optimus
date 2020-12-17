@@ -27,7 +27,7 @@ class IbisDataFrame(BaseDataFrame):
         pass
 
     @staticmethod
-    def cache():
+    def execute():
         pass
 
     @staticmethod
