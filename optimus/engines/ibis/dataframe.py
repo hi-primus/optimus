@@ -1,4 +1,5 @@
 from optimus.engines.base.odataframe import BaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class IbisDataFrame(BaseDataFrame):
@@ -74,3 +75,6 @@ class IbisDataFrame(BaseDataFrame):
 
     def to_optimus_dataframe(self):
         return
+
+    def to_optimus_pandas(self):
+        return PandasDataFrame(self.root.data.execute())
