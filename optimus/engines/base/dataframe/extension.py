@@ -131,7 +131,7 @@ class Ext(BaseDataFrame):
         raise NotImplementedError
 
     def partitions(self):
-        return "N/A"
+        return 1
 
     @staticmethod
     def partitioner():
