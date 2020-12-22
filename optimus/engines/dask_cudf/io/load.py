@@ -1,10 +1,10 @@
 import ntpath
 
 import dask.bag as db
-import dask_cudf
+
 import pandas as pd
 from dask import dataframe as dd
-
+import dask_cudf
 from optimus.engines.base.io.load import BaseLoad
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
@@ -13,7 +13,7 @@ from optimus.engines.base.meta import Meta
 
 
 class Load(BaseLoad):
-
+    # import dask_cudf
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
@@ -27,7 +27,7 @@ class Load(BaseLoad):
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dd.read_json(path, lines=multiline, *args, **kwargs)
+            df = dask_cudf.read_json(path, lines=multiline, *args, **kwargs)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
