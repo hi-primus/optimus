@@ -3,13 +3,13 @@ import ibis
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.ibis.io.jdbc import JDBC
 from optimus.profiler.profiler import Profiler
+from optimus.version import __version__
 
-# DaskCUDF.instance = None
 Profiler.instance = None
 
 
 class IbisEngine(BaseEngine):
-    # __version__ = __version__
+    __version__ = __version__
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
         self.engine = 'ibis'
