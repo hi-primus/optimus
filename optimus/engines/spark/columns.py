@@ -540,25 +540,6 @@ class Cols(BaseColumns):
 
         # Quantile statistics
 
-    # @staticmethod
-    # def min(columns):
-    #     """
-    #     Return the min value from a column dataframe
-    #     :param columns: '*', list of columns names or a single column name.
-    #     :return:
-    #     """
-    #
-    #     return format_dict(Cols.agg_exprs(columns, F.min))
-
-    # @staticmethod
-    # def max(columns):
-    #     """
-    #     Return the max value from a column dataframe
-    #     :param columns: '*', list of columns names or a single column name.
-    #     :return:
-    #     """
-    #     return format_dict(Cols.agg_exprs(columns, F.max))
-
     @staticmethod
     def range(columns):
         """
