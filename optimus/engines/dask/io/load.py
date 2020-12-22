@@ -160,6 +160,34 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
+    def orc(path, columns, cache, *args, **kwargs):
+
+        """
+        Optimized Row Columnar
+        Return a dataframe from a .orc file.
+        params
+
+
+        """
+
+        if cache is False:
+            prepare_path.cache_clear()
+
+        try:
+            # From the panda docs using na_filter
+            # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
+            # passing na_filter=False can improve the performance of reading a large file.
+            ddf = dd.read_orc(path, columns, *args, **kwargs)
+
+            df = DaskDataFrame(ddf)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    @staticmethod
     def avro(path, *args, **kwargs):
         """
         Return a dataframe from a avro file.

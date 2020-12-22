@@ -141,6 +141,27 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
+    def orc(path, columns, *args, **kwargs):
+        """
+        Return a dataframe from a avro file.
+        :param path: path or location of the file. Must be string dataType
+        :param args: custom argument to be passed to the avro function
+        :param kwargs: custom keyword arguments to be passed to the avro function
+        :return: Spark Dataframe
+        """
+        file, file_name = prepare_path(path, "avro")
+
+        try:
+            df = cudf.read_orc(path, columns, *args, **kwargs).to_dataframe()
+            df.meta = Meta.set(df.meta, "file_name", file_name)
+
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    @staticmethod
     def excel(path, sheet_name=0, *args, **kwargs):
         """
         Return a spark from a excel file.
