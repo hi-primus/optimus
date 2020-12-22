@@ -1472,10 +1472,12 @@ class Cols(BaseColumns):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     def hist(self, columns="*", buckets=20, compute=True):
+        # print("1")
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
+        # return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
 
-        # result = Cols.agg_exprs(columns, self.functions.hist_agg, self, buckets)
+        result = df.cols.agg_exprs(columns, self.F.hist_agg, self.root, buckets)
+
         # TODO: for some reason casting to int in the exprs do not work. Casting Here. A Spark bug?
         # Example
         # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT),
@@ -1485,7 +1487,7 @@ class Cols(BaseColumns):
         # AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10))
         # THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
 
-        # return result
+        return result
 
         # TODO: In tests this code run faster than using Cols.agg_exprs when run over all the columns.
         #  Not when running over columns individually
