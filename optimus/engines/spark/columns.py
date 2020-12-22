@@ -221,11 +221,13 @@ class Cols(BaseColumns):
             return main_query
 
         dfd = df.data
+        meta = df.meta
         for input_col, output_col in columns:
             # print("expr(when)",type(expr(when)),expr(when))
             dfd = dfd.withColumn(output_col, expr(when))
-            self.root.meta.preserve(self, meta_action, output_col)
-        dfd = self.root.new(dfd)
+            meta = Meta.action(meta, meta_action, output_col)
+            # self.root.meta.preserve(self, meta_action, output_col)
+        # dfd = self.root.new(dfd)
 
         return self.root.new(dfd)
 
