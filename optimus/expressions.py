@@ -633,70 +633,66 @@ binary_operators = {
 reserved_words = json.dumps(
     {"functions": functions, "operators": {"unary": unary_operators, "binary": binary_operators}}, ensure_ascii=False)
 
+"""
+Parse an expression to optimus code
+"""
 
-class Parser:
+lexer_generator = LexerGenerator()
+lexer = lexer_generator.build()
+
+l_g = lexer_generator
+
+for f in functions:
+    rx = f'(?i){f}(?!\w)'
+    l_g.add(f, rx)
+
+# Parenthesis
+l_g.add('OPEN_PAREN', r'\(')
+l_g.add('CLOSE_PAREN', r'\)')
+
+# Semi Colon
+l_g.add('SEMI_COLON', r'\;')
+l_g.add('COMMA', r'\,')
+
+l_g.add('IDENTIFIER', r'{(.*?)}')  # Reference
+l_g.add('IDENTIFIER', r'[^\W0-9 ]\w*')  # Column names
+l_g.add('STRINGS', r'"(.*?)"')  # Reference
+
+# Operators
+l_g.add('SUM_OPERATOR', r'\+')
+l_g.add('SUB_OPERATOR', r'\-')
+l_g.add('MUL_OPERATOR', r'\*')
+l_g.add('DIV_OPERATOR', r'\/')
+
+# Number
+l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
+l_g.add('INTEGER', r'\d+')
+
+# Ignore spaces
+l_g.ignore('\s+')
+
+
+def parser(text_input, df_name="df"):
     """
-    Parse an expression to optimus code
+
+    :param text_input: string to be parsed
+    :param df_name: dataframe name
+
+    :return:
     """
+    tokens = lexer.lex(text_input)
+    result = []
+    for token in tokens:
+        token_value = token.value
+        if token.name == "IDENTIFIER":
+            for r in (("{", ""), ("}", "")):
+                token_value = token_value.replace(*r)
 
-    def __init__(self):
-        self.lexer_generator = LexerGenerator()
-        self._add_tokens()
-        self.lexer = self.lexer_generator.build()
-
-    def _add_tokens(self):
-        l_g = self.lexer_generator
-
-        for f in functions:
-            rx = f'(?i){f}(?!\w)'
-            l_g.add(f, rx)
-
-        # Parenthesis
-        l_g.add('OPEN_PAREN', r'\(')
-        l_g.add('CLOSE_PAREN', r'\)')
-
-        # Semi Colon
-        l_g.add('SEMI_COLON', r'\;')
-        l_g.add('COMMA', r'\,')
-
-        l_g.add('IDENTIFIER', r'{(.*?)}')  # Reference
-        l_g.add('IDENTIFIER', r'[^\W0-9 ]\w*')  # Column names
-        l_g.add('STRINGS', r'"(.*?)"')  # Reference
-
-        # Operators
-        l_g.add('SUM_OPERATOR', r'\+')
-        l_g.add('SUB_OPERATOR', r'\-')
-        l_g.add('MUL_OPERATOR', r'\*')
-        l_g.add('DIV_OPERATOR', r'\/')
-
-        # Number
-        l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
-        l_g.add('INTEGER', r'\d+')
-
-        # Ignore spaces
-        l_g.ignore('\s+')
-
-    def parse(self, text_input, meta=None):
-        """
-
-        :param text_input: string to be parsed
-        :param meta: Column data used to better handle datatypes. For example when add or subs values to times
-
-        :return:
-        """
-        tokens = self.lexer.lex(text_input)
-        result = []
-        for token in tokens:
-            token_value = token.value
-            if token.name == "IDENTIFIER":
-                for r in (("{", ""), ("}", "")):
-                    token_value = token_value.replace(*r)
-
-                result_element = "df['" + token_value + "']"
-            elif token.name in functions:
-                result_element = "F." + token_value.lower()
-            else:
-                result_element = token_value
-            result.append(result_element)
-        result = "".join(result)
-        return result
+            result_element = f"""{df_name}['{token_value}']"""
+        elif token.name in functions:
+            result_element = "F." + token_value.lower()
+        else:
+            result_element = token_value
+        result.append(result_element)
+    result = "".join(result)
+    return result
