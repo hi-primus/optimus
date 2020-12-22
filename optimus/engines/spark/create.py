@@ -1,6 +1,7 @@
 import pandas as pd
 from pyspark.sql.types import StringType, StructField, StructType
 
+from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.infer import Infer, is_, is_tuple, is_list_of_tuples, is_one_element, parse_spark_class_dtypes
 from optimus.engines.spark.spark import Spark
 
@@ -9,7 +10,7 @@ from optimus.engines.base.meta import Meta
 
 class Create:
     @staticmethod
-    def data_frame(cols=None, rows=None, infer_schema=True, pdf=None):
+    def dataframe(cols=None, rows=None, infer_schema=True, pdf=None):
         """
         Helper to create a Spark dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
@@ -59,7 +60,8 @@ class Create:
             struct_fields = list(map(lambda x: StructField(*x), specs))
 
             df = Spark.instance.spark.createDataFrame(rows, StructType(struct_fields))
-            df.meta = Meta.set(df.meta, value=df.meta.columns(df.cols.names()).get())
+            df = SparkDataFrame(df)
+            # df.meta = Meta.columns(df.meta, value=df.cols.names().get())
         return df
 
     df = data_frame
