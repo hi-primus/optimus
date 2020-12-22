@@ -54,6 +54,23 @@ class Save:
             logger.print(error)
             raise
 
+    def xml(self, filename=None, mode='w'):
+        df = self.root.data
+
+        def row_to_xml(row):
+            xml = ['<item>']
+            for i, col_name in enumerate(row.index):
+                xml.append('  <field name="{0}">{1}</field>'.format(col_name, row.iloc[i]))
+            xml.append('</item>')
+            return '\n'.join(xml)
+
+        res = '\n'.join(df.apply(row_to_xml, axis=1))
+
+        if filename is None:
+            return res
+        with open(filename, mode) as f:
+            f.write(res)
+
     def parquet(self, path, mode="overwrite", num_partitions=1):
         """
         Save data frame to a parquet file
