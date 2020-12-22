@@ -202,8 +202,8 @@ See `prepare_columns` for more info
 
 Always try to use the same Optimus functions to write the functions so it can be reused for all the engines.
 
- 
- ## Working with databases in Dask
+
+## Working with databases in Dask
 For Dask you need to install some additional libraries to interact with databases
 
 ### Mysql
@@ -271,6 +271,10 @@ Go to https://anaconda.org/ and check the file is available
 ```
 conda install -c conda-forge -c argenisleon optimus 
 ```
+## Ibis
+### Mysql
+
+pip install mysqlclient
 
 ##ODBC
 ### Windows
