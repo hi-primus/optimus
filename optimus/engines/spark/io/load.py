@@ -78,8 +78,8 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
-        # file, file_name = prepare_path(path, "csv")
-
+        _path, file_name = prepare_path(path, "csv")[0]
+        # print(file, file_name)
         try:
             read = (Spark.instance.spark.read
                     .options(header='true' if header else 'false')
@@ -95,16 +95,17 @@ class Load(BaseLoad):
             else:
                 read.options(mode="DROPMALFORMED")
 
-            sdf = read.csv(path)
+            sdf = read.csv(_path)
 
             if n_rows > -1:
                 sdf = sdf.limit(n_rows)
+            print(type(sdf))
             df = SparkDataFrame(sdf)
-            df.meta = Meta.set(df.meta, "file_name", path)
+            # df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             print(error)
             raise
-        df = replace_columns_special_characters(df)
+        df = replace_columns_special_characters(df.data)
 
         return df
 
