@@ -537,7 +537,7 @@ class BaseColumns(ABC):
         :param kwargs:
         :return:
         """
-        df = self.df
+        df = self.root.data
         compact = {}
         for col_agg in list(agg.values()):
             for col_name, _agg in col_agg.items():
@@ -565,7 +565,7 @@ class BaseColumns(ABC):
         suffix_left = "_left"
         suffix_right = "_right"
 
-        df_left = self.df
+        df_left = self.root.data
 
         if on is not None:
             left_on = on
