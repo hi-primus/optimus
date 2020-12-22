@@ -124,13 +124,13 @@ class BaseDataFrame(ABC):
 
         return json.dumps(self.root.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, orient="records", limit=None):
+    def to_dict(self, orient="records"):
         """
             Return a dict from a Collect result
             [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
         """
-        return self.root.rows.limit(limit).to_pandas().to_dict(orient)
+        return self.root.to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
