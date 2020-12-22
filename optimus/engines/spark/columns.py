@@ -604,14 +604,14 @@ class Cols(BaseColumns):
 
         return format_dict(result)
 
-    @staticmethod
-    def std(columns):
+    def std(self, columns="*", tidy=True, compute=True):
         """
         Return the standard deviation of a column dataframe
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+        df = self.root
+        columns = parse_columns(df, columns)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.stddev))
