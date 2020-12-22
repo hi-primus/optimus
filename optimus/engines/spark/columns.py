@@ -168,7 +168,7 @@ class Cols(BaseColumns):
             dfd = df.data.withColumn(output_col, F.col(input_col))
             meta.set(value=current_meta)
             meta = meta.copy({input_col: output_col})
-        
+
         return self.root.new(dfd, meta=meta)
 
     @staticmethod
@@ -403,7 +403,7 @@ class Cols(BaseColumns):
         for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
             return_type, func, func_type = cast_factory(data_type)
             dfd = self.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                            output_cols=output_col, meta_action=Actions.CAST.value)
+                             output_cols=output_col, meta_action=Actions.CAST.value)
 
         return dfd
 
@@ -897,7 +897,8 @@ class Cols(BaseColumns):
             _search = attr[0]
             return F.when(F.col(_input_cols).rlike(_search), True).otherwise(False)
 
-        return self.apply(input_cols, func=_match, args=(regex,), func_type="column_expr", func_return_type=str, output_cols=output_cols,
+        return self.apply(input_cols, func=_match, args=(regex,), func_type="column_expr", func_return_type=str,
+                          output_cols=output_cols,
                           meta_action=Actions.REPLACE_REGEX.value)
 
     def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
@@ -1412,7 +1413,8 @@ class Cols(BaseColumns):
 
             else:
                 RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.UNNEST.value, [v for k, v in final_columns]).get())
+            df.meta = Meta.set(df.meta,
+                               value=df.meta.preserve(None, Actions.UNNEST.value, [v for k, v in final_columns]).get())
         return df
 
     @staticmethod

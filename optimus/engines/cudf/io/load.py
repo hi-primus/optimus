@@ -3,10 +3,11 @@ import ntpath
 import cudf
 
 from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.meta import Meta
+from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.engines.cudf.dataframe import CUDFDataFrame
-from optimus.engines.base.meta import Meta
+
 
 class Load(BaseLoad):
 
@@ -87,9 +88,10 @@ class Load(BaseLoad):
                 dtype = ["str"]
 
             cdf = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
-                               quoting=quoting, error_bad_lines=error_bad_lines,
-                               keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows, na_filter=na_filter,
-                               dtype=dtype)
+                                quoting=quoting, error_bad_lines=error_bad_lines,
+                                keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows,
+                                na_filter=na_filter,
+                                dtype=dtype)
             df = CUDFDataFrame(cdf)
             df.meta = Meta.set(df.meta, "file_name", path)
         except IOError as error:

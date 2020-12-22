@@ -10,7 +10,6 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 
 
 class IbisFunctions(Functions):
-
     def _to_float(self, series, *args):
         return series.cast("float64")
 

@@ -6,11 +6,11 @@ from dask import dataframe as dd
 
 import optimus.helpers.functions_spark
 from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.meta import Meta
+from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.engines.dask.dataframe import DaskDataFrame
-from optimus.engines.base.meta import Meta
 
 
 class Load(BaseLoad):
@@ -84,9 +84,9 @@ class Load(BaseLoad):
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
             ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
-                             **kwargs)
+                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
+                              **kwargs)
 
             if n_rows > -1:
                 ddf = dd.from_pandas(ddf.head(n_rows), npartitions=1)
@@ -199,7 +199,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")
 
         try:
-            df = db.read_avro(path, *args, **kwargs).to_dataframe()
+            df = dd.read_avro(path, *args, **kwargs).to_dataframe()
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
