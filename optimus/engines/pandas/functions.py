@@ -10,8 +10,6 @@ from optimus.helpers.core import val_to_list
 
 
 class PandasFunctions(Functions):
-    # def __init__(self, ):
-    #     super(PandasFunctions, self).__init__(df)
 
     def _to_float(self, value):
         return value.map(to_float)

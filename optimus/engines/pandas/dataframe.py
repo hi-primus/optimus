@@ -1,7 +1,6 @@
-from optimus.engines.base.dataframe.extension import Ext as PandasExtension
+from optimus.engines.base.dataframe.dataframe import Ext as PandasExtension
 from optimus.engines.pandas.io.save import Save
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
 class PandasDataFrame(PandasExtension):
@@ -65,5 +64,8 @@ class PandasDataFrame(PandasExtension):
 
         return result
 
-    def to_optimus_dask(self):
-        return pandas_to_dask_dataframe(self.root.data, 1)
+    def to_optimus_pandas(self):
+        return self.root.data
+
+    def to_pandas(self):
+        return self.root.data

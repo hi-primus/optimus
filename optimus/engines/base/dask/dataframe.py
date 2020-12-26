@@ -7,7 +7,7 @@ from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 
 
-class Ext(BaseDataFrame):
+class DaskBaseDataFrame(BaseDataFrame):
 
     def __init__(self, root, data):
         super().__init__(root, data)

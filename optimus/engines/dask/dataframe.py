@@ -1,4 +1,4 @@
-from optimus.engines.base.dask.extension import Ext as DaskExtension
+from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
 from optimus.engines.buffer import _set_buffer, _buffer_windows
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
@@ -6,9 +6,9 @@ from optimus.engines.dask.io.save import Save
 from optimus.helpers.constants import BUFFER_SIZE
 
 
-class DaskDataFrame(DaskExtension):
-    def __init__(self, data):
-        super().__init__(self, data)
+class DaskDataFrame(DaskBaseDataFrame):
+    def __init__(self, root, data):
+        super().__init__(root, data)
 
     @staticmethod
     def pivot(index, column, values):
