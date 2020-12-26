@@ -1,4 +1,5 @@
 from optimus.engines.cudf.extension import Ext as CUDFExtension
+from optimus.engines.cudf.io.save import Save
 
 
 class CUDFDataFrame(CUDFExtension):
@@ -14,6 +15,10 @@ class CUDFDataFrame(CUDFExtension):
     def cols(self):
         from optimus.engines.cudf.columns import Cols
         return Cols(self)
+
+    @property
+    def save(self):
+        return Save(self)
 
     @property
     def functions(self):
