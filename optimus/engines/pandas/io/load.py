@@ -1,14 +1,14 @@
-import glob
 import ntpath
 
-import dask.bag as db
 import pandas as pd
+import pandavro as pdx
 
 from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.meta import Meta
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.engines.pandas.dataframe import PandasDataFrame
-from optimus.engines.base.meta import Meta
+from optimus.infer import is_str
 
 
 class Load(BaseLoad):
@@ -32,6 +32,7 @@ class Load(BaseLoad):
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)
+            df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
 
         except IOError as error:
@@ -74,25 +75,29 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
-
-        local_file_names = prepare_path(path, "csv")
+        local_file_names = []
+        if is_str(path):
+            local_file_names = prepare_path(path, "csv")
+            _meta = {"file_name": path, "name": ntpath.basename(path)}
+        else:
+            local_file_names.append((path, None))
+            _meta = {}
 
         try:
             df_list = []
-            # Pandas do not support \r\n terminator .
+            # Pandas do not support \r\n terminator.
             if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
                 lineterminator = None
 
             for file_name, _ in local_file_names:
                 df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
-
                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                 na_filter=na_filter, *args, **kwargs)
+                                 na_filter=na_filter, index_col=False, *args, **kwargs)
                 df_list.append(df)
-
             df = pd.concat(df_list, axis=0, ignore_index=True)
             df = PandasDataFrame(df)
-            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+
+            df.meta = Meta.set(df.meta, value=_meta)
 
         except IOError as error:
             logger.print(error)
@@ -108,14 +113,14 @@ class Load(BaseLoad):
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
-        :return: Spark Dataframe
         """
 
-        file, file_name = prepare_path(path, "parquet")
+        # file, file_name = prepare_path(path, "parquet")[0]
 
         try:
             df = pd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            df = PandasDataFrame(df)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
             logger.print(error)
@@ -130,13 +135,13 @@ class Load(BaseLoad):
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
-        :return: Spark Dataframe
         """
-        file, file_name = prepare_path(path, "avro")
+        file, file_name = prepare_path(path, "avro")[0]
 
         try:
-            df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            df = pdx.read_avro(file_name)
+            df = PandasDataFrame(df)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
             logger.print(error)
@@ -152,27 +157,48 @@ class Load(BaseLoad):
         :param sheet_name: excel sheet name
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
-        :return: Spark Dataframe
         """
-        file, file_name = prepare_path(path, "xls")
+        file, file_name = prepare_path(path, "xls")[0]
 
         try:
-            pdf = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+            df = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
 
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
             # exception when Spark try to infer the column data type
-            col_names = list(pdf.select_dtypes(include=['object']))
+            col_names = list(df.select_dtypes(include=['object']))
 
             column_dtype = {}
             for col in col_names:
                 column_dtype[col] = str
 
             # Convert object columns to string
-            pdf = pdf.astype(column_dtype)
+            df = df.astype(column_dtype)
 
             # Create spark data frame
-            df = pd.from_pandas(pdf, npartitions=3)
+            # df = pd.from_pandas(pdf, npartitions=3)
+            df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    @staticmethod
+    def orc(path, *args, **kwargs):
+        """
+        Return a dataframe from a avro file.
+        :param path: path or location of the file. Must be string dataType
+        :param args: custom argument to be passed to the spark avro function
+        :param kwargs: custom keyword arguments to be passed to the spark avro function
+        """
+        file, file_name = prepare_path(path, "orc")[0]
+
+        try:
+            df = pdx.read_orc(file_name)
+            df = PandasDataFrame(df)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
+
         except IOError as error:
             logger.print(error)
             raise

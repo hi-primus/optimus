@@ -1,8 +1,7 @@
 # from pyspark.sql import DataFrame
 # from dask.dataframe.core import DataFrame
-import pandas as pd
+import pandavro as pdx
 
-DataFrame = pd.DataFrame
 from optimus.helpers.logger import logger
 
 
@@ -10,21 +9,18 @@ class Save:
     def __init__(self, root):
         self.root = root
 
-    def json(self, path, *args, **kwargs):
+    def json(self, path, orient="records", *args, **kwargs):
         """
         Save data frame in a json file
         :param path: path where the spark will be saved.
-        :param mode: Specifies the behavior of the save operation when data already exists.
-                "append": Append contents of this DataFrame to existing data.
-                "overwrite" (default case): Overwrite existing data.
-                "ignore": Silently ignore this operation if data already exists.
-                "error": Throw an exception if data already exists.
-        :param num_partitions: the number of partitions of the DataFrame
+        :param orient:
+
         :return:
         """
         df = self.root.data
+
         try:
-            df.to_json(path, *args, **kwargs)
+            df.to_json(path, orient=orient, *args, **kwargs)
 
         except IOError as e:
             logger.print(e)
@@ -54,6 +50,30 @@ class Save:
             logger.print(error)
             raise
 
+    def excel(self, path, **kwargs):
+        """
+        Save data frame to a CSV file.
+        :param path: path where the spark will be saved.
+        :param mode: 'rb', 'wt', etc
+        it uses the default value.
+        :return: Dataframe in a CSV format in the specified path.
+        """
+
+        try:
+            df = self.root.data
+            # columns = parse_columns(self, "*",
+            #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
+            # df = df.cols.cast(columns, "str").repartition(num_partitions)
+
+            # Dask reference
+            # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
+            # df.to_csv(filename=path)
+            df.to_excel(path, index=False)
+
+        except IOError as error:
+            logger.print(error)
+            raise
+
     def xml(self, filename=None, mode='w'):
         df = self.root.data
 
@@ -71,7 +91,7 @@ class Save:
         with open(filename, mode) as f:
             f.write(res)
 
-    def parquet(self, path, mode="overwrite", num_partitions=1):
+    def parquet(self, path, *args, **kwargs):
         """
         Save data frame to a parquet file
         :param path: path where the spark will be saved.
@@ -92,18 +112,13 @@ class Save:
                 col_name = col_name.replace(i, "_")
             return col_name
 
-        df = self.root.rename(func)
+        df = self.root.cols.rename(func)
 
         try:
-            df.to_parquet(path, num_partitions=num_partitions)
+            df.data.to_parquet(path)
         except IOError as e:
             logger.print(e)
             raise
 
-    @staticmethod
-    def avro(path):
-        raise NotImplementedError('Not implemented yet')
-
-    @staticmethod
-    def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
-        raise NotImplementedError('Not implemented yet')
+    def avro(self, path):
+        pdx.to_avro(path, self.root.data)
