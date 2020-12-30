@@ -1,6 +1,4 @@
-# from pyspark.sql import DataFrame
 import os
-from pathlib import Path
 
 from optimus.helpers.logger import logger
 
@@ -32,25 +30,27 @@ class Save:
         # else:
         #     print("Successfully created the directory %s" % path)
 
-    def csv(self, path, mode="wt", return_path=False, **kwargs):
+    def csv(self, path, mode="wt", index=False, single_file=True, **kwargs):
         """
         Save data frame to a CSV file.
-        :param path: path where the spark will be saved.
         :param mode: 'rb', 'wt', etc
+        :param single_file:
+        :param index:
+        :param path: path where the spark will be saved.
         it uses the default value.
         :return: Dataframe in a CSV format in the specified path.
         """
 
         df = self.root.data
         try:
+            import pathlib
+
+            path = os.path.join(pathlib.Path().absolute(), path)
             os.makedirs(path, exist_ok=True)
-            df.to_csv(filename=path, mode=mode, index=False, **kwargs)
+            df.to_csv(filename=path, mode=mode, index=index, single_file=single_file, **kwargs)
         except IOError as error:
             logger.print(error)
             raise
-
-        if return_path is True:
-            return Path(path).absolute().as_uri()
 
     def parquet(self, path, mode="overwrite", num_partitions=1, engine="pyarrow"):
         """
@@ -87,8 +87,4 @@ class Save:
 
     @staticmethod
     def avro(path):
-        raise NotImplementedError('Not implemented yet')
-
-    @staticmethod
-    def rabbit_mq(host, exchange_name=None, queue_name=None, routing_key=None, parallelism=None):
         raise NotImplementedError('Not implemented yet')

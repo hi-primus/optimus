@@ -104,10 +104,6 @@ class Save:
     def orc(self, path, **kwargs):
         try:
             df = self.root.data
-            # df = df.cols.cast("*", "str")
-
-            # Dask reference
-            # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
             df.to_orc(path, index=False, **kwargs)
 
         except IOError as error:

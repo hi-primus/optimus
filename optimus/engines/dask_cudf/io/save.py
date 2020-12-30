@@ -2,7 +2,6 @@
 # from dask.dataframe.core import DataFrame
 
 from optimus.helpers.logger import logger
-from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
 
 
 class Save:
@@ -29,7 +28,7 @@ class Save:
             logger.print(e)
             raise
 
-    def csv(self,path, mode="rb", **kwargs):
+    def csv(self, path, mode="rb", **kwargs):
         """
         Save data frame to a CSV file.
         :param path: path where the spark will be saved.
@@ -86,5 +85,3 @@ class Save:
     @staticmethod
     def avro(path):
         raise NotImplementedError('Not implemented yet')
-
-
