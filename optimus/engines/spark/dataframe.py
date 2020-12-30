@@ -25,6 +25,11 @@ class SparkDataFrame(BaseDataFrame):
         return Cols(self)
 
     @property
+    def save(self):
+        from optimus.engines.spark.io.save import Save
+        return Save(self)
+
+    @property
     def constants(self):
         from optimus.engines.spark.constants import Constants
         return Constants()

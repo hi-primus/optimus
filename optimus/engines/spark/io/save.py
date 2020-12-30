@@ -7,8 +7,7 @@ from optimus.helpers.logger import logger
 
 class Save:
 
-    def __init__(self, root, sc):
-        self.sc = sc
+    def __init__(self, root):
         self.root = root
 
     def json(self, path, mode="overwrite", encoding="UTF-8", num_partitions=1):
