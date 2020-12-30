@@ -55,13 +55,16 @@ class Load(BaseLoad):
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None, null_value="None", quoting=3,
-            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, *args, **kwargs):
+    def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
+            null_value="None", quoting=3,
+            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, conn=None,
+            *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
-        :param path: path or location of the file.
+
+        :param filepath_or_buffer: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
@@ -71,42 +74,42 @@ class Load(BaseLoad):
         :param na_filter:
         :param lineterminator:
         :param error_bad_lines:
+        :param conn:
         It requires one extra pass over the data. True default.
 
         :return dataFrame
         """
-        local_file_names = []
-        if is_str(path):
-            local_file_names = prepare_path(path, "csv")
-            _meta = {"file_name": path, "name": ntpath.basename(path)}
-        else:
-            local_file_names.append((path, None))
-            _meta = {}
+        if is_str(filepath_or_buffer):
+            _meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
         try:
-            df_list = []
+
             # Pandas do not support \r\n terminator.
             if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
                 lineterminator = None
+            if conn is not None:
+                filepath_or_buffer = conn.url + filepath_or_buffer
+                storage_options = conn.options
+            else:
+                storage_options = None
 
-            for file_name, _ in local_file_names:
-                df = pd.read_csv(file_name, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
-                                 quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                 na_filter=na_filter, index_col=False, *args, **kwargs)
-                df_list.append(df)
-            df = pd.concat(df_list, axis=0, ignore_index=True)
+            df = pd.read_csv(filepath_or_buffer, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
+                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                             na_filter=na_filter, index_col=False, storage_options=storage_options, *args, **kwargs)
+
             df = PandasDataFrame(df)
 
             df.meta = Meta.set(df.meta, value=_meta)
 
         except IOError as error:
+            print(error)
             logger.print(error)
             raise
 
         return df
 
     @staticmethod
-    def parquet(path, columns=None, *args, **kwargs):
+    def parquet(path, columns=None, storage_options=None, *args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -118,7 +121,7 @@ class Load(BaseLoad):
         # file, file_name = prepare_path(path, "parquet")[0]
 
         try:
-            df = pd.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
+            df = pd.read_parquet(path, columns=columns, engine='pyarrow', storage_options=storage_options, **kwargs)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
@@ -129,9 +132,10 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, *args, **kwargs):
+    def avro(path, storage_options=None, *args, **kwargs):
         """
         Return a spark from a avro file.
+        :param storage_options:
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
@@ -139,7 +143,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")[0]
 
         try:
-            df = pdx.read_avro(file_name)
+            df = pdx.read_avro(file_name, storage_options=storage_options, *args, **kwargs)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
@@ -185,7 +189,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, *args, **kwargs):
+    def orc(path, columns, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -195,7 +199,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "orc")[0]
 
         try:
-            df = pdx.read_orc(file_name)
+            df = pdx.read_orc(file_name, columns)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 

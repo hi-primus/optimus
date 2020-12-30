@@ -61,6 +61,9 @@ class Load(BaseLoad):
         Return a dataframe from a csv file.
         params
 
+        :param dtype:
+        :param cache:
+        :param na_filter:
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param keep_default_na:
@@ -122,9 +125,10 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, *args, **kwargs):
+    def avro(path, storage_options=None, *args, **kwargs):
         """
         :param path: path or location of the file. Must be string dataType
+        :param storage_options:
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         """

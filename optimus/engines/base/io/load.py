@@ -1,5 +1,6 @@
 import csv
 import os
+from abc import abstractmethod
 
 import magic
 
@@ -13,10 +14,10 @@ BYTES_SIZE = 16384
 
 
 class BaseLoad:
-    def to_optimus_pandas(self,df):
-        return PandasDataFrame(df.to_pandas())
 
-    def csv(self, full_path, *args, **kwargs):
+    @staticmethod
+    @abstractmethod
+    def csv(filepath_or_buffer, storage_options=None, *args, **kwargs):
         pass
 
     def xml(self, full_path, *args, **kwargs):
@@ -26,6 +27,21 @@ class BaseLoad:
         pass
 
     def excel(self, full_path, *args, **kwargs):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def avro(full_path, storage_options=None, *args, **kwargs):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def parquet(full_path, *args, **kwargs):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def orc(full_path, columns=None, *args, **kwargs):
         pass
 
     def file(self, path, *args, **kwargs):
@@ -89,3 +105,6 @@ class BaseLoad:
         # df.meta.update("mime_info", value=mime_info)
 
         return df
+
+    # def to_optimus_pandas(self, df):
+    #     return PandasDataFrame(df.to_pandas())

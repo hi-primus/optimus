@@ -1,6 +1,6 @@
 import ntpath
 
-import dask.bag as db
+import dask.bag as dask_bag
 import pandas as pd
 from dask import dataframe as dd
 
@@ -52,8 +52,8 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False,
-            na_filter=False, null_value=None, *args, **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
+            na_filter=False, null_value=None, storage_options=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -144,7 +144,6 @@ class Load(BaseLoad):
 
         ddf.compute()
 
-        # print("---",path, file, file_name)
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
                              compression="gzip", *args,
@@ -160,7 +159,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns, cache, *args, **kwargs):
+    def orc(path, columns=None, cache=None, *args, **kwargs):
 
         """
         Optimized Row Columnar
@@ -188,10 +187,11 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, *args, **kwargs):
+    def avro(path, storage_options=None, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
+        :param storage_options:
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         :return: Spark Dataframe
@@ -199,7 +199,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")
 
         try:
-            df = dd.read_avro(path, *args, **kwargs).to_dataframe()
+            df = dask_bag.read_avro(path, storage_options=storage_options, *args, **kwargs).to_dataframe()
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
