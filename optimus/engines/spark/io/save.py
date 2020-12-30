@@ -58,7 +58,7 @@ class Save:
             df = df.cols.cast(columns, "str").repartition(num_partitions)
 
             # Save to csv
-            df.write.options(header=header).mode(mode).csv(path, sep=sep)
+            df.data.write.options(header=header).mode(mode).csv(path, sep=sep)
 
             # val conf    = sc.hadoopConfiguration
             # val src     = new Path(tmpFolder)

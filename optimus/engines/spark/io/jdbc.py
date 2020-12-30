@@ -215,7 +215,7 @@ class JDBC:
         columns = df.cols.names("*", by_dtypes=["array", "vector"])
         df = df.cols.cast(columns, "str")
 
-        conf = df.write \
+        conf = df.data.write \
             .format(
             "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
             DriverProperties.CASSANDRA.value["java_class"]) \
