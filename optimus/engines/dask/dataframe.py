@@ -7,8 +7,8 @@ from optimus.helpers.constants import BUFFER_SIZE
 
 
 class DaskDataFrame(DaskBaseDataFrame):
-    def __init__(self, root, data):
-        super().__init__(root, data)
+    def __init__(self,  data):
+        super().__init__(self, data)
 
     @staticmethod
     def pivot(index, column, values):
