@@ -290,11 +290,10 @@ class BaseColumns(ABC):
                 new_col_name = col_name[1]
                 if old_col_name != col_name:
                     dfd = dfd.rename(columns={old_col_name: new_col_name})
-                    meta = meta.rename({old_col_name: new_col_name})
+                    meta = Meta.rename(meta, {old_col_name: new_col_name})
 
         df = self.root.new(dfd, meta=meta)
-
-        meta = meta.preserve(None, value=meta.get())
+        df.meta = meta
 
         return self.root.new(df.data, meta=meta)
 
