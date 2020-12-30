@@ -774,7 +774,6 @@ class BaseColumns(ABC):
     def range(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
-        
 
     def percentile(self, columns="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.root
@@ -1911,15 +1910,16 @@ class BaseColumns(ABC):
         """
 
         def _domain(value):
-            return value.str.extract(regex_full_url)[4]
+            return value.str.extract(regex_full_url)[6]
 
         df = self.root
         return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
     def domain_scheme(self, input_cols, output_cols=None):
+        # From https://www.hi-bumblebee.com it returns https
         def _domain_scheme(value):
-            return value.str.extract(regex_full_url)[1]
+            return value.str.extract(regex_full_url)[2]
 
         df = self.root
         return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
@@ -1936,6 +1936,7 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     def domain_path(self, input_cols, output_cols=None):
+
         def _domain_path(value):
             return value.str.extract(regex_full_url)[7]
 
@@ -1944,14 +1945,16 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     def port(self, input_cols, output_cols=None):
+        # From https://www.hi-bumblebee.com:8080 it returns 8080
         def _port(value):
-            return value.str.extract(regex_full_url)[5]
+            return value.str.extract(regex_full_url)[7]
 
         df = self.root
         return df.cols.apply(input_cols, _port, output_cols=output_cols, meta_action=Actions.PORT.value,
                              mode="vectorized")
 
     def subdomain(self, input_cols, output_cols=None):
+        # From https://www.hi-bumblebee.com:8080 it returns www
         def _subdomain(value):
             return value.str.extract(regex_full_url)[3]
 
