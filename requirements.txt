@@ -21,7 +21,7 @@ pygments>=2.2.0
 ipython>=7.5.0
 humanize>=0.5.1
 psutil>=5.6.3
-pandas>=1.0.5
+pandas>=1.2.0
 ordered-set>=3.1.1
 deepdiff>=4.0.6
 statsmodels>=0.10.1
@@ -44,3 +44,5 @@ pybigquery==0.4.15
 coiled>=0.0.30
 pandavro>=1.6.0
 openpyxl>=3.0.5
+s3fs>=0.5.2
+tabulate>=0.8.7
