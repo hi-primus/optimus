@@ -1,6 +1,8 @@
 from optimus.engines.base.dataframe.dataframe import Ext as PandasExtension
+# from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
 class PandasDataFrame(PandasExtension):
@@ -65,7 +67,13 @@ class PandasDataFrame(PandasExtension):
         return result
 
     def to_optimus_pandas(self):
-        return self.root.data
+        return self.root
+
+    # def to_optimus_dask(self):
+    #     df = self.root
+    #     ddf = DaskDataFrame(pandas_to_dask_dataframe(self.root.data))
+    #     ddf.meta = df.meta
+    #     return ddf
 
     def to_pandas(self):
         return self.root.data

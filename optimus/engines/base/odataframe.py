@@ -1,3 +1,4 @@
+import operator
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
@@ -7,6 +8,7 @@ import jinja2
 import simplejson as json
 from dask import dataframe as dd
 from glom import assign
+from tabulate import tabulate
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
@@ -17,8 +19,6 @@ from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
-import operator
-
 from .meta import Meta
 
 
