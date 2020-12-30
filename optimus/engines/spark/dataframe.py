@@ -1,3 +1,4 @@
+from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
@@ -207,6 +208,10 @@ class SparkDataFrame(BaseDataFrame):
 
     def delayed(self):
         pass
+
+    def execute(self):
+        self.root.data.cache()
+        return self
 
     def compute(self):
         """
