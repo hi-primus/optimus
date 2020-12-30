@@ -99,13 +99,14 @@ class Load(BaseLoad):
 
             if n_rows > -1:
                 sdf = sdf.limit(n_rows)
-            print(type(sdf))
+            # print(type(sdf))
             df = SparkDataFrame(sdf)
-            # df.meta = Meta.set(df.meta, "file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             print(error)
             raise
-        df = replace_columns_special_characters(df.data)
+
+        # df = replace_columns_special_characters(df)
 
         return df
 
