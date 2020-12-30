@@ -3,6 +3,7 @@ from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
 from optimus.engines.base.odataframe import BaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.output import print_html
@@ -362,6 +363,12 @@ class SparkDataFrame(BaseDataFrame):
         """
         df = self.root.data
         print(df.rdd.toDebugString().decode("ascii"))
+
+    def to_optimus_pandas(self):
+        return PandasDataFrame(self.root.data.toPandas())
+
+    def to_pandas(self):
+        return self.root.data.toPandas()
 
     # @staticmethod
     # def reset():
