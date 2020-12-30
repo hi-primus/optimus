@@ -2,7 +2,6 @@ from pyspark.ml import feature, classification
 from pyspark.ml.classification import RandomForestClassifier, DecisionTreeClassifier, GBTClassifier
 from pyspark.sql import functions as F
 from pysparkling import *
-from pysparkling.ml import H2OAutoML, H2ODeepLearning, H2OXGBoost, H2OGBM
 
 # from optimus.infer import is_str, is_spark_dataframe
 from optimus.helpers.check import is_spark_dataframe
@@ -124,82 +123,3 @@ class ML:
         df_model = gbt_model.transform(df)
         return df_model, gbt_model
 
-    @staticmethod
-    def h2o_automl(df, label, columns, **kwargs):
-
-        H2OContext.getOrCreate(Spark.instance.spark)
-
-        df_sti = string_to_index(df, input_cols=label)
-        df_va = vector_assembler(df_sti, input_cols=columns)
-        automl = H2OAutoML(convertUnknownCategoricalLevelsToNa=True,
-                           maxRuntimeSecs=60,  # 1 minutes
-                           seed=1,
-                           maxModels=3,
-                           labelCol=name_col(label, STRING_TO_INDEX),
-                           **kwargs)
-
-        model = automl.fit(df_va)
-        df_raw = model.transform(df_va)
-
-        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["value"] > 0.5, 1.0).otherwise(0.0))
-
-        return df_pred, model
-
-    @staticmethod
-    def h2o_deeplearning(df, label, columns, **kwargs):
-
-        H2OContext.getOrCreate(Spark.instance.spark)
-
-        df_sti = string_to_index(df, input_cols=label)
-        df_va = vector_assembler(df_sti, input_cols=columns)
-        h2o_deeplearning = H2ODeepLearning(epochs=10,
-                                           seed=1,
-                                           l1=0.001,
-                                           l2=0.0,
-                                           hidden=[200, 200],
-                                           featuresCols=columns,
-                                           labelCol=label,
-                                           **kwargs)
-        model = h2o_deeplearning.fit(df_va)
-        df_raw = model.transform(df_va)
-
-        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
-
-        return df_pred, model
-
-    @staticmethod
-    def h2o_xgboost(df, label, columns, **kwargs):
-
-        H2OContext.getOrCreate(Spark.instance.spark)
-
-        df_sti = string_to_index(df, input_cols=label)
-        df_va = vector_assembler(df_sti, input_cols=columns)
-        h2o_xgboost = H2OXGBoost(convertUnknownCategoricalLevelsToNa=True,
-                                 featuresCols=columns,
-                                 labelCol=label,
-                                 **kwargs)
-        model = h2o_xgboost.fit(df_va)
-        df_raw = model.transform(df_va)
-
-        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
-
-        return df_pred, model
-
-    @staticmethod
-    def h2o_gbm(df, label, columns, **kwargs):
-
-        H2OContext.getOrCreate(Spark.instance.spark)
-
-        df_sti = string_to_index(df, input_cols=label)
-        df_va = vector_assembler(df_sti, input_cols=columns)
-        h2o_gbm = H2OGBM(ratio=0.8,
-                         seed=1,
-                         featuresCols=columns,
-                         labelCol=label,
-                         **kwargs)
-        model = h2o_gbm.fit(df_va)
-        df_raw = model.transform(df_va)
-
-        df_pred = df_raw.withColumn("prediction", F.when(df_raw.prediction_output["p1"] > 0.5, 1.0).otherwise(0.0))
-
-        return df_pred, model
