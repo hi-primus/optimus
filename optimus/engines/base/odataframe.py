@@ -216,7 +216,7 @@ class BaseDataFrame(ABC):
         return result
 
     def optimize(self, categorical_threshold=50, verbose=False):
-        df = self.df
+        df = self.root
         return reduce_mem_usage(df, categorical_threshold=categorical_threshold, verbose=verbose)
 
     def run(self):
@@ -513,6 +513,12 @@ class BaseDataFrame(ABC):
         except NameError as e:
             print(e)
             df.show()
+
+    def ascii(self):
+        df = self.root
+        print(
+            tabulate(df.to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()], tablefmt="simple",
+                     showindex="never"))
 
     def export(self):
         """
