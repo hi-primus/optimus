@@ -244,7 +244,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
 def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None, is_regex=None,
                     filter_by_column_dtypes=None, accepts_missing_cols=False, invert: bool = False, default=None,
-                    columns=None, auto_increment=False, merge=False, args=None):
+                    columns=None, auto_increment=False, args=None):
     """
     One input columns- > Same output column. lower(), upper()
     One input column -> One output column. copy()
@@ -274,11 +274,16 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
     else:
         input_cols = parse_columns(df, input_cols, False, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
+        merge = False
         if output_cols is None and default is not None:
             output_cols = default
             merge = True
-        if auto_increment is not False:
+
+        elif auto_increment is not False:
             input_cols = input_cols * auto_increment
+
+        if output_cols is not None and (len(input_cols) != len(val_to_list(output_cols))):
+            merge = True
 
         output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
 
@@ -385,7 +390,7 @@ def name_col(col_names: str, append: str) -> str:
     :param append: string to be appended
     :return:
     """
-    separator = "***"
+    separator = "_"
     append = str(one_list_to_val(append))
     col_names = val_to_list(col_names)
     if len(col_names) > 1:
@@ -393,4 +398,4 @@ def name_col(col_names: str, append: str) -> str:
     else:
         output_col = one_list_to_val(col_names)
 
-    return output_col + separator + append.upper()
+    return output_col + separator + append
