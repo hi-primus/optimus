@@ -17,7 +17,7 @@ BIG_NUMBER = 100000
 
 class DaskCUDFEngine(BaseEngine):
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
-                 memory_limit='4GB', verbose=False, comm=None, coiled_token=None, *args, **kwargs):
+                 memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
 
         """
 
