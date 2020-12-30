@@ -53,7 +53,7 @@ class Save:
         """
         try:
             df = self.root
-            columns = parse_columns(self, "*",
+            columns = parse_columns(df, "*",
                                     filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
             df = df.cols.cast(columns, "str").repartition(num_partitions)
 
@@ -95,7 +95,7 @@ class Save:
 
         df = df.cols.rename(func)
 
-        columns = parse_columns(self, "*", filter_by_column_dtypes=["null"])
+        columns = parse_columns(df, "*", filter_by_column_dtypes=["null"])
         df = df.cols.cast(columns, "str")
 
         try:

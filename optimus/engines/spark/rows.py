@@ -98,8 +98,8 @@ class Rows(DaskBaseRows):
         """
         Sort column by row
         """
-        input_cols = parse_columns(self, input_cols)
-        return self.rows.sort([(input_cols, "desc",)])
+        input_cols = parse_columns(self.root, input_cols)
+        return self.root.rows.sort([(input_cols, "desc",)])
 
     @staticmethod
     @dispatch(str, str)
@@ -107,8 +107,8 @@ class Rows(DaskBaseRows):
         """
         Sort column by row
         """
-        columns = parse_columns(self, columns)
-        return self.rows.sort([(columns, order,)])
+        columns = parse_columns(self.root, columns)
+        return self.root.rows.sort([(columns, order,)])
 
     @staticmethod
     @dispatch(list)
@@ -170,7 +170,7 @@ class Rows(DaskBaseRows):
                 :return:
                 """
         # TODO: should process string or dates
-        columns = parse_columns(self, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
+        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]
 
@@ -236,7 +236,7 @@ class Rows(DaskBaseRows):
         :return: Returns a new DataFrame omitting rows with null values.
         """
         df = self
-        input_cols = parse_columns(self, input_cols)
+        input_cols = parse_columns(self.root, input_cols)
 
         df = df.dropna(how, subset=input_cols)
         df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
@@ -256,7 +256,7 @@ class Rows(DaskBaseRows):
         #  all: Drop all duplicates except for the last occurrence.
 
         df = self
-        input_cols = parse_columns(self, input_cols)
+        input_cols = parse_columns(self.root, input_cols)
         df = df.drop_duplicates(subset=input_cols)
         df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
         return df
@@ -319,11 +319,12 @@ class Rows(DaskBaseRows):
         :param input_cols:
         :return:
         """
-        input_cols = parse_columns(self, input_cols)[0]
-        df = self
-        df = df.withColumn(input_cols, F.explode(input_cols))
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
-        return df
+        input_cols = parse_columns(self.root, input_cols)[0]
+        df = self.root
+        dfd = df.data
+        dfd = dfd.withColumn(input_cols, F.explode(input_cols))
+        meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
+        return df.new(dfd, meta=meta)
 
     def approx_count(self, timeout=1000, confidence=0.90) -> DataFrame:
         """
