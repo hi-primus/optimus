@@ -380,10 +380,6 @@ class Functions(ABC):
         return series == pat
 
     # dates
-
-    def to_datetime(self, series, format):
-        pass
-
     def year(self, series, format):
         """
         :param series:
