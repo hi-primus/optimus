@@ -16,6 +16,7 @@ from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:
@@ -31,6 +32,14 @@ class DaskBaseJDBC:
         Create the JDBC connection object
         :return:
         """
+        if host is None:
+            host = "127.0.0.1"
+            # RaiseIt.value_error(host, "host must be specified")
+
+        if user is None:
+            user = "root"
+            # print("user",user)
+            # RaiseIt.value_error(user, "user must be specified")
 
         if database is None:
             database = ""
@@ -49,6 +58,7 @@ class DaskBaseJDBC:
             self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
+
         self.uri = self.driver_context.uri(
             user=user,
             password=password,
