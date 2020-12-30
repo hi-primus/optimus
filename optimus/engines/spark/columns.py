@@ -61,7 +61,7 @@ ENGINE = "spark"
 class Cols(BaseColumns):
 
     def _names(self):
-        return self.root.data.columns
+        return list(self.root.data.columns)
 
     @staticmethod
     @dispatch(str, object)
