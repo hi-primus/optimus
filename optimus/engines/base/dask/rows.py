@@ -30,28 +30,35 @@ class DaskBaseRows(BaseRows):
         dfd[column] = dd.from_dask_array(a)
         return dfd
 
-    def append(self, dfs, cols_map):
+    def append(self, dfs, cols_map=None):
         """
         Appends 2 or more dataframes
         :param dfs:
         :param cols_map:
         """
+            
         every_df = [self.root, *dfs]
-        rename = [[] for _ in self.root]
-        for key in cols_map:
-            assert len(cols_map[key]) == len(every_df)
-            for i in range(len(cols_map[key])):
-                col_name = cols_map[key][i]
-                if col_name:
-                    rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
-        for i in range(len(rename)):
-            every_df[i] = every_df[i].cols.rename(rename[i])
+
+        if cols_map is not None:
+            rename = [[] for _ in self.root]
+            for key in cols_map:
+                assert len(cols_map[key]) == len(every_df)
+                for i in range(len(cols_map[key])):
+                    col_name = cols_map[key][i]
+                    if col_name:
+                        rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
+            for i in range(len(rename)):
+                every_df[i] = every_df[i].cols.rename(rename[i])
+
         dfd = every_df[0].data
         for i in range(len(every_df)):
             if i != 0:
                 dfd = dfd.append(every_df[i].data)
         df = self.root.new(dfd)
-        df = df.cols.rename([("__output_column__" + key, key) for key in cols_map])
+
+        if cols_map is not None:
+            df = df.cols.rename([("__output_column__" + key, key) for key in cols_map])
+            
         df = df.cols.select([*cols_map.keys()])
         return df.reset_index(drop=True)
 

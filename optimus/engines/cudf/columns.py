@@ -296,7 +296,7 @@ class Cols(DataFrameBaseColumns):
             if final_index:
                 dfd_new = dfd_new.cols.select(final_index[idx])
             df_new = self.root.new(dfd_new)
-            df = self.root.new(dfd).cols.append(df_new)
+            df = self.root.new(dfd).cols.append([df_new])
 
         if drop is True:
             df = df.cols.drop(columns=input_cols)

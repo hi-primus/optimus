@@ -22,7 +22,7 @@ class Cols(DataFrameBaseColumns):
         """
 
         df = self.root
-        dfd = pd.concat([dfds.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
+        dfd = pd.concat([*[_df.data.reset_index(drop=True) for _df in dfs], df.data.reset_index(drop=True)], axis=1)
         return self.root.new(dfd)
 
     def find(self, columns, sub, ignore_case=False):

@@ -201,7 +201,7 @@ class BaseColumns(ABC):
                     _ddf = func(dfd[input_col], *args)
 
                     if is_dask_dataframe(_ddf):
-                        df = df.cols.append(_ddf)
+                        df = df.cols.append([_ddf])
                     else:
                         kw_columns[output_col] = func(dfd[input_col], *args)
                 elif mode == "map":
@@ -1577,6 +1577,8 @@ class BaseColumns(ABC):
                 final_columns = [input_col + "_" + str(i) for i in range(splits)]
             elif is_list_of_tuples(output_cols):
                 final_columns = output_cols[idx]
+            elif is_list(output_cols):
+                final_columns = output_cols
             else:
                 final_columns = [output_cols + "_" + str(i) for i in range(splits)]
 
@@ -1599,17 +1601,17 @@ class BaseColumns(ABC):
             df_new = df.new(dfd_new)
             if final_index:
                 df_new = df_new.cols.select(final_index[idx])
-            df = df.cols.append(df_new)
-
-        if drop is True:
-            df = df.drop(columns=input_cols)
-            for input_col in input_cols:
-                if input_col in output_ordered_columns:
-                    output_ordered_columns.remove(input_col)
+            df = df.cols.append([df_new])
 
         df.meta = Meta.preserve(df.meta, Actions.UNNEST.value, final_columns)
 
         df = df.cols.move(df_new.cols.names(), "after", input_cols)
+
+        if drop is True:
+            df = df.cols.drop(columns=input_cols)
+            for input_col in input_cols:
+                if input_col in output_ordered_columns:
+                    output_ordered_columns.remove(input_col)
 
         return df
 

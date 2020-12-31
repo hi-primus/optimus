@@ -21,7 +21,7 @@ class BaseRows(ABC):
         pass
 
     @abstractmethod
-    def append(self, odfs, cols_map):
+    def append(self, dfs, cols_map):
         pass
 
     #

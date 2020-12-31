@@ -49,7 +49,7 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.root
         meta = df.meta
-        dfd = dd.concat([df.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
+        dfd = dd.concat([*[_df.data.reset_index(drop=True) for _df in dfs], df.data.reset_index(drop=True)], axis=1)
         
         meta = Meta.preserve(df.meta, Actions.APPEND.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
