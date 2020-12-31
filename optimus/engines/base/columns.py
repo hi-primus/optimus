@@ -227,7 +227,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def set(self, where=None, value=None, output_cols=None, default=None):
+    def set(self, output_cols=None, value=None, where=None, default=None):
         """
         Set a column value using a number, string or a expression.
         :param where:

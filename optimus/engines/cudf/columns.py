@@ -308,7 +308,7 @@ class Cols(DataFrameBaseColumns):
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
 
-    def set(self, where=None, value=None, output_cols=None, default=None):
+    def set(self, output_cols=None, value=None, where=None, default=None):
         """
         Set a column value using a number, string or a expression.
         :param where:
