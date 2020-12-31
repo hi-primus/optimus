@@ -33,7 +33,7 @@ class DaskBaseRows(BaseRows):
     def append(self, dfs, cols_map):
         """
         Appends 2 or more dataframes
-        :param dfds:
+        :param dfs:
         :param cols_map:
         """
         every_df = [self.root, *dfs]
