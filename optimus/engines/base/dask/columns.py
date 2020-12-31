@@ -3,6 +3,7 @@ import dask.dataframe as dd
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
+from optimus.engines.base.meta import Meta
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -48,9 +49,9 @@ class DaskBaseColumns(BaseColumns):
 
         df = self.root
         meta = df.meta
-        dfd = dd.concat([dfds.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
+        dfd = dd.concat([df.data.reset_index(drop=True), df.data.reset_index(drop=True)], axis=1)
         
-        meta = meta.preserve(df, Actions.APPEND.value, df.cols.names())
+        meta = Meta.preserve(df.meta, Actions.APPEND.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
@@ -213,8 +214,7 @@ class DaskBaseColumns(BaseColumns):
         col_index = output_ordered_columns.index(input_cols[-1]) + 1
         output_ordered_columns[col_index:col_index] = [output_col]
 
-
-        meta = df.meta.preserve(dfd, Actions.NEST.value, list(kw_columns.values()))
+        meta = Meta.preserve(df.meta, dfd, Actions.NEST.value, list(kw_columns.values()))
 
         df = self.root.new(dfd, meta=meta)
 

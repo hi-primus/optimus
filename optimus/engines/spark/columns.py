@@ -136,7 +136,7 @@ class Cols(BaseColumns):
     #     if columns is not None:
     #         df = df.select(columns)
     #         # Metadata get lost when using select(). So we copy here again.
-    #         df.meta = Meta.set(df.meta, value=df.meta.preserve(None).get())
+    #         df.meta = Meta.preserve(df.meta, None)
     #
     #     else:
     #         df = None
@@ -275,7 +275,7 @@ class Cols(BaseColumns):
             RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
         df = df.withColumn(output_col, expr)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SET.value, columns).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.SET.value, columns)
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -986,8 +986,8 @@ class Cols(BaseColumns):
         for input_col, output_col in columns:
             dfd = func(dfd, input_col, output_col, search, replace_by)
 
-            dfd.meta = Meta.set(dfd.meta, value=dfd.meta.preserve(None, Actions.REPLACE.value, output_col).get())
-        return self.root.new(dfd)
+            meta = Meta.preserve(df.meta, None, Actions.REPLACE.value, output_col)
+        return self.root.new(dfd, meta=meta)
 
     @staticmethod
     def replace_regex(input_cols, regex=None, value=None, output_cols=None):
@@ -1292,7 +1292,7 @@ class Cols(BaseColumns):
 
             df = vector_assembler.transform(df)
 
-            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.NEST.value, output_col).get())
+            df.meta = Meta.preserve(df.meta, None, Actions.NEST.value, output_col)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
@@ -1306,7 +1306,7 @@ class Cols(BaseColumns):
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.NEST.value, output_col).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.NEST.value, output_col)
         return df
 
     @staticmethod
@@ -1415,8 +1415,7 @@ class Cols(BaseColumns):
 
             else:
                 RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-            df.meta = Meta.set(df.meta,
-                               value=df.meta.preserve(None, Actions.UNNEST.value, [v for k, v in final_columns]).get())
+            df.meta = Meta.preserve(df.meta, None, Actions.UNNEST.value, [v for k, v in final_columns])
         return df
 
     @staticmethod

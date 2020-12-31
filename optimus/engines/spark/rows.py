@@ -71,7 +71,7 @@ class Rows(DaskBaseRows):
         dfd = self.root.data
         dfd = dfd.filter(condition)
         df = self.root.new(dfd)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SORT_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.SORT_ROW.value, df.cols.names())
 
         return odf
 
@@ -141,7 +141,7 @@ class Rows(DaskBaseRows):
                 RaiseIt.value_error(sort_func, ["asc", "desc"])
 
             func.append(sort_func(col_name))
-            df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.SORT_ROW.value, col_name).get())
+            df.meta = Meta.preserve(df.meta, None, Actions.SORT_ROW.value, col_name)
 
         df = df.sort(*func)
         return df
@@ -154,7 +154,7 @@ class Rows(DaskBaseRows):
         """
         df = self.paren.data
         df = df.where(~where)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
@@ -207,7 +207,7 @@ class Rows(DaskBaseRows):
         df = self
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
@@ -221,7 +221,7 @@ class Rows(DaskBaseRows):
         df = self
         input_cols = parse_columns(df, input_cols)
         df = df.rows.drop(fbdt(input_cols, data_type))
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
@@ -239,7 +239,7 @@ class Rows(DaskBaseRows):
         input_cols = parse_columns(self.root, input_cols)
 
         df = df.dropna(how, subset=input_cols)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
@@ -258,7 +258,7 @@ class Rows(DaskBaseRows):
         df = self
         input_cols = parse_columns(self.root, input_cols)
         df = df.drop_duplicates(subset=input_cols)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod
@@ -269,7 +269,7 @@ class Rows(DaskBaseRows):
         """
         df = self
         df = df.zipWithIndex().filter(lambda tup: tup[1] > 0).map(lambda tup: tup[0])
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, df.cols.names()).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     def head(self, columns="*", n=10):
@@ -309,7 +309,7 @@ class Rows(DaskBaseRows):
         # Concat expression with and logical or
         expr = reduce(lambda a, b: a | b, column_expr)
         df = df.rows.select(expr)
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(None, Actions.DROP_ROW.value, input_cols).get())
+        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, input_cols)
         return df
 
     @staticmethod

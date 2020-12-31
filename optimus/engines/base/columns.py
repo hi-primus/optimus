@@ -140,7 +140,7 @@ class BaseColumns(ABC):
 
         dfd = dfd.drop(columns=list(set(df.columns) - set(columns)))
 
-        df.meta = Meta.set(df.meta, value=df.meta.preserve(df, Actions.KEEP.value, columns).get())
+        df.meta = Meta.preserve(df.meta, df, Actions.KEEP.value, columns)
 
         return self.root.new(dfd, meta=meta)
 
@@ -1607,8 +1607,7 @@ class BaseColumns(ABC):
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        meta = df.meta
-        meta = meta.preserve(df, Actions.UNNEST.value, final_columns)
+        df.meta = Meta.preserve(df.meta, Actions.UNNEST.value, final_columns)
 
         df = df.cols.move(df_new.cols.names(), "after", input_cols)
 

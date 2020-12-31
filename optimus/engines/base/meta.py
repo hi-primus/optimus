@@ -69,7 +69,7 @@ class Meta:
         Shortcut to add rename transformations to a dataframe
         :param meta:
         :param old_new_columns:
-        :return: Meta
+        :return: dict (Meta)
         """
 
         # assign(target, spec, value, missing=missing)
@@ -91,7 +91,7 @@ class Meta:
         Shortcut to cache the columns in a dataframe
         :param meta:
         :param value:
-        :return: Meta
+        :return: dict (Meta)
         """
         meta = copy.deepcopy(meta)
         value = val_to_list(value)
@@ -106,7 +106,7 @@ class Meta:
         :param meta:
         :param name:
         :param value:
-        :return: Meta
+        :return: dict (Meta)
         """
         meta = copy.deepcopy(meta)
         value = val_to_list(value)
@@ -132,7 +132,7 @@ class Meta:
         :param path:
         :param value:
         :param default:
-        :return: Meta
+        :return: dict (Meta)
         """
 
         meta = copy.deepcopy(meta)
@@ -156,4 +156,16 @@ class Meta:
                 result = result[ele]
 
         Meta.set(meta, value=new_meta)
+        return meta
+    
+    @staticmethod
+    def preserve(meta, df, value, columns) -> dict:
+        """
+        Preserves meta
+        :param meta:
+        :param df:
+        :param value:
+        :param columns:
+        :return: dict (Meta)
+        """
         return meta
