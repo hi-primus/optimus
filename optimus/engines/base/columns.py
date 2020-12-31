@@ -1538,7 +1538,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def nest(input_cols, shape="string", separator="", output_col=None):
+    def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
         pass
 
     def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
@@ -1608,10 +1608,7 @@ class BaseColumns(ABC):
         df = df.cols.move(df_new.cols.names(), "after", input_cols)
 
         if drop is True:
-            df = df.cols.drop(columns=input_cols)
-            for input_col in input_cols:
-                if input_col in output_ordered_columns:
-                    output_ordered_columns.remove(input_col)
+            df = df.cols.drop(columns=[col for col in input_cols if col not in output_cols])
 
         return df
 

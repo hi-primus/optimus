@@ -168,7 +168,7 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    def nest(self, input_cols, shape="string", separator="", output_col=None):
+    def nest(self, input_cols, separator="", output_col=None, drop=False, shape="string"):
         """
         Merge multiple columns with the format specified
         :param input_cols: columns to be nested
@@ -179,7 +179,8 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.root
-        input_cols = parse_columns(df, input_cols)
+        input_cols = parse_columns(df, input_cols)\
+        
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)
         if output_col is None:
@@ -211,11 +212,15 @@ class DaskBaseColumns(BaseColumns):
 
         dfd = df.data.assign(**kw_columns)
 
-        col_index = output_ordered_columns.index(input_cols[-1]) + 1
-        output_ordered_columns[col_index:col_index] = [output_col]
+        if output_col not in output_ordered_columns:
+            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            output_ordered_columns[col_index:col_index] = [output_col]
 
         meta = Meta.preserve(df.meta, dfd, Actions.NEST.value, list(kw_columns.values()))
 
-        df = self.root.new(dfd, meta=meta)
+        if drop is True:
+            for input_col in input_cols:
+                if input_col in output_ordered_columns and input_col != output_col:
+                    output_ordered_columns.remove(input_col)
 
-        return df.cols.select(output_ordered_columns)
+        return self.root.new(dfd).cols.select(output_ordered_columns)

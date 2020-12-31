@@ -1263,7 +1263,7 @@ class Cols(BaseColumns):
 
     @staticmethod
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, shape="string", separator="", output_col=None):
+    def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
@@ -1275,6 +1275,11 @@ class Cols(BaseColumns):
         df = self.root
         output_col = parse_columns(df, output_col, accepts_missing_cols=True)
         check_column_numbers(output_col, 1)
+
+        output_ordered_columns = df.cols.names()
+
+        if output_col not in output_ordered_columns:
+            output_ordered_columns.append(output_col)
 
         if has_(input_cols, F.Column):
             # Transform non Column data to lit
@@ -1307,7 +1312,17 @@ class Cols(BaseColumns):
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
         df.meta = Meta.preserve(df.meta, None, Actions.NEST.value, output_col)
-        return df
+
+        if output_col not in output_ordered_columns:
+            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            output_ordered_columns[col_index:col_index] = [output_col]
+
+        if drop is True:
+            for input_col in input_cols:
+                if input_col in output_ordered_columns and input_col != output_col:
+                    output_ordered_columns.remove(input_col)
+
+        return df.cols.select(output_ordered_columns)
 
     @staticmethod
     def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False) -> DataFrame:

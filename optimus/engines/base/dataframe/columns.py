@@ -103,7 +103,7 @@ class DataFrameBaseColumns(BaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def nest(self, input_cols, shape="string", separator="", output_col=None):
+    def nest(self, input_cols, separator="", output_col=None, shape="string", drop=False):
         df = self.root
 
         dfd = df.data
@@ -112,6 +112,8 @@ class DataFrameBaseColumns(BaseColumns):
             RaiseIt.type_error(output_col, ["str"])
 
         input_cols = parse_columns(df, input_cols)
+
+        output_ordered_columns = df.cols.names()
 
         # cudfd do nor support apply or agg join for this operation
         if shape == "vector" or shape == "array":
@@ -125,4 +127,13 @@ class DataFrameBaseColumns(BaseColumns):
             dfds = [dfd[input_col].astype(str) for input_col in input_cols]
             dfd[output_col] = reduce((lambda x, y: x + separator + y), dfds)
 
-        return self.root.new(dfd)
+        if output_col not in output_ordered_columns:
+            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            output_ordered_columns[col_index:col_index] = [output_col]
+
+        if drop is True:
+            for input_col in input_cols:
+                if input_col in output_ordered_columns and input_col != output_col:
+                    output_ordered_columns.remove(input_col)
+
+        return self.root.new(dfd).cols.select(output_ordered_columns)

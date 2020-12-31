@@ -36,7 +36,6 @@ class DaskBaseRows(BaseRows):
         :param dfs:
         :param cols_map:
         """
-            
         every_df = [self.root, *dfs]
 
         if cols_map is not None:
