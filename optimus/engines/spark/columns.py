@@ -435,7 +435,7 @@ class Cols(BaseColumns):
 
         dfd = df.data.drop(*columns)
 
-        meta = df.meta.action(Actions.DROP.value, columns)
+        meta = Meta.action(df.meta, Actions.DROP.value, columns)
         return self.root.new(dfd, meta=meta)
 
     def create_exprs(self, columns, funcs, *args):

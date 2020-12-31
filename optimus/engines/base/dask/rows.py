@@ -229,7 +229,7 @@ class DaskBaseRows(BaseRows):
 
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        meta = df.meta.action(Actions.DROP_ROW.value, df.cols.names())
+        meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(df.data, meta=meta)
 
     def drop_by_dtypes(self, input_cols, data_type=None):

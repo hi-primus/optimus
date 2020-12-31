@@ -118,7 +118,7 @@ class BaseColumns(ABC):
         check_column_numbers(columns, "*")
 
         dfd = df.data.drop(columns=columns)
-        meta = df.meta.action(Actions.DROP.value, columns)
+        meta = Meta.action(df.meta, Actions.DROP.value, columns)
 
         return self.root.new(dfd, meta=meta)
 

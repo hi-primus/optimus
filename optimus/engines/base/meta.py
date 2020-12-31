@@ -159,7 +159,7 @@ class Meta:
         return meta
     
     @staticmethod
-    def preserve(meta, df, value, columns) -> dict:
+    def preserve(meta, df=None, value=None, columns=None) -> dict:
         """
         Preserves meta
         :param meta:
