@@ -5,7 +5,7 @@ import simplejson as json
 import pyspark
 
 from optimus.helpers.check import is_dask_dataframe
-from optimus.infer import is_function, is_list, is_list_empty, is_list_of_strings, is_list_of_numeric, is_list_of_tuples, \
+from optimus.infer import is_function, is_list, is_list_empty, is_list_of_str, is_list_of_numeric, is_list_of_tuples, \
     is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
@@ -159,7 +159,7 @@ class Test:
                 _args.append(str(v))
 
             elif is_list(v):
-                if is_list_of_strings(v):
+                if is_list_of_str(v):
                     lst = ["'" + x + "'" for x in v]
                 elif is_list_of_numeric(v) or is_list_of_tuples(v):
                     lst = [str(x) for x in v]

@@ -814,16 +814,6 @@ def is_column(value):
     """
     return isinstance(value, F.Column)
 
-
-def is_list_of_str(value):
-    """
-    Check if an object is a list of strings
-    :param value:
-    :return:
-    """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, str) for elem in value)
-
-
 def is_list_of_int(value):
     """
     Check if an object is a list of integers
@@ -910,7 +900,7 @@ def is_ip(value):
     return True
 
 
-def is_list_of_strings(value):
+def is_list_of_str(value):
     """
     Check if all elements in a list are strings
     :param value:

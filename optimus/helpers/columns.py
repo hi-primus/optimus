@@ -7,7 +7,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str
+from optimus.infer import is_list, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -341,7 +341,7 @@ def validate_columns_names(df, col_names: [str, list], index=0):
 
     # Remove duplicates in the list
 
-    if is_list_of_strings(columns):
+    if is_list_of_str(columns):
         columns = OrderedSet(columns)
 
     check_for_missing_columns(df, columns)
