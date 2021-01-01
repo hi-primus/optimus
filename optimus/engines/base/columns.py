@@ -1175,7 +1175,7 @@ class BaseColumns(ABC):
     #     # "apply" from pandas method will help to all the decode text in the csv
     #     df['title'] = df.title.apply(title_parse)
 
-    def pad(self, input_cols="*", width=0, side="left", fillchar="0", output_cols=None, ):
+    def pad(self, input_cols="*", width=0, fillchar="0", side="left", output_cols=None, ):
 
         return self.apply(input_cols, self.F.pad, args=(width, side, fillchar,), func_return_type=str,
                           output_cols=output_cols,
