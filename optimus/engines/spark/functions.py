@@ -105,7 +105,7 @@ class SparkFunctions(Functions):
         pass
 
     @staticmethod
-    def log(col):
+    def log(col, base):
         pass
 
     @staticmethod

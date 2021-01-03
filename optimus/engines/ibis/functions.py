@@ -73,10 +73,10 @@ class IbisFunctions(Functions):
         return np.degrees(series.to_float())
 
     def ln(self, series, *args):
-        return self._to_float(series).ln()
+        return self._to_float(series).log()
 
-    def log(self, series, *args):
-        return self._to_float(series).log10()
+    def log(self, series, base=10):
+        return self._to_float(series).log() / np.log(base)
 
     def ceil(self, series, *args):
         return self._to_float(series).ceil()

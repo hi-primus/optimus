@@ -202,7 +202,7 @@ class Functions(ABC):
 
     @staticmethod
     @abstractmethod
-    def log(series):
+    def log(series, base):
         pass
 
     @staticmethod

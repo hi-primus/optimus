@@ -49,10 +49,10 @@ class CUDFFunctions(Functions):
         return cudf.degrees(self.to_float(series))
 
     def ln(self, series):
-        return cudf.log(self.to_float(series))
+        return self.to_float(series).log()
 
-    def log(self, series):
-        return self.to_float(series).log() / cudf.log(10)
+    def log(self, series, base=10):
+        return cudf.log(self.to_float(series)) / cudf.log(base)
 
     def ceil(self, series):
         return self.to_float(series).ceil()

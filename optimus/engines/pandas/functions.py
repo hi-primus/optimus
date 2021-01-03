@@ -50,8 +50,8 @@ class PandasFunctions(Functions):
     def ln(self, series):
         return np.log(self._to_float(series))
 
-    def log(self, series):
-        return np.log10(self._to_float(series))
+    def log(self, series, base=10):
+        return np.log(self._to_float(series)) / np.log(base)
 
     def ceil(self, series):
         return np.ceil(self._to_float(series))

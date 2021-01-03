@@ -845,16 +845,17 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized", args=divisor)
 
-    def log(self, input_cols="*", output_cols=None):
+    def log(self, input_cols="*", base=10, output_cols=None):
         """
         Apply mod to column
         :param input_cols:
+        :param base:
         :param output_cols:
         :return:(
         """
 
         return self.apply(input_cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
-                          mode="vectorized")
+                          mode="vectorized", args=base)
 
     def ln(self, input_cols="*", output_cols=None):
         """

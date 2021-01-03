@@ -97,9 +97,9 @@ class DaskCUDFFunctions(Functions):
         series = self.series
         return series.map_partitions(lambda _series: _series.exp())
 
-    def log(self):
+    def ln(self):
         series = self.series
-        return series.map_partitions(lambda _series: _series.log() / cudf.log(10))
+        return series.map_partitions(lambda _series: _series.log())
 
     def radians(self):
         series = self.series
@@ -109,9 +109,9 @@ class DaskCUDFFunctions(Functions):
         series = self.series
         return cudf.degrees(series.to_float())
 
-    def ln(self):
+    def log(self, base=10):
         series = self.series
-        return series.map_partitions(lambda _series: _series.log())
+        return series.map_partitions(lambda _series: _series.log()) / cudf.log(base)
 
     def ceil(self):
         series = self.series
