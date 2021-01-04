@@ -170,7 +170,7 @@ class BaseColumns(ABC):
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
+              meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs):
 
         columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
@@ -1197,7 +1197,7 @@ class BaseColumns(ABC):
 
         df = self.root
         return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
-                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="pandas",
+                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="vectorized",
                              set_index=True)
 
     @staticmethod
@@ -1233,7 +1233,7 @@ class BaseColumns(ABC):
             return value.astype(str).str.replace(r'\d+', '')
 
         return self.apply(input_cols, _remove_numbers, func_return_type=str,
-                          output_cols=output_cols, mode="pandas", set_index=True)
+                          output_cols=output_cols, mode="vectorized", set_index=True)
 
     def remove_white_spaces(self, input_cols="*", output_cols=None):
         """
@@ -1266,7 +1266,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.apply(input_cols, self.F().to_datetime, func_return_type=str,
-                          output_cols=output_cols, args=format, mode="pandas")
+                          output_cols=output_cols, args=format, mode="vectorized")
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -1279,7 +1279,7 @@ class BaseColumns(ABC):
 
         return self.apply(input_cols, self.F().year, args=format, output_cols=output_cols,
                           meta_action=Actions.YEAR.value,
-                          mode="pandas", set_index=True)
+                          mode="vectorized", set_index=True)
 
     def month(self, input_cols, format=None, output_cols=None):
         """
@@ -1290,40 +1290,40 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="pandas",
+        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="vectorized",
                           set_index=True)
 
     def day(self, input_cols, format=None, output_cols=None):
 
-        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
     def hour(self, input_cols, format=None, output_cols=None):
 
         def _hour(value, _format):
             return self.F.hour(value, _format)
 
-        return self.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
     def minute(self, input_cols, format=None, output_cols=None):
 
         def _minute(value, _format):
             return self.F.minute(value, _format)
 
-        return self.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
     def second(self, input_cols, format=None, output_cols=None):
 
         def _second(value, _format):
             return self.F.second(value, _format)
 
-        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
     def weekday(self, input_cols, format=None, output_cols=None):
 
         def _second(value, _format):
             return self.F.weekday(value, _format)
 
-        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
     def years_between(self, input_cols, date_format=None, output_cols=None):
 
@@ -1332,7 +1332,7 @@ class BaseColumns(ABC):
 
         return self.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.YEARS_BETWEEN.value, mode="pandas", set_index=True)
+                          meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)
 
     def replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                 output_cols=None):
