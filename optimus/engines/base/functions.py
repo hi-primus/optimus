@@ -1,11 +1,9 @@
-import math
 import re
 from abc import abstractmethod, ABC
 
 import numpy as np
 
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_numeric
 
 
 class Functions(ABC):
@@ -147,39 +145,28 @@ class Functions(ABC):
     def cut(series, bins):
         pass
 
-    @staticmethod
-    def abs(series):
-        return series._to_float().abs()
+    def abs(self, series):
+        return self._to_float(series).abs()
 
-    @staticmethod
-    def exp(series):
-        return series._to_float().exp()
+    def exp(self, series):
+        return self._to_float(series).exp()
 
     @staticmethod
     @abstractmethod
     def sqrt(series):
         pass
 
-    @staticmethod
-    def mod(series, other):
-        return series._to_float().mod(other)
+    def mod(self, series, other):
+        return self._to_float(series).mod(other)
 
-    @staticmethod
-    def round(series, decimals):
-        return series._to_float().round(decimals)
+    def round(self, series, decimals):
+        return self._to_float(series).round(decimals)
 
-    @staticmethod
-    def pow(series, exponent):
+    def pow(self, series, exponent):
+        return self._to_float(series).pow(exponent)
 
-        if is_numeric(series):
-            series = float(series)
-            return math.pow(series, exponent)
-
-        return series._to_float().pow(exponent)
-
-    @staticmethod
-    def floor(series):
-        return series._to_float().floor()
+    def floor(self, series):
+        return self._to_float(series).floor()
 
     # def trunc(self):
     #     series = self.series
