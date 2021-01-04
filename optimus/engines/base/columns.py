@@ -190,22 +190,25 @@ class BaseColumns(ABC):
             dfd = func(dfd)
         else:
             for input_col, output_col in columns:
-                if mode == "pandas" and (is_dask_dataframe(dfd)):
+
+                if mode == "vectorized" and (is_dask_dataframe(dfd)):
                     partitions = dfd.to_delayed()
+                    print(partitions)
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
+                    # print(kw_columns)
 
-                elif mode == "vectorized" or mode == "pandas":
+                elif mode == "vectorized":
+                    # ddf = func(dfd[input_col], *args)
+                    #
+                    # if is_dask_dataframe(_ddf):
+                    #     df = df.cols.append(func(dfd[input_col], *args))
+                    # else:
 
-                    _ddf = func(dfd[input_col], *args)
-
-                    if is_dask_dataframe(_ddf):
-                        df = df.cols.append([_ddf])
-                    else:
-                        kw_columns[output_col] = func(dfd[input_col], *args)
+                    kw_columns[output_col] = func(dfd[input_col], *args)
                 elif mode == "map":
-                    kw_columns = self._map(dfd, input_col, output_col, func, args, kw_columns)
+                    kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
 
                 # Preserve column order
                 if output_col not in self.names():
