@@ -55,18 +55,52 @@ class BaseDataFrame(ABC):
         :param opb:
         :return:
         """
+        if isinstance(df1, (BaseDataFrame,)):
+            col1 = df1.cols.names(0)[0]
+            df1 = df1.cols.to_float(col1).data[col1]
+
         if isinstance(df2, (BaseDataFrame,)):
             col2 = df2.cols.names(0)[0]
-            df2 = df2.data[col2]
+            # print("aaa", df2)
+            df2 = df2.cols.to_float().data[col2]
 
-        col1 = df1.cols.names(0)[0]
-        return self.root.new(opb(df1.data[col1], df2).to_frame())
+        return self.root.new(opb(df1, df2).to_frame())
 
     def __add__(self, df2):
         return self.operation(self, df2, operator.add)
 
+    def __radd__(self, df2):
+        return self.operation(df2, self, operator.add)
+
     def __sub__(self, df2):
         return self.operation(self, df2, operator.sub)
+
+    def __rsub__(self, df2):
+        return self.operation(self, df2, operator.sub)
+
+    def __mul__(self, df2):
+        return self.operation(self, df2, operator.mul)
+
+    def __rmul__(self, df2):
+        return self.operation(df2, self, operator.mul)
+
+    def __truediv__(self, df2):
+        return self.operation(self, df2, operator.truediv)
+
+    def __rtruediv__(self, df2):
+        return self.operation(self, df2, operator.truediv)
+
+    def __floordiv__(self, df2):
+        return self.operation(self, df2, operator.floordiv)
+
+    def __rfloordiv__(self, df2):
+        return self.operation(self, df2, operator.floordiv)
+
+    def __pow__(self, df2):
+        return self.operation(self, df2, operator.pow)
+
+    def __rpow__(self, df2):
+        return self.operation(self, df2, operator.pow)
 
     def __eq__(self, df2):
         return self.operation(self, df2, operator.eq)
