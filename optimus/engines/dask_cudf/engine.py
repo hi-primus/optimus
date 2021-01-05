@@ -1,4 +1,5 @@
 import dask
+
 from dask.distributed import Client
 
 from optimus.engines.base.create import Create
@@ -63,13 +64,14 @@ class DaskCUDFEngine(BaseEngine):
             DaskCUDF.instance = Client(address=address)
 
         elif session is None:
-            # from dask_cuda import LocalCUDACluster
+            from dask_cuda import LocalCUDACluster
+            from GPUtil import GPUtil
             n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
 
             if n_workers > n_gpus:
-                logger.print(f"n_workers should equal or less than the number of GPUs. n_workers is now {n_gpus}")
+                logger.print(f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
                 n_workers = n_gpus
-            n_gpus = 1
+                # n_gpus = 1
             cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
                                        memory_limit=memory_limit)
             DaskCUDF.instance = Client(cluster, *args, **kwargs)
