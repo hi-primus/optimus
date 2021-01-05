@@ -332,7 +332,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
 
     start_mem_usg = df.size()
-
+    df=df.data
     ints = df.applymap(isint).sum().compute().to_dict()
     floats = df.applymap(isfloat).sum().compute().to_dict()
     nulls = df.isnull().sum().compute().to_dict()
