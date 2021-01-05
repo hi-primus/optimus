@@ -41,6 +41,10 @@ class BaseDataFrame(ABC):
     def __getitem__(self, item):
         return self.cols.select(item)
 
+    def __setitem__(self, key, value):
+        self.cols.assign({key: value})
+
+
     def new(self, df, meta=None):
         new_df = self.__class__(df)
         if meta is not None:
