@@ -57,7 +57,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3,
-            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, conn=None,
+            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, storage_options=None, conn=None,
             *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -88,8 +88,8 @@ class Load(BaseLoad):
             if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
                 lineterminator = None
             if conn is not None:
-                filepath_or_buffer = conn.url + filepath_or_buffer
-                storage_options = conn.options
+                filepath_or_buffer = conn.path(filepath_or_buffer)
+                storage_options = conn.storage_options
             else:
                 storage_options = None
 
@@ -109,7 +109,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, *args, **kwargs):
+    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -119,6 +119,11 @@ class Load(BaseLoad):
         """
 
         # file, file_name = prepare_path(path, "parquet")[0]
+
+        
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
 
         try:
             df = pd.read_parquet(path, columns=columns, engine='pyarrow', storage_options=storage_options, **kwargs)
@@ -132,7 +137,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a avro file.
         :param storage_options:
@@ -140,6 +145,10 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "avro")[0]
 
         try:
@@ -154,7 +163,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, *args, **kwargs):
+    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -162,10 +171,14 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "xls")[0]
 
         try:
-            df = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+            df = pd.read_excel(file, sheet_name=sheet_name, storage_options=storage_options, *args, **kwargs)
 
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
             # exception when Spark try to infer the column data type
@@ -189,17 +202,21 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns, *args, **kwargs):
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+        
         file, file_name = prepare_path(path, "orc")[0]
 
         try:
-            df = pdx.read_orc(file_name, columns)
+            df = pdx.read_orc(file_name, columns, storage_options=storage_options)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 

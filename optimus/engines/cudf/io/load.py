@@ -125,17 +125,21 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
         :param path: path or location of the file. Must be string dataType
         :param storage_options:
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+        
         file, file_name = prepare_path(path, "avro")[0]
 
         try:
-            df = cudf.read_avro(path, *args, **kwargs)
+            df = cudf.read_avro(path, storage_options=storage_options, *args, **kwargs)
             df = CUDFDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
@@ -146,7 +150,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns=None, *args, **kwargs):
+    def orc(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -154,10 +158,14 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+        
         file, file_name = prepare_path(path, "orc")[0]
 
         try:
-            df = cudf.read_orc(path, columns, *args, **kwargs)
+            df = cudf.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
             df = CUDFDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
@@ -168,7 +176,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, *args, **kwargs):
+    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -176,10 +184,14 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "xls")
 
         try:
-            pdf = cudf.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+            pdf = cudf.read_excel(file, sheet_name=sheet_name, storage_options=storage_options, *args, **kwargs)
 
             # exception when Spark try to infer the column data type
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce

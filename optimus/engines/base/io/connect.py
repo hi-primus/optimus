@@ -4,13 +4,48 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import regex_full_url
 import re
 
-class S3:
+SCHEMAS = ['s3://','gcs://','gc://','http://','https://','ftp://','file://','az://','adl://','abfs://']
+
+class Connection:
+    """
+    Generic
+    """
+
+    def __init__(self, **kwargs):
+        if not kwargs["base_url"].endswith("/"):
+            kwargs["base_url"] = kwargs["base_url"] + "/"
+        self.options = kwargs
+
+
+    def path(self, path):
+        if self.options["base_url"] and not path.startswith((self.options["base_url"], *SCHEMAS)):
+            path = self.options["base_url"] + path
+
+        return path
+
+
+    @property
+    def storage_options(self):
+        storage_options = self.options.copy()
+        display(self.__class__)
+        storage_options.pop("base_url")
+
+        if not len(storage_options.keys()):
+            storage_options = None
+        else:
+            storage_options = {k: storage_options[k] for k in storage_options.keys() if not k.startswith('_')}
+
+        return storage_options
+
+class S3(Connection):
     """
     Amazon S3
     """
 
-    def __init__(self, url=None, **kwargs):
+    def __init__(self, url=None, bucket=None, **kwargs):
         """
+        url: http(s)://<bucket name>.<subdomain>.<domain>
+        bucket
         anon: Whether access should be anonymous (default False)
         key, secret: For user authentication
         token: If authentication has been done with some other S3 client
@@ -30,15 +65,41 @@ class S3:
         if url is None:
             RaiseIt.value_error(url, "")
 
+        schema_result = re.search(regex_full_url, url)
 
-        schema = re.search(regex_full_url, url)[2]
-        if schema is None:
-            self.url = "s3:" + url
+        if schema_result is not None:
+            schema = schema_result[2]
+            url = url[len(schema)+3:] # removes schema from url
 
-        self.options = kwargs
+        kwargs['client_kwargs'] = kwargs.get('client_kwargs', {})
+
+        schema = schema if schema else 'https'
+
+        kwargs['client_kwargs']['endpoint_url'] = kwargs['client_kwargs'].get('endpoint_url', schema+"://"+url)
+
+        if not kwargs.get('base_url', False):
+            if bucket:
+                kwargs["base_url"] = 's3://'+bucket
+            elif url:
+                kwargs["base_url"] = 's3://'+url
+
+        super().__init__(**kwargs)
 
 
-class MAS:
+class Local(Connection):
+    """
+    Local file system
+    """
+
+    def __init__(self, **kwargs):
+        """
+        supports base_url
+        :param kwargs:
+        """
+        super().__init__(**kwargs)
+
+
+class MAS(Connection):
     """
     Microsoft Azure Storage
     """
@@ -49,15 +110,17 @@ class MAS:
         Authentication for abfs requires account_name and account_key in storage_options.
         :param kwargs:
         """
+        super().__init__(**kwargs)
 
 
-class HDFS:
-    def __init__(self, host, port, user, keb_ticket):
-        self.options = args
+class GCS(Connection):
+    def __init__(self, host, port, user, kerb_ticket):
+        super().__init__(host, port, user, kerb_ticket)
 
-    def options(self):
-        return self.options
 
+class HDFS(Connection):
+    def __init__(self, host, port, user, kerb_ticket):
+        super().__init__(host, port, user, kerb_ticket)
 
 class Connect:
     @staticmethod
@@ -117,10 +180,17 @@ class Connect:
     @staticmethod
     def s3(**kwargs):
         return S3(**kwargs)
+    
+
+    @staticmethod
+    def local(**kwargs):
+        return Local(**kwargs)
+
 
     @staticmethod
     def hdfs(**kwargs):
         return HDFS(**kwargs)
+
 
     @staticmethod
     def gcs(**kwargs):
@@ -129,7 +199,8 @@ class Connect:
         :param kwargs:
         :return:
         """
-        return HDFS(**kwargs)
+        return GCS(**kwargs)
+
 
     @staticmethod
     def mas(**kwargs):

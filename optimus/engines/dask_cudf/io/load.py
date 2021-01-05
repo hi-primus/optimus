@@ -15,7 +15,7 @@ from optimus.helpers.logger import logger
 class Load(BaseLoad):
     # import dask_cudf
     @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
+    def json(path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dask dataframe from a json file.
         :param path: path or location of the file.
@@ -23,11 +23,15 @@ class Load(BaseLoad):
 
         :return:
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+        
         file, file_name = prepare_path(path, "json")[0]
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dask_cudf.read_json(path, lines=multiline, *args, **kwargs)
+            df = dask_cudf.read_json(path, lines=multiline, storage_options=storage_options, *args, **kwargs)
             df = DaskCUDFDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
@@ -53,7 +57,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True,
-            storage_options=None, *args,**kwargs):
+            storage_options=None, conn=None, *args,**kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -73,11 +77,15 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
 
         try:
             dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                       quoting=quoting, error_bad_lines=error_bad_lines,
-                                      keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
+                                      keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter,
+                                      storage_options=storage_options)
             df = DaskCUDFDataFrame(dcdf)
             df.meta = Meta.set(df.meta, "file_name", path)
             df.meta = Meta.set(df.meta, "name", ntpath.basename(path))
@@ -88,7 +96,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, *args, **kwargs):
+    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -97,11 +105,14 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
 
         file, file_name = prepare_path(path, "parquet")
 
         try:
-            df = dask_cudf.read_parquet(path, columns=columns, *args, **kwargs)
+            df = dask_cudf.read_parquet(path, columns=columns, storage_options=storage_options, *args, **kwargs)
 
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
@@ -112,7 +123,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -120,10 +131,14 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         :return: Spark Dataframe
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "avro")
 
         try:
-            df = db.read_avro(path, *args, **kwargs).to_dataframe()
+            df = db.read_avro(path, storage_options=storage_options, *args, **kwargs).to_dataframe()
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
@@ -133,7 +148,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, *args, **kwargs):
+    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -142,10 +157,14 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: Spark Dataframe
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "xls")
 
         try:
-            pdf = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+            pdf = pd.read_excel(file, sheet_name=sheet_name, storage_options=storage_options, *args, **kwargs)
 
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
             # exception when Spark try to infer the column data type

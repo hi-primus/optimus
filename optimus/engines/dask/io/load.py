@@ -26,9 +26,13 @@ class Load(BaseLoad):
         """
         file, file_name = prepare_path(path, "json")[0]
 
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dd.read_json(path, lines=multiline, *args, **kwargs)
+            df = dd.read_json(path, lines=multiline, storage_options=storage_options, *args, **kwargs)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
@@ -53,7 +57,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
-            na_filter=False, null_value=None, storage_options=None, *args, **kwargs):
+            na_filter=False, null_value=None, storage_options=None, conn=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -79,14 +83,18 @@ class Load(BaseLoad):
         if cache is False:
             prepare_path.cache_clear()
 
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
             ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                               quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
-                              **kwargs)
+                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                              storage_options=storage_options, *args, **kwargs)
 
             if n_rows > -1:
                 ddf = dd.from_pandas(ddf.head(n_rows), npartitions=1)
@@ -100,7 +108,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, engine="pyarrow", *args, **kwargs):
+    def parquet(path, columns=None, engine="pyarrow", storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -111,8 +119,12 @@ class Load(BaseLoad):
         :return: Spark Dataframe
         """
 
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
-            df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
+            df = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args, **kwargs)
             df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
@@ -122,8 +134,8 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, *args,
-            **kwargs):
+    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, 
+            storage_options=None, conn=None, *args, **kwargs):
         file, file_name = prepare_path(path, "zip")
 
         from zipfile import ZipFile
@@ -146,8 +158,7 @@ class Load(BaseLoad):
 
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
-                             compression="gzip", *args,
-                             **kwargs)
+                             compression="gzip", *args, **kwargs)
 
             if n_rows > -1:
                 df = df.head(n_rows)
@@ -159,7 +170,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns=None, cache=None, *args, **kwargs):
+    def orc(path, columns=None, cache=None, storage_options=None, conn=None, *args, **kwargs):
 
         """
         Optimized Row Columnar
@@ -172,11 +183,15 @@ class Load(BaseLoad):
         if cache is False:
             prepare_path.cache_clear()
 
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            ddf = dd.read_orc(path, columns, *args, **kwargs)
+            ddf = dd.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
 
             df = DaskDataFrame(ddf)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
@@ -187,7 +202,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -196,6 +211,10 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the avro function
         :return: Spark Dataframe
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path, "avro")
 
         try:
@@ -209,7 +228,8 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, *args, **kwargs):
+    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None, 
+            conn=None, *args, **kwargs):
         """
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -219,6 +239,10 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the excel function
 
         """
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         file, file_name = prepare_path(path)
         header = None
         if merge_sheets is True:
@@ -230,9 +254,9 @@ class Load(BaseLoad):
         if n_rows == -1:
             n_rows = None
 
-        pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, *args,
-                             **kwargs)
-        sheet_names = list(pd.read_excel(file, None).keys())
+        pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, 
+                            storage_options=storage_options, *args, **kwargs)
+        sheet_names = list(pd.read_excel(file, None, storage_options=storage_options).keys())
 
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
