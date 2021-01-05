@@ -207,6 +207,7 @@ class BaseColumns(ABC):
                     # else:
 
                     kw_columns[output_col] = func(dfd[input_col], *args)
+
                 elif mode == "map":
                     kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
 
@@ -222,6 +223,7 @@ class BaseColumns(ABC):
             if set_index is True:
                 dfd = dfd.reset_index()
             if kw_columns:
+
                 dfd = dfd.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
@@ -473,6 +475,7 @@ class BaseColumns(ABC):
         return df.cols.assign(kw_columns)
 
     def assign(self, kw_columns):
+
         dfd = self.root.data
         return self.root.new(dfd.assign(**kw_columns))
 
@@ -1911,23 +1914,24 @@ class BaseColumns(ABC):
         """
 
         def _domain(value):
-            return value.str.extract(regex_full_url)[6]
+            return value.str.extract(regex_full_url)[5]
+
 
         df = self.root
         return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
-    def domain_scheme(self, input_cols, output_cols=None):
+    def url_scheme(self, input_cols, output_cols=None):
         # From https://www.hi-bumblebee.com it returns https
         def _domain_scheme(value):
-            return value.str.extract(regex_full_url)[2]
+            return value.str.extract(regex_full_url)[1]
 
         df = self.root
         return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_SCHEME.value,
                              mode="vectorized")
 
-    def domain_params(self, input_cols, output_cols=None):
+    def url_params(self, input_cols, output_cols=None):
         def _domain_params(value):
             return value.str.extract(regex_full_url)[9]
 
@@ -1936,10 +1940,10 @@ class BaseColumns(ABC):
                              meta_action=Actions.DOMAIN_PARAMS.value,
                              mode="vectorized")
 
-    def domain_path(self, input_cols, output_cols=None):
+    def url_path(self, input_cols, output_cols=None):
 
         def _domain_path(value):
-            return value.str.extract(regex_full_url)[7]
+            return value.str.extract(regex_full_url)[8]
 
         df = self.root
         return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.DOMAIN_PATH.value,
@@ -1948,7 +1952,7 @@ class BaseColumns(ABC):
     def port(self, input_cols, output_cols=None):
         # From https://www.hi-bumblebee.com:8080 it returns 8080
         def _port(value):
-            return value.str.extract(regex_full_url)[7]
+            return value.str.extract(regex_full_url)[6]
 
         df = self.root
         return df.cols.apply(input_cols, _port, output_cols=output_cols, meta_action=Actions.PORT.value,
@@ -1957,7 +1961,7 @@ class BaseColumns(ABC):
     def subdomain(self, input_cols, output_cols=None):
         # From https://www.hi-bumblebee.com:8080 it returns www
         def _subdomain(value):
-            return value.str.extract(regex_full_url)[3]
+            return value.str.extract(regex_full_url)[4]
 
         df = self.root
         return df.cols.apply(input_cols, _subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
@@ -1966,7 +1970,7 @@ class BaseColumns(ABC):
     # Email functions
     def email_username(self, input_cols, output_cols=None):
         def _email_user(value):
-            return value.str.split('@')[0]
+            return value.str.split('@')[0][0]
 
         df = self.root
         return df.cols.apply(input_cols, _email_user, output_cols=output_cols, meta_action=Actions.EMAIL_USER.value,
@@ -1976,7 +1980,7 @@ class BaseColumns(ABC):
         def _email_domain(value):
             # return value.str.split('@').str[1]
             # return value.str.extract(r"@(.*)")
-            return value.str.split('@')[1]
+            return value.str.split('@')[0][1]
 
         df = self.root
         return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
