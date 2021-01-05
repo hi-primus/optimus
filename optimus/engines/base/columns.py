@@ -26,9 +26,6 @@ from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_e
     is_tuple, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
-INFER_ROWS_NUMBER = 30
-
-
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
 
