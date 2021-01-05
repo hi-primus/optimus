@@ -1,7 +1,7 @@
 import numpy as np
 from numba import njit
 
-
+# Reference https://stackoverflow.com/questions/52673285/performance-of-pandas-apply-vs-np-vectorize-to-create-new-column-from-existing-c
 # Reference https://stackoverflow.com/questions/12200580/numpy-function-for-simultaneous-max-and-min
 
 @njit(fastmath=True)

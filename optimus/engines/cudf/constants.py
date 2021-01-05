@@ -1,6 +1,4 @@
 import numpy as np
-from cudf.core import DataFrame
-
 
 # from cudf.core.column.numerical import NumericalColumn
 # from cudf.core.column.datetime import DatetimeColumn
@@ -59,4 +57,3 @@ def constants(self):
 
 
 STARTING_DASK = "Starting or setting Cudf..."
-DataFrame.constants = property(constants)

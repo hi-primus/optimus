@@ -21,8 +21,8 @@ from optimus.plots.functions import plot_frequency, plot_missing_values, plot_hi
 from optimus.profiler.functions import fill_missing_col_types, \
     write_json, write_html
 from optimus.profiler.templates.html import FOOTER, HEADER
-
 from optimus.profiler.constants import MAX_BUCKETS, BATCH_SIZE
+from optimus.engines.base.meta import Meta
 
 
 class Profiler:
@@ -110,7 +110,7 @@ class Profiler:
             html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
-        # self.html = html + df.ext.display_html(10)
+        # self.html = html + df.display_html(10)
         self.html = html
 
         # Display HTML
@@ -326,13 +326,13 @@ class Profiler:
 
                 output_columns = update_dict(output_columns, updated_columns)
 
-                assign(output_columns, "name", df.ext.get_name(), dict)
+                assign(output_columns, "name", df.meta.get("name"), dict)
                 assign(output_columns, "file_name", df.meta.get("file_name"), dict)
 
                 # Add the General data summary to the output
                 data_set_info = {'cols_count': cols_count,
                                  'rows_count': rows_count,
-                                 'size': humanize.naturalsize(df.ext.size()),
+                                 'size': humanize.naturalsize(df.size()),
                                  'sample_size': sample}
 
                 assign(output_columns, "summary", data_set_info, dict)
@@ -357,8 +357,8 @@ class Profiler:
             {_cols_name: actual_columns[_cols_name] for _cols_name in df.cols.names() if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.meta.set(value={})
-        df = df.meta.columns(df.cols.names())
+        df.meta = Meta.set(df.meta, value={})
+        df.meta = Meta.set(df.meta, value=df.meta.columns(df.cols.names()).get())
 
         # col_names = output_columns["columns"].keys()
         if format == "json":
@@ -367,7 +367,7 @@ class Profiler:
             result = output_columns
 
         self.output_columns = output_columns
-        df.meta.set("transformations.actions", {})
+        df.meta = Meta.set(df.meta, "transformations.actions", {})
 
         return result
 

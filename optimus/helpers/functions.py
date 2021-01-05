@@ -21,16 +21,12 @@ from fastnumbers import isint, isfloat
 from string_grouper import match_strings
 
 from optimus import ROOT_DIR
-from optimus.engines import functions as F  # Used in eval
 from optimus.helpers.check import is_url
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import any_dataframe_to_pandas
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
 
-F = F  # To do not remove the import accidentally when using pycharm auto clean import feature
 
 
 def random_int(n=5):
@@ -43,71 +39,6 @@ def random_int(n=5):
 
 def collect_as_list(df):
     return df.rdd.flatMap(lambda x: x).collect()
-
-
-def collect_as_dict(df, limit=None):
-    """
-    Return a dict from a Collect result
-    [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-    :return:
-    """
-
-    dict_result = []
-
-    df = any_dataframe_to_pandas(df)
-
-    # if there is only an element in the dict just return the value
-    if len(dict_result) == 1:
-        dict_result = next(iter(dict_result.values()))
-    else:
-        col_names = parse_columns(df, "*")
-
-        # Because asDict can return messed columns names we order
-        for index, row in df.iterrows():
-            # _row = row.asDict()
-            r = collections.OrderedDict()
-            # for col_name, value in row.iteritems():
-            for col_name in col_names:
-                r[col_name] = row[col_name]
-            dict_result.append(r)
-    return dict_result
-
-
-# def collect_as_dict(df, limit=None):
-#     """
-#     Return a dict from a Collect result
-#     :param df:
-#     :return:
-#     """
-#     # # Explore this approach seems faster
-#     # use_unicode = True
-#     # from pyspark.serializers import UTF8Deserializer
-#     # from pyspark.rdd import RDD
-#     # rdd = df._jdf.toJSON()
-#     # r = RDD(rdd.toJavaRDD(), df._sc, UTF8Deserializer(use_unicode))
-#     # if limit is None:
-#     #     r.collect()
-#     # else:
-#     #     r.take(limit)
-#     # return r
-#     #
-#     from optimus.helpers.columns import parse_columns
-#     dict_result = []
-#
-#     # if there is only an element in the dict just return the value
-#     if len(dict_result) == 1:
-#         dict_result = next(iter(dict_result.values()))
-#     else:
-#         col_names = parse_columns(df, "*")
-#
-#         # Because asDict can return messed columns names we order
-#         for row in df.collect():
-#             _row = row.asDict()
-#             r = collections.OrderedDict()
-#             for col in col_names:
-#                 r[col] = _row[col]
-#             dict_result.append(r)
-#     return dict_result
 
 
 def filter_list(val, index=0):
@@ -210,7 +141,8 @@ def is_pyarrow_installed():
     try:
         import pyarrow
         have_arrow = True
-    except ImportError:
+    except ImportError as e:
+        print(e)
         have_arrow = False
     return have_arrow
 
@@ -399,8 +331,8 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
 
     # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
 
-    start_mem_usg = df.ext.size()
-
+    start_mem_usg = df.size()
+    df=df.data
     ints = df.applymap(isint).sum().compute().to_dict()
     floats = df.applymap(isfloat).sum().compute().to_dict()
     nulls = df.isnull().sum().compute().to_dict()
@@ -459,7 +391,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     #             final[col_name] = "category"
 
     df = df.astype(final)
-    mem_usg = df.ext.size()
+    mem_usg = df.size()
 
     if verbose is True:
         print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))
@@ -545,10 +477,10 @@ def prepare_path(path, file_format=None):
     return r
 
 
-def set_func(pdf, value, where, output_col, parser, default=None):
+def set_func(df, value, where, output_col, parser, default=None):
     """
     Core implementation of the set function
-    :param pdf:
+    :param df:
     :param value:
     :param where:
     :param output_col:
@@ -557,11 +489,13 @@ def set_func(pdf, value, where, output_col, parser, default=None):
     :return:
     """
 
-    col_names = list(filter(lambda x: x != "__match__", pdf.cols.names()))
+    col_names = list(filter(lambda x: x != "__match__", df.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
                                 "bool": "bool", "zip_code": "str"}
-    df = pdf.cols.cast(col_names, profiler_dtype_to_python[parser])
+
+    df = df.cols.cast(col_names, profiler_dtype_to_python[parser])
+    F = df.functions
     try:
         if where is None:
             return eval(value)
@@ -570,10 +504,10 @@ def set_func(pdf, value, where, output_col, parser, default=None):
 
             mask = (eval(where))
 
-            if (output_col not in pdf.cols.names()) and (default is not None):
-                pdf[output_col] = pdf[default]
-            pdf.loc[mask, output_col] = eval(value)
-            return pdf[output_col]
+            if (output_col not in df.cols.names()) and (default is not None):
+                df[output_col] = df[default]
+            df.loc[mask, output_col] = eval(value)
+            return df[output_col]
 
     except (ValueError, TypeError) as e:
         logger.print(e)

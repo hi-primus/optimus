@@ -2,12 +2,12 @@ import re
 
 from ordered_set import OrderedSet
 
-from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe, is_cudf_dataframe
+# from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe, is_cudf_dataframe
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list, is_tuple, is_list_of_strings, is_list_of_list, is_list_of_tuples, is_str
+from optimus.infer import is_list, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -125,21 +125,23 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
     return output_cols
 
 
-def columns_names(df):
-    """
-    Helper to get the column names from different dataframes types
-    :param df:
-    :return:
-    """
-    # print("df",type(df),df)
-    if is_spark_dataframe(df):
-        columns_names = df.columns
-    elif is_pandas_dataframe(df) or is_dask_dataframe(df) or is_cudf_dataframe(df):
-        columns_names = list(df.columns)
-    else:
-        columns_names = list(df.name)
-
-    return columns_names
+# def columns_names(df):
+#     """
+#     Helper to get the column names from different dataframes types
+#     :param df:
+#     :return:
+#     """
+#
+#     if is_spark_dataframe(df):
+#         columns_names = df.columns
+#     elif is_pandas_dataframe(df) or is_dask_dataframe(df):
+#         columns_names = list(df.columns)
+#     elif is_cudf_dataframe(df):
+#         columns_names = list(df.columns)
+#     else:
+#         columns_names = list(df.name)
+#
+#     return columns_names
 
 
 def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
@@ -161,11 +163,9 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     :return: A list of columns string names
     """
 
-    attrs = None
-
     # if columns value is * get all dataframes columns
-
-    df_columns = columns_names(df)
+    attrs = None
+    df_columns = df.cols._names()
 
     if is_regex is True:
         r = re.compile(cols_args[0])
@@ -174,14 +174,15 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
 
-    # In case we have a list of tuples we use the first element of the tuple is taken as the column name
-    # and the rest as params. We can use the param in a custom function as follow
-    # def func(attrs): attrs return (1,2) and (3,4)
-    #   return attrs[0] + 1
-    # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
-
-    # Verify if we have a list with tuples
     elif is_tuple(cols_args) or is_list_of_tuples(cols_args):
+        # In case we have a list of tuples we use the first element of the tuple is taken as the column name
+        # and the rest as params. We can use the param in a custom function as follow
+        # def func(attrs): attrs return (1,2) and (3,4)
+        #   return attrs[0] + 1
+        # df.cols().apply([('col_1',1,2),('cols_2', 3 ,4)], func)
+
+        # Verify if we have a list with tuples
+
         cols_args = val_to_list(cols_args)
         # Extract a specific position in the tuple
         cols = [(i[0:1][0]) for i in cols_args]
@@ -204,11 +205,10 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     columns_residual = None
 
     # If necessary filter the columns by data type
-
     if filter_by_column_dtypes:
         # Get columns for every data type
-        # print("filter", filter_by_column_dtypes)
         columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
+
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
 
@@ -244,7 +244,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
 
 def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None, is_regex=None,
                     filter_by_column_dtypes=None, accepts_missing_cols=False, invert: bool = False, default=None,
-                    columns=None, auto_increment=False, merge=False, args=None):
+                    columns=None, auto_increment=False, args=None):
     """
     One input columns- > Same output column. lower(), upper()
     One input column -> One output column. copy()
@@ -274,11 +274,16 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
     else:
         input_cols = parse_columns(df, input_cols, False, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
+        merge = False
         if output_cols is None and default is not None:
             output_cols = default
             merge = True
-        if auto_increment is not False:
+
+        elif auto_increment is not False:
             input_cols = input_cols * auto_increment
+
+        if output_cols is not None and (len(input_cols) != len(val_to_list(output_cols))):
+            merge = True
 
         output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
 
@@ -320,10 +325,10 @@ def check_column_numbers(columns, number=0):
     # elif isinstance(columns,zip):
 
 
-def validate_columns_names(df, col_names, index=0):
+def validate_columns_names(df, col_names: [str, list], index=0):
     """
     Check if a string or list of string are valid spark columns
-    :param df: Data frame to be analyzed
+    :param df: Dataframe to be analyzed
     :param col_names: columns names to be checked
     :param index:
     :return:
@@ -336,7 +341,7 @@ def validate_columns_names(df, col_names, index=0):
 
     # Remove duplicates in the list
 
-    if is_list_of_strings(columns):
+    if is_list_of_str(columns):
         columns = OrderedSet(columns)
 
     check_for_missing_columns(df, columns)
@@ -351,7 +356,7 @@ def check_for_missing_columns(df, col_names):
     :param col_names: cols names to
     :return:
     """
-    _col_names = columns_names(df)
+    _col_names = df.cols._names()
     missing_columns = list(OrderedSet(col_names) - OrderedSet(_col_names))
 
     if len(missing_columns) > 0:
@@ -385,7 +390,7 @@ def name_col(col_names: str, append: str) -> str:
     :param append: string to be appended
     :return:
     """
-    separator = "***"
+    separator = "_"
     append = str(one_list_to_val(append))
     col_names = val_to_list(col_names)
     if len(col_names) > 1:
@@ -393,4 +398,4 @@ def name_col(col_names: str, append: str) -> str:
     else:
         output_col = one_list_to_val(col_names)
 
-    return output_col + separator + append.upper()
+    return output_col + separator + append

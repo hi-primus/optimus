@@ -1,11 +1,12 @@
 from optimus.engines.base.contants import LIMIT_TABLE, NUM_PARTITIONS
-from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import collect_as_list
-from optimus.helpers.logger import logger
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.engines.spark.spark import Spark
+from optimus.helpers.core import val_to_list
+from optimus.helpers.functions import collect_as_list
+from optimus.helpers.logger import logger
+
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -71,20 +72,7 @@ class JDBC:
             schema = self.schema
         query = self.driver_context.table_names_query(schema=schema, database=database)
         df = self.execute(query, limit)
-        return df.ext.display(limit)
-
-    def tables_names_to_json(self, schema=None):
-        """
-        Get the table names from a database in json format
-        :return:
-        """
-
-        # Override the schema used in the constructors
-        if schema is None: schema = self.schema
-        query = self.driver_context.table_name_query(schema=schema, database=self.database)
-        table_name = self.driver_properties.value["table_name"]
-        df = self.execute(query, "all")
-        return [i[table_name] for i in df.ext.to_dict()]
+        return df.display(limit)
 
     @property
     def table(self):
@@ -133,7 +121,7 @@ class JDBC:
 
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        df = df.ext.run()
+        df = df.run()
         return df
 
     def _build_conf(self, query=None, limit=None):
@@ -227,7 +215,7 @@ class JDBC:
         columns = df.cols.names("*", by_dtypes=["array", "vector"])
         df = df.cols.cast(columns, "str")
 
-        conf = df.write \
+        conf = df.data.write \
             .format(
             "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
             DriverProperties.CASSANDRA.value["java_class"]) \
@@ -249,8 +237,8 @@ class Table:
     def show(self, table_names="*", limit=None):
         db = self.db
 
-        if table_names=="*":
-            table_names = db.tables_names_to_json()
+        if table_names == "*":
+            table_names = db.tables()
         else:
             table_names = val_to_list(table_names)
 

@@ -5,13 +5,18 @@ import zipfile
 import pandas as pd
 from packaging import version
 
+from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.engines.spark.dataframe import SparkDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
+
+from optimus.engines.base.meta import Meta
 
 
-class Load:
+class Load(BaseLoad):
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
@@ -29,15 +34,14 @@ class Load:
                 .option("mode", "PERMISSIVE") \
                 .json(file, *args, **kwargs)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             print(error)
             raise
         df = replace_columns_special_characters(df)
 
-        df = df.meta.add_action("columns", df.cols.names())
-        df.ext.reset()
+        df.meta = Meta.set(df.meta, value=df.meta.add_action("columns", df.cols.names()).get())
         return df
 
     @staticmethod
@@ -52,13 +56,11 @@ class Load:
 
         :return:
         """
-        df = Load.csv(path, sep='\t', header='true' if header else 'false',
-                      infer_schema='true' if infer_schema else 'false', charset=charset, *args, **kwargs)
-        df.ext.reset()
+        df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
         return df
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
+    def csv(path, sep=',', header=True, infer_schema=True, encoding="UTF-8", null_value="None", n_rows=-1,
             error_bad_lines=False, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -68,7 +70,7 @@ class Load:
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
-        :param charset: Charset file encoding
+        :param encoding: Charset file encoding
         :param error_bad_lines:
         :param null_value: value to convert the string to a None value
         :param n_rows:
@@ -76,32 +78,36 @@ class Load:
 
         :return dataFrame
         """
-        file, file_name = prepare_path(path, "csv")
-
+        _path, file_name = prepare_path(path, "csv")[0]
+        # print(file, file_name)
         try:
             read = (Spark.instance.spark.read
                     .options(header='true' if header else 'false')
                     .options(delimiter=sep)
                     .options(inferSchema='true' if infer_schema else 'false')
                     .options(nullValue=null_value)
-                    .option("charset", charset))
+                    # .options(quote=null_value)
+                    # .options(escape=escapechar)
+                    .option("charset", encoding))
 
             if error_bad_lines is True:
                 read.options(mode="FAILFAST")
             else:
                 read.options(mode="DROPMALFORMED")
 
-            df = read.csv(file, *args, **kwargs)
+            sdf = read.csv(_path)
 
             if n_rows > -1:
-                df = df.limit(n_rows)
-
-            df.meta.set("file_name", file_name)
+                sdf = sdf.limit(n_rows)
+            # print(type(sdf))
+            df = SparkDataFrame(sdf)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             print(error)
             raise
-        df = replace_columns_special_characters(df)
-        df.ext.reset()
+
+        # df = replace_columns_special_characters(df)
+
         return df
 
     @staticmethod
@@ -118,12 +124,11 @@ class Load:
 
         try:
             df = Spark.instance.spark.read.parquet(file, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             print(error)
             raise
-        df.ext.reset()
         return df
 
     @staticmethod
@@ -144,11 +149,10 @@ class Load:
                 avro_version = "avro "
             df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             print(error)
             raise
-        df.ext.reset()
         return df
 
     @staticmethod
@@ -179,13 +183,12 @@ class Load:
 
             # Create spark data frame
             df = Spark.instance.spark.createDataFrame(pdf)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             print(error)
             raise
 
         df = replace_columns_special_characters(df)
-        df.ext.reset()
         return df
 
     @staticmethod
@@ -212,6 +215,5 @@ class Load:
             result = files_data
         else:
             result = files_data[file_name]
-        df.ext.reset()
         return result
 

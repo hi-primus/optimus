@@ -1,5 +1,8 @@
 from abc import abstractmethod, ABC
 
+import pandas as pd
+
+from optimus.engines.base.meta import Meta
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
@@ -9,18 +12,76 @@ from optimus.infer import is_str
 class BaseRows(ABC):
     """Base class for all Rows implementations"""
 
-    def __init__(self, df):
-        self.df = df
+    def __init__(self, root):
+        self.root = root
 
     @staticmethod
     @abstractmethod
     def create_id(column="id"):
         pass
 
-    @staticmethod
     @abstractmethod
-    def append(rows):
+    def append(self, dfs, cols_map):
         pass
+
+    #
+    def greater_than(self, input_col, value):
+
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.greather_than(input_col, value)])
+
+    def greater_than_equal(self, input_col, value):
+
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.greater_than_equal(input_col, value)])
+
+    def less_than(self, input_col, value):
+
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.less_than(input_col, value)])
+
+    def less_than_equal(self, input_col, value):
+
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.less_than_equal(input_col, value)])
+
+    def equal(self, input_col, value):
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.is_equal(input_col, value)])
+
+    def not_equal(self, input_col, value):
+
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.not_equal(input_col, value)])
+
+    def missing(self, input_col):
+        """
+        Return missing values
+        :param input_col:
+        :return:
+        """
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.missing(input_col)])
+
+    def mismatch(self, input_col, dtype):
+        """
+        Return mismatches values
+        :param input_col:
+        :param dtype:
+        :return:
+        """
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.miasmatch(input_col, dtype)])
+
+    def match(self, col_name, dtype):
+        """
+        Return Match values
+        :param col_name:
+        :param dtype:
+        :return:
+        """
+        dfd = self.root.data
+        return self.root.new(dfd[self.root.mask.match(col_name, dtype)])
 
     def apply(self, func, args=None, output_cols=None):
         """
@@ -29,77 +90,103 @@ class BaseRows(ABC):
         :param func:
         :return:
         """
-        df = self.df
+        dfd = self.root.data
         kw_columns = {}
 
         for output_col in output_cols:
-            result = func(df, *args)
+            result = func(dfd, *args)
             kw_columns = {output_col: result}
 
-        return df.assign(**kw_columns)
+        return self.root.new(dfd.assign(**kw_columns))
 
-    def find(self, condition):
+    def find(self, condition, output_col, expr=None):
         """
 
         :param condition: a condition like (df.A > 0) & (df.B <= 10)
-        :return:
-        """
-        df = self.df
-        if is_str(condition):
-            condition = eval(condition)
-
-        df["__match__"] = condition
-        return df
-
-    def select(self, condition):
-        """
-
-        :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        :param output_col:
+        :param expr:
         :return:
         """
 
-        df = self.df
+        df = self.root
+        dfd = df.data
+
         if is_str(condition):
-            condition = eval(condition)
-        df = df[condition]
-        df = df.meta.preserve(df, Actions.SORT_ROW.value, df.cols.names())
-        return df
+            condition = df[condition]
+        elif expr:
+            condition = pd.eval(expr)
+            # dfd = dfd[condition]
+        dfd.assing({output_col: condition.data[condition.cols.names()[0]]})
+
+        return self.root.new(dfd)
+
+    def select(self, condition, expr=None):
+        """
+
+        :param condition: a condition like (dfd.A > 0) & (dfd.B <= 10)
+        :param expr:
+        :return:
+        """
+
+        df = self.root
+        dfd = df.data
+
+        if is_str(condition):
+            condition = df[condition]
+        elif expr:
+            condition = pd.eval(expr)
+        # dfd = dfd[condition]
+        dfd = dfd[condition.data[condition.cols.names()[0]]]
+        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
         """
-        df = self.df
+        dfd = self.root.data
+        # TODO: Be sure that we need the compute param
         if compute is True:
-            result = len(df.ext.compute())
+            result = len(dfd.index)
         else:
-            result = len(df)
+            result = len(dfd.index)
         return result
 
-    @staticmethod
-    @abstractmethod
-    def to_list(input_cols):
-        pass
+    def to_list(self, input_cols):
+        """
+
+        :param input_cols:
+        :return:
+        """
+        df = self.root
+        input_cols = parse_columns(df, input_cols)
+        value = df.cols.select(input_cols).to_pandas().values.tolist()
+
+        return value
 
     @staticmethod
     @abstractmethod
     def sort(input_cols):
         pass
 
-    def drop(self, where=None):
+    def drop(self, where=None, expr=None):
         """
         Drop a row depending on a dataframe expression
         :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
         :return: Spark DataFrame
         :return:
         """
-        df = self.df
-        if is_str(where):
-            where = eval(where)
+        df = self.root
+        dfd = df.data
 
-        df = df[~where]
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
-        return df
+        if is_str(where):
+            condition = df[where]
+        elif expr:
+            condition = pd.eval(expr)
+        # dfd = dfd[condition]
+        dfd = dfd[~where.data[condition.cols.names()[0]]]
+        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     @staticmethod
     @abstractmethod
@@ -120,10 +207,10 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        df = self.df
-        subset = parse_columns(df, subset)
-        df = df.meta.preserve(df, Actions.DROP_ROW.value, df.cols.names())
-        return df.dropna(how=how, subset=subset)
+        df = self.root
+        subset = parse_columns(df.data, subset)
+        df.meta = Meta.preserve(df.meta, df, Actions.DROP_ROW.value, df.cols.names())
+        return self.root.new(df.dropna(how=how, subset=subset))
 
     @staticmethod
     @abstractmethod
@@ -148,10 +235,14 @@ class BaseRows(ABC):
 
         pass
 
-    @staticmethod
-    @abstractmethod
-    def is_in(input_cols, values):
-        pass
+    def is_in(self, input_cols, values, output_cols=None):
+
+        def _is_in(value, *args):
+            _values = args
+            return value.isin(_values)
+
+        df = self.root
+        return df.cols.apply(input_cols, func=_is_in, args=(values,), output_cols=output_cols)
 
     @staticmethod
     @abstractmethod
@@ -163,4 +254,4 @@ class BaseRows(ABC):
         Aprox count
         :return:
         """
-        return self.count()
+        return self.root.rows.count()

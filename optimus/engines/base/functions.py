@@ -1,45 +1,49 @@
-import math
 import re
 from abc import abstractmethod, ABC
 
 import numpy as np
 
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_numeric
 
 
 class Functions(ABC):
-    def __init__(self, series):
-        self.series = series
+    @staticmethod
+    def _to_float(series):
+        pass
+
+    def to_integer(self, series):
+        pass
+
+    def to_string(self, series):
+        pass
 
     # Aggregation
-    @staticmethod
-    def min(series):
-        return series.ext.to_float().min()
+    # @staticmethod
+    def min(self, series):
+        # print(self)
+        # return self.parent.new(series).cols._to_float().data.min()
+        return self._to_float(series).min()
 
-    @staticmethod
-    def max(series):
-        return series.ext.to_float().max()
+    # @staticmethod
+    def max(self, series):
+        return self._to_float(series).max()
+        # return series._to_float().max()
 
-    @staticmethod
-    def mean(series):
-        return series.ext.to_float().max()
+    def mean(self, series):
+        return self._to_float(series).mean()
 
-    @staticmethod
-    def mode(series):
-        return series.ext.to_float().mode().ext.to_dict(index=False)
+    def mode(self, series):
+        return self._to_float(series).mode()
+        # return series._to_float().mode().to_dict(index=False)
 
-    @staticmethod
-    def std(series):
-        return series.ext.to_float().std()
+    def std(self, series):
+        return self._to_float(series).std()
 
-    @staticmethod
-    def sum(series):
-        return series.ext.to_float().sum()
+    def sum(self, series):
+        return self._to_float(series).sum()
 
-    @staticmethod
-    def var(series):
-        return series.ext.to_float().var()
+    def var(self, series):
+        return self._to_float(series).var()
 
     @staticmethod
     def count_uniques(series, estimate: bool = True, compute: bool = True):
@@ -80,7 +84,7 @@ class Functions(ABC):
     def mad(series, *args):
         error, more = args
 
-        series = series.ext.to_float()
+        series = series._to_float()
         if series.isnull().any():
             mad_value = np.nan
             median_value = np.nan
@@ -104,27 +108,27 @@ class Functions(ABC):
     # cudf seems to be calculate faster in on pass using df.min()
     @staticmethod
     def range(series):
-        series = series.ext.to_float()
+        series = series._to_float()
         return {"min": series.min(), "max": series.max()}
 
     @staticmethod
     def percentile(series, *args):
         values, error = args
-        series = series.ext.to_float()
+        series = series._to_float()
 
-        @series.ext.delayedyed
+        @series.delayed
         def to_dict(_result):
             ## In pandas if all values are non it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
             if _result.isnull().all():
                 return np.nan
             else:
-                return _result.quantile(values).ext.to_dict()
+                return _result.quantile(values).to_dict()
 
         return to_dict(series)
 
     # def radians(series):
-    #     return series.ext.to_float().radians()
+    #     return series._to_float().radians()
     #
     # def degrees(series, *args):
     #     return call(series, method_name="degrees")
@@ -141,43 +145,32 @@ class Functions(ABC):
     def cut(series, bins):
         pass
 
-    @staticmethod
-    def abs(series):
-        return series.ext.to_float().abs()
+    def abs(self, series):
+        return self._to_float(series).abs()
 
-    @staticmethod
-    def exp(series):
-        return series.ext.to_float().exp()
+    def exp(self, series):
+        return self._to_float(series).exp()
 
     @staticmethod
     @abstractmethod
     def sqrt(series):
         pass
 
-    @staticmethod
-    def mod(series, other):
-        return series.ext.to_float().mod(other)
+    def mod(self, series, other):
+        return self._to_float(series).mod(other)
 
-    @staticmethod
-    def round(series, decimals):
-        return series.ext.to_float().round(decimals)
+    def round(self, series, decimals):
+        return self._to_float(series).round(decimals)
 
-    @staticmethod
-    def pow(series, exponent):
+    def pow(self, series, exponent):
+        return self._to_float(series).pow(exponent)
 
-        if is_numeric(series):
-            series = float(series)
-            return math.pow(series, exponent)
-
-        return series.ext.to_float().pow(exponent)
-
-    @staticmethod
-    def floor(series):
-        return series.ext.to_float().floor()
+    def floor(self, series):
+        return self._to_float(series).floor()
 
     # def trunc(self):
     #     series = self.series
-    #     return series.ext.to_float().truncate()
+    #     return series._to_float().truncate()
 
     @staticmethod
     @abstractmethod
@@ -196,7 +189,7 @@ class Functions(ABC):
 
     @staticmethod
     @abstractmethod
-    def log(series):
+    def log(series, base):
         pass
 
     @staticmethod
@@ -265,9 +258,9 @@ class Functions(ABC):
         pass
 
     # Strings
-    @staticmethod
-    def lower(series):
-        return series.astype(str).str.lower()
+    def lower(self, series):
+        return self.to_string(series).str.lower()
+        # return series.astype(str).str.lower()
 
     @staticmethod
     def upper(series):
@@ -276,6 +269,10 @@ class Functions(ABC):
     @staticmethod
     def title(series):
         return series.astype(str).str.title()
+
+    @staticmethod
+    def capitalize(series):
+        return series.astype(str).str.capitalize()
 
     @staticmethod
     def pad(series, width, side, fillchar=""):
@@ -299,7 +296,7 @@ class Functions(ABC):
 
     @staticmethod
     @abstractmethod
-    def replace_string(series, search, replace_by):
+    def replace_chars(series, search, replace_by):
         pass
 
     @staticmethod
@@ -309,7 +306,7 @@ class Functions(ABC):
         return series.astype(str).str.replace(str_regex, replace_by)
 
     @staticmethod
-    def replace_match(series, search, replace_by):
+    def replace_full(series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return series.astype(str).str.replace(str_regex, replace_by)
@@ -322,12 +319,10 @@ class Functions(ABC):
     def len(series):
         return series.str.len()
 
-    @abstractmethod
-    def remove_special_chars(self):
+    def to_datetime(self, series, format):
         pass
 
-    @abstractmethod
-    def remove_accents(self):
+    def remove_accents(self, series):
         pass
 
     @staticmethod
@@ -372,39 +367,38 @@ class Functions(ABC):
         return series == pat
 
     # dates
-    @staticmethod
-    def year(series, format):
+    def year(self, series, format):
         """
         :param series:
         :param format: "%Y-%m-%d HH:mm:ss"
         :return:
         """
-        # return self.ext.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
-        return series.ext.to_datetime(format=format).dt.year
+        # return self.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
+        return self.to_datetime(series, format=format).dt.year
 
     @staticmethod
     def month(series, format):
-        return series.ext.to_datetime(format=format).dt.month
+        return series.to_datetime(format=format).dt.month
 
     @staticmethod
     def day(series, format):
-        return series.ext.to_datetime(format=format).dt.day
+        return series.to_datetime(format=format).dt.day
 
     @staticmethod
     def hour(series, format):
-        return series.ext.to_datetime(format=format).dt.hour
+        return series.to_datetime(format=format).dt.hour
 
     @staticmethod
     def minute(series, format):
-        return series.ext.to_datetime(format=format).dt.minute
+        return series.to_datetime(format=format).dt.minute
 
     @staticmethod
     def second(series, format):
-        return series.ext.to_datetime(format=format).dt.second
+        return series.to_datetime(format=format).dt.second
 
     @staticmethod
     def weekday(series, format):
-        return series.ext.to_datetime(format=format).dt.weekday
+        return series.to_datetime(format=format).dt.weekday
 
     @staticmethod
     @abstractmethod

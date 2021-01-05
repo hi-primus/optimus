@@ -78,7 +78,7 @@ rows = [
 
     ]
 source_df = op.create.df(cols ,rows)
-source_df.ext.display()
+source_df.display()
 # -
 
 

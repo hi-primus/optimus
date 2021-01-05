@@ -154,7 +154,7 @@ source_df['height(ft)'].astype(str).str.split(".", expand=True, n=1)
 
 source_df['attributes'].compute().apply(pd.Series)
 
-source_df = source_df.ext.repartition(6)
+source_df = source_df.repartition(6)
 
 source_df["date arrival"].astype(str).str.split("/", expand=True, n=2).compute()
 

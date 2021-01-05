@@ -29,7 +29,7 @@ op = Optimus(master="local[*]", app_name = "optimus" , checkpoint= True, verbose
 
 df = op.load.csv("data/Meteorite_Landings.csv").h_repartition()
 
-df.ext.display(10)
+df.display(10)
 
 # ### Profiler dump mode (Faster). It just handle the column data type as present in the spark
 
@@ -51,7 +51,7 @@ df.plot.hist(["id", "reclong"], 20)
 
 df.plot.frequency(["id", "reclong"], 10)
 
-df.ext.display()
+df.display()
 
 df.cols.count_na("*")
 

@@ -6,12 +6,14 @@ import pandas as pd
 from dask import dataframe as dd
 
 from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.meta import Meta
+from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
-
+    # import dask_cudf
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
         """
@@ -25,8 +27,9 @@ class Load(BaseLoad):
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+            df = dask_cudf.read_json(path, lines=multiline, *args, **kwargs)
+            df = DaskCUDFDataFrame(df)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -49,8 +52,8 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=False, *args,
-            **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True,
+            storage_options=None, *args,**kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -64,22 +67,24 @@ class Load(BaseLoad):
         :param infer_schema: infers the input schema automatically from data.
         :param quoting:
         :param null_value:
+        :param na_filter:
         :param encoding:
         It requires one extra pass over the data. 'true' default.
 
         :return dataFrame
         """
 
-        file, file_name = prepare_path(path, "csv")[0]
         try:
-            df = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                    quoting=quoting, error_bad_lines=error_bad_lines,
-                                    keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
-            df.meta.set("file_name", file_name)
+            dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                      quoting=quoting, error_bad_lines=error_bad_lines,
+                                      keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter)
+            df = DaskCUDFDataFrame(dcdf)
+            df.meta = Meta.set(df.meta, "file_name", path)
+            df.meta = Meta.set(df.meta, "name", ntpath.basename(path))
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
+
         return df
 
     @staticmethod
@@ -97,7 +102,8 @@ class Load(BaseLoad):
 
         try:
             df = dask_cudf.read_parquet(path, columns=columns, *args, **kwargs)
-            df.meta.set("file_name", file_name)
+
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -118,7 +124,7 @@ class Load(BaseLoad):
 
         try:
             df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -154,7 +160,7 @@ class Load(BaseLoad):
 
             # Create spark data frame
             df = dd.from_pandas(pdf, npartitions=3)
-            df.meta.set("file_name", ntpath.basename(file_name))
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
             raise

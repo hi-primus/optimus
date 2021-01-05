@@ -1,39 +1,140 @@
-import time
+import operator
 from abc import abstractmethod, ABC
 from collections import OrderedDict
-import re
+
 import humanize
 import imgkit
 import jinja2
 import simplejson as json
 from dask import dataframe as dd
 from glom import assign
+from tabulate import tabulate
 
-from optimus.bumblebee import Comm
-from optimus.engines.base.contants import SAMPLE_NUMBER
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE
-from optimus.helpers.constants import RELATIVE_ERROR, PROFILER_NUMERIC_DTYPES
-from optimus.helpers.converter import any_dataframe_to_pandas
-from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import absolute_path, collect_as_dict, reduce_mem_usage, update_dict
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
+from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
-from optimus.infer import is_list_of_str, is_dict, is_str
+from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
-from optimus.profiler.profiler import Profiler
 from optimus.profiler.templates.html import HEADER, FOOTER
+from .columns import BaseColumns
+from .meta import Meta
 
 
-class BaseExt(ABC):
-    _name = None
+class BaseDataFrame(ABC):
+    """
+    Optimus DataFrame
+    """
 
-    def __init__(self, df):
-        self.df = df
-        df._buffer = None
-        df._updated = None
-        # df._buffer= None
-        # self.buffer_a = None
+    def __init__(self, root, data):
+        self.data = data
+        self.buffer = None
+        self.updated = None
+        self.root = root
+        self.meta = {}
+
+    def __repr__(self):
+        self.display()
+        return str(type(self))
+
+    def __getitem__(self, item):
+        return self.cols.select(item)
+
+    def __setitem__(self, key, value):
+        self.cols.assign({key: value})
+
+
+    def new(self, df, meta=None):
+        new_df = self.__class__(df)
+        if meta is not None:
+            new_df.meta = meta
+        return new_df
+
+    def operation(self, df1, df2, opb):
+        """
+        Helper to process binary operations
+        :param df1:
+        :param df2:
+        :param opb:
+        :return:
+        """
+        if isinstance(df1, (BaseDataFrame,)):
+            col1 = df1.cols.names(0)[0]
+            df1 = df1.cols.to_float(col1).data[col1]
+
+        if isinstance(df2, (BaseDataFrame,)):
+            col2 = df2.cols.names(0)[0]
+            # print("aaa", df2)
+            df2 = df2.cols.to_float().data[col2]
+
+        return self.root.new(opb(df1, df2).to_frame())
+
+    def __add__(self, df2):
+        return self.operation(self, df2, operator.add)
+
+    def __radd__(self, df2):
+        return self.operation(df2, self, operator.add)
+
+    def __sub__(self, df2):
+        return self.operation(self, df2, operator.sub)
+
+    def __rsub__(self, df2):
+        return self.operation(self, df2, operator.sub)
+
+    def __mul__(self, df2):
+        return self.operation(self, df2, operator.mul)
+
+    def __rmul__(self, df2):
+        return self.operation(df2, self, operator.mul)
+
+    def __truediv__(self, df2):
+        return self.operation(self, df2, operator.truediv)
+
+    def __rtruediv__(self, df2):
+        return self.operation(self, df2, operator.truediv)
+
+    def __floordiv__(self, df2):
+        return self.operation(self, df2, operator.floordiv)
+
+    def __rfloordiv__(self, df2):
+        return self.operation(self, df2, operator.floordiv)
+
+    def __pow__(self, df2):
+        return self.operation(self, df2, operator.pow)
+
+    def __rpow__(self, df2):
+        return self.operation(self, df2, operator.pow)
+
+    def __eq__(self, df2):
+        return self.operation(self, df2, operator.eq)
+
+    def __gt__(self, df2):
+        return self.operation(self, df2, operator.gt)
+
+    def __lt__(self, df2):
+        return self.operation(self, df2, operator.lt)
+
+    def __ne__(self, df2):
+        return self.operation(self, df2, operator.ne)
+
+    def __ge__(self, df2):
+        return self.operation(self, df2, operator.ge)
+
+    def __le__(self, df2):
+        return self.operation(self, df2, operator.le)
+
+    def __and__(self, df2):
+        return self.operation(self, df2, operator.__and__)
+
+    def __or__(self, df2):
+        return self.operation(self, df2, operator.__or__)
+
+    def __xor__(self, df2):
+        return self.operation(self, df2, operator.__xor__)
+
+    def cols(self):
+        return BaseColumns
 
     @staticmethod
     @abstractmethod
@@ -42,7 +143,7 @@ class BaseExt(ABC):
 
     @staticmethod
     @abstractmethod
-    def cache():
+    def execute():
         pass
 
     @staticmethod
@@ -53,51 +154,50 @@ class BaseExt(ABC):
         # With this we expect to abstract the behavior and just use compute() a value from operation
         pass
 
-    def to_json(self, columns="*", format="bumblebee"):
+    def to_json(self, columns="*"):
         """
         Return a json from a Dataframe
         :return:
         """
 
-        df = self.df
-        if format == "bumblebee":
-            columns = parse_columns(df, columns)
-            result = {"sample": {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                                 "value": df.rows.to_list(columns)}}
-        else:
-            result = json.dumps(df.ext.to_dict(), ensure_ascii=False, default=json_converter)
+        return json.dumps(self.root.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
 
-        return result
-
-
-
-    def to_dict(self):
+    def to_dict(self, orient="records"):
         """
-        Return a dict from a Collect result
-        [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
-        :return:
+            Return a dict from a Collect result
+            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
+            :return:
         """
-        df = self.df
-        return collect_as_dict(df)
+        return self.root.to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
     def sample(n=10, random=False):
         pass
 
+    def columns_sample(self, columns="*"):
+        """
+        Return a dict of the sample of a Dataframe
+        :return:
+        """
+        df = self.root
+
+        return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
+                "value": df.rows.to_list(columns)}
+
     def to_pandas(self):
-        df = self.df
-        return any_dataframe_to_pandas(df)
+        pass
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
         Stratified Sampling
+        columns_type = parse_columns(df, columns_type.keys())
         :param col_name:
         :param seed:
         :return:
         """
-        df = self.df
-        n = min(5, df[col_name].value_counts().min())
+        df = self.data
+        # n = min(5, df[col_name].value_counts().min())
         df = df.groupby(col_name).apply(lambda x: x.sample(2))
         # df_.index = df_.index.droplevel(0)
         return df
@@ -129,54 +229,13 @@ class BaseExt(ABC):
 
         pass
 
-    def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        df = self.df
-        input_columns = parse_columns(df, columns)
-        df._buffer = df.ext.head(input_columns, n)
-        df.meta.set("buffer_time", int(time.time()))
-
     def get_buffer(self):
-        # return self.df._buffer.values.tolist()
-        df = self.df
-        return df._buffer
-
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
-
-        df = self.df
-        buffer_time = df.meta.get("buffer_time")
-        last_action_time = df.meta.get("last_action_time")
-
-        if buffer_time and last_action_time:
-            if buffer_time > last_action_time:
-                df.ext.set_buffer(columns, n)
-        elif df._buffer is None:
-            df.ext.set_buffer(columns, n)
-
-        df_buffer = df._buffer
-        df_length = len(df_buffer)
-        if lower_bound is None:
-            lower_bound = 0
-
-        if lower_bound < 0:
-            lower_bound = 0
-
-        if upper_bound is None:
-            upper_bound = df_length
-
-        if upper_bound > df_length:
-            upper_bound = df_length
-
-        if lower_bound >= df_length:
-            diff = upper_bound - lower_bound
-            lower_bound = df_length - diff
-            upper_bound = df_length
-            # RaiseIt.value_error(df_length, str(df_length - 1))
-
-        input_columns = parse_columns(df_buffer, columns)
-        return df_buffer[input_columns][lower_bound: upper_bound]
+        # return self.df.buffer.values.tolist()
+        # df = self.parent
+        return self.buffer
 
     def buffer_json(self, columns):
-        df = self.df._buffer
+        df = self.df.buffer
         columns = parse_columns(df, columns)
 
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
@@ -195,7 +254,7 @@ class BaseExt(ABC):
         return result
 
     def optimize(self, categorical_threshold=50, verbose=False):
-        df = self.df
+        df = self.root
         return reduce_mem_usage(df, categorical_threshold=categorical_threshold, verbose=verbose)
 
     def run(self):
@@ -228,10 +287,9 @@ class BaseExt(ABC):
         return False if df.meta.get("profile.profiler_dtype") is None else True
 
     def to_delayed(self):
-        return self.df.to_delayed()
+        return self.data.to_delayed()
 
-    @staticmethod
-    def calculate_cols_to_profile(df, columns):
+    def calculate_cols_to_profile(self, df, columns):
         """
         Get the columns that needs to be profiled.
         :return:
@@ -239,7 +297,7 @@ class BaseExt(ABC):
         # Metadata
         # If not empty the profiler already run.
         # So process the dataframe's metadata to get which columns need to be profiled
-
+        df = self
         actions = df.meta.get("transformations.actions")
         are_actions = actions is not None and len(actions) > 0
 
@@ -258,7 +316,7 @@ class BaseExt(ABC):
             return result
 
         # Process actions to check if any column must be processed
-        if BaseExt.is_cached(df):
+        if self.is_cached(df):
             if are_actions:
 
                 def get_columns_by_action(action):
@@ -375,29 +433,21 @@ class BaseExt(ABC):
 
         return calculate_columns
 
-    def set_name(self, value=None):
-        """
-        Create a temp view for a data frame also used in the json output profiling
-        :param value:
-        :return:
-        """
-        df = self.df
-        df.ext._name = value
-        # if not is_str(value):
-        #     RaiseIt.type_error(value, ["string"])
-
-        # if len(value) == 0:
-        #     RaiseIt.value_error(value, ["> 0"])
-
-        # self.createOrReplaceTempView(value)
-
-    def get_name(self):
-        """
-        Get dataframe name
-        :return:
-        """
-        df = self.df
-        return df.ext._name
+    # def set_name(self, value=None):
+    #     """
+    #     Create a temp view for a data frame also used in the json output profiling
+    #     :param value:
+    #     :return:
+    #     """
+    #     df = self.df
+    #     df._name = value
+    #     # if not is_str(value):
+    #     #     RaiseIt.type_error(value, ["string"])
+    #
+    #     # if len(value) == 0:
+    #     #     RaiseIt.value_error(value, ["> 0"])
+    #
+    #     # self.createOrReplaceTempView(value)
 
     @staticmethod
     @abstractmethod
@@ -409,12 +459,11 @@ class BaseExt(ABC):
         raise NotImplementedError
 
     def repartition(self, n=None, *args, **kwargs):
-        df = self.df
+        df = self.data
         df = df.repartition(npartitions=n, *args, **kwargs)
-        return df
+        return self.root.new(df, meta=self.root.meta)
 
-    @staticmethod
-    def table_image(path, limit=10):
+    def table_image(self, path, limit=10):
         """
         Output table as image
         :param limit:
@@ -424,7 +473,7 @@ class BaseExt(ABC):
 
         css = absolute_path("/css/styles.css")
 
-        imgkit.from_string(BaseExt.table_html(limit=limit, full=True), path, css=css)
+        imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
     def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True):
@@ -440,17 +489,15 @@ class BaseExt(ABC):
         :return:
         """
 
-        df = self.df
-
-        columns = parse_columns(df, columns)
+        columns = parse_columns(self, columns)
         if limit is None:
             limit = 10
 
+        df = self
         if limit == "all":
-            data = df.cols.select(columns).ext.to_dict()
+            data = df.cols.select(columns).to_dict()
         else:
-            data = collect_as_dict(df.cols.select(columns).rows.limit(limit))
-
+            data = df.cols.select(columns).rows.limit(limit).to_dict()
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -466,19 +513,17 @@ class BaseExt(ABC):
                 if i[0] == j:
                     final_columns.append(i)
 
-        if count is True:
-            total_rows = df.rows.approx_count()
-        else:
-            count = None
+        # if count is True:
 
-        if limit == "all":
-            limit = total_rows
-        elif total_rows < limit:
+        # else:
+        #     count = None
+        total_rows = df.rows.approx_count()
+        if limit == "all" or total_rows < limit:
             limit = total_rows
 
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
-        total_partitions = df.ext.partitions()
+        total_partitions = df.partitions()
 
         # print(data)
         df_type = type(df)
@@ -492,29 +537,34 @@ class BaseExt(ABC):
 
     def display(self, limit=None, columns=None, title=None, truncate=True):
         # TODO: limit, columns, title, truncate
-
         self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
-        df = self.df
+        df = self.data
         try:
             if __IPYTHON__:
                 # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
-                result = df.ext.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:
-                df.ext.show()
-        except NameError:
+                df.show()
+        except NameError as e:
+            print(e)
             df.show()
+
+    def ascii(self):
+        df = self.root
+        print(
+            tabulate(df.to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()], tablefmt="simple",
+                     showindex="never"))
 
     def export(self):
         """
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.df
-        df_data = df.ext.to_json()
-        df_schema = df.dtypes.to_json()
+        df_data = self.to_json()
+        df_schema = self.data.dtypes.to_json()
 
         return f"{df_schema}, {df_data}"
 
@@ -533,58 +583,17 @@ class BaseExt(ABC):
 
         :return:
         """
-        df = self.df
+        df = self
         columns = parse_columns(df, columns)
-        return df[columns].head(n)
-
-    # @staticmethod
-    # @abstractmethod
-    # def create_id(column="id"):
-    #     """
-    #     Create a unique id for every row.
-    #     :param column: Columns to be processed
-    #     :return:
-    #     """
-    #
-    #     pass
-
-    def send(self, name: str = None, infer: bool = False, mismatch=None, stats: bool = True,
-             advanced_stats: bool = True,
-             output: str = "http", sample=SAMPLE_NUMBER):
-        """
-        Profile and send the data to the queue
-        :param name: Specified a name for the view/spark
-        :param infer:
-        :param mismatch:
-        :param stats:
-        :param advanced_stats: Process advance stats
-        :param output: 'json' or 'dict'
-        :param sample: Number of data sample returned
-        :return:
-        """
-        df = self.df
-        if name is not None:
-            df.ext.set_name(name)
-
-        message = Profiler.instance.dataset(df, columns="*", buckets=35, infer=infer, relative_error=RELATIVE_ERROR,
-                                            approx_count=True,
-                                            sample=sample,
-                                            stats=stats,
-                                            format="json",
-                                            advanced_stats=advanced_stats,
-                                            mismatch=mismatch
-                                            )
-        if Comm.instance:
-            return Comm.instance.send(message, output=output)
-        else:
-            raise Exception("Comm is not initialized. Please use comm=True param like Optimus(comm=True)")
+        return df.data[columns].head(n)
 
     def reset(self):
-        df = self.df
-        df = df.meta.set(None, {})
+        # df = self.df
+        df = self
+        df.meta = {}
         return df
 
-    def profile(self, columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         """
         Return profiler info
         :param columns:
@@ -595,30 +604,30 @@ class BaseExt(ABC):
         :return:
         """
 
-        df = self.df
+        df = self
+        meta = self.root.meta
+
         if flush is False:
-            cols_to_profile = df.ext.calculate_cols_to_profile(df, columns)
+            cols_to_profile = df.calculate_cols_to_profile(df, columns)
         else:
             cols_to_profile = parse_columns(df, columns)
 
-        columns = parse_columns(df, columns)
-
-        profiler_data = df.meta.get("profile")
+        profiler_data = Meta.get(meta, "profile")
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
 
-        if cols_to_profile or not BaseExt.is_cached(df) or flush is True:
-            df_length = len(df)
+        if cols_to_profile or not self.is_cached(df) or flush is True:
             numeric_cols = []
             string_cols = []
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
             compute = True
-            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype, compute=compute)
+            # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
+            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             for col_name, x in cols_and_inferred_dtype.items():
-                if x in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
+                if x["dtype"] in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
                     numeric_cols.append(col_name)
                 else:
                     string_cols.append(col_name)
@@ -627,7 +636,7 @@ class BaseExt(ABC):
             freq_uniques = None
 
             if len(numeric_cols):
-                hist = df[numeric_cols].cols.hist(numeric_cols, buckets=bins, compute=compute)
+                hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
                 freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
 
             freq = None
@@ -665,38 +674,42 @@ class BaseExt(ABC):
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
-            assign(profiler_data, "name", df.ext.get_name(), dict)
+            assign(profiler_data, "name", df.meta.get("name"), dict)
             assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
 
-            data_set_info = {'cols_count': len(df.columns),
+            data_set_info = {'cols_count': df.cols.count(),
                              'rows_count': df.rows.count(),
                              }
             if size is True:
-                data_set_info.update({'size': df.ext.size(format="human")})
+                data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
             dtypes_list = list(set(df.cols.dtypes("*").values()))
             assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
             assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(total_count_na / df_length * 100, 2))
+            assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
         actual_columns = profiler_data["columns"]
 
         # Order columns
+        columns = parse_columns(df, columns)
         profiler_data["columns"] = dict(OrderedDict(
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        df = df.meta.columns(df.cols.names())
-        df.meta.set("transformations", value={})
-        df.meta.set("profile", profiler_data)
+        df.meta = {}
+        meta = Meta.columns(meta, df.cols.names())
+
+        meta = Meta.set(meta, "transformations", value={})
+        meta = Meta.set(meta, "profile", profiler_data)
+
         if cols_and_inferred_dtype is not None:
             df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
 
         # Reset Actions
-        df.meta.reset()
-
+        meta = Meta.reset_actions(meta)
+        df.meta = meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
 

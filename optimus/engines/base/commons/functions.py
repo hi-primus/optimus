@@ -15,6 +15,36 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 
 
+def to_float_cudf(series):
+    import cudf
+    series_string = series.astype(str)
+    # See https://github.com/rapidsai/cudf/issues/5345
+    # series = cudf.Series(series_string.str.stof()).fillna(False)
+    series = cudf.Series(cudf.core.column.string.str_cast.stof(series_string._column))
+    series[
+        ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
+
+    # TODO: after using to_float_cudf() the function .round() is not working(for some unclear reason).
+    #  I found to fixes apply astype(float) to the return or use str_cast.stod() instead of stof()
+
+    return series
+
+
+def to_string_cudf(series):
+    return series.astype(str)
+
+
+def to_integer_cudf(series):
+    import cudf
+    series_string = series.astype(str)
+    # See https://github.com/rapidsai/cudf/issues/5345
+    # series = cudf.Series(series_string.str.stoi()).fillna(False)
+    series = cudf.Series(cudf.core.column.string.str_cast.stoi(series_string._column))
+    series[
+        ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
+    return series
+
+
 def to_string(value, *args):
     try:
         return value.astype(str)
@@ -46,41 +76,10 @@ def to_datetime(value, format):
 
 
 def hist(series, bins):
-    return np.histogram(series.ext.to_float(), bins=bins)
-
-
-def to_string_cudf(value, *args):
-    return value.astype(str)
-
-
-def to_integer_cudf(value, *args):
-    import cudf
-    series_string = value.astype(str)
-    # See https://github.com/rapidsai/cudf/issues/5345
-    # series = cudf.Series(series_string.str.stoi()).fillna(False)
-    series = cudf.Series(cudf.core.column.string.str_cast.stoi(series_string._column))
-    series[
-        ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
-    return series
-
-
-def to_float_cudf(value, *args):
-    import cudf
-    series_string = value.astype(str)
-    # See https://github.com/rapidsai/cudf/issues/5345
-    # series = cudf.Series(series_string.str.stof()).fillna(False)
-    series = cudf.Series(cudf.core.column.string.str_cast.stof(series_string._column))
-    series[
-        ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-
-    # TODO: after using to_float_cudf() the function .round() is not working(for some unclear reason).
-    #  I found to fixes apply astype(float) to the return or use str_cast.stod() instead of stof()
-
-    return series.astype(float)
+    return np.histogram(series.to_float(), bins=bins)
 
 
 def to_datetime_cudf(value, format):
-    import cudf
     return cudf.to_datetime(value, format=format, errors="coerce")
 
 
@@ -161,6 +160,7 @@ def index_to_string(df, input_cols, output_cols=None, le=None, **kwargs):
 def find(df, columns, sub, ignore_case=False):
     """
     Find the start and end position for a char or substring
+    :param df: Dataframe to be transformed.
     :param columns:
     :param ignore_case:
     :param sub:
@@ -183,34 +183,13 @@ def find(df, columns, sub, ignore_case=False):
             result = length if len(length) > 0 else None
         return result
 
+    dfd = df.data
+
     for col_name in columns:
         # Categorical columns can not handle a list inside a list as return for example [[1,2],[6,7]].
         # That could happened if we try to split a categorical column
-        # df[col_name] = df[col_name].astype("object")
-        df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
+        # dfd[col_name] = dfd[col_name].astype("object")
+        dfd[col_name + "__match_positions__"] = dfd[col_name].astype("object").apply(get_match_positions,
                                                                                    args=(sub,))
 
-
-    return df
-# def _cast_date(value, format="YYYY-MM-DD"):
-#     if pd.isnull(value):
-#         return np.nan
-#     else:
-#         try:
-#             # return pendulum.parse(value)
-#             # return pendulum.from_format(value, format)
-#             # return dparse(value)
-#
-#             return value
-#         except:
-#             return value
-
-# def _cast_bool(value):
-#     if pd.isnull(value):
-#         return np.nan
-#     else:
-#         return bool(value)
-#
-
-# cast_func = {'int': _cast_int, 'decimal': _cast_float, "string": _cast_str, 'bool': _cast_bool,
-#              'date': _cast_date, "object": _cast_object, "missing": _cast_str}
+    return df.new(dfd)

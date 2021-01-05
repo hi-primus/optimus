@@ -3,6 +3,7 @@ import dask.dataframe as dd
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
+from optimus.engines.base.meta import Meta
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -19,6 +20,12 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
+    def _map(self, df, input_col, output_col, func, args, kw_columns):
+        # def _func(value):
+        #     return value.map(func)
+        kw_columns[output_col] = df[input_col].map(func, *args)
+        return kw_columns
+
     @staticmethod
     def exec_agg(exprs, compute):
         """
@@ -31,7 +38,6 @@ class DaskBaseColumns(BaseColumns):
         else:
             # result = exprs.compute()
             result = dd.compute(exprs)[0]
-
         return result
 
     def append(self, dfs):
@@ -41,10 +47,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        df = self.df
-        df = dd.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
-        df = df.meta.preserve(df, Actions.APPEND.value, df.cols.names())
-        return df
+        df = self.root
+        meta = df.meta
+        dfd = dd.concat([*[_df.data.reset_index(drop=True) for _df in dfs], df.data.reset_index(drop=True)], axis=1)
+        
+        meta = Meta.preserve(df.meta, Actions.APPEND.value, df.cols.names())
+        return self.root.new(dfd, meta=meta)
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
@@ -106,20 +114,17 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        df = self.df
-
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
+        return self.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+                          filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES)
 
     def reverse(self, input_cols, output_cols=None):
         def _reverse(value):
             return value.astype(str).str[::-1]
 
-        df = self.df
-        return df.cols.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -163,7 +168,7 @@ class DaskBaseColumns(BaseColumns):
 
         return result
 
-    def nest(self, input_cols, shape="string", separator="", output_col=None):
+    def nest(self, input_cols, separator="", output_col=None, drop=False, shape="string"):
         """
         Merge multiple columns with the format specified
         :param input_cols: columns to be nested
@@ -173,8 +178,9 @@ class DaskBaseColumns(BaseColumns):
         :return: Dask DataFrame
         """
 
-        df = self.df
-        input_cols = parse_columns(df, input_cols)
+        df = self.root
+        input_cols = parse_columns(df, input_cols)\
+        
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)
         if output_col is None:
@@ -204,11 +210,17 @@ class DaskBaseColumns(BaseColumns):
         else:
             kw_columns = {output_col: _nest_array}
 
-        df = df.assign(**kw_columns)
+        dfd = df.data.assign(**kw_columns)
 
-        col_index = output_ordered_columns.index(input_cols[-1]) + 1
-        output_ordered_columns[col_index:col_index] = [output_col]
+        if output_col not in output_ordered_columns:
+            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            output_ordered_columns[col_index:col_index] = [output_col]
 
-        df = df.meta.preserve(df, Actions.NEST.value, list(kw_columns.values()))
+        meta = Meta.preserve(df.meta, dfd, Actions.NEST.value, list(kw_columns.values()))
 
-        return df.cols.select(output_ordered_columns)
+        if drop is True:
+            for input_col in input_cols:
+                if input_col in output_ordered_columns and input_col != output_col:
+                    output_ordered_columns.remove(input_col)
+
+        return self.root.new(dfd).cols.select(output_ordered_columns)

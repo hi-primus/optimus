@@ -1,150 +1,125 @@
 # DataFrame = pd.DataFrame
 
 import cudf
-from cudf import Series
 
+from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
 
 
-def functions(self):
-    class CUDFFunctions(Functions):
-        def __init__(self, df):
-            super(CUDFFunctions, self).__init__(df)
+class CUDFFunctions(Functions):
 
+    def to_float(self, series):
+        return to_float_cudf(series)
 
+    def to_integer(self, series):
+        return to_integer_cudf(series)
 
-        def count_zeros(self, *args):
-            # Cudf can not handle null so we fill it with non zero values.
-            series = self.series
-            non_zero_value = 1
-            return (series.ext.to_float().fillna(non_zero_value).values == 0).sum()
+    def to_string(self, series):
+        return series.astype(str)
 
-        def kurtosis(self):
-            series = self.series
-            return series.ext.to_float().kurt()
+    def count_zeros(self, series, *args):
+        # Cudf can not handle null so we fill it with non zero values.
+        non_zero_value = 1
+        return (self.to_float(series).fillna(non_zero_value).values == 0).sum()
 
-        def skew(self):
-            series = self.series
-            return series.ext.to_float().skew()
+    def kurtosis(self, series):
+        return self.to_float(series).kurt()
 
-        def exp(self):
-            series = self.series
-            return cudf.exp(series.ext.to_float())
+    def skew(self, series):
+        return self.to_float(series).skew()
 
-        def sqrt(self):
-            series = self.series
-            return series.ext.to_float().sqrt()
+    def exp(self, series):
+        return cudf.exp(self.to_float(series))
 
-        def unique(self, *args):
-            series = self.series
-            # Cudf can not handle null so we fill it with non zero values.
-            return series.astype(str).unique()
+    def sqrt(self, series):
+        return self.to_float(series).sqrt()
 
-        # def mod(self, other):
-        #     series = self.series
-        #     return cudf.mod(series.ext.to_float(), other)
+    def unique(self, series, *args):
+        # Cudf can not handle null so we fill it with non zero values.
+        return series.astype(str).unique()
 
-        def radians(self):
-            series = self.series
-            return cudf.radians(series.ext.to_float())
+    # def mod(self, other):
+    #     
+    #     return cudf.mod(self.to_float(series), other)
 
-        def degrees(self):
-            series = self.series
-            return cudf.degrees(series.ext.to_float())
+    def radians(self, series):
+        return cudf.radians(self.to_float(series))
 
-        def ln(self):
-            series = self.series
-            return cudf.log(series.ext.to_float())
+    def degrees(self, series):
+        return cudf.degrees(self.to_float(series))
 
-        def log(self):
-            series = self.series
-            return series.ext.to_float().log() / cudf.log(10)
+    def ln(self, series):
+        return self.to_float(series).log()
 
-        def ceil(self):
-            series = self.series
-            return series.ext.to_float().ceil()
+    def log(self, series, base=10):
+        return cudf.log(self.to_float(series)) / cudf.log(base)
 
-        def floor(self):
-            series = self.series
-            return series.ext.to_float().ceil()
+    def ceil(self, series):
+        return self.to_float(series).ceil()
 
-        def sin(self):
-            series = self.series
-            return series.ext.to_float().sin()
+    def floor(self, series):
+        return self.to_float(series).ceil()
 
-        def cos(self):
-            series = self.series
-            return series.ext.to_float().cos()
+    def sin(self, series):
+        return self.to_float(series).sin()
 
-        def tan(self):
-            series = self.series
-            return series.ext.to_float().tan()
+    def cos(self, series):
+        return self.to_float(series).cos()
 
-        def asin(self):
-            series = self.series
-            return series.ext.to_float().asin()
+    def tan(self, series):
+        return self.to_float(series).tan()
 
-        def acos(self):
-            series = self.series
-            return series.ext.to_float().acos()
+    def asin(self, series):
+        return self.to_float(series).asin()
 
-        def atan(self):
-            series = self.series
-            return series.ext.to_float().atan()
+    def acos(self, series):
+        return self.to_float(series).acos()
 
-        def sinh(self):
-            series = self.series
-            return 1 / 2 * (cudf.exp(series) - cudf.exp(-series))
+    def atan(self, series):
+        return self.to_float(series).atan()
 
-        def cosh(self):
-            series = self.series
-            return 1 / 2 * (cudf.exp(series) + cudf.exp(-series))
+    def sinh(self, series):
+        return 1 / 2 * (cudf.exp(series) - cudf.exp(-series))
 
-        def tanh(self):
-            return self.sinh() / self.cosh()
+    def cosh(self, series):
+        return 1 / 2 * (cudf.exp(series) + cudf.exp(-series))
 
-        def asinh(self):
-            return 1 / self.sinh()
+    def tanh(self, series):
+        return self.sinh() / self.cosh()
 
-        def acosh(self):
-            return 1 / self.cosh()
+    def asinh(self, series):
+        return 1 / self.sinh()
 
-        def atanh(self):
-            return 1 / self.tanh()
+    def acosh(self, series):
+        return 1 / self.cosh()
 
-        def clip(self, lower_bound, upper_bound):
-            series = self.series
-            return series.ext.to_float().clip(float(lower_bound), float(upper_bound))
+    def atanh(self, series):
+        return 1 / self.tanh()
 
-        def cut(self, bins):
-            raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
+    def clip(self, series, lower_bound, upper_bound):
+        return self.to_float(series).clip(float(lower_bound), float(upper_bound))
 
-        def replace_string(self, search, replace_by):
-            series = self.series
-            return series.astype(str).str.replace(search, replace_by)
+    def cut(self, bins):
+        raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
-        def remove_special_chars(self):
-            series = self.series
-            return series.astype(str).str.filter_alphanum()
+    def replace_chars(self, series, search, replace_by):
+        return series.astype(str).str.replace(search, replace_by)
 
-        def remove_accents(self):
-            series = self.series
-            if not series.isnull().all():
-                return series.astype(str).str.normalize_characters()
-            else:
-                return series
+    def remove_special_chars(self, series):
+        return series.astype(str).str.filter_alphanum()
 
-        def date_format(self, current_format=None, output_format=None):
-            series = self.series
-            # Some formats are no supported yet. https://github.com/rapidsai/cudf/issues/5991
-            return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
+    def remove_accents(self, series):
+        if not series.isnull().all():
+            return series.astype(str).str.normalize_characters()
+        else:
+            return series
 
-        def years_between(self, date_format=None):
-            series = self.series
-            raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
-            # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()
+    def date_format(self, series, current_format=None, output_format=None):
 
-    return CUDFFunctions(self)
+        # Some formats are no supported yet. https://github.com/rapidsai/cudf/issues/5991
+        return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
+    def years_between(self, date_format=None):
 
-Series.functions = property(functions)
+        raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
+        # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()

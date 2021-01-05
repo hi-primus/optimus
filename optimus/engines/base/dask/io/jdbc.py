@@ -9,12 +9,14 @@ from sqlalchemy.sql import elements
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
+from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:
@@ -30,6 +32,14 @@ class DaskBaseJDBC:
         Create the JDBC connection object
         :return:
         """
+        if host is None:
+            host = "127.0.0.1"
+            # RaiseIt.value_error(host, "host must be specified")
+
+        if user is None:
+            user = "root"
+            # print("user",user)
+            # RaiseIt.value_error(user, "user must be specified")
 
         if database is None:
             database = ""
@@ -48,6 +58,7 @@ class DaskBaseJDBC:
             self.port = port
 
         self.driver_option = self.driver_properties.value["java_class"]
+
         self.uri = self.driver_context.uri(
             user=user,
             password=password,
@@ -85,23 +96,10 @@ class DaskBaseJDBC:
         #     schema = self.schema
         # query = self.driver_context.table_names_query(schema=schema, database=database)
         # df = self.execute(query, limit)
-        # return df.ext.display(limit)
+        # return df.display(limit)
 
         engine = create_engine(self.uri)
         return engine.table_names()
-
-    def tables_names_to_json(self, schema=None):
-        """
-        Get the table names from a database in json format
-        :return:
-        """
-
-        # Override the schema used in the constructors
-        if schema is None: schema = self.schema
-        query = self.driver_context.table_name_query(schema=schema, database=self.database)
-        table_name = self.driver_properties.value["table_name"]
-        df = self.execute(query, "all")
-        return [i[table_name] for i in df.ext.to_dict()]
 
     @property
     def table(self):
@@ -111,7 +109,7 @@ class DaskBaseJDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name, columns="*", limit=None):
+    def table_to_df(self, table_name: str, columns="*", limit=None):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
@@ -137,12 +135,12 @@ class DaskBaseJDBC:
 
         logger.print(query)
 
-        df = self.execute(query, limit)
+        ddf = self.execute(query, limit)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        # df = df.ext.run()
-        # df = dask_pandas_to_dask_cudf(df)
-        return df
+        # ddf = ddf.run()
+        # ddf = dask_pandas_to_dask_cudf(ddf)
+        return DaskDataFrame(ddf)
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
@@ -443,8 +441,8 @@ class Table:
     def show(self, table_names="*", limit=None):
         db = self.db
 
-        if table_names=="*":
-            table_names = db.tables_names_to_json()
+        if table_names == "*":
+            table_names = db.tables()
         else:
             table_names = val_to_list(table_names)
 

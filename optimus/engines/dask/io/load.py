@@ -1,11 +1,13 @@
 import ntpath
 
-import dask.bag as db
+import dask.bag as dask_bag
 import pandas as pd
 from dask import dataframe as dd
 
 import optimus.helpers.functions_spark
 from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.meta import Meta
+from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
@@ -27,8 +29,7 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             df = dd.read_json(path, lines=multiline, *args, **kwargs)
-            df.ext.reset()
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -51,14 +52,14 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, engine="python", keep_default_na=False,
-            na_filter=False, *args,
-            **kwargs):
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
+            na_filter=False, null_value=None, storage_options=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
+        :param na_filter:
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
@@ -74,23 +75,24 @@ class Load(BaseLoad):
         :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
 
         """
+
         if cache is False:
             prepare_path.cache_clear()
 
-        # file, file_name = prepare_path(path, "csv")[0]
         try:
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                             *args, **kwargs)
-            # print(len(df))
+            ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter, *args,
+                              **kwargs)
+
             if n_rows > -1:
-                df = dd.from_pandas(df.head(n_rows), npartitions=1)
-            df.ext.reset()
-            df.meta.set("file_name", path)
+                ddf = dd.from_pandas(ddf.head(n_rows), npartitions=1)
+
+            df = DaskDataFrame(ddf)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
             raise
@@ -111,8 +113,7 @@ class Load(BaseLoad):
 
         try:
             df = dd.read_parquet(path, columns=columns, engine=engine, *args, **kwargs)
-            df.ext.reset()
-            df.meta.set("file_name", path)
+            df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
             logger.print(error)
@@ -143,7 +144,6 @@ class Load(BaseLoad):
 
         ddf.compute()
 
-        # print("---",path, file, file_name)
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
                              compression="gzip", *args,
@@ -152,18 +152,46 @@ class Load(BaseLoad):
             if n_rows > -1:
                 df = df.head(n_rows)
 
-            df.meta.set("file_name", file_name)
+            df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
-        df.ext.reset()
         return df
 
     @staticmethod
-    def avro(path, *args, **kwargs):
+    def orc(path, columns=None, cache=None, *args, **kwargs):
+
+        """
+        Optimized Row Columnar
+        Return a dataframe from a .orc file.
+        params
+
+
+        """
+
+        if cache is False:
+            prepare_path.cache_clear()
+
+        try:
+            # From the panda docs using na_filter
+            # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
+            # passing na_filter=False can improve the performance of reading a large file.
+            ddf = dd.read_orc(path, columns, *args, **kwargs)
+
+            df = DaskDataFrame(ddf)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    @staticmethod
+    def avro(path, storage_options=None, *args, **kwargs):
         """
         Return a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
+        :param storage_options:
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         :return: Spark Dataframe
@@ -171,9 +199,8 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")
 
         try:
-            df = db.read_avro(path, *args, **kwargs).to_dataframe()
-            df.ext.reset()
-            df.meta.set("file_name", file_name)
+            df = dask_bag.read_avro(path, storage_options=storage_options, *args, **kwargs).to_dataframe()
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
@@ -210,8 +237,7 @@ class Load(BaseLoad):
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
         df = dd.from_pandas(pdf, npartitions=n_partitions)
-        df.ext.reset()
-        df.meta.set("file_name", ntpath.basename(file_name))
-        df.meta.set("sheet_names", sheet_names)
+        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
         return df

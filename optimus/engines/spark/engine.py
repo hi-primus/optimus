@@ -7,7 +7,6 @@ from deepdiff import DeepDiff
 from pyspark.sql import DataFrame
 
 import optimus.helpers.functions_spark
-from optimus.bumblebee import Comm
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
 from optimus.engines.spark.io.load import Load
@@ -26,7 +25,6 @@ from optimus.version import __version__
 # Singletons
 Spark.instance = None
 Profiler.instance = None
-Comm.instance = None
 
 
 class SparkEngine:
@@ -71,13 +69,10 @@ class SparkEngine:
         :type jars: (list[str])
 
         """
-
+        self.engine = 'spark'
+        self.client = session
         self.preserve = False
 
-        if comm is True:
-            Comm.instance = Comm()
-        else:
-            Comm.instance = comm
 
         if jars is None:
             jars = []
@@ -339,7 +334,7 @@ class SparkEngine:
     # Jar
     def _add_jars(self, jar):
         for j in val_to_list(jar):
-            optimus.helpers.functions_spark.append(j)
+            self.jars.append(j)
 
     def _setup_jars(self):
         if self.jars:
@@ -351,7 +346,7 @@ class SparkEngine:
     def _add_driver_class_path(self, driver_class_path):
 
         for d in val_to_list(driver_class_path):
-            optimus.helpers.functions_spark.append(d)
+            self.driver_class_path.append(d)
 
     def _setup_driver_class_path(self):
 
@@ -456,7 +451,7 @@ class SparkEngine:
         :return:
         """
         if method is "json":
-            diff = DeepDiff(df1.ext.to_json(), df2.ext.to_json(), ignore_order=False)
+            diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
             print_json(diff)
         elif method is "collect":
             if df1.collect() == df2.collect():

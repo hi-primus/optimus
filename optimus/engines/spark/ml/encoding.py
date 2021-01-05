@@ -8,6 +8,8 @@ from optimus.infer import is_, is_str
 from optimus.helpers.check import is_spark_dataframe
 from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
 
+from optimus.engines.base.meta import Meta
+
 
 def n_gram(df, input_col, n=2):
     """
@@ -57,7 +59,7 @@ def string_to_index(df, input_cols, output_cols=None, columns=None, **kargs):
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
 
-    df = df.meta.preserve(df_actual, Actions.STRING_TO_INDEX.value, output_cols)
+    df.meta = Meta.preserve(df.meta, df_actual, Actions.STRING_TO_INDEX.value, output_cols)
 
     return df
 
@@ -88,7 +90,7 @@ def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     pipeline = Pipeline(stages=indexers)
     df = pipeline.fit(df).transform(df)
 
-    df = df.meta.preserve(df_actual, Actions.INDEX_TO_STRING.value, output_cols)
+    df.meta = Meta.preserve(df.meta, df_actual, Actions.INDEX_TO_STRING.value, output_cols)
 
     return df
 

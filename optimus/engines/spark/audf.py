@@ -1,31 +1,32 @@
 from pyspark.sql import functions as F
 
-from optimus.infer import is_column, parse_spark_class_dtypes, Infer
 from optimus.helpers.core import one_list_to_val
 from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_column, parse_spark_class_dtypes, Infer, is_tuple
 
 
-def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
+def abstract_udf(col, func, func_return_type=None, args=None, func_type=None):
     """
     Abstract User defined functions. This is a helper function to create udf, pandas udf or a Column Exp
     :param col: Column to created or transformed
     :param func: Function to be applied to the data
-    :param attrs: If required attributes to be passed to the function
+    :param args: If required attributes to be passed to the function
     :param func_return_type: Required by UDF and Pandas UDF.
     :param func_type: pandas_udf or udf. The function is going to try to use pandas_udf if func_type is not defined
     :return: A function, UDF or Pandas UDF
     """
 
-    if func_return_type is None:
-        func_type = "column_exp"
-    # By default is going to try to use pandas UDF
-    elif func_type is None and is_pyarrow_installed() is True:
-        func_type = "pandas_udf"
+    # print("func_return_type", col, func_return_type)
+    # if func_return_type is None:
+    #     func_type = "column_exp"
+    # # By default is going to try to use pandas UDF
+    # elif func_type is None and is_pyarrow_installed() is True:
+    #     func_type = "pandas_udf"
 
-    types = ["column_exp", "udf", "pandas_udf"]
+    types = ["column_expr", "udf", "pandas_udf"]
     if func_type not in types:
         RaiseIt.value_error(func_type, types)
 
@@ -37,14 +38,18 @@ def abstract_udf(col, func, func_return_type=None, attrs=None, func_type=None):
         _func = func_col_exp
     else:
         _func = func
-
+    # print(func_type)
     logger.print(
         "Using '{func_type}' to process column '{column}' with function {func_name}".format(func_type=func_type,
                                                                                             column=col,
                                                                                             func_name=_func.__name__))
 
     df_func = func_factory(func_type, func_return_type)
-    return df_func(attrs, _func)(col)
+    if not is_tuple(args):
+        args = (args,)
+
+    # print("-----------------df_func(_func, args)(col)", df_func(_func, args)(col))
+    return df_func(_func, args)(col)
 
 
 def func_factory(func_type=None, func_return_type=None):
@@ -57,29 +62,33 @@ def func_factory(func_type=None, func_return_type=None):
 
     func_return_type = parse_spark_class_dtypes(func_return_type)
 
-    def pandas_udf_func(attr=None, func=None):
+    def pandas_udf_func(func=None, args=None):
         # TODO: Get the column type, so is not necessary to pass the return type as param.
 
         # Apply the function over the whole series
-        def apply_to_series(val, attr):
-            if attr is None:
-                attr = (None,)
+        def apply_to_series(value, args):
+            if args is None or args == (None,):
+                return value.apply(func)
             else:
-                attr = (attr,)
-
-            return val.apply(func, args=attr)
+                return value.apply(func, args=args)
 
         def to_serie(value):
-            return apply_to_series(value, attr)
+            return apply_to_series(value, args)
 
         return F.pandas_udf(to_serie, func_return_type)
 
-    def udf_func(attr, func):
-        return F.udf(lambda value: func(value, attr), func_return_type)
+    def udf_func(func, args):
+        if args is None or args == (None,):
+            return F.udf(lambda value: func(value), func_return_type)
+        else:
+            return F.udf(lambda value: func(value, *args), func_return_type)
 
-    def expression_func(attr, func):
+    def expression_func(func, args):
         def inner(col_name):
-            return func(col_name, attr)
+            if args is None or args == (None,):
+                return func(col_name)
+            else:
+                return func(col_name, *args)
 
         return inner
 
@@ -89,7 +98,7 @@ def func_factory(func_type=None, func_return_type=None):
     elif func_type is "udf":
         return udf_func
 
-    elif func_type is "column_exp":
+    elif func_type is "column_expr":
         return expression_func
 
 
