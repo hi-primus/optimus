@@ -131,6 +131,22 @@ class ProfilerDataTypes(Enum):
     # NULL = "null"
     # MISSING = "missing"
 
+class Schemas(Enum):
+    S3 = 's3://'
+    GCS = 'gcs://'
+    GC = 'gc://'
+    HTTP = 'http://'
+    HTTPS = 'https://'
+    FTP = 'ftp://'
+    FILE = 'file://'
+    AZ = 'az://'
+    ADL = 'adl://'
+    ABFS = 'abfs://'
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, Schemas))
+
 
 PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
 PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,

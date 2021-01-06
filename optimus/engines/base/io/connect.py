@@ -1,10 +1,9 @@
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.constants import Schemas
 from optimus.infer import regex_full_url
 import re
-
-SCHEMAS = ['s3://','gcs://','gc://','http://','https://','ftp://','file://','az://','adl://','abfs://']
 
 class Connection:
     """
@@ -18,7 +17,7 @@ class Connection:
 
 
     def path(self, path):
-        if self.options["base_url"] and not path.startswith((self.options["base_url"], *SCHEMAS)):
+        if self.options["base_url"] and not path.startswith((self.options["base_url"], *Schemas.list())):
             path = self.options["base_url"] + path
 
         return path
