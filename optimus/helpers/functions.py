@@ -477,6 +477,26 @@ def prepare_path(path, file_format=None):
     return r
 
 
+def prepare_path_local(path):
+    """
+    Helper create the folder of the file to be saved
+    :param path: Path to the file to be saved
+    """
+    path = os.path.join(Path().absolute(), path)
+    os.makedirs(path, exist_ok=True)
+
+
+def path_is_local(path):
+    """
+    Check if path is local
+    :param path: Path to the file to be saved
+    """
+    from optimus.helpers.constants import Schemas
+    if path.startswith((*Schemas.list(),)):
+        return path.startswith(Schemas.FILE.value)
+    return True
+
+
 def set_func(df, value, where, output_col, parser, default=None):
     """
     Core implementation of the set function

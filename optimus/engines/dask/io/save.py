@@ -1,6 +1,7 @@
 import os
 
 from optimus.helpers.logger import logger
+from optimus.helpers.functions import prepare_path_local, path_is_local
 
 
 class Save:
@@ -30,7 +31,7 @@ class Save:
         # else:
         #     print("Successfully created the directory %s" % path)
 
-    def csv(self, path, mode="wt", index=False, single_file=True, **kwargs):
+    def csv(self, path, mode="wt", index=False, single_file=True, storage_options=None, conn=None, **kwargs):
         """
         Save data frame to a CSV file.
         :param mode: 'rb', 'wt', etc
@@ -42,12 +43,16 @@ class Save:
         """
 
         df = self.root.data
-        try:
-            import pathlib
 
-            path = os.path.join(pathlib.Path().absolute(), path)
-            os.makedirs(path, exist_ok=True)
-            df.to_csv(filename=path, mode=mode, index=index, single_file=single_file, **kwargs)
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
+        try:
+            if path_is_local(path):
+                prepare_path_local(path)
+            
+            df.to_csv(filename=path, mode=mode, index=index, single_file=single_file, storage_options=storage_options, **kwargs)
         except IOError as error:
             logger.print(error)
             raise
