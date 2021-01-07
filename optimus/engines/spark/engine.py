@@ -39,7 +39,6 @@ class SparkEngine:
                  driver_class_path=None,
                  options=None,
                  additional_options=None,
-                 comm=None,
                  load_avro=False,
                  ):
 
@@ -149,7 +148,7 @@ class SparkEngine:
 
         logger.print(SUCCESS)
 
-        self.create = Create()
+        self.create = Create(self)
         self.load = Load()
         self.read = self.spark.read
 
