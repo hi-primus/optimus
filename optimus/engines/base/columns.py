@@ -26,6 +26,7 @@ from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_e
     is_tuple, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
+
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
 
@@ -222,7 +223,6 @@ class BaseColumns(ABC):
             if set_index is True:
                 dfd = dfd.reset_index()
             if kw_columns:
-
                 dfd = dfd.assign(**kw_columns)
 
         # Dataframe to Optimus dataframe
@@ -1297,7 +1297,8 @@ class BaseColumns(ABC):
 
     def day(self, input_cols, format=None, output_cols=None):
 
-        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized",
+                          set_index=True)
 
     def hour(self, input_cols, format=None, output_cols=None):
 
@@ -1910,7 +1911,7 @@ class BaseColumns(ABC):
         pass
 
     # URL methods
-    def domain(self, input_cols, output_cols=None):
+    def domain(self, input_cols="*", output_cols=None):
         """
         From https://www.hi-bumblebee.com it returns hi-bumblebee.com
         :param input_cols:
@@ -1918,77 +1919,58 @@ class BaseColumns(ABC):
         :return:
         """
 
-        def _domain(value):
-            return value.str.extract(regex_full_url)[5]
-
-
         df = self.root
-        return df.cols.apply(input_cols, _domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
+        return df.cols.apply(input_cols, self.F.domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
-    def url_scheme(self, input_cols, output_cols=None):
+    def url_scheme(self, input_cols="*", output_cols=None):
         # From https://www.hi-bumblebee.com it returns https
-        def _domain_scheme(value):
-            return value.str.extract(regex_full_url)[1]
-
         df = self.root
-        return df.cols.apply(input_cols, _domain_scheme, output_cols=output_cols,
+        return df.cols.apply(input_cols, self.F.url_scheme, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_SCHEME.value,
                              mode="vectorized")
 
-    def url_params(self, input_cols, output_cols=None):
-        def _domain_params(value):
-            return value.str.extract(regex_full_url)[9]
+    def url_params(self, input_cols="*", output_cols=None):
 
         df = self.root
-        return df.cols.apply(input_cols, _domain_params, output_cols=output_cols,
+        return df.cols.apply(input_cols, self.F.url_params, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_PARAMS.value,
                              mode="vectorized")
 
-    def url_path(self, input_cols, output_cols=None):
-
-        def _domain_path(value):
-            return value.str.extract(regex_full_url)[8]
+    def url_path(self, input_cols="*", output_cols=None):
 
         df = self.root
-        return df.cols.apply(input_cols, _domain_path, output_cols=output_cols, meta_action=Actions.DOMAIN_PATH.value,
+        return df.cols.apply(input_cols, self.F.url_path, output_cols=output_cols,
+                             meta_action=Actions.DOMAIN_PATH.value,
                              mode="vectorized")
 
-    def port(self, input_cols, output_cols=None):
+    def port(self, input_cols="*", output_cols=None):
         # From https://www.hi-bumblebee.com:8080 it returns 8080
-        def _port(value):
-            return value.str.extract(regex_full_url)[6]
 
         df = self.root
-        return df.cols.apply(input_cols, _port, output_cols=output_cols, meta_action=Actions.PORT.value,
+        return df.cols.apply(input_cols, self.F.port, output_cols=output_cols, meta_action=Actions.PORT.value,
                              mode="vectorized")
 
-    def subdomain(self, input_cols, output_cols=None):
+    def subdomain(self, input_cols="*", output_cols=None):
         # From https://www.hi-bumblebee.com:8080 it returns www
-        def _subdomain(value):
-            return value.str.extract(regex_full_url)[4]
 
         df = self.root
-        return df.cols.apply(input_cols, _subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
+        return df.cols.apply(input_cols, self.F.subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
                              mode="vectorized")
 
     # Email functions
-    def email_username(self, input_cols, output_cols=None):
-        def _email_user(value):
-            return value.str.split('@')[0][0]
+    def email_username(self, input_cols="*", output_cols=None):
 
         df = self.root
-        return df.cols.apply(input_cols, _email_user, output_cols=output_cols, meta_action=Actions.EMAIL_USER.value,
+        return df.cols.apply(input_cols, self.F.email_username, output_cols=output_cols,
+                             meta_action=Actions.EMAIL_USER.value,
                              mode="vectorized")
 
-    def email_domain(self, input_cols, output_cols=None):
-        def _email_domain(value):
-            # return value.str.split('@').str[1]
-            # return value.str.extract(r"@(.*)")
-            return value.str.split('@')[0][1]
+    def email_domain(self, input_cols="*", output_cols=None):
 
         df = self.root
-        return df.cols.apply(input_cols, _email_domain, output_cols=output_cols, meta_action=Actions.EMAIL_DOMAIN.value,
+        return df.cols.apply(input_cols, self.F.email_domain, output_cols=output_cols,
+                             meta_action=Actions.EMAIL_DOMAIN.value,
                              mode="vectorized")
 
     # Mask functions
