@@ -483,7 +483,7 @@ def prepare_path_local(path):
     :param path: Path to the file to be saved
     """
     path = os.path.join(Path().absolute(), path)
-    os.makedirs(path, exist_ok=True)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
 
 def path_is_local(path):
