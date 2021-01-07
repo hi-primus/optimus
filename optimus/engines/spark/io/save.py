@@ -2,6 +2,7 @@ from packaging import version
 
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.functions import path_is_local, prepare_path_local
 from optimus.helpers.logger import logger
 
 
@@ -36,7 +37,8 @@ class Save:
             logger.print(e)
             raise
 
-    def csv(self, path, header="true", mode="overwrite", sep=",", num_partitions=1):
+    def csv(self, path, header="true", mode="overwrite", single_file=True, storage_options=None, conn=None, sep=",",
+            num_partitions=1):
         """
         Save data frame to a CSV file.
         :param path: path where the spark will be saved.
@@ -53,12 +55,32 @@ class Save:
         """
         try:
             df = self.root
+
+            if conn is not None:
+                path = conn.path(path)
+                storage_options = conn.storage_options
+
+            try:
+                if path_is_local(path):
+                    prepare_path_local(path)
+            except IOError as error:
+                logger.print(error)
+                raise
+
             columns = parse_columns(df, "*",
                                     filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
             df = df.cols.cast(columns, "str").repartition(num_partitions)
 
+
             # Save to csv
-            df.data.write.options(header=header).mode(mode).csv(path, sep=sep)
+            if single_file is True:
+                print(path)
+                # df.data.repartition(1).write.csv(path)
+                df.data.toPandas().to_csv(path, header=True)
+                # df.data.repartition(1).write.format('com.databricks.spark.csv').save(path,
+                #                                                                 header='true')
+            else:
+                df.data.write.options(header=header).mode(mode).csv(path, sep=sep)
 
             # val conf    = sc.hadoopConfiguration
             # val src     = new Path(tmpFolder)

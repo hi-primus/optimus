@@ -19,12 +19,11 @@ def abstract_udf(col, func, func_return_type=None, args=None, func_type=None):
     :return: A function, UDF or Pandas UDF
     """
 
-    # print("func_return_type", col, func_return_type)
-    # if func_return_type is None:
-    #     func_type = "column_exp"
-    # # By default is going to try to use pandas UDF
-    # elif func_type is None and is_pyarrow_installed() is True:
-    #     func_type = "pandas_udf"
+    if func_return_type is None:
+        func_type = "column_expr"
+    # By default is going to try to use pandas UDF
+    elif func_type is None and is_pyarrow_installed() is True:
+        func_type = "pandas_udf"
 
     types = ["column_expr", "udf", "pandas_udf"]
     if func_type not in types:

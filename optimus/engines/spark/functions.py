@@ -9,7 +9,7 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import create_buckets
 # These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
-from optimus.infer import is_numeric
+from optimus.infer import is_numeric, regex_full_url
 
 
 class SparkFunctions(Functions):
@@ -35,6 +35,9 @@ class SparkFunctions(Functions):
         return F.col(col_name).cast("string")
 
     def to_float(self, col_name):
+        return F.col(col_name).cast("float")
+
+    def _to_float(self, col_name):
         return F.col(col_name).cast("float")
 
     def to_integer(self, col_name):
@@ -112,53 +115,41 @@ class SparkFunctions(Functions):
     def ceil(col):
         pass
 
-    @staticmethod
-    def sin(col):
-        pass
+    def sin(self, series):
+        return F.sin(self._to_float(series))
 
-    @staticmethod
-    def cos(col):
-        pass
+    def cos(self, series):
+        return F.cos(self._to_float(series))
 
-    @staticmethod
-    def tan(col):
-        pass
+    def tan(self, series):
+        return F.tan(self._to_float(series))
 
-    @staticmethod
-    def asin(col):
-        pass
+    def asin(self, series):
+        return F.asin(self._to_float(series))
 
-    @staticmethod
-    def acos(col):
-        pass
+    def acos(self, series):
+        return F.acos(self._to_float(series))
 
-    @staticmethod
-    def atan(col):
-        pass
+    def atan(self, series):
+        return F.atan(self._to_float(series))
 
-    @staticmethod
-    def sinh(col):
-        pass
+    def sinh(self, series):
+        return F.sinh(self._to_float(series))
 
-    @staticmethod
-    def cosh(col):
-        pass
+    def cosh(self, series):
+        return F.cosh(self._to_float(series))
 
-    @staticmethod
-    def tanh(col):
-        pass
+    def tanh(self, series):
+        return F.tanh(self._to_float(series))
 
-    @staticmethod
-    def asinh(col):
-        pass
+    def asinh(self, series):
+        return F.log10(series + F.sqrt(F.pow(series, F.lit(2)) + F.lit(1)))
 
-    @staticmethod
-    def acosh(col):
-        pass
+    def acosh(self, series):
+        return F.log10(series + F.sqrt(F.pow(series, F.lit(2)) - F.lit(1)))
 
-    @staticmethod
-    def atanh(col):
-        pass
+    def atanh(self, series):
+        return 1 / 2 * F.log10(F.lit(1) + series / F.lit(1) - series)
 
     @staticmethod
     def replace_chars(series, search, replace_by):
@@ -434,3 +425,27 @@ class SparkFunctions(Functions):
             expr = None
         # print(expr)
         return expr
+
+    def domain(self, series):
+        return F.regexp_extract(series, regex_full_url, 5)
+
+    def url_scheme(self, series):
+        return F.regexp_extract(series, regex_full_url, 1)
+
+    def url_params(self, series):
+        return F.regexp_extract(series, regex_full_url, 9)
+
+    def url_path(self, series):
+        return F.regexp_extract(series, regex_full_url, 8)
+
+    def port(self, series):
+        return F.regexp_extract(series, regex_full_url, 6)
+
+    def subdomain(self, series):
+        return F.regexp_extract(series, regex_full_url, 4)
+
+    def email_username(self, series):
+        return F.split(series, '@')[0]
+
+    def email_domain(self, series):
+        return F.split(series, '@')[1]

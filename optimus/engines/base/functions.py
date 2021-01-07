@@ -4,6 +4,7 @@ from abc import abstractmethod, ABC
 import numpy as np
 
 from optimus.helpers.core import val_to_list
+from optimus.infer import regex_full_url
 
 
 class Functions(ABC):
@@ -409,3 +410,27 @@ class Functions(ABC):
     @abstractmethod
     def years_between(self, date_format=None):
         pass
+
+    def domain(self, series):
+        return series.str.extract(regex_full_url)[5]
+
+    def url_scheme(self, series):
+        return series.str.extract(regex_full_url)[1]
+
+    def url_params(self, series):
+        return series.str.extract(regex_full_url)[9]
+
+    def url_path(self, series):
+        return series.str.extract(regex_full_url)[8]
+
+    def port(self, series):
+        return series.str.extract(regex_full_url)[6]
+
+    def subdomain(self, series):
+        return series.str.extract(regex_full_url)[4]
+
+    def email_username(self, series):
+        return series.str.split('@')[0][0]
+
+    def email_domain(self, series):
+        return series.str.split('@')[0][1]
