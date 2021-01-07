@@ -93,7 +93,7 @@ def format_path(path, format="posix"):
 
 def java_version():
     version = subprocess.check_output(['java', '-version'], stderr=subprocess.STDOUT)
-    pattern = '\"(\d+\.\d+).*\"'
+    pattern = r'\"(\d+\.\d+).*\"'
     print(re.search(pattern, version).groups()[0])
 
 
