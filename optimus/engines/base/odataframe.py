@@ -42,7 +42,7 @@ class BaseDataFrame(ABC):
         return self.cols.select(item)
 
     def __setitem__(self, key, value):
-        self.cols.assign({key: value})
+        return self.cols.assign({key: value})
 
 
     def new(self, df, meta=None):
