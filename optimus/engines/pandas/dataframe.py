@@ -29,6 +29,11 @@ class PandasDataFrame(PandasExtension):
         return PandasFunctions()
 
     @property
+    def mask(self):
+        from optimus.engines.base.mask import Mask
+        return Mask(self)
+
+    @property
     def constants(self):
         from optimus.engines.pandas.constants import constants
         return constants(self)
