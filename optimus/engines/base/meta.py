@@ -171,3 +171,14 @@ class Meta:
         :return: dict (Meta)
         """
         return meta
+
+    @staticmethod
+    def append_action(meta, value=None, columns=None) -> dict:
+        """
+        Append action
+        :param meta:
+        :param value:
+        :param columns:
+        :return: dict (Meta)
+        """
+        return meta

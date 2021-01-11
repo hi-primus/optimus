@@ -581,6 +581,9 @@ class BaseColumns(ABC):
         if df_right.cols.dtypes(right_on) == "category":
             df_right[right_on] = df_right[right_on].cat.as_ordered()
 
+        dfd_left = df_left.data
+        dfd_right = df_right.data
+
         # Join do not work with different data types.
         # Use set_index to return a index in the dataframe
 
@@ -601,16 +604,16 @@ class BaseColumns(ABC):
 
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
-            names = df_left.cols.names()
+            names = df.cols.names()
             last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
             left_on = left_on if left_on in names else left_on + suffix_left
             right_on = right_on if right_on in names else right_on + suffix_right
             if left_on in names:
-                df_left = df_left.cols.move(left_on, "before", last_column_name)
+                df = df.cols.move(left_on, "before", last_column_name)
             if right_on in names:
-                df_left = df_left.cols.move(right_on, "before", last_column_name)
+                df = df.cols.move(right_on, "before", last_column_name)
 
-        return df_left
+        return df
 
     def is_match(self, columns, dtype, invert=False):
         """

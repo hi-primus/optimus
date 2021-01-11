@@ -30,20 +30,23 @@ class DaskBaseRows(BaseRows):
         dfd[column] = dd.from_dask_array(a)
         return dfd
 
-    def append(self, dfs, cols_map=None):
+    def append(self, dfs, names_map=None):
         """
         Appends 2 or more dataframes
         :param dfs:
-        :param cols_map:
+        :param names_map:
         """
+        if not is_list(dfs):
+            dfs = [dfs]
+
         every_df = [self.root, *dfs]
 
-        if cols_map is not None:
-            rename = [[] for _ in self.root]
-            for key in cols_map:
-                assert len(cols_map[key]) == len(every_df)
-                for i in range(len(cols_map[key])):
-                    col_name = cols_map[key][i]
+        if names_map is not None:
+            rename = [[] for _ in every_df]
+            for key in names_map:
+                assert len(names_map[key]) == len(every_df)
+                for i in range(len(names_map[key])):
+                    col_name = names_map[key][i]
                     if col_name:
                         rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
             for i in range(len(rename)):
@@ -55,11 +58,11 @@ class DaskBaseRows(BaseRows):
                 dfd = dfd.append(every_df[i].data)
         df = self.root.new(dfd)
 
-        if cols_map is not None:
-            df = df.cols.rename([("__output_column__" + key, key) for key in cols_map])
+        if names_map is not None:
+            df = df.cols.rename([("__output_column__" + key, key) for key in names_map])
+            df = df.cols.select([*names_map.keys()])
             
-        df = df.cols.select([*cols_map.keys()])
-        return df.reset_index(drop=True)
+        return df.new(df.data.reset_index(drop=True))
 
     # def append(self, rows):
     #     """

@@ -41,9 +41,9 @@ class S3(Connection):
     Amazon S3
     """
 
-    def __init__(self, url=None, bucket=None, **kwargs):
+    def __init__(self, endpoint_url=None, bucket=None, **kwargs):
         """
-        url: http(s)://<bucket name>.<subdomain>.<domain>
+        endpoint_url: http(s)://<...>
         bucket
         anon: Whether access should be anonymous (default False)
         key, secret: For user authentication
@@ -61,26 +61,25 @@ class S3(Connection):
 
 
         """
-        if url is None:
-            RaiseIt.value_error(url, "")
+        if endpoint_url is None:
+            RaiseIt.value_error(endpoint_url, "")
 
-        schema_result = re.search(regex_full_url, url)
+        schema_result = re.search(regex_full_url, endpoint_url)
 
         if schema_result is not None:
             schema = schema_result[2]
-            url = url[len(schema)+3:] # removes schema from url
-
-        kwargs['client_kwargs'] = kwargs.get('client_kwargs', {})
+            endpoint_url = endpoint_url[len(schema+"://"):] # removes schema from endpoint_url
 
         schema = schema if schema else 'https'
 
-        kwargs['client_kwargs']['endpoint_url'] = kwargs['client_kwargs'].get('endpoint_url', schema+"://"+url)
+        kwargs['client_kwargs'] = kwargs.get('client_kwargs', {})
+        kwargs['client_kwargs']['endpoint_url'] = kwargs['client_kwargs'].get('endpoint_url', schema+"://"+endpoint_url)
 
         if not kwargs.get('base_url', False):
             if bucket:
-                kwargs["base_url"] = 's3://'+bucket
-            elif url:
-                kwargs["base_url"] = 's3://'+url
+                kwargs["base_url"] = Schemas.S3.value + bucket
+            elif endpoint_url:
+                kwargs["base_url"] = Schemas.S3.value + endpoint_url
 
         super().__init__(**kwargs)
 

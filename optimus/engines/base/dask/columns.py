@@ -8,7 +8,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_dict
+from optimus.infer import Infer, is_dict, is_list
 from optimus.profiler.functions import fill_missing_var_types
 
 MAX_BUCKETS = 33
@@ -47,9 +47,12 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
+        if not is_list(dfs):
+            dfs = [dfs]
+
         df = self.root
         meta = df.meta
-        dfd = dd.concat([*[_df.data.reset_index(drop=True) for _df in dfs], df.data.reset_index(drop=True)], axis=1)
+        dfd = dd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
         
         meta = Meta.preserve(df.meta, Actions.APPEND.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
