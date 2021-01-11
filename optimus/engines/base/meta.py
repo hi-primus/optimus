@@ -59,7 +59,8 @@ class Meta:
         """
 
         meta = copy.deepcopy(meta)
-        meta = meta.append_action("copy", old_new_columns)
+        meta = Meta.action(meta, "copy", value=old_new_columns)
+        # meta = meta.append_action("copy", old_new_columns)
 
         return meta
 
@@ -81,7 +82,8 @@ class Meta:
         #         odf.meta.get()["transformations"]["actions"] = {}
         #
         # odf.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
-        meta = meta.append_action("rename", old_new_columns)
+        meta = copy.deepcopy(meta)
+        meta = Meta.action(meta, "rename", value=old_new_columns)
 
         return meta
 
@@ -157,7 +159,7 @@ class Meta:
 
         Meta.set(meta, value=new_meta)
         return meta
-    
+
     @staticmethod
     def preserve(meta, df=None, value=None, columns=None) -> dict:
         """
