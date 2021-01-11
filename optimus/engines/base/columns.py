@@ -372,7 +372,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
+    def cast(self, input_cols="*", dtype=None, output_cols=None, columns=None):
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         trnasformation like string to number in which should output nan.
@@ -569,7 +569,7 @@ class BaseColumns(ABC):
         suffix_left = "_left"
         suffix_right = "_right"
 
-        df_left = self.root.data
+        df_left = self.root
 
         if on is not None:
             left_on = on
@@ -583,19 +583,21 @@ class BaseColumns(ABC):
 
         # Join do not work with different data types.
         # Use set_index to return a index in the dataframe
-        df_left[left_on] = df_left[left_on].astype(str)
-        df_left.set_index(left_on)
 
-        df_right[right_on] = df_right[right_on].astype(str)
-        df_right.set_index(right_on)
+        df_left[left_on] = df_left[left_on].cols.cast("*", "str")
+        df_left.data.set_index(left_on)
+
+        df_right[right_on] = df_right[right_on].cols.cast("*", "str")
+        df_right.data.set_index(right_on)
 
         left_names = df_left.cols.names()
         right_names = df_right.cols.names()
 
         last_column_name = left_names[-1]
         # Use to reorder de output
-        df_left = df_left.merge(df_right, how=how, on=on, left_on=left_on, right_on=right_on,
-                                suffixes=(suffix_left, suffix_right))
+
+        df_left = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
+                                                   suffixes=(suffix_left, suffix_right)))
 
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
