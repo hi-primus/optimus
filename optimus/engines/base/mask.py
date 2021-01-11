@@ -68,11 +68,11 @@ class Mask:
         pass
 
     def starts_with(self, col_name, value):
-        mask = self.root.data[col_name].str.startswith(value, na=False)
+        mask = self.root.data[col_name].str.startswith(value, na=False).to_frame()
         return self.root.new(mask)
 
     def ends_with(self, col_name, value):
-        mask = self.root.data[col_name].str.endswith(value, na=False)
+        mask = self.root.data[col_name].str.endswith(value, na=False).to_frame()
         return self.root.new(mask)
 
     def find(self, value):
