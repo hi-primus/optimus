@@ -116,7 +116,7 @@ class BaseRows(ABC):
         elif expr:
             condition = pd.eval(expr)
             # dfd = dfd[condition]
-        dfd.assing({output_col: condition.data[condition.cols.names()[0]]})
+        dfd.assign({output_col: condition.data[condition.cols.names()[0]]})
 
         return self.root.new(dfd)
 
