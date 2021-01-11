@@ -39,7 +39,7 @@ class DataFrameBaseColumns(BaseColumns):
     def scatter(columns, buckets=10):
         pass
 
-    def set(self, where=None, value=None, output_cols=None, default=None):
+    def set(self, output_cols=None, where=None, value=None, default=None):
 
         df = self.root.data
 

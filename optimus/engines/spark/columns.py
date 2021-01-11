@@ -252,17 +252,18 @@ class Cols(BaseColumns):
         return df
 
     # TODO: Maybe we could merge this with apply()
-    @staticmethod
-    def set(output_col, value=None):
+    def set(self, output_cols=None, value=None, where=None, default=None):
         """
-        Execute a hive expression. Also handle ints and list in columns
-        :param output_col: Output columns
-        :param value: numeric, list or hive expression
+        Set a column value using a number, string or a expression.
+        :param where:
+        :param value:
+        :param output_cols:
+        :param default:
         :return:
         """
         df = self.root
 
-        columns = parse_columns(df, output_col, accepts_missing_cols=True)
+        columns = parse_columns(df, output_cols, accepts_missing_cols=True)
         check_column_numbers(columns, 1)
 
         if is_list(value):
@@ -274,7 +275,7 @@ class Cols(BaseColumns):
         else:
             RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
-        df = df.withColumn(output_col, expr)
+        df = df.withColumn(output_cols, expr)
         df.meta = Meta.preserve(df.meta, None, Actions.SET.value, columns)
         return df
 
