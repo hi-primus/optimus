@@ -26,7 +26,6 @@ class Connection:
     @property
     def storage_options(self):
         storage_options = self.options.copy()
-        display(self.__class__)
         storage_options.pop("base_url")
 
         if not len(storage_options.keys()):

@@ -524,7 +524,6 @@ def set_func(df, value, where, output_col, parser, default=None):
             mask = where
             if (output_col not in df.cols.names()) and (default is not None):
                 df[output_col] = df[default]
-            print("ASDFASDFASDF")
             # df.data.loc[mask, output_col] = eval(value)
             return df[output_col]
 
