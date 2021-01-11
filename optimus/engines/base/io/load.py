@@ -4,7 +4,6 @@ from abc import abstractmethod
 
 import magic
 
-from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.raiseit import RaiseIt
 
@@ -60,6 +59,7 @@ class BaseLoad:
         mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
 
         # CSV
+        print(mime_info)
         if mime == "text/plain" or mime == "application/csv":
             # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
             if mime_info["encoding"] == "unknown-8bit":
@@ -90,16 +90,17 @@ class BaseLoad:
             df = self.json(full_path, *args, **kwargs)
 
         # XML
-        elif mime == "text/xml":
+        elif mime in "text/xml":
             mime_info["file_type"] = "xml"
             df = self.xml(full_path, **kwargs)
 
-        elif mime == "application/vnd.ms-excel":
+        elif mime in ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
             mime_info["file_type"] = "excel"
             df = self.excel(full_path, **kwargs)
 
         else:
-            RaiseIt.value_error(mime_info["file_ext"], ["csv", "json", "xml", "xls", "xlsx"])
+
+            RaiseIt.value_error(mime, ["csv", "json", "xml", "xls", "xlsx"])
 
         # print(os.path.abspath(__file__))
         # df.meta.update("mime_info", value=mime_info)
