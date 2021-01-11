@@ -508,7 +508,6 @@ def set_func(df, value, where, output_col, parser, default=None):
     :param default:
     :return:
     """
-
     col_names = list(filter(lambda x: x != "__match__", df.cols.names()))
 
     profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
@@ -518,20 +517,20 @@ def set_func(df, value, where, output_col, parser, default=None):
     F = df.functions
     try:
         if where is None:
-            return eval(value)
+            return eval(str(value))
         else:
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
-
-            mask = (eval(where))
-
+            # print("where",where)
+            mask = where
             if (output_col not in df.cols.names()) and (default is not None):
                 df[output_col] = df[default]
-            df.loc[mask, output_col] = eval(value)
+            print("ASDFASDFASDF")
+            # df.data.loc[mask, output_col] = eval(value)
             return df[output_col]
 
     except (ValueError, TypeError) as e:
         logger.print(e)
-
+        print(e)
         # raise
         return np.nan
 
