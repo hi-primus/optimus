@@ -475,6 +475,15 @@ class BaseColumns(ABC):
 
     def assign(self, kw_columns):
 
+        if kw_columns.__class__ == self.root.__class__:
+            kw_columns = { name: kw_columns.data[name] for name in kw_columns.cols.names() }
+
+        for key in kw_columns:
+            if kw_columns[key].__class__ == self.root.__class__:
+                name = kw_columns[key].cols.names()[0]
+                kw_columns[key] = kw_columns[key].cols.rename([(name, key)])
+                kw_columns[key] = kw_columns[key].data[key]
+
         dfd = self.root.data
         return self.root.new(dfd.assign(**kw_columns))
 
