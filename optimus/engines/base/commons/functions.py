@@ -59,6 +59,12 @@ def to_integer(value, *args):
     except TypeError:
         return np.nan
 
+def to_boolean(value, *args):
+    try:
+        # fastnumbers can only handle string or numeric values. Not None, dates or list
+        return bool(value)
+    except TypeError:
+        return np.nan
 
 def to_float(value, *args):
     # if value is None or isinstance(value, str):
