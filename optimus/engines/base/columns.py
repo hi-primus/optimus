@@ -608,7 +608,7 @@ class BaseColumns(ABC):
         last_column_name = left_names[-1]
         # Use to reorder de output
 
-        df_left = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
+        df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
                                                    suffixes=(suffix_left, suffix_right)))
 
         # Remove duplicated index if the name is the same. If the index name are not the same
@@ -1633,7 +1633,11 @@ class BaseColumns(ABC):
         df = df.cols.move(df_new.cols.names(), "after", input_cols)
 
         if drop is True:
-            df = df.cols.drop(columns=[col for col in input_cols if col not in output_cols])
+            if output_cols is not None:
+                columns = [col for col in input_cols if col not in output_cols]
+            else:
+                columns = input_cols
+            df = df.cols.drop(columns)
 
         return df
 
