@@ -28,6 +28,9 @@ class DaskFunctions(Functions):
     def to_integer(self, series):
         return to_integer(series)
 
+    def to_boolean(self, series):
+        return to_boolean(series)
+
     def to_string(self, series, *args):
         return series.astype(str)
 

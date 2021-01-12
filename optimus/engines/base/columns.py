@@ -1145,6 +1145,10 @@ class BaseColumns(ABC):
         # else:
         #     return df
 
+    def to_boolean(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.to_boolean, func_return_type=int,
+                          output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
+
     def to_string(self, input_cols="*", output_cols=None):
         filtered_columns = []
         df = self.root

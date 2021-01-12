@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from optimus.engines.base.commons.functions import to_string, to_integer, to_float
+from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
 
@@ -22,6 +22,9 @@ class PandasFunctions(Functions):
 
     def to_integer(self, series):
         return to_integer(series)
+
+    def to_boolean(self, series):
+        return to_boolean(series)
 
     def to_string(self, series):
         return to_string(series)

@@ -64,6 +64,7 @@ class Actions(Enum):
     CUT = "cut"
     TO_FLOAT = "to_float"
     TO_INTEGER = "to_integer"
+    TO_BOOLEAN = "to_boolean"
     TO_STRING = "to_string"
     YEAR = "years"
     APPEND = "append"
