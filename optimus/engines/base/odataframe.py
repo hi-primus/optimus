@@ -36,7 +36,7 @@ class BaseDataFrame(ABC):
 
     def __repr__(self):
         self.display()
-        return str(type(self))
+        # return str(type(self))
 
     def __getitem__(self, item):
         return self.cols.select(item)
@@ -44,94 +44,93 @@ class BaseDataFrame(ABC):
     def __setitem__(self, key, value):
         return self.cols.assign({key: value})
 
-
     def new(self, df, meta=None):
         new_df = self.__class__(df)
         if meta is not None:
             new_df.meta = meta
         return new_df
 
-    def operation(self, df1, df2, opb):
+    def operation(self, df1, df2, opb, dtype):
         """
         Helper to process binary operations
-        :param df1:
-        :param df2:
-        :param opb:
+        :param df1: Left
+        :param df2: Right
+        :param opb: Operator
         :return:
         """
         if isinstance(df1, (BaseDataFrame,)):
             col1 = df1.cols.names(0)[0]
-            df1 = df1.cols.to_float(col1).data[col1]
+            df1 = df1.cols.cast(col1, dtype).data[col1]
 
         if isinstance(df2, (BaseDataFrame,)):
             col2 = df2.cols.names(0)[0]
             # print("aaa", df2)
-            df2 = df2.cols.to_float().data[col2]
+            df2 = df2.cols.cast(col2, dtype).data[col2]
 
         return self.root.new(opb(df1, df2).to_frame())
 
     def __add__(self, df2):
-        return self.operation(self, df2, operator.add)
+        return self.operation(self, df2, operator.add, "float")
 
     def __radd__(self, df2):
-        return self.operation(df2, self, operator.add)
+        return self.operation(df2, self, operator.add, "float")
 
     def __sub__(self, df2):
-        return self.operation(self, df2, operator.sub)
+        return self.operation(self, df2, operator.sub, "float")
 
     def __rsub__(self, df2):
-        return self.operation(self, df2, operator.sub)
+        return self.operation(self, df2, operator.sub, "float")
 
     def __mul__(self, df2):
-        return self.operation(self, df2, operator.mul)
+        return self.operation(self, df2, operator.mul, "float")
 
     def __rmul__(self, df2):
-        return self.operation(df2, self, operator.mul)
+        return self.operation(df2, self, operator.mul, "float")
 
     def __truediv__(self, df2):
-        return self.operation(self, df2, operator.truediv)
+        return self.operation(self, df2, operator.truediv, "float")
 
     def __rtruediv__(self, df2):
-        return self.operation(self, df2, operator.truediv)
+        return self.operation(self, df2, operator.truediv, "float")
 
     def __floordiv__(self, df2):
-        return self.operation(self, df2, operator.floordiv)
+        return self.operation(self, df2, operator.floordiv, "float")
 
     def __rfloordiv__(self, df2):
-        return self.operation(self, df2, operator.floordiv)
+        return self.operation(self, df2, operator.floordiv, "float")
 
     def __pow__(self, df2):
-        return self.operation(self, df2, operator.pow)
+        return self.operation(self, df2, operator.pow, "float")
 
     def __rpow__(self, df2):
-        return self.operation(self, df2, operator.pow)
+        return self.operation(self, df2, operator.pow, "float")
 
     def __eq__(self, df2):
-        return self.operation(self, df2, operator.eq)
+        return self.operation(self, df2, operator.eq, "float")
 
     def __gt__(self, df2):
-        return self.operation(self, df2, operator.gt)
+        return self.operation(self, df2, operator.gt, "float")
 
     def __lt__(self, df2):
-        return self.operation(self, df2, operator.lt)
+        return self.operation(self, df2, operator.lt, "float")
 
     def __ne__(self, df2):
-        return self.operation(self, df2, operator.ne)
+        return self.operation(self, df2, operator.ne, "float")
 
     def __ge__(self, df2):
-        return self.operation(self, df2, operator.ge)
+        return self.operation(self, df2, operator.ge, "float")
 
     def __le__(self, df2):
-        return self.operation(self, df2, operator.le)
+        return self.operation(self, df2, operator.le, "float")
 
     def __and__(self, df2):
-        return self.operation(self, df2, operator.__and__)
+        return self.operation(self, df2, operator.__and__, "bool")
 
     def __or__(self, df2):
-        return self.operation(self, df2, operator.__or__)
+        return self.operation(self, df2, operator.__or__, "bool")
 
     def __xor__(self, df2):
-        return self.operation(self, df2, operator.__xor__)
+        return self.operation(self, df2, operator.__xor__, "bool")
 
     def cols(self):
         return BaseColumns
@@ -555,7 +554,8 @@ class BaseDataFrame(ABC):
     def ascii(self):
         df = self.root
         print(
-            tabulate(df.to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()], tablefmt="simple",
+            tabulate(df.to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
+                     tablefmt="simple",
                      showindex="never"))
 
     def export(self):
@@ -714,3 +714,7 @@ class BaseDataFrame(ABC):
             profiler_data = dump_json(profiler_data)
 
         return profiler_data
+
+    def get_series(self):
+        col1 = self.root.cols.names(0)[0]
+        return self.root.data[col1]
