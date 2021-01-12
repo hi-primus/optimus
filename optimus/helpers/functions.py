@@ -520,16 +520,15 @@ def set_func(df, value, where, output_col, parser, default=None):
             return eval(str(value))
         else:
             # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
-            # print("where",where)
-            mask = where
+            mask = where.get_series()
             if (output_col not in df.cols.names()) and (default is not None):
                 df[output_col] = df[default]
-            # df.data.loc[mask, output_col] = eval(value)
-            return df[output_col]
+
+            df.data.loc[mask, output_col] = value
+            return df[output_col].data
 
     except (ValueError, TypeError) as e:
         logger.print(e)
-        print(e)
         # raise
         return np.nan
 
