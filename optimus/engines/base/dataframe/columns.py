@@ -6,6 +6,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.core import one_list_to_val
 from optimus.helpers.functions import set_function_parser, set_func
+from optimus.helpers.raiseit import RaiseIt
 
 
 class DataFrameBaseColumns(BaseColumns):
