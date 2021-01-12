@@ -333,7 +333,7 @@ class Cols(BaseColumns):
     #     return Cols.rename([(old_column, new_column)], None)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
-    def cast(self, input_cols=None, dtype=None, output_cols=None, columns=None):
+    def cast(self, input_cols="*", dtype=None, output_cols=None, columns=None):
         """
         Cast a column or a list of columns to a specific data type
         :param input_cols: Columns names to be casted
