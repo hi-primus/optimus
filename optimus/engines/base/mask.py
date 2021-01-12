@@ -84,7 +84,7 @@ class Mask:
 
         pass
 
-    def nulls(self, how="all", columns=None):
+    def nulls(self,col_name,  how="any", ):
         """
         Find the rows that have null values
         :param how:
@@ -94,8 +94,8 @@ class Mask:
 
         dfd = self.root.data
 
-        if columns is not None:
-            columns = val_to_list(columns)
+        if col_name is not None:
+            columns = val_to_list(col_name)
             subset_df = dfd[columns]
         else:
             subset_df = dfd
@@ -103,7 +103,7 @@ class Mask:
         if how == "all":
             mask = subset_df.isnull().all(axis=1)
         else:
-            mask = subset_df.isnull().any(axis=1)
+            mask = subset_df.isnull()
 
         return self.root.new(mask)
 
