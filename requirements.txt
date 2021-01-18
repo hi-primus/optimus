@@ -8,15 +8,9 @@ tqdm>=4.28.1
 fastnumbers>=2.2.1
 multipledispatch>=0.6.0
 numpy>=1.19.0
-matplotlib>=3.0.3
-pyspark>=2.4.1
-findspark>=1.3.0
-seaborn>=0.9.0
 deprecated>=1.2.5
 setuptools>=41.6.0
 Jinja2>=2.10.1
-tensorflow>=2.0.0b1
-keras>=2.4.3
 pygments>=2.2.0
 ipython>=7.5.0
 humanize>=0.5.1
@@ -27,7 +21,6 @@ deepdiff>=4.0.6
 statsmodels>=0.10.1
 glom>=19.10.0
 singleton-decorator>=1.0.0
-nltk>=3.4.5
 fastavro>=0.22.7
 dask[complete]>=2.21.0
 dask-ml>=1.6.0
@@ -39,7 +32,6 @@ xlrd>=1.2.0
 string-grouper==0.1.0
 pendulum>=2.0.5
 rply==0.7.7
-sqlalchemy==1.3.18
 pybigquery==0.4.15
 coiled>=0.0.30
 pandavro>=1.6.0
