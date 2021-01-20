@@ -31,7 +31,7 @@ class Connection:
         if not len(storage_options.keys()):
             storage_options = None
         else:
-            storage_options = {k: storage_options[k] for k in storage_options.keys() if not k.startswith('_')}
+            storage_options = {k: storage_options[k] for k in storage_options.keys() if not k.startswith("_")}
 
         return storage_options
 
@@ -69,12 +69,12 @@ class S3(Connection):
             schema = schema_result[2]
             endpoint_url = endpoint_url[len(schema+"://"):] # removes schema from endpoint_url
 
-        schema = schema if schema else 'https'
+        schema = schema if schema else "https"
 
-        kwargs['client_kwargs'] = kwargs.get('client_kwargs', {})
-        kwargs['client_kwargs']['endpoint_url'] = kwargs['client_kwargs'].get('endpoint_url', schema+"://"+endpoint_url)
+        kwargs["client_kwargs"] = kwargs.get("client_kwargs", {})
+        kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url", schema+"://"+endpoint_url)
 
-        if not kwargs.get('base_url', False):
+        if not kwargs.get("base_url", False):
             if bucket:
                 kwargs["base_url"] = Schemas.S3.value + bucket
             elif endpoint_url:
@@ -116,8 +116,26 @@ class GCS(Connection):
 
 
 class HDFS(Connection):
-    def __init__(self, host, port, user, kerb_ticket):
-        super().__init__(host, port, user, kerb_ticket)
+    def __init__(self, **kwargs):
+        
+        if not kwargs.get("url", False):
+            kwargs["url"] = "hdfs://" + kwargs["user"]
+
+            if kwargs.get("password", False):
+                kwargs["url"] += ":" + kwargs["password"] 
+            
+            kwargs["url"] += "@" + kwargs["host"] 
+            
+            if kwargs.get("port", False):
+                kwargs["url"] += ":" + kwargs["port"]
+
+        elif not kwargs["url"].startswith("hdfs://"):
+            kwargs["url"] = "hdfs://" + kwargs["url"]
+        
+        kwargs["base_url"] = kwargs["url"]
+        kwargs.pop("url")
+
+        super().__init__(**kwargs)
 
 class Connect:
     @staticmethod
