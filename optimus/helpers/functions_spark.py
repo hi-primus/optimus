@@ -5,10 +5,6 @@ from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_
 
-from pyspark.ml.linalg import DenseVector
-from pyspark.sql import DataFrame
-from pyspark.sql import functions as F
-
 def traverse(obj, path=None, callback=None):
     """
     Traverse a deep nested python structure
@@ -17,6 +13,8 @@ def traverse(obj, path=None, callback=None):
     :param callback: Function used to transform a value
     :return:
     """
+    from pyspark.ml.linalg import DenseVector
+
     if path is None:
         path = []
 
@@ -59,6 +57,7 @@ def append(dfs, like="columns"):
 
         dfs = val_to_list(dfs)
         for df in dfs:
+            from pyspark.sql import functions as F
             temp_dfs.append(df.withColumn(col_temp_name, F.monotonically_increasing_id()))
 
         def _append(df1, df2):
@@ -67,6 +66,7 @@ def append(dfs, like="columns"):
         df_result = reduce(_append, temp_dfs).drop(col_temp_name)
 
     elif like == "rows":
+        from pyspark.sql import DataFrame
         df_result = reduce(DataFrame.union, dfs)
     else:
         RaiseIt.value_error(like, ["columns", "rows"])
