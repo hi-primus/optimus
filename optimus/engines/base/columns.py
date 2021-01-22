@@ -1285,7 +1285,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(input_cols, self.F().to_datetime, func_return_type=str,
+        return self.apply(input_cols, self.F.to_datetime, func_return_type=str,
                           output_cols=output_cols, args=format, mode="vectorized")
 
     def year(self, input_cols, format=None, output_cols=None):
@@ -1297,7 +1297,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F().year, args=format, output_cols=output_cols,
+        return self.apply(input_cols, self.F.year, args=format, output_cols=output_cols,
                           meta_action=Actions.YEAR.value,
                           mode="vectorized", set_index=True)
 
