@@ -79,7 +79,9 @@ class Load(BaseLoad):
         :return dataFrame
         """
         _path, file_name = prepare_path(path, "csv")[0]
-        # print(file, file_name)
+
+        # TODO: Add support to S3 https://bartek-blog.github.io/python/spark/2019/04/22/how-to-access-s3-from-pyspark.html
+
         try:
             read = (Spark.instance.spark.read
                     .options(header='true' if header else 'false')

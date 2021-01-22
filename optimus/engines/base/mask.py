@@ -84,11 +84,11 @@ class Mask:
 
         pass
 
-    def nulls(self,col_name,  how="any", ):
+    def nulls(self, col_name, how="any"):
         """
         Find the rows that have null values
         :param how:
-        :param columns:
+        :param col_name:
         :return:
         """
 

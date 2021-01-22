@@ -12,10 +12,6 @@ import pandas as pd
 import pendulum
 from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
-from pyspark.ml.linalg import VectorUDT
-from pyspark.sql import functions as F, DataFrame as SparkDataFrame
-from pyspark.sql.types import ArrayType, StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, \
-    LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import ProfilerDataTypes
@@ -396,29 +392,6 @@ def str_to_currency(value, compile=False):
     return str_to(value, regex_boolean, regex_boolean_compiled, compile)
 
 
-def parse_spark_class_dtypes(value):
-    """
-    Get a pyspark data class from a string data type representation. for example 'StringType()' from 'string'
-    :param value:
-    :return:
-    """
-    if not isinstance(value, list):
-        value = [value]
-
-    try:
-        data_type = [SPARK_DTYPES_DICT_OBJECTS[SPARK_SHORT_DTYPES[v]] for v in value]
-
-    except (KeyError, TypeError):
-        data_type = value
-
-    if isinstance(data_type, list) and len(data_type) == 1:
-        result = data_type[0]
-    else:
-        result = data_type
-
-    return result
-
-
 class Infer(object):
     """
     This functions return True or False if match and specific dataType
@@ -481,49 +454,7 @@ class Infer(object):
     #     result = (col_name, _data_type), 1
     #     return result
 
-    @staticmethod
-    def to_spark(value):
-        """
-        Infer a Spark data type from a value
-        :param value: value to be inferred
-        :return: Spark data type
-        """
-        result = None
-        if value is None:
-            result = "null"
 
-        elif is_bool(value):
-            result = "bool"
-
-        elif fastnumbers.isint(value):
-            result = "int"
-
-        elif fastnumbers.isfloat(value):
-            result = "float"
-
-        elif is_list(value):
-            result = ArrayType(Infer.to_spark(value[0]))
-
-        elif is_datetime(value):
-            result = "datetime"
-
-        elif is_date(value):
-            result = "date"
-
-        elif is_binary(value):
-            result = "binary"
-
-        elif is_str(value):
-            if str_to_boolean(value):
-                result = "bool"
-            elif str_to_date(value):
-                result = "string"  # date
-            elif str_to_array(value):
-                result = "string"  # array
-            else:
-                result = "string"
-
-        return parse_spark_class_dtypes(result)
 
     @staticmethod
     def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
@@ -807,13 +738,6 @@ def is_tuple(value):
     return isinstance(value, tuple)
 
 
-def is_column(value):
-    """
-    Check if a object is a column
-    :return:
-    """
-    return isinstance(value, F.Column)
-
 def is_list_of_int(value):
     """
     Check if an object is a list of integers
@@ -848,15 +772,6 @@ def is_list_of_str_or_num(value):
     :return:
     """
     return bool(value) and isinstance(value, list) and all(isinstance(elem, (str, int, float)) for elem in value)
-
-
-def is_list_of_spark_dataframes(value):
-    """
-    Check if an object is a Spark DataFrame
-    :param value:
-    :return:
-    """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, SparkDataFrame) for elem in value)
 
 
 def is_list_of_dask_dataframes(value):
@@ -1109,48 +1024,8 @@ PYTHON_SHORT_TYPES = {"string": "string",
                       "null": "null"
                       }
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
-PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
-PYSPARK_NOT_ARRAY_TYPES = ["byte", "short", "big", "int", "double", "float", "string", "date", "bool"]
-PYSPARK_STRING_TYPES = ["str"]
-PYSPARK_ARRAY_TYPES = ["array"]
-SPARK_SHORT_DTYPES = {"string": "string",
-                      "str": "string",
-                      "integer": "int",
-                      "int": "int",
-                      "bigint": "bigint",
-                      "big": "bigint",
-                      "long": "bigint",
-                      "float": "float",
-                      "double": "double",
-                      "bool": "boolean",
-                      "boolean": "boolean",
-                      "struct": "struct",
-                      "array": "array",
-                      "date": "date",
-                      "datetime": "datetime",
-                      "byte": "byte",
-                      "short": "short",
-                      "binary": "binary",
-                      "null": "null",
-                      "vector": "vector",
-                      "timestamp": "datetime"
-                      }
-SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
-                     "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
-                     "bigint": LongType, "date": DateType, "byte": ByteType, "short": ShortType,
-                     "datetime": TimestampType, "binary": BinaryType, "null": NullType, "vector": VectorUDT
-                     }
-SPARK_DTYPES_DICT_OBJECTS = \
-    {"string": StringType(), "int": IntegerType(), "float": FloatType(),
-     "double": DoubleType(), "boolean": BooleanType(), "struct": StructType(), "array": ArrayType(StringType()),
-     "bigint": LongType(), "date": DateType(), "byte": ByteType(), "short": ShortType(),
-     "datetime": TimestampType(), "binary": BinaryType(), "null": NullType()
-     }
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
                       "decimal": "numeric", "date": "date", "array": "array", "binaty": "binary", "null": "null"}
 
-SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
-                            "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
-                            "array": "array", "object": "object", "null": "null", "missing": "missing"}

@@ -1,26 +1,10 @@
-import simplejson as json
-
 import math
 
+import simplejson as json
+
 from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT
-from optimus.infer import PROFILER_COLUMN_TYPES, SPARK_DTYPES_TO_PROFILER
 from optimus.helpers.json import json_converter
-
-
-def parse_profiler_dtypes(col_data_type):
-    """
-       Parse a spark data type to a profiler data type
-       :return:
-       """
-
-    columns = {}
-    for col_name, data_type_count in col_data_type.items():
-        columns[col_name] = {data_type: 0 for data_type in ["null", "missing"]}
-        for data_type, count in data_type_count.items():
-            for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
-                if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
-                    columns[col_name][profiler_data_type] = count
-    return columns
+from optimus.infer import PROFILER_COLUMN_TYPES
 
 
 def fill_missing_var_types(var_types, dtypes):

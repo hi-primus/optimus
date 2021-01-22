@@ -5,7 +5,8 @@ from optimus.helpers.functions import is_pyarrow_installed
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_column, parse_spark_class_dtypes, Infer, is_tuple
+from optimus.infer import Infer, is_tuple
+from optimus.infer_spark import parse_spark_class_dtypes, is_column
 
 
 def abstract_udf(col, func, func_return_type=None, args=None, func_type=None):

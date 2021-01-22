@@ -125,27 +125,7 @@ def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
     return output_cols
 
 
-# def columns_names(df):
-#     """
-#     Helper to get the column names from different dataframes types
-#     :param df:
-#     :return:
-#     """
-#
-#     if is_spark_dataframe(df):
-#         columns_names = df.columns
-#     elif is_pandas_dataframe(df) or is_dask_dataframe(df):
-#         columns_names = list(df.columns)
-#     elif is_cudf_dataframe(df):
-#         columns_names = list(df.columns)
-#     else:
-#         columns_names = list(df.name)
-#
-#     return columns_names
-
-
-def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column_dtypes=None,
-                  accepts_missing_cols=False, invert=False):
+def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, accepts_missing_cols=False, invert=False):
     """
     Return a list of columns and check that columns exists in the spark
     Accept '*' as parameter in which case return a list of all columns in the spark.
@@ -154,7 +134,6 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the spark
-    :param get_args:
     :param is_regex: Use True is col_attrs is a regex
     :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the spark
@@ -167,8 +146,8 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     attrs = None
     df_columns = df.cols._names()
 
-    if is_regex is True:
-        r = re.compile(cols_args[0])
+    if is_regex is not None:
+        r = re.compile(is_regex)
         cols = list(filter(r.match, df_columns))
 
     elif cols_args == "*" or cols_args is None:
@@ -222,12 +201,7 @@ def parse_columns(df, cols_args, get_args=False, is_regex=None, filter_by_column
     if invert:
         final_columns = list(OrderedSet(df_columns) - OrderedSet(final_columns))
 
-    if get_args is True:
-        cols_params = final_columns, attrs
-    elif get_args is False:
-        cols_params = final_columns
-    else:
-        RaiseIt.value_error(get_args, ["True", "False"])
+    cols_params = final_columns
 
     if columns_residual:
         logger.print("%s %s %s", ",".join(escape_columns(columns_residual)),
