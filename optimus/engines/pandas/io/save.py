@@ -1,5 +1,3 @@
-# from pyspark.sql import DataFrame
-# from dask.dataframe.core import DataFrame
 import pandavro as pdx
 
 from optimus.helpers.logger import logger
