@@ -8,7 +8,7 @@ class Save:
     def __init__(self, root):
         self.root = root
 
-    def json(self, path, *args, **kwargs):
+    def json(self, path, storage_options=None, conn=None, *args, **kwargs):
         """
         Save data frame in a json file
         :param path: path where the spark will be saved.
@@ -20,10 +20,16 @@ class Save:
         :param num_partitions: the number of partitions of the DataFrame
         :return:
         """
+        
         df = self.root.data
+
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
             os.makedirs(path, exist_ok=True)
-            df.to_json(filename=path, *args, **kwargs)
+            df.to_json(filename=path, storage_options=storage_options, *args, **kwargs)
         except (OSError, IOError) as error:
             logger.print(error)
             raise
@@ -57,7 +63,7 @@ class Save:
             logger.print(error)
             raise
 
-    def parquet(self, path, mode="overwrite", num_partitions=1, engine="pyarrow"):
+    def parquet(self, path, mode="overwrite", num_partitions=1, engine="pyarrow", storage_options=None, conn=None, **kwargs):
         """
         Save data frame to a parquet file
         :param path: path where the spark will be saved.
@@ -80,11 +86,15 @@ class Save:
 
         df = self.root.cols.rename(func)
 
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
         try:
             if engine == 'pyarrow':
-                df.to_parquet(path, num_partitions=num_partitions, engine='pyarrow')
+                df.to_parquet(path, num_partitions=num_partitions, engine='pyarrow', storage_options=storage_options, **kwargs)
             elif engine == "fastparquet":
-                df.to_parquet(path, engine='fastparquet')
+                df.to_parquet(path, engine='fastparquet', storage_options=storage_options, **kwargs)
 
         except IOError as e:
             logger.print(e)
