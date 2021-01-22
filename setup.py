@@ -44,7 +44,7 @@ else:
     with open('requirements.txt') as f:
         required = f.read().splitlines()
 
-extras_requirements_keys = ['spark', 'ai', 'plotting', 'db']
+extras_requirements_keys = ['spark', 'ai', 'db']
 extras_requirements = {}
 for extra in extras_requirements_keys:
     with open('requirements-'+extra+'.txt') as f:
