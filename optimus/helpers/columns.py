@@ -246,7 +246,7 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
     if columns:
         result = zip(*columns)
     else:
-        input_cols = parse_columns(df, input_cols, False, is_regex, filter_by_column_dtypes,
+        input_cols = parse_columns(df, input_cols, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
         merge = False
         if output_cols is None and default is not None:
@@ -351,9 +351,8 @@ def filter_col_name_by_dtypes(df, data_type):
     # Filter columns by data type
     result = []
     for col_name in df.cols.names():
-        for dt in data_type:
-            if (df.cols.schema_dtype(col_name) is dt) or (isinstance(df.cols.schema_dtype(col_name), dt)):
-                result.append(col_name)
+        if str(df.cols.schema_dtype(col_name)) in data_type:
+            result.append(col_name)
     return result
 
 
