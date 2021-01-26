@@ -201,33 +201,6 @@ class BaseDataFrame(ABC):
         # df_.index = df_.index.droplevel(0)
         return df
 
-    @staticmethod
-    @abstractmethod
-    def pivot(index, column, values):
-        """
-        Return reshaped DataFrame organized by given index / column values.
-        :param index: Column to use to make new frame's index.
-        :param column: Column to use to make new frame's columns.
-        :param values: Column(s) to use for populating new frame's values.
-        :return:
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
-        """
-        Convert DataFrame from wide to long format.
-        :param id_vars: column with unique values
-        :param value_vars: Column names that are going to be converted to columns values
-        :param var_name: Column name for vars
-        :param value_name: Column name for values
-        :param data_type: All columns must have the same type. It will transform all columns to this data type.
-        :return:
-        """
-
-        pass
-
     def get_buffer(self):
         # return self.df.buffer.values.tolist()
         # df = self.parent
