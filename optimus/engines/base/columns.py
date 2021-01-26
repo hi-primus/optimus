@@ -561,7 +561,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, order=True, *args, **kwargs):
+    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False):
         """
         Join 2 dataframes SQL style
         :param df_right:
@@ -569,7 +569,7 @@ class BaseColumns(ABC):
         :param on:
         :param left_on:
         :param right_on:
-        :param order: Order the columns putting the left df columns first then the key column and the right df columns
+        :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
         :param args:
         :param kwargs:
 
