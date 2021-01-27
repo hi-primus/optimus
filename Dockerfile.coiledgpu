@@ -1,0 +1,18 @@
+FROM gpuci/miniconda-cuda:10.2-runtime-ubuntu18.04
+
+RUN apt-get update --fix-missing && \
+    apt-get install -y gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN conda install -c conda-forge gxx_linux-64 && \
+    conda install python=3.7 && \
+    conda install -c conda-forge libmagic && \
+    conda install -c rapidsai cudatoolkit=10.2 && \
+    conda install -c rapidsai rapidsblazing=0.17
+
+RUN pip install aiohttp && \
+    pip install cupy-cuda102 && \
+    pip install dask-cuda && \
+    pip install git+https://github.com/ironmussa/dateinfer.git && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0

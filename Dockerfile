@@ -36,9 +36,11 @@ RUN conda install -c conda-forge jupyterlab && \
     jupyter serverextension enable dask_labextension && \
     conda install -c conda-forge jupyter_kernel_gateway
 
+RUN echo "Version 3.0.6 - Jan 27 2021"
+
 RUN pip install cytoolz && \
     pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@optimus_dataframe
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 
