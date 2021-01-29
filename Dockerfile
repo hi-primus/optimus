@@ -34,13 +34,14 @@ RUN sudo chown -R root ~/anaconda3/bin && \
 RUN conda install -c conda-forge jupyterlab && \
     conda install -c conda-forge dask-labextension && \
     jupyter serverextension enable dask_labextension && \
-    conda install -c conda-forge jupyter_kernel_gateway
+    conda install -c conda-forge jupyter_kernel_gateway && \
+    conda clean -afy
 
-RUN echo "Version 3.0.6 - Jan 27 2021"
+RUN echo "Version 3.0.6 - 20210119"
 
-RUN pip install cytoolz && \
-    pip install git+https://github.com/ironmussa/dateinfer.git && \
-    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0
+RUN pip install cytoolz --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/dateinfer.git --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0 --no-cache-dir
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 
