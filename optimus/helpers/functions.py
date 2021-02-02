@@ -25,7 +25,7 @@ from optimus.helpers.check import is_url
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_
+from optimus.infer import is_, is_str, is_list_of_str
 
 
 def random_int(n=5):
@@ -541,7 +541,6 @@ def set_function_parser(df, value, where, default=None):
     :return:
     """
     value = str(value)
-    where = str(where)
 
     def prepare_columns(cols):
         """
@@ -562,8 +561,14 @@ def set_function_parser(df, value, where, default=None):
         default = []
 
     # if default is in
-    columns = prepare_columns(value) + prepare_columns(where) + val_to_list(default)
+    columns = prepare_columns(value) 
+    
+    if is_str(where) or is_list_of_str(where):
+        columns += prepare_columns(where) 
+    columns += val_to_list(default)
+    
     columns = list(set(columns))
+    
     if columns:
         first_columns = columns[0]
         column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
