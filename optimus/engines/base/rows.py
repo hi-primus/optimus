@@ -99,44 +99,43 @@ class BaseRows(ABC):
 
         return self.root.new(dfd.assign(**kw_columns))
 
-    def find(self, condition, output_col, expr=None):
+    def find(self, where, output_col, expr=None):
         """
-
-        :param condition: a condition like (df.A > 0) & (df.B <= 10)
+        Find rows and appends resulting mask to the dataset
+        :param where: Mask or name of the column to be taken as mask
         :param output_col:
-        :param expr:
-        :return:
+        :param expr: Expression used (replaces where). For Ex: (df.A > 3) & (df.A <= 1000)
+        :return: Optimus Dataframe
         """
 
         df = self.root
         dfd = df.data
 
-        if is_str(condition):
-            condition = df[condition]
-        elif expr:
-            condition = pd.eval(expr)
-            # dfd = dfd[condition]
-        dfd.assign({output_col: condition.data[condition.cols.names()[0]]})
+        if expr:
+            where = pd.eval(expr)
+        elif is_str(where):
+            where = df[where]
+            # dfd = dfd[where]
+        dfd.assign({output_col: where.data[where.cols.names()[0]]})
 
         return self.root.new(dfd)
 
-    def select(self, condition, expr=None):
+    def select(self, where, expr=None):
         """
-
-        :param condition: a condition like (dfd.A > 0) & (dfd.B <= 10)
-        :param expr:
+        :param where: Mask or name of the column to be taken as mask
+        :param expr: Expression used, For Ex: (df.A > 3) & (df.A <= 1000)
         :return:
         """
 
         df = self.root
         dfd = df.data
 
-        if is_str(condition):
-            condition = df[condition]
-        elif expr:
-            condition = pd.eval(expr)
-        # dfd = dfd[condition]
-        dfd = dfd[condition.data[condition.cols.names()[0]]]
+        if expr:
+            where = pd.eval(expr)
+        elif is_str(where):
+            where = df[where]
+        # dfd = dfd[where]
+        dfd = dfd[where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
@@ -171,20 +170,20 @@ class BaseRows(ABC):
 
     def drop(self, where=None, expr=None):
         """
-        Drop a row depending on a dataframe expression
-        :param where: Expression used to drop the row, For Ex: (df.A > 3) & (df.A <= 1000)
-        :return: Spark DataFrame
-        :return:
+        Drop rows depending on a mask or an expression
+        :param where: Mask or name of the column to be taken as mask
+        :param expr: Expression used (replaces where). For Ex: (df.A > 3) & (df.A <= 1000)
+        :return: Optimus Dataframe
         """
         df = self.root
         dfd = df.data
 
-        if is_str(where):
-            condition = df[where]
-        elif expr:
-            condition = pd.eval(expr)
-        # dfd = dfd[condition]
-        dfd = dfd[~where.data[condition.cols.names()[0]]]
+        if expr:
+            where = pd.eval(expr)
+        elif is_str(where):
+            where = df[where]
+        # dfd = dfd[where]
+        dfd = dfd[~where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 

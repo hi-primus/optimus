@@ -1,0 +1,31 @@
+FROM rapidsai/rapidsai:cuda10.2-runtime-ubuntu18.04-py3.7
+
+RUN apt-get update --fix-missing && \
+    apt-get install -y gcc && \
+    apt-get install -y g++ && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN conda install libmagic && \
+    conda clean -afy
+
+RUN pip install aiohttp --no-cache-dir && \
+    pip install cupy-cuda102 --no-cache-dir && \
+    pip install dask-cuda --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/dateinfer.git --no-cache-dir && \
+    pip install git+https://github.com/ironmussa/Optimus.git@develop-3.0 --no-cache-dir
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
