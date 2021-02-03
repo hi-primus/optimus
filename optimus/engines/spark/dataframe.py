@@ -212,8 +212,6 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-    def delayed(self):
-        pass
 
     def execute(self):
         self.root.data.cache()

@@ -11,9 +11,16 @@ from dask.array import stats
 from optimus.engines.base.commons.functions import to_float, to_integer
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
+import dask
 
 
 class DaskFunctions(Functions):
+
+    def delayed(self, func):
+        def wrapper(*args, **kwargs):
+            return dask.delayed(func)(*args, **kwargs)
+
+        return wrapper
 
     def _to_float(self, value):
         return value.map(to_float)

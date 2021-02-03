@@ -8,6 +8,7 @@ import random
 import string
 
 import cudf
+import dask
 
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
@@ -60,6 +61,11 @@ def create_func(_df, input_cols, output_cols, func, args=None):
 
 
 class DaskCUDFFunctions(Functions):
+    def delayed(self, func):
+        def wrapper(*args, **kwargs):
+            return dask.delayed(func)(*args, **kwargs)
+
+        return wrapper
 
     def _to_float(self, series, *args):
         return series.map_partitions(to_float_cudf, meta=float)

@@ -12,12 +12,7 @@ class DaskBaseDataFrame(BaseDataFrame):
     def __init__(self, root, data):
         super().__init__(root, data)
 
-    @staticmethod
-    def delayed(func):
-        def wrapper(*args, **kwargs):
-            return dask.delayed(func)(*args, **kwargs)
 
-        return wrapper
 
     def execute(self):
         df = self.data

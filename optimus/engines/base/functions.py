@@ -9,6 +9,13 @@ from optimus.infer import regex_full_url
 
 class Functions(ABC):
     @staticmethod
+    def delayed(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    @staticmethod
     def _to_float(series):
         pass
 

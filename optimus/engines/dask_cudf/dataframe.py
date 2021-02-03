@@ -49,12 +49,6 @@ class DaskCUDFDataFrame(DaskDataFrame):
     def to_pandas(self):
         return self.data.compute().to_pandas()
 
-    # @staticmethod
-    # def delayed(func):
-    #     def wrapper(*args, **kwargs):
-    #         return dask.delayed(func)(*args, **kwargs)
-    #
-    #     return wrapper
 
     def to_dict(self, orient="records", limit=None):
         """
