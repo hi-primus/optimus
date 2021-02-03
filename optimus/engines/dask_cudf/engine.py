@@ -4,13 +4,11 @@ from dask.distributed import Client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.dask_cudf.dask_cudf import DaskCUDF
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.profiler.profiler import Profiler
 
 # import dask_cudf
-DaskCUDF.instance = None
 Profiler.instance = None
 
 BIG_NUMBER = 100000
@@ -58,10 +56,10 @@ class DaskCUDFEngine(BaseEngine):
                                      worker_gpu=1
                                      )
 
-            DaskCUDF.instance = Client(cluster)
+            self.client = Client(cluster)
 
         elif address:
-            DaskCUDF.instance = Client(address=address)
+            self.client = Client(address=address)
 
         elif session is None:
             from dask_cuda import LocalCUDACluster
@@ -74,13 +72,12 @@ class DaskCUDFEngine(BaseEngine):
                 # n_gpus = 1
             cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
                                        memory_limit=memory_limit)
-            DaskCUDF.instance = Client(cluster, *args, **kwargs)
+            self.client = Client(cluster, *args, **kwargs)
 
         else:
-            DaskCUDF.instance = DaskCUDF().load(session)
+            self.client = session
 
         # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
-        self.client = DaskCUDF.instance
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
@@ -96,7 +93,7 @@ class DaskCUDFEngine(BaseEngine):
 # from optimus.helpers.logger import logger
 # from optimus.profiler.profiler import Profiler
 # import dask_cudf
-# DaskCUDF.instance = None
+# self.client = None
 # Profiler.instance = None
 #
 # BIG_NUMBER = 100000
@@ -134,16 +131,16 @@ class DaskCUDFEngine(BaseEngine):
 #             n_gpus = 1
 #             cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
 #                                        memory_limit=memory_limit)
-#             DaskCUDF.instance = Client(cluster, *args, **kwargs)
+#             self.client = Client(cluster, *args, **kwargs)
 #             # self._cluster = cluster
-#             # DaskCUDF.instance = DaskCUDF().create(*args, **kwargs)
+#             # self.client = DaskCUDF().create(*args, **kwargs)
 #             # n_workers = n_workers, threads_per_worker = threads_per_worker,
 #             # processes = processes, memory_limit = memory_limit
 #         else:
-#             DaskCUDF.instance = DaskCUDF().load(session)
+#             self.client = DaskCUDF().load(session)
 #
 #         # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
-#         self.client = DaskCUDF.instance
+#         self.client = self.client
 #
 #         Profiler.instance = Profiler()
 #         self.profiler = Profiler.instance
