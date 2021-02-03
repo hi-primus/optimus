@@ -137,11 +137,6 @@ class BaseDataFrame(ABC):
 
     @staticmethod
     @abstractmethod
-    def delayed(func):
-        pass
-
-    @staticmethod
-    @abstractmethod
     def execute():
         pass
 

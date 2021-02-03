@@ -193,7 +193,7 @@ class BaseColumns(ABC):
 
                 if mode == "vectorized" and (is_dask_dataframe(dfd)):
                     partitions = dfd.to_delayed()
-                    print(partitions)
+
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
@@ -820,6 +820,22 @@ class BaseColumns(ABC):
     def sum(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.sum, tidy=tidy, compute=compute)
+
+    def cumsum(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cumsum, tidy=tidy, compute=compute)
+
+    def cumprod(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cumprod, tidy=tidy, compute=compute)
+
+    def cummax(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.new(df.cols.agg_exprs(columns, self.F.cummax, tidy=tidy, compute=compute))
+
+    def cummin(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cummin, tidy=tidy, compute=compute)
 
     def var(self, columns="*", tidy=True, compute=True):
         df = self.root
@@ -1542,22 +1558,26 @@ class BaseColumns(ABC):
         """
         df = self.root
         iqr_result = {}
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        columns = parse_columns(df, columns)
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
             "percentile"]
+        # print("quantile",quartile)
         for col_name in columns:
-            q1 = quartile[col_name][0.25]
-            q2 = quartile[col_name][0.5]
-            q3 = quartile[col_name][0.75]
-
-            iqr_value = q3 - q1
-            if more:
-                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            if is_nan(quartile[col_name]):
+                iqr_result[col_name] = np.nan
             else:
-                result = iqr_value
-            iqr_result[col_name] = result
+                q1 = quartile[col_name][0.25]
+                q2 = quartile[col_name][0.5]
+                q3 = quartile[col_name][0.75]
+
+                iqr_value = q3 - q1
+                if more:
+                    result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+                else:
+                    result = iqr_value
+
+                iqr_result[col_name] = result
 
         return format_dict(iqr_result)
 
@@ -1651,16 +1671,16 @@ class BaseColumns(ABC):
         df = self.root
         columns = parse_columns(df, columns)
 
-        @df.delayed
+        @self.F.delayed
         def _bins_col(_columns, _min, _max):
-            return {col_name: list(np.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets)) for
+            return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets)) for
                     col_name in _columns}
 
         _min = df.cols.min(columns, compute=False, tidy=False)
         _max = df.cols.max(columns, compute=False, tidy=False)
         _bins = _bins_col(columns, _min, _max)
 
-        @df.delayed
+        @self.F.delayed
         def _hist(pdf, col_name, _bins):
             # import cupy as cp
             _count, bins_edges = np.histogram(pd.to_numeric(pdf, errors='coerce'), bins=_bins[col_name])
@@ -1668,7 +1688,7 @@ class BaseColumns(ABC):
             # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
             return {col_name: [list(_count), list(bins_edges)]}
 
-        @df.delayed
+        @self.F.delayed
         def _agg_hist(values):
             _result = {}
             x = np.zeros(buckets - 1)
@@ -1813,7 +1833,7 @@ class BaseColumns(ABC):
         df = self.root
         columns = parse_columns(df, columns)
 
-        @df.delayed
+        @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j} for i, j in _series.to_dict().items()]
 
@@ -1824,11 +1844,11 @@ class BaseColumns(ABC):
 
             return _result
 
-        @df.delayed
+        @self.F.delayed
         def flat_dict(top_n):
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
-        @df.delayed
+        @self.F.delayed
         def freq_percentage(_value_counts, _total_rows):
 
             for i, j in _value_counts.items():
@@ -1868,12 +1888,13 @@ class BaseColumns(ABC):
 
     def boxplot(self, columns):
         """
-        Output values frequency in json format
+        Output the boxplot in python dict format
         :param columns: Columns to be processed
         :return:
         """
         df = self.root
         columns = parse_columns(df, columns)
+        stats = {}
 
         for col_name in columns:
             iqr = df.cols.iqr(col_name, more=True)
@@ -1882,10 +1903,11 @@ class BaseColumns(ABC):
 
             _mean = df.cols.mean(columns)
 
-            query = ((df(col_name) < lb) | (df(col_name) > ub))
-            fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
-            stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
-                      'fliers': fliers, 'label': one_list_to_val(col_name)}]
+            query = ((df[col_name] < lb) | (df[col_name] > ub))
+            # Fliers are outliers points
+            fliers = df.rows.select(query).cols.select(col_name).rows.limit(1000).to_dict()
+            stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb, 'whisker_high': ub,
+                      'fliers': fliers, 'label': one_list_to_val(col_name)}
 
             return stats
         pass

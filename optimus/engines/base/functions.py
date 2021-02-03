@@ -9,6 +9,13 @@ from optimus.infer import regex_full_url
 
 class Functions(ABC):
     @staticmethod
+    def delayed(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    @staticmethod
     def _to_float(series):
         pass
 
@@ -42,6 +49,18 @@ class Functions(ABC):
 
     def sum(self, series):
         return self._to_float(series).sum()
+
+    def cumsum(self, series):
+        return self._to_float(series).cumsum()
+
+    def cumprod(self, series):
+        return self._to_float(series).cumprod()
+
+    def cummax(self, series):
+        return self._to_float(series).cummax()
+
+    def cummin(self, series):
+        return self._to_float(series).cummin()
 
     def var(self, series):
         return self._to_float(series).var()
@@ -112,14 +131,13 @@ class Functions(ABC):
         series = series._to_float()
         return {"min": series.min(), "max": series.max()}
 
-    @staticmethod
-    def percentile(series, *args):
-        values, error = args
-        series = series._to_float()
+    def percentile(self, series, values, error):
 
-        @series.delayed
+        series = self._to_float(series)
+
+        @self.delayed
         def to_dict(_result):
-            ## In pandas if all values are non it return {} on dict
+            ## In pandas if all values are none it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
             if _result.isnull().all():
                 return np.nan

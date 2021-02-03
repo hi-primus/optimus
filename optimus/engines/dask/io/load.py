@@ -94,10 +94,10 @@ class Load(BaseLoad):
             ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                               quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                               keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                              storage_options=storage_options, *args, **kwargs)
+                              storage_options=storage_options,*args, **kwargs)
 
             if n_rows > -1:
-                ddf = dd.from_pandas(ddf.head(n_rows), npartitions=1)
+                ddf = dd.from_pandas(ddf.head(n=n_rows), npartitions=1).reset_index()
 
             df = DaskDataFrame(ddf)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
@@ -134,7 +134,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, 
+    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
             storage_options=None, conn=None, *args, **kwargs):
         file, file_name = prepare_path(path, "zip")
 
@@ -228,7 +228,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None, 
+    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None,
             conn=None, *args, **kwargs):
         """
         Return a dataframe from a excel file.
@@ -254,7 +254,7 @@ class Load(BaseLoad):
         if n_rows == -1:
             n_rows = None
 
-        pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows, 
+        pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows,
                             storage_options=storage_options, *args, **kwargs)
         sheet_names = list(pd.read_excel(file, None, storage_options=storage_options).keys())
 

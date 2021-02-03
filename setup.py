@@ -60,7 +60,7 @@ if 'nosetests' in sys.argv[1:]:
 setup(
     name='optimuspyspark',
     version=get_version(),
-    author='Favio Vazquez and Argenis Leon',
+    author='Argenis Leon',
     author_email='argenisleon@gmail.com',
     url='https://github.com/ironmussa/Optimus/',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion.'),
