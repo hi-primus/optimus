@@ -649,7 +649,7 @@ including:
 [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)  
   
 ## Core Team
-Argenis Leon and Favio Vazquez
+Argenis Leon and Luis Aguirre
 
 ## Contributors:
 Here is the amazing people that make Optimus possible:
