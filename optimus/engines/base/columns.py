@@ -1868,12 +1868,13 @@ class BaseColumns(ABC):
 
     def boxplot(self, columns):
         """
-        Output values frequency in json format
+        Output the boxplot in python dict format
         :param columns: Columns to be processed
         :return:
         """
         df = self.root
         columns = parse_columns(df, columns)
+        stats = {}
 
         for col_name in columns:
             iqr = df.cols.iqr(col_name, more=True)
@@ -1882,10 +1883,11 @@ class BaseColumns(ABC):
 
             _mean = df.cols.mean(columns)
 
-            query = ((df(col_name) < lb) | (df(col_name) > ub))
-            fliers = collect_as_list(df.rows.select(query).cols.select(col_name).limit(1000))
-            stats = [{'mean': _mean, 'med': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whislo': lb, 'whishi': ub,
-                      'fliers': fliers, 'label': one_list_to_val(col_name)}]
+            query = ((df[col_name] < lb) | (df[col_name] > ub))
+            # Fliers are outliers points
+            fliers = df.rows.select(query).cols.select(col_name).rows.limit(1000).to_dict()
+            stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb, 'whisker_high': ub,
+                      'fliers': fliers, 'label': one_list_to_val(col_name)}
 
             return stats
         pass
