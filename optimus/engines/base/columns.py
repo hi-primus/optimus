@@ -1558,22 +1558,26 @@ class BaseColumns(ABC):
         """
         df = self.root
         iqr_result = {}
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        columns = parse_columns(df, columns)
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
             "percentile"]
+        # print("quantile",quartile)
         for col_name in columns:
-            q1 = quartile[col_name][0.25]
-            q2 = quartile[col_name][0.5]
-            q3 = quartile[col_name][0.75]
-
-            iqr_value = q3 - q1
-            if more:
-                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+            if is_nan(quartile[col_name]):
+                iqr_result[col_name] = np.nan
             else:
-                result = iqr_value
-            iqr_result[col_name] = result
+                q1 = quartile[col_name][0.25]
+                q2 = quartile[col_name][0.5]
+                q3 = quartile[col_name][0.75]
+
+                iqr_value = q3 - q1
+                if more:
+                    result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
+                else:
+                    result = iqr_value
+
+                iqr_result[col_name] = result
 
         return format_dict(iqr_result)
 
