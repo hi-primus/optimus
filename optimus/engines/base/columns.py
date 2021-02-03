@@ -193,7 +193,7 @@ class BaseColumns(ABC):
 
                 if mode == "vectorized" and (is_dask_dataframe(dfd)):
                     partitions = dfd.to_delayed()
-                    print(partitions)
+
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
