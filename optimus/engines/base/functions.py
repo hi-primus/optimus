@@ -119,14 +119,13 @@ class Functions(ABC):
         series = series._to_float()
         return {"min": series.min(), "max": series.max()}
 
-    @staticmethod
-    def percentile(series, *args):
-        values, error = args
-        series = series._to_float()
+    def percentile(self, series, values, error):
 
-        @series.delayed
+        series = self._to_float(series)
+
+        @self.delayed
         def to_dict(_result):
-            ## In pandas if all values are non it return {} on dict
+            ## In pandas if all values are none it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
             if _result.isnull().all():
                 return np.nan
