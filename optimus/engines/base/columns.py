@@ -821,6 +821,22 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.sum, tidy=tidy, compute=compute)
 
+    def cumsum(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cumsum, tidy=tidy, compute=compute)
+
+    def cumprod(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cumprod, tidy=tidy, compute=compute)
+
+    def cummax(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.new(df.cols.agg_exprs(columns, self.F.cummax, tidy=tidy, compute=compute))
+
+    def cummin(self, columns="*", tidy=True, compute=True):
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.cummin, tidy=tidy, compute=compute)
+
     def var(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.var, tidy=tidy, compute=compute)

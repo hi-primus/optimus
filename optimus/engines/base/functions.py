@@ -50,6 +50,18 @@ class Functions(ABC):
     def sum(self, series):
         return self._to_float(series).sum()
 
+    def cumsum(self, series):
+        return self._to_float(series).cumsum()
+
+    def cumprod(self, series):
+        return self._to_float(series).cumprod()
+
+    def cummax(self, series):
+        return self._to_float(series).cummax()
+
+    def cummin(self, series):
+        return self._to_float(series).cummin()
+
     def var(self, series):
         return self._to_float(series).var()
 
