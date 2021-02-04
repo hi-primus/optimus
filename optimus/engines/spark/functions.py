@@ -164,11 +164,11 @@ class SparkFunctions(Functions):
         pass
 
     @staticmethod
-    def min(col_name):
+    def min(col_name, *args):
         return F.min(col_name)
 
     @staticmethod
-    def max(col_name):
+    def max(col_name, *args):
         return F.max(col_name)
 
     # @staticmethod
@@ -176,27 +176,27 @@ class SparkFunctions(Functions):
     #     return F.mode(col_name)
 
     @staticmethod
-    def stddev(col_name):
+    def stddev(col_name, *args):
         return F.stddev(col_name)
 
     @staticmethod
-    def kurtosis(col_name):
+    def kurtosis(col_name, *args):
         return F.kurtosis(col_name)
 
     @staticmethod
-    def mean(col_name):
+    def mean(col_name, *args):
         return F.mean(col_name)
 
     @staticmethod
-    def skewness(col_name):
+    def skewness(col_name, *args):
         return F.skewness(col_name)
 
     @staticmethod
-    def sum(col_name):
+    def sum(col_name, *args):
         return F.sum(col_name)
 
     @staticmethod
-    def variance(col_name):
+    def variance(col_name, *args):
         return F.variance(col_name)
 
     @staticmethod
@@ -217,18 +217,18 @@ class SparkFunctions(Functions):
 
     @staticmethod
     def na_agg_integer(col_name):
-        return F.count(F.when(Functions.match_nulls_integers(col_name), col_name))
+        return F.count(F.when(SparkFunctions.match_nulls_integers(col_name), col_name))
 
     @staticmethod
     def na_agg(col_name):
-        return F.count(F.when(Functions.match_null(col_name), col_name))
+        return F.count(F.when(SparkFunctions.match_null(col_name), col_name))
 
     @staticmethod
     def zeros_agg(col_name):
         return F.count(F.when(F.col(col_name) == 0, col_name))
 
     @staticmethod
-    def count_uniques_agg(col_name, estimate=True):
+    def count_uniques_agg(col_name, estimate=True, df=None):
         if estimate is True:
             result = F.approx_count_distinct(col_name)
         else:
@@ -240,7 +240,7 @@ class SparkFunctions(Functions):
         return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
 
     @staticmethod
-    def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
+    def hist_agg(col_name, buckets, min_max, df=None):
         """
         Create a columns expression to calculate a column histogram
         :param col_name:
@@ -286,6 +286,7 @@ class SparkFunctions(Functions):
             return _exprs
 
         def hist_numeric(_min_max, _buckets):
+
             if _min_max is None:
                 _min_max = \
                     df.data.agg(F.min(col_name).alias("min"), F.max(col_name).alias("max")).toPandas().reset_index(
@@ -344,8 +345,10 @@ class SparkFunctions(Functions):
 
             return exprs
 
+
+        dtype = df.cols.dtypes(col_name)
         if dtype is not None:
-            col_dtype = dtype[col_name]["dtype"]
+            col_dtype = dtype[col_name]
             if col_dtype == "int" or col_dtype == "decimal":
                 exprs = hist_numeric(min_max, buckets)
             elif col_dtype == "string":
@@ -371,23 +374,25 @@ class SparkFunctions(Functions):
     # def to_string(self, col):
     #     return F.col(col).cast("str")
 
-    def count_na(self, col_name):
+    def count_na(self, col_name, df=None):
+        # print("col_name",col_name, self)
         # If type column is Struct parse to String. isnan/isNull can not handle Structure/Boolean
         # if is_column_a(df, col_name, ["struct", "boolean"]):
         #     df = df.cols.cast(col_name, "string")
 
         # Select the nan/null rows depending of the columns data type
-        df = self.parent
+        # df = self.root
+
         # If numeric
         if is_column_a(df, col_name, df.constants.NUMERIC_TYPES):
-            expr = F.count(F.when(self.match_nulls_integers(col_name), col_name))
+            expr = F.count(F.when(SparkFunctions.match_nulls_integers(col_name), col_name))
         # If string. Include 'nan' string
         elif is_column_a(df, col_name, df.constants.STRING_TYPES):
             expr = F.count(
-                F.when(self.match_nulls_strings(col_name), col_name))
+                F.when(SparkFunctions.match_nulls_strings(col_name), col_name))
             # print("Including 'nan' as Null in processing string type column '{}'".format(col_name))
         else:
-            expr = F.count(F.when(self.match_null(col_name), col_name))
+            expr = F.count(F.when(SparkFunctions.match_null(col_name), col_name))
 
         return expr
 
@@ -403,7 +408,6 @@ class SparkFunctions(Functions):
         """
 
         # Make sure values are double
-
         if values is None:
             values = [0.05, 0.25, 0.5, 0.75, 0.95]
 

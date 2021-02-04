@@ -525,7 +525,7 @@ class Cols(BaseColumns):
 
         return r
 
-    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
+    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True, df=None):
         """
         Create and run aggregation
         :param columns:
@@ -1504,7 +1504,7 @@ class Cols(BaseColumns):
         # AS `hist_agg_rank_2`, map(count, CAST(sum(CASE WHEN ((rank >= 9.25) AND (rank < 10))
         # THEN 1 ELSE 0 END) AS INT), lower, 9.25, upper, 10) AS `hist_agg_rank_3`) AS `histrank`' >
 
-        return result
+        return {"hist": result}
 
         # TODO: In tests this code run faster than using Cols.agg_exprs when run over all the columns.
         #  Not when running over columns individually
