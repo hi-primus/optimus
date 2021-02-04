@@ -454,7 +454,7 @@ class Cols(BaseColumns):
         meta = Meta.action(df.meta, Actions.DROP.value, columns)
         return self.root.new(dfd, meta=meta)
 
-    def create_exprs(self, columns, funcs, *args):
+    def create_exprs(self, columns, funcs, *args, df=None):
         """
         Helper function to apply multiple columns expression to multiple columns
         :param columns:
@@ -469,8 +469,8 @@ class Cols(BaseColumns):
 
         for col_name in columns:
             for func in funcs:
-                exprs.append((func, (col_name, *args)))
-
+                exprs.append((func, (col_name, *args, df)))
+        # print("exprs",exprs)
         # df = self
 
         # Std, kurtosis, mean, skewness and other agg functions can not process date columns.
@@ -536,7 +536,7 @@ class Cols(BaseColumns):
         :return:
         """
 
-        return format_dict(self.exec_agg(self.create_exprs(columns, funcs, *args)), tidy=tidy)
+        return format_dict(self.exec_agg(self.create_exprs(columns, funcs, *args, df=df)), tidy=tidy)
 
     def exec_agg(self, exprs):
         """
@@ -1489,11 +1489,10 @@ class Cols(BaseColumns):
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
     def hist(self, columns="*", buckets=20, compute=True):
-        # print("1")
         df = self.root
         # return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
 
-        result = df.cols.agg_exprs(columns, self.F.hist_agg, self.root, buckets)
+        result = df.cols.agg_exprs(columns, self.F.hist_agg, buckets, None, df=self.root)
 
         # TODO: for some reason casting to int in the exprs do not work. Casting Here. A Spark bug?
         # Example
