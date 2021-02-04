@@ -625,7 +625,13 @@ df_predict.cols.select(["label","prediction"]).table()
 ![](readme/images/table13.png)
 
 The rf_model variable contains the Random Forest model for analysis.
- 
+
+## Troubleshooting
+
+###ImportError: failed to find libmagic.  Check your installation
+Install libmagic
+https://anaconda.org/conda-forge/libmagic
+
 ## Contributing to Optimus
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
 including:  
