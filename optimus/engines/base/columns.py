@@ -1171,7 +1171,7 @@ class BaseColumns(ABC):
 
         input_cols = parse_columns(df, input_cols)
         for col_name in input_cols:
-            dtype = df.data[col_name].dtype
+            dtype = df.cols.dtypes(col_name)
 
             if dtype != np.object:
                 filtered_columns.append(col_name)
@@ -1728,7 +1728,8 @@ class BaseColumns(ABC):
         dfd = df.data
 
         result = {}
-        nulls = df.cols.count_na(tidy=False)["count_na"]
+        # print(df.cols.count_na(tidy=False))
+        nulls = df.cols.count_na(tidy=True)
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
