@@ -1026,8 +1026,7 @@ class Cols(BaseColumns):
                           filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES,
                           meta_action=Actions.REPLACE_REGEX.value)
 
-    @staticmethod
-    def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
         """
         Imputes missing data from specified columns using the mean or median.
         :param input_cols: list of columns to be analyze.
@@ -1068,8 +1067,7 @@ class Cols(BaseColumns):
 
         return df
 
-    @staticmethod
-    def fill_na(input_cols, value=None, output_cols=None):
+    def fill_na(self, input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
         :param input_cols: '*', list of columns names or a single column name.
@@ -1133,8 +1131,7 @@ class Cols(BaseColumns):
 
         return format_dict(Cols.agg_exprs(columns, self.root.functions.zeros_agg))
 
-    @staticmethod
-    def count_uniques(columns, estimate=True):
+    def count_uniques(self, columns, estimate=True, tidy=True, compute=True):
         """
         Return how many unique items exist in a columns
         :param columns: '*', list of columns names or a single column name.
@@ -1143,8 +1140,10 @@ class Cols(BaseColumns):
         :return:
         """
         columns = parse_columns(self.root, columns)
-
-        return format_dict(Cols.agg_exprs(columns, self.root.functions.count_uniques_agg, estimate))
+        df = self.root
+        # result = df.cols.agg_exprs(columns, self.F.hist_agg, buckets, None, df=self.root)
+        result = df.cols.agg_exprs(columns, self.root.functions.count_uniques_agg, estimate)
+        return {"count_uniques": result}
 
     @staticmethod
     def unique(columns):
