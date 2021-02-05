@@ -1178,7 +1178,7 @@ class BaseColumns(ABC):
 
         if len(filtered_columns) > 0:
             return self.apply(input_cols, self.F.to_string, func_return_type=str,
-                              output_cols=output_cols, meta_action=Actions.LOWER.value, mode="vectorized",
+                              output_cols=output_cols, meta_action=Actions.TO_STRING.value, mode="vectorized",
                               func_type="column_expr")
         else:
             return df
