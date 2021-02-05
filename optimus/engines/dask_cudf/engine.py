@@ -37,31 +37,35 @@ class DaskCUDFEngine(BaseEngine):
 
         if coiled_token:
             import coiled
-            print(coiled_token)
             dask.config.set({"coiled.token": coiled_token})
             try:
                 coiled.Cloud()
             except Exception as error:
                 raise error
-            coiled.create_cluster_configuration(name="default-gpu", software="optimus/default-gpu")
-            cluster = coiled.Cluster(name="temp",
-                                     n_workers=n_workers,
-                                     # worker_memory=15,
+            cluster = coiled.Cluster(
+                                     name=kwargs.get("name"),
                                      worker_options={
                                          "nthreads": threads_per_worker,
                                          "memory_limit": memory_limit,
                                      },
-                                     # software="optimus/default-gpu",
-                                     configuration="default-gpu",
-                                     worker_gpu=1
-                                     )
+                                     worker_gpu=1, 
+                                     worker_class='dask_cuda.CUDAWorker',
+                                     n_workers=n_workers, 
+                                     worker_memory='15GiB', 
+                                     backend_options={
+                                         "region": kwargs.get("backend_region", "us-east-1")
+                                     },
+                                     software="optimus/gpu"
+                                    )
+
+            self.client_name = cluster.name
 
             self.client = Client(cluster)
 
         elif address:
             self.client = Client(address=address)
 
-        elif session is None:
+        elif session=="local":
             from dask_cuda import LocalCUDACluster
             from GPUtil import GPUtil
             n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
@@ -74,8 +78,10 @@ class DaskCUDFEngine(BaseEngine):
                                        memory_limit=memory_limit)
             self.client = Client(cluster, *args, **kwargs)
 
-        else:
+        elif session:
             self.client = session
+        else:
+            self.client = False
 
         # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
 
