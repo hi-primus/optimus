@@ -1,8 +1,8 @@
-from optimus.engines.dask.dataframe import DaskDataFrame
+from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
 from optimus.engines.dask_cudf.io.save import Save
 
 
-class DaskCUDFDataFrame(DaskDataFrame):
+class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def __init__(self, data):
         super().__init__(self, data)
