@@ -16,23 +16,6 @@ class Load(BaseLoad):
     def __init__(self, op):
         self.op = op
 
-    # def __getattr__(self, func):
-    #     """
-
-    #     :param func: Method name
-    #     :return:
-    #     """
-
-    #     def _func(*args, **kwargs):
-    #         fut = self.client.submit(getattr(self, "_"+func), *args, **kwargs)
-    #         exc = fut.exception()
-    #         if exc:
-    #             raise exc
-    #         return fut.result()
-
-    #     return _func
-
-
     @staticmethod
     def json(path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
         """
