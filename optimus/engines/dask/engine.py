@@ -9,7 +9,6 @@ from optimus.engines.dask.io.load import Load
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
-Dask.instance = None
 Profiler.instance = None
 
 
@@ -46,22 +45,19 @@ class DaskEngine(BaseEngine):
                                      },
                                      )
 
-            Dask.instance = Client(cluster)
+            self.client = Client(cluster)
 
         elif address:
-            Dask.instance = Client(address=address)
+            self.client = Client(address=address)
 
         elif session is None:
             # Create a local cluster
-            Dask.instance = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
+            self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
                                    processes=processes,
                                    memory_limit=memory_limit, *args,
                                    **kwargs)
         else:
-            Dask.instance = Dask().load(session)
-
-        # Reference https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
-        self.client = Dask.instance
+            self.client = Dask().load(session)
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
@@ -72,7 +68,7 @@ class DaskEngine(BaseEngine):
         Return a Spark session object
         :return:
         """
-        return Dask.instance.dask
+        return self.client.dask
 
     @property
     def create(self):
