@@ -1,5 +1,3 @@
-import cudf
-import cupy as cp
 from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
@@ -28,6 +26,7 @@ class Cols(DataFrameBaseColumns):
         :param dfs:
         :return:
         """
+        import cudf
 
         df = self.root
         df = cudf.concat([dfs.reset_index(drop=True), df.reset_index(drop=True)], axis=1)
@@ -44,6 +43,7 @@ class Cols(DataFrameBaseColumns):
         :param sub:
         :return:
         """
+        import cudf
 
         df = self.root
         # TODO: This could be slow try to implement the find function in cudf
@@ -206,6 +206,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):
+        import cupy as cp
         df = self.root
         columns = parse_columns(df, columns)
 
