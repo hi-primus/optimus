@@ -45,8 +45,8 @@ class DaskCUDFEngine(BaseEngine):
             cluster = coiled.Cluster(
                                      name=kwargs.get("name"),
                                      worker_options={
-                                         "nthreads": threads_per_worker,
-                                         "memory_limit": memory_limit,
+                                         **({"nthreads": threads_per_worker} if threads_per_worker else {}),
+                                         **({"memory_limit": memory_limit} if memory_limit else {})
                                      },
                                      worker_gpu=1, 
                                      worker_class='dask_cuda.CUDAWorker',
