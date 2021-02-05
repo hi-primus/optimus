@@ -73,7 +73,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
 
         if op.client:
             op.client.run(switch_to_rmm_allocator)
-        switch_to_rmm_allocator()
 
     return op
 

@@ -12,9 +12,26 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
-    # import dask_cudf
+
+    def __getattr__(self, func):
+        """
+
+        :param func: Method name
+        :return:
+        """
+
+        def _func(*args, **kwargs):
+            fut = self.client.submit(getattr(self, "_"+func), *args, **kwargs)
+            exc = fut.exception()
+            if exc:
+                raise exc
+            return fut.result()
+
+        return _func
+
+
     @staticmethod
-    def json(path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
+    def _json(path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dask dataframe from a json file.
         :param path: path or location of the file.
@@ -40,7 +57,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def tsv(path, header=0, infer_schema='true', *args, **kwargs):
+    def _tsv(path, header=0, infer_schema='true', *args, **kwargs):
         """
         Return a spark from a tsv file.
         :param path: path or location of the file.
@@ -54,7 +71,7 @@ class Load(BaseLoad):
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
+    def _csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True,
             storage_options=None, conn=None, *args,**kwargs):
         """
@@ -96,7 +113,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
+    def _parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -124,7 +141,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, **kwargs):
+    def _avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -149,7 +166,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
+    def _excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a spark from a excel file.
         :param path: Path or location of the file. Must be string dataType
