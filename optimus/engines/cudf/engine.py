@@ -31,7 +31,7 @@ class CUDFEngine(BaseEngine):
 
     @property
     def load(self):
-        return Load()
+        return Load(self)
 
     @property
     def engine(self):

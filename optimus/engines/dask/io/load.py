@@ -14,6 +14,9 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
+    
+    def __init__(self, op):
+        self.op = op
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):

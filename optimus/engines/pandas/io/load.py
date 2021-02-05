@@ -12,6 +12,9 @@ from optimus.infer import is_str
 
 
 class Load(BaseLoad):
+    
+    def __init__(self, op):
+        self.op = op
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):

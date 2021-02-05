@@ -32,7 +32,7 @@ class DaskCUDFEngine(BaseEngine):
 
         self.engine = 'dask-cudf'
         self.create = Create(self)
-        self.load = Load()
+        self.load = Load(self)
         self.verbose(verbose)
 
         if coiled_token:
