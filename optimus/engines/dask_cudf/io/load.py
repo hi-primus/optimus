@@ -1,7 +1,6 @@
 import ntpath
 
 import dask.bag as db
-import dask_cudf
 import pandas as pd
 from dask import dataframe as dd
 
@@ -30,7 +29,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "json")[0]
 
         try:
-            # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
+            import dask_cudf
             df = dask_cudf.read_json(path, lines=multiline, storage_options=storage_options, *args, **kwargs)
             df = DaskCUDFDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", file_name)
@@ -82,6 +81,7 @@ class Load(BaseLoad):
             storage_options = conn.storage_options
 
         try:
+            import dask_cudf
             dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                       quoting=quoting, error_bad_lines=error_bad_lines,
                                       keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter,
@@ -112,6 +112,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "parquet")
 
         try:
+            import dask_cudf
             df = dask_cudf.read_parquet(path, columns=columns, storage_options=storage_options, *args, **kwargs)
 
             df.meta = Meta.set(df.meta, "file_name", file_name)

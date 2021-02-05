@@ -82,6 +82,11 @@ class DaskCUDFEngine(BaseEngine):
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
+    def dataframe(self, cdf, n_partitions=1, *args, **kwargs):
+        import dask_cudf
+        from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
+        return DaskCUDFDataFrame(dask_cudf.from_cudf(cdf, npartitions=n_partitions, *args, **kwargs))
+
 # import GPUtil
 # from dask.distributed import Client
 # from dask_cuda import LocalCUDACluster
