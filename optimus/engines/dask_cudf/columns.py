@@ -1,4 +1,3 @@
-import cupy as cp
 import dask
 from dask_ml import preprocessing
 
@@ -62,6 +61,7 @@ class Cols(DaskBaseColumns):
 
         df = self.root
         columns = parse_columns(df, columns)
+        import cupy as cp
 
         def _bins_col(_columns, _min, _max):
             return {col_name: cp.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets) for
