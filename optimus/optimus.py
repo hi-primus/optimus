@@ -31,39 +31,50 @@ class Engine(Enum):
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     logger.print("ENGINE", engine)
 
-    if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
-        import rmm
-        import cupy
-        # Switch to RMM allocator
-        cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
-
     # Dummy so pycharm not complain about not used imports
     # columns, rows, constants, extension, functions, save, plots
 
     # Init engine
     if engine == Engine.PANDAS.value:
         from optimus.engines.pandas.engine import PandasEngine
-        return PandasEngine(*args, **kwargs)
+        op = PandasEngine(*args, **kwargs)
 
     elif engine == Engine.SPARK.value:
         from optimus.engines.spark.engine import SparkEngine
-        return SparkEngine(*args, **kwargs)
+        op = SparkEngine(*args, **kwargs)
 
     elif engine == Engine.DASK.value:
         from optimus.engines.dask.engine import DaskEngine
-        return DaskEngine(*args, **kwargs)
-
-    elif engine == Engine.CUDF.value:
-        from optimus.engines.cudf.engine import CUDFEngine
-        return CUDFEngine(*args, **kwargs)
-
-    elif engine == Engine.DASK_CUDF.value:
-        from optimus.engines.dask_cudf.engine import DaskCUDFEngine
-        return DaskCUDFEngine(*args, **kwargs)
+        op = DaskEngine(*args, **kwargs)
 
     elif engine == Engine.IBIS.value:
         from optimus.engines.ibis.engine import IbisEngine
-        return IbisEngine(*args, **kwargs)
+        op = IbisEngine(*args, **kwargs)
+
+    elif engine == Engine.CUDF.value:
+        from optimus.engines.cudf.engine import CUDFEngine
+        op = CUDFEngine(*args, **kwargs)
+
+    elif engine == Engine.DASK_CUDF.value:
+        from optimus.engines.dask_cudf.engine import DaskCUDFEngine
+        op = DaskCUDFEngine(*args, **kwargs)
 
     else:
         RaiseIt.value_error(engine, Engine.list())
+
+    print(op.engine)
+
+    if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
+        def switch_to_rmm_allocator():
+            import rmm
+            import cupy
+            cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
+            return True
+
+        if op.client:
+            op.client.run(switch_to_rmm_allocator)
+        switch_to_rmm_allocator()
+
+    return op
+
+
