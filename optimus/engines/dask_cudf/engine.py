@@ -58,7 +58,7 @@ class DaskCUDFEngine(BaseEngine):
                                      software="optimus/gpu"
                                     )
 
-            self.client_name = cluster.name
+            self.cluster_name = cluster.name
 
             self.client = Client(cluster)
 
