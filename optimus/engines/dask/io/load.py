@@ -100,7 +100,7 @@ class Load(BaseLoad):
                               storage_options=storage_options,*args, **kwargs)
 
             if n_rows > -1:
-                ddf = dd.from_pandas(ddf.head(n=n_rows), npartitions=1).reset_index()
+                ddf = dd.from_pandas(ddf.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
             df = DaskDataFrame(ddf)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
