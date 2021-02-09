@@ -89,6 +89,8 @@ class Load(BaseLoad):
                                       quoting=quoting, error_bad_lines=error_bad_lines,
                                       keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter,
                                       storage_options=storage_options)
+            if n_rows > -1:
+                dcdf = dcdf.head(n_rows)
             df = DaskCUDFDataFrame(dcdf)
             df.meta = Meta.set(df.meta, "file_name", path)
             df.meta = Meta.set(df.meta, "name", ntpath.basename(path))
