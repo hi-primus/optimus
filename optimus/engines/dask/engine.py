@@ -6,6 +6,7 @@ from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
+from optimus.optimus import Engine
 from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
@@ -80,7 +81,7 @@ class DaskEngine(BaseEngine):
 
     @property
     def engine(self):
-        return "dask"
+        return Engine.DASK.value
 
     def dataframe(self, pdf, n_partitions=1, *args, **kwargs):
         from dask import dataframe as dd

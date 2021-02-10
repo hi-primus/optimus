@@ -26,6 +26,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str, is_list_of_str
+from optimus.optimus import Engine
 
 
 def random_int(n=5):
@@ -721,16 +722,16 @@ def ipython_vars(globals_vars, dtype=None):
     vars = [(k, v, type(v)) for k, v in tmp.items() if
             not k.startswith('_') and k != 'tmp' and k != 'In' and k != 'Out' and not hasattr(v, '__call__')]
 
-    if dtype == "dask_cudf":
+    if dtype == Engine.DASK_CUDF.value:
         from dask_cudf.core import DataFrame as DaskCUDFDataFrame
         _dtype = DaskCUDFDataFrame
-    elif dtype == "cudf":
+    elif dtype == Engine.CUDF.value:
         from cudf.core import DataFrame as CUDFDataFrame
         _dtype = CUDFDataFrame
-    elif dtype == "dask":
+    elif dtype == Engine.DASK.value:
         from dask.dataframe.core import DataFrame
         _dtype = DataFrame
-    elif dtype == "pandas":
+    elif dtype == Engine.PANDAS.value:
         import pandas as pd
         PandasDataFrame = pd.DataFrame
         _dtype = PandasDataFrame

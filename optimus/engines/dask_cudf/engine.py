@@ -1,11 +1,12 @@
 import dask
-
 from dask.distributed import Client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
+from optimus.helpers.raiseit import RaiseIt
+from optimus.optimus import Engine
 from optimus.profiler.profiler import Profiler
 
 # import dask_cudf
@@ -30,7 +31,7 @@ class DaskCUDFEngine(BaseEngine):
         :param kwargs:
         """
 
-        self.engine = 'dask-cudf'
+        self.engine = Engine.DASK_CUDF.value
         self.create = Create(self)
         self.load = Load(self)
         self.verbose(verbose)

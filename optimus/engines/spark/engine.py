@@ -68,7 +68,7 @@ class SparkEngine:
         :type jars: (list[str])
 
         """
-        self.engine = 'spark'
+        self.engine = Engine.SPARK.value
         self.client = session
         self.preserve = False
 
