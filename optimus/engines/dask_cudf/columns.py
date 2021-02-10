@@ -78,9 +78,9 @@ class Cols(DaskBaseColumns):
         reductions = []
 
         @dask.delayed
-        def format(_count, _bins):
+        def format(_count, _bins, _col_name):
             result = {}
-            result[col_name] = [
+            result[_col_name] = [
                 {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
                 for i in range(len(_bins) - 1)]
             return result
@@ -89,7 +89,7 @@ class Cols(DaskBaseColumns):
             r = df.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
                                                                      chunk_kwargs={
                                                                          '_bins': _bins[col_name]})
-            reductions.append(format(r, _bins[col_name]))
+            reductions.append(format(r, _bins[col_name], col_name))
 
         d = dask.delayed(reductions)
 
