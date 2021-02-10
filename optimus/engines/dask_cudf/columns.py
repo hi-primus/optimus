@@ -97,4 +97,10 @@ class Cols(DaskBaseColumns):
             result = d.compute()
         else:
             result = d
-        return result
+        
+        _res = {}
+
+        for res in result:
+            _res.update(res)
+            
+        return {"hist": _res}
