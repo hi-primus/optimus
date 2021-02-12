@@ -35,3 +35,11 @@ class BaseEngine:
     @abstractmethod
     def engine(self):
         pass
+
+    @abstractmethod
+    def remote_run(self, callback, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def remote_submit(self, callback, *args, **kwargs):
+        pass
