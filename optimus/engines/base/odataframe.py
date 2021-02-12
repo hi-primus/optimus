@@ -202,7 +202,7 @@ class BaseDataFrame(ABC):
         return self.buffer
 
     def buffer_json(self, columns):
-        df = self.df.buffer
+        df = self.buffer
         columns = parse_columns(df, columns)
 
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
@@ -213,7 +213,7 @@ class BaseDataFrame(ABC):
         Get the size of a dask in bytes
         :return:
         """
-        df = self.df
+        df = self
         result = df.memory_usage(index=True, deep=deep).sum()
         if format == "human":
             result = humanize.naturalsize(result)
@@ -221,7 +221,7 @@ class BaseDataFrame(ABC):
         return result
 
     def optimize(self, categorical_threshold=50, verbose=False):
-        df = self.root
+        df = self
         return reduce_mem_usage(df, categorical_threshold=categorical_threshold, verbose=verbose)
 
     def run(self):
@@ -236,7 +236,7 @@ class BaseDataFrame(ABC):
 
         :return:
         """
-        df = self.df
+        df = self
         df.cache().count()
         return df
 
@@ -426,9 +426,9 @@ class BaseDataFrame(ABC):
         raise NotImplementedError
 
     def repartition(self, n=None, *args, **kwargs):
-        df = self.data
-        df = df.repartition(npartitions=n, *args, **kwargs)
-        return self.root.new(df, meta=self.root.meta)
+        dfd = self.data
+        dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+        return self.new(dfd, meta=self.meta)
 
     def table_image(self, path, limit=10):
         """
