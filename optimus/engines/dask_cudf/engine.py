@@ -45,6 +45,9 @@ class DaskCUDFEngine(BaseEngine):
                 coiled.Cloud()
             except Exception as error:
                 raise error
+
+            idle_timeout = kwargs.get("idle_timeout", None)
+
             cluster = coiled.Cluster(
                                      name=kwargs.get("name"),
                                      worker_options={
@@ -58,6 +61,9 @@ class DaskCUDFEngine(BaseEngine):
                                      backend_options={
                                          "region": kwargs.get("backend_region", "us-east-1")
                                      },
+                                     scheduler_options={
+                                         **({"idle_timeout": idle_timeout} if idle_timeout else {})
+                                     }
                                      software="optimus/gpu"
                                     )
 
