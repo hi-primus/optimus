@@ -332,11 +332,11 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     # Reference https://www.kaggle.com/arjanso/reducing-dataframe-memory-size-by-65/notebook
 
     start_mem_usg = df.size()
-    df = df.data
-    ints = df.applymap(isint).sum().compute().to_dict()
-    floats = df.applymap(isfloat).sum().compute().to_dict()
-    nulls = df.isnull().sum().compute().to_dict()
-    total_rows = len(df)
+    dfd = df.data
+    ints = dfd.applymap(isint).sum().compute().to_dict()
+    floats = dfd.applymap(isfloat).sum().compute().to_dict()
+    nulls = dfd.isnull().sum().compute().to_dict()
+    total_rows = len(dfd)
 
     columns_dtype = {}
     for x, y in ints.items():
@@ -390,15 +390,15 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     #         if len(count_values[col_name]) <= categorical_threshold:
     #             final[col_name] = "category"
 
-    df = df.astype(final)
-    mem_usg = df.size()
+    dfd = dfd.astype(final)
+    mem_usg = dfd.size()
 
     if verbose is True:
         print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))
         print("Memory usage before optimization is: ", humanize.naturalsize(mem_usg))
         print(round(100 * mem_usg / start_mem_usg), "% of the initial size")
 
-    return df
+    return df.new(dfd, meta=df.meta)
 
 
 def downloader(url, file_format):
