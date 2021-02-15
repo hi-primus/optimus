@@ -129,7 +129,7 @@ class DaskFunctions(Functions):
     def to_datetime(self, series, format):
         return pd.to_datetime(series, format=format, errors="coerce")
 
-    def remove_special_chars(self, series):
+    def normalize_characters(self, series):
         return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
     def remove_accents(self, series):

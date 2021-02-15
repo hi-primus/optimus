@@ -178,7 +178,7 @@ class DaskCUDFFunctions(Functions):
         series = self.series
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-    # def remove_special_chars(self):
+    # def normalize_characters(self):
     #     series = self.series
     #     return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
@@ -186,7 +186,7 @@ class DaskCUDFFunctions(Functions):
         # str.decode return a float column. We are forcing to return a string again
         return series.astype(str).str.normalize_characters()
 
-    def remove_special_chars(self, series):
+    def normalize_characters(self, series):
         # See https://github.com/rapidsai/cudf/issues/5520
         return series.astype(str).str.replace_non_alphanumns(replacement_char='')
 

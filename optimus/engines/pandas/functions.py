@@ -113,7 +113,7 @@ class PandasFunctions(Functions):
             series = series.astype(str).str.replace(i, j)
         return series
 
-    def remove_special_chars(self, series):
+    def normalize_characters(self, series):
         return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
     def remove_accents(self, series):

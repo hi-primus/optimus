@@ -149,7 +149,7 @@ class IbisFunctions(Functions):
             series = series.astype(str).str.replace(i, j)
         return series
 
-    def remove_special_chars(self):
+    def normalize_characters(self):
         series = self.series
         return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 

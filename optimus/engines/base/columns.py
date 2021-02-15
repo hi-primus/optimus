@@ -1282,7 +1282,7 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
-    def remove_special_chars(self, input_cols="*", output_cols=None):
+    def normalize_characters(self, input_cols="*", output_cols=None):
         """
         Remove special chars from a dataframe
         :param input_cols:
@@ -1290,7 +1290,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F.remove_special_chars, func_return_type=str,
+        return self.apply(input_cols, self.F.normalize_characters, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
     def to_datetime(self, input_cols, format, output_cols=None):
