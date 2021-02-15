@@ -693,7 +693,7 @@ class BaseDataFrame(ABC):
     def string_clustering(self, columns="*", algorithm="fingerprint"):
         if algorithm == "fingerprint":
             clusters = fingerprint_cluster(self, columns)
-        elif algorithm == "n_gram_fingerprint"
+        elif algorithm == "n_gram_fingerprint":
             clusters = n_gram_fingerprint_cluster(self, columns)
 
         return clusters

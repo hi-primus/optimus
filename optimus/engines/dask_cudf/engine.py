@@ -3,6 +3,7 @@ from dask.distributed import Client, get_client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
+from optimus.engines.base.clientactor import ClientActor
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -63,7 +64,7 @@ class DaskCUDFEngine(BaseEngine):
                                      },
                                      scheduler_options={
                                          **({"idle_timeout": idle_timeout} if idle_timeout else {})
-                                     }
+                                     },
                                      software="optimus/gpu"
                                     )
 
@@ -94,8 +95,7 @@ class DaskCUDFEngine(BaseEngine):
             use_actor = False
 
         if use_actor:
-            from optimus.engines.dask_cudf.clientactor import DaskCUDFClientActor
-            self._client_actor = self.client.submit(DaskCUDFClientActor, actor=True).result(10)
+            self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
@@ -108,7 +108,7 @@ class DaskCUDFEngine(BaseEngine):
 
 
     def remote_run(self, callback, *args, **kwargs):
-        if not getattr(self, "_client_actor"):
+        if not getattr(self, "remote"):
             raise
 
         if kwargs.get("client_timeout"):
@@ -118,15 +118,15 @@ class DaskCUDFEngine(BaseEngine):
         else:
             client_timeout = 600
 
-        result = self._client_actor.submit(callback, *args, **kwargs).result(client_timeout)
+        result = self.remote.submit(callback, *args, **kwargs).result(client_timeout)
         if isinstance(result, dict) and result.get("status") == "error" and result.get("error"):
             raise Exception(result.get("error"))
         return result
 
 
     def remote_submit(self, callback, *args, **kwargs):
-        if not getattr(self, "_client_actor"):
+        if not getattr(self, "remote"):
             raise
 
-        return self._client_actor.submit(callback, *args, **kwargs)
+        return self.remote.submit(callback, *args, **kwargs)
 

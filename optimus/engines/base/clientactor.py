@@ -1,25 +1,35 @@
-class DaskCUDFClientActor():
+class ClientActor():
     op = {}
     _vars = {}
-    def __init__(self):
+
+    def __init__(self, engine=False):
+        if not engine:
+            from optimus.optimus import Engine
+            engine = Engine.DASK.value
+
         from optimus import Optimus
-        from optimus.optimus import Engine
-        self.op = Optimus(Engine.DASK_CUDF.value)
-        self.op.set_var = self._set_var
-        self.op.get_var = self._get_var
-        self.op.list_vars = self._list_vars
-        self.op.update_vars = self._update_vars
+        self.op = Optimus(engine)
+        self.op.set_var = self.set_var
+        self.op.get_var = self.get_var
+        self.op.list_vars = self.list_vars
+        self.op.update_vars = self.update_vars
         
-    def _list_vars(self):
+    def list_vars(self):
         return list(self._vars.keys())
-    
-    def _update_vars(self, values):
+
+    def update_vars(self, values):
         self._vars.update(values)
 
-    def _set_var(self, name, value):
-        self._vars[name] = value
+    def del_var(self, name):
+        try:
+            del self._vars[name]
+        except:
+            print(name + " not found")
         
-    def _get_var(self, name):
+    def set_var(self, name, value):
+        self._vars[name] = value
+
+    def get_var(self, name):
         return self._vars.get(name, None)
 
     def _primitive(self, value):
