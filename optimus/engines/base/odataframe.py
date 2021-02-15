@@ -18,6 +18,9 @@ from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
+
+from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
+
 from .columns import BaseColumns
 from .meta import Meta
 
@@ -686,3 +689,12 @@ class BaseDataFrame(ABC):
     def get_series(self):
         col1 = self.root.cols.names(0)[0]
         return self.root.data[col1]
+
+    def string_clustering(self, columns="*", algorithm="fingerprint"):
+        if algorithm == "fingerprint":
+            clusters = fingerprint_cluster(self, columns)
+        elif algorithm == "n_gram_fingerprint"
+            clusters = n_gram_fingerprint_cluster(self, columns)
+
+        return clusters
+        
