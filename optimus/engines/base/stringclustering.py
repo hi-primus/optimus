@@ -10,6 +10,10 @@ class Clusters:
     
     def __init__(self, clusters):
         self.clusters = clusters
+
+
+    def __repr__(self):
+        return str(self.to_dict())
         
     
     def set_suggestion(self, suggestion_or_id, new_value, column = 0):
