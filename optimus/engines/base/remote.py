@@ -63,7 +63,8 @@ class ClientActor:
         self.op.del_var = self.del_var
         self.op.list_vars = self.list_vars
         self.op.update_vars = self.update_vars
-        self.set_var("_remote_load", self.op.load)
+        self.set_var("_load", self.op.load)
+        self.set_var("_create", self.op.create)
         
     def list_vars(self):
         return list(self._vars.keys())

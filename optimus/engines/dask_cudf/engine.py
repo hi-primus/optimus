@@ -96,7 +96,8 @@ class DaskCUDFEngine(BaseEngine):
 
         if use_actor:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
-            self.remote_load = RemoteDummyVariable(self, "_remote_load")
+            self.load = RemoteDummyVariable(self, "_load")
+            self.create = RemoteDummyVariable(self, "_create")
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
