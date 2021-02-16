@@ -14,6 +14,9 @@ class RemoteDummyAttribute:
 
         def _f(op, unique_id, method, *args, **kwargs):
             obj = op.get_var(unique_id)
+            if obj is None:
+                op.del_var(unique_id)
+                raise Exception("Remote variable with id "+unique_id+" not found or null")
             func = obj
             for me in method:
                 func = getattr(func, me)
@@ -23,7 +26,7 @@ class RemoteDummyAttribute:
         return self.__op.remote_run(_f, self.__id, self.__names, *args, **kwargs)
 
 
-class RemoteDummy:
+class RemoteDummyVariable:
 
     def __init__(self, op, unique_id, *args, **kwargs):
         self.op = op
@@ -60,6 +63,7 @@ class ClientActor:
         self.op.del_var = self.del_var
         self.op.list_vars = self.list_vars
         self.op.update_vars = self.update_vars
+        self.set_var("_remote_load", self.op.load)
         
     def list_vars(self):
         return list(self._vars.keys())
