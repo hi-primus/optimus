@@ -41,11 +41,8 @@ class RemoteDummy:
         return
 
     def __del__(self):
-
-        def _f(op, unique_id, *args, **kwargs):
-            op.del_var(unique_id)
-            
-        self.op.remote_run(_f, self.id)
+        self.op.remote.del_var(self.id).result(180)
+        
     
 class ClientActor:
     op = {}
@@ -111,4 +108,4 @@ class ClientActor:
             tb = traceback.format_exc()
             error = "%s: %s\n%s" % (error_class, detail, tb)
             return {"status": "error", "error": error}
-        return self._primitive(result)
+        return self._primitive(result) if result is not None else None
