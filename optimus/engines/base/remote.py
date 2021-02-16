@@ -7,7 +7,7 @@ class RemoteDummyAttribute:
         
     
     def __getattr__(self, item):
-        return RemoteDummyAttribute(item, self.__names, self.__op)
+        return RemoteDummyAttribute(item, self.__names, self.__id, self.__op)
     
     
     def __call__(self, *args, **kwargs):
