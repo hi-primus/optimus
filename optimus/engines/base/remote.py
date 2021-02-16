@@ -1,25 +1,16 @@
-class AttributeChain():
+class RemoteDummyAttribute:
     
-    def __init__(self, name, names = [], dummy_id, op):
+    def __init__(self, name, names, dummy_id, op):
         self.__names = [*names, name]
         self.__op = op
         self.__id = dummy_id
         
     
     def __getattr__(self, item):
-        return AttributeChain(item, self.__names, self.__op)
+        return RemoteDummyAttribute(item, self.__names, self.__op)
     
     
     def __call__(self, *args, **kwargs):
-
-        if self.__names[-1] == "__getstate__":
-            return {"names": self.__names, "op": self.__op, "id": self.__id}
-
-        elif self.__names[-1] == "__setstate__":
-            self.__names = args[0].names
-            self.__op = args[0].op
-            self.__id = args[0].id
-            return
 
         def _f(op, unique_id, method, *args, **kwargs):
             obj = op.get_var(unique_id)
@@ -39,19 +30,24 @@ class RemoteDummy:
         self.id = unique_id
     
     def __getattr__(self, item):
-        return AttributeChain(item, [], self.id, self.op)
-    
+        return RemoteDummyAttribute(item, [], self.id, self.op)
+
+    def __getstate__(self):
+        return {"op": self.op, "id": self.id}
+
+    def __setstate__(self, d):
+        self.op = d.op
+        self.id = d.id
+        return
+
     def __del__(self):
 
         def _f(op, unique_id, *args, **kwargs):
-            try:
-                op.del_var(unique_id)
-            except:
-                return "no del var"
+            op.del_var(unique_id)
             
         self.op.remote_run(_f, self.id)
     
-class ClientActor():
+class ClientActor:
     op = {}
     _vars = {}
 
@@ -100,7 +96,7 @@ class ClientActor():
         elif not isinstance(value, (str, bool, int, float, complex)):
             import uuid
             unique_id = str(uuid.uuid4())
-            self.set_var(unique_id, result)
+            self.set_var(unique_id, value)
             return {"dummy": unique_id}
         else:
             return value
