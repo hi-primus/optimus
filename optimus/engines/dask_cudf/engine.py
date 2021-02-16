@@ -37,7 +37,7 @@ class DaskCUDFEngine(BaseEngine):
         self.load = Load(self)
         self.verbose(verbose)
 
-        use_actor = True
+        use_remote = True
 
         if coiled_token:
             import coiled
@@ -92,9 +92,9 @@ class DaskCUDFEngine(BaseEngine):
 
         else:
             self.client = get_client()
-            use_actor = False
+            use_remote = False
 
-        if use_actor:
+        if use_remote:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
             self.load = RemoteDummyVariable(self, "_load")
             self.create = RemoteDummyVariable(self, "_create")
