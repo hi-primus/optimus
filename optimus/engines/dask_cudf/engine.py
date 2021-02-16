@@ -3,7 +3,7 @@ from dask.distributed import Client, get_client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.clientactor import ClientActor
+from optimus.engines.base.remote import ClientActor, RemoteDummy
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -119,8 +119,11 @@ class DaskCUDFEngine(BaseEngine):
             client_timeout = 600
 
         result = self.remote.submit(callback, *args, **kwargs).result(client_timeout)
-        if isinstance(result, dict) and result.get("status") == "error" and result.get("error"):
-            raise Exception(result.get("error"))
+        if isinstance(result, dict):
+            if result.get("status") == "error" and result.get("error"):
+                raise Exception(result.get("error"))
+            elif result.get("dummy"):
+                return RemoteDummy(self, result.get("dummy"))
         return result
 
 

@@ -1,3 +1,56 @@
+class AttributeChain():
+    
+    def __init__(self, name, names = [], dummy_id, op):
+        self.__names = [*names, name]
+        self.__op = op
+        self.__id = dummy_id
+        
+    
+    def __getattr__(self, item):
+        return AttributeChain(item, self.__names, self.__op)
+    
+    
+    def __call__(self, *args, **kwargs):
+
+        if self.__names[-1] == "__getstate__":
+            return {"names": self.__names, "op": self.__op, "id": self.__id}
+
+        elif self.__names[-1] == "__setstate__":
+            self.__names = args[0].names
+            self.__op = args[0].op
+            self.__id = args[0].id
+            return
+
+        def _f(op, unique_id, method, *args, **kwargs):
+            obj = op.get_var(unique_id)
+            func = obj
+            for me in method:
+                func = getattr(func, me)
+            result = func(*args, **kwargs)
+            return result
+
+        return self.__op.remote_run(_f, self.__id, self.__names, *args, **kwargs)
+
+
+class RemoteDummy:
+
+    def __init__(self, op, unique_id, *args, **kwargs):
+        self.op = op
+        self.id = unique_id
+    
+    def __getattr__(self, item):
+        return AttributeChain(item, [], self.id, self.op)
+    
+    def __del__(self):
+
+        def _f(op, unique_id, *args, **kwargs):
+            try:
+                op.del_var(unique_id)
+            except:
+                return "no del var"
+            
+        self.op.remote_run(_f, self.id)
+    
 class ClientActor():
     op = {}
     _vars = {}
@@ -11,6 +64,7 @@ class ClientActor():
         self.op = Optimus(engine)
         self.op.set_var = self.set_var
         self.op.get_var = self.get_var
+        self.op.del_var = self.del_var
         self.op.list_vars = self.list_vars
         self.op.update_vars = self.update_vars
         
@@ -44,7 +98,10 @@ class ClientActor():
         elif isinstance(value, (tuple,)):
             return tuple(map(self._primitive, value))
         elif not isinstance(value, (str, bool, int, float, complex)):
-            return type(value)
+            import uuid
+            unique_id = str(uuid.uuid4())
+            self.set_var(unique_id, result)
+            return {"dummy": unique_id}
         else:
             return value
 
