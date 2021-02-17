@@ -83,8 +83,16 @@ def is_column_a(df, column=None, dtypes="str"):
 #
 #
 def is_dask_cudf_dataframe(value):
-    from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-    return isinstance(value, DaskCUDFDataFrame)
+    """
+    Check if an object is a Dask cuDF DataFrame
+    :param value:
+    :return:
+    """
+    try:
+        from dask_cudf.core import DataFrame as DaskCUDFDataFrame
+        return isinstance(value, DaskCUDFDataFrame)
+    except:
+        return False
 
 #
 # def is_dask_cudf_series(value):

@@ -14,7 +14,7 @@ from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
-from optimus.helpers.check import is_dask_dataframe
+from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
@@ -191,22 +191,16 @@ class BaseColumns(ABC):
         else:
             for input_col, output_col in columns:
 
-                if mode == "vectorized" and (is_dask_dataframe(dfd)):
+                if mode == "vectorized" and (not is_dask_dataframe(dfd) or is_dask_cudf_dataframe(dfd)):
+                    kw_columns[output_col] = func(dfd[input_col], *args)
+
+                elif mode == "vectorized":
                     partitions = dfd.to_delayed()
 
                     delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
-                    # print(kw_columns)
 
-                elif mode == "vectorized":
-                    # ddf = func(dfd[input_col], *args)
-                    #
-                    # if is_dask_dataframe(_ddf):
-                    #     df = df.cols.append(func(dfd[input_col], *args))
-                    # else:
-
-                    kw_columns[output_col] = func(dfd[input_col], *args)
 
                 elif mode == "map":
                     kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
