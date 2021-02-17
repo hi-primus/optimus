@@ -510,11 +510,11 @@ class BaseDataFrame(ABC):
         self.table(limit, columns, title, truncate)
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
-        df = self.data
+        df = self
         try:
             if __IPYTHON__:
                 # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
-                result = self.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                result = df.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
                 print_html(result)
             else:
                 df.show()

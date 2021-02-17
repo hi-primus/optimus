@@ -198,7 +198,7 @@ class Ext(BaseDataFrame):
         """
         :return:
         """
-        return self.data
+        return self.data.head()
 
     @staticmethod
     def debug():
