@@ -83,80 +83,61 @@ class DaskCUDFFunctions(Functions):
         print(series.dtype)
         return series.astype(str)
 
-    def count_zeros(self, *args):
-        series = self.series
+    def count_zeros(self, series):
         return int((series.to_float().values == 0).sum())
 
-    def kurtosis(self):
-        series = self.series
+    def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())
 
     def skew(self, series):
-        # series = self.series
         return series.map_partitions(lambda _series: _series.skew())
 
-    def sqrt(self):
-        series = self.series
+    def sqrt(self, series):
         return series.map_partitions(lambda _series: _series.sqrt())
 
-    def exp(self):
-        series = self.series
+    def exp(self, series):
         return series.map_partitions(lambda _series: _series.exp())
 
-    def ln(self):
-        series = self.series
+    def ln(self, series):
         return series.map_partitions(lambda _series: _series.log())
 
-    def radians(self):
-        series = self.series
+    def radians(self, series):
         return cudf.radians(series.to_float())
 
-    def degrees(self):
-        series = self.series
+    def degrees(self, series):
         return cudf.degrees(series.to_float())
 
-    def log(self, base=10):
-        series = self.series
+    def log(self, base=10, series):
         return series.map_partitions(lambda _series: _series.log()) / cudf.log(base)
 
-    def ceil(self):
-        series = self.series
+    def ceil(self, series):
         return series.map_partitions(lambda _series: _series.ceil())
 
-    def floor(self):
-        series = self.series
+    def floor(self, series):
         return series.map_partitions(lambda _series: _series.floor())
 
-    def sin(self):
-        series = self.series
+    def sin(self, series):
         return series.map_partitions(lambda _series: _series.sin())
 
-    def cos(self):
-        series = self.series
+    def cos(self, series):
         return series.map_partitions(lambda _series: _series.cos())
 
-    def tan(self):
-        series = self.series
+    def tan(self, series):
         return series.map_partitions(lambda _series: _series.tan())
 
-    def asin(self):
-        series = self.series
+    def asin(self, series):
         return series.map_partitions(lambda _series: _series.asin())
 
-    def acos(self):
-        series = self.series
+    def acos(self, series):
         return series.map_partitions(lambda _series: _series.acos())
 
-    def atan(self):
-        series = self.series
+    def atan(self, series):
         return series.map_partitions(lambda _series: _series.atan())
 
-    def sinh(self):
-        series = self.series
+    def sinh(self, series):
         return 1 / 2 * (self.exp() - self.exp())
 
-    def cosh(self):
-        series = self.series
+    def cosh(self, series):
         return 1 / 2 * (self.exp() + self.exp())
 
     def tanh(self):
@@ -174,12 +155,10 @@ class DaskCUDFFunctions(Functions):
     def clip(self, lower_bound, upper_bound):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
 
-    def cut(self, bins):
-        series = self.series
+    def cut(self, series, bins):
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-    # def normalize_characters(self):
-    #     series = self.series
+    # def normalize_characters(self, series):
     #     return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
 
     def remove_accents(self, series):
