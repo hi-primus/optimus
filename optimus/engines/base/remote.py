@@ -95,7 +95,7 @@ class ClientActor:
             return set(map(self._primitive, value))
         elif isinstance(value, (tuple,)):
             return tuple(map(self._primitive, value))
-        elif not isinstance(value, (str, bool, int, float, complex)):
+        elif not isinstance(value, (str, bool, int, float, complex)) and value is not None:
             import uuid
             unique_id = str(uuid.uuid4())
             self.set_var(unique_id, value)
