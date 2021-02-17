@@ -107,7 +107,7 @@ class DaskCUDFFunctions(Functions):
     def degrees(self, series):
         return cudf.degrees(series.to_float())
 
-    def log(self, base=10, series):
+    def log(self, series, base=10):
         return series.map_partitions(lambda _series: _series.log()) / cudf.log(base)
 
     def ceil(self, series):
