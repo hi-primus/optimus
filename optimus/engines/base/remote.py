@@ -62,6 +62,7 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
 class ClientActor:
     op = {}
     _vars = {}
+    _del_next = []
 
     def __init__(self, engine=False):
         if not engine:
@@ -84,11 +85,21 @@ class ClientActor:
     def update_vars(self, values):
         self._vars.update(values)
 
-    def del_var(self, name):
+    def _del_var(self, name):
         try:
             del self._vars[name]
         except:
             print(name + " not found")
+
+    def del_var(self, name):
+        
+        for _name in self._del_next:
+            self._del_var(_name)
+        
+        if self._vars[name] is None:
+            print(name + " not found")
+        else:
+            self._del_next.append(name)
         
     def set_var(self, name, value):
         self._vars[name] = value
