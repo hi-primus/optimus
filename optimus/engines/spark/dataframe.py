@@ -40,8 +40,8 @@ class SparkDataFrame(BaseDataFrame):
         return SparkFunctions()
 
     def cache(self):
-        df = self.root.data
-        return self.root.new(df.cache(), meta=self.root.meta)
+        df = self.data
+        return self.new(df.cache(), meta=self.meta)
 
     @staticmethod
     def roll_out():
@@ -214,7 +214,7 @@ class SparkDataFrame(BaseDataFrame):
 
 
     def execute(self):
-        self.root.data.cache()
+        self.data.cache()
         return self
 
     def compute(self):
@@ -231,7 +231,7 @@ class SparkDataFrame(BaseDataFrame):
         :return:
         """
 
-        self.root.data.cache().count()
+        self.data.cache().count()
         return self
 
     @staticmethod
@@ -265,7 +265,7 @@ class SparkDataFrame(BaseDataFrame):
 
     def to_pandas(self):
 
-        df = self.root.data
+        df = self.data
         return df.toPandas()
 
     def partitions(self):
@@ -273,7 +273,7 @@ class SparkDataFrame(BaseDataFrame):
         Return the dataframe partitions number
         :return: Number of partitions
         """
-        df = self.root.data
+        df = self.data
         return df.rdd.getNumPartitions()
 
     @staticmethod
@@ -286,9 +286,9 @@ class SparkDataFrame(BaseDataFrame):
         return self.rdd.partitioner
 
     def repartition(self, n=None, *args, **kwargs):
-        df = self.root.data
+        df = self.data
         df = df.repartition(n, *args, **kwargs)
-        return self.root.new(df, meta=self.root.meta)
+        return self.new(df, meta=self.meta)
 
     def h_repartition(self, partitions_number=None, col_name=None):
         """
@@ -345,7 +345,10 @@ class SparkDataFrame(BaseDataFrame):
             return False  # Probably standard Python interpreter
 
     def show(self):
-        self.root.data.show()
+        """
+        :return:
+        """
+        self.data.show()
 
     @staticmethod
     def random_split(weights: list = None, seed: int = 1):
@@ -364,14 +367,14 @@ class SparkDataFrame(BaseDataFrame):
         """
         :return:
         """
-        df = self.root.data
+        df = self.data
         print(df.rdd.toDebugString().decode("ascii"))
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.data.toPandas())
+        return PandasDataFrame(self.data.toPandas())
 
     def to_pandas(self):
-        return self.root.data.toPandas()
+        return self.data.toPandas()
 
     # @staticmethod
     # def reset():
@@ -379,7 +382,7 @@ class SparkDataFrame(BaseDataFrame):
     #     Reset actions metadata and the profiler cache
     #     :return:
     #     """
-    #     df = self.root
+    #     df = self
     #     df.meta = Meta.set(df.meta, "transformations.actions", {})
     #     Profiler.instance.output_columns = {}
     #     return df
