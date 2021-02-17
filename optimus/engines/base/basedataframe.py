@@ -77,7 +77,7 @@ class BaseDataFrame(ABC):
             # print("aaa", df2)
             df2 = df2.cols.cast(col2, dtype).data[col2]
 
-        return self.root.new(opb(df1, df2).to_frame())
+        return self.new(opb(df1, df2).to_frame())
 
     def __add__(self, df2):
         return self.operation(self, df2, operator.add, "float")
@@ -164,7 +164,7 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        return json.dumps(self.root.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
+        return json.dumps(self.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
 
     def to_dict(self, orient="records"):
         """
@@ -184,7 +184,7 @@ class BaseDataFrame(ABC):
         Return a dict of the sample of a Dataframe
         :return:
         """
-        df = self.root
+        df = self
 
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                 "value": df.rows.to_list(columns)}
@@ -598,7 +598,7 @@ class BaseDataFrame(ABC):
         """
 
         df = self
-        meta = self.root.meta
+        meta = self.meta
 
         if flush is False:
             cols_to_profile = df.calculate_cols_to_profile(df, columns)
@@ -709,8 +709,8 @@ class BaseDataFrame(ABC):
         return profiler_data
 
     def get_series(self):
-        col1 = self.root.cols.names(0)[0]
-        return self.root.data[col1]
+        col1 = self.cols.names(0)[0]
+        return self.data[col1]
 
     def string_clustering(self, columns="*", algorithm="fingerprint"):
         if algorithm == "fingerprint":
