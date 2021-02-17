@@ -3,7 +3,7 @@ from dask.distributed import Client, get_client
 
 from optimus.engines.base.create import Create
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.remote import ClientActor, RemoteDummyVariable
+from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -125,7 +125,10 @@ class DaskCUDFEngine(BaseEngine):
             if result.get("status") == "error" and result.get("error"):
                 raise Exception(result.get("error"))
             elif result.get("dummy"):
-                return RemoteDummyVariable(self, result.get("dummy"))
+                if result.get("dataframe"):
+                    return RemoteDummyDataFrame(self, result.get("dummy"))
+                else:
+                    return RemoteDummyVariable(self, result.get("dummy"))
         return result
 
 

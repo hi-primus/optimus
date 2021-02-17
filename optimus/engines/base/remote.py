@@ -1,4 +1,5 @@
 from pandas import DataFrame as PandasDataFrame
+from optimus.engines.base.basedataframe import BaseDataFrame
 
 class RemoteDummyAttribute:
     
@@ -47,6 +48,15 @@ class RemoteDummyVariable:
 
     def __del__(self):
         self.op.remote.del_var(self.id).result(180)
+
+
+class RemoteDummyDataFrame(RemoteDummyVariable):
+
+    __repr__ = BaseDataFrame.__repr__
+    _repr_html_ = BaseDataFrame._repr_html_
+    print = BaseDataFrame.print
+    display = BaseDataFrame.display
+    table = BaseDataFrame.table
         
     
 class ClientActor:
@@ -103,7 +113,10 @@ class ClientActor:
             import uuid
             unique_id = str(uuid.uuid4())
             self.set_var(unique_id, value)
-            return {"dummy": unique_id}
+            if isinstance(value, (BaseDataFrame,)):
+                return {"dummy": unique_id, "dataframe": True}
+            else:
+                return {"dummy": unique_id, "dataframe": False}
         else:
             return value
 
