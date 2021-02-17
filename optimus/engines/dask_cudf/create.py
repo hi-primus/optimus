@@ -1,4 +1,4 @@
-import pandas as pd
+import cudf
 
 
 class Create:
@@ -15,10 +15,12 @@ class Create:
         :param n_partitions:
         :return: Dataframe
         """
-        
-        if dict:
-            pdf = pd.DataFrame(dict)
 
-        df = self.root.dataframe(pdf, n_partitions)
+        if dict:
+            cdf = cudf.DataFrame(dict)
+        else if pdf:
+            cdf = cudf.from_pandas(pdf)
+
+        df = self.root.dataframe(cdf, n_partitions)
         return df
 

@@ -11,6 +11,7 @@ class Create:
     def dataframe(self, dict, cols=None, rows=None, infer_schema=True, pdf=None):
         """
         Helper to create a Spark dataframe:
+        :param dict:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples with the same number and types that cols
         :param infer_schema: Try to infer the schema data type.

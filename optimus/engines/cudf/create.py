@@ -10,6 +10,7 @@ class Create:
     def dataframe(self, dict, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
+        :param dict:
         :param cols: List of Tuple with name, data type and a flag to accept null
         :param rows: List of Tuples with the same number and types that cols
         :param pdf: a pandas dataframe
@@ -17,7 +18,10 @@ class Create:
         :return: Dataframe
         """
 
-        cdf = cudf.DataFrame(dict)
+        if dict:
+            cdf = cudf.DataFrame(dict)
+        else if pdf:
+            cdf = cudf.from_pandas(pdf)
 
         df = CUDFDataFrame(cdf)
         return df
