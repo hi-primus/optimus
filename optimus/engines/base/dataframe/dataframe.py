@@ -3,7 +3,7 @@ import humanize
 
 from collections.abc import Iterable 
 
-from optimus.engines.base.odataframe import BaseDataFrame
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt

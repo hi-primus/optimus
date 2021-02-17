@@ -45,10 +45,14 @@ def print_html(html):
     :param html: html code to be printed
     :return:
     """
-    if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-        displayHTML(result)
-    else:
-        display(HTML(html))
+    try:
+        if "DATABRICKS_RUNTIME_VERSION" in os.environ:
+            displayHTML(result)
+        else:
+            display(HTML(html))
+        return True
+    except NameError:
+        return False
 
 
 def print_json(value):

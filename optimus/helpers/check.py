@@ -167,3 +167,14 @@ def equal_function(f1, f2):
         if f1.__name__ == func.__name__:
             return True
     return False
+
+
+def is_notebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell in ['ZMQInteractiveShell', 'Shell']:
+            return True
+        else:
+            return False
+    except NameError:
+        return False

@@ -10,6 +10,9 @@ from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
 
+from IPython.core.display import display, HTML
+
+from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
@@ -37,9 +40,13 @@ class BaseDataFrame(ABC):
         self.root = root
         self.meta = {}
 
+    def _repr_html_(self):
+        df = self   
+        return df.table()
+
     def __repr__(self):
-        self.display()
-        # return str(type(self))
+        df = self
+        return df.ascii()
 
     def __getitem__(self, item):
         return self.cols.select(item)
@@ -505,29 +512,44 @@ class BaseDataFrame(ABC):
             output = HEADER + output + FOOTER
         return output
 
-    def display(self, limit=None, columns=None, title=None, truncate=True):
+
+    def display(self, limit=10, columns=None, title=None, truncate=True, plain_text=False):
         # TODO: limit, columns, title, truncate
-        self.table(limit, columns, title, truncate)
+        df = self
+        
+        if is_notebook() and not plain_text:
+            print_html(df.table(limit, columns, title, truncate))
+
+        else:
+            print(df.ascii(limit, columns))
+
+
+    def print(self, limit=10, columns=None):
+        print(self.ascii(limit, columns))
+
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
+        
         df = self
         try:
-            if __IPYTHON__:
-                # TODO: move the html param to the ::: if __IPYTHON__ and engine.output is "html":
-                result = df.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
-                print_html(result)
-            else:
-                df.show()
+            if is_notebook():
+                # TODO: move the html param to the ::: if is_notebook() and engine.output is "html":
+                return df.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+
         except NameError as e:
             print(e)
-            df.show()
 
-    def ascii(self):
-        df = self.root
-        print(
-            tabulate(df.to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
+        return df.ascii(limit, columns)
+
+
+    def ascii(self, limit=10, columns=None):
+        df = self
+        if not columns:
+            columns = "*"
+        return tabulate(df.rows.limit(limit).cols.select(columns).to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
                      tablefmt="simple",
-                     showindex="never"))
+                     showindex="never")
+
 
     def export(self):
         """

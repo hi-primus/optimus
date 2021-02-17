@@ -1,11 +1,11 @@
-from optimus.engines.base.dataframe.dataframe import Ext as PandasExtension
+from optimus.engines.base.dataframe.dataframe import Ext as BaseDataFrame
 # from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
-class PandasDataFrame(PandasExtension):
+class PandasDataFrame(BaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
