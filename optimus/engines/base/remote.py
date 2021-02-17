@@ -1,3 +1,5 @@
+from pandas import DataFrame as PandasDataFrame
+
 class RemoteDummyAttribute:
     
     def __init__(self, name, names, dummy_id, op):
@@ -84,17 +86,19 @@ class ClientActor:
     def get_var(self, name):
         return self._vars.get(name, None)
 
-    def _primitive(self, value):
+    def _return(self, value):
         if isinstance(value, (dict,)):
             for key in value:
-                value[key] = self._primitive(value[key])
+                value[key] = self._return(value[key])
             return value
         elif isinstance(value, (list,)):
-            return list(map(self._primitive, value))
+            return list(map(self._return, value))
         elif isinstance(value, (set,)):
-            return set(map(self._primitive, value))
+            return set(map(self._return, value))
         elif isinstance(value, (tuple,)):
-            return tuple(map(self._primitive, value))
+            return tuple(map(self._return, value))
+        elif isinstance(value, (PandasDataFrame,)):
+            return value.head()
         elif not isinstance(value, (str, bool, int, float, complex)) and value is not None:
             import uuid
             unique_id = str(uuid.uuid4())
@@ -113,4 +117,4 @@ class ClientActor:
             tb = traceback.format_exc()
             error = "%s: %s\n%s" % (error_class, detail, tb)
             return {"status": "error", "error": error}
-        return self._primitive(result) if result is not None else None
+        return self._return(result) if result is not None else None
