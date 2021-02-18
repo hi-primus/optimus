@@ -36,6 +36,8 @@ class RemoteDummyVariable:
         self.id = unique_id
     
     def __getattr__(self, item):
+        if item.startswith('_'):
+            raise AttributeError(item)
         return RemoteDummyAttribute(item, [], self.id, self.op)
 
     def __getstate__(self):
@@ -52,15 +54,13 @@ class RemoteDummyVariable:
 
 class RemoteDummyDataFrame(RemoteDummyVariable):
 
+    __repr__ = BaseDataFrame.ascii
+    _repr_html_ = BaseDataFrame.table_html
     print = BaseDataFrame.print
     table = BaseDataFrame.table
     display = BaseDataFrame.display
     
-    def __repr__(self):
-        return self.ascii()
     
-    def _repr_html_(self):
-        return self.table_html()
         
     
 class ClientActor:
@@ -99,6 +99,8 @@ class ClientActor:
         
         for _name in self._del_next:
             self._del_var(_name)
+
+        self._del_next = []
         
         if self._vars[name] is None:
             print(name + " not found")
