@@ -52,11 +52,15 @@ class RemoteDummyVariable:
 
 class RemoteDummyDataFrame(RemoteDummyVariable):
 
-    __repr__ = BaseDataFrame.__repr__
-    _repr_html_ = BaseDataFrame._repr_html_
     print = BaseDataFrame.print
-    display = BaseDataFrame.display
     table = BaseDataFrame.table
+    display = BaseDataFrame.display
+    
+    def __repr__(self):
+        return self.ascii()
+    
+    def _repr_html_(self):
+        return self.table_html()
         
     
 class ClientActor:
