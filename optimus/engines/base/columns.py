@@ -1819,7 +1819,7 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd[input_cols].str.match(regex).to_frame())
 
-    def _series_to_dict(series):
+    def _series_to_dict(self, series):
         return series.to_dict()
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
