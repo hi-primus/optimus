@@ -18,14 +18,14 @@ class DaskEngine(BaseEngine):
 
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
-                 memory_limit='4GB', verbose=False, coiled_token=None, coiled_gpu=False, *args, **kwargs):
+                 memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
 
         if n_workers is None:
             import psutil
             threads_per_worker = psutil.cpu_count() * 4
 
         self.verbose(verbose)
-
+        
         if coiled_token:
             import coiled
             dask.config.set({"coiled.token": coiled_token})
@@ -34,31 +34,37 @@ class DaskEngine(BaseEngine):
             except Exception as error:
                 raise error
 
-            cluster = coiled.Cluster(name="temp",
-                                     n_workers=n_workers,
-                                     # worker_memory=15,
+            idle_timeout = kwargs.get("idle_timeout", None)
+            
+            cluster = coiled.Cluster(
+                                     name=kwargs.get("name"),
                                      worker_options={
-                                         "nthreads": threads_per_worker,
-                                         "memory_limit": memory_limit,
+                                         **({"nthreads": threads_per_worker} if threads_per_worker else {}),
+                                         **({"memory_limit": memory_limit} if memory_limit else {})
                                      },
-                                     software={
-                                         coiled_gpu if "optimus/default-gpu" else "optimus/default"
+                                     n_workers=n_workers, 
+                                     worker_memory='15GiB',
+                                     scheduler_options={
+                                         **({"idle_timeout": idle_timeout} if idle_timeout else {})
                                      },
-                                     )
+                                     software="optimus/default"
+                                    )
 
+            self.cluster_name = cluster.name
             self.client = Client(cluster)
 
         elif address:
             self.client = Client(address=address)
 
-        elif session is None:
-            # Create a local cluster
+        elif session=="local":
             self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
-                                   processes=processes,
-                                   memory_limit=memory_limit, *args,
-                                   **kwargs)
-        else:
+                                   processes=processes, memory_limit=memory_limit, *args, **kwargs)
+
+        elif session:
             self.client = Dask().load(session)
+        
+        else:
+            self.client = get_client()
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
