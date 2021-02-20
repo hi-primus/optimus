@@ -120,7 +120,8 @@ class PandasFunctions(Functions):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
     def date_format(self, series, current_format=None, output_format=None):
-        return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
+        return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
+            drop=True)
 
     def years_between(self, series, date_format=None):
         return (pd.to_datetime(series, format=date_format,
