@@ -56,15 +56,15 @@ class DaskEngine(BaseEngine):
         elif address:
             self.client = Client(address=address)
 
-        elif session=="local":
-            self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
-                                   processes=processes, memory_limit=memory_limit, *args, **kwargs)
-
-        elif session:
+        elif session and session!="local":
             self.client = Dask().load(session)
         
         else:
-            self.client = get_client()
+            try:
+                self.client = get_client()
+            except ValueError:
+                self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
+                                   processes=processes, memory_limit=memory_limit, *args, **kwargs)
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance

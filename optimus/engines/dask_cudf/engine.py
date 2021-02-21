@@ -37,7 +37,7 @@ class DaskCUDFEngine(BaseEngine):
         self.load = Load(self)
         self.verbose(verbose)
 
-        use_remote = True
+        use_remote = kwargs.get("use_remote", True)
 
         if coiled_token:
             import coiled
@@ -74,25 +74,26 @@ class DaskCUDFEngine(BaseEngine):
         elif address:
             self.client = Client(address=address)
 
-        elif session=="local":
-            from dask_cuda import LocalCUDACluster
-            from GPUtil import GPUtil
-            n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
-
-            if n_workers > n_gpus:
-                logger.print(f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
-                n_workers = n_gpus
-                # n_gpus = 1
-            cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
-                                       memory_limit=memory_limit)
-            self.client = Client(cluster, *args, **kwargs)
-
-        elif session:
+        elif session and session!="local":
             self.client = session
 
         else:
-            self.client = get_client()
+            try:
+                self.client = get_client()
+            except ValueError:
+                from dask_cuda import LocalCUDACluster
+                from GPUtil import GPUtil
+                n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
+
+                if n_workers > n_gpus:
+                    logger.print(f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
+                    n_workers = n_gpus
+                    # n_gpus = 1
+                cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
+                                        memory_limit=memory_limit)
+                self.client = Client(cluster, *args, **kwargs)
             use_remote = False
+
 
         if use_remote:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
