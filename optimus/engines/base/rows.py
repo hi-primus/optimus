@@ -99,10 +99,10 @@ class BaseRows(ABC):
 
         return self.root.new(dfd.assign(**kw_columns))
 
-    def find(self, where, output_col, expr=None):
+    def find(self, where, output_col):
         """
         Find rows and appends resulting mask to the dataset
-        :param where: Mask or name of the column to be taken as mask
+        :param where: Mask, expression or name of the column to be taken as mask
         :param output_col:
         :param expr: Expression used (replaces where). For Ex: (df.A > 3) & (df.A <= 1000)
         :return: Optimus Dataframe
@@ -111,11 +111,12 @@ class BaseRows(ABC):
         df = self.root
         dfd = df.data
 
-        if expr:
-            where = pd.eval(expr)
-        elif is_str(where):
-            where = df[where]
-            # dfd = dfd[where]
+        if is_str(where):
+            if where in df.cols.names():
+                where = df[where]
+            else:
+                where = pd.eval(where)
+                
         dfd.assign({output_col: where.data[where.cols.names()[0]]})
 
         return self.root.new(dfd)
