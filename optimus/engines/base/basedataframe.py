@@ -49,6 +49,8 @@ class BaseDataFrame(ABC):
         return df.ascii()
 
     def __getitem__(self, item):
+        if isinstance(item, slice):
+            return self.buffer_window("*", item.start, item.stop)
         return self.cols.select(item)
 
     def __setitem__(self, key, value):
