@@ -30,18 +30,21 @@ class Functions(ABC):
     def min(self, series):
         # print(self)
         # return self.parent.new(series).cols._to_float().data.min()
-        return self._to_float(series).min()
+        return series.min()
+        # return self._to_float(series).min()
 
     # @staticmethod
     def max(self, series):
-        return self._to_float(series).max()
+        return series.max()
+        # return self._to_float(series).max()
         # return series._to_float().max()
 
     def mean(self, series):
+
         return self._to_float(series).mean()
 
     def mode(self, series):
-        return self._to_float(series).mode()
+        return self._to_float(series).mode().to_dict()
         # return series._to_float().mode().to_dict(index=False)
 
     def std(self, series):
@@ -126,8 +129,7 @@ class Functions(ABC):
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
-    @staticmethod
-    def range(series):
+    def range(self, series):
         series = series._to_float()
         return {"min": series.min(), "max": series.max()}
 

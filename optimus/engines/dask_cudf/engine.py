@@ -6,7 +6,6 @@ from optimus.engines.base.engine import BaseEngine
 from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 from optimus.optimus import Engine
 from optimus.profiler.profiler import Profiler
 
@@ -50,23 +49,23 @@ class DaskCUDFEngine(BaseEngine):
             idle_timeout = kwargs.get("idle_timeout", None)
 
             cluster = coiled.Cluster(
-                                     name=kwargs.get("name"),
-                                     worker_options={
-                                         **({"nthreads": threads_per_worker} if threads_per_worker else {}),
-                                         **({"memory_limit": memory_limit} if memory_limit else {})
-                                     },
-                                     worker_gpu=1, 
-                                     worker_class='dask_cuda.CUDAWorker',
-                                     n_workers=n_workers, 
-                                     worker_memory='15GiB', 
-                                     backend_options={
-                                         "region": kwargs.get("backend_region", "us-east-1")
-                                     },
-                                     scheduler_options={
-                                         **({"idle_timeout": idle_timeout} if idle_timeout else {})
-                                     },
-                                     software="optimus/gpu"
-                                    )
+                name=kwargs.get("name"),
+                worker_options={
+                    **({"nthreads": threads_per_worker} if threads_per_worker else {}),
+                    **({"memory_limit": memory_limit} if memory_limit else {})
+                },
+                worker_gpu=1,
+                worker_class='dask_cuda.CUDAWorker',
+                n_workers=n_workers,
+                worker_memory='15GiB',
+                backend_options={
+                    "region": kwargs.get("backend_region", "us-east-1")
+                },
+                scheduler_options={
+                    **({"idle_timeout": idle_timeout} if idle_timeout else {})
+                },
+                software="optimus/gpu"
+            )
 
             self.cluster_name = cluster.name
             self.client = Client(cluster)
@@ -74,7 +73,7 @@ class DaskCUDFEngine(BaseEngine):
         elif address:
             self.client = Client(address=address)
 
-        elif session and session!="local":
+        elif session and session != "local":
             self.client = session
 
         else:
@@ -86,14 +85,14 @@ class DaskCUDFEngine(BaseEngine):
                 n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
 
                 if n_workers > n_gpus:
-                    logger.print(f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
+                    logger.print(
+                        f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
                     n_workers = n_gpus
                     # n_gpus = 1
                 cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
-                                        memory_limit=memory_limit)
+                                           memory_limit=memory_limit)
                 self.client = Client(cluster, *args, **kwargs)
             use_remote = False
-
 
         if use_remote:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
@@ -103,12 +102,10 @@ class DaskCUDFEngine(BaseEngine):
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
-
     def dataframe(self, cdf, n_partitions=1, *args, **kwargs):
         import dask_cudf
         from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
         return DaskCUDFDataFrame(dask_cudf.from_cudf(cdf, npartitions=n_partitions, *args, **kwargs))
-
 
     def remote_run(self, callback, *args, **kwargs):
         if not getattr(self, "remote"):
@@ -132,10 +129,8 @@ class DaskCUDFEngine(BaseEngine):
                     return RemoteDummyVariable(self, result.get("dummy"))
         return result
 
-
     def remote_submit(self, callback, *args, **kwargs):
         if not getattr(self, "remote"):
             raise
 
         return self.remote.submit(callback, *args, **kwargs)
-

@@ -22,8 +22,8 @@ class DaskFunctions(Functions):
 
         return wrapper
 
-    def _to_float(self, value):
-        return value.map(to_float)
+    def _to_float(self, series):
+        return series.map(to_float)
 
     def to_float(self, series):
         return to_float(series)
