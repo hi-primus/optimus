@@ -52,7 +52,12 @@ class BaseDataFrame(ABC):
         return self.cols.select(item)
 
     def __setitem__(self, key, value):
-        return self.cols.assign({key: value})
+        df = self.cols.assign({key: value})
+        self.data = df.data
+        self.buffer = df.buffer
+        self.updated = df.updated
+        self.root = df.root
+        self.meta = df.meta
 
     def new(self, df, meta=None):
         new_df = self.__class__(df)
