@@ -1,7 +1,7 @@
 import dask
 from dask.distributed import Client, get_client
 
-from optimus.engines.base.create import Create
+from optimus.engines.dask_cudf.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
@@ -32,11 +32,10 @@ class DaskCUDFEngine(BaseEngine):
         """
 
         self.engine = Engine.DASK_CUDF.value
-        self.create = Create(self)
-        self.load = Load(self)
+
         self.verbose(verbose)
 
-        use_remote = kwargs.get("use_remote", True)
+        use_remote = kwargs.get("use_remote", coiled_token is not None)
 
         if coiled_token:
             import coiled
@@ -96,19 +95,36 @@ class DaskCUDFEngine(BaseEngine):
 
         if use_remote:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
-            self.load = RemoteDummyVariable(self, "_load")
-            self.create = RemoteDummyVariable(self, "_create")
+
+        else:
+            self.remote = False
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
 
+    @property
+    def create(self):
+        if self.remote:
+            return RemoteDummyVariable(self, "_create")
+
+        else:
+            return Create(self)
+
+    @property
+    def load(self):
+        if self.remote:
+            return RemoteDummyVariable(self, "_load")
+
+        else:
+            return Load(self)
+            
     def dataframe(self, cdf, n_partitions=1, *args, **kwargs):
         import dask_cudf
         from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
         return DaskCUDFDataFrame(dask_cudf.from_cudf(cdf, npartitions=n_partitions, *args, **kwargs))
 
     def remote_run(self, callback, *args, **kwargs):
-        if not getattr(self, "remote"):
+        if not self.remote:
             raise
 
         if kwargs.get("client_timeout"):
@@ -130,7 +146,7 @@ class DaskCUDFEngine(BaseEngine):
         return result
 
     def remote_submit(self, callback, *args, **kwargs):
-        if not getattr(self, "remote"):
+        if not self.remote:
             raise
 
         return self.remote.submit(callback, *args, **kwargs)
