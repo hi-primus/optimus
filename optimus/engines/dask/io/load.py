@@ -60,7 +60,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
-            na_filter=False, null_value=None, storage_options=None, conn=None, *args, **kwargs):
+            na_filter=False, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -263,7 +263,7 @@ class Load(BaseLoad):
 
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
 
-        df = dd.from_pandas(pdf, npartitions=n_partitions)
+        df = dd.from_pandas(pdf, npartitions=1)
         df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
