@@ -32,8 +32,7 @@ class DaskCUDFEngine(BaseEngine):
         """
 
         self.engine = Engine.DASK_CUDF.value
-        self.create = Create(self)
-        self.load = Load(self)
+
         self.verbose(verbose)
 
         use_remote = kwargs.get("use_remote", True)
@@ -96,11 +95,20 @@ class DaskCUDFEngine(BaseEngine):
 
         if use_remote:
             self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
-            self.load = RemoteDummyVariable(self, "_load")
             self.create = RemoteDummyVariable(self, "_create")
+            self.load = RemoteDummyVariable(self, "_load")
+
+        else:
+            self.remote = False
+            self.create = Create(self)
+            self.load = Load(self)
 
         Profiler.instance = Profiler()
         self.profiler = Profiler.instance
+
+    @property
+    def create(self):
+        return Create(self)
 
     def dataframe(self, cdf, n_partitions=1, *args, **kwargs):
         import dask_cudf
