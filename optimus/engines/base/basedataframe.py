@@ -79,7 +79,6 @@ class BaseDataFrame(ABC):
 
         if isinstance(df2, (BaseDataFrame,)):
             col2 = df2.cols.names(0)[0]
-            # print("aaa", df2)
             df2 = df2.cols.cast(col2, dtype).data[col2]
 
         return self.new(opb(df1, df2).to_frame())
@@ -728,4 +727,3 @@ class BaseDataFrame(ABC):
             clusters = n_gram_fingerprint_cluster(self, columns)
 
         return clusters
-        
