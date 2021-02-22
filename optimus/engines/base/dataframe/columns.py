@@ -40,30 +40,6 @@ class DataFrameBaseColumns(BaseColumns):
     def scatter(columns, buckets=10):
         pass
 
-    def set(self, output_cols=None, where=None, value=None, default=None):
-
-        df = self.root.data
-
-        columns, vfunc = set_function_parser(df, value, where, default)
-        # if df.cols.dtypes(input_col) == "category":
-        #     try:
-        #         # Handle error if the category already exist
-        #         df[input_col] = df[input_col].cat.add_categories(val_to_list(value))
-        #     except ValueError:
-        #         pass
-
-        output_cols = one_list_to_val(output_cols)
-
-        if columns:
-            final_value = set_func(self.root[columns], value=value, where=where, output_col=output_cols, parser=vfunc,
-                                   default=default)
-        else:
-            final_value = set_func(self.root, value=value, where=where, output_col=output_cols, parser=vfunc,
-                                   default=default)
-
-        kw_columns = {output_cols: final_value}
-        return self.root.new(df.assign(**kw_columns))
-
     @staticmethod
     def standard_scaler(self, input_cols, output_cols=None):
         pass

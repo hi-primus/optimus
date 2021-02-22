@@ -16,13 +16,13 @@ from multipledispatch import dispatch
 from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
-    validate_columns_names
+    validate_columns_names, name_col
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import collect_as_list, set_function_parser, set_func
+from optimus.helpers.functions import collect_as_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, is_int, \
+from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, is_int, \
     is_tuple, US_STATES_NAMES, regex_full_url
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -224,38 +224,50 @@ class BaseColumns(ABC):
 
         return df
 
-    def set(self, output_cols=None, value=None, where=None, default=None):
+    def set(self, col_name, value=None, where=None, default=None):
         """
         Set a column value using a number, string or a expression.
-        :param where:
-        :param value:
-        :param output_cols:
-        :param default:
+        :param where: mask
+        :param value: expression, number or string
+        :param col_name:
+        :param default: value
         :return:
         """
         df = self.root
         dfd = df.data
 
-        columns, vfunc = set_function_parser(df, value, where, default)
-        # if dfd.cols.dtypes(input_col) == "category":
-        #     try:
-        #         # Handle error if the category already exist
-        #         dfd[input_vcol] = dfd[input_col].cat.add_categories(val_to_list(value))
-        #     except ValueError:
-        #         pass
+        col_name = one_list_to_val(col_name)
 
-        output_cols = one_list_to_val(output_cols)
+        temp_col_name = name_col(col_name,"SET")
 
-        if columns:
-            final_value = dfd[columns]
+        dfd[temp_col_name] = default
+        default = dfd[temp_col_name]
+        del dfd[temp_col_name]
+        
+        if is_str(where):
+            if where in df.cols.names():
+                where = df[where]
+            else:
+                where = pd.eval(where)
+
+        if where:
+            where = where.data[where.cols.names()[0]]
+            if isinstance(value, self.root.__class__):
+                value = value.data[value.cols.names()[0]]
+            else:
+                # TO-DO: Create the value series
+                dfd[temp_col_name] = value
+                value = dfd[temp_col_name]
+                del dfd[temp_col_name]
+
+            value = default.mask(where, value)
+
         else:
-            final_value = dfd
-        final_value = final_value.map_partitions(set_func, value=value, where=where, output_col=output_cols,
-                                                 parser=vfunc, default=default, meta=object)
+            if isinstance(value, self.root.__class__):
+               value = value.data[value.cols.names()[0]]
 
-        meta = Meta.action(df.meta, Actions.SET.value, output_cols)
-        kw_columns = {output_cols: final_value}
-        return self.root.new(dfd.assign(**kw_columns), meta=meta)
+        # meta = Meta.action(df.meta, Actions.SET.value, col_name)
+        return self.root.new(df.data).cols.assign({col_name: value})
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None):
@@ -289,10 +301,7 @@ class BaseColumns(ABC):
                     dfd = dfd.rename(columns={old_col_name: new_col_name})
                     meta = Meta.rename(meta, {old_col_name: new_col_name})
 
-        df = self.root.new(dfd, meta=meta)
-        df.meta = meta
-
-        return self.root.new(df.data, meta=meta)
+        return self.root.new(dfd, meta=meta)
 
     @dispatch(list)
     def rename(self, columns_old_new=None):
@@ -477,8 +486,9 @@ class BaseColumns(ABC):
                 kw_columns[key] = kw_columns[key].cols.rename([(name, key)])
                 kw_columns[key] = kw_columns[key].data[key]
 
-        dfd = self.root.data
-        return self.root.new(dfd.assign(**kw_columns))
+        meta = Meta.action(self.root.meta, Actions.SET.value, list(kw_columns.keys()))
+            
+        return self.root.new(self.root._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
     def pattern_counts(self, input_cols, n=10, mode=0, flush=False):

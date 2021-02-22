@@ -7,7 +7,6 @@ from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import set_function_parser, set_func
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import profiler_dtype_func, is_list_of_tuples
 from optimus.engines.base.meta import Meta
@@ -308,37 +307,3 @@ class Cols(DataFrameBaseColumns):
         df.meta = Meta.preserve(df.meta, dfd, Actions.UNNEST.value, final_columns)
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
-
-    def set(self, output_cols=None, value=None, where=None, default=None):
-        """
-        Set a column value using a number, string or a expression.
-        :param where:
-        :param value:
-        :param output_cols:
-        :param default:
-        :return:
-        """
-        df = self.root
-        if output_cols is None:
-            RaiseIt.value_error(output_cols, ["string"])
-
-        columns, vfunc = set_function_parser(df, value, where, default)
-        # if dfd.cols.dtypes(input_col) == "category":
-        #     try:
-        #         # Handle error if the category already exist
-        #         dfd[input_vcol] = dfd[input_col].cat.add_categories(val_to_list(value))
-        #     except ValueError:
-        #         pass
-
-        output_cols = one_list_to_val(output_cols)
-        if columns:
-            final_value = df[columns]
-        else:
-            final_value = df
-        final_value = set_func(final_value, value=value, where=where, output_col=output_cols,
-                               parser=vfunc, default=default)
-
-        meta = Meta.preserve(df.meta, Actions.SET.value, output_cols)
-        kw_columns = {output_cols: final_value}
-
-        return self.root.new(df.data.assign(**kw_columns), meta=meta)

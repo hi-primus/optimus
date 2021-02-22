@@ -497,106 +497,13 @@ def path_is_local(path):
     return True
 
 
-def set_func(df, value, where, output_col, parser, default=None):
-    """
-    Core implementation of the set function
-    :param df:
-    :param value:
-    :param where:
-    :param output_col:
-    :param parser:
-    :param default:
-    :return:
-    """
-    col_names = list(filter(lambda x: x != "__match__", df.cols.names()))
-
-    profiler_dtype_to_python = {"decimal": "float", "int": "int", "string": "str", "datetime": "datetime",
-                                "bool": "bool", "zip_code": "str"}
-
-    df = df.cols.cast(col_names, profiler_dtype_to_python[parser])
-    F = df.functions
-    try:
-        if where is None:
-            return eval(str(value))
-        else:
-            # Reference https://stackoverflow.com/questions/33769860/pandas-apply-but-only-for-rows-where-a-condition-is-met
-            mask = where.get_series()
-            if (output_col not in df.cols.names()) and (default is not None):
-                df[output_col] = df[default]
-
-            df.data.loc[mask, output_col] = value
-            return df[output_col].data
-
-    except (ValueError, TypeError) as e:
-        logger.print(e)
-        # raise
-        return np.nan
-
-
-def set_function_parser(df, value, where, default=None):
-    """
-    Infer the data type that must be used to make result calculation using the set function
-    :param df:
-    :param value:
-    :param where:
-    :return:
-    """
-    value = str(value)
-
-    def prepare_columns(cols):
-        """
-        Extract the columns names from the value and where params
-        :param cols:
-        :return:
-        """
-        if cols is not None:
-            r = val_to_list([f_col[1:len(f_col) - 1] for f_col in
-                             re.findall(r"(df\['[A-Za-z0-9_ -]*'\])", cols.replace("\"", "'"))])
-            result = [re.findall(r"'([^']*)'", i)[0] for i in r]
-
-        else:
-            result = []
-        return result
-
-    if default is None:
-        default = []
-
-    # if default is in
-    columns = prepare_columns(value) 
-    
-    if is_str(where) or is_list_of_str(where):
-        columns += prepare_columns(where) 
-    columns += val_to_list(default)
-    
-    columns = list(set(columns))
-    
-    if columns:
-        first_columns = columns[0]
-        column_dtype = df.cols.infer_profiler_dtypes(first_columns)[first_columns]["dtype"]
-
-    else:
-        if fastnumbers.fast_int(value):
-            column_dtype = "int"
-        elif fastnumbers.fast_float(value):
-            column_dtype = "decimal"
-        else:
-            column_dtype = "string"
-
-    # if column_dtype in PROFILER_NUMERIC_DTYPES:
-    #     func = lambda x: fastnumbers.fast_float(x) if x is not None else None
-    # elif column_dtype in PROFILER_STRING_DTYPES or column_dtype is None:
-    #     func = lambda x: str(x) if not pd.isnull(x) else None
-
-    return columns, column_dtype
-
-
-# value = "dd/MM/yyyy hh:mm:ss-sss MA"
 def match_date(value):
     """
     Returns Create a regex from a string with a date format
     :param value:
     :return:
     """
+    # value = "dd/MM/yyyy hh:mm:ss-sss MA"
     formats = ["d", "dd", "M", "MM", "yy", "yyyy", "h", "hh", "H", "HH", "kk", "k", "m", "mm", "s", "ss", "sss", "/",
                ":", "-", " ", "+", "|", "mi"]
     formats.sort(key=len, reverse=True)
