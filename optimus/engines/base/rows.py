@@ -206,9 +206,9 @@ class BaseRows(ABC):
         :return:
         """
         df = self.root
-        subset = parse_columns(df.data, subset)
-        df.meta = Meta.preserve(df.meta, df, Actions.DROP_ROW.value, df.cols.names())
-        return self.root.new(df.dropna(how=how, subset=subset))
+        subset = parse_columns(df, subset)
+        meta = Meta.preserve(df.meta, df, Actions.DROP_ROW.value, df.cols.names())
+        return self.root.new(df.data.dropna(how=how, subset=subset), meta=meta)
 
     @staticmethod
     @abstractmethod
