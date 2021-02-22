@@ -187,6 +187,7 @@ class BaseColumns(ABC):
 
         if mode == "whole":
             dfd = func(dfd)
+            df = self.root.new(dfd, meta=meta)
         else:
             for input_col, output_col in columns:
 
@@ -1481,8 +1482,8 @@ class BaseColumns(ABC):
         """
         df = self.root
         columns = parse_columns(df, columns)
-        expr = reduce(operator, [df[col_name].to_float().fillna(0) for col_name in columns])
-        return df.assign(**{output_col: expr})
+        expr = reduce(operator, [df[col_name].cols.fill_na("*", 0).cols.to_float() for col_name in columns])
+        return df.cols.assign({output_col: expr})
 
     def add(self, columns, output_col="sum"):
         """
