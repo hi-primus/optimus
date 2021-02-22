@@ -249,7 +249,7 @@ class BaseColumns(ABC):
             if where in df.cols.names():
                 where = df[where]
             else:
-                where = pd.eval(where)
+                where = eval(where)
 
         if where:
             where = where.data[where.cols.names()[0]]

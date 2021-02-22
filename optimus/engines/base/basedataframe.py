@@ -67,7 +67,7 @@ class BaseDataFrame(ABC):
             new_df.meta = meta
         return new_df
 
-    def operation(self, df1, df2, opb, dtype):
+    def operation(self, df1, df2, opb, dtype=None):
         """
         Helper to process binary operations
         :param df1: Left
@@ -77,11 +77,17 @@ class BaseDataFrame(ABC):
         """
         if isinstance(df1, (BaseDataFrame,)):
             col1 = df1.cols.names(0)[0]
-            df1 = df1.cols.cast(col1, dtype).data[col1]
+            if dtype:
+                df1 = df1.cols.cast(col1, dtype).data[col1]
+            else:
+                df1 = df1.data[col1]
 
         if isinstance(df2, (BaseDataFrame,)):
             col2 = df2.cols.names(0)[0]
-            df2 = df2.cols.cast(col2, dtype).data[col2]
+            if dtype:
+                df2 = df2.cols.cast(col2, dtype).data[col2]
+            else:
+                df2 = df2.data[col2]
 
         return self.new(opb(df1, df2).to_frame())
 
@@ -122,7 +128,7 @@ class BaseDataFrame(ABC):
         return self.operation(self, df2, operator.pow, "float")
 
     def __eq__(self, df2):
-        return self.operation(self, df2, operator.eq, "float")
+        return self.operation(self, df2, operator.eq)
 
     def __gt__(self, df2):
         return self.operation(self, df2, operator.gt, "float")
