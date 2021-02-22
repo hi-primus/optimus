@@ -61,8 +61,10 @@ class Mask:
         mask = self.root.data[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
         return self.root.new(mask.to_frame())
 
-    def values_in(self):
-        pass
+    def values_in(self, col_name, values):
+        values = val_to_list(values)
+        mask = self.root.data[col_name].isin(values)
+        return self.root.new(mask.to_frame())
 
     def pattern(self):
         pass
