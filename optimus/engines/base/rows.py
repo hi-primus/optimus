@@ -104,8 +104,25 @@ class BaseRows(ABC):
         Find rows and appends resulting mask to the dataset
         :param where: Mask, expression or name of the column to be taken as mask
         :param output_col:
-        :param expr: Expression used (replaces where). For Ex: (df.A > 3) & (df.A <= 1000)
         :return: Optimus Dataframe
+        """
+
+        df = self.root
+        dfd = self.root.data
+
+        if is_str(where):
+            if where in df.cols.names():
+                where = df[where]
+            else:
+                where = pd.eval(where)
+
+        return df.cols.assign({output_col: where})
+
+    def select(self, where):
+        """
+        :param where: Mask, expression or name of the column to be taken as mask
+        :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000)
+        :return:
         """
 
         df = self.root
@@ -116,25 +133,6 @@ class BaseRows(ABC):
                 where = df[where]
             else:
                 where = pd.eval(where)
-                
-        dfd.assign({output_col: where.data[where.cols.names()[0]]})
-
-        return self.root.new(dfd)
-
-    def select(self, where, expr=None):
-        """
-        :param where: Mask or name of the column to be taken as mask
-        :param expr: Expression used, For Ex: (df.A > 3) & (df.A <= 1000)
-        :return:
-        """
-
-        df = self.root
-        dfd = df.data
-
-        if expr:
-            where = pd.eval(expr)
-        elif is_str(where):
-            where = df[where]
         # dfd = dfd[where]
         dfd = dfd[where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
@@ -169,20 +167,20 @@ class BaseRows(ABC):
     def sort(input_cols):
         pass
 
-    def drop(self, where=None, expr=None):
+    def drop(self, where):
         """
         Drop rows depending on a mask or an expression
-        :param where: Mask or name of the column to be taken as mask
-        :param expr: Expression used (replaces where). For Ex: (df.A > 3) & (df.A <= 1000)
+        :param where: Mask, expression or name of the column to be taken as mask
         :return: Optimus Dataframe
         """
         df = self.root
         dfd = df.data
 
-        if expr:
-            where = pd.eval(expr)
-        elif is_str(where):
-            where = df[where]
+        if is_str(where):
+            if where in df.cols.names():
+                where = df[where]
+            else:
+                where = pd.eval(where)
         # dfd = dfd[where]
         dfd = dfd[~where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
