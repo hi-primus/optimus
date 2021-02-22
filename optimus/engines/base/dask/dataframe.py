@@ -14,11 +14,17 @@ class DaskBaseDataFrame(BaseDataFrame):
         super().__init__(root, data)
 
     def _assign(self, kw_columns):
+
+        dfd = self.root.data
+
+        if not dfd.known_divisions:
+            dfd = dfd.reset_index().set_index('index')
+
         for key in kw_columns:
             if not is_one_element(kw_columns[key]) and not kw_columns[key].known_divisions:
-                kw_columns[key] = kw_columns[key].reset_index().set_index('index')
-        
-        return self.root.data.assign(**kw_columns)
+                kw_columns[key] = kw_columns[key].reset_index().set_index('index')[key]
+
+        return dfd.assign(**kw_columns)
 
     def execute(self):
         df = self.data
