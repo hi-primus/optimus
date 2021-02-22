@@ -71,7 +71,7 @@ class BaseRows(ABC):
         :return:
         """
         dfd = self.root.data
-        return self.root.new(dfd[self.root.mask.miasmatch(input_col, dtype)])
+        return self.root.new(dfd[self.root.mask.mismatch(input_col, dtype)])
 
     def match(self, col_name, dtype):
         """
