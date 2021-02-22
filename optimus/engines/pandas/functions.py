@@ -30,13 +30,13 @@ class PandasFunctions(Functions):
         return to_string(series)
 
     def count_zeros(self, series, *args):
-        return int((series.to_float().values == 0).sum())
+        return int((self._to_float(series).values == 0).sum())
 
     def kurtosis(self, series):
-        return series.kurtosis(self._to_float(series))
+        return self._to_float(series).kurtosis()
 
     def skew(self, series):
-        return series.skew(self._to_float(series))
+        return self._to_float(series).skew()
 
     def exp(self, series):
         return np.exp(self._to_float(series))
