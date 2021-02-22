@@ -6,12 +6,19 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 
+from optimus.infer import is_one_element
 
 class DaskBaseDataFrame(BaseDataFrame):
 
     def __init__(self, root, data):
         super().__init__(root, data)
 
+    def _assign(self, kw_columns):
+        for key in kw_columns:
+            if not is_one_element(kw_columns[key]) and not kw_columns[key].known_divisions:
+                kw_columns[key] = kw_columns[key].reset_index().set_index('index')
+        
+        return self.root.data.assign(**kw_columns)
 
     def execute(self):
         df = self.data

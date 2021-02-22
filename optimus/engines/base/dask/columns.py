@@ -213,7 +213,7 @@ class DaskBaseColumns(BaseColumns):
         else:
             kw_columns = {output_col: _nest_array}
 
-        dfd = df.data.assign(**kw_columns)
+        dfd = df.cols.assign(kw_columns).data
 
         if output_col not in output_ordered_columns:
             col_index = output_ordered_columns.index(input_cols[-1]) + 1

@@ -163,6 +163,10 @@ class BaseDataFrame(ABC):
         # With this we expect to abstract the behavior and just use compute() a value from operation
         pass
 
+    @staticmethod
+    def _assign(series):
+        pass
+
     def to_json(self, columns="*"):
         """
         Return a json from a Dataframe

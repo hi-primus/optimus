@@ -95,9 +95,8 @@ class BaseColumns(ABC):
         for input_col, output_col in zip(input_cols, output_cols):
             kw_columns[output_col] = dfd[input_col]
             meta = meta.copy({input_col: output_col})
-        dfd = dfd.assign(**kw_columns)
 
-        df = self.root.new(dfd, meta=meta)
+        df = self.root.new(dfd, meta=meta).cols.assign(kw_columns)
 
         return df.cols.select(output_ordered_columns)
 
@@ -201,7 +200,6 @@ class BaseColumns(ABC):
 
                     kw_columns[output_col] = from_delayed(delayed_parts)
 
-
                 elif mode == "map":
                     kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
 
@@ -216,11 +214,12 @@ class BaseColumns(ABC):
 
             if set_index is True:
                 dfd = dfd.reset_index()
+            df = self.root.new(dfd, meta=meta)
             if kw_columns:
-                dfd = dfd.assign(**kw_columns)
+                df = df.cols.assign(kw_columns)
 
         # Dataframe to Optimus dataframe
-        df = self.root.new(dfd, meta=meta)
+        
         df = df.cols.select(output_ordered_columns)
 
         return df

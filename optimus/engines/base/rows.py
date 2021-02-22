@@ -97,7 +97,7 @@ class BaseRows(ABC):
             result = func(dfd, *args)
             kw_columns = {output_col: result}
 
-        return self.root.new(dfd.assign(**kw_columns))
+        return df.cols.assign(kw_columns)
 
     def find(self, where, output_col):
         """

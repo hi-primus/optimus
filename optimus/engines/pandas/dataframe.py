@@ -9,6 +9,10 @@ class PandasDataFrame(BaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
+    
+    def _assign(self, kw_columns):
+        return self.root.data.assign(**kw_columns)
+
     @property
     def rows(self):
         from optimus.engines.pandas.rows import Rows
