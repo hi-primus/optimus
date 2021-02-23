@@ -194,12 +194,6 @@ class Ext(BaseDataFrame):
         print("Dask not support custom partitioner")
         raise NotImplementedError
 
-    def show(self, n=10):
-        """
-        :return:
-        """
-        return self.head(n=n)
-
     @staticmethod
     def debug():
         """
@@ -207,15 +201,6 @@ class Ext(BaseDataFrame):
         :return:
         """
         raise NotImplementedError
-
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.data[columns].head(n)
 
     @staticmethod
     def create_id(column="id"):
@@ -246,7 +231,3 @@ class Ext(BaseDataFrame):
 
     def to_delayed(self):
         return [self.data]
-
-    def repartition(self, n=None, *args, **kwargs):
-        df = self.data
-        return self.root.new(df, meta=self.root.meta)

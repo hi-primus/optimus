@@ -452,9 +452,8 @@ class BaseDataFrame(ABC):
         raise NotImplementedError
 
     def repartition(self, n=None, *args, **kwargs):
-        dfd = self.data
-        dfd = dfd.repartition(npartitions=n, *args, **kwargs)
-        return self.new(dfd, meta=self.meta)
+        df = self.data
+        return self.root.new(df, meta=self.root.meta)
 
     def table_image(self, path, limit=10):
         """
@@ -577,20 +576,26 @@ class BaseDataFrame(ABC):
 
         return f"{df_schema}, {df_data}"
 
-    @staticmethod
-    @abstractmethod
-    def show(n=10):
-        pass
+    def show(self, n=10):
+        """
+        :return:
+        """
+        return self.head(n=n)
 
     @staticmethod
     @abstractmethod
     def debug():
         pass
 
-    @staticmethod
-    @abstractmethod
-    def head(columns="*", n=10):
-        pass
+    def head(self, columns="*", n=10):
+        """
+
+        :return:
+        """
+        df = self.root
+        columns = parse_columns(df, columns)
+        return df.data[columns].head(n)
+
 
     def reset(self):
         # df = self.df
