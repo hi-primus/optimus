@@ -186,7 +186,7 @@ class BaseColumns(ABC):
         meta = df.meta
 
         if mode == "whole":
-            dfd = func(dfd)
+            dfd = func(dfd, *args)
             df = self.root.new(dfd, meta=meta)
         else:
             for input_col, output_col in columns:
