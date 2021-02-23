@@ -1,10 +1,11 @@
 import dask
+import fastnumbers
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, impute
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
-from optimus.infer import Infer, is_dict
+from optimus.infer import Infer
 from optimus.profiler.functions import fill_missing_var_types
 
 
@@ -64,11 +65,15 @@ class Cols(DaskBaseColumns):
         import cupy as cp
 
         def _bins_col(_columns, _min, _max):
-            return {col_name: cp.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets) for
+            # In some cases a string can be passed as min or max values. Try to convert them to numeric if not nan
+            return {col_name: cp.linspace(fastnumbers.fast_float(_min["min"][col_name], default=cp.nan),
+                                          fastnumbers.fast_float(_max["max"][col_name], default=cp.nan),
+                                          num=buckets) for
                     col_name in _columns}
 
         _min = df.cols.min(columns, compute=False, tidy=False)
         _max = df.cols.max(columns, compute=False, tidy=False)
+
         _bins = _bins_col(columns, _min, _max)
 
         def chunk(pdf, _bins):
@@ -78,7 +83,7 @@ class Cols(DaskBaseColumns):
         reductions = []
 
         @dask.delayed
-        def format(_count, _bins, _col_name):
+        def _format_dict(_col_name, _count, _bins):
             result = {}
             result[_col_name] = [
                 {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
@@ -86,10 +91,10 @@ class Cols(DaskBaseColumns):
             return result
 
         for col_name in columns:
-            r = df.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
-                                                                     chunk_kwargs={
-                                                                         '_bins': _bins[col_name]})
-            reductions.append(format(r, _bins[col_name], col_name))
+            count = df.cols.to_float(col_name).data[col_name].reduction(chunk, aggregate=lambda x: x.sum(),
+                                                                        chunk_kwargs={
+                                                                            '_bins': _bins[col_name]})
+            reductions.append(_format_dict(col_name, count, _bins[col_name]))
 
         d = dask.delayed(reductions)
 
@@ -97,10 +102,10 @@ class Cols(DaskBaseColumns):
             result = d.compute()
         else:
             result = d
-        
+
         _res = {}
 
         for res in result:
             _res.update(res)
-            
+
         return {"hist": _res}
