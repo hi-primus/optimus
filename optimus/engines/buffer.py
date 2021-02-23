@@ -54,4 +54,4 @@ def _buffer_windows(df, columns=None, lower_bound=None, upper_bound=None, n=BUFF
         # RaiseIt.value_error(df_length, str(df_length - 1))
 
     input_columns = parse_columns(df, columns)
-    return PandasDataFrame(df_buffer.data[input_columns][lower_bound: upper_bound])
+    return PandasDataFrame(df_buffer.data[input_columns][lower_bound: upper_bound].to_pandas())
