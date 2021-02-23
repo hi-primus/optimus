@@ -9,7 +9,14 @@ from optimus.helpers.constants import BUFFER_SIZE
 def _set_buffer(df, columns="*", n=BUFFER_SIZE):
     input_cols = parse_columns(df, columns)
 
-    df.buffer = PandasDataFrame(df.cols.select(input_cols).rows.limit(n).to_pandas())
+    df_length = df.rows.count()
+
+    if n > df_length:
+        n = df_length
+    
+    partitions = partitions = df.partitions()
+
+    df.buffer = PandasDataFrame(df.cols.select(input_cols).data.head(n, npartitions=partitions))
     Meta.set(df.meta, "buffer_time", int(time.time()))
 
 
