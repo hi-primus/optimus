@@ -14,9 +14,7 @@ def _set_buffer(df, columns="*", n=BUFFER_SIZE):
     if n > df_length:
         n = df_length
     
-    partitions = partitions = df.partitions()
-
-    df.buffer = PandasDataFrame(df.cols.select(input_cols).data.head(n, npartitions=partitions))
+    df.buffer = PandasDataFrame(df.cols.select(input_cols).head(n=n))
     Meta.set(df.meta, "buffer_time", int(time.time()))
 
 
