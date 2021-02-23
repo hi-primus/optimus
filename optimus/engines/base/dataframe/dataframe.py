@@ -194,11 +194,11 @@ class Ext(BaseDataFrame):
         print("Dask not support custom partitioner")
         raise NotImplementedError
 
-    def show(self):
+    def show(self, n=10):
         """
         :return:
         """
-        return self.data.head()
+        return self.head(n=n)
 
     @staticmethod
     def debug():

@@ -3,6 +3,7 @@ from optimus.engines.dask_cudf.io.save import Save
 from optimus.engines.buffer import _set_buffer, _buffer_windows
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE
 
 
@@ -45,6 +46,15 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
         return _buffer_windows(self, columns=columns, lower_bound=lower_bound, upper_bound=upper_bound, n=n)
+
+    def head(self, columns="*", n=10):
+        """
+
+        :return:
+        """
+        df = self.root
+        columns = parse_columns(df, columns)
+        return df.data[columns].head(n, npartitions=-1).to_pandas()
 
     @staticmethod
     def pivot(index, column, values):

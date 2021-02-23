@@ -30,6 +30,15 @@ class CUDFDataFrame(BaseDataFrame):
         from optimus.engines.cudf.constants import constants
         return constants(self)
 
+    def head(self, columns="*", n=10):
+        """
+
+        :return:
+        """
+        df = self.root
+        columns = parse_columns(df, columns)
+        return df.data[columns].head(n).to_pandas()
+
     def to_pandas(self):
         return self.data.to_pandas()
 

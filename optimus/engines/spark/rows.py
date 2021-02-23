@@ -278,7 +278,6 @@ class Rows(DaskBaseRows):
 
         :return:
         """
-        print("Asdf")
         df = self.root
         columns = parse_columns(df, columns)
         return df.data[columns].limit(n)

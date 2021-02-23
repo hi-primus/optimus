@@ -579,7 +579,7 @@ class BaseDataFrame(ABC):
 
     @staticmethod
     @abstractmethod
-    def show():
+    def show(n=10):
         pass
 
     @staticmethod
@@ -587,14 +587,10 @@ class BaseDataFrame(ABC):
     def debug():
         pass
 
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self
-        columns = parse_columns(df, columns)
-        return df.data[columns].head(n)
+    @staticmethod
+    @abstractmethod
+    def head(columns="*", n=10):
+        pass
 
     def reset(self):
         # df = self.df

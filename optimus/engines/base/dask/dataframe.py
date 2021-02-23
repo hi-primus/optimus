@@ -145,14 +145,6 @@ class DaskBaseDataFrame(BaseDataFrame):
         print("Dask not support custom partitioner")
         raise NotImplementedError
 
-    def show(self, n):
-        """
-        :return:
-        """
-        df = self
-        partitions = df.partitions()
-        return self.data.head(n, npartitions=-1)
-
     @staticmethod
     def debug():
         """
