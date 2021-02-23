@@ -18,7 +18,7 @@ class Create:
 
         if dict:
             cdf = cudf.DataFrame(dict)
-        else if pdf:
+        elif pdf:
             cdf = cudf.from_pandas(pdf)
 
         df = self.root.dataframe(cdf, n_partitions)

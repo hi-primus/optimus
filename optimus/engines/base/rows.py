@@ -114,7 +114,7 @@ class BaseRows(ABC):
             if where in df.cols.names():
                 where = df[where]
             else:
-                where = pd.eval(where)
+                where = eval(where)
 
         return df.cols.assign({output_col: where})
 
@@ -132,7 +132,7 @@ class BaseRows(ABC):
             if where in df.cols.names():
                 where = df[where]
             else:
-                where = pd.eval(where)
+                where = eval(where)
         # dfd = dfd[where]
         dfd = dfd[where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
@@ -180,7 +180,7 @@ class BaseRows(ABC):
             if where in df.cols.names():
                 where = df[where]
             else:
-                where = pd.eval(where)
+                where = eval(where)
         # dfd = dfd[where]
         dfd = dfd[~where.data[where.cols.names()[0]]]
         meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())

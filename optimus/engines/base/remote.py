@@ -102,10 +102,11 @@ class ClientActor:
 
         self._del_next = []
         
-        if self._vars[name] is None:
-            print(name + " not found")
-        else:
-            self._del_next.append(name)
+        if not name.startswith("_"):
+            if self._vars[name] is None:
+                print(name + " not found")
+            else:
+                self._del_next.append(name)
         
     def set_var(self, name, value):
         self._vars[name] = value
