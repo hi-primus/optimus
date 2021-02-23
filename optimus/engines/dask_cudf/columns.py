@@ -64,7 +64,7 @@ class Cols(DaskBaseColumns):
         import cupy as cp
 
         def _bins_col(_columns, _min, _max):
-            return {col_name: cp.linspace(_min["min"][col_name], _max["max"][col_name], num=buckets) for
+            return {col_name: cp.linspace(_min[col_name], _max[col_name], num=buckets) for
                     col_name in _columns}
 
         _min = df.cols.min(columns, compute=False, tidy=False)
