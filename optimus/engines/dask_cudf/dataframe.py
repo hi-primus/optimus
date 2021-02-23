@@ -1,6 +1,5 @@
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
 from optimus.engines.dask_cudf.io.save import Save
-from optimus.engines.buffer import _set_buffer, _buffer_windows
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
@@ -41,11 +40,11 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
         from optimus.engines.base.dask.constants import constants
         return constants(self)
 
-    def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        return _set_buffer(self, columns=columns, n=n)
+    def _create_buffer_df(self, input_cols, n):
+        return CUDFDataFrame(self.data[input_cols].head(n, npartitions=-1))
 
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
-        return _buffer_windows(self, columns=columns, lower_bound=lower_bound, upper_bound=upper_bound, n=n)
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+        return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas())
 
     def head(self, columns="*", n=10):
         """

@@ -39,6 +39,12 @@ class SparkDataFrame(BaseDataFrame):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions()
 
+    def _create_buffer_df():
+        pass
+
+    def _buffer_window():
+        pass
+
     def cache(self):
         df = self.data
         return self.new(df.cache(), meta=self.meta)

@@ -2,6 +2,7 @@ import dask
 import humanize
 
 from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
@@ -42,6 +43,12 @@ class DaskBaseDataFrame(BaseDataFrame):
         df_schema = df.cols.dtypes()
 
         return f"{df_schema}, {df_data}"
+
+    def _create_buffer_df(df, input_cols, n):
+        return PandasDataFrame(df.cols.select(input_cols).head(n=n))
+
+    def _buffer_window(df, input_cols, lower_bound, upper_bound):
+        return PandasDataFrame(df.get_buffer().data[input_cols][lower_bound: upper_bound])
 
     def sample(self, n=10, random=False):
         """

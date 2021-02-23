@@ -1,5 +1,4 @@
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
-from optimus.engines.buffer import _set_buffer, _buffer_windows
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.engines.dask.io.save import Save
@@ -53,12 +52,6 @@ class DaskDataFrame(DaskBaseDataFrame):
     def mask(self):
         from optimus.engines.base.mask import Mask
         return Mask(self)
-
-    def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        return _set_buffer(self, columns=columns, n=n)
-
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
-        return _buffer_windows(self, columns=columns, lower_bound=lower_bound, upper_bound=upper_bound, n=n)
 
     def to_optimus_pandas(self):
         return PandasDataFrame(self.root.to_pandas())

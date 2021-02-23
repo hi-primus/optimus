@@ -62,8 +62,6 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     else:
         RaiseIt.value_error(engine, Engine.list())
 
-    print(op.engine)
-
     if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
         def switch_to_rmm_allocator():
             import rmm

@@ -42,6 +42,12 @@ class PandasDataFrame(BaseDataFrame):
         from optimus.engines.pandas.constants import constants
         return constants(self)
 
+    def _create_buffer_df(self, input_cols, n):
+        return self
+
+    def _buffer_window():
+        pass
+
     def set_buffer(self, columns="*", n=None):
         return True
 

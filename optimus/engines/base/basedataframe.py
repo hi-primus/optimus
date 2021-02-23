@@ -2,6 +2,7 @@ import operator
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
+import time
 import humanize
 import imgkit
 import jinja2
@@ -14,7 +15,7 @@ from IPython.core.display import display, HTML
 
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
@@ -222,11 +223,70 @@ class BaseDataFrame(ABC):
         # df_.index = df_.index.droplevel(0)
         return df
 
+
     def get_buffer(self):
-        # return self.df.buffer.values.tolist()
-        # df = self.parent
         return self.buffer
 
+    @abstractmethod
+    def _create_buffer_df(self, input_cols, n):
+        pass
+
+    @abstractmethod
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+        pass
+
+    def set_buffer(self, columns="*", n=BUFFER_SIZE):
+        df = self
+        input_cols = parse_columns(self, columns)
+
+        df_length = self.rows.count()
+
+        if n > df_length:
+            n = df_length
+        
+        self.buffer = self._create_buffer_df(input_cols, n)
+        Meta.set(self.meta, "buffer_time", int(time.time()))
+
+    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+
+        df = self
+
+        meta = df.meta
+        buffer_time = Meta.get(meta, "buffer_time")
+        last_action_time = Meta.get(meta, "last_action_time")
+
+        if buffer_time and last_action_time:
+            if buffer_time > last_action_time:
+                df.set_buffer(columns, n)
+
+        df_buffer = df.get_buffer()
+
+        if df_buffer is None:
+            df.set_buffer(columns, n)
+            df_buffer = df.get_buffer()
+
+        df_length = df_buffer.rows.count()
+
+        if lower_bound is None:
+            lower_bound = 0
+
+        if lower_bound < 0:
+            lower_bound = 0
+
+        if upper_bound is None:
+            upper_bound = df_length
+
+        if upper_bound > df_length:
+            upper_bound = df_length
+
+        if lower_bound >= df_length:
+            diff = upper_bound - lower_bound
+            lower_bound = df_length - diff
+            upper_bound = df_length
+
+        input_columns = parse_columns(df, columns)
+        return self._buffer_window(input_columns, lower_bound, upper_bound)
+        
     def buffer_json(self, columns):
         df = self.buffer
         columns = parse_columns(df, columns)
