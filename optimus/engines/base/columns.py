@@ -1428,11 +1428,14 @@ class BaseColumns(ABC):
         """
         df = self.root
 
-        def _fill_na(series, *args):
-            _value = args[0]
-            return series.fillna(_value)
+        columns = prepare_columns(df, input_cols, output_cols)
 
-        return df.cols.apply(input_cols, _fill_na, args=value, output_cols=output_cols, mode="vectorized")
+        kw_columns = {}
+
+        for input_col, output_col in columns:
+            kw_columns[output_col] = df.data[input_col].fillna(value)
+
+        return df.cols.assign(kw_columns)
 
     def is_na(self, input_cols, output_cols=None):
         """
