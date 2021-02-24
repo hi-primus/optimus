@@ -34,7 +34,7 @@ class CUDFDataFrame(BaseDataFrame):
         pass
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_columns][lower_bound: upper_bound].to_pandas())
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas())
 
     def get_buffer(self):
         return self
