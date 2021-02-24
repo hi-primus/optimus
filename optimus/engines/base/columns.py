@@ -225,13 +225,14 @@ class BaseColumns(ABC):
 
         return df
 
-    def set(self, col_name, value=None, where=None, default=None):
+    def set(self, col_name, value=None, where=None, default=None, eval_value=False):
         """
         Set a column value using a number, string or a expression.
         :param where: mask
         :param value: expression, number or string
         :param col_name:
         :param default: value
+        :param value: expression, number or string
         :return:
         """
         df = self.root
@@ -244,6 +245,9 @@ class BaseColumns(ABC):
         dfd[temp_col_name] = default
         default = dfd[temp_col_name]
         del dfd[temp_col_name]
+
+        if eval_value:
+            value = eval(value)
         
         if is_str(where):
             if where in df.cols.names():

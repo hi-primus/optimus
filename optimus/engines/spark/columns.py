@@ -267,7 +267,7 @@ class Cols(BaseColumns):
         return df
 
     # TODO: Maybe we could merge this with apply()
-    def set(self, output_cols=None, value=None, where=None, default=None):
+    def set(self, output_cols=None, value=None, where=None, default=None, eval_value=False):
         """
         Set a column value using a number, string or a expression.
         :param where:
