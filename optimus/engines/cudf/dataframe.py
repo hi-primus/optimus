@@ -30,6 +30,45 @@ class CUDFDataFrame(BaseDataFrame):
         from optimus.engines.cudf.constants import constants
         return constants(self)
 
+    def _create_buffer_df(self, input_cols, n):
+        pass
+
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+        return PandasDataFrame(self.data[input_columns][lower_bound: upper_bound].to_pandas())
+
+    def get_buffer(self):
+        return self
+
+    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=None):
+        # TODO: This is the same method that the one in PandasDataFrame
+        if lower_bound is None:
+            lower_bound = 0
+
+        if lower_bound < 0:
+            lower_bound = 0
+
+        df_length = self.rows.count()
+
+        if upper_bound is None:
+            upper_bound = df_length
+
+        input_columns = parse_columns(self, columns)
+
+        if lower_bound == 0 and upper_bound == df_length:
+            result = self[input_columns]
+        else:
+            if upper_bound > df_length:
+                upper_bound = df_length
+
+            if lower_bound >= df_length:
+                diff = upper_bound - lower_bound
+                lower_bound = df_length - diff
+                upper_bound = df_length
+
+            result = self._buffer_window(input_columns, lower_bound, upper_bound)
+
+        return result
+
     def head(self, columns="*", n=10):
         """
 

@@ -43,13 +43,16 @@ class PandasDataFrame(BaseDataFrame):
         return constants(self)
 
     def _create_buffer_df(self, input_cols, n):
-        return self
-
-    def _buffer_window():
         pass
+
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+        return PandasDataFrame(self.data[input_columns][lower_bound: upper_bound])
 
     def set_buffer(self, columns="*", n=None):
         return True
+
+    def get_buffer(self):
+        return self
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=None):
 
@@ -77,7 +80,7 @@ class PandasDataFrame(BaseDataFrame):
                 lower_bound = df_length - diff
                 upper_bound = df_length
 
-            result = PandasDataFrame(self.data[input_columns][lower_bound: upper_bound])
+            result = self._buffer_window(input_columns, lower_bound, upper_bound)
 
         return result
 
