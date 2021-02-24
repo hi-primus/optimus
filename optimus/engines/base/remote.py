@@ -115,6 +115,8 @@ class ClientActor:
         return self._vars.get(name, None)
 
     def _return(self, value):
+        import cupy as cp
+        import numpy as np
         if isinstance(value, (dict,)):
             for key in value:
                 value[key] = self._return(value[key])
@@ -127,7 +129,7 @@ class ClientActor:
             return tuple(map(self._return, value))
         elif isinstance(value, (PandasDataFrame,)):
             return value.head()
-        elif not isinstance(value, (str, bool, int, float, complex)) and value is not None:
+        elif not isinstance(value, (str, bool, int, float, complex, np.generic, cp.generic)) and value is not None:
             import uuid
             unique_id = str(uuid.uuid4())
             self.set_var(unique_id, value)
