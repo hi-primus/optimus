@@ -1735,8 +1735,7 @@ class BaseColumns(ABC):
         dfd = df.data
 
         result = {}
-        # print(df.cols.count_na(tidy=False))
-        nulls = df.cols.count_na(tidy=True)
+        nulls = df.cols.count_na(tidy=False)
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
@@ -1744,11 +1743,11 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
 
             result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-            result[col_name]["missing"] = int(nulls.get(col_name))
+            result[col_name]["missing"] = int(nulls.get(col_name, 0))
 
             if dtype == ProfilerDataTypes.STRING.value:
-                match = total_rows - nulls.get(col_name)
-                mismatch = nulls[col_name]
+                match = total_rows - nulls.get(col_name, 0)
+                mismatch = nulls.get(col_name, 0)
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 match = dfd[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
