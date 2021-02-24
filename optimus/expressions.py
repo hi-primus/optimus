@@ -672,7 +672,7 @@ l_g.add('INTEGER', r'\d+')
 l_g.ignore('\s+')
 
 
-def parser(text_input, df_name="df"):
+def parse(text_input, df_name="df"):
     """
 
     :param text_input: string to be parsed
