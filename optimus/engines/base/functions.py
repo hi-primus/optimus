@@ -71,7 +71,7 @@ class Functions(ABC):
     @staticmethod
     def count_uniques(series, estimate: bool = True, compute: bool = True):
         # series = self.series
-        return int(series.astype(str).nunique())
+        return series.astype(str).nunique()
 
     @staticmethod
     def unique(series, *args):
