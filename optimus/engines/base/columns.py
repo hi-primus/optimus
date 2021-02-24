@@ -352,12 +352,8 @@ class BaseColumns(ABC):
         result = {}
 
         for col_name in columns:
-            # column_meta = glom(df.meta.get(), f"profile.columns.{col_name}", skip_exc=KeyError)
-            column_meta = df.meta.get(f"profile.columns.{col_name}")
-            if column_meta is None:
-                result[col_name] = None
-            else:
-                result[col_name] = column_meta["profiler_dtype"]
+            column_meta = Meta.get(df.meta, f"profile.columns.{col_name}.stats.profiler_dtype.dtype")
+            result.update({col_name: column_meta})
         return result
 
     def set_profiler_dtypes(self, columns: dict):
