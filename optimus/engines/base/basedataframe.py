@@ -42,12 +42,18 @@ class BaseDataFrame(ABC):
         self.meta = {}
 
     def _repr_html_(self):
-        df = self   
-        return df.table()
+        df = self
+        try:
+            return df.table()
+        except Exception:
+            pass
 
     def __repr__(self):
         df = self
-        return df.ascii()
+        try:
+            return df.ascii()
+        except Exception:
+            pass
 
     def __getitem__(self, item):
         if isinstance(item, slice):
