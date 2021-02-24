@@ -1418,7 +1418,7 @@ class BaseColumns(ABC):
     def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
         pass
 
-    def fill_na(self, input_cols, value=None, output_cols=None):
+    def fill_na(self, input_cols, value=None, output_cols=None, fill_empty=True):
         """
         Replace null data with a specified value
         :param input_cols: '*', list of columns names or a single column name.
@@ -1434,6 +1434,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col in columns:
             kw_columns[output_col] = df.data[input_col].fillna(value)
+            kw_columns[output_col] = kw_columns[output_col].mask(kw_columns[output_col] == "", value)
 
         return df.cols.assign(kw_columns)
 
