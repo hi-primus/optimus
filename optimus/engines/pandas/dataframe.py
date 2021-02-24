@@ -46,7 +46,7 @@ class PandasDataFrame(BaseDataFrame):
         pass
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_columns][lower_bound: upper_bound])
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound])
 
     def set_buffer(self, columns="*", n=None):
         return True
