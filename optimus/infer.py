@@ -77,8 +77,8 @@ def str_to_object(_value):
     # return str_to_data_type(_value, (dict, set))
 
 
-regex_int = r"^\d+$"  # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
-regex_decimal = r"^(\d+\.\d+)|(\d+)$"
+regex_int = r"(^\d+\.[0]+$)|(^\d+$)"  # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
+regex_decimal = r"(^\d+\.\d+$)|(^\d+$)"
 regex_non_int_decimal = r"^(\d+\.\d+)$"
 
 regex_boolean = r"\btrue\b|\bfalse\b"
@@ -543,8 +543,8 @@ class Infer(object):
             _data_type = "null"
         elif isinstance(value, bool):
             _data_type = "boolean"
-        elif profiler_dtype_func("int", True)(
-                value):  # We first check if a number can be parsed as a credit card or zip code
+        elif profiler_dtype_func("int", True)(value): 
+            # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for func in int_funcs:
                 if func[0](str(value)) is True:
@@ -576,15 +576,15 @@ def profiler_dtype_func(dtype, null=False):
 
     def _float(value):
         if null is True:
-            return fastnumbers.isfloat(value, allow_nan=True) is True and fastnumbers.isint(value) is False
+            return fastnumbers.isfloat(value, allow_nan=True)
         else:
-            return fastnumbers.isfloat(value) is True and fastnumbers.isint(value) is False or value != value
+            return fastnumbers.isfloat(value) or value != value
 
     def _int(value):
-        if null is True:
-            return fastnumbers.isint(value)
+        if null:
+            return fastnumbers.isintlike(value)
         else:
-            return fastnumbers.isint(value) or value != value
+            return fastnumbers.isintlike(value) or value != value
 
     if dtype == ProfilerDataTypes.INT.value:
         return _int

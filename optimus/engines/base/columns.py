@@ -1753,6 +1753,9 @@ class BaseColumns(ABC):
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 match = dfd[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
                 mismatch = total_rows - match
+            # elif dtype in [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]:
+            #     TODO: Check matching rows using fastnumbers instead of regex
+            #     match = df.cols.select(col_name).cols.apply(col_name, profiler_dtype_func, args=(dtype,)).cols.frequency()
             else:
                 match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
@@ -1799,7 +1802,7 @@ class BaseColumns(ABC):
 
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized?
-        sample = df.cols.select(columns).rows.limit(total_preview_rows).to_pandas()
+        sample = df.head(columns, total_preview_rows)
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
@@ -1808,11 +1811,13 @@ class BaseColumns(ABC):
 
             dtype = infer_value_counts.index[0]
             pdf_dict = infer_value_counts.to_dict()
+            dtypes = list(pdf_dict.keys())
+            second_dtype = dtypes[1] if len(dtypes) > 1 else None
 
             if dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
-                if ProfilerDataTypes.INT.value in pdf_dict and ProfilerDataTypes.DECIMAL.value in pdf_dict:
+                if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
                     # In case we have integers and decimal values no matter if we have more integer we cast to decimal
-                    r = ProfilerDataTypes.INT.value
+                    r = second_dtype
                 else:
                     r = dtype
             elif infer_value_counts[0] < len(pdf):
