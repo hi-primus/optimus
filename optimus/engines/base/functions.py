@@ -26,18 +26,11 @@ class Functions(ABC):
         pass
 
     # Aggregation
-    # @staticmethod
     def min(self, series):
-        # print(self)
-        # return self.parent.new(series).cols._to_float().data.min()
-        return series.min()
-        # return self._to_float(series).min()
+        return self._to_float(series).min()
 
-    # @staticmethod
     def max(self, series):
-        return series.max()
-        # return self._to_float(series).max()
-        # return series._to_float().max()
+        return self._to_float(series).max()
 
     def mean(self, series):
 
@@ -45,7 +38,6 @@ class Functions(ABC):
 
     def mode(self, series):
         return self._to_float(series).mode().to_dict()
-        # return series._to_float().mode().to_dict(index=False)
 
     def std(self, series):
         return self._to_float(series).std()
