@@ -3,11 +3,17 @@ from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.engines.dask.io.save import Save
 from optimus.helpers.constants import BUFFER_SIZE
+from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
 class DaskDataFrame(DaskBaseDataFrame):
     def __init__(self,  data):
         super().__init__(self, data)
+
+    @staticmethod
+    def _pandas_to_dfd(pdf, npartitions):
+        return pandas_to_dask_dataframe(pdf, npartitions)
+
 
     @staticmethod
     def pivot(index, column, values):

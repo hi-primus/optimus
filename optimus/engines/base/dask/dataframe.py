@@ -1,6 +1,8 @@
 import dask
 import humanize
 
+from abc import abstractmethod
+
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
@@ -24,6 +26,12 @@ class DaskBaseDataFrame(BaseDataFrame):
                     kw_columns[key] = kw_columns[key].reset_index().set_index('index')[key]
 
         return dfd.assign(**kw_columns)
+
+    @staticmethod
+    @abstractmethod
+    def _pandas_to_dfd(pdf, npartitions):
+        pass
+
 
     def execute(self):
         df = self.data

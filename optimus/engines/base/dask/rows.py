@@ -88,11 +88,12 @@ class DaskBaseRows(BaseRows):
         :param count:
         :return:
         """
-        dfd = self.root.data
+        df = self.root
+        dfd = df.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
 
         if count is None:
-            return dfd
+            return df
 
         length_df = len(dfd)
 
@@ -104,9 +105,9 @@ class DaskBaseRows(BaseRows):
             # Param frac can not be greater than 1
             limit = 1 if limit > 1 else limit
 
-        return self.root.new(dfd.sample(frac=limit))
-        # # TODO. This is totally unreliable to use with big data because is going to bring all the data to the client.
-        # return self.parent.new(pandas_to_dask_dataframe(df.head(count)))
+        partitions = df.partitions()
+        return self.root.new(self.root._pandas_to_dfd(df.head("*",count), partitions))
+
 
     def count(self, compute=True) -> int:
         """

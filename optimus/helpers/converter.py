@@ -169,13 +169,13 @@ def cudf_to_pandas(df):
 #     return cudf.from_pandas(df)
 
 
-def pandas_to_dask_dataframe(df, n_partitions=1):
-    return dd.from_pandas(df, npartitions=n_partitions)
+def pandas_to_dask_dataframe(pdf, n_partitions=1):
+    return dd.from_pandas(pdf, npartitions=n_partitions)
 
-#
-# def pandas_to_dask_cudf(df, n_partitions=1):
-#     import dask_cudf
-#     import cudf
-#     # Seems that from_cudf also accepts pandas
-#     df = cudf.DataFrame.from_pandas(df)
-#     return dask_cudf.from_cudf(df, npartitions=n_partitions)
+def pandas_to_dask_cudf_dataframe(pdf, n_partitions=1):
+    import cudf
+    import dask_cudf
+    # Seems that from_cudf also accepts pandas
+    cdf = cudf.DataFrame.from_pandas(pdf)
+    return dask_cudf.from_cudf(cdf, npartitions=n_partitions)
+
