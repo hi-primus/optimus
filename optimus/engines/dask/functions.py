@@ -130,7 +130,7 @@ class DaskFunctions(Functions):
         return pd.to_datetime(series, format=format, errors="coerce")
 
     def remove_special_chars(self, series):
-        return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
+        return self.to_string(series).str.replace('[^A-Za-z0-9]+', '')
 
     def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again
@@ -155,5 +155,5 @@ class DaskFunctions(Functions):
         #     regex = str_regex
         replace_by = val_to_list(replace_by)
         for i, j in zip(search, replace_by):
-            series = series.astype(str).str.replace(i, j)
+            series = self.to_string(series).str.replace(i, j)
         return series
