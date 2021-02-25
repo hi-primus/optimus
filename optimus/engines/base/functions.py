@@ -82,7 +82,7 @@ class Functions(ABC):
 
     @staticmethod
     def count_na(series):
-        return series.isnull().sum()
+        return series.isna().sum()
 
         # return {"count_na": {col_name:  for col_name in columns}}
         # return np.count_nonzero(_df[_serie].isnull().values.ravel())
