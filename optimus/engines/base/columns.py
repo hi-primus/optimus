@@ -1736,19 +1736,20 @@ class BaseColumns(ABC):
         dfd = df.data
 
         result = {}
-        nulls = df.cols.count_na(tidy=False)
+        nulls = df.cols.count_na(tidy=False)['count_na']
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
             dtype = props["dtype"]
 
-            result[col_name] = {"match": 0, "missing": 0, "mismatch": 0}
-            result[col_name]["missing"] = int(nulls.get(col_name, 0))
-
+            missing = nulls.get(col_name, 0)
+            match = total_rows - missing
+            mismatch = 0
+            
             if dtype == ProfilerDataTypes.STRING.value:
-                match = total_rows - nulls.get(col_name, 0)
-                mismatch = nulls.get(col_name, 0)
+                match = total_rows - missing
+                mismatch = 0
 
             elif dtype == ProfilerDataTypes.US_STATE.value:
                 match = dfd[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
@@ -1757,17 +1758,20 @@ class BaseColumns(ABC):
             #     TODO: Check matching rows using fastnumbers instead of regex
             #     match = df.cols.select(col_name).cols.apply(col_name, profiler_dtype_func, args=(dtype,)).cols.frequency()
             else:
-                match = df.cols.select(col_name).cols.to_string().cols.match(col_name,
+
+                freq = df.cols.select(col_name).cols.to_string().cols.match(col_name,
                                                                              Infer.ProfilerDataTypesFunctions[
                                                                                  dtype]).cols.frequency()
 
-                v = {list(j.values())[0]: list(j.values())[1] for j in match["frequency"][col_name]["values"]}
+                values = {list(j.values())[0]: list(j.values())[1] for j in freq["frequency"][col_name]["values"]}
 
-                match = v.get("True")
-                mismatch = v.get("False")
+                match = values.get("True")
+                mismatch = values.get("False", missing) - missing
 
-            result[col_name]["match"] = 0 if match is None else int(match)
-            result[col_name]["mismatch"] = 0 if mismatch is None else int(mismatch)
+            match = 0 if match is None else int(match)
+            mismatch = 0 if mismatch is None else int(mismatch)
+
+            result[col_name] = {"match": match, "missing": missing, "mismatch": mismatch}
 
         for col_name in columns_type.keys():
             result[col_name].update({"profiler_dtype": columns_type[col_name]})
