@@ -20,11 +20,13 @@ from optimus.helpers.columns import parse_columns, check_column_numbers, prepare
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.functions import collect_as_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, is_int, \
-    is_tuple, US_STATES_NAMES, regex_full_url
+from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, \
+    is_int, \
+    is_tuple, US_STATES_NAMES
 from optimus.profiler.constants import MAX_BUCKETS
+
+TOTAL_PREVIEW_ROWS = 30
 
 
 class BaseColumns(ABC):
@@ -220,7 +222,7 @@ class BaseColumns(ABC):
                 df = df.cols.assign(kw_columns)
 
         # Dataframe to Optimus dataframe
-        
+
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -240,7 +242,7 @@ class BaseColumns(ABC):
 
         col_name = one_list_to_val(col_name)
 
-        temp_col_name = name_col(col_name,"SET")
+        temp_col_name = name_col(col_name, "SET")
 
         dfd[temp_col_name] = default
         default = dfd[temp_col_name]
@@ -248,7 +250,7 @@ class BaseColumns(ABC):
 
         if eval_value:
             value = eval(value)
-        
+
         if is_str(where):
             if where in df.cols.names():
                 where = df[where]
@@ -269,7 +271,7 @@ class BaseColumns(ABC):
 
         else:
             if isinstance(value, self.root.__class__):
-               value = value.data[value.cols.names()[0]]
+                value = value.data[value.cols.names()[0]]
 
         # meta = Meta.action(df.meta, Actions.SET.value, col_name)
         return self.root.new(df.data).cols.assign({col_name: value})
@@ -479,7 +481,7 @@ class BaseColumns(ABC):
     def assign(self, kw_columns):
 
         if kw_columns.__class__ == self.root.__class__:
-            kw_columns = { name: kw_columns.data[name] for name in kw_columns.cols.names() }
+            kw_columns = {name: kw_columns.data[name] for name in kw_columns.cols.names()}
 
         for key in kw_columns:
             if kw_columns[key].__class__ == self.root.__class__:
@@ -488,7 +490,7 @@ class BaseColumns(ABC):
                 kw_columns[key] = kw_columns[key].data[key]
 
         meta = Meta.action(self.root.meta, Actions.SET.value, list(kw_columns.keys()))
-            
+
         return self.root.new(self.root._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
@@ -613,7 +615,7 @@ class BaseColumns(ABC):
         # Use to reorder de output
 
         df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
-                                                   suffixes=(suffix_left, suffix_right)))
+                                              suffixes=(suffix_left, suffix_right)))
 
         # Remove duplicated index if the name is the same. If the index name are not the same
         if order is True:
@@ -1681,7 +1683,8 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def _bins_col(_columns, _min, _max):
-            return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets)) for
+            return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets))
+                    for
                     col_name in _columns}
 
         _min = df.cols.min(columns, compute=False, tidy=False)
@@ -1798,11 +1801,10 @@ class BaseColumns(ABC):
         df = self.root
 
         columns = parse_columns(df, columns)
-        total_preview_rows = 30
 
         # Infer the data type from every element in a Series.
         # FIX: could this be vectorized?
-        sample = df.head(columns, total_preview_rows)
+        sample = df.cols.select(columns).rows.limit(TOTAL_PREVIEW_ROWS).to_pandas()
         pdf = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
@@ -1919,8 +1921,9 @@ class BaseColumns(ABC):
             query = ((df[col_name] < lb) | (df[col_name] > ub))
             # Fliers are outliers points
             fliers = df.rows.select(query).cols.select(col_name).rows.limit(1000).to_dict()
-            stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb, 'whisker_high': ub,
-                      'fliers': fliers, 'label': one_list_to_val(col_name)}
+            stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb,
+                               'whisker_high': ub,
+                               'fliers': fliers, 'label': one_list_to_val(col_name)}
 
             return stats
         pass

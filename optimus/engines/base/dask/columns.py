@@ -3,16 +3,13 @@ import dask.dataframe as dd
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-from optimus.engines.base.meta import Meta
 from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_dict, is_list
 from optimus.profiler.functions import fill_missing_var_types
-
-MAX_BUCKETS = 33
-TOTAL_PREVIEW_ROWS = 30
 
 
 class DaskBaseColumns(BaseColumns):
@@ -53,7 +50,7 @@ class DaskBaseColumns(BaseColumns):
         df = self.root
         meta = df.meta
         dfd = dd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
-        
+
         meta = Meta.preserve(df.meta, Actions.APPEND.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
@@ -182,8 +179,8 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.root
-        input_cols = parse_columns(df, input_cols)\
-        
+        input_cols = parse_columns(df, input_cols) \
+ \
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)
         if output_col is None:
