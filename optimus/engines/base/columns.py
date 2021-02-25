@@ -471,7 +471,7 @@ class BaseColumns(ABC):
         kw_columns = {}
 
         for input_col, output_col in columns:
-            kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.remove_accents().cols.replace(
+            kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace(
                 search=search_by, replace_by=replace_by).data[input_col]
 
         return df.cols.assign(kw_columns)
@@ -1249,7 +1249,7 @@ class BaseColumns(ABC):
         return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
-    def remove_accents(self, input_cols="*", output_cols=None):
+    def normalize_chars(self, input_cols="*", output_cols=None):
         """
         Remove diacritics from a dataframe
         :param input_cols:
@@ -1257,7 +1257,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F.remove_accents, func_return_type=str,
+        return self.apply(input_cols, self.F.normalize_chars, func_return_type=str,
                           meta_action=Actions.REMOVE_ACCENTS.value,
                           output_cols=output_cols, mode="vectorized")
 
@@ -1286,7 +1286,7 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
-    def normalize_characters(self, input_cols="*", output_cols=None):
+    def remove_special_chars(self, input_cols="*", output_cols=None):
         """
         Remove special chars from a dataframe
         :param input_cols:
@@ -1294,7 +1294,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(input_cols, self.F.normalize_characters, func_return_type=str,
+        return self.apply(input_cols, self.F.remove_special_chars, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
     def to_datetime(self, input_cols, format, output_cols=None):

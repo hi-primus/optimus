@@ -38,7 +38,7 @@ def fingerprint(df, input_cols):
               .cols.trim(input_col, output_col)
               .cols.lower(output_col)
               .cols.remove_special_chars(output_col)
-              .cols.remove_accents(output_col)
+              .cols.normalize_chars(output_col)
               .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
               )
     return df
@@ -82,7 +82,7 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
               .cols.remove_white_spaces(ngram_fingerprint_col)
               .cols.apply(ngram_fingerprint_col, calculate_ngrams, "string", output_cols=ngram_fingerprint_col)
               .cols.remove_special_chars(ngram_fingerprint_col)
-              .cols.remove_accents(ngram_fingerprint_col)
+              .cols.normalize_chars(ngram_fingerprint_col)
 
               )
 

@@ -785,7 +785,7 @@ class Cols(BaseColumns):
         """
         return self.replace(columns, search, "", search_by, output_cols)
 
-    def remove_accents(self, input_cols="*", output_cols=None):
+    def normalize_chars(self, input_cols="*", output_cols=None):
         """
         Remove accents in specific columns
         :param input_cols: '*', list of columns names or a single column name.
@@ -793,7 +793,7 @@ class Cols(BaseColumns):
         :return:
         """
 
-        def _remove_accents(value):
+        def _normalize_chars(value):
             value = str(value)
 
             # first, normalize strings:
@@ -803,7 +803,7 @@ class Cols(BaseColumns):
             with_out_accents = u"".join([c for c in nfkd_str if not unicodedata.combining(c)])
             return with_out_accents
 
-        df = self.apply(input_cols, _remove_accents, str, output_cols=output_cols,
+        df = self.apply(input_cols, _normalize_chars, str, output_cols=output_cols,
                         meta_action=Actions.REMOVE_ACCENTS.value)
         return df
 

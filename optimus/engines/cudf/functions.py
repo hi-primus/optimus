@@ -105,10 +105,10 @@ class CUDFFunctions(Functions):
     def replace_chars(self, series, search, replace_by):
         return series.astype(str).str.replace(search, replace_by)
 
-    def normalize_characters(self, series):
+    def remove_special_chars(self, series):
         return series.astype(str).str.filter_alphanum()
 
-    def remove_accents(self, series):
+    def normalize_chars(self, series):
         if not series.isnull().all():
             return series.astype(str).str.normalize_characters()
         else:

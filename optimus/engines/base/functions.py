@@ -335,7 +335,7 @@ class Functions(ABC):
     def to_datetime(self, series, format):
         pass
 
-    def remove_accents(self, series):
+    def normalize_chars(self, series):
         pass
 
     @staticmethod
