@@ -271,6 +271,9 @@ class Functions(ABC):
         pass
 
     # Strings
+    def match(self, series, regex):
+        return self.to_string(series).str.match(regex)
+
     def lower(self, series):
         return self.to_string(series).str.lower()
 

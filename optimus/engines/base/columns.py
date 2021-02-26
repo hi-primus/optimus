@@ -1189,6 +1189,10 @@ class BaseColumns(ABC):
         else:
             return df
 
+    def match(self, input_cols="*", regex="", output_cols=None):
+        return self.apply(input_cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
+
     def lower(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
@@ -1838,10 +1842,10 @@ class BaseColumns(ABC):
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(filtered_dates)})
         return cols_and_inferred_dtype
 
-    def match(self, input_cols, regex):
-        dfd = self.root.data
-
-        return self.root.new(dfd[input_cols].str.match(regex).to_frame())
+    # def match(self, input_cols, regex):
+    #     dfd = self.root.data
+    #
+    #     return self.root.new(dfd[input_cols].str.match(regex).to_frame())
 
     def _series_to_dict(self, series):
         return series.to_dict()

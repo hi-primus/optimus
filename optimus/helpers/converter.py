@@ -1,6 +1,3 @@
-from ast import literal_eval
-
-import dateutil
 from dask import dataframe as dd
 
 # from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
@@ -67,6 +64,7 @@ def format_dict(_dict, tidy=True):
         else:
             return _dict
 
+
 #
 # def str_to_boolean(value):
 #     """
@@ -118,6 +116,7 @@ def any_dataframe_to_pandas(df):
 
     return result
 
+
 #
 # def cudf_series_to_pandas(serie):
 #     return serie.to_pandas()
@@ -153,6 +152,7 @@ def dask_dataframe_to_pandas(df):
 def cudf_to_pandas(df):
     return df.to_pandas()
 
+
 #
 # def cudf_to_dask_cudf(df, n_partitions=1):
 #     import dask_cudf
@@ -172,10 +172,10 @@ def cudf_to_pandas(df):
 def pandas_to_dask_dataframe(pdf, n_partitions=1):
     return dd.from_pandas(pdf, npartitions=n_partitions)
 
+
 def pandas_to_dask_cudf_dataframe(pdf, n_partitions=1):
     import cudf
     import dask_cudf
     # Seems that from_cudf also accepts pandas
     cdf = cudf.DataFrame.from_pandas(pdf)
     return dask_cudf.from_cudf(cdf, npartitions=n_partitions)
-
