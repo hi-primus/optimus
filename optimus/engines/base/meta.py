@@ -21,7 +21,7 @@ class Meta:
         """
         if spec is not None:
             data = copy.deepcopy(meta)
-            _ = assign(data, spec, value, missing=missing)
+            assign(data, spec, value, missing=missing)
         else:
             data = value
 
