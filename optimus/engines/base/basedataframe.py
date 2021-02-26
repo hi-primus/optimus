@@ -120,19 +120,19 @@ class BaseDataFrame(ABC):
         return self.operation(self, df2, operator.truediv, "float")
 
     def __rtruediv__(self, df2):
-        return self.operation(self, df2, operator.truediv, "float")
+        return self.operation(df2, self, operator.truediv, "float")
 
     def __floordiv__(self, df2):
         return self.operation(self, df2, operator.floordiv, "float")
 
     def __rfloordiv__(self, df2):
-        return self.operation(self, df2, operator.floordiv, "float")
+        return self.operation(df2, self, operator.floordiv, "float")
 
     def __pow__(self, df2):
         return self.operation(self, df2, operator.pow, "float")
 
     def __rpow__(self, df2):
-        return self.operation(self, df2, operator.pow, "float")
+        return self.operation(df2, self, operator.pow, "float")
 
     def __eq__(self, df2):
         return self.operation(self, df2, operator.eq)
