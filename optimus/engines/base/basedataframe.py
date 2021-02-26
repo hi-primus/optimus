@@ -402,13 +402,15 @@ class BaseDataFrame(ABC):
                         elif is_str(column):
                             source = target = column
 
-
                         if action_name == Actions.COPY.value and source in profiler_columns:
                             profiler_columns[target] = profiler_columns[source]
 
                         elif action_name == Actions.RENAME.value and source in profiler_columns:
                             profiler_columns[target] = profiler_columns[source]
                             profiler_columns.pop(source)
+                            if source in new_columns:
+                                new_columns.pop(source)
+                                new_columns.push(target)
 
                         elif action_name == Actions.DROP.value and source in profiler_columns:
                             profiler_columns.pop(source)
@@ -420,6 +422,7 @@ class BaseDataFrame(ABC):
                 profiled_columns = list(profiler_columns.keys())
 
                 calculate_columns = [column for column in new_columns if column not in profiled_columns]
+                modified_columns = [column for column in modified_columns if column in new_columns]
                 calculate_columns = list(set(modified_columns + calculate_columns))
                 calculate_columns = list(set(calculate_columns) - set(dropped_columns))
 
@@ -595,10 +598,13 @@ class BaseDataFrame(ABC):
         df = self
         meta = self.meta
 
+        print("columns")
+        print(columns)
         if flush is False:
             cols_to_profile = df._cols_to_profile(columns)
         else:
             cols_to_profile = parse_columns(df, columns)
+        print(cols_to_profile)
 
         profiler_data = Meta.get(meta, "profile")
 
