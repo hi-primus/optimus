@@ -7,13 +7,8 @@ from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, Remote
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.optimus import Engine
-from optimus.profiler.profiler import Profiler
-
-# import dask_cudf
-Profiler.instance = None
 
 BIG_NUMBER = 100000
-
 
 class DaskCUDFEngine(BaseEngine):
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
@@ -98,9 +93,6 @@ class DaskCUDFEngine(BaseEngine):
 
         else:
             self.remote = False
-
-        Profiler.instance = Profiler()
-        self.profiler = Profiler.instance
 
     @property
     def create(self):

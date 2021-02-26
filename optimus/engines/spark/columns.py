@@ -151,7 +151,7 @@ class Cols(BaseColumns):
     #     if columns is not None:
     #         df = df.select(columns)
     #         # Metadata get lost when using select(). So we copy here again.
-    #         df.meta = Meta.preserve(df.meta, None)
+    #         df.meta = Meta.action(df.meta, None)
     #
     #     else:
     #         df = None
@@ -182,7 +182,7 @@ class Cols(BaseColumns):
             current_meta = dfd.meta.get()
             dfd = df.data.withColumn(output_col, F.col(input_col))
             meta.set(value=current_meta)
-            meta = meta.copy({input_col: output_col})
+            meta = Meta.action(meta, Actions.COPY.value, (input_col, output_col))
 
         return self.root.new(dfd, meta=meta)
 
@@ -291,7 +291,7 @@ class Cols(BaseColumns):
             RaiseIt.value_error(value, ["numeric", "list", "hive expression"])
 
         df = df.withColumn(output_cols, expr)
-        df.meta = Meta.preserve(df.meta, None, Actions.SET.value, columns)
+        df.meta = Meta.action(df.meta, None, Actions.SET.value, columns)
         return df
 
     # TODO: Check if we must use * to select all the columns
@@ -326,8 +326,7 @@ class Cols(BaseColumns):
                     old_col_name = self.schema.names[old_col_name]
                     dfd = dfd.withColumnRenamed(old_col_name, new_col_name)
 
-                # dfd = dfd.rename_meta([(old_col_name, new_col_name)])
-                meta = meta.rename((old_col_name, new_col_name))
+                meta = Meta.action(meta, Actions.RENAME.value, (input_col, output_col))
 
         return self.root.new(dfd, meta=meta)
 
@@ -1002,7 +1001,7 @@ class Cols(BaseColumns):
         for input_col, output_col in columns:
             dfd = func(dfd, input_col, output_col, search, replace_by)
 
-            meta = Meta.preserve(df.meta, None, Actions.REPLACE.value, output_col)
+            meta = Meta.action(df.meta, None, Actions.REPLACE.value, output_col)
         return self.root.new(dfd, meta=meta)
 
     @staticmethod
@@ -1312,7 +1311,7 @@ class Cols(BaseColumns):
 
             df = vector_assembler.transform(df)
 
-            df.meta = Meta.preserve(df.meta, None, Actions.NEST.value, output_col)
+            df.meta = Meta.action(df.meta, None, Actions.NEST.value, output_col)
 
         elif shape is "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
@@ -1326,7 +1325,7 @@ class Cols(BaseColumns):
         else:
             RaiseIt.value_error(shape, ["vector", "array", "string"])
 
-        df.meta = Meta.preserve(df.meta, None, Actions.NEST.value, output_col)
+        df.meta = Meta.action(df.meta, None, Actions.NEST.value, output_col)
 
         if output_col not in output_ordered_columns:
             col_index = output_ordered_columns.index(input_cols[-1]) + 1
@@ -1445,7 +1444,7 @@ class Cols(BaseColumns):
 
             else:
                 RaiseIt.type_error(input_col, ["string", "struct", "array", "vector"])
-            df.meta = Meta.preserve(df.meta, None, Actions.UNNEST.value, [v for k, v in final_columns])
+            df.meta = Meta.action(df.meta, None, Actions.UNNEST.value, [v for k, v in final_columns])
         return df
 
     @staticmethod

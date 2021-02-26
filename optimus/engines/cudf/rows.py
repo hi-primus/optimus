@@ -79,7 +79,7 @@ class Rows(BaseRows):
             if order != "asc" and order != "desc":
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            df.meta = Meta.preserve(df.meta, None, Actions.SORT_ROW.value, col_name)
+            df.meta = Meta.action(df.meta, None, Actions.SORT_ROW.value, col_name)
 
             c = df.cols.names()
             # It seems that is on posible to order rows in Dask using set_index. It only return data in ascendent way.
@@ -139,7 +139,7 @@ class Rows(BaseRows):
         df = self.root
         for col_name in columns:
             df = df.rows.select(_between(col_name))
-        df.meta = Meta.preserve(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
+        df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
     @staticmethod

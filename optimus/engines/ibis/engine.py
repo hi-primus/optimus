@@ -3,10 +3,7 @@ import ibis
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.ibis.io.jdbc import JDBC
 from optimus.optimus import Engine
-from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
-
-Profiler.instance = None
 
 
 class IbisEngine(BaseEngine):
@@ -18,9 +15,6 @@ class IbisEngine(BaseEngine):
         self.verbose(verbose)
 
         self.client = ibis
-
-        Profiler.instance = Profiler()
-        self.profiler = Profiler.instance
 
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",

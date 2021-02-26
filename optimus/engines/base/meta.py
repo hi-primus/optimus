@@ -4,7 +4,7 @@ from glom import glom, assign
 
 from optimus.helpers.core import val_to_list
 
-ACTIONS_KEY = "transformations.actions"
+ACTIONS_PATH = "transformations.actions"
 
 
 class Meta:
@@ -49,35 +49,8 @@ class Meta:
         :return:
         """
 
-        return Meta.set(meta, ACTIONS_KEY, [])
+        return Meta.set(meta, ACTIONS_PATH, [])
 
-    @staticmethod
-    def copy(meta, old_new_columns) -> dict:
-        """
-        Shortcut to add copy transformations to a dataframe
-        :param meta: Meta data to be modified
-        :param old_new_columns:
-        :return: dict
-        """
-
-        meta = copy.deepcopy(meta)
-        meta = Meta.action(meta, "copy", value=old_new_columns)
-
-        return meta
-
-    @staticmethod
-    def rename(meta, old_new_columns) -> dict:
-        """
-        Shortcut to add rename transformations to a dataframe
-        :param meta: Meta data to be modified
-        :param old_new_columns:
-        :return: dict (Meta)
-        """
-
-        meta = copy.deepcopy(meta)
-        meta = Meta.action(meta, "rename", value=old_new_columns)
-
-        return meta
 
     @staticmethod
     def columns(meta, value) -> dict:
@@ -87,7 +60,6 @@ class Meta:
         :param value:
         :return: dict (Meta)
         """
-        meta = copy.deepcopy(meta)
         value = val_to_list(value)
         for v in value:
             meta = Meta.update(meta, "transformations.columns", v, list)
@@ -102,18 +74,9 @@ class Meta:
         :param value: Value to be added
         :return: dict (Meta)
         """
-        meta = copy.deepcopy(meta)
         value = val_to_list(value)
-
-        for _value in value:
-            key = ACTIONS_KEY
-
-            old_value = meta.get(key)
-            if old_value is None:
-                old_value = []
-            old_value.append({name: value})
-            meta = Meta.update(meta, key, old_value)
-
+        for v in value:
+            meta = Meta.update(meta, ACTIONS_PATH, {name: v}, list)
         return meta
 
     @staticmethod
@@ -127,37 +90,25 @@ class Meta:
         :return: dict (Meta)
         """
 
-        meta = copy.deepcopy(meta)
+        new_meta = copy.deepcopy(meta)
 
-        new_meta = Meta.get(meta)
         if new_meta is None:
             new_meta = {}
 
         elements = path.split(".")
-        result = new_meta
+        _element = new_meta
         for i, ele in enumerate(elements):
-            if ele not in result and not len(elements) - 1 == i:
-                result[ele] = {}
+            if ele not in _element and not len(elements) - 1 == i:
+                _element[ele] = {}
 
             if len(elements) - 1 == i:
                 if default is list:
-                    result.setdefault(ele, []).append(value)
+                    _element[ele] = _element.get(ele, [])
+                    _element[ele].append(value)
                 elif default is dict:
-                    result.setdefault(ele, {}).update(value)
+                    _element[ele] = _element.get(ele, {})
+                    _element[ele].update(value)
             else:
-                result = result[ele]
+                _element = _element[ele]
 
-        Meta.set(meta, value=new_meta)
-        return meta
-
-    @staticmethod
-    def preserve(meta, df=None, value=None, columns=None) -> dict:
-        """
-        Preserves meta
-        :param meta:
-        :param df:
-        :param value:
-        :param columns:
-        :return: dict (Meta)
-        """
-        return meta
+        return new_meta

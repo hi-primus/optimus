@@ -19,12 +19,10 @@ from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
 # Singletons
 Spark.instance = None
-Profiler.instance = None
 
 
 class SparkEngine:
@@ -153,8 +151,6 @@ class SparkEngine:
         self.read = self.spark.read
 
         # Create singleton profiler
-        Profiler.instance = Profiler()
-        self.profiler = Profiler.instance
         self.ml = ML()
 
         # Set global output as html

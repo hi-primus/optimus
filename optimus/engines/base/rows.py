@@ -207,7 +207,7 @@ class BaseRows(ABC):
         """
         df = self.root
         subset = parse_columns(df, subset)
-        meta = Meta.preserve(df.meta, df, Actions.DROP_ROW.value, df.cols.names())
+        meta = Meta.action(df.meta, df, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(df.data.dropna(how=how, subset=subset), meta=meta)
 
     @staticmethod

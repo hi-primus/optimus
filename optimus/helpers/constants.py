@@ -69,6 +69,8 @@ class Actions(Enum):
     YEAR = "years"
     APPEND = "append"
     PORT = "port"
+    COPY = "copy"
+    RENAME = "rename"
 
     # URL Example	http://search.somedb.com:8080/history?era=darkages
     # scheme	http

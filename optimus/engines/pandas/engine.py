@@ -5,11 +5,9 @@ from optimus.engines.pandas.create import Create
 from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas
-from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
 
 Pandas.instance = None
-Profiler.instance = None
 
 
 class PandasEngine(BaseEngine):
@@ -23,9 +21,6 @@ class PandasEngine(BaseEngine):
         Pandas.instance = pd
 
         self.client = pd
-
-        Profiler.instance = Profiler()
-        self.profiler = Profiler.instance
 
     @property
     def create(self):

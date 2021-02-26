@@ -96,7 +96,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col in zip(input_cols, output_cols):
             kw_columns[output_col] = dfd[input_col]
-            meta = meta.copy({input_col: output_col})
+            meta = Meta.action(meta, Actions.COPY.value, (input_col, output_col))
 
         df = self.root.new(dfd, meta=meta).cols.assign(kw_columns)
 
@@ -141,7 +141,7 @@ class BaseColumns(ABC):
 
         dfd = dfd.drop(columns=list(set(df.columns) - set(columns)))
 
-        df.meta = Meta.preserve(df.meta, df, Actions.KEEP.value, columns)
+        df.meta = Meta.action(df.meta, df, Actions.KEEP.value, columns)
 
         return self.root.new(dfd, meta=meta)
 
@@ -306,7 +306,7 @@ class BaseColumns(ABC):
                 new_col_name = col_name[1]
                 if old_col_name != col_name:
                     dfd = dfd.rename(columns={old_col_name: new_col_name})
-                    meta = Meta.rename(meta, {old_col_name: new_col_name})
+                    meta = Meta.action(meta, Actions.RENAME.value, (old_col_name, new_col_name))
 
         return self.root.new(dfd, meta=meta)
 
@@ -509,14 +509,14 @@ class BaseColumns(ABC):
         result = {}
         input_cols = parse_columns(df, input_cols)
         for input_col in input_cols:
-            column_modified_time = df.meta.get(f"profile.columns.{input_col}.modified")
-            patterns_update_time = df.meta.get(f"profile.columns.{input_col}.patterns.updated")
+            column_modified_time = Meta.get(df.meta, f"profile.columns.{input_col}.modified")
+            patterns_update_time = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.updated")
             if column_modified_time is None:
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
 
-            _patterns_values = df.meta.get(f"profile.columns.{input_col}.patterns.values")
+            _patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
             if _patterns_values is not None:
                 cached = len(_patterns_values)
 
@@ -541,7 +541,7 @@ class BaseColumns(ABC):
 
 
             else:
-                result[input_col] = df.meta.get(f"profile.columns.{input_col}.patterns")
+                result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
 
         return result
 
@@ -1662,7 +1662,7 @@ class BaseColumns(ABC):
                 df_new = df_new.cols.select(final_index[idx])
             df = df.cols.append([df_new])
 
-        df.meta = Meta.preserve(df.meta, Actions.UNNEST.value, final_columns)
+        df.meta = Meta.action(df.meta, Actions.UNNEST.value, final_columns)
 
         df = df.cols.move(df_new.cols.names(), "after", input_cols)
 

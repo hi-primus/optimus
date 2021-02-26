@@ -7,10 +7,7 @@ from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
 from optimus.optimus import Engine
-from optimus.profiler.profiler import Profiler
 from optimus.version import __version__
-
-Profiler.instance = None
 
 
 class DaskEngine(BaseEngine):

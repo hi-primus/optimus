@@ -14,11 +14,11 @@ from tabulate import tabulate
 from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE
+from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE, Actions
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
-from optimus.infer import is_list_of_str, is_dict
+from optimus.infer import is_str, is_dict, is_tuple, is_list_of_str
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
@@ -364,170 +364,67 @@ class BaseDataFrame(ABC):
 
         :return:
         """
-        return False if df.meta.get("profile.profiler_dtype") is None else True
+        return False if Meta.get(df.meta,"profile") is None else True
 
     def to_delayed(self):
         return self.data.to_delayed()
 
-    def calculate_cols_to_profile(self, df, columns):
+    def _cols_to_profile(self, columns):
         """
-        Get the columns that needs to be profiled.
+        Get the columns that needs to be profiled and renames the columns in the metadata
         :return:
         """
-        # Metadata
-        # If not empty the profiler already run.
-        # So process the dataframe's metadata to get which columns need to be profiled
+
         df = self
-        actions = df.meta.get("transformations.actions")
-        are_actions = actions is not None and len(actions) > 0
+        actions = Meta.get(df.meta, "transformations.actions")
+        has_actions = actions is not None and len(actions) > 0
 
-        # print("are actions", are_actions)
+        profiler_columns = Meta.get(df.meta, "profile.columns")
 
-        def get_columns(action):
-            """
-            Get the column applied to the specified action
-            :param action:
-            :return:
-            """
-            _actions = df.meta.get("transformations.actions")
-            result = None
-            if _actions:
-                result = [j for i in _actions for col_name, j in i.items() if col_name == action]
-            return result
-
-        # Process actions to check if any column must be processed
-        if self.is_cached(df):
-            if are_actions:
-
-                def get_columns_by_action(action):
-                    """
-                    Get a list of columns which have been applied and specific action.
-                    :param action:
-                    :return:
-                    """
-                    # modified = []
-
-                    col = get_columns(action)
-                    # Check if was renamed
-                    renamed_columns = get_renamed_columns(col)
-                    if len(renamed_columns) == 0:
-                        _result = col
-                    else:
-                        _result = renamed_columns
-
-                    return _result
-
-                def get_renamed_columns(_col_names):
-                    """
-                    Get a list of columns and return the renamed version.
-                    :param _col_names:
-                    :return:
-                    """
-                    _renamed_columns = []
-                    _rename = get_columns("rename")
-
-                    def get_name(_col_name):
-                        c = _rename.get(_col_name)
-                        # The column has not been rename. Get the actual column name
-                        if c is None:
-                            c = _col_name
-                        return c
-
-                    if _rename:
-                        # if a list
-                        if is_list_of_str(_col_names):
-                            for _col_name in _col_names:
-                                # The column name has been changed. Get the new name
-                                _renamed_columns.append(get_name(_col_name))
-                        # if a dict
-                        if is_dict(_col_names):
-                            for _col1, _col2 in _col_names.items():
-                                _renamed_columns.append({get_name(_col1): get_name(_col2)})
-
-                    else:
-                        _renamed_columns = _col_names
-                    return _renamed_columns
-
-                # New columns
-                new_columns = []
-
-                current_col_names = df.cols.names()
-                profiler_columns = df.meta.get("profile.columns")
-
-                # Operations need to be processed int the same order that created
-                modified_columns = []
-                for l in df.meta.get("transformations.actions"):
-                    for action_name, j in l.items():
-                        if action_name == "copy":
-                            for source, target in j.items():
-                                profiler_columns[target] = profiler_columns[source].copy()
-                                profiler_columns[target]["name"] = target
-                            # Check is a new column is a copied column
-                            new_columns = list(set(new_columns) - set(j.values()))
-
-                        # Rename keys to match new names
-                        elif action_name == "rename":
-                            renamed_cols = get_renamed_columns(df.meta.get("transformations.columns"))
-                            for current_col_name in current_col_names:
-                                if current_col_name not in renamed_cols:
-                                    new_columns.append(current_col_name)
-
-                            rename = get_columns("rename")
-                            if rename:
-                                for l in rename:
-                                    for k, v in l.items():
-                                        profiler_columns[v] = profiler_columns.pop(k)
-                                        profiler_columns[v]["name"] = v
-
-                        # Drop Keys
-                        elif action_name == "drop":
-
-                            for col_names in get_columns_by_action(action_name):
-                                # print("action_name, col_names", action_name, col_names)
-                                # print("profiler_columns",profiler_columns)
-                                profiler_columns.pop(col_names)
-                        else:
-                            modified_columns = modified_columns + get_columns_by_action(action_name)
-                # Actions applied to current columns
-
-                # Remove duplicated
-                temp_calculate_columns = list(set(modified_columns + new_columns))
-                calculate_columns = []
-                # If after some  action the columns is dropped we need to remove it from the modified columns
-                for col_name in get_columns_by_action("drop"):
-                    for temp_calculate_column in temp_calculate_columns:
-                        if temp_calculate_column != col_name and (temp_calculate_column not in new_columns):
-                            calculate_columns.append(temp_calculate_column)
-
-            elif not are_actions:
-                # Check if there are columns that have not beend profiler an that are not in the profiler buffer
-                profiler_columns = list(df.meta.get("profile.columns").keys())
-                new_columns = parse_columns(df, columns)
-
-                calculate_columns = [x for x in new_columns if
-                                     not x in profiler_columns or profiler_columns.remove(x)]
-
+        new_columns = parse_columns(df, columns)
+        
+        if profiler_columns is None:
+            calculate_columns = new_columns
         else:
-            # Check if all the columns are calculated
-            calculate_columns = parse_columns(df, columns)
+            profiled_columns = list(profiler_columns.keys())
+            if not has_actions:
+                calculate_columns = [column for column in new_columns if column not in profiled_columns]
+
+            else:
+                modified_columns = []
+                # Operations need to be processed int the same order that created
+                for l in Meta.get(df.meta, "transformations.actions"):
+                    dropped_columns = []
+                    for action_name, column in l.items():
+                        if is_tuple(column):
+                            source, target = column
+
+                        elif is_str(column):
+                            source = target = column
+
+
+                        if action_name == Actions.COPY.value and source in profiler_columns:
+                            profiler_columns[target] = profiler_columns[source]
+
+                        elif action_name == Actions.RENAME.value and source in profiler_columns:
+                            profiler_columns[target] = profiler_columns[source]
+                            profiler_columns.pop(source)
+
+                        elif action_name == Actions.DROP.value and source in profiler_columns:
+                            profiler_columns.pop(source)
+                            dropped_columns.append(source)
+
+                        else:
+                            modified_columns.append(source)
+
+                profiled_columns = list(profiler_columns.keys())
+
+                calculate_columns = [column for column in new_columns if column not in profiled_columns]
+                calculate_columns = list(set(modified_columns + calculate_columns))
+                calculate_columns = list(set(calculate_columns) - set(dropped_columns))
 
         return calculate_columns
 
-    # def set_name(self, value=None):
-    #     """
-    #     Create a temp view for a data frame also used in the json output profiling
-    #     :param value:
-    #     :return:
-    #     """
-    #     df = self.df
-    #     df._name = value
-    #     # if not is_str(value):
-    #     #     RaiseIt.type_error(value, ["string"])
-    #
-    #     # if len(value) == 0:
-    #     #     RaiseIt.value_error(value, ["> 0"])
-    #
-    #     # self.createOrReplaceTempView(value)
 
     @staticmethod
     @abstractmethod
@@ -604,7 +501,6 @@ class BaseDataFrame(ABC):
         total_cols = df.cols.count()
         total_partitions = df.partitions()
 
-        # print(data)
         df_type = type(df)
         output = template.render(df_type=df_type, cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                  total_cols=total_cols,
@@ -700,16 +596,19 @@ class BaseDataFrame(ABC):
         meta = self.meta
 
         if flush is False:
-            cols_to_profile = df.calculate_cols_to_profile(df, columns)
+            cols_to_profile = df._cols_to_profile(columns)
         else:
             cols_to_profile = parse_columns(df, columns)
 
         profiler_data = Meta.get(meta, "profile")
+
+        is_cached = profiler_data is not None
+
         if profiler_data is None:
             profiler_data = {}
         cols_and_inferred_dtype = None
 
-        if cols_to_profile or not self.is_cached(df) or flush is True:
+        if cols_to_profile or not is_cached or flush is True:
             numeric_cols = []
             string_cols = []
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
@@ -768,8 +667,8 @@ class BaseDataFrame(ABC):
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
-            assign(profiler_data, "name", df.meta.get("name"), dict)
-            assign(profiler_data, "file_name", df.meta.get("file_name"), dict)
+            assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
+            assign(profiler_data, "file_name", Meta.get(df.meta, "file_name"), dict)
 
             data_set_info = {'cols_count': df.cols.count(),
                              'rows_count': df.rows.count(),
@@ -791,7 +690,6 @@ class BaseDataFrame(ABC):
             {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
              _cols_name in list(actual_columns.keys())}))
 
-        df.meta = {}
         meta = Meta.columns(meta, df.cols.names())
 
         meta = Meta.set(meta, "transformations", value={})
@@ -803,7 +701,7 @@ class BaseDataFrame(ABC):
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
-        df.meta = meta
+        self.meta = meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
         return profiler_data
