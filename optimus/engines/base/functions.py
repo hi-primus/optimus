@@ -60,8 +60,7 @@ class Functions(ABC):
     def var(self, series):
         return self._to_float(series).var()
 
-    def count_uniques(self, series, estimate: bool = True, compute: bool = True):
-        # series = self.series
+    def count_uniques(self, series, values = None, estimate: bool = True):
         return self.to_string(series).nunique()
 
     def unique(self, series, *args):
