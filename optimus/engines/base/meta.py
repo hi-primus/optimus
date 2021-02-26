@@ -3,6 +3,7 @@ import copy
 from glom import glom, assign
 
 from optimus.helpers.core import val_to_list
+from optimus.infer import is_list
 
 ACTIONS_PATH = "transformations.actions"
 
@@ -74,7 +75,8 @@ class Meta:
         :param value: Value to be added
         :return: dict (Meta)
         """
-        value = val_to_list(value)
+        if not is_list(value):
+            value = [value]
         for v in value:
             meta = Meta.update(meta, ACTIONS_PATH, {name: v}, list)
         return meta
