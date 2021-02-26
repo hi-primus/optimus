@@ -127,6 +127,12 @@ class BaseDataFrame(ABC):
 
     def __rfloordiv__(self, df2):
         return self.operation(df2, self, operator.floordiv, "float")
+    
+    def __mod__(self, df2):
+        return self.operation(self, df2, operator.mod, "float")
+    
+    def __rmod__(self, df2):
+        return self.operation(df2, self, operator.mod, "float")
 
     def __pow__(self, df2):
         return self.operation(self, df2, operator.pow, "float")
