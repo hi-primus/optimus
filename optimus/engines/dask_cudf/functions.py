@@ -67,6 +67,12 @@ class DaskCUDFFunctions(Functions):
 
         return wrapper
 
+    def from_delayed(self, delayed):
+        return dask.from_delayed(delayed)
+
+    def to_delayed(self, value):
+        return value.to_delayed()
+
     def _to_float(self, series, *args):
         return series.map_partitions(to_float_cudf, meta=float)
 

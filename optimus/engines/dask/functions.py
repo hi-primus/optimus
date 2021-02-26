@@ -27,12 +27,17 @@ class DaskFunctions(Functions):
 
         return wrapper
 
+    def from_delayed(self, delayed):
+        return dask.dataframe.from_delayed(delayed)
+
+    def to_delayed(self, value):
+        return value.to_delayed()
+
     def _to_float(self, series):
         return series.map(to_float)
 
     def to_float(self, series):
         return to_float(series)
-        # return pd.to_numeric(series, errors="coerce")
 
     def _to_integer(self, value):
         return value.map(to_integer)
@@ -132,9 +137,6 @@ class DaskFunctions(Functions):
 
     def cut(self, series, bins):
         return series._to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
-
-    def to_datetime(self, series, format):
-        return pd.to_datetime(series, format=format, errors="coerce")
 
     def remove_special_chars(self, series):
         return self.to_string(series).str.replace('[^A-Za-z0-9]+', '')

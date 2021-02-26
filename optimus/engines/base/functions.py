@@ -15,6 +15,12 @@ class Functions(ABC):
 
         return wrapper
 
+    def from_delayed(self, delayed):
+        return delayed[0]
+    
+    def to_delayed(self, delayed):
+        return [delayed]
+
     @staticmethod
     def _to_float(series):
         pass

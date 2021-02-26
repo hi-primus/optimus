@@ -366,9 +366,6 @@ class BaseDataFrame(ABC):
         """
         return False if Meta.get(df.meta,"profile") is None else True
 
-    def to_delayed(self):
-        return self.data.to_delayed()
-
     def _cols_to_profile(self, columns):
         """
         Get the columns that needs to be profiled and renames the columns in the metadata
