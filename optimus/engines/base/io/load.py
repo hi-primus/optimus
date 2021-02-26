@@ -99,12 +99,16 @@ class BaseLoad:
                                         "skipinitialspace": dialect.skipinitialspace}}
 
                     mime_info.update(r)
-                    df = self.csv(path, encoding=mime_info.get("encoding", None), dtype=str, **mime_info.get("properties", {}), **kwargs, engine="python", na_values='nan')
+                    kwargs.update({
+                        "encoding": mime_info.get("encoding", None),
+                        **mime_info.get("properties", {})
+                    })
+                    df = self.csv(path, **kwargs)
                 except Exception as err:
                     raise err
                     pass
             else:
-                df = self.csv(path, dtype=str, **kwargs, engine="python", na_values='nan')
+                df = self.csv(path, **kwargs)
                 
         elif file_type == "json":
             mime_info["file_type"] = "json"
