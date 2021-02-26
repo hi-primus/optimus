@@ -16,6 +16,11 @@ import dask
 
 class DaskFunctions(Functions):
 
+    @property
+    def constants(self):
+        from optimus.engines.base.dask.constants import constants
+        return constants(self)
+
     def delayed(self, func):
         def wrapper(*args, **kwargs):
             return dask.delayed(func)(*args, **kwargs)
@@ -38,7 +43,9 @@ class DaskFunctions(Functions):
     def to_boolean(self, series):
         return to_boolean(series)
 
-    def to_string(self, series, *args):
+    def to_string(self, series):
+        if str(series.dtype) in self.constants.STRING_TYPES:
+            return series
         return series.astype(str)
 
     def count_zeros(self, series, *args):
