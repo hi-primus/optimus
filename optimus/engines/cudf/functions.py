@@ -36,7 +36,7 @@ class CUDFFunctions(Functions):
 
     def unique(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
-        return series.astype(str).unique()
+        return self.to_string(series).unique()
 
     # def mod(self, other):
     #     
@@ -103,14 +103,14 @@ class CUDFFunctions(Functions):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
     def replace_chars(self, series, search, replace_by):
-        return series.astype(str).str.replace(search, replace_by)
+        return self.to_string(series).str.replace(search, replace_by)
 
-    def normalize_characters(self, series):
-        return series.astype(str).str.filter_alphanum()
+    def remove_special_chars(self, series):
+        return self.to_string(series).str.filter_alphanum()
 
-    def remove_accents(self, series):
+    def normalize_chars(self, series):
         if not series.isnull().all():
-            return series.astype(str).str.normalize_characters()
+            return self.to_string(series).str.normalize_characters()
         else:
             return series
 

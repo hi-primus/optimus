@@ -26,18 +26,11 @@ class Functions(ABC):
         pass
 
     # Aggregation
-    # @staticmethod
     def min(self, series):
-        # print(self)
-        # return self.parent.new(series).cols._to_float().data.min()
-        return series.min()
-        # return self._to_float(series).min()
+        return self._to_float(series).min()
 
-    # @staticmethod
     def max(self, series):
-        return series.max()
-        # return self._to_float(series).max()
-        # return series._to_float().max()
+        return self._to_float(series).max()
 
     def mean(self, series):
 
@@ -45,7 +38,6 @@ class Functions(ABC):
 
     def mode(self, series):
         return self._to_float(series).mode().to_dict()
-        # return series._to_float().mode().to_dict(index=False)
 
     def std(self, series):
         return self._to_float(series).std()
@@ -71,18 +63,18 @@ class Functions(ABC):
     @staticmethod
     def count_uniques(series, estimate: bool = True, compute: bool = True):
         # series = self.series
-        return series.astype(str).nunique()
+        return self.to_string(series).nunique()
 
     @staticmethod
     def unique(series, *args):
 
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
-        return series.astype(str).unique()
+        return self.to_string(series).unique()
 
     @staticmethod
     def count_na(series):
-        return series.isnull().sum()
+        return series.isna().sum()
 
         # return {"count_na": {col_name:  for col_name in columns}}
         # return np.count_nonzero(_df[_serie].isnull().values.ravel())
@@ -281,39 +273,38 @@ class Functions(ABC):
     # Strings
     def lower(self, series):
         return self.to_string(series).str.lower()
-        # return series.astype(str).str.lower()
 
     @staticmethod
     def upper(series):
-        return series.astype(str).str.upper()
+        return self.to_string(series).str.upper()
 
     @staticmethod
     def title(series):
-        return series.astype(str).str.title()
+        return self.to_string(series).str.title()
 
     @staticmethod
     def capitalize(series):
-        return series.astype(str).str.capitalize()
+        return self.to_string(series).str.capitalize()
 
     @staticmethod
     def pad(series, width, side, fillchar=""):
-        return series.astype(str).str.pad(width, side, fillchar)
+        return self.to_string(series).str.pad(width, side, fillchar)
 
     @staticmethod
     def extract(series, regex):
-        return series.astype(str).str.extract(regex)
+        return self.to_string(series).str.extract(regex)
 
     @staticmethod
     def slice(series, start, stop, step):
-        return series.astype(str).str.slice(start, stop, step)
+        return self.to_string(series).str.slice(start, stop, step)
 
     @staticmethod
     def proper(series):
-        return series.astype(str).str.title()
+        return self.to_string(series).str.title()
 
     @staticmethod
     def trim(series):
-        return series.astype(str).str.strip()
+        return self.to_string(series).str.strip()
 
     @staticmethod
     @abstractmethod
@@ -324,17 +315,17 @@ class Functions(ABC):
     def replace_words(series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return series.astype(str).str.replace(str_regex, replace_by)
+        return self.to_string(series).str.replace(str_regex, replace_by)
 
     @staticmethod
     def replace_full(series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return series.astype(str).str.replace(str_regex, replace_by)
+        return self.to_string(series).str.replace(str_regex, replace_by)
 
     @staticmethod
     def remove_white_spaces(series):
-        return series.astype(str).str.replace(" ", "")
+        return self.to_string(series).str.replace(" ", "")
 
     @staticmethod
     def len(series):
@@ -343,41 +334,45 @@ class Functions(ABC):
     def to_datetime(self, series, format):
         pass
 
-    def remove_accents(self, series):
+    def normalize_chars(self, series):
         pass
 
     @staticmethod
     def find(self, sub, start=0, end=None):
         series = self.series
-        return series.astype(str).str.find(sub, start, end)
+        return self.to_string(series).str.find(sub, start, end)
 
     @staticmethod
     def rfind(series, sub, start=0, end=None):
-        return series.astype(str).str.rfind(sub, start, end)
+        return self.to_string(series).str.rfind(sub, start, end)
 
     @staticmethod
     def left(series, position):
-        return series.str[:position]
+        return self.to_string(series).str[:position]
 
     @staticmethod
     def right(series, position):
-        return series.str[-1 * position:]
+        return self.to_string(series).str[-1 * position:]
 
     @staticmethod
     def mid(series, _start, _n):
-        return series.str[_start:_n]
+        return self.to_string(series).str[_start:_n]
 
     @staticmethod
     def starts_with(series, pat):
-        return series.str.startswith(pat)
+        return self.to_string(series).str.startswith(pat)
 
     @staticmethod
     def ends_with(series, pat):
-        return series.str.endswith(pat)
+        return self.to_string(series).str.endswith(pat)
 
     @staticmethod
-    def char(series):
-        pass
+    def contains(series, pat):
+        return self.to_string(series).str.contains(pat)
+
+    @staticmethod
+    def char(series, _n):
+        return self.to_string(series).str[_n]
 
     @staticmethod
     def unicode(series):

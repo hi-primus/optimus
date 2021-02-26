@@ -23,7 +23,10 @@ class RemoteDummyAttribute:
             func = obj
             for me in method:
                 func = getattr(func, me)
-            result = func(*args, **kwargs)
+            if callable(func):
+                result = func(*args, **kwargs)
+            else:
+                result = func
             return result
 
         return self.__op.remote_run(_f, self.__id, self.__names, *args, **kwargs)
@@ -59,9 +62,19 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
     print = BaseDataFrame.print
     table = BaseDataFrame.table
     display = BaseDataFrame.display
-    
-    
+
+    @property
+    def meta(self):
+        def _get_attr(op, unique_id, attr):
+            df = op.get_var(unique_id)
+            if df is None:
+                op.del_var(unique_id)
+                raise Exception("Remote variable with id "+unique_id+" not found or null")
+            return getattr(df, attr)
+
+        return self.op.remote_run(_get_attr, self.id, "meta")
         
+
     
 class ClientActor:
     op = {}

@@ -80,7 +80,6 @@ class DaskCUDFFunctions(Functions):
         return to_integer_cudf(series)
 
     def to_string(self, series):
-        print(series.dtype)
         return series.astype(str)
 
     def count_zeros(self, series):
@@ -158,16 +157,16 @@ class DaskCUDFFunctions(Functions):
     def cut(self, series, bins):
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-    # def normalize_characters(self, series):
-    #     return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
+    # def remove_special_chars(self, series):
+    #     return self.to_string(series).str.replace('[^A-Za-z0-9]+', '')
 
-    def remove_accents(self, series):
+    def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again
-        return series.astype(str).str.normalize_characters()
+        return self.to_string(series).str.normalize_characters()
 
-    def normalize_characters(self, series):
+    def remove_special_chars(self, series):
         # See https://github.com/rapidsai/cudf/issues/5520
-        return series.astype(str).str.replace_non_alphanumns(replacement_char='')
+        return self.to_string(series).str.replace_non_alphanumns(replacement_char='')
 
     def date_format(self, series, current_format=None, output_format=None):
         return cudf.to_datetime(series).astype('str', format=output_format)
@@ -185,5 +184,5 @@ class DaskCUDFFunctions(Functions):
         #     regex = str_regex
         replace_by = val_to_list(replace_by)
         for i, j in zip(search, replace_by):
-            series = series.astype(str).str.replace(i, j)
+            series = self.to_string(series).str.replace(i, j)
         return series

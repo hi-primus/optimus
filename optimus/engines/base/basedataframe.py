@@ -74,6 +74,21 @@ class BaseDataFrame(ABC):
             new_df.meta = meta
         return new_df
 
+    def unary_operation(self, df, opb, dtype=None):
+        """
+        Helper to process unary operations
+        :param df: Dataframe
+        :param opb: Operator
+        :return:
+        """
+        col = df.cols.names(0)[0]
+        if dtype:
+            df = df.cols.cast(col, dtype).data[col]
+        else:
+            df = df.data[col]
+
+        return self.new(opb(df).to_frame())
+    
     def operation(self, df1, df2, opb, dtype=None):
         """
         Helper to process binary operations
@@ -98,6 +113,12 @@ class BaseDataFrame(ABC):
 
         return self.new(opb(df1, df2).to_frame())
 
+    def __invert__(self):
+        return self.unary_operation(self, operator.invert)
+    
+    def __neg__(self):
+        return self.unary_operation(self, operator.neg)
+    
     def __add__(self, df2):
         return self.operation(self, df2, operator.add, "float")
 
@@ -120,19 +141,25 @@ class BaseDataFrame(ABC):
         return self.operation(self, df2, operator.truediv, "float")
 
     def __rtruediv__(self, df2):
-        return self.operation(self, df2, operator.truediv, "float")
+        return self.operation(df2, self, operator.truediv, "float")
 
     def __floordiv__(self, df2):
         return self.operation(self, df2, operator.floordiv, "float")
 
     def __rfloordiv__(self, df2):
-        return self.operation(self, df2, operator.floordiv, "float")
+        return self.operation(df2, self, operator.floordiv, "float")
+    
+    def __mod__(self, df2):
+        return self.operation(self, df2, operator.mod, "float")
+    
+    def __rmod__(self, df2):
+        return self.operation(df2, self, operator.mod, "float")
 
     def __pow__(self, df2):
         return self.operation(self, df2, operator.pow, "float")
 
     def __rpow__(self, df2):
-        return self.operation(self, df2, operator.pow, "float")
+        return self.operation(df2, self, operator.pow, "float")
 
     def __eq__(self, df2):
         return self.operation(self, df2, operator.eq)
