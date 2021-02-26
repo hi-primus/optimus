@@ -332,7 +332,7 @@ class BaseDataFrame(ABC):
         Get the size of a dask in bytes
         :return:
         """
-        df = self
+        df = self.data
         result = df.memory_usage(index=True, deep=deep).sum()
         if format == "human":
             result = humanize.naturalsize(result)
