@@ -60,13 +60,11 @@ class Functions(ABC):
     def var(self, series):
         return self._to_float(series).var()
 
-    @staticmethod
-    def count_uniques(series, estimate: bool = True, compute: bool = True):
+    def count_uniques(self, series, estimate: bool = True, compute: bool = True):
         # series = self.series
         return self.to_string(series).nunique()
 
-    @staticmethod
-    def unique(series, *args):
+    def unique(self, series, *args):
 
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
@@ -277,36 +275,28 @@ class Functions(ABC):
     def lower(self, series):
         return self.to_string(series).str.lower()
 
-    @staticmethod
-    def upper(series):
+    def upper(self, series):
         return self.to_string(series).str.upper()
 
-    @staticmethod
-    def title(series):
+    def title(self, series):
         return self.to_string(series).str.title()
 
-    @staticmethod
-    def capitalize(series):
+    def capitalize(self, series):
         return self.to_string(series).str.capitalize()
 
-    @staticmethod
-    def pad(series, width, side, fillchar=""):
+    def pad(self, series, width, side, fillchar=""):
         return self.to_string(series).str.pad(width, side, fillchar)
 
-    @staticmethod
-    def extract(series, regex):
+    def extract(self, series, regex):
         return self.to_string(series).str.extract(regex)
 
-    @staticmethod
-    def slice(series, start, stop, step):
+    def slice(self, series, start, stop, step):
         return self.to_string(series).str.slice(start, stop, step)
 
-    @staticmethod
-    def proper(series):
+    def proper(self, series):
         return self.to_string(series).str.title()
 
-    @staticmethod
-    def trim(series):
+    def trim(self, series):
         return self.to_string(series).str.strip()
 
     @staticmethod
@@ -314,20 +304,17 @@ class Functions(ABC):
     def replace_chars(series, search, replace_by):
         pass
 
-    @staticmethod
-    def replace_words(series, search, replace_by):
+    def replace_words(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return self.to_string(series).str.replace(str_regex, replace_by)
 
-    @staticmethod
-    def replace_full(series, search, replace_by):
+    def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return self.to_string(series).str.replace(str_regex, replace_by)
 
-    @staticmethod
-    def remove_white_spaces(series):
+    def remove_white_spaces(self, series):
         return self.to_string(series).str.replace(" ", "")
 
     @staticmethod
@@ -340,41 +327,32 @@ class Functions(ABC):
     def normalize_chars(self, series):
         pass
 
-    @staticmethod
     def find(self, sub, start=0, end=None):
         series = self.series
         return self.to_string(series).str.find(sub, start, end)
 
-    @staticmethod
-    def rfind(series, sub, start=0, end=None):
+    def rfind(self, series, sub, start=0, end=None):
         return self.to_string(series).str.rfind(sub, start, end)
 
-    @staticmethod
-    def left(series, position):
+    def left(self, series, position):
         return self.to_string(series).str[:position]
 
-    @staticmethod
-    def right(series, position):
+    def right(self, series, position):
         return self.to_string(series).str[-1 * position:]
 
-    @staticmethod
-    def mid(series, _start, _n):
+    def mid(self, series, _start, _n):
         return self.to_string(series).str[_start:_n]
 
-    @staticmethod
-    def starts_with(series, pat):
+    def starts_with(self, series, pat):
         return self.to_string(series).str.startswith(pat)
 
-    @staticmethod
-    def ends_with(series, pat):
+    def ends_with(self, series, pat):
         return self.to_string(series).str.endswith(pat)
 
-    @staticmethod
-    def contains(series, pat):
+    def contains(self, series, pat):
         return self.to_string(series).str.contains(pat)
 
-    @staticmethod
-    def char(series, _n):
+    def char(self, series, _n):
         return self.to_string(series).str[_n]
 
     @staticmethod
