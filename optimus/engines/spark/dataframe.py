@@ -382,13 +382,3 @@ class SparkDataFrame(BaseDataFrame):
     def to_pandas(self):
         return self.data.toPandas()
 
-    # @staticmethod
-    # def reset():
-    #     """
-    #     Reset actions metadata and the profiler cache
-    #     :return:
-    #     """
-    #     df = self
-    #     df.meta = Meta.set(df.meta, "transformations.actions", {})
-    #     Profiler.instance.output_columns = {}
-    #     return df
