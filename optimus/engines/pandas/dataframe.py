@@ -34,8 +34,8 @@ class PandasDataFrame(BaseDataFrame):
 
     @property
     def mask(self):
-        from optimus.engines.base.mask import Mask
-        return Mask(self)
+        from optimus.engines.pandas.mask import PandasMask
+        return PandasMask(self)
 
     @property
     def constants(self):

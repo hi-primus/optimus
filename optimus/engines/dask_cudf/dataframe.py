@@ -1,9 +1,8 @@
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
-from optimus.engines.dask_cudf.io.save import Save
 from optimus.engines.cudf.dataframe import CUDFDataFrame
+from optimus.engines.dask_cudf.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.converter import pandas_to_dask_cudf_dataframe
 
 
@@ -12,9 +11,8 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
-    @staticmethod
-    def _pandas_to_dfd(pdf, npartitions):
-        return pandas_to_dask_cudf_dataframe(pdf, npartitions)
+    def _pandas_to_dfd(self, pdf, n_partitions):
+        return pandas_to_dask_cudf_dataframe(pdf, n_partitions)
 
     @property
     def rows(self):
@@ -37,8 +35,8 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     @property
     def mask(self):
-        from optimus.engines.base.mask import Mask
-        return Mask(self)
+        from optimus.engines.dask_cudf.mask import DaskCUDFMask
+        return DaskCUDFMask(self)
 
     @property
     def constants(self):
@@ -88,7 +86,6 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def to_optimus_cudf(self):
         return CUDFDataFrame(self.root.to_pandas())
-
 
     def to_dict(self, orient="records", limit=None):
         """

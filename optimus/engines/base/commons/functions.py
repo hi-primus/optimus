@@ -15,41 +15,34 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 
 
-def to_float_cudf(series):
-    import cudf
-    series_string = series.astype(str)
-    # See https://github.com/rapidsai/cudf/issues/5345
-    # series = cudf.Series(series_string.str.stof()).fillna(False)
-    series = cudf.Series(cudf.core.column.string.str_cast.stof(series_string._column))
-    series[
-        ~cudf.Series(cudf.core.column.string.cpp_is_float(series_string._column)).fillna(False)] = None
-
-    # TODO: after using to_float_cudf() the function .round() is not working(for some unclear reason).
-    #  I found to fixes apply astype(float) to the return or use str_cast.stod() instead of stof()
-
-    return series
+def is_integer(series):
+    return pd.Series(np.vectorize(fastnumbers.isint)(series).flatten())
 
 
-def to_string_cudf(series):
-    return series.astype(str)
+def is_float(series):
+    return pd.Series(np.vectorize(fastnumbers.isfloat)(series).flatten())
+
+
+def is_integer_cudf(series):
+    return series.is_integer()
+
+
+def is_float_cudf(series):
+    return series.is_float()
 
 
 def to_integer_cudf(series):
     import cudf
-    series_string = series.astype(str)
-    # See https://github.com/rapidsai/cudf/issues/5345
-    # series = cudf.Series(series_string.str.stoi()).fillna(False)
-    series = cudf.Series(cudf.core.column.string.str_cast.stoi(series_string._column))
-    series[
-        ~cudf.Series(cudf.core.column.string.cpp_is_integer(series_string._column)).fillna(False)] = None
-    return series
+    return cudf.to_numeric(series, errors="ignore", downcast="integer")
 
 
-def to_string(value, *args):
-    try:
-        return value.astype(str)
-    except TypeError:
-        return np.nan
+def to_float_cudf(series):
+    import cudf
+    return cudf.to_numeric(series, errors="ignore", downcast="float")
+
+
+def to_string_cudf(series):
+    return series.astype(str)
 
 
 def to_integer(value, *args):
@@ -59,12 +52,6 @@ def to_integer(value, *args):
     except TypeError:
         return np.nan
 
-def to_boolean(value, *args):
-    try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return bool(value)
-    except TypeError:
-        return np.nan
 
 def to_float(value, *args):
     # if value is None or isinstance(value, str):
@@ -73,6 +60,21 @@ def to_float(value, *args):
     try:
         # fastnumbers can only handle string or numeric values. Not None, dates or list
         return fastnumbers.fast_float(value, default=np.nan)
+    except TypeError:
+        return np.nan
+
+
+def to_string(value, *args):
+    try:
+        return value.astype(str)
+    except TypeError:
+        return np.nan
+
+
+def to_boolean(value, *args):
+    try:
+        # fastnumbers can only handle string or numeric values. Not None, dates or list
+        return bool(value)
     except TypeError:
         return np.nan
 
@@ -86,6 +88,7 @@ def hist(series, bins):
 
 
 def to_datetime_cudf(value, format):
+    import cudf
     return cudf.to_datetime(value, format=format, errors="coerce")
 
 
@@ -196,6 +199,6 @@ def find(df, columns, sub, ignore_case=False):
         # That could happened if we try to split a categorical column
         # dfd[col_name] = dfd[col_name].astype("object")
         dfd[col_name + "__match_positions__"] = dfd[col_name].astype("object").apply(get_match_positions,
-                                                                                   args=(sub,))
+                                                                                     args=(sub,))
 
     return df.new(dfd)

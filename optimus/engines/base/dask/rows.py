@@ -3,9 +3,9 @@ import operator
 
 import dask.array as da
 import dask.dataframe as  dd
-import pandas as pd
 from multipledispatch import dispatch
 
+from optimus.engines.base.meta import Meta
 from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
@@ -61,7 +61,7 @@ class DaskBaseRows(BaseRows):
         if names_map is not None:
             df = df.cols.rename([("__output_column__" + key, key) for key in names_map])
             df = df.cols.select([*names_map.keys()])
-            
+
         return df.new(df.data.reset_index(drop=True))
 
     # def append(self, rows):
@@ -106,8 +106,7 @@ class DaskBaseRows(BaseRows):
             limit = 1 if limit > 1 else limit
 
         partitions = df.partitions()
-        return self.root.new(self.root._pandas_to_dfd(df.head("*",count), partitions))
-
+        return self.root.new(self.root._pandas_to_dfd(df.head("*", count), partitions))
 
     def count(self, compute=True) -> int:
         """
@@ -250,6 +249,7 @@ class DaskBaseRows(BaseRows):
         """
         Drop duplicates values in a dataframe
         :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
+        :param keep: Row to keep when find a duplicate
         :return: Return a new DataFrame with duplicate rows removed
         :return:
         """
@@ -259,7 +259,6 @@ class DaskBaseRows(BaseRows):
         dfd = dfd.drop_duplicates(keep=keep, subset=subset)
 
         return self.root.new(dfd)
-
 
         # df = self.parent.data
         # columns = prepare_columns(self.parent, input_cols, output_cols, accepts_missing_cols=True)

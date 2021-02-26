@@ -1,8 +1,8 @@
 import operator
+import time
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
-import time
 import humanize
 import imgkit
 import jinja2
@@ -11,8 +11,7 @@ from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
 
-from IPython.core.display import display, HTML
-
+from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE
@@ -22,9 +21,6 @@ from optimus.helpers.output import print_html
 from optimus.infer import is_list_of_str, is_dict
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
-
-from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
-
 from .columns import BaseColumns
 from .meta import Meta
 
@@ -43,17 +39,17 @@ class BaseDataFrame(ABC):
 
     def _repr_html_(self):
         df = self
-        try:
-            return df.table()
-        except Exception:
-            pass
+        # try:
+        return df.table()
+        # except Exception:
+        #     pass
 
     def __repr__(self):
         df = self
-        try:
-            return df.ascii()
-        except Exception:
-            pass
+        # try:
+        return df.ascii()
+        # except Exception:
+        #     pass
 
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -74,42 +70,38 @@ class BaseDataFrame(ABC):
             new_df.meta = meta
         return new_df
 
+    @staticmethod
+    def __operator__(df, dtype):
+        col1 = df.cols.names(0)[0]
+        if dtype:
+            df = df.cols.cast(col1, dtype).data[col1]
+        else:
+            df = df.data[col1]
+        return df
+
     def unary_operation(self, df, opb, dtype=None):
         """
-        Helper to process unary operations
-        :param df: Dataframe
+        Helper to process binary operations
+        :param df: Left
         :param opb: Operator
+        :param dtype: 
         :return:
         """
-        col = df.cols.names(0)[0]
-        if dtype:
-            df = df.cols.cast(col, dtype).data[col]
-        else:
-            df = df.data[col]
+        df = BaseDataFrame.__operator__(df, dtype)
 
         return self.new(opb(df).to_frame())
-    
+
     def operation(self, df1, df2, opb, dtype=None):
         """
         Helper to process binary operations
         :param df1: Left
         :param df2: Right
         :param opb: Operator
+        :param dtype:
         :return:
         """
-        if isinstance(df1, (BaseDataFrame,)):
-            col1 = df1.cols.names(0)[0]
-            if dtype:
-                df1 = df1.cols.cast(col1, dtype).data[col1]
-            else:
-                df1 = df1.data[col1]
-
-        if isinstance(df2, (BaseDataFrame,)):
-            col2 = df2.cols.names(0)[0]
-            if dtype:
-                df2 = df2.cols.cast(col2, dtype).data[col2]
-            else:
-                df2 = df2.data[col2]
+        df1 = BaseDataFrame.__operator__(df1, dtype)
+        df2 = BaseDataFrame.__operator__(df2, dtype)
 
         return self.new(opb(df1, df2).to_frame())
 
@@ -162,7 +154,7 @@ class BaseDataFrame(ABC):
         return self.operation(df2, self, operator.pow, "float")
 
     def __eq__(self, df2):
-        return self.operation(self, df2, operator.eq)
+        return self.unary_operation(self, operator.eq)
 
     def __gt__(self, df2):
         return self.operation(self, df2, operator.gt, "float")
@@ -171,7 +163,10 @@ class BaseDataFrame(ABC):
         return self.operation(self, df2, operator.lt, "float")
 
     def __ne__(self, df2):
-        return self.operation(self, df2, operator.ne, "float")
+        return self.operation(self, df2, operator.ne)
+
+    def __invert__(self):
+        return self.unary_operation(self, operator.__invert__)
 
     def __ge__(self, df2):
         return self.operation(self, df2, operator.ge, "float")
@@ -256,7 +251,6 @@ class BaseDataFrame(ABC):
         # df_.index = df_.index.droplevel(0)
         return df
 
-
     def get_buffer(self):
         return self.buffer
 
@@ -276,7 +270,7 @@ class BaseDataFrame(ABC):
 
         if n > df_length:
             n = df_length
-        
+
         self.buffer = self._create_buffer_df(input_cols, n)
         Meta.set(self.meta, "buffer_time", int(time.time()))
 
@@ -319,7 +313,7 @@ class BaseDataFrame(ABC):
 
         input_columns = parse_columns(df, columns)
         return self._buffer_window(input_columns, lower_bound, upper_bound)
-        
+
     def buffer_json(self, columns):
         df = self.buffer
         columns = parse_columns(df, columns)
@@ -620,24 +614,21 @@ class BaseDataFrame(ABC):
             output = HEADER + output + FOOTER
         return output
 
-
     def display(self, limit=10, columns=None, title=None, truncate=True, plain_text=False):
         # TODO: limit, columns, title, truncate
         df = self
-        
+
         if is_notebook() and not plain_text:
             print_html(df.table(limit, columns, title, truncate))
 
         else:
             print(df.ascii(limit, columns))
 
-
     def print(self, limit=10, columns=None):
         print(self.ascii(limit, columns))
 
-
     def table(self, limit=None, columns=None, title=None, truncate=True):
-        
+
         df = self
         try:
             if is_notebook():
@@ -649,15 +640,14 @@ class BaseDataFrame(ABC):
 
         return df.ascii(limit, columns)
 
-
     def ascii(self, limit=10, columns=None):
         df = self
         if not columns:
             columns = "*"
-        return tabulate(df.rows.limit(limit).cols.select(columns).to_pandas(), headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
-                     tablefmt="simple",
-                     showindex="never")
-
+        return tabulate(df.rows.limit(limit).cols.select(columns).to_pandas(),
+                        headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
+                        tablefmt="simple",
+                        showindex="never")
 
     def export(self):
         """
@@ -688,7 +678,6 @@ class BaseDataFrame(ABC):
         df = self.root
         columns = parse_columns(df, columns)
         return df.data[columns].head(n)
-
 
     def reset(self):
         # df = self.df
@@ -724,6 +713,7 @@ class BaseDataFrame(ABC):
             numeric_cols = []
             string_cols = []
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
+
             compute = True
             # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
             mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
@@ -774,6 +764,7 @@ class BaseDataFrame(ABC):
 
             if compute is True:
                 hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
+
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
@@ -794,7 +785,6 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
         actual_columns = profiler_data["columns"]
-
         # Order columns
         columns = parse_columns(df, columns)
         profiler_data["columns"] = dict(OrderedDict(
@@ -805,6 +795,7 @@ class BaseDataFrame(ABC):
         meta = Meta.columns(meta, df.cols.names())
 
         meta = Meta.set(meta, "transformations", value={})
+
         meta = Meta.set(meta, "profile", profiler_data)
 
         if cols_and_inferred_dtype is not None:
@@ -815,7 +806,6 @@ class BaseDataFrame(ABC):
         df.meta = meta
         if output == "json":
             profiler_data = dump_json(profiler_data)
-
         return profiler_data
 
     def get_series(self):

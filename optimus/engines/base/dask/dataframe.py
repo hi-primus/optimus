@@ -1,15 +1,14 @@
-import dask
-import humanize
-
 from abc import abstractmethod
+
+import humanize
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-
 from optimus.infer import is_one_element
+
 
 class DaskBaseDataFrame(BaseDataFrame):
 
@@ -22,16 +21,16 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         if dfd.known_divisions:
             for key in kw_columns:
-                if not is_one_element(kw_columns[key]) and not callable(kw_columns[key]) and not kw_columns[key].known_divisions:
+                if not is_one_element(kw_columns[key]) and not callable(kw_columns[key]) and not kw_columns[
+                    key].known_divisions:
                     kw_columns[key] = kw_columns[key].reset_index().set_index('index')[key]
 
         return dfd.assign(**kw_columns)
 
     @staticmethod
     @abstractmethod
-    def _pandas_to_dfd(pdf, npartitions):
+    def _pandas_to_dfd(pdf, n_partitions):
         pass
-
 
     def execute(self):
         df = self.data

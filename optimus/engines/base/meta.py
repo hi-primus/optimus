@@ -10,10 +10,10 @@ ACTIONS_KEY = "transformations.actions"
 class Meta:
 
     @staticmethod
-    def set(meta, spec=None, value=None, missing=dict):
+    def set(meta, spec=None, value=None, missing=dict) -> dict:
         """
         Set metadata in a dataframe columns
-        :param meta:
+        :param meta: Meta data to be modified
         :param spec: path to the key to be modified
         :param value: dict value
         :param missing:
@@ -28,9 +28,10 @@ class Meta:
         return data
 
     @staticmethod
-    def get(meta, spec=None):
+    def get(meta, spec=None) -> dict:
         """
         Get metadata from a dataframe column
+        :param meta:Meta data to be modified
         :param spec: path to the key to be modified
         :return: dict
         """
@@ -44,6 +45,7 @@ class Meta:
     def reset_actions(meta):
         """
         Reset the data frame metadata
+        :param meta: Meta data to be modified
         :return:
         """
 
@@ -53,14 +55,13 @@ class Meta:
     def copy(meta, old_new_columns) -> dict:
         """
         Shortcut to add copy transformations to a dataframe
-        :param meta:
+        :param meta: Meta data to be modified
         :param old_new_columns:
         :return: dict
         """
 
         meta = copy.deepcopy(meta)
         meta = Meta.action(meta, "copy", value=old_new_columns)
-        # meta = meta.append_action("copy", old_new_columns)
 
         return meta
 
@@ -68,20 +69,11 @@ class Meta:
     def rename(meta, old_new_columns) -> dict:
         """
         Shortcut to add rename transformations to a dataframe
-        :param meta:
+        :param meta: Meta data to be modified
         :param old_new_columns:
         :return: dict (Meta)
         """
 
-        # assign(target, spec, value, missing=missing)
-        # a = odf.meta.get()
-        # if a.get("transformations") is None:
-        #     odf.meta.get()["transformations"] = {}
-        #
-        #     if a["transformations"].get("actions") is None:
-        #         odf.meta.get()["transformations"]["actions"] = {}
-        #
-        # odf.meta.get()["transformations"]["actions"].update({"rename":old_new_columns})
         meta = copy.deepcopy(meta)
         meta = Meta.action(meta, "rename", value=old_new_columns)
 
@@ -91,7 +83,7 @@ class Meta:
     def columns(meta, value) -> dict:
         """
         Shortcut to cache the columns in a dataframe
-        :param meta:
+        :param meta: Meta data to be modified
         :param value:
         :return: dict (Meta)
         """
@@ -105,17 +97,15 @@ class Meta:
     def action(meta, name, value) -> dict:
         """
         Shortcut to add actions to a dataframe
-        :param meta:
-        :param name:
-        :param value:
+        :param meta: Meta data to be modified
+        :param name: Action name
+        :param value: Value to be added
         :return: dict (Meta)
         """
         meta = copy.deepcopy(meta)
         value = val_to_list(value)
 
         for _value in value:
-            # meta = self.append_action(name, _value)
-            # meta = copy.deepcopy(meta)
             key = ACTIONS_KEY
 
             old_value = meta.get(key)
@@ -130,9 +120,9 @@ class Meta:
     def update(meta, path, value, default=list) -> dict:
         """
         Update meta data in a key
-        :param meta:
-        :param path:
-        :param value:
+        :param meta: Meta data to be modified
+        :param path: Path indise the dict to be modified
+        :param value: New key value
         :param default:
         :return: dict (Meta)
         """
@@ -166,17 +156,6 @@ class Meta:
         Preserves meta
         :param meta:
         :param df:
-        :param value:
-        :param columns:
-        :return: dict (Meta)
-        """
-        return meta
-
-    @staticmethod
-    def append_action(meta, value=None, columns=None) -> dict:
-        """
-        Append action
-        :param meta:
         :param value:
         :param columns:
         :return: dict (Meta)
