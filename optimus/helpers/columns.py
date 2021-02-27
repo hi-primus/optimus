@@ -356,7 +356,7 @@ def filter_col_name_by_dtypes(df, data_type):
     return result
 
 
-def name_col(col_names: str, append: str) -> str:
+def name_col(col_names: str, append: str = None) -> str:
     """
     Whenever you want to name and output use this function. This ensure that we use and Standard when naming
     :param col_names: Column name
@@ -364,11 +364,17 @@ def name_col(col_names: str, append: str) -> str:
     :return:
     """
     separator = "_"
-    append = str(one_list_to_val(append))
+
     col_names = val_to_list(col_names)
-    if len(col_names) > 1:
+    if len(col_names) > 1 and append is None:
+        output_col = ('_'.join(str(elem) for elem in col_names))
+    elif len(col_names) > 1:
         output_col = ('_'.join(str(elem) for elem in col_names))[:10] + separator
     else:
         output_col = one_list_to_val(col_names)
 
-    return output_col + separator + append
+    if append is not None:
+        append = separator + str(one_list_to_val(append))
+    else:
+        append = ""
+    return output_col + append
