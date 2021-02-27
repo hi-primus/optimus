@@ -72,11 +72,12 @@ class BaseDataFrame(ABC):
 
     @staticmethod
     def __operator__(df, dtype):
-        col1 = df.cols.names(0)[0]
-        if dtype:
-            df = df.cols.cast(col1, dtype).data[col1]
-        else:
-            df = df.data[col1]
+        if isinstance(df, (BaseDataFrame,)):
+            col1 = df.cols.names(0)[0]
+            if dtype:
+                df = df.cols.cast(col1, dtype).data[col1]
+            else:
+                df = df.data[col1]
         return df
 
     def unary_operation(self, df, opb, dtype=None):
