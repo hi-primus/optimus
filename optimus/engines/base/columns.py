@@ -238,9 +238,12 @@ class BaseColumns(ABC):
 
         temp_col_name = name_col(col_name, "SET")
 
-        dfd[temp_col_name] = default
-        default = dfd[temp_col_name]
-        del dfd[temp_col_name]
+        if default:
+            dfd[temp_col_name] = default
+            default = dfd[temp_col_name]
+            del dfd[temp_col_name]
+        elif col_name:
+            default = dfd[col_name]
 
         if eval_value and is_str(value):
             value = eval(value)
