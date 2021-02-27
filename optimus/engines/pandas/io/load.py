@@ -6,7 +6,7 @@ import pandavro as pdx
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
-from optimus.helpers.functions import prepare_path
+from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
 from optimus.infer import is_str
 
@@ -25,7 +25,9 @@ class Load(BaseLoad):
 
         :return:
         """
-
+        
+        path = unquote_path(path)
+        
         local_file_names = prepare_path(path, "json")
         try:
             df_list = []
@@ -82,6 +84,9 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
+        
+        path = unquote_path(path)
+        
         if is_str(filepath_or_buffer):
             _meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
@@ -120,10 +125,11 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         """
-
+        
+        path = unquote_path(path)
+        
         # file, file_name = prepare_path(path, "parquet")[0]
 
-        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -148,6 +154,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -174,6 +183,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -212,6 +224,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options

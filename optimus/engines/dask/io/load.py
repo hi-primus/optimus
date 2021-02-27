@@ -9,7 +9,7 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import prepare_path
+from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
 
 
@@ -27,6 +27,9 @@ class Load(BaseLoad):
 
         :return:
         """
+
+        path = unquote_path(path)
+        
         file, file_name = prepare_path(path, "json")[0]
 
         if conn is not None:
@@ -83,6 +86,8 @@ class Load(BaseLoad):
 
         """
 
+        path = unquote_path(path)
+
         if cache is False:
             prepare_path.cache_clear()
 
@@ -122,6 +127,8 @@ class Load(BaseLoad):
         :return: Spark Dataframe
         """
 
+        path = unquote_path(path)
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -139,6 +146,9 @@ class Load(BaseLoad):
     @staticmethod
     def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
             storage_options=None, conn=None, *args, **kwargs):
+
+        path = unquote_path(path)
+
         file, file_name = prepare_path(path, "zip")
 
         from zipfile import ZipFile
@@ -183,6 +193,8 @@ class Load(BaseLoad):
 
         """
 
+        path = unquote_path(path)
+
         if cache is False:
             prepare_path.cache_clear()
 
@@ -214,6 +226,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the avro function
         :return: Spark Dataframe
         """
+
+        path = unquote_path(path)
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -242,6 +257,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the excel function
 
         """
+
+        path = unquote_path(path)
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
