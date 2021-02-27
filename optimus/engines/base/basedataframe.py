@@ -616,41 +616,54 @@ class BaseDataFrame(ABC):
             mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
-            for col_name, x in cols_and_inferred_dtype.items():
+            cols = cols_and_inferred_dtype.items()
+
+            for col_name, x in cols:
                 if x["dtype"] in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
                     numeric_cols.append(col_name)
                 else:
                     string_cols.append(col_name)
 
             hist = None
-            freq_uniques = None
+            count_uniques = None
+
+
+
+            if len(numeric_cols):
+                count_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=True, tidy=False)
+            
+            for col in numeric_cols:
+                if count_uniques["count_uniques"][col] <= 2:
+                    numeric_cols.remove(col)
+                    string_cols.append(col)
 
             if len(numeric_cols):
                 hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
-                freq_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=compute, tidy=False)
 
             freq = None
+
             if len(string_cols):
                 freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
 
-            # print(numeric_cols, string_cols)
-
-            def merge(_columns, _hist, _freq, _mismatch, _dtypes, _freq_uniques):
+            def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _f = {}
+
+                _freq = {} if _freq is None else _freq["frequency"]
+                _hist = {} if _hist is None else _hist["hist"]
 
                 for _col_name in _columns:
                     _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
-
-                if _hist is not None:
-                    for _col_name, h in _hist["hist"].items():
-                        _f[_col_name]["stats"]["hist"] = h
-                        # print("freq_uniques",freq_uniques)
-                        _f[_col_name]["stats"]["count_uniques"] = freq_uniques["count_uniques"][_col_name]
-
-                if _freq is not None:
-                    for _col_name, f in _freq["frequency"].items():
+                    if _col_name in _freq:
+                        f = _freq[_col_name]
                         _f[_col_name]["stats"]["frequency"] = f["values"]
                         _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
+
+                    elif _col_name in _hist:
+                        h = _hist[_col_name]
+                        _f[_col_name]["stats"]["hist"] = h
+                        _f[_col_name]["stats"]["count_uniques"] = count_uniques["count_uniques"][_col_name]
+
+
 
                 return {"columns": _f}
 
@@ -660,9 +673,9 @@ class BaseDataFrame(ABC):
             dtypes = df.cols.dtypes("*")
 
             if compute is True:
-                hist, freq, mismatch, freq_uniques = dd.compute(hist, freq, mismatch, freq_uniques)
+                hist, freq, mismatch = dd.compute(hist, freq, mismatch)
 
-            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, freq_uniques)
+            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
