@@ -215,11 +215,11 @@ class DaskBaseColumns(BaseColumns):
             col_index = output_ordered_columns.index(input_cols[-1]) + 1
             output_ordered_columns[col_index:col_index] = [output_col]
 
-        meta = Meta.action(df.meta, dfd, Actions.NEST.value, list(kw_columns.values()))
+        meta = Meta.action(df.meta, Actions.NEST.value, list(kw_columns.values()))
 
         if drop is True:
             for input_col in input_cols:
                 if input_col in output_ordered_columns and input_col != output_col:
                     output_ordered_columns.remove(input_col)
 
-        return self.root.new(dfd).cols.select(output_ordered_columns)
+        return self.root.new(dfd, meta).cols.select(output_ordered_columns)
