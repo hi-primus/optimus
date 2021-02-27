@@ -2,6 +2,7 @@ import csv
 import os
 from abc import abstractmethod
 
+import boto3
 import magic
 
 from optimus.helpers.functions import prepare_path
@@ -51,11 +52,27 @@ class BaseLoad:
         :param kwargs:
         :return:
         """
-
-        try:
+        conn = kwargs.get("conn")
+        if conn:
+            s3config = {
+                # "region_name": S3_REGION,
+                "endpoint_url": conn.storage_options['client_kwargs']['endpoint_url'],
+                "aws_access_key_id": conn.storage_options.get("key"),
+                "aws_secret_access_key": conn.storage_options.get("secret")}
+            s3_obj = boto3.resource('s3', **s3config).Object("bumblebee", path)
+            body = s3_obj.get()['Body']
+            buffer = body.read(amt=BYTES_SIZE)
+            full_path = path
+            file_name = path
+        else:
+            file = open(path, "rb")
+            buffer = file.read(BYTES_SIZE)
             full_path, file_name = prepare_path(path)[0]
+
+        # Detect the file type
+        try:
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
-            mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_path).split(";")
+            mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_buffer(buffer).split(";")
             mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
         except Exception as e:
             print(getattr(e, 'message', repr(e)))
@@ -63,7 +80,7 @@ class BaseLoad:
             file_name = path.split('/')[-1]
             file_ext = file_name.split('.')[-1]
             mime = False
-            mime_info = { "file_type": file_ext, "encoding": False }
+            mime_info = {"file_type": file_ext, "encoding": False}
 
         file_type = file_ext
 
@@ -74,20 +91,21 @@ class BaseLoad:
                 file_type = "json"
             elif mime == "text/xml":
                 file_type = "xml"
-            elif mime in ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
+            elif mime in ["application/vnd.ms-excel",
+                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
                 file_type = "excel"
             else:
                 RaiseIt.value_error(mime, ["csv", "json", "xml", "xls", "xlsx"])
-        
+
+        # Detect the file encoding
         if file_type == "csv":
             # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
             if mime_info.get("encoding", None) == "unknown-8bit":
                 mime_info["encoding"] = "latin-1"
-            
+
             if mime:
                 try:
-                    file = open(full_path, encoding=mime_info["encoding"]).read(BYTES_SIZE)
-                    dialect = csv.Sniffer().sniff(file)
+                    dialect = csv.Sniffer().sniff(str(buffer))
                     mime_info["file_type"] = "csv"
 
                     r = {"properties": {"delimiter": dialect.delimiter,
@@ -109,7 +127,7 @@ class BaseLoad:
                     pass
             else:
                 df = self.csv(path, **kwargs)
-                
+
         elif file_type == "json":
             mime_info["file_type"] = "json"
             df = self.json(full_path, *args, **kwargs)
