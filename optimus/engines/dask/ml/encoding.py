@@ -1,8 +1,7 @@
 # from dask_ml.preprocessing import DummyEncoder
 
 from optimus.helpers.check import is_spark_dataframe
-from optimus.helpers.columns import parse_columns, name_col, get_output_cols, prepare_columns
-from optimus.helpers.constants import Actions
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 
@@ -27,8 +26,6 @@ def n_gram(df, input_col, n=2):
     tfidf_model = tfidf.fit(df)
     df_model = tfidf_model.transform(df)
     return df_model, tfidf_model
-
-
 
 
 def one_hot_encoder(df, input_cols, output_col=None, **kargs):
