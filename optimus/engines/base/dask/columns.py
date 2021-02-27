@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.meta import Meta
-from optimus.helpers.columns import parse_columns, get_output_cols
+from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import Infer, is_dict, is_list
@@ -48,11 +48,10 @@ class DaskBaseColumns(BaseColumns):
             dfs = [dfs]
 
         df = self.root
-        meta = df.meta
         dfd = dd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
-
         meta = Meta.action(df.meta, Actions.APPEND.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
+        # return dfd
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
@@ -179,12 +178,12 @@ class DaskBaseColumns(BaseColumns):
         """
 
         df = self.root
-        input_cols = parse_columns(df, input_cols) \
- \
+        input_cols = parse_columns(df, input_cols)
         # output_col = val_to_list(output_col)
         # check_column_numbers(input_cols, 2)
         if output_col is None:
-            RaiseIt.type_error(output_col, ["str"])
+            output_col = name_col(input_cols)
+            # RaiseIt.type_error(output_col, ["str"])
 
         # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
 
