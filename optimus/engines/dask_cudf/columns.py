@@ -109,3 +109,26 @@ class Cols(DaskBaseColumns):
             _res.update(res)
 
         return {"hist": _res}
+
+    # def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
+    #
+    #     """
+    #     Split an array or string in different columns
+    #     :param input_cols: Columns to be un-nested
+    #     :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
+    #     (output_col_2_1, output_col_2]
+    #     :param separator: char or regex
+    #     :param splits: Number of columns splits.
+    #     :param index: Return a specific index per columns. [1,2]
+    #     :param drop:
+    #     :param mode:
+    #     """
+    #     df = self.root
+    #     ddf = self.root.data
+    #     input_cols = parse_columns(df, input_cols)
+    #
+    #     for input_col in input_cols:
+    #         a= ddf[input_col].str.split(separator, splits, expand=True)
+    #         a.o
+    #     return a
+    #     # return df
