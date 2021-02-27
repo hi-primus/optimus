@@ -154,7 +154,7 @@ class BaseDataFrame(ABC):
         return self.operation(df2, self, operator.pow, "float")
 
     def __eq__(self, df2):
-        return self.unary_operation(self, operator.eq)
+        return self.operation(self, df2, operator.eq)
 
     def __gt__(self, df2):
         return self.operation(self, df2, operator.gt, "float")
@@ -164,9 +164,6 @@ class BaseDataFrame(ABC):
 
     def __ne__(self, df2):
         return self.operation(self, df2, operator.ne)
-
-    def __invert__(self):
-        return self.unary_operation(self, operator.__invert__)
 
     def __ge__(self, df2):
         return self.operation(self, df2, operator.ge, "float")
