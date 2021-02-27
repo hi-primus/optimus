@@ -19,8 +19,8 @@ class Connection:
 
 
     def path(self, path):
-        if self.options["base_url"] and not path.startswith((self.options["base_url"], *Schemas.list())):
-            path = self.options["base_url"] + path
+        if self._storage_options["base_url"] and not path.startswith((self._storage_options["base_url"], *Schemas.list())):
+            path = self._storage_options["base_url"] + path
 
         return path
 
