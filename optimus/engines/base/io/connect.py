@@ -3,6 +3,7 @@ from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.constants import Schemas
 from optimus.infer import regex_full_url
+import copy
 import re
 
 class Connection:
@@ -10,10 +11,11 @@ class Connection:
     Generic
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, config=None, **kwargs):
         if not kwargs["base_url"].endswith("/"):
             kwargs["base_url"] = kwargs["base_url"] + "/"
-        self.options = kwargs
+        self._storage_options = kwargs
+        self.options = config if config else kwargs
 
 
     def path(self, path):
@@ -25,7 +27,7 @@ class Connection:
 
     @property
     def storage_options(self):
-        storage_options = self.options.copy()
+        storage_options = self._storage_options.copy()
         storage_options.pop("base_url")
 
         if not len(storage_options.keys()):
@@ -34,6 +36,7 @@ class Connection:
             storage_options = {k: storage_options[k] for k in storage_options.keys() if not k.startswith("_")}
 
         return storage_options
+
 
 class S3(Connection):
     """
@@ -60,6 +63,10 @@ class S3(Connection):
 
 
         """
+        config = kwargs.copy()
+        config["endpoint_url"] = endpoint_url
+        config["bucket"] = bucket
+
         if endpoint_url is None:
             RaiseIt.value_error(endpoint_url, "")
 
@@ -80,7 +87,7 @@ class S3(Connection):
             elif endpoint_url:
                 kwargs["base_url"] = Schemas.S3.value + endpoint_url
 
-        super().__init__(**kwargs)
+        super().__init__(config, **kwargs)
 
 
 class Local(Connection):
@@ -112,11 +119,17 @@ class MAS(Connection):
 
 class GCS(Connection):
     def __init__(self, host, port, user, kerb_ticket):
-        super().__init__(host, port, user, kerb_ticket)
+        config["host"] = host
+        config["port"] = port
+        config["user"] = user
+        config["kerb_ticket"] = kerb_ticket
+        super().__init__(config, host, port, user, kerb_ticket)
 
 
 class HDFS(Connection):
     def __init__(self, **kwargs):
+
+        config = kwargs.copy()
         
         if not kwargs.get("url", False):
             kwargs["url"] = "hdfs://" + kwargs["user"]
@@ -135,7 +148,7 @@ class HDFS(Connection):
         kwargs["base_url"] = kwargs["url"]
         kwargs.pop("url")
 
-        super().__init__(**kwargs)
+        super().__init__(config, **kwargs)
 
 class Connect:
     @staticmethod

@@ -7,7 +7,7 @@ from dask import dataframe as dd
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
-from optimus.helpers.functions import prepare_path
+from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
 
 
@@ -25,6 +25,9 @@ class Load(BaseLoad):
 
         :return:
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -79,6 +82,9 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
+
+        path = unquote_path(path)
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -112,6 +118,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -139,6 +148,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         :return: Spark Dataframe
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -165,6 +177,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: Spark Dataframe
         """
+        
+        path = unquote_path(path)
+        
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options

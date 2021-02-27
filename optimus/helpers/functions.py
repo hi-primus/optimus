@@ -8,9 +8,11 @@ import re
 import subprocess
 import sys
 import tempfile
+
 from collections import Counter
 from pathlib import Path
 from urllib.request import Request, urlopen
+from urllib.parse import unquote
 
 import fastnumbers
 import humanize
@@ -453,6 +455,9 @@ def downloader(url, file_format):
 
     return path
 
+
+def unquote_path(path):
+    return unquote(path)
 
 @functools.lru_cache(maxsize=128)
 def prepare_path(path, file_format=None):
