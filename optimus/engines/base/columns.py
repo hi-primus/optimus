@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import pydateinfer
 from dask import dataframe as dd
-from dask.dataframe import from_delayed
 from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
@@ -187,39 +186,34 @@ class BaseColumns(ABC):
         dfd = df.data
         meta = df.meta
 
-        if mode == "whole":
-            dfd = func(dfd, *args)
-            df = self.root.new(dfd, meta=meta)
-        else:
-            for input_col, output_col in columns:
+        for input_col, output_col in columns:
 
-                if mode == "vectorized" and (not is_dask_dataframe(dfd) or is_dask_cudf_dataframe(dfd)):
-                    kw_columns[output_col] = func(dfd[input_col], *args)
+            if mode == "vectorized":
+                # kw_columns[output_col] = self.F.delayed(func)(part, *args)
+                kw_columns[output_col] = func(dfd[input_col], *args)
 
-                elif mode == "vectorized":
-                    partitions = dfd.to_delayed()
+            elif mode == "partitioned":
+                partitions = self.F.to_delayed(dfd[input_col].to_frame())
+                delayed_parts = [self.F.delayed(func)(part[input_col], *args) for part in partitions]
+                kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
-                    delayed_parts = [dask.delayed(func)(part[input_col], *args) for part in partitions]
+            elif mode == "map":
+                kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
 
-                    kw_columns[output_col] = from_delayed(delayed_parts)
+            # Preserve column order
+            if output_col not in self.names():
+                col_index = output_ordered_columns.index(input_col) + 1
+                output_ordered_columns[col_index:col_index] = [output_col]
 
-                elif mode == "map":
-                    kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
+            meta = Meta.action(meta, meta_action, output_col)
 
-                # Preserve column order
-                if output_col not in self.names():
-                    col_index = output_ordered_columns.index(input_col) + 1
-                    output_ordered_columns[col_index:col_index] = [output_col]
-                from optimus.engines.base.meta import Meta
+        if set_index is True and mode != "partitioned":
+            dfd = dfd.reset_index()
+        
+        df = self.root.new(dfd, meta=meta)
 
-                # Preserve actions for the profiler
-                meta = Meta.action(meta, meta_action, output_col)
-
-            if set_index is True:
-                dfd = dfd.reset_index()
-            df = self.root.new(dfd, meta=meta)
-            if kw_columns:
-                df = df.cols.assign(kw_columns)
+        if kw_columns:
+            df = df.cols.assign(kw_columns)
 
         # Dataframe to Optimus dataframe
 
@@ -248,7 +242,7 @@ class BaseColumns(ABC):
         default = dfd[temp_col_name]
         del dfd[temp_col_name]
 
-        if eval_value:
+        if eval_value and is_str(value):
             value = eval(value)
 
         if is_str(where):
@@ -1236,15 +1230,11 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
-
-        def _date_format(value, *args):
-            _current_format, _output_format = args
-            return self.F.date_format(value, _current_format, _output_format)
-
+        
         df = self.root
-        return df.cols.apply(input_cols, _date_format, args=(current_format, output_format), func_return_type=str,
-                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="vectorized",
-                             set_index=True)
+        return df.cols.apply(input_cols, self.F.date_format, args=(current_format, output_format), func_return_type=str,
+                             output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
+                             set_index=False)
 
     @staticmethod
     @abstractmethod
@@ -1312,7 +1302,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.apply(input_cols, self.F.to_datetime, func_return_type=str,
-                          output_cols=output_cols, args=format, mode="vectorized")
+                          output_cols=output_cols, args=format, mode="partitioned")
 
     def year(self, input_cols, format=None, output_cols=None):
         """
@@ -1379,7 +1369,7 @@ class BaseColumns(ABC):
 
         return self.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)
+                          meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True)
 
     def replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                 output_cols=None):
@@ -1721,8 +1711,7 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        # print("df.data",type(df.data),df.data)
-        partitions = df.to_delayed()
+        partitions = self.F.to_delayed(df.data)
         c = [_hist(part[col_name], col_name, _bins) for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
@@ -1765,10 +1754,8 @@ class BaseColumns(ABC):
             #     TODO: Check matching rows using fastnumbers instead of regex
             #     match = df.cols.select(col_name).cols.apply(col_name, profiler_dtype_func, args=(dtype,)).cols.frequency()
             else:
-
-                freq = df.cols.select(col_name).cols.to_string().cols.match(col_name,
-                                                                             Infer.ProfilerDataTypesFunctions[
-                                                                                 dtype]).cols.frequency()
+                regex = Infer.ProfilerDataTypesFunctions[dtype]
+                freq = df.cols.select(col_name).cols.to_string().cols.match(col_name, regex).cols.frequency()
 
                 values = {list(j.values())[0]: list(j.values())[1] for j in freq["frequency"][col_name]["values"]}
 

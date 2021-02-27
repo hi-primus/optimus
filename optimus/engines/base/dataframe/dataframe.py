@@ -230,4 +230,4 @@ class Ext(BaseDataFrame):
         return self.data
 
     def to_delayed(self):
-        return [self.data]
+        return self.functions.to_delayed(self.data)

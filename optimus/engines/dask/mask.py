@@ -9,7 +9,7 @@ from optimus.engines.base.mask import Mask
 class DaskMask(Mask):
 
     def integer(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_integer)
+        return self.root.cols.apply(col_name, is_integer, mode="partitioned")
 
     def float(self, col_name="*"):
 

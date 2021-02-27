@@ -142,12 +142,13 @@ class BaseRows(ABC):
         """
         Count dataframe rows
         """
-        dfd = self.root.data
+        df = self.root
+        dfd = df.data
         # TODO: Be sure that we need the compute param
         if compute is True:
             result = len(dfd.index)
         else:
-            result = len(dfd.index)
+            result = self.F.delayed(len)(dfd)
         return result
 
     def to_list(self, input_cols):

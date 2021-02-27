@@ -108,17 +108,6 @@ class DaskBaseRows(BaseRows):
         partitions = df.partitions()
         return self.root.new(self.root._pandas_to_dfd(df.head("*", count), partitions))
 
-    def count(self, compute=True) -> int:
-        """
-        Count dataframe rows
-        """
-        dfd = self.root.data
-        # TODO: Be sure that we need the compute param
-        if compute is True:
-            result = len(dfd.index)
-        else:
-            result = len(dfd.index)
-        return result
 
     @dispatch(str, str)
     def sort(self, input_cols):
