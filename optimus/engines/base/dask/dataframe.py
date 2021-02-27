@@ -21,10 +21,9 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         if dfd.known_divisions:
             for key in kw_columns:
-                if not is_one_element(kw_columns[key]) and not callable(kw_columns[key]) and not kw_columns[
-                    key].known_divisions:
-                    kw_columns[key] = kw_columns[key].reset_index().set_index('index')[key]
-
+                kw_column = kw_columns[key]
+                if not is_one_element(kw_column) and not callable(kw_column) and not kw_column.known_divisions:
+                    kw_columns[key] = kw_column.reset_index().set_index('index')[key]
         return dfd.assign(**kw_columns)
 
     @staticmethod
