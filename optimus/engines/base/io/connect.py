@@ -1,10 +1,11 @@
+import re
+
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.spark.io.properties import DriverProperties
-from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.constants import Schemas
+from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import regex_full_url
-import copy
-import re
+
 
 class Connection:
     """
@@ -17,13 +18,12 @@ class Connection:
         self._storage_options = kwargs
         self.options = config if config else kwargs
 
-
     def path(self, path):
-        if self._storage_options["base_url"] and not path.startswith((self._storage_options["base_url"], *Schemas.list())):
+        if self._storage_options["base_url"] and not path.startswith(
+                (self._storage_options["base_url"], *Schemas.list())):
             path = self._storage_options["base_url"] + path
 
         return path
-
 
     @property
     def storage_options(self):
@@ -37,11 +37,16 @@ class Connection:
 
         return storage_options
 
+    def boto(self):
+        return self.options
+
 
 class S3(Connection):
     """
     Amazon S3
     """
+
+    type = "s3"
 
     def __init__(self, endpoint_url=None, bucket=None, **kwargs):
         """
@@ -74,12 +79,13 @@ class S3(Connection):
 
         if schema_result is not None:
             schema = schema_result[2]
-            endpoint_url = endpoint_url[len(schema+"://"):] # removes schema from endpoint_url
+            endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url
 
         schema = schema if schema else "https"
 
         kwargs["client_kwargs"] = kwargs.get("client_kwargs", {})
-        kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url", schema+"://"+endpoint_url)
+        kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url",
+                                                                              schema + "://" + endpoint_url)
 
         if not kwargs.get("base_url", False):
             if bucket:
@@ -88,6 +94,14 @@ class S3(Connection):
                 kwargs["base_url"] = Schemas.S3.value + endpoint_url
 
         super().__init__(config, **kwargs)
+
+    @property
+    def boto(self):
+        return {
+            # "region_name": S3_REGION,
+            "endpoint_url": self.options['endpoint_url'],
+            "aws_access_key_id": self.options.get("key"),
+            "aws_secret_access_key": self.options.get("secret")}
 
 
 class Local(Connection):
@@ -130,25 +144,26 @@ class HDFS(Connection):
     def __init__(self, **kwargs):
 
         config = kwargs.copy()
-        
+
         if not kwargs.get("url", False):
             kwargs["url"] = "hdfs://" + kwargs["user"]
 
             if kwargs.get("password", False):
-                kwargs["url"] += ":" + kwargs["password"] 
-            
-            kwargs["url"] += "@" + kwargs["host"] 
-            
+                kwargs["url"] += ":" + kwargs["password"]
+
+            kwargs["url"] += "@" + kwargs["host"]
+
             if kwargs.get("port", False):
                 kwargs["url"] += ":" + kwargs["port"]
 
         elif not kwargs["url"].startswith("hdfs://"):
             kwargs["url"] = "hdfs://" + kwargs["url"]
-        
+
         kwargs["base_url"] = kwargs["url"]
         kwargs.pop("url")
 
         super().__init__(config, **kwargs)
+
 
 class Connect:
     @staticmethod
@@ -208,17 +223,14 @@ class Connect:
     @staticmethod
     def s3(**kwargs):
         return S3(**kwargs)
-    
 
     @staticmethod
     def local(**kwargs):
         return Local(**kwargs)
 
-
     @staticmethod
     def hdfs(**kwargs):
         return HDFS(**kwargs)
-
 
     @staticmethod
     def gcs(**kwargs):
@@ -228,7 +240,6 @@ class Connect:
         :return:
         """
         return GCS(**kwargs)
-
 
     @staticmethod
     def mas(**kwargs):

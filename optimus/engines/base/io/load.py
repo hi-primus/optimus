@@ -53,17 +53,15 @@ class BaseLoad:
         :return:
         """
         conn = kwargs.get("conn")
+
         if conn:
-            s3config = {
-                # "region_name": S3_REGION,
-                "endpoint_url": conn.storage_options['client_kwargs']['endpoint_url'],
-                "aws_access_key_id": conn.storage_options.get("key"),
-                "aws_secret_access_key": conn.storage_options.get("secret")}
-            s3_obj = boto3.resource('s3', **s3config).Object("bumblebee", path)
-            body = s3_obj.get()['Body']
+
+            remote_obj = boto3.resource(conn.type, **conn.boto).Object(conn.options.get("bucket"), path)
+            body = remote_obj.get()['Body']
             buffer = body.read(amt=BYTES_SIZE)
-            full_path = path
-            file_name = path
+            full_path = conn.path(path)
+            file_name = os.path.basename(path)
+
         else:
             file = open(path, "rb")
             buffer = file.read(BYTES_SIZE)
