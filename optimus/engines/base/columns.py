@@ -242,7 +242,7 @@ class BaseColumns(ABC):
         default = dfd[temp_col_name]
         del dfd[temp_col_name]
 
-        if eval_value:
+        if eval_value and is_str(value):
             value = eval(value)
 
         if is_str(where):
