@@ -593,8 +593,8 @@ class BaseColumns(ABC):
         if df_right.cols.dtypes(right_on) == "category":
             df_right[right_on] = df_right[right_on].cat.as_ordered()
 
-        dfd_left = df_left.data
-        dfd_right = df_right.data
+        # dfd_left = df_left.data
+        # dfd_right = df_right.data
 
         # Join do not work with different data types.
         # Use set_index to return a index in the dataframe
@@ -615,7 +615,7 @@ class BaseColumns(ABC):
                                               suffixes=(suffix_left, suffix_right)))
 
         # Remove duplicated index if the name is the same. If the index name are not the same
-        if order is True:
+        if key_middle is True:
             names = df.cols.names()
             last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
             left_on = left_on if left_on in names else left_on + suffix_left
@@ -1392,7 +1392,7 @@ class BaseColumns(ABC):
         search = val_to_list(search)
         replace_by = val_to_list(replace_by)
 
-        if search_by=="full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
+        if search_by == "full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
             search_by = "values"
 
         if search_by == "chars":
