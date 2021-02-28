@@ -93,7 +93,7 @@ class Load(BaseLoad):
         try:
 
             # Pandas do not support \r\n terminator.
-            if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
+            if lineterminator and lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
                 lineterminator = None
             if conn is not None:
                 filepath_or_buffer = conn.path(filepath_or_buffer)
