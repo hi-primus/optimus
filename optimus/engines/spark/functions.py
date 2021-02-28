@@ -34,6 +34,9 @@ class SparkFunctions(Functions):
     def to_string(self, col_name):
         return F.col(col_name).cast("string")
 
+    def to_string_accessor(self, series):
+        return self.to_string(series)
+
     def to_float(self, col_name):
         return F.col(col_name).cast("float")
 

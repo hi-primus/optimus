@@ -16,14 +16,12 @@ class IbisFunctions(Functions):
     # def _to_float(self, series, *args):
     #     return series.map_partitions(to_float_cudf, meta=float)
 
-    def lower(self, series, *args):
-        return series.cast("string").lower()
+    def to_string(self, series):
+        return series.cast("string")
+    
+    def to_string_accessor(self, series):
+        return self.to_string(series)
 
-    def upper(self, series, *args):
-        return series.cast("string").upper()
-
-    def capitalize(self, series, *args):
-        return series.cast("string").capitalize()
 
     def title(self, series, *args):
         raise NotImplementedError("Not implemented yet")
@@ -31,22 +29,6 @@ class IbisFunctions(Functions):
     #
     # def replace(self, series, *args):
     #     return series.cast("string").upper()
-
-    def replace_chars(self, series, search, replace_by):
-        # print("search, replace_by", search, replace_by)
-        search = one_list_to_val(search)
-        replace_by = one_list_to_val(replace_by)
-        return series.cast("string").replace(search, replace_by)
-
-    def replace_words(self, series, search, replace_by):
-        search = val_to_list(search)
-        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return series.cast("string").replace(str_regex, replace_by)
-
-    def replace_full(self, series, search, replace_by):
-        search = val_to_list(search)
-        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return series.cast("string").replace(str_regex, replace_by)
 
     def count_zeros(self, *args):
         series = self.series

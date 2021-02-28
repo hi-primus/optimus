@@ -21,7 +21,7 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, \
-    is_int, \
+    is_int, is_list_of_str, \
     is_tuple, US_STATES_NAMES
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -238,9 +238,12 @@ class BaseColumns(ABC):
 
         temp_col_name = name_col(col_name, "SET")
 
-        dfd[temp_col_name] = default
-        default = dfd[temp_col_name]
-        del dfd[temp_col_name]
+        if default:
+            dfd[temp_col_name] = default
+            default = dfd[temp_col_name]
+            del dfd[temp_col_name]
+        elif col_name:
+            default = dfd[col_name]
 
         if eval_value and is_str(value):
             value = eval(value)
@@ -1378,7 +1381,7 @@ class BaseColumns(ABC):
         :param input_cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one
-        :param search_by: Can be "full","words","chars" or "numeric".
+        :param search_by: Can be "full","words","chars" or "values".
         :param ignore_case: Ignore case when searching for match
         :param output_cols:
         :return: DataFrame
@@ -1386,23 +1389,33 @@ class BaseColumns(ABC):
 
         # df = self.parent
 
+        search = val_to_list(search)
+        replace_by = val_to_list(replace_by)
+
+        if search_by=="full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
+            search_by = "values"
+
         if search_by == "chars":
             # print("F", type(F), F)
             func = self.F.replace_chars
+            func_return_type = str
         elif search_by == "words":
             func = self.F.replace_words
+            func_return_type = str
         elif search_by == "full":
             func = self.F.replace_full
+            func_return_type = str
+        elif search_by == "values":
+            func = self.F.replace_values
+            func_return_type = None
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full"])
 
         # Cudf raise and exception if both param are not the same type
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
-        search = val_to_list(search)
-        replace_by = val_to_list(replace_by)
-        return self.apply(input_cols, func, args=(search, replace_by), func_return_type=str,
-                          output_cols=output_cols,
-                          meta_action=Actions.REPLACE.value, mode="vectorized")
+        
+        return self.apply(input_cols, func, args=(search, replace_by), func_return_type=func_return_type,
+                          output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod

@@ -141,7 +141,7 @@ def str_to_credit_card(value, compile=False):
     return str_to(value, regex_credit_card, regex_credit_card_compiled, compile)
 
 
-regex_zip_code = r"^(\d{5}(?:[- ]\d{4})?)$"
+regex_zip_code = r"^(\d{4,5}(?:[- ]\d{4})?)$"
 regex_zip_code_compiled = re.compile(regex_zip_code, re.IGNORECASE)
 
 

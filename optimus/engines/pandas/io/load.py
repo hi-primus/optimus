@@ -85,7 +85,7 @@ class Load(BaseLoad):
         :return dataFrame
         """
         
-        path = unquote_path(path)
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
         
         if is_str(filepath_or_buffer):
             _meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
@@ -93,7 +93,7 @@ class Load(BaseLoad):
         try:
 
             # Pandas do not support \r\n terminator.
-            if lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
+            if lineterminator and lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
                 lineterminator = None
             if conn is not None:
                 filepath_or_buffer = conn.path(filepath_or_buffer)
