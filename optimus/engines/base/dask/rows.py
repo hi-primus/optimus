@@ -109,7 +109,7 @@ class DaskBaseRows(BaseRows):
         return self.root.new(self.root._pandas_to_dfd(df.head("*", count), partitions))
 
 
-    @dispatch(str, str)
+    @dispatch(str)
     def sort(self, input_cols):
         df = self.root
         input_cols = parse_columns(df, input_cols)
@@ -153,7 +153,7 @@ class DaskBaseRows(BaseRows):
             def func(pdf):
                 return pdf.sort_values(col_name, ascending=True if order == "asc" else False)
 
-            df = df.map_partitions(func)
+            df = df.data.map_partitions(func)
 
             meta = meta.action(Actions.SORT_ROW.value, col_name)
 
