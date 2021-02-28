@@ -21,18 +21,17 @@ class Functions(ABC):
     def to_delayed(self, delayed):
         return [delayed]
 
-    @staticmethod
-    def _to_float(series):
-        pass
+    def _to_float(self, series):
+        return series
 
     def to_integer(self, series):
-        pass
+        return series
 
     def to_string(self, series):
-        pass
+        return series
     
     def to_string_accessor(self, series):
-        pass
+        return self.to_string(series)
 
     # Aggregation
     def min(self, series):

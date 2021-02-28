@@ -32,8 +32,8 @@ class DaskBaseDataFrame(BaseDataFrame):
         pass
 
     def execute(self):
-        df = self.data
-        return self.new(df.persist(), meta=self.meta)
+        self.data = self.data.persist()
+        return self
 
     def compute(self):
         df = self.data
