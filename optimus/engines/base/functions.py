@@ -318,6 +318,10 @@ class Functions(ABC):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return self.to_string(series).str.replace(str_regex, replace_by)
+    
+    def replace_values(self, series, search, replace_by):
+        search = val_to_list(search)
+        return series.mask(series.isin(search), replace_by)
 
     def remove_white_spaces(self, series):
         return self.to_string(series).str.replace(" ", "")
