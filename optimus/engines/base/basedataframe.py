@@ -108,10 +108,10 @@ class BaseDataFrame(ABC):
 
     def __invert__(self):
         return self.unary_operation(self, operator.invert)
-    
+
     def __neg__(self):
         return self.unary_operation(self, operator.neg)
-    
+
     def __add__(self, df2):
         return self.operation(self, df2, operator.add, "float")
 
@@ -141,10 +141,10 @@ class BaseDataFrame(ABC):
 
     def __rfloordiv__(self, df2):
         return self.operation(df2, self, operator.floordiv, "float")
-    
+
     def __mod__(self, df2):
         return self.operation(self, df2, operator.mod, "float")
-    
+
     def __rmod__(self, df2):
         return self.operation(df2, self, operator.mod, "float")
 
@@ -362,7 +362,7 @@ class BaseDataFrame(ABC):
 
         :return:
         """
-        return False if Meta.get(df.meta,"profile") is None else True
+        return False if Meta.get(df.meta, "profile") is None else True
 
     def _cols_to_profile(self, columns):
         """
@@ -377,7 +377,7 @@ class BaseDataFrame(ABC):
         profiler_columns = Meta.get(df.meta, "profile.columns")
 
         new_columns = parse_columns(df, columns)
-        
+
         if profiler_columns is None:
             calculate_columns = new_columns
         else:
@@ -422,7 +422,6 @@ class BaseDataFrame(ABC):
                 calculate_columns = list(set(calculate_columns) - set(dropped_columns))
 
         return calculate_columns
-
 
     @staticmethod
     @abstractmethod
@@ -618,32 +617,22 @@ class BaseDataFrame(ABC):
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             cols = cols_and_inferred_dtype.items()
 
-            for col_name, x in cols:
-                if x["dtype"] in PROFILER_NUMERIC_DTYPES and mismatch[col_name]["mismatch"] == 0:
-                    numeric_cols.append(col_name)
-                else:
+            for col_name, properties in cols:
+                if properties["categorical"]:
                     string_cols.append(col_name)
+                else:
+                    numeric_cols.append(col_name)
 
             hist = None
             count_uniques = None
 
-
-
             if len(numeric_cols):
-                count_uniques = df.cols.count_uniques(numeric_cols, estimate=False, compute=True, tidy=False)
-            
-            for col in numeric_cols:
-                if count_uniques["count_uniques"][col] <= 2:
-                    numeric_cols.remove(col)
-                    string_cols.append(col)
-
-            if len(numeric_cols):
-                hist = df.cols.hist(numeric_cols, buckets=bins, compute=compute)
+                hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
 
             freq = None
 
             if len(string_cols):
-                freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=compute)
+                freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=False)
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _f = {}
@@ -661,9 +650,7 @@ class BaseDataFrame(ABC):
                     elif _col_name in _hist:
                         h = _hist[_col_name]
                         _f[_col_name]["stats"]["hist"] = h
-                        _f[_col_name]["stats"]["count_uniques"] = count_uniques["count_uniques"][_col_name]
-
-
+                        # _f[_col_name]["stats"]["count_uniques"] = count_uniques["count_uniques"][_col_name]
 
                 return {"columns": _f}
 

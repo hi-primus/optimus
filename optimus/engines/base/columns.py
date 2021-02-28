@@ -4,16 +4,16 @@ import time
 from abc import abstractmethod, ABC
 from functools import reduce
 
-import dask
 import numpy as np
 import pandas as pd
 import pydateinfer
+import wordninja
 from dask import dataframe as dd
 from multipledispatch import dispatch
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
-from optimus.helpers.check import is_dask_dataframe, is_dask_cudf_dataframe
+from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
@@ -26,6 +26,8 @@ from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, 
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
+CATEGORICAL_THRESHOLD = 0.10
+ZIPCODE_THRESHOLD = 0.80
 
 
 class BaseColumns(ABC):
@@ -209,7 +211,7 @@ class BaseColumns(ABC):
 
         if set_index is True and mode != "partitioned":
             dfd = dfd.reset_index()
-        
+
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
@@ -592,9 +594,6 @@ class BaseColumns(ABC):
 
         if df_right.cols.dtypes(right_on) == "category":
             df_right[right_on] = df_right[right_on].cat.as_ordered()
-
-        # dfd_left = df_left.data
-        # dfd_right = df_right.data
 
         # Join do not work with different data types.
         # Use set_index to return a index in the dataframe
@@ -1233,7 +1232,7 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
-        
+
         df = self.root
         return df.cols.apply(input_cols, self.F.date_format, args=(current_format, output_format), func_return_type=str,
                              output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
@@ -1413,7 +1412,7 @@ class BaseColumns(ABC):
 
         # Cudf raise and exception if both param are not the same type
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
-        
+
         return self.apply(input_cols, func, args=(search, replace_by), func_return_type=func_return_type,
                           output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
@@ -1476,12 +1475,12 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
-    def unique(self, columns, values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
-        df = self.root
+    def unique(self, input_cols="*", relative_error=RELATIVE_ERROR, output_cols=None):
+        return self.apply(input_cols, self.F.unique, args=(relative_error,), func_return_type=str,
+                          output_cols=output_cols,
+                          meta_action=Actions.UNIQUE.value, mode="vectorized", func_type="column_expr")
 
-        return df.cols.agg_exprs(columns, self.F.unique, tidy=tidy, compute=compute)
-
-    def count_uniques(self, columns, values=None, estimate=True, tidy=True, compute=True):
+    def count_uniques(self, columns="*", values=None, estimate=True, tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
@@ -1729,9 +1728,9 @@ class BaseColumns(ABC):
 
         d = _agg_hist(c)
 
-        if is_dict(d):
+        if is_dict(d) or compute is False:
             result = d
-        elif compute:
+        elif compute is True:
             result = d.compute()
         return result
 
@@ -1750,12 +1749,13 @@ class BaseColumns(ABC):
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
         for col_name, props in columns_type.items():
+
             dtype = props["dtype"]
 
             missing = nulls.get(col_name, 0)
             match = total_rows - missing
             mismatch = 0
-            
+
             if dtype == ProfilerDataTypes.STRING.value:
                 match = total_rows - missing
                 mismatch = 0
@@ -1811,13 +1811,13 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # Infer the data type from every element in a Series.
-        # FIX: could this be vectorized?
-        sample = df.cols.select(columns).rows.limit(TOTAL_PREVIEW_ROWS).to_pandas()
-        pdf = sample.applymap(Infer.parse_pandas)
+        sample = df.cols.select(columns).rows.limit(200).to_pandas()
+        rows_count = len(sample)  # In case the dataframe is smaller that 100
+        pdf_dtypes = sample.applymap(Infer.parse_pandas)
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            infer_value_counts = pdf[col_name].value_counts()
+            infer_value_counts = pdf_dtypes[col_name].value_counts()
 
             dtype = infer_value_counts.index[0]
             pdf_dict = infer_value_counts.to_dict()
@@ -1827,17 +1827,35 @@ class BaseColumns(ABC):
             if dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
                 if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
                     # In case we have integers and decimal values no matter if we have more integer we cast to decimal
-                    r = second_dtype
+                    _dtype = second_dtype
                 else:
-                    r = dtype
-            elif infer_value_counts[0] < len(pdf):
-                r = infer_value_counts.index[1]
+                    _dtype = dtype
+            elif infer_value_counts[0] < len(pdf_dtypes):
+                _dtype = infer_value_counts.index[1]
             else:
-                r = ProfilerDataTypes.OBJECT.value
+                _dtype = ProfilerDataTypes.OBJECT.value
 
-            cols_and_inferred_dtype[col_name] = {"dtype": r}
+            # Infer is is a ZIp code
+            _value_counts = sample[col_name].value_counts()
+            # print(len(_value_counts) / rows_count)
+            is_categorical = False
+            
+            if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"]) \
+                    and _dtype == "zip_code" \
+                    and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD):
+                _dtype = ProfilerDataTypes.INT.value
+
+            # Is the column categorical?. Try to infer the datatype using the column name
+            if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
+                is_categorical = False
+            if dtype in ["boolean", "zip_code"] \
+                    or len(_value_counts) / rows_count < CATEGORICAL_THRESHOLD:
+                is_categorical = True
+
+            cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
+
             if dtype == "date":
-                # pydatainfer do not accepts None value so we must filter tham
+                # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(filtered_dates)})
         return cols_and_inferred_dtype
@@ -1880,8 +1898,7 @@ class BaseColumns(ABC):
 
             return _value_counts
 
-        value_counts = [df.cols.to_string().data[col_name].value_counts() for col_name in columns]
-
+        value_counts = [df.data[col_name].value_counts() for col_name in columns]
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
         if count_uniques is True:

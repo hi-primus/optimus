@@ -537,11 +537,17 @@ class Infer(object):
             (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
             (str_to_url, "url"),
             (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")]
+
+        def _bool(val):
+            if val == 0 or val == 1 or val == "0" or val == "1" or val is True or val is False or val == "True" or val == "False":
+                return True
+            else:
+                return False
         if isinstance(value, list):
             _data_type = "array"
         elif pd.isnull(value):
             _data_type = "null"
-        elif isinstance(value, bool):
+        elif _bool(value):
             _data_type = "boolean"
         elif profiler_dtype_func("int", True)(value): 
             # We first check if a number can be parsed as a credit card or zip code
@@ -562,6 +568,7 @@ class Infer(object):
             for func in str_funcs:
                 if func[0](str(value)) is True:
                     _data_type = func[1]
+
 
         return _data_type
 
