@@ -29,6 +29,9 @@ class PandasFunctions(Functions):
     def to_string(self, series):
         return to_string(series)
 
+    def to_string_accessor(self, series):
+        return self.to_string(series).str
+
     def count_zeros(self, series, *args):
         return int((self._to_float(series).values == 0).sum())
 
@@ -110,11 +113,11 @@ class PandasFunctions(Functions):
         #     regex = str_regex
         replace_by = val_to_list(replace_by)
         for i, j in zip(search, replace_by):
-            series = self.to_string(series).str.replace(i, j)
+            series = self.to_string_accessor(series).replace(i, j)
         return series
 
     def remove_special_chars(self, series):
-        return self.to_string(series).str.replace('[^A-Za-z0-9]+', '')
+        return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')
 
     def normalize_chars(self, series):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
