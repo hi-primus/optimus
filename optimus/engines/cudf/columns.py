@@ -304,6 +304,6 @@ class Cols(DataFrameBaseColumns):
                 if input_col in output_ordered_columns:
                     output_ordered_columns.remove(input_col)
 
-        df.meta = Meta.action(df.meta, dfd, Actions.UNNEST.value, final_columns)
+        df.meta = Meta.action(df.meta, Actions.UNNEST.value, final_columns)
 
         return df.cols.move(df_new.cols.names(), "after", input_cols)
