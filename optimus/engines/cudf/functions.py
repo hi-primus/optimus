@@ -17,6 +17,9 @@ class CUDFFunctions(Functions):
     def to_string(self, series):
         return series.astype(str)
 
+    def to_string_accessor(self, series):
+        return self.to_string(series).str
+
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         non_zero_value = 1
@@ -103,14 +106,14 @@ class CUDFFunctions(Functions):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
     def replace_chars(self, series, search, replace_by):
-        return self.to_string(series).str.replace(search, replace_by)
+        return self.to_string_accessor(series).replace(search, replace_by)
 
     def remove_special_chars(self, series):
-        return self.to_string(series).str.filter_alphanum()
+        return self.to_string_accessor(series).filter_alphanum()
 
     def normalize_chars(self, series):
         if not series.isnull().all():
-            return self.to_string(series).str.normalize_characters()
+            return self.to_string_accessor(series).normalize_characters()
         else:
             return series
 

@@ -30,6 +30,9 @@ class Functions(ABC):
 
     def to_string(self, series):
         pass
+    
+    def to_string_accessor(self, series):
+        pass
 
     # Aggregation
     def min(self, series):
@@ -39,7 +42,6 @@ class Functions(ABC):
         return self._to_float(series).max()
 
     def mean(self, series):
-
         return self._to_float(series).mean()
 
     def mode(self, series):
@@ -70,15 +72,12 @@ class Functions(ABC):
         return self.to_string(series).nunique()
 
     def unique(self, series, *args):
-
-        # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
         return self.to_string(series).unique()
 
     @staticmethod
     def count_na(series):
         return series.isna().sum()
-
         # return {"count_na": {col_name:  for col_name in columns}}
         # return np.count_nonzero(_df[_serie].isnull().values.ravel())
         # return cp.count_nonzero(_df[_serie].isnull().values.ravel())
@@ -275,34 +274,34 @@ class Functions(ABC):
 
     # Strings
     def match(self, series, regex):
-        return self.to_string(series).str.match(regex)
+        return self.to_string_accessor(series).match(regex)
 
     def lower(self, series):
-        return self.to_string(series).str.lower()
+        return self.to_string_accessor(series).lower()
 
     def upper(self, series):
-        return self.to_string(series).str.upper()
+        return self.to_string_accessor(series).upper()
 
     def title(self, series):
-        return self.to_string(series).str.title()
+        return self.to_string_accessor(series).title()
 
     def capitalize(self, series):
-        return self.to_string(series).str.capitalize()
+        return self.to_string_accessor(series).capitalize()
 
     def pad(self, series, width, side, fillchar=""):
-        return self.to_string(series).str.pad(width, side, fillchar)
+        return self.to_string_accessor(series).pad(width, side, fillchar)
 
     def extract(self, series, regex):
-        return self.to_string(series).str.extract(regex)
+        return self.to_string_accessor(series).extract(regex)
 
     def slice(self, series, start, stop, step):
-        return self.to_string(series).str.slice(start, stop, step)
+        return self.to_string_accessor(series).slice(start, stop, step)
 
     def proper(self, series):
-        return self.to_string(series).str.title()
+        return self.to_string_accessor(series).title()
 
     def trim(self, series):
-        return self.to_string(series).str.strip()
+        return self.to_string_accessor(series).strip()
 
     @staticmethod
     @abstractmethod
@@ -312,19 +311,19 @@ class Functions(ABC):
     def replace_words(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return self.to_string(series).str.replace(str_regex, replace_by)
+        return self.to_string_accessor(series).replace(str_regex, replace_by)
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return self.to_string(series).str.replace(str_regex, replace_by)
+        return self.to_string_accessor(series).replace(str_regex, replace_by)
     
     def replace_values(self, series, search, replace_by):
         search = val_to_list(search)
         return series.mask(series.isin(search), replace_by)
 
     def remove_white_spaces(self, series):
-        return self.to_string(series).str.replace(" ", "")
+        return self.to_string_accessor(series).replace(" ", "")
 
     @staticmethod
     def len(series):
@@ -338,31 +337,31 @@ class Functions(ABC):
 
     def find(self, sub, start=0, end=None):
         series = self.series
-        return self.to_string(series).str.find(sub, start, end)
+        return self.to_string_accessor(series).find(sub, start, end)
 
     def rfind(self, series, sub, start=0, end=None):
-        return self.to_string(series).str.rfind(sub, start, end)
+        return self.to_string_accessor(series).rfind(sub, start, end)
 
     def left(self, series, position):
-        return self.to_string(series).str[:position]
+        return self.to_string_accessor(series)[:position]
 
     def right(self, series, position):
-        return self.to_string(series).str[-1 * position:]
+        return self.to_string_accessor(series)[-1 * position:]
 
     def mid(self, series, _start, _n):
-        return self.to_string(series).str[_start:_n]
+        return self.to_string_accessor(series)[_start:_n]
 
     def starts_with(self, series, pat):
-        return self.to_string(series).str.startswith(pat)
+        return self.to_string_accessor(series).startswith(pat)
 
     def ends_with(self, series, pat):
-        return self.to_string(series).str.endswith(pat)
+        return self.to_string_accessor(series).endswith(pat)
 
     def contains(self, series, pat):
-        return self.to_string(series).str.contains(pat)
+        return self.to_string_accessor(series).contains(pat)
 
     def char(self, series, _n):
-        return self.to_string(series).str[_n]
+        return self.to_string_accessor(series)[_n]
 
     @staticmethod
     def unicode(series):
