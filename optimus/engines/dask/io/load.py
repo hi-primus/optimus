@@ -99,10 +99,18 @@ class Load(BaseLoad):
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                              storage_options=storage_options,*args, **kwargs)
+            try:
+                ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                                storage_options=storage_options, *args, **kwargs)
+            except Exception:
+                #TODO: Handle inference errors
+                ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                                storage_options=storage_options, sample=10000000000, low_memory=False, *args, **kwargs)
+
 
             if n_rows > -1:
                 ddf = dd.from_pandas(ddf.head(n=n_rows), npartitions=1).reset_index(drop=True)
