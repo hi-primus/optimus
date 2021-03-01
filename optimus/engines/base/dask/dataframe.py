@@ -7,9 +7,11 @@ from optimus import engines as Engine
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import random_int, parse_size
+from optimus.helpers.output import output_image, output_base64
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_one_element
 import dask
+
 
 class DaskBaseDataFrame(BaseDataFrame):
 
@@ -39,6 +41,9 @@ class DaskBaseDataFrame(BaseDataFrame):
     def compute(self):
         df = self.data
         return df.compute()
+
+    def visualize(self):
+        return display(self.data.visualize())
 
     def export(self):
         """

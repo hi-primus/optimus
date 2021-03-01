@@ -184,6 +184,10 @@ class BaseDataFrame(ABC):
     def cols(self):
         return BaseColumns
 
+    @abstractmethod
+    def visualize(self):
+        pass
+
     @staticmethod
     @abstractmethod
     def execute():

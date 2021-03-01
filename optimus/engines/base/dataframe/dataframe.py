@@ -1,10 +1,9 @@
-import dask
+from collections.abc import Iterable
+
 import humanize
 
-from collections.abc import Iterable 
-
 from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.exceptions import UnsupportedOperationError
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list
@@ -15,13 +14,15 @@ class Ext(BaseDataFrame):
     def __init__(self, root, data):
         super().__init__(root, data)
 
-
     def execute(self):
         df = self.data
         return self.new(df, meta=self.meta)
 
     def compute(self):
         return self.data
+
+    def visualize(self):
+        raise UnsupportedOperationError
 
     def export(self):
         """
@@ -70,7 +71,6 @@ class Ext(BaseDataFrame):
         # df_.index = df_.index.droplevel(0)
         return self.root.new(df)
 
-       
     def stack(self, index=None, col_name="variable", value_name="value"):
         """
         Return reshaped DataFrame organized by given index / column values.
@@ -95,14 +95,14 @@ class Ext(BaseDataFrame):
                 return ''.join([str(s) if s else '' for s in val])
             else:
                 return str(val)
-            
+
         dfd.columns = dfd.columns.map(_join).str.strip('_')
 
         return self.root.new(dfd).cols.rename([
-            ("level_"+new_level, col_name),
+            ("level_" + new_level, col_name),
             ("0", value_name)
         ])
-    
+
     def unstack(self, index=None, level=-1):
         """
         Return reshaped DataFrame organized by given index / column values.
@@ -112,16 +112,12 @@ class Ext(BaseDataFrame):
         """
         dfd = self.root.data
 
-        dfd = dfd\
-            .set_index(index)\
-
-        dfd = dfd\
-            .unstack(level=level, fill_value=None)\
-            .reset_index()
+        dfd = dfd.set_index(index)
+        dfd = dfd.unstack(level=level, fill_value=None).reset_index()
 
         def _join(val):
             if isinstance(val, Iterable):
-                return list(filter(lambda l : l, val))[-1]
+                return list(filter(lambda l: l, val))[-1]
             else:
                 return str(val)
 
