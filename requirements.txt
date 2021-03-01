@@ -20,7 +20,6 @@ ordered-set>=3.1.1
 deepdiff>=4.0.6
 statsmodels>=0.10.1
 glom>=19.10.0
-singleton-decorator>=1.0.0
 fastavro>=0.22.7
 dask[complete]>=2.21.0
 dask-ml>=1.6.0
