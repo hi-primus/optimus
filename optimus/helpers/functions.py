@@ -459,6 +459,7 @@ def downloader(url, file_format):
 def unquote_path(path):
     return unquote(path)
 
+
 @functools.lru_cache(maxsize=128)
 def prepare_path(path, file_format=None):
     """d
@@ -645,3 +646,18 @@ def singleton(cls):
     attribute to access decorated class directly in unit tests
     """
     return _SingletonWrapper(cls)
+
+
+def parse_size(size):
+    """
+    Parse a size string to bytes.
+    :param size:
+    :return:
+    """
+    units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40}
+    size = size.upper()
+    # print("parsing size ", size)
+    if not re.match(r' ', size):
+        size = re.sub(r'([KMGT]?B)', r' \1', size)
+    number, unit = [string.strip() for string in size.split()]
+    return int(float(number) * units[unit])

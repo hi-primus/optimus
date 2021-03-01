@@ -3,12 +3,13 @@ from abc import abstractmethod
 import humanize
 
 from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus import engines as Engine
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.functions import random_int
+from optimus.helpers.functions import random_int, parse_size
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_one_element
-
+import dask
 
 class DaskBaseDataFrame(BaseDataFrame):
 
@@ -159,7 +160,23 @@ class DaskBaseDataFrame(BaseDataFrame):
 
     def repartition(self, n=None, *args, **kwargs):
         dfd = self.data
-        dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+        df = self
+        if n == "auto":
+            # Follow a heuristic for partitioning a mentioned
+            # https://docs.dask.org/en/latest/best-practices.html#avoid-very-large-partitions
+            client = dask.distributed.get_client()
+            worker_memory = parse_size(client.cluster.worker_spec[0]["options"]["memory_limit"])
+            nthreads = client.cluster.worker_spec[0]["options"]["nthreads"]
+
+            part_recommended_size = worker_memory / nthreads / 10
+            n = int(df.size() / part_recommended_size)
+            # Partition can not be lower than 1
+            n = n if n < 0 else 1
+
+            dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+        else:
+            dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+
         return self.new(dfd, meta=self.meta)
 
     @staticmethod
