@@ -149,10 +149,8 @@ class Functions(ABC):
 
     ###########################
 
-    @staticmethod
-    @abstractmethod
-    def clip(series, lower_bound, upper_bound):
-        pass
+    def clip(self, series, lower_bound, upper_bound):
+        return self._to_float(series).clip(float(lower_bound), float(upper_bound))
 
     @staticmethod
     @abstractmethod

@@ -160,9 +160,6 @@ class DaskCUDFFunctions(Functions):
     def atanh(self):
         return 1 / self.tanh()
 
-    def clip(self, lower_bound, upper_bound):
-        raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/pull/5222")
-
     def cut(self, series, bins):
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 

@@ -135,8 +135,6 @@ class DaskFunctions(Functions):
     def atanh(self, series):
         return da.arctanh(self._to_float(series))
 
-    def clip(self, series, lower_bound, upper_bound):
-        return self._to_float(series).clip(lower_bound, upper_bound)
 
     def cut(self, series, bins):
         return series._to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))

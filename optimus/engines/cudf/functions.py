@@ -99,9 +99,6 @@ class CUDFFunctions(Functions):
     def atanh(self, series):
         return 1 / self.tanh()
 
-    def clip(self, series, lower_bound, upper_bound):
-        return self.to_float(series).clip(float(lower_bound), float(upper_bound))
-
     def cut(self, bins):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 

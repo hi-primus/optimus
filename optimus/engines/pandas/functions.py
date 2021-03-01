@@ -98,9 +98,6 @@ class PandasFunctions(Functions):
     def atanh(self, series):
         return np.arctanh(self._to_float(series))
 
-    def clip(self, series, lower_bound, upper_bound):
-        return series.clip(lower_bound, upper_bound)
-
     def cut(self, series, bins):
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
