@@ -1772,8 +1772,8 @@ class BaseColumns(ABC):
 
                 values = {list(j.values())[0]: list(j.values())[1] for j in freq["frequency"][col_name]["values"]}
 
-                match = values.get("True")
-                mismatch = values.get("False", missing) - missing
+                match = values.get(True)
+                mismatch = values.get(False, missing) - missing
 
             match = 0 if match is None else int(match)
             mismatch = 0 if mismatch is None else int(mismatch)
