@@ -5,6 +5,7 @@ from optimus.engines.pandas.create import Create
 from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas
+from optimus.helpers.exceptions import UnsupportedOperationError
 from optimus.version import __version__
 
 Pandas.instance = None
@@ -34,3 +35,11 @@ class PandasEngine(BaseEngine):
     def engine(self):
         return "pandas"
 
+    def remote_run(self, callback, *args, **kwargs):
+        return {"result": callback(*args, **kwargs)}
+
+    def remote_submit(self, callback, *args, **kwargs):
+        return {"result": callback(*args, **kwargs)}
+
+    def submit(self, func, *args, **kwargs):
+        return {"result": func(*args, **kwargs)}

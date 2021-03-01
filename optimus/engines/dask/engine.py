@@ -22,7 +22,7 @@ class DaskEngine(BaseEngine):
             threads_per_worker = psutil.cpu_count() * 4
 
         self.verbose(verbose)
-        
+
         if coiled_token:
             import coiled
             dask.config.set({"coiled.token": coiled_token})
@@ -32,37 +32,37 @@ class DaskEngine(BaseEngine):
                 raise error
 
             idle_timeout = kwargs.get("idle_timeout", None)
-            
+
             cluster = coiled.Cluster(
-                                     name=kwargs.get("name"),
-                                     worker_options={
-                                         **({"nthreads": threads_per_worker} if threads_per_worker else {}),
-                                         **({"memory_limit": memory_limit} if memory_limit else {})
-                                     },
-                                     n_workers=n_workers, 
-                                     worker_memory='15GiB',
-                                     scheduler_options={
-                                         **({"idle_timeout": idle_timeout} if idle_timeout else {})
-                                     },
-                                     software="optimus/default"
-                                    )
+                name=kwargs.get("name"),
+                worker_options={
+                    **({"nthreads": threads_per_worker} if threads_per_worker else {}),
+                    **({"memory_limit": memory_limit} if memory_limit else {})
+                },
+                n_workers=n_workers,
+                worker_memory='15GiB',
+                scheduler_options={
+                    **({"idle_timeout": idle_timeout} if idle_timeout else {})
+                },
+                software="optimus/default"
+            )
 
             self.cluster_name = cluster.name
             self.client = Client(cluster)
 
+
         elif address:
             self.client = Client(address=address)
 
-        elif session and session!="local":
+        elif session and session != "local":
             self.client = Dask().load(session)
-        
+
         else:
             try:
                 self.client = get_client()
             except ValueError:
                 self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
-                                   processes=processes, memory_limit=memory_limit, *args, **kwargs)
-
+                                     processes=processes, memory_limit=memory_limit, *args, **kwargs)
 
     @property
     def dask(self):
@@ -87,3 +87,6 @@ class DaskEngine(BaseEngine):
     def dataframe(self, pdf, n_partitions=1, *args, **kwargs):
         from dask import dataframe as dd
         return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
+
+    def submit(self, func,*args, **kwargs):
+        dask.distributed.get_client().submit(func, *args, **kwargs)

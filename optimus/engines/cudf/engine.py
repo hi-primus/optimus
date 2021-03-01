@@ -1,9 +1,7 @@
 import cudf
-
-from optimus.engines.cudf.create import Create
 from optimus.engines.base.engine import BaseEngine
+from optimus.engines.cudf.create import Create
 from optimus.engines.cudf.cudf import CUDF
-from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.cudf.io.load import Load
 from optimus.version import __version__
 
@@ -32,6 +30,11 @@ class CUDFEngine(BaseEngine):
     def engine(self):
         return "cudf"
 
-    # def dataframe(self, pdf, *args, **kwargs):
-    #     from dask import dataframe as dd
-    #     return CUDFDataFrame(pdf)
+    def remote_run(self, callback, *args, **kwargs):
+        return {"result": callback(*args, **kwargs)}
+
+    def remote_submit(self, callback, *args, **kwargs):
+        return {"result": callback(*args, **kwargs)}
+
+    def submit(self, func, *args, **kwargs):
+        return {"result": func(*args, **kwargs)}

@@ -43,3 +43,7 @@ class BaseEngine:
     @abstractmethod
     def remote_submit(self, callback, *args, **kwargs):
         pass
+
+    @abstractmethod
+    def submit(self, func, *args, **kwargs):
+        pass
