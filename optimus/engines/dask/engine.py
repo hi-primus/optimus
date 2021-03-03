@@ -89,4 +89,4 @@ class DaskEngine(BaseEngine):
         return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
 
     def submit(self, func,*args, **kwargs):
-        dask.distributed.get_client().submit(func, *args, **kwargs)
+        return dask.distributed.get_client().submit(func, *args, **kwargs)
