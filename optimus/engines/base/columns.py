@@ -1840,9 +1840,9 @@ class BaseColumns(ABC):
             # print(len(_value_counts) / rows_count)
             is_categorical = False
             
-            if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"]) \
+            if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
                     and _dtype == "zip_code" \
-                    and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD):
+                    and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD:
                 _dtype = ProfilerDataTypes.INT.value
 
             # Is the column categorical?. Try to infer the datatype using the column name
@@ -1853,7 +1853,6 @@ class BaseColumns(ABC):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
-
             if dtype == "date":
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
