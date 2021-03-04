@@ -1824,7 +1824,9 @@ class BaseColumns(ABC):
             dtypes = list(pdf_dict.keys())
             second_dtype = dtypes[1] if len(dtypes) > 1 else None
 
-            if dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
+            if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
+                _dtype = second_dtype
+            elif dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
                 if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
                     # In case we have integers and decimal values no matter if we have more integer we cast to decimal
                     _dtype = second_dtype
@@ -1835,25 +1837,25 @@ class BaseColumns(ABC):
             else:
                 _dtype = ProfilerDataTypes.OBJECT.value
 
-            # Infer is is a ZIp code
+            # Infer if and integer or zipcode
             _value_counts = pdf_dtypes[col_name].value_counts()
             # print(len(_value_counts) / rows_count)
             is_categorical = False
 
             if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
-                    and _dtype == "zip_code" \
+                    and _dtype == ProfilerDataTypes.ZIP_CODE.value \
                     and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD:
                 _dtype = ProfilerDataTypes.INT.value
 
             # Is the column categorical?. Try to infer the datatype using the column name
             if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = False
-            if dtype in ["boolean", "zip_code"] \
+            if dtype in [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value] \
                     or len(_value_counts) / rows_count < CATEGORICAL_THRESHOLD:
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
-            if dtype == "date":
+            if dtype == ProfilerDataTypes.DATE.value:
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(filtered_dates)})
