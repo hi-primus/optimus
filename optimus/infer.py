@@ -81,7 +81,7 @@ regex_int = r"(^\d+\.[0]+$)|(^\d+$)"  # For cudf 0.14 regex_int = r"^\d+$" # For
 regex_decimal = r"(^\d+\.\d+$)|(^\d+$)"
 regex_non_int_decimal = r"^(\d+\.\d+)$"
 
-regex_boolean = r"\btrue\b|\bfalse\b"
+regex_boolean = r"\btrue\b|\bfalse\b|\b0\b|\b1\b"
 regex_boolean_compiled = re.compile(regex_boolean)
 
 
