@@ -10,7 +10,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
-BYTES_SIZE = 16384
+BYTES_SIZE = 327680
 
 
 class BaseLoad:
@@ -63,15 +63,17 @@ class BaseLoad:
             file_name = os.path.basename(path)
 
         else:
-            file = open(path, "rb")
-            buffer = file.read(BYTES_SIZE)
+
             full_path, file_name = prepare_path(path)[0]
+            file = open(full_path, "rb")
+            buffer = file.read(BYTES_SIZE)
 
         # Detect the file type
         try:
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
             mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_buffer(buffer).split(";")
             mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
+
         except Exception as e:
             print(getattr(e, 'message', repr(e)))
             full_path = path
