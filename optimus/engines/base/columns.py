@@ -564,7 +564,7 @@ class BaseColumns(ABC):
 
         df = df.groupby(by=by).agg(compact).reset_index()
         df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
-
+        df = self.root.new(df)
         return df
 
     def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False):
@@ -576,8 +576,6 @@ class BaseColumns(ABC):
         :param left_on:
         :param right_on:
         :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
-        :param args:
-        :param kwargs:
 
         :return:
         """
