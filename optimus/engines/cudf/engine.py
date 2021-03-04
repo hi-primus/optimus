@@ -31,10 +31,13 @@ class CUDFEngine(BaseEngine):
         return "cudf"
 
     def remote_run(self, callback, *args, **kwargs):
-        return {"result": callback(*args, **kwargs)}
+        callback(*args, **kwargs)
 
     def remote_submit(self, callback, *args, **kwargs):
-        return {"result": callback(*args, **kwargs)}
+        return self.submit(callback, op=self, *args, **kwargs)
 
     def submit(self, func, *args, **kwargs):
-        return {"result": func(*args, **kwargs)}
+        import uuid
+        def _func():
+            return func(*args, **kwargs)
+        return {"result": _func, "key": str(uuid.uuid4()), "status": "finished"}

@@ -88,5 +88,11 @@ class DaskEngine(BaseEngine):
         from dask import dataframe as dd
         return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
 
+    def remote_run(self, callback, *args, **kwargs):
+        self.submit(callback, op=self, *args, **kwargs).result()
+
+    def remote_submit(self, callback, *args, **kwargs):
+        return self.submit(callback, op=self, *args, **kwargs)
+
     def submit(self, func,*args, **kwargs):
         return dask.distributed.get_client().submit(func, *args, **kwargs)
