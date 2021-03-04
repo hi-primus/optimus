@@ -538,14 +538,14 @@ class Infer(object):
             _data_type = "array"
         elif pd.isnull(value):
             _data_type = "null"
-        elif Infer.ProfilerDataTypesFunctions["boolean"](str(value)):
+        elif profiler_dtype_func("boolean")(str(value)):
             _data_type = "boolean"
 
         elif profiler_dtype_func("int", True)(value):
             # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
             for _dtype in ["credit_card_number", "zip_code"]:
-                if Infer.ProfilerDataTypesFunctions[_dtype](value):
+                if profiler_dtype_func(_dtype):
                     _data_type = _dtype
 
                     # Seems like float can be parsed as dates
@@ -558,8 +558,8 @@ class Infer(object):
         else:
             _data_type = "string"
             for _dtype in ["missing", "object", "ip", "url", "email", "gender"]:
-                if Infer.ProfilerDataTypesFunctions[_dtype](value):
-                    # print(_dtype)
+                if profiler_dtype_func(_dtype)(value):
+
                     _data_type = _dtype
 
         return _data_type
