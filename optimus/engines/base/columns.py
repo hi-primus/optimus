@@ -28,6 +28,7 @@ from optimus.profiler.constants import MAX_BUCKETS
 TOTAL_PREVIEW_ROWS = 30
 CATEGORICAL_THRESHOLD = 0.10
 ZIPCODE_THRESHOLD = 0.80
+INFER_PROFILER_ROWS = 200
 
 
 class BaseColumns(ABC):
@@ -563,7 +564,7 @@ class BaseColumns(ABC):
 
         df = df.groupby(by=by).agg(compact).reset_index()
         df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
-
+        df = self.root.new(df)
         return df
 
     def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False):
@@ -575,8 +576,6 @@ class BaseColumns(ABC):
         :param left_on:
         :param right_on:
         :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
-        :param args:
-        :param kwargs:
 
         :return:
         """
@@ -638,7 +637,6 @@ class BaseColumns(ABC):
         dfd = df.data
         columns = parse_columns(df, columns)
 
-        # dtype = parse_dtypes(dfd, dtype)
         f = profiler_dtype_func(dtype)
         if f is not None:
             for col_name in columns:
@@ -1753,8 +1751,8 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
 
             missing = nulls.get(col_name, 0)
-            match = total_rows - missing
-            mismatch = 0
+            # match = total_rows - missing
+            # mismatch = 0
 
             if dtype == ProfilerDataTypes.STRING.value:
                 match = total_rows - missing
@@ -1803,7 +1801,9 @@ class BaseColumns(ABC):
     def infer_profiler_dtypes(self, columns="*"):
         """
         Infer datatypes in a dataframe from a sample
-        :param columns:
+        This function use Pandas no matter the engine you are using.
+
+        :param columns: Columns in which you want to infer the datatype.
         :return:Return a dict with the column and the inferred data type
         """
         df = self.root
@@ -1811,7 +1811,7 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(columns).rows.limit(200).to_pandas()
+        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_pandas()
         rows_count = len(sample)  # In case the dataframe is smaller that 100
         pdf_dtypes = sample.applymap(Infer.parse_pandas)
 
@@ -1836,10 +1836,10 @@ class BaseColumns(ABC):
                 _dtype = ProfilerDataTypes.OBJECT.value
 
             # Infer is is a ZIp code
-            _value_counts = sample[col_name].value_counts()
+            _value_counts = pdf_dtypes[col_name].value_counts()
             # print(len(_value_counts) / rows_count)
             is_categorical = False
-            
+
             if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
                     and _dtype == "zip_code" \
                     and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD:
