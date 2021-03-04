@@ -455,8 +455,6 @@ class Infer(object):
     #     result = (col_name, _data_type), 1
     #     return result
 
-
-
     @staticmethod
     def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
         """
@@ -530,33 +528,27 @@ class Infer(object):
 
     @staticmethod
     def parse_pandas(value, date_format="DD/MM/YYYY"):
-        #
-        int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-        str_funcs = [
-            (str_to_missing, "missing"), (str_to_boolean, "boolean"),
-            (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
-            (str_to_url, "url"),
-            (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")]
-
-        def _bool(val):
-            if val == 0 or val == 1 or val == "0" or val == "1" or val is True or val is False or val == "True" or val == "False":
-                return True
-            else:
-                return False
+        """
+        This function
+        :param value:
+        :param date_format:
+        :return:
+        """
         if isinstance(value, list):
             _data_type = "array"
         elif pd.isnull(value):
             _data_type = "null"
-        elif _bool(value):
+        elif Infer.ProfilerDataTypesFunctions["boolean"](str(value)):
             _data_type = "boolean"
-        elif profiler_dtype_func("int", True)(value): 
+
+        elif profiler_dtype_func("int", True)(value):
             # We first check if a number can be parsed as a credit card or zip code
             _data_type = "int"
-            for func in int_funcs:
-                if func[0](str(value)) is True:
-                    _data_type = func[1]
+            for _dtype in ["credit_card_number", "zip_code"]:
+                if Infer.ProfilerDataTypesFunctions[_dtype](value):
+                    _data_type = _dtype
 
-        # Seems like float can be parsed as dates
+                    # Seems like float can be parsed as dates
         elif profiler_dtype_func("decimal", True)(value):
             _data_type = "decimal"
 
@@ -565,10 +557,10 @@ class Infer(object):
 
         else:
             _data_type = "string"
-            for func in str_funcs:
-                if func[0](str(value)) is True:
-                    _data_type = func[1]
-
+            for _dtype in ["missing", "object", "ip", "url", "email", "gender"]:
+                if Infer.ProfilerDataTypesFunctions[_dtype](value):
+                    # print(_dtype)
+                    _data_type = _dtype
 
         return _data_type
 
@@ -1036,4 +1028,3 @@ PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "bin
 
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
                       "decimal": "numeric", "date": "date", "array": "array", "binaty": "binary", "null": "null"}
-
