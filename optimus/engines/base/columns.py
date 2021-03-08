@@ -365,13 +365,12 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        meta = df.meta
 
         for col_name, props in columns.items():
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
-                Meta.set(meta, f"profile.columns.{col_name}.profiler_dtype", props)
-                Meta.action(meta, Actions.PROFILER_DTYPE.value, col_name)
+                df.meta = Meta.set(df.meta, f"profile.columns.{col_name}.profiler_dtype", props)
+                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 

@@ -40,7 +40,7 @@ class Meta:
             data = glom(meta, spec, skip_exc=KeyError)
         else:
             data = meta
-        return data
+        return copy.deepcopy(data)
 
     @staticmethod
     def reset_actions(meta):

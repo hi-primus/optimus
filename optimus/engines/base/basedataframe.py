@@ -3,6 +3,7 @@ import time
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 
+import copy
 import humanize
 import imgkit
 import jinja2
@@ -596,6 +597,8 @@ class BaseDataFrame(ABC):
         df = self
         meta = self.meta
 
+        previous_columns = Meta.get(meta, "profile.columns")
+
         if flush is False:
             cols_to_profile = df._cols_to_profile(columns)
         else:
@@ -685,27 +688,41 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
             assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
-        actual_columns = profiler_data["columns"]
-        # Order columns
-        columns = parse_columns(df, columns)
-        profiler_data["columns"] = dict(OrderedDict(
-            {_cols_name: actual_columns[_cols_name] for _cols_name in columns if
-             _cols_name in list(actual_columns.keys())}))
-
-        meta = Meta.columns(meta, df.cols.names())
-
+        
+        all_columns_names = df.cols.names()
+        
         meta = Meta.set(meta, "transformations", value={})
+
+        meta = Meta.columns(meta, all_columns_names)
+
+        if not previous_columns:
+            previous_columns = {}
+
+        # Order columns
+        actual_columns = profiler_data["columns"]
+
+        profiler_data["columns"] = {key: actual_columns[key] for key in all_columns_names if key in actual_columns}
 
         meta = Meta.set(meta, "profile", profiler_data)
 
+        profiler_data = copy.deepcopy(profiler_data)
+
+        actual_columns = {**previous_columns, **actual_columns}
+
+        profiler_data["columns"] = {key: actual_columns[key] for key in columns if key in actual_columns}
+
         if cols_and_inferred_dtype is not None:
-            df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+            df = df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+            meta = df.meta
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
+
         self.meta = meta
+
         if output == "json":
             profiler_data = dump_json(profiler_data)
+
         return profiler_data
 
     def graph(self) -> dict:
