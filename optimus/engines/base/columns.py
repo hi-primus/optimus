@@ -903,10 +903,10 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def pow(self, input_cols="*", other=2, output_cols=None):
+    def pow(self, input_cols="*", power=2, output_cols=None):
         """
         Apply mod to column
-        :param other:
+        :param power:
         :param input_cols:
         :param output_cols:
         :return:(
@@ -914,7 +914,7 @@ class BaseColumns(ABC):
 
         df = self.root
         return df.cols.apply(input_cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
-                             mode="vectorized", args=other)
+                             mode="vectorized", args=power)
 
     def sqrt(self, input_cols="*", output_cols=None):
         """
@@ -927,7 +927,7 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def round(self, input_cols="*", decimals=1, output_cols=None):
+    def round(self, input_cols="*", decimals=0, output_cols=None):
         """
 
         :param input_cols:
