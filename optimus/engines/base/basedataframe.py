@@ -583,12 +583,11 @@ class BaseDataFrame(ABC):
         df.meta = {}
         return df
 
-    def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def calculate_profile(self, columns="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
         """
-        Return profiler info
+        Returns a new dataframe with the profile in its meta
         :param columns:
         :param bins:
-        :param output:
         :param flush:
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
@@ -693,8 +692,6 @@ class BaseDataFrame(ABC):
         
         meta = Meta.set(meta, "transformations", value={})
 
-        meta = Meta.columns(meta, all_columns_names)
-
         if not previous_columns:
             previous_columns = {}
 
@@ -705,25 +702,59 @@ class BaseDataFrame(ABC):
 
         meta = Meta.set(meta, "profile", profiler_data)
 
-        profiler_data = copy.deepcopy(profiler_data)
-
-        actual_columns = {**previous_columns, **actual_columns}
-
-        profiler_data["columns"] = {key: actual_columns[key] for key in columns if key in actual_columns}
-
         if cols_and_inferred_dtype is not None:
+            df.meta = meta
             df = df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
             meta = df.meta
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
 
-        self.meta = meta
+        df.meta = meta
+
+        return df
+
+    def profile(self, columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+        """
+        Return a dict the profile of the dataset
+        :param columns:
+        :param bins:
+        :param output:
+        :param flush:
+        :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
+        :return:
+        """
+
+        df = self.root
+        
+        meta = self.meta
+        profile = Meta.get(meta, "profile")
+
+        flush = True if not profile else flush
+
+        if columns or flush:
+            columns = parse_columns(df, columns) if columns else []
+
+            if flush:
+                calculate = True
+            else:
+                calculate = False
+                
+                for col in columns:
+                    if col not in profile["columns"]:
+                        calculate = True
+
+            if calculate:
+                df = df.calculate_profile(columns, bins, flush, size)
+                profile = Meta.get(df.meta, "profile")
+                self.meta = df.meta
+
+            profile["columns"] = { key: profile["columns"][key] for key in columns }
 
         if output == "json":
-            profiler_data = dump_json(profiler_data)
+            profile = dump_json(profile)
 
-        return profiler_data
+        return profile
 
     def graph(self) -> dict:
         """
