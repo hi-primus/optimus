@@ -17,7 +17,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE, Actions
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
-from optimus.helpers.output import print_html
+from optimus.helpers.output import print_html, print_json
 from optimus.infer import is_str, is_dict, is_tuple, is_list_of_str
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -707,6 +707,15 @@ class BaseDataFrame(ABC):
         if output == "json":
             profiler_data = dump_json(profiler_data)
         return profiler_data
+
+    def graph(self) -> dict:
+        """
+        Return a dict the Dask tasks graph
+        :return:
+        """
+        ddf = self.root.data
+
+        return ddf.__dask_graph__().layers
 
     def get_series(self):
         col1 = self.cols.names(0)[0]
