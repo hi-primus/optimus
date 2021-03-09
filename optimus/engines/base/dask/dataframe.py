@@ -2,6 +2,8 @@ from abc import abstractmethod
 
 import humanize
 
+from dask.distributed import Variable
+
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus import engines as Engine
 from optimus.engines.pandas.dataframe import PandasDataFrame
@@ -56,8 +58,18 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         return f"{df_schema}, {df_data}"
 
+    def _reset_buffer(self):
+        Variable(self.buffer).delete()
+        self.buffer = None
+
     def _create_buffer_df(df, input_cols, n):
-        return PandasDataFrame(df.cols.select(input_cols).head(n=n))
+        import uuid
+        unique_id = str(uuid.uuid4())
+        Variable(unique_id).set(PandasDataFrame(df.cols.select(input_cols).head(n=n)))
+        return unique_id
+
+    def get_buffer(self):
+        return Variable(self.buffer).get()
 
     def _buffer_window(df, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(df.get_buffer().data[input_cols][lower_bound: upper_bound])

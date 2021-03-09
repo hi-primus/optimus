@@ -1,6 +1,6 @@
 import copy
 
-from glom import glom, assign
+from glom import glom, assign, delete
 
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_list
@@ -25,6 +25,24 @@ class Meta:
             assign(data, spec, value, missing=missing)
         else:
             data = value
+
+        return data
+
+    @staticmethod
+    def reset(meta, spec=None) -> dict:
+        """
+        Set metadata in a dataframe columns
+        :param meta: Meta data to be modified
+        :param spec: path to the key to be modified
+        :param value: dict value
+        :param missing:
+        :return:
+        """
+        if spec is not None:
+            data = copy.deepcopy(meta)
+            delete(data, spec, ignore_missing=True)
+        else:
+            data = meta
 
         return data
 

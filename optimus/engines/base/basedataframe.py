@@ -265,8 +265,14 @@ class BaseDataFrame(ABC):
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         pass
 
+    def _reset_buffer(self):
+        self.buffer = None
+
+    def reset_buffer(self):        
+        self._reset_buffer()
+        self.meta = Meta.reset(self.meta, "buffer_time")
+    
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        df = self
         input_cols = parse_columns(self, columns)
 
         df_length = self.rows.count()
@@ -275,7 +281,7 @@ class BaseDataFrame(ABC):
             n = df_length
 
         self.buffer = self._create_buffer_df(input_cols, n)
-        Meta.set(self.meta, "buffer_time", int(time.time()))
+        self.meta = Meta.set(self.meta, "buffer_time", int(time.time()))
 
     def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
