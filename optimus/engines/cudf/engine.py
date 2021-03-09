@@ -1,6 +1,5 @@
-import cudf
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.cudf.create import Create
+
 from optimus.engines.cudf.cudf import CUDF
 from optimus.engines.cudf.io.load import Load
 from optimus.version import __version__
@@ -12,6 +11,7 @@ class CUDFEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, verbose=False, *args, **kwargs):
+        import cudf
         self.verbose(verbose)
 
         CUDF.instance = cudf
@@ -20,6 +20,7 @@ class CUDFEngine(BaseEngine):
 
     @property
     def create(self):
+        from optimus.engines.cudf.create import Create
         return Create(self)
 
     @property
