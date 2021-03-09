@@ -1,7 +1,6 @@
 import dask
 from dask.distributed import Client, get_client
 
-from optimus.engines.dask_cudf.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
@@ -100,6 +99,7 @@ class DaskCUDFEngine(BaseEngine):
             return RemoteDummyVariable(self, "_create")
 
         else:
+            from optimus.engines.dask_cudf.create import Create
             return Create(self)
 
     @property
