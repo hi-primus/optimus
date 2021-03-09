@@ -559,7 +559,6 @@ class Infer(object):
             _data_type = "string"
             for _dtype in ["missing", "object", "ip", "url", "email", "gender"]:
                 if profiler_dtype_func(_dtype)(value):
-
                     _data_type = _dtype
 
         return _data_type
@@ -625,7 +624,7 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_zip_code
 
     elif dtype == ProfilerDataTypes.MISSING.value:
-        return is_str
+        return str_to_object
 
     else:
         RaiseIt.value_error(dtype, ProfilerDataTypes.list())
