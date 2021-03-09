@@ -597,12 +597,14 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_boolean
 
     elif dtype == ProfilerDataTypes.DATE.value:
+        # TODO: Implement date function
         return str_to_object
 
     elif dtype == ProfilerDataTypes.ARRAY.value:
         return is_str
 
     elif dtype == ProfilerDataTypes.OBJECT.value:
+        # TODO: Implement object function
         return str_to_object
 
     elif dtype == ProfilerDataTypes.GENDER.value:
@@ -624,6 +626,7 @@ def profiler_dtype_func(dtype, null=False):
         return str_to_zip_code
 
     elif dtype == ProfilerDataTypes.MISSING.value:
+        # TODO: Implement missing function
         return str_to_object
 
     else:
