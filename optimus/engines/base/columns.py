@@ -168,7 +168,7 @@ class BaseColumns(ABC):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def _map(self, df, input_col, output_col, func, args, kw_columns):
+    def _map(self, df, input_col, output_col, func, args):
         pass
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
@@ -201,7 +201,7 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
             elif mode == "map":
-                kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
+                kw_columns[output_col] = self._map(dfd, input_col, str(output_col), func, *args)
 
             # Preserve column order
             if output_col not in self.names():
