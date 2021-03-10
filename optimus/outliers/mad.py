@@ -29,9 +29,13 @@ class MAD(AbstractOutlierBounds):
         Get the wisker used to defined outliers
         :return:
         """
-        mad_value = self.df.cols.mad(self.col_name, self.relative_error, more=True)
-        lower_bound = mad_value["median"] - self.threshold * mad_value["mad"]
-        upper_bound = mad_value["median"] + self.threshold * mad_value["mad"]
+        mad_median_value = self.df.cols.mad(self.col_name, self.relative_error, more=True)
+        col_name = self.col_name
+        mad_value = mad_median_value[col_name]["mad"]
+        median_value = mad_median_value[col_name]["median"]
+
+        lower_bound = median_value - self.threshold * mad_value
+        upper_bound = median_value + self.threshold * mad_value
 
         return {"lower_bound": lower_bound, "upper_bound": upper_bound}
 
