@@ -98,9 +98,6 @@ class PandasFunctions(Functions):
     def atanh(self, series):
         return np.arctanh(self._to_float(series))
 
-    def cut(self, series, bins):
-        return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
-
     def replace_chars(self, series, search, replace_by):
         # if ignore_case is True:
         #     # Cudf do not accept re.compile as argument for replace

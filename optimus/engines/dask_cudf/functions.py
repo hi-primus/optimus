@@ -160,8 +160,8 @@ class DaskCUDFFunctions(Functions):
     def atanh(self):
         return 1 / self.tanh()
 
-    def cut(self, series, bins):
-        return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
+    def cut(self, series, bins, labels):
+        raise NotImplementedError
 
     # def remove_special_chars(self, series):
     #     return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')
