@@ -312,7 +312,7 @@ class Functions(ABC):
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
-        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
         return self.to_string_accessor(series).replace(str_regex, replace_by)
     
     def replace_values(self, series, search, replace_by):

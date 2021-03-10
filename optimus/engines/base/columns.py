@@ -1430,9 +1430,8 @@ class BaseColumns(ABC):
         # df = self.parent
 
         search = val_to_list(search)
-        replace_by = val_to_list(replace_by)
 
-        if search_by == "full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
+        if search_by == "full" and not is_list_of_str(search) or not is_str(replace_by):
             search_by = "values"
 
         if search_by == "chars":
