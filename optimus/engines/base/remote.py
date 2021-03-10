@@ -67,10 +67,12 @@ class RemoteDummyVariable:
 class RemoteDummyDataFrame(RemoteDummyVariable):
 
     __repr__ = BaseDataFrame.ascii
-    _repr_html_ = BaseDataFrame.table_html
     print = BaseDataFrame.print
     table = BaseDataFrame.table
     display = BaseDataFrame.display
+
+    def _repr_html_(self):
+        return self.table()
 
     @property
     def meta(self):
