@@ -96,17 +96,16 @@ class Functions(ABC):
     def skew(series):
         pass
 
-    @staticmethod
-    def mad(series, *args):
-        error, more = args
-
-        series = series._to_float()
+    def mad(self, series, error, more):
+        series = self._to_float(series)
         if series.isnull().any():
-            mad_value = np.nan
-            median_value = np.nan
+            mad_value = {"mad": np.nan, "median": np.nan}
         else:
+            print("aaaaa")
             median_value = series.quantile(0.5)
             mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
+            if more:
+                mad_value.update({"median": median_value})
 
         # median_value = series.quantile(0.5)
         # # In all case all the values from the column
@@ -116,8 +115,6 @@ class Functions(ABC):
         # else:
         #     mad_value = np.nan
 
-        if more:
-            mad_value.update({"median": median_value})
         return mad_value
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
