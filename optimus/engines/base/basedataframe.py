@@ -202,9 +202,10 @@ class BaseDataFrame(ABC):
         # With this we expect to abstract the behavior and just use compute() a value from operation
         pass
 
-    @staticmethod
-    def _assign(series):
-        pass
+    def _assign(self, kw_columns):
+
+        dfd = self.root.data
+        return dfd.assign(**kw_columns)
 
     def to_json(self, columns="*"):
         """
@@ -268,10 +269,10 @@ class BaseDataFrame(ABC):
     def _reset_buffer(self):
         self.buffer = None
 
-    def reset_buffer(self):        
+    def reset_buffer(self):
         self._reset_buffer()
         self.meta = Meta.reset(self.meta, "buffer_time")
-    
+
     def set_buffer(self, columns="*", n=BUFFER_SIZE):
         input_cols = parse_columns(self, columns)
 
@@ -693,9 +694,8 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
             assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
-        
         all_columns_names = df.cols.names()
-        
+
         meta = Meta.set(meta, "transformations", value={})
 
         if not previous_columns:
@@ -732,7 +732,7 @@ class BaseDataFrame(ABC):
         """
 
         df = self.root
-        
+
         meta = self.meta
         profile = Meta.get(meta, "profile")
 
@@ -745,7 +745,7 @@ class BaseDataFrame(ABC):
                 calculate = True
             else:
                 calculate = False
-                
+
                 for col in columns:
                     if col not in profile["columns"]:
                         calculate = True
@@ -755,7 +755,7 @@ class BaseDataFrame(ABC):
                 profile = Meta.get(df.meta, "profile")
                 self.meta = df.meta
 
-            profile["columns"] = { key: profile["columns"][key] for key in columns }
+            profile["columns"] = {key: profile["columns"][key] for key in columns}
 
         if output == "json":
             profile = dump_json(profile)
