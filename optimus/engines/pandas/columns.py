@@ -40,9 +40,9 @@ class Cols(DataFrameBaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         df = self.root
-        return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
+        return impute(df, input_cols, data_type=data_type, strategy=strategy, fill_value=fill_value, output_cols=None)
 
     @staticmethod
     def astype(*args, **kwargs):
