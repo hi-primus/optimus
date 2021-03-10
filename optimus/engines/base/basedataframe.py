@@ -720,7 +720,7 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def profile(self, columns, bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         """
         Return a dict the profile of the dataset
         :param columns:
