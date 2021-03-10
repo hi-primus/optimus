@@ -9,8 +9,9 @@ from optimus.optimus import Engine
 
 BIG_NUMBER = 100000
 
+
 class DaskCUDFEngine(BaseEngine):
-    def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
+    def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=8, processes=False,
                  memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
 
         """
@@ -82,6 +83,7 @@ class DaskCUDFEngine(BaseEngine):
                         f"n_workers should be equal or less than the number of GPUs. n_workers is now {n_gpus}")
                     n_workers = n_gpus
                     # n_gpus = 1
+
                 cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
                                            memory_limit=memory_limit)
                 self.client = Client(cluster, *args, **kwargs)
@@ -109,7 +111,7 @@ class DaskCUDFEngine(BaseEngine):
 
         else:
             return Load(self)
-            
+
     def dataframe(self, cdf, n_partitions=1, *args, **kwargs):
         import dask_cudf
         from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
@@ -152,7 +154,7 @@ class DaskCUDFEngine(BaseEngine):
         return fut
 
     def submit(self, func, *args, **kwargs):
-        from optimus.engines.base.remote import RemoteDummyAttribute 
-        if isinstance(func,(RemoteDummyAttribute,)):
+        from optimus.engines.base.remote import RemoteDummyAttribute
+        if isinstance(func, (RemoteDummyAttribute,)):
             return func(client_submit=True, *args, **kwargs)
         return dask.distributed.get_client().submit(func, *args, **kwargs)
