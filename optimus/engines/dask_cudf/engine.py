@@ -142,3 +142,6 @@ class DaskCUDFEngine(BaseEngine):
             raise
 
         return self.remote.submit(callback, *args, **kwargs)
+
+    def submit(self, func,*args, **kwargs):
+        return dask.distributed.get_client().submit(func, *args, **kwargs)
