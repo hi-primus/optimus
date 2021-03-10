@@ -32,6 +32,9 @@ class CUDFEngine(BaseEngine):
         return "cudf"
 
     def remote_run(self, callback, *args, **kwargs):
+        if kwargs.get("client_timeout"):
+            del kwargs["client_timeout"]
+
         callback(*args, **kwargs)
 
     def remote_submit(self, callback, *args, **kwargs):

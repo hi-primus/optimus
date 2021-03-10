@@ -116,17 +116,19 @@ class DaskCUDFEngine(BaseEngine):
         return DaskCUDFDataFrame(dask_cudf.from_cudf(cdf, npartitions=n_partitions, *args, **kwargs))
 
     def remote_run(self, callback, *args, **kwargs):
-        if not self.remote:
-            raise
-
         if kwargs.get("client_timeout"):
             client_timeout = kwargs.get("client_timeout")
             del kwargs["client_timeout"]
 
+        if not self.remote:
+            submit = self.submit
+        else:
+            submit = self.remote.submit
+
         else:
             client_timeout = 600
 
-        result = self.remote.submit(callback, *args, **kwargs).result(client_timeout)
+        result = submit(callback, *args, **kwargs).result(client_timeout)
         if isinstance(result, dict):
             if result.get("status") == "error" and result.get("error"):
                 raise Exception(result.get("error"))
@@ -139,9 +141,14 @@ class DaskCUDFEngine(BaseEngine):
 
     def remote_submit(self, callback, *args, **kwargs):
         if not self.remote:
-            raise
+            submit = self.submit
+        else:
+            submit = self.remote.submit
 
-        return self.remote.submit(callback, *args, **kwargs)
+        return submit(callback, op=self, *args, **kwargs)
 
-    def submit(self, func,*args, **kwargs):
+    def submit(self, func, *args, **kwargs):
+        import RemoteDummyAttribute from optimus.engines.base.remote
+        if isinstance(func,(RemoteDummyAttribute,)):
+            return func(client_submit=True, *args, **kwargs)
         return dask.distributed.get_client().submit(func, *args, **kwargs)

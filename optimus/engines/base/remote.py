@@ -15,6 +15,10 @@ class RemoteDummyAttribute:
     
     def __call__(self, *args, **kwargs):
 
+        if kwargs.get("client_submit"):
+            client_submit = True
+            del kwargs["client_submit"]
+
         def _f(op, unique_id, method, *args, **kwargs):
             obj = op.get_var(unique_id)
             if obj is None:
@@ -29,7 +33,10 @@ class RemoteDummyAttribute:
                 result = func
             return result
 
-        return self.__op.remote_run(_f, self.__id, self.__names, *args, **kwargs)
+        if client_submit:
+            return self.__op.remote_submit(_f, self.__id, self.__names, *args, **kwargs)
+        else:
+            return self.__op.remote_run(_f, self.__id, self.__names, *args, **kwargs)
 
 
 class RemoteDummyVariable:

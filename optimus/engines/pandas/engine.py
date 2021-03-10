@@ -36,6 +36,9 @@ class PandasEngine(BaseEngine):
         return "pandas"
 
     def remote_run(self, callback, *args, **kwargs):
+        if kwargs.get("client_timeout"):
+            del kwargs["client_timeout"]
+        
         callback(op=self, *args, **kwargs)
 
     def remote_submit(self, callback, *args, **kwargs):

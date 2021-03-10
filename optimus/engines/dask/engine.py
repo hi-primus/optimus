@@ -89,6 +89,9 @@ class DaskEngine(BaseEngine):
         return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
 
     def remote_run(self, callback, *args, **kwargs):
+        if kwargs.get("client_timeout"):
+            del kwargs["client_timeout"]
+        
         self.submit(callback, op=self, *args, **kwargs).result()
 
     def remote_submit(self, callback, *args, **kwargs):
