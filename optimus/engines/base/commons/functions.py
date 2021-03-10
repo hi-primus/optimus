@@ -92,7 +92,7 @@ def to_datetime_cudf(value, format):
     return cudf.to_datetime(value, format=format, errors="coerce")
 
 
-def impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+def impute(df, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
     """
 
     :param df:
@@ -110,19 +110,23 @@ def impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=
     :param output_cols:
     :return:
     """
-    imputer = SimpleImputer(strategy=strategy, copy=False)
+
+    imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
 
     def _imputer(value):
-        return imputer.fit_transform(value.to_frame())[value.name]
+        return imputer.fit_transform(value.values.reshape(-1, 1))
 
     if data_type == "continuous":
-        return df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
-                             mode="vectorized")
+        result = df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
+                               mode="vectorized")
     elif data_type == "categorical":
-        # return df.cols.mode()
-        raise
+        result = df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
+                               mode="most_frequent")
+
     else:
         RaiseIt.value_error(data_type, ["continuous", "categorical"])
+
+    return result
 
 
 def string_to_index(df, input_cols, output_cols=None, le=None, **kwargs):
