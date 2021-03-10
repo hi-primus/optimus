@@ -122,7 +122,7 @@ class DaskCUDFEngine(BaseEngine):
         else:
             client_timeout = 600
 
-        return self.remote.submit(callback, *args, **kwargs).result(client_timeout)
+        return self.remote_submit(callback, *args, **kwargs).result(client_timeout)
 
     def remote_submit(self, callback, *args, **kwargs):
 
@@ -148,7 +148,7 @@ class DaskCUDFEngine(BaseEngine):
 
         import types
         fut.result = types.MethodType(_result, fut)
-        
+
         return fut
 
     def submit(self, func, *args, **kwargs):
