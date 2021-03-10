@@ -122,24 +122,18 @@ class DaskCUDFEngine(BaseEngine):
         else:
             client_timeout = 600
 
-        if not self.remote:
-            submit = self.submit
-        else:
-            submit = self.remote.submit
-
-        result = submit(callback, *args, **kwargs).result(client_timeout)
-
-        return result
-
+        return self.remote.submit(callback, *args, **kwargs).result(client_timeout)
+        
     def remote_submit(self, callback, *args, **kwargs):
+
         if not self.remote:
-            submit = self.submit
+            fut = self.submit(callback, op=self, *args, **kwargs)
         else:
-            submit = self.remote.submit
+            fut = self.remote.submit(callback, *args, **kwargs)
 
-        fut = submit(callback, op=self, *args, **kwargs)
-
+        fut = submit(callback, *args, **kwargs)
         fut.__result = fut.result
+        _op = self
 
         def _result(self, *args, **kwargs):
             result = self.__result(*args, **kwargs)
@@ -148,11 +142,14 @@ class DaskCUDFEngine(BaseEngine):
                     raise Exception(result.get("error"))
                 elif result.get("dummy"):
                     if result.get("dataframe"):
-                        return RemoteDummyDataFrame(self, result.get("dummy"))
+                        return RemoteDummyDataFrame(_op, result.get("dummy"))
                     else:
-                        return RemoteDummyVariable(self, result.get("dummy"))
-                        
-        fut.result = _result
+                        return RemoteDummyVariable(_op, result.get("dummy"))
+            return result
+
+        import types
+        fut.result = types.MethodType(_result, fut)
+        return fut
 
     def submit(self, func, *args, **kwargs):
         from optimus.engines.base.remote import RemoteDummyAttribute 
