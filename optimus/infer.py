@@ -18,9 +18,8 @@ from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.raiseit import RaiseIt
 
 
-def str_to_date(_value, date_format=None):
+def is_datetime_str(_value):
     try:
-        # date_format = "DD/MM/YYYY"
         pendulum.parse(_value, strict=False)
         return True
     except ValueError:
@@ -45,10 +44,7 @@ def str_to_null(_value):
 
 
 def is_null(_value):
-    if pd.isnull(_value):
-        return True
-    else:
-        return False
+    return pd.isnull(_value)
 
 
 def str_to_data_type(_value, _dtypes):
@@ -67,7 +63,7 @@ def str_to_data_type(_value, _dtypes):
         return False
 
 
-def str_to_array(_value):
+def is_list_str(_value):
     return False
     # return str_to_data_type(_value, (list, tuple))
 
@@ -77,6 +73,8 @@ def str_to_object(_value):
     # return str_to_data_type(_value, (dict, set))
 
 
+regex_str = r"."
+
 regex_int = r"(^\d+\.[0]+$)|(^\d+$)"  # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
 regex_decimal = r"(^\d+\.\d+$)|(^\d+$)"
 regex_non_int_decimal = r"^(\d+\.\d+)$"
@@ -85,15 +83,15 @@ regex_boolean = r"\btrue\b|\bfalse\b|\b0\b|\b1\b"
 regex_boolean_compiled = re.compile(regex_boolean)
 
 
-def str_to_boolean(value, compile=False):
-    return str_to(value, regex_boolean, regex_boolean_compiled, compile)
+def is_bool_str(value, compile=False):
+    return str_to(str(value), regex_boolean, regex_boolean_compiled, compile)
 
 
 regex_gender = r"\bmale\b|\bfemale\b"
 regex_gender_compiled = re.compile(regex_gender)
 
 
-def str_to_gender(value, compile=False):
+def is_gender(value, compile=False):
     return str_to(value, regex_gender, regex_gender_compiled, compile)
 
 
@@ -121,47 +119,43 @@ regex_email = r"^[^@]+@[^@]+\.[a-zA-Z]{2,}$"
 regex_email_compiled = re.compile(regex_email, re.IGNORECASE)
 
 
-def str_to_email(value, compile=False):
+def is_email(value, compile=False):
     return str_to(value, regex_email, regex_email_compiled, compile)
 
 
 # Reference https://www.regular-expressions.info/creditcard.html
 # https://codereview.stackexchange.com/questions/74797/credit-card-checking
-regex_credit_card = (r'(4(?:\d{12}|\d{15})'  # Visa
-                     r'|5[1-5]\d{14}'  # Mastercard
-                     r'|6011\d{12}'  # Discover (incomplete?)
-                     r'|7\d{15}'  # What's this?
-                     r'|3[47]\d{13}'  # American Express
-                     r')$')
+regex_credit_card_number = (r'(4(?:\d{12}|\d{15})'  # Visa
+                            r'|5[1-5]\d{14}'  # Mastercard
+                            r'|6011\d{12}'  # Discover (incomplete?)
+                            r'|7\d{15}'  # What's this?
+                            r'|3[47]\d{13}'  # American Express
+                            r')$')
 
-regex_credit_card_compiled = re.compile(regex_credit_card)
+regex_credit_card_compiled = re.compile(regex_credit_card_number)
 
 
-def str_to_credit_card(value, compile=False):
-    return str_to(value, regex_credit_card, regex_credit_card_compiled, compile)
+def is_credit_card_number(value, compile=False):
+    return str_to(value, regex_credit_card_number, regex_credit_card_compiled, compile)
 
 
 regex_zip_code = r"^(\d{4,5}(?:[- ]\d{4})?)$"
 regex_zip_code_compiled = re.compile(regex_zip_code, re.IGNORECASE)
 
 
-def str_to_zip_code(value, compile=False):
+def is_zip_code(value, compile=False):
     return str_to(value, regex_zip_code, regex_zip_code_compiled, compile)
 
 
-regex_missing = r" "
-regex_missing_compiled = re.compile(regex_missing, re.IGNORECASE)
-
-
-def str_to_missing(value, compile=False):
-    return str_to(value, regex_missing, regex_missing_compiled, compile)
+def is_missing(value):
+    return value == ""
 
 
 regex_social_security_number = "^([1-9])(?!\1{2}-\1{2}-\1{4})[1-9]{2}-[1-9]{2}-[1-9]{4}"
 regex_social_security_number_compiled = re.compile(regex_social_security_number, re.IGNORECASE)
 
 
-def str_to_social_security_number(value, compile=False):
+def is_social_security_number(value, compile=False):
     return str_to(value, regex_social_security_number, regex_social_security_number_compiled, compile)
 
 
@@ -169,7 +163,7 @@ regex_http_code = "/^[1-5][0-9][0-9]$/"
 regex_http_code_compiled = re.compile(regex_http_code, re.IGNORECASE)
 
 
-def str_to_http_code(value, compile=False):
+def is_http_code(value, compile=False):
     return str_to(value, regex_http_code, regex_http_code_compiled, compile)
 
 
@@ -178,7 +172,7 @@ regex_phone_number = r"/\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/"
 regex_phone_number_compiled = re.compile(regex_phone_number, re.IGNORECASE)
 
 
-def str_to_phone_number(value, compile=False):
+def is_phone_number(value, compile=False):
     return str_to(value, regex_phone_number, regex_phone_number_compiled, compile)
 
 
@@ -308,6 +302,7 @@ US_STATES_CODE = [
 
 
 def str_to(value, regex, compiled_regex, compile=False):
+    value = str(value)
     if value is None:
         result = False
     else:
@@ -315,6 +310,7 @@ def str_to(value, regex, compiled_regex, compile=False):
             regex = compiled_regex
         else:
             regex = regex
+
         result = bool(re.match(regex, value))
     return result
 
@@ -393,178 +389,6 @@ def str_to_currency(value, compile=False):
     return str_to(value, regex_boolean, regex_boolean_compiled, compile)
 
 
-class Infer(object):
-    """
-    This functions return True or False if match and specific dataType
-    """
-    ProfilerDataTypesFunctions = {ProfilerDataTypes.INT.value: regex_int,
-                                  ProfilerDataTypes.DECIMAL.value: regex_decimal,
-                                  ProfilerDataTypes.STRING.value: r".",
-                                  ProfilerDataTypes.EMAIL.value: regex_email,
-                                  ProfilerDataTypes.IP.value: regex_ip,
-                                  ProfilerDataTypes.URL.value: regex_url,
-                                  ProfilerDataTypes.GENDER.value: regex_gender,
-                                  ProfilerDataTypes.BOOLEAN.value: regex_boolean,
-                                  ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
-                                  ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card,
-                                  ProfilerDataTypes.DATE.value: r".",
-                                  ProfilerDataTypes.OBJECT.value: r"",
-                                  ProfilerDataTypes.ARRAY.value: r"",
-                                  ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
-                                  ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: regex_social_security_number,
-                                  ProfilerDataTypes.HTTP_CODE.value: regex_http_code,
-                                  # ProfilerDataTypes.US_STATE.value: US_STATES
-                                  }
-
-    DTYPE_FUNC = {"string": str_to_str, "boolean": str_to_boolean, "date": str_to_date,
-                  "array": str_to_array, "object": str_to_object, "ip": str_to_ip,
-                  "url": str_to_url, "email": str_to_email, "gender": str_to_gender,
-                  "credit_card_number": str_to_credit_card, "zip_code": str_to_zip_code, "int": str_to_int,
-                  "decimal": str_to_decimal,
-                  ProfilerDataTypes.PHONE_NUMBER.value: str_to_phone_number,
-                  ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: str_to_social_security_number,
-                  ProfilerDataTypes.HTTP_CODE.value: str_to_http_code,
-                  }
-
-    # @staticmethod
-    # def mismatch(value: tuple, dtypes: dict):
-    #     """
-    #     Count the dataType that match, do not match, nulls and missing.
-    #     For example if we have an string column we also need to pass the column type we want to match.
-    #     Like credit card or postal code.
-    #     :param value: tuple(Column/Row, value)
-    #     :param dtypes: dict {col_name:(dataType, mismatch)}
-    #
-    #     :return:
-    #     """
-    #     col_name, value = value
-    #
-    #     _data_type = ""
-    #     dtype = dtypes[col_name]
-    #
-    #     if Infer.DTYPE_FUNC[dtype](value) is True:
-    #         _data_type = dtype
-    #     else:
-    #         if is_null(value) is True:
-    #             _data_type = "null"
-    #         elif str_to_missing(value) is True:
-    #             _data_type = "missing"
-    #         else:
-    #             _data_type = "mismatch"
-    #
-    #     result = (col_name, _data_type), 1
-    #     return result
-
-    @staticmethod
-    def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
-        """
-
-        :param col_and_value: Column and value tuple
-        :param infer: If 'True' try to infer in all the dataTypes available. See int_func and str_funcs
-        :param dtypes:
-        :param str_funcs: Custom string function to infer.
-        :param int_funcs: Custom numeric functions to infer.
-        {col_name: regular_expression}
-        :param full: True return a tuple with (col_name, dtype), count or False return dtype
-        :return:
-        """
-        col_name, value = col_and_value
-
-        # Try to order the functions from less to more computational expensive
-        if int_funcs is None:
-            int_funcs = [(str_to_credit_card, "credit_card_number"), (str_to_zip_code, "zip_code")]
-
-        if str_funcs is None:
-            str_funcs = [
-                (str_to_missing, "missing"), (str_to_boolean, "boolean"), (str_to_date, "date"),
-                (str_to_array, "array"), (str_to_object, "object"), (str_to_ip, "ip"),
-                (str_to_url, "url"),
-                (str_to_email, "email"), (str_to_gender, "gender"), (str_to_null, "null")
-            ]
-        # Check 'string' for Spark, 'object' for Dask
-        if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
-
-            if isinstance(value, bool):
-                _data_type = "boolean"
-            elif fastnumbers.isint(value):  # Check if value is integer
-                _data_type = "int"
-                for func in int_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-
-            elif value != value:
-                _data_type = "null"
-
-            elif fastnumbers.isfloat(value):
-                _data_type = "decimal"
-
-            elif isinstance(value, str):
-                _data_type = "string"
-                for func in str_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-
-        else:
-            _data_type = dtypes[col_name]
-            if is_null(value) is True:
-                _data_type = "null"
-            elif str_to_missing(value) is True:
-                _data_type = "missing"
-            else:
-                if dtypes[col_name].startswith("array"):
-                    _data_type = "array"
-                else:
-                    _data_type = dtypes[col_name]
-                    # print(_data_type)
-
-        result = (col_name, _data_type), 1
-
-        if full:
-            return result
-        else:
-            return _data_type
-
-    @staticmethod
-    def parse_pandas(value, date_format="DD/MM/YYYY"):
-        """
-        This function
-        :param value:
-        :param date_format:
-        :return:
-        """
-        if isinstance(value, list):
-            _data_type = "array"
-        elif pd.isnull(value):
-            _data_type = "null"
-        elif profiler_dtype_func("boolean")(str(value)):
-            _data_type = "boolean"
-
-        elif profiler_dtype_func("int", True)(value):
-            # We first check if a number can be parsed as a credit card or zip code
-            _data_type = "int"
-            for _dtype in ["credit_card_number", "zip_code"]:
-                if profiler_dtype_func(_dtype):
-                    _data_type = _dtype
-
-                    # Seems like float can be parsed as dates
-        elif profiler_dtype_func("decimal", True)(value):
-            _data_type = "decimal"
-
-        elif str_to_date(value):
-            _data_type = "date"
-
-        else:
-            _data_type = "string"
-            for _dtype in ["missing", "object", "ip", "url", "email", "gender"]:
-                if profiler_dtype_func(_dtype)(value):
-
-                    _data_type = _dtype
-
-        return _data_type
-
-
 def profiler_dtype_func(dtype, null=False):
     """
     Return a function that check if a value match a datatype
@@ -573,56 +397,17 @@ def profiler_dtype_func(dtype, null=False):
     :return:
     """
 
-    def _float(value):
-        if null is True:
-            return fastnumbers.isfloat(value, allow_nan=True)
-        else:
-            return fastnumbers.isfloat(value) or value != value
+    # if dtype == ProfilerDataTypes.INT.value:
+    #     return _int
+    #
+    # elif dtype == ProfilerDataTypes.DECIMAL.value:
+    #     return _float
 
-    def _int(value):
-        if null:
-            return fastnumbers.isintlike(value)
-        else:
-            return fastnumbers.isintlike(value) or value != value
-
-    if dtype == ProfilerDataTypes.INT.value:
-        return _int
-
-    elif dtype == ProfilerDataTypes.DECIMAL.value:
-        return _float
-
-    elif dtype == ProfilerDataTypes.STRING.value:
+    if dtype == ProfilerDataTypes.STRING.value:
         return is_str
-
-    elif dtype == ProfilerDataTypes.BOOLEAN.value:
-        return str_to_boolean
-
-    elif dtype == ProfilerDataTypes.DATE.value:
-        return str_to_object
 
     elif dtype == ProfilerDataTypes.ARRAY.value:
         return is_str
-
-    elif dtype == ProfilerDataTypes.OBJECT.value:
-        return str_to_object
-
-    elif dtype == ProfilerDataTypes.GENDER.value:
-        return str_to_gender
-
-    elif dtype == ProfilerDataTypes.IP.value:
-        return str_to_ip
-
-    elif dtype == ProfilerDataTypes.URL.value:
-        return str_to_url
-
-    elif dtype == ProfilerDataTypes.EMAIL.value:
-        return str_to_email
-
-    elif dtype == ProfilerDataTypes.CREDIT_CARD_NUMBER.value:
-        return str_to_credit_card
-
-    elif dtype == ProfilerDataTypes.ZIP_CODE.value:
-        return str_to_zip_code
 
     elif dtype == ProfilerDataTypes.MISSING.value:
         return is_str
@@ -702,7 +487,38 @@ def is_function(value):
     return hasattr(value, '__call__')
 
 
-def is_list(value):
+def is_list(value, mode=None):
+    """
+    Check if a string or any not string value is a python list
+    :param value:
+    :return:
+    """
+    if mode == "string":
+        result = is_list_str(value)
+    else:
+        result = is_list_value(value)
+
+    return result
+
+
+def a_object(value):
+    """
+    Check if a string or any not string value is a python list
+    :param value:
+    :return:
+    """
+    return True if is_object(value) or str_to_object(value) else False
+
+
+def is_bool(value, mode=None):
+    if mode == "string":
+        result = is_bool_str(value)
+    else:
+        result = is_bool_value(value)
+    return result
+
+
+def is_list_value(value):
     """
     Check if an object is a list
     :param value:
@@ -859,7 +675,7 @@ def is_list_of_one_element(value):
     :param value:
     :return:
     """
-    if is_list(value):
+    if is_list_value(value):
         return len(value) == 1
 
 
@@ -949,13 +765,17 @@ def is_future(value):
     return isinstance(value, distributed.client.Future)
 
 
+def is_decimal(value):
+    return fastnumbers.isfloat(value, allow_nan=True)
+
+
 def is_int(value):
     """
     Check if an object is an integer
     :param value:
     :return:
     """
-    return isinstance(value, int)
+    return fastnumbers.isintlike(value)
 
 
 def is_url(value):
@@ -979,18 +799,27 @@ def is_float(value):
     return isinstance(value, float)
 
 
-def is_bool(value):
+def is_bool_value(value):
     return isinstance(value, bool)
 
 
-def is_datetime(value):
+def is_datetime(value, mode=None):
     """
     Check if an object is a datetime
     :param value:
     :return:
     """
 
-    return isinstance(value, datetime.datetime)
+    if mode == "string":
+        result = is_datetime_str(value)
+    else:
+
+        if isinstance(value, datetime.datetime):
+            result = True
+        else:
+            result = is_datetime_str(str(value))
+
+    return result
 
 
 def is_binary(value):
@@ -1028,3 +857,117 @@ PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "bin
 
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
                       "decimal": "numeric", "date": "date", "array": "array", "binaty": "binary", "null": "null"}
+
+
+class Infer(object):
+    """
+    This functions return True or False if match and specific dataType
+    """
+    # ProfilerDataTypesRegex = {ProfilerDataTypes.INT.value: regex_int,
+    #                           ProfilerDataTypes.DECIMAL.value: regex_decimal,
+    #                           ProfilerDataTypes.STRING.value: regex_str,
+    #                           ProfilerDataTypes.EMAIL.value: regex_email,
+    #                           ProfilerDataTypes.IP.value: regex_ip,
+    #                           ProfilerDataTypes.URL.value: regex_url,
+    #                           ProfilerDataTypes.GENDER.value: regex_gender,
+    #                           ProfilerDataTypes.BOOLEAN.value: regex_boolean,
+    #                           ProfilerDataTypes.ZIP_CODE.value: regex_zip_code,
+    #                           ProfilerDataTypes.CREDIT_CARD_NUMBER.value: regex_credit_card_number,
+    #                           ProfilerDataTypes.DATE.value: r".",
+    #                           ProfilerDataTypes.OBJECT.value: r"",
+    #                           ProfilerDataTypes.ARRAY.value: r"",
+    #                           ProfilerDataTypes.PHONE_NUMBER.value: regex_phone_number,
+    #                           ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: regex_social_security_number,
+    #                           ProfilerDataTypes.HTTP_CODE.value: regex_http_code,
+    #                           # ProfilerDataTypes.US_STATE.value: US_STATES
+    #                           }
+
+    ProfilerDataTypesID = {ProfilerDataTypes.INT.value: 0,
+                           ProfilerDataTypes.DECIMAL.value: 1,
+                           ProfilerDataTypes.STRING.value: 2,
+                           ProfilerDataTypes.BOOLEAN.value: 3,
+                           ProfilerDataTypes.DATE.value: 4,
+                           ProfilerDataTypes.ARRAY.value: 5,
+                           ProfilerDataTypes.OBJECT.value: 6,
+                           ProfilerDataTypes.IP.value: 7,
+                           ProfilerDataTypes.URL.value: 8,
+                           ProfilerDataTypes.EMAIL.value: 9,
+                           ProfilerDataTypes.GENDER.value: 10,
+                           ProfilerDataTypes.CREDIT_CARD_NUMBER.value: 11,
+                           ProfilerDataTypes.ZIP_CODE.value: 12,
+                           ProfilerDataTypes.PHONE_NUMBER.value: 13,
+                           ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: 14,
+                           ProfilerDataTypes.HTTP_CODE.value: 15,
+                           ProfilerDataTypes.MISSING.value: 16,
+                           }
+
+    @staticmethod
+    def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
+        """
+
+        :param col_and_value: Column and value tuple
+        :param infer: If 'True' try to infer in all the dataTypes available. See int_func and str_funcs
+        :param dtypes:
+        :param str_funcs: Custom string function to infer.
+        :param int_funcs: Custom numeric functions to infer.
+        {col_name: regular_expression}
+        :param full: True return a tuple with (col_name, dtype), count or False return dtype
+        :return:
+        """
+        col_name, value = col_and_value
+
+        # Try to order the functions from less to more computational expensive
+        if int_funcs is None:
+            int_funcs = [(is_credit_card_number, "credit_card_number"), (is_zip_code, "zip_code")]
+
+        if str_funcs is None:
+            str_funcs = [
+                (is_missing, "missing"), (is_bool_str, "boolean"), (is_datetime, "date"),
+                (is_list_str, "array"), (str_to_object, "object"), (is_ip, "ip"),
+                (str_to_url, "url"),
+                (is_email, "email"), (is_gender, "gender"), (str_to_null, "null")
+            ]
+        # Check 'string' for Spark, 'object' for Dask
+        if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
+
+            if isinstance(value, bool):
+                _data_type = "boolean"
+            elif fastnumbers.isint(value):  # Check if value is integer
+                _data_type = "int"
+                for func in int_funcs:
+                    if func[0](value) is True:
+                        _data_type = func[1]
+                        break
+
+            elif value != value:
+                _data_type = "null"
+
+            elif fastnumbers.isfloat(value):
+                _data_type = "decimal"
+
+            elif isinstance(value, str):
+                _data_type = "string"
+                for func in str_funcs:
+                    if func[0](value) is True:
+                        _data_type = func[1]
+                        break
+
+        else:
+            _data_type = dtypes[col_name]
+            if is_null(value) is True:
+                _data_type = "null"
+            elif is_missing(value) is True:
+                _data_type = "missing"
+            else:
+                if dtypes[col_name].startswith("array"):
+                    _data_type = "array"
+                else:
+                    _data_type = dtypes[col_name]
+                    # print(_data_type)
+
+        result = (col_name, _data_type), 1
+
+        if full:
+            return result
+        else:
+            return _data_type

@@ -16,10 +16,10 @@ class Cols(DaskBaseColumns):
     def _names(self):
         return list(self.root.data.columns)
 
-    def _map(self, df, input_col, output_col, func, args, kw_columns):
-        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
-        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
-        return kw_columns
+    def _map(self, df, input_col, output_col, func, args):
+        return df[input_col].map_partitions(func, *args)
+        # kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+        # return kw_columns
 
     def _series_to_dict(self, series):
         return series.to_pandas().to_dict()

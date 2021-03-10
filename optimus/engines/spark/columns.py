@@ -47,7 +47,7 @@ sys.path.append(os.path.abspath(ROOT_DIR))
 # as python module because it generate a pickle error.
 from infer import Infer
 
-from optimus.infer import is_, is_type, is_function, is_list, is_tuple, is_list_of_str, \
+from optimus.infer import is_, is_type, is_function, is_list_value, is_tuple, is_list_of_str, \
     is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int
 from optimus.infer_spark import parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
@@ -83,7 +83,7 @@ class Cols(BaseColumns):
 
         if is_num_or_str(value):
             value = F.lit(value)
-        elif is_list(value):
+        elif is_list_value(value):
             value = lit_array(value)
         elif is_tuple(value):
             value = lit_array(list(value))
@@ -281,7 +281,7 @@ class Cols(BaseColumns):
         columns = parse_columns(df, output_cols, accepts_missing_cols=True)
         check_column_numbers(columns, 1)
 
-        if is_list(value):
+        if is_list_value(value):
             expr = F.array([F.lit(x) for x in value])
         elif is_numeric(value):
             expr = F.lit(value)
@@ -368,7 +368,7 @@ class Cols(BaseColumns):
         # Parse params
         if columns is None:
             input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
+            if is_list_value(input_cols) or is_one_element(input_cols):
 
                 output_cols = get_output_cols(input_cols, output_cols)
 
@@ -934,7 +934,7 @@ class Cols(BaseColumns):
 
             # Create as dict
             _search_and_replace_by = None
-            if is_list(search):
+            if is_list_value(search):
                 _search_and_replace_by = {s: _replace_by for s in search}
             elif is_one_element(search):
                 _search_and_replace_by = {search: _replace_by}
@@ -1374,7 +1374,7 @@ class Cols(BaseColumns):
 
                 if is_list_of_tuples(_index):
                     _index = [(i - 1, j - 1) for i, j in _index]
-                elif is_list(_index):
+                elif is_list_value(_index):
                     _index = [i - 1 for i in _index]
 
                 actual_index = _index

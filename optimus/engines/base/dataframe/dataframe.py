@@ -6,7 +6,7 @@ from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.exceptions import UnsupportedOperationError
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list
+from optimus.infer import is_list_value
 
 
 class Ext(BaseDataFrame):
@@ -85,7 +85,7 @@ class Ext(BaseDataFrame):
         if index:
             dfd = dfd.set_index(index)
             new_level = '1'
-            if is_list(index):
+            if is_list_value(index):
                 new_level = str(len(index))
 
         dfd = dfd.stack().reset_index()

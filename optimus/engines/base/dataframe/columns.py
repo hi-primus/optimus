@@ -4,7 +4,6 @@ import dask.dataframe as dd
 
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
-from optimus.helpers.core import one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -49,7 +48,7 @@ class DataFrameBaseColumns(BaseColumns):
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
 
-        df = self.df
+        df = self.root
 
         scaler = MinMaxScaler()
 
@@ -122,8 +121,8 @@ class DataFrameBaseColumns(BaseColumns):
             # https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
             # t['combined'] = t.values.tolist()
 
-            dfds = [dfd[input_col] for input_col in input_cols]
-            dfd[output_col] = dfd[input_cols].values.tolist()
+            # dfds = [dfd[input_col] for input_col in input_cols]
+            # dfd[output_col] = dfd[input_cols].values.tolist()
         elif shape == "string":
             dfds = [dfd[input_col].astype(str) for input_col in input_cols]
             dfd[output_col] = reduce((lambda x, y: x + separator + y), dfds)

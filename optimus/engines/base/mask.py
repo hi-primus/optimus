@@ -3,7 +3,8 @@ from abc import abstractmethod, ABC
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
-from optimus.infer import Infer, is_str
+from optimus.infer import Infer, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
+    regex_credit_card_number, regex_zip_code, regex_boolean, regex_gender, regex_url, regex_ip, regex_email
 
 
 class Mask(ABC):
@@ -51,7 +52,7 @@ class Mask(ABC):
         :return:
         """
         dfd = self.root.data
-        mask_mismatch = ~dfd[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
+        mask_mismatch = ~dfd[col_name].astype("str").str.match(Infer.ProfilerDataTypesRegex[dtype])
         mask_null = dfd[col_name].isnull()
         return self.root.new((mask_mismatch | mask_null).to_frame())
 
@@ -62,7 +63,7 @@ class Mask(ABC):
         :param dtype:
         :return:
         """
-        mask = self.root.data[col_name].astype("str").str.match(Infer.ProfilerDataTypesFunctions[dtype])
+        mask = self.root.data[col_name].astype("str").str.match(Infer.ProfilerDataTypesRegex[dtype])
         return self.root.new(mask.to_frame())
 
     def values_in(self, col_name, values):
@@ -80,12 +81,13 @@ class Mask(ABC):
     def ends_with(self, col_name, value):
         mask = self.root.data[col_name].str.endswith(value, na=False)
         return self.root.new(mask.to_frame())
-    
+
     def contains(self, col_name, value):
         mask = self.root.data[col_name].str.contains(value, na=False)
         return self.root.new(mask.to_frame())
 
     def find(self, col_name, value):
+        dfd = self.root.data
         if is_str(value):
             mask = self.root.data[col_name].astype(str).str.match(value, na=False)
         else:
@@ -93,7 +95,11 @@ class Mask(ABC):
         return self.root.new(mask.to_frame())
 
     @abstractmethod
-    def integer(self,col_name):
+    def integer(self, col_name):
+        pass
+
+    @abstractmethod
+    def float(self, col_name):
         pass
 
     def nulls(self, columns, how="any"):
@@ -154,53 +160,44 @@ class Mask(ABC):
         return ~self.root.mask.nulls(col_name)
 
     def email(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.EMAIL.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_email)
 
     def ip(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.IP.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_ip)
 
     def url(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.URL.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_url)
 
     def gender(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.GENDER.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_gender)
 
     def boolean(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.BOOLEAN.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_boolean)
 
     def zip_code(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.ZIP_CODE.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_zip_code)
 
     def credit_card_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.CREDIT_CARD_NUMBER.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_credit_card_number)
 
-    def date(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
+    def datetime(self, col_name="*"):
+        df = self.root
+        if df[col_name].cols.dtype  == df.constants.
+        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesRegex[
             ProfilerDataTypes.DATE.value])
 
     def object(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
+        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesRegex[
             ProfilerDataTypes.OBJECT.value])
 
     def array(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.ARRAY.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_array)
 
     def phone_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.PHONE_NUMBER.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_phone_number)
 
     def social_security_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_social_security_number)
 
     def http_code(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesFunctions[
-            ProfilerDataTypes.HTTP_CODE.value])
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_http_code)

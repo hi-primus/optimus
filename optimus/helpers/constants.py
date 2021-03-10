@@ -126,6 +126,7 @@ class ProfilerDataTypes(Enum):
     SOCIAL_SECURITY_NUMBER = "social_security_number"
     HTTP_CODE = "http_code"
     US_STATE = "us_state"
+    NULL ="null"
 
     @staticmethod
     def list():

@@ -1,9 +1,6 @@
 # from dask_ml.preprocessing import DummyEncoder
-from sklearn import preprocessing
 
-from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
-from optimus.helpers.columns import parse_columns, name_col, prepare_columns
-from optimus.helpers.constants import Actions
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 
@@ -20,7 +17,6 @@ def n_gram(df, input_col, n=2):
     pass
 
 
-
 def one_hot_encoder(df, input_cols, output_col=None, **kargs):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
@@ -35,10 +31,10 @@ def one_hot_encoder(df, input_cols, output_col=None, **kargs):
     if output_col is None:
         output_col = name_col(input_cols, "one_hot_encoder")
 
-    # de = DummyEncoder()
-    # df[output_col] = de.fit_transform(df[input_cols])
+    import pandas as pd
+    return pd.get_dummies(df[input_cols], prefix='one_hot_encoder')
 
-    return df
+
 
 
 # TODO: Must we use the pipeline version?

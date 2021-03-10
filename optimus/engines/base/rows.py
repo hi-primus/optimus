@@ -148,7 +148,7 @@ class BaseRows(ABC):
         if compute is True:
             result = len(dfd.index)
         else:
-            result = self.F.delayed(len)(dfd)
+            result = df.functions.delayed(len)(dfd)
         return result
 
     def to_list(self, input_cols):

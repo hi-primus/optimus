@@ -5,7 +5,7 @@ import simplejson as json
 from glom import glom
 
 import optimus.helpers.functions_spark
-from optimus.infer import is_dict, is_list, is_str, is_int
+from optimus.infer import is_dict, is_list_value, is_str, is_int
 
 META = "_meta"
 PROPERTIES = "_properties"
@@ -43,7 +43,7 @@ class JSON:
                         if len(y) > 0:
                             _keys[x][PROPERTIES] = {}
                             _schema(y, _keys[x][PROPERTIES])
-                    elif is_list(y):
+                    elif is_list_value(y):
                         _keys[x] = {META: {"count": len(y), "dtype": type(y)}}
                         if len(y) > 0:
                             _keys[x] = {ITEMS: {PROPERTIES: {}, META: {"count": len(y), "dtype": type(y)}}}
@@ -55,7 +55,7 @@ class JSON:
                         _keys[x] = {META: {"dtype": type(y)}}
                         _schema(y, _keys[x])
 
-            elif is_list(_data):
+            elif is_list_value(_data):
                 for x in _data:
                     _schema(x, _keys)
 
@@ -117,7 +117,7 @@ class JSON:
 
         result = []
         value = glom(self.data, path, skip_exc=KeyError)
-        if is_list(value):
+        if is_list_value(value):
             for i in value:
                 result.append((_flatten_json(i)))
         elif is_dict(value):

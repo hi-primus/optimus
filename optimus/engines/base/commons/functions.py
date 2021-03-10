@@ -16,7 +16,7 @@ from optimus.infer import is_str
 
 
 def is_integer(series):
-    return pd.Series(np.vectorize(fastnumbers.isint)(series).flatten())
+    return pd.Series(np.vectorize(fastnumbers.isintlike)(series).flatten())
 
 
 def is_float(series):

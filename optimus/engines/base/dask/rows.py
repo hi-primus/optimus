@@ -11,7 +11,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_list
+from optimus.infer import is_list_of_str_or_int, is_list_value
 
 
 class DaskBaseRows(BaseRows):
@@ -36,7 +36,7 @@ class DaskBaseRows(BaseRows):
         :param dfs:
         :param names_map:
         """
-        if not is_list(dfs):
+        if not is_list_value(dfs):
             dfs = [dfs]
 
         every_df = [self.root, *dfs]

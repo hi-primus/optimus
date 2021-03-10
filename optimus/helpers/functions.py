@@ -8,26 +8,23 @@ import re
 import subprocess
 import sys
 import tempfile
-
 from collections import Counter
 from pathlib import Path
-from urllib.request import Request, urlopen
 from urllib.parse import unquote
+from urllib.request import Request, urlopen
 
 import fastnumbers
 import humanize
-import numpy as np
 import pandas as pd
 import six
 from fastnumbers import isint, isfloat
 from string_grouper import match_strings
 
 from optimus import ROOT_DIR
-from optimus.helpers.check import is_url
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, is_list_of_str
+from optimus.infer import is_url
 
 
 def random_int(n=5):
