@@ -59,8 +59,9 @@ class DaskBaseDataFrame(BaseDataFrame):
         return f"{df_schema}, {df_data}"
 
     def _reset_buffer(self):
-        Variable(self.buffer).delete()
-        self.buffer = None
+        if self.buffer:
+            Variable(self.buffer).delete()
+            self.buffer = None
 
     def _create_buffer_df(df, input_cols, n):
         import uuid
@@ -69,7 +70,7 @@ class DaskBaseDataFrame(BaseDataFrame):
         return unique_id
 
     def get_buffer(self):
-        return Variable(self.buffer).get()
+        return Variable(self.buffer).get() if self.buffer else None
 
     def _buffer_window(df, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(df.get_buffer().data[input_cols][lower_bound: upper_bound])

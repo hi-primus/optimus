@@ -293,13 +293,13 @@ class BaseDataFrame(ABC):
 
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
-                df.set_buffer(columns, n)
+                self.set_buffer(columns, n)
 
-        df_buffer = df.get_buffer()
+        df_buffer = self.get_buffer()
 
         if df_buffer is None:
-            df.set_buffer(columns, n)
-            df_buffer = df.get_buffer()
+            self.set_buffer(columns, n)
+            df_buffer = self.get_buffer()
 
         df_length = df_buffer.rows.count()
 
