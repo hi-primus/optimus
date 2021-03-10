@@ -493,13 +493,14 @@ class BaseColumns(ABC):
         return self.root.new(self.root._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
-    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
+    def calculate_pattern_counts(self, input_cols, n=10, mode=0, flush=False):
         """
-        Count how many equal patters there are in a columns. Handle cache to trigger the operation on if necessary
+        Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary. 
+        Saves the result to meta and returns the same dataframe
         :param input_cols:
-        :param n: top n number
+        :param n: Top n matches
         :param mode:
-        :param flush: FLush cache to reprocess
+        :param flush: Flushes the cache to process again
         :return:
         """
 
@@ -515,14 +516,12 @@ class BaseColumns(ABC):
             if patterns_update_time is None:
                 patterns_update_time = 0
 
-            _patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
-            if _patterns_values is not None:
-                cached = len(_patterns_values)
+            patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
 
             if column_modified_time > patterns_update_time \
                     or patterns_update_time == 0 \
                     or flush is True \
-                    or cached != n:
+                    or patterns_more:
 
                 # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = \
@@ -538,10 +537,55 @@ class BaseColumns(ABC):
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
 
+        return df
 
-            else:
-                result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
+    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
+        """
+        Get how many equal patterns there are in a column. Triggers the operation only if necessary
+        :param input_cols:
+        :param n: Top n matches
+        :param mode:
+        :param flush: Flushes the cache to process again
+        :return:
+        """
 
+        df = self.root
+
+        result = {}
+        input_cols = parse_columns(df, input_cols)
+
+        calculate = flush
+
+        for input_col in input_cols:
+            patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
+            patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
+
+            if patterns_values is None or (len(patterns_values)<n and patterns_more):
+                calculate = True
+                break
+
+            column_modified_time = Meta.get(df.meta, f"profile.columns.{input_col}.modified")
+            patterns_update_time = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.updated")
+            if column_modified_time is None:
+                column_modified_time = -1
+            if patterns_update_time is None:
+                patterns_update_time = 0
+
+            if column_modified_time > patterns_update_time or patterns_update_time == 0:
+                calculate = True
+                break
+
+        if calculate:
+            df = df.cols.calculate_pattern_counts(input_cols, n, mode, flush)
+            profile = Meta.get(df.meta, "profile")
+            self.meta = df.meta
+
+        for input_col in input_cols:
+            result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
+            if len(result[input_col]["values"]) > n:
+                result[input_col].update({"more": True})
+                result[input_col]["values"] = result[input_col]["values"][0:n]
+            
         return result
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):
