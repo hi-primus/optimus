@@ -66,10 +66,12 @@ class RemoteDummyVariable:
 
 class RemoteDummyDataFrame(RemoteDummyVariable):
 
-    __repr__ = BaseDataFrame.ascii
     print = BaseDataFrame.print
     table = BaseDataFrame.table
     display = BaseDataFrame.display
+
+    def __repr__(self):
+        return self.ascii()
 
     def _repr_html_(self):
         return self.table()
