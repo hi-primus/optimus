@@ -3,6 +3,7 @@ from enum import Enum
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 
+
 # if importlib.util.find_spec("vaex") is not None:
 #     from vaex import DataFrame as VaexDataFrame
 #     # import pandas as pd
@@ -62,16 +63,18 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     else:
         RaiseIt.value_error(engine, Engine.list())
 
-    if engine == Engine.CUDF.value or engine == Engine.DASK_CUDF.value:
-        def switch_to_rmm_allocator():
-            import rmm
-            import cupy
-            cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
-            return True
+    # Set cupy yo user RMM
+    def switch_to_rmm_allocator():
+        import rmm
+        import cupy
+        cupy.cuda.set_allocator(rmm.rmm_cupy_allocator)
+        return True
 
+    if engine == Engine.CUDF.value:
+        switch_to_rmm_allocator()
+
+    if engine == Engine.DASK_CUDF.value:
         if op.client:
             op.client.run(switch_to_rmm_allocator)
 
     return op
-
-
