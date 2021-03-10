@@ -16,8 +16,10 @@ class RemoteDummyAttribute:
     def __call__(self, *args, **kwargs):
 
         if kwargs.get("client_submit"):
-            client_submit = True
+            client_submit = kwargs["client_submit"]
             del kwargs["client_submit"]
+        else:
+            client_submit = False
 
         def _f(op, unique_id, method, *args, **kwargs):
             obj = op.get_var(unique_id)
