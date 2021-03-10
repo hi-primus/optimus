@@ -23,6 +23,7 @@ from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
 from .meta import Meta
+from ...outliers.outliers import Outliers
 
 
 class BaseDataFrame(ABC):
@@ -183,6 +184,10 @@ class BaseDataFrame(ABC):
 
     def cols(self):
         return BaseColumns
+
+    @property
+    def outliers(self):
+        return Outliers(self)
 
     @abstractmethod
     def visualize(self):
