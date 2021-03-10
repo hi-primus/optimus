@@ -119,14 +119,14 @@ class DaskCUDFEngine(BaseEngine):
         if kwargs.get("client_timeout"):
             client_timeout = kwargs.get("client_timeout")
             del kwargs["client_timeout"]
+        else:
+            client_timeout = 600
 
         if not self.remote:
             submit = self.submit
         else:
             submit = self.remote.submit
 
-        else:
-            client_timeout = 600
 
         result = submit(callback, *args, **kwargs).result(client_timeout)
         if isinstance(result, dict):
