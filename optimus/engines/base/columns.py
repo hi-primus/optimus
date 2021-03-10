@@ -180,6 +180,7 @@ class BaseColumns(ABC):
 
         kw_columns = {}
         output_ordered_columns = self.names()
+
         if args is None:
             args = []
         elif not is_tuple(args, ):
@@ -217,9 +218,8 @@ class BaseColumns(ABC):
 
         if kw_columns:
             df = df.cols.assign(kw_columns)
-
+        # print("df.data", df.data)
         # Dataframe to Optimus dataframe
-
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -1228,7 +1228,7 @@ class BaseColumns(ABC):
 
     def match(self, input_cols="*", regex="", output_cols=None):
         return self.apply(input_cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
+                          meta_action=Actions.MATCH.value, mode="vectorized", func_type="column_expr")
 
     def lower(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,

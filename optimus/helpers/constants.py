@@ -24,6 +24,7 @@ class Actions(Enum):
     """
     # COLUMNS
     PROFILER_DTYPE = "profiler_dtype"
+    MATCH = "match"
     LOWER = "lower"
     UPPER = "upper"
     PROPER = "proper"
