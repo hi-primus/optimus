@@ -1420,7 +1420,7 @@ class BaseColumns(ABC):
         Replace a value, list of values by a specified string
         :param input_cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
-        :param replace_by: New value to replace the old one
+        :param replace_by: New value to replace the old one. Supports an array when searching by characters.
         :param search_by: Can be "full","words","chars" or "values".
         :param ignore_case: Ignore case when searching for match
         :param output_cols:
@@ -1430,8 +1430,9 @@ class BaseColumns(ABC):
         # df = self.parent
 
         search = val_to_list(search)
+        replace_by = val_to_list(replace_by)
 
-        if search_by == "full" and not is_list_of_str(search) or not is_str(replace_by):
+        if search_by == "full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
             search_by = "values"
 
         if search_by == "chars":
@@ -1441,14 +1442,17 @@ class BaseColumns(ABC):
         elif search_by == "words":
             func = self.F.replace_words
             func_return_type = str
+            replace_by = replace_by[0]
         elif search_by == "full":
             func = self.F.replace_full
             func_return_type = str
+            replace_by = replace_by[0]
         elif search_by == "values":
             func = self.F.replace_values
             func_return_type = None
+            replace_by = replace_by[0]
         else:
-            RaiseIt.value_error(search_by, ["chars", "words", "full"])
+            RaiseIt.value_error(search_by, ["chars", "words", "full", "values"])
 
         # Cudf raise and exception if both param are not the same type
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
