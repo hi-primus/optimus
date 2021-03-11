@@ -690,7 +690,7 @@ def parse(text_input, df_name="df"):
 
             result_element = f"""{df_name}['{token_value}']"""
         elif token.name in functions:
-            result_element = "F." + token_value.lower()
+            result_element = f"""{df_name}.functions.{token_value.lower()}"""
         else:
             result_element = token_value
         result.append(result_element)
