@@ -143,7 +143,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     """
 
     # if columns value is * get all dataframes columns
-    attrs = None
+
     df_columns = df.cols._names()
 
     if is_regex is not None:
