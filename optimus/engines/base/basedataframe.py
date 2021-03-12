@@ -623,6 +623,12 @@ class BaseDataFrame(ABC):
             string_cols = []
             cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
 
+            for col_name in cols_and_inferred_dtype:
+                _dtype = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+
+                if _dtype is not None:
+                    cols_and_inferred_dtype[col_name]["dtype"] = _dtype
+
             compute = True
             # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
             mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
@@ -736,16 +742,19 @@ class BaseDataFrame(ABC):
         meta = self.meta
         profile = Meta.get(meta, "profile")
 
-        flush = True if not profile else flush
+        if not profile:
+            flush = True
 
         if columns or flush:
             columns = parse_columns(df, columns) if columns else []
+            transformations = Meta.get(meta, "transformations")
 
-            if flush:
+            calculate = False
+
+            if flush or len(transformations):
                 calculate = True
+                
             else:
-                calculate = False
-
                 for col in columns:
                     if col not in profile["columns"]:
                         calculate = True
