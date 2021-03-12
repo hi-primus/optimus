@@ -716,7 +716,7 @@ class BaseDataFrame(ABC):
 
         if cols_and_inferred_dtype is not None:
             df.meta = meta
-            df = df.cols.set_profiler_dtypes(cols_and_inferred_dtype)
+            df = df.cols.set_dtypes(cols_and_inferred_dtype, True)
             meta = df.meta
 
         # Reset Actions

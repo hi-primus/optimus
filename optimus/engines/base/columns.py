@@ -358,21 +358,43 @@ class BaseColumns(ABC):
             result.update({col_name: column_meta})
         return result
 
-    def set_profiler_dtypes(self, columns: dict):
+    def set_dtypes(self, columns: dict, inferred=False):
         """
         Set profiler data type
         :param columns: A dict with the form {"col_name": profiler datatype}
+        :param inferred: Wherter it was inferred or not
         :return:
         """
         df = self.root
 
-        for col_name, props in columns.items():
+        for col_name, element in columns.items():
+            props = element if is_dict(element) else {"dtype": element}
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
-                df.meta = Meta.set(df.meta, f"profile.columns.{col_name}.profiler_dtype", props)
+                if not inferred:
+                    df.meta = Meta.set(df.meta, f"columns_dtypes.{col_name}", dtype)
+                df.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.profiler_dtype", props)
                 df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
+
+        return df
+    
+    def unset_dtypes(self, columns="*"):
+        """
+        Unset profiler data type
+        :param columns:
+        :return:
+        """
+        df = self.root
+        columns = parse_columns(df, columns)
+
+        for col_name in columns:
+            dtype = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+
+            if dtype is not None:
+                df.meta = Meta.reset(df.meta, f"columns_dtypes.{col_name}")
+                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)                
 
         return df
 
