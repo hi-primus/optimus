@@ -616,28 +616,35 @@ class BaseDataFrame(ABC):
 
         if profiler_data is None:
             profiler_data = {}
-        cols_and_inferred_dtype = None
+        cols_dtypes = None
 
         if cols_to_profile or not is_cached or flush is True:
             numeric_cols = []
             string_cols = []
-            cols_and_inferred_dtype = df.cols.infer_profiler_dtypes(cols_to_profile)
 
-            for col_name in cols_and_inferred_dtype:
-                _dtype = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+            cols_dtypes = {}
+            cols_to_infer = [*cols_to_profile]
+            
+            for col_name in cols_to_profile:
+                _props = Meta.get(df.meta, f"columns_dtypes.{col_name}")
 
-                if _dtype is not None:
-                    cols_and_inferred_dtype[col_name]["dtype"] = _dtype
+                if _props is not None:
+                    cols_dtypes[col_name] = _props
+                    cols_to_infer.remove(col_name)
+
+            if cols_to_infer:
+                cols_dtypes = { **cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer) }
+                cols_dtypes = { col: cols_dtypes[col] for col in cols_to_profile }
 
             compute = True
-            # print("cols_and_inferred_dtype, compute",cols_and_inferred_dtype, compute)
-            mismatch = df.cols.count_mismatch(cols_and_inferred_dtype)
+            # print("cols_dtypes, compute",cols_dtypes, compute)
+            mismatch = df.cols.count_mismatch(cols_dtypes)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
-            cols = cols_and_inferred_dtype.items()
+            cols = cols_dtypes.items()
 
             for col_name, properties in cols:
-                if properties["categorical"]:
+                if properties.get("categorical"):
                     string_cols.append(col_name)
                 else:
                     numeric_cols.append(col_name)
@@ -714,9 +721,9 @@ class BaseDataFrame(ABC):
 
         meta = Meta.set(meta, "profile", profiler_data)
 
-        if cols_and_inferred_dtype is not None:
+        if cols_dtypes is not None:
             df.meta = meta
-            df = df.cols.set_dtypes(cols_and_inferred_dtype, True)
+            df = df.cols.set_dtype(cols_dtypes, True)
             meta = df.meta
 
         # Reset Actions
@@ -753,7 +760,7 @@ class BaseDataFrame(ABC):
 
             if flush or len(transformations):
                 calculate = True
-                
+
             else:
                 for col in columns:
                     if col not in profile["columns"]:

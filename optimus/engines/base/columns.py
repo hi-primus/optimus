@@ -358,7 +358,20 @@ class BaseColumns(ABC):
             result.update({col_name: column_meta})
         return result
 
-    def set_dtypes(self, columns: dict, inferred=False):
+    @dispatch(str, str)
+    def set_dtype(self, column, dtype):
+        return self.set_dtype({column: dtype}, False)
+
+    @dispatch(str, str, bool)
+    def set_dtype(self, column, dtype, categorical):
+        return self.set_dtype({column: {"dtype": dtype, "categorical": categorical}}, False)
+
+    @dispatch(dict)
+    def set_dtype(self, columns: dict):
+        return self.set_dtype(columns, False)
+        
+    @dispatch(dict, bool)
+    def set_dtype(self, columns: dict, inferred=False):
         """
         Set profiler data type
         :param columns: A dict with the form {"col_name": profiler datatype}
@@ -372,7 +385,7 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
                 if not inferred:
-                    df.meta = Meta.set(df.meta, f"columns_dtypes.{col_name}", dtype)
+                    df.meta = Meta.set(df.meta, f"columns_dtypes.{col_name}", props)
                 df.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.profiler_dtype", props)
                 df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
             else:
@@ -380,7 +393,7 @@ class BaseColumns(ABC):
 
         return df
     
-    def unset_dtypes(self, columns="*"):
+    def unset_dtype(self, columns="*"):
         """
         Unset profiler data type
         :param columns:
@@ -390,9 +403,9 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         for col_name in columns:
-            dtype = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+            props = Meta.get(df.meta, f"columns_dtypes.{col_name}")
 
-            if dtype is not None:
+            if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_dtypes.{col_name}")
                 df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)                
 
