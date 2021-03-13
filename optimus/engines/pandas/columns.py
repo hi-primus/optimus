@@ -67,7 +67,7 @@ class Cols(DataFrameBaseColumns):
         df = self
 
     def strip_html(self):
-        df = self
+        df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")
         # self.text = soup.get_text()
         return self

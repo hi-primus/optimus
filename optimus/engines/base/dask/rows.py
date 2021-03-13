@@ -2,7 +2,8 @@ import functools
 import operator
 
 import dask.array as da
-import dask.dataframe as  dd
+import dask.dataframe as dd
+from dask.delayed import delayed
 from multipledispatch import dispatch
 
 from optimus.engines.base.meta import Meta
@@ -21,6 +22,23 @@ class DaskBaseRows(BaseRows):
         # self.parent = parent
         super().__init__(parent)
         # super(DaskBaseRows, self).__init__(parent)
+
+    def _reverse(self, dfd):
+        @delayed
+        def reverse_pdf(pdf):
+            return pdf[::-1]
+
+        ds = dfd.to_delayed()
+        ds = [reverse_pdf(d) for d in ds][::-1]
+        return dd.from_delayed(ds)
+
+
+    def _sort(self, dfd, col_name, ascending):
+        dfd = dfd.set_index(col_name)
+        if not ascending:
+            dfd = self._reverse(dfd)
+        return dfd.reset_index()[self.root.cols.names()]
+
 
     def create_id(self, column="id"):
         # Reference https://github.com/dask/dask/issues/1426
@@ -108,62 +126,6 @@ class DaskBaseRows(BaseRows):
         partitions = df.partitions()
         return self.root.new(self.root._pandas_to_dfd(df.head("*", count), partitions))
 
-
-    @dispatch(str)
-    def sort(self, input_cols):
-        df = self.root
-        input_cols = parse_columns(df, input_cols)
-        return df.rows.sort([(input_cols, "desc",)])
-
-    @dispatch(str, str)
-    def sort(self, columns, order="desc"):
-        """
-        Sort column by row
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.rows.sort([(columns, order,)])
-
-    @dispatch(list)
-    def sort(self, col_sort):
-        """
-        Sort rows taking into account multiple columns
-        :param col_sort: column and sort type combination (col_name, "asc")
-        :type col_sort: list of tuples
-        """
-        # If a list of columns names are given order this by desc. If you need to specify the order of every
-        # column use a list of tuples (col_name, "asc")
-        df = self.root
-        meta = df.meta
-
-        t = []
-        if is_list_of_str_or_int(col_sort):
-            for col_name in col_sort:
-                t.append(tuple([col_name, "desc"]))
-            col_sort = t
-
-        for cs in col_sort:
-            # print(col_sort)
-            col_name = one_list_to_val(cs[0])
-            order = cs[1]
-
-            if order != "asc" and order != "desc":
-                RaiseIt.value_error(order, ["asc", "desc"])
-
-            def func(pdf):
-                return pdf.sort_values(col_name, ascending=True if order == "asc" else False)
-
-            df = df.data.map_partitions(func)
-
-            meta = meta.action(Actions.SORT_ROW.value, col_name)
-
-            # c = df.cols.names()
-            # It seems that is on possible to order rows in Dask using set_index. It only return data in asc way.
-            # We should fins a way to make it work desc and form multiple columns
-            # df = df.set_index(col_name).reset_index()[c]
-
-        return self.root.new(df.data, meta=meta)
-
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """
 
@@ -174,7 +136,7 @@ class DaskBaseRows(BaseRows):
         """
         dfd = self.root.data
         columns = parse_columns(dfd, columns)
-        return dfd[lower_bound: upper_bound][columns]
+        return self.root.new(dfd[lower_bound: upper_bound][columns])
 
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):

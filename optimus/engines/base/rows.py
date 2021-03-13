@@ -1,12 +1,14 @@
 from abc import abstractmethod, ABC
 
 import pandas as pd
+from multipledispatch import dispatch
 
 from optimus.engines.base.meta import Meta
 # This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.infer import is_str
+from optimus.helpers.core import one_list_to_val
+from optimus.infer import is_str, is_list_of_str_or_int
 
 
 class BaseRows(ABC):
@@ -17,6 +19,30 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
+    def _sort():
+        pass
+
+    def _sort_multiple(self, dfd, meta, col_sort):
+        """
+        Sort rows taking into account multiple columns
+        :param col_sort: column and sort type combination (col_name, "asc")
+        :type col_sort: list of tuples
+        """
+
+        for cs in col_sort:
+            col_name = one_list_to_val(cs[0])
+            order = cs[1]
+
+            if order != "asc" and order != "desc":
+                RaiseIt.value_error(order, ["asc", "desc"])
+
+            dfd = self._sort(dfd, col_name, True if order == "asc" else False)
+            meta = Meta.action(meta, Actions.SORT_ROW.value, col_name)
+
+        return dfd, meta
+
+    @staticmethod
+    @abstractmethod
     def create_id(column="id"):
         pass
 
@@ -24,7 +50,6 @@ class BaseRows(ABC):
     def append(self, dfs, cols_map):
         pass
 
-    #
     def greater_than(self, input_col, value):
 
         dfd = self.root.data
@@ -163,10 +188,62 @@ class BaseRows(ABC):
 
         return value
 
-    @staticmethod
-    @abstractmethod
-    def sort(input_cols):
-        pass
+
+    @dispatch(str)
+    def sort(self, input_col):
+        df = self.root
+        input_col = parse_columns(df, input_col)
+        return df.rows.sort([(input_col, "desc",)])
+
+
+    @dispatch(str, bool)
+    def sort(self, input_col, asc=False):
+        """
+        Sort column by row
+        """
+        df = self.root
+        input_col = parse_columns(df, input_col)
+        return df.rows.sort([(input_col, "asc" if asc else "desc",)])
+
+
+    @dispatch(str, str)
+    def sort(self, input_col, order="desc"):
+        """
+        Sort column by row
+        """
+        df = self.root
+        input_col = parse_columns(df, input_col)
+        return df.rows.sort([(input_col, order,)])
+    
+
+    @dispatch(dict)
+    def sort(self, col_sort):
+        df = self.root
+        return df.rows.sort([(k, v) for k, v in col_sort.items()])
+
+
+    @dispatch(list)
+    def sort(self, col_sort):
+        """
+        Sort rows taking into account multiple columns
+        :param col_sort: column and sort type combination (col_name, "asc")
+        :type col_sort: list of tuples
+        """
+        # If a list of columns names are given order this by desc. If you need to specify the order of every
+        # column use a list of tuples (col_name, "asc")
+        df = self.root
+        dfd = df.data
+        meta = df.meta
+
+        if is_list_of_str_or_int(col_sort):
+            t = []
+            for col_name in col_sort:
+                t.append(tuple([col_name, "desc"]))
+            col_sort = t
+
+        dfd, meta = self._sort_multiple(dfd, meta, col_sort)
+
+        return self.root.new(dfd, meta=meta)
 
     def drop(self, where):
         """

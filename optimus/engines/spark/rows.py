@@ -93,42 +93,7 @@ class Rows(DaskBaseRows):
         """
         return self.root.data.filter(*args, **kwargs)
 
-    @staticmethod
-    @dispatch(str)
-    def sort(input_cols) -> DataFrame:
-        """
-        Sort column by row
-        """
-        input_cols = parse_columns(self.root, input_cols)
-        return self.root.rows.sort([(input_cols, "desc",)])
-
-    @staticmethod
-    @dispatch(str, str)
-    def sort(columns, order="desc") -> DataFrame:
-        """
-        Sort column by row
-        """
-        columns = parse_columns(self.root, columns)
-        return self.root.rows.sort([(columns, order,)])
-
-    @staticmethod
-    @dispatch(list)
-    def sort(col_sort) -> DataFrame:
-        """
-        Sort rows taking into account multiple columns
-        :param col_sort: column and sort type combination (col_name, "asc")
-        :type col_sort: list of tuples
-        """
-        # If a list of columns names are given order this by desc. If you need to specify the order of every
-        # column use a list of tuples (col_name, "asc")
-        df = self
-
-        t = []
-        if is_list_of_str_or_int(col_sort):
-            for col_name in col_sort:
-                t.append(tuple([col_name, "desc"]))
-            col_sort = t
-
+    def _sort_multiple(self, dfd, col_sort, meta):
         func = []
         for cs in col_sort:
             col_name = one_list_to_val(cs[0])
@@ -142,10 +107,15 @@ class Rows(DaskBaseRows):
                 RaiseIt.value_error(sort_func, ["asc", "desc"])
 
             func.append(sort_func(col_name))
-            df.meta = Meta.action(df.meta, None, Actions.SORT_ROW.value, col_name)
+            meta = Meta.action(meta, Actions.SORT_ROW.value, col_name)
 
-        df = df.sort(*func)
-        return df
+        dfd = dfd.sort(*func)
+        return dfd, meta
+
+
+    def _sort(self):
+        pass
+
 
     def drop(self,where=None) -> DataFrame:
         """

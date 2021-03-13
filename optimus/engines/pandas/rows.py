@@ -41,50 +41,8 @@ class Rows(BaseRows):
 
         return df_list
 
-    @dispatch(str, str)
-    def sort(self, input_cols) -> DataFrame:
-        df = self.root
-        input_cols = parse_columns(df, input_cols)
-        return df.rows.sort([(input_cols, "desc",)])
-
-    @dispatch(str, str)
-    def sort(self, columns, order="desc") -> DataFrame:
-        """
-        Sort column by row
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.rows.sort([(columns, order,)])
-
-    @dispatch(list)
-    def sort(self, col_sort) -> DataFrame:
-        """
-        Sort rows taking into account multiple columns
-        :param col_sort: column and sort type combination (col_name, "asc")
-        :type col_sort: list of tuples
-        """
-        # If a list of columns names are given order this by desc. If you need to specify the order of every
-        # column use a list of tuples (col_name, "asc")
-        df = self.root
-
-        t = []
-        if is_list_of_str_or_int(col_sort):
-            for col_name in col_sort:
-                t.append(tuple([col_name, "desc"]))
-            col_sort = t
-
-        for cs in col_sort:
-            col_name = one_list_to_val(cs[0])
-            order = cs[1]
-
-            if order != "asc" and order != "desc":
-                RaiseIt.value_error(order, ["asc", "desc"])
-
-            df.meta = Meta.action(df.meta, None, Actions.SORT_ROW.value, col_name)
-
-            df = df.sort_values(col_name, ascending=True if order == "asc" else False)
-
-        return df
+    def _sort(self, dfd, col_name, ascending):
+        return dfd.sort_values(col_name, ascending=ascending)
 
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None) -> DataFrame:
