@@ -41,6 +41,9 @@ class BaseRows(ABC):
 
         return dfd, meta
 
+    def _reverse(self, dfd):
+        return dfd[::-1]
+
     @staticmethod
     @abstractmethod
     def create_id(column="id"):
@@ -244,6 +247,14 @@ class BaseRows(ABC):
         dfd, meta = self._sort_multiple(dfd, meta, col_sort)
 
         return self.root.new(dfd, meta=meta)
+
+    def reverse(self):
+        """
+
+        :return:
+        """
+        dfd = self._reverse(self.root.data)
+        return self.root.new(dfd)
 
     def drop(self, where):
         """
