@@ -1856,6 +1856,7 @@ class BaseColumns(ABC):
 
             match = 0 if match is None else int(match)
             mismatch = 0 if mismatch is None else int(mismatch)
+            missing = 0 if missing is None else int(missing)
 
             result[col_name] = {"match": match, "missing": missing, "mismatch": mismatch}
 
