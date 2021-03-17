@@ -24,6 +24,7 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
 from .meta import Meta
 from ...outliers.outliers import Outliers
+from ...plots.plots import Plot
 
 
 class BaseDataFrame(ABC):
@@ -186,8 +187,16 @@ class BaseDataFrame(ABC):
         return BaseColumns
 
     @property
+    def plot(self):
+        return Plot(self)
+
+    @property
     def outliers(self):
         return Outliers(self)
+
+    @abstractmethod
+    def encoding(self):
+        pass
 
     @abstractmethod
     def visualize(self):
