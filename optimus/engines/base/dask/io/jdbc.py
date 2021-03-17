@@ -135,12 +135,12 @@ class DaskBaseJDBC:
 
         logger.print(query)
 
-        ddf = self.execute(query, limit)
+        dfd = self.execute(query, limit)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
-        # ddf = ddf.run()
-        # ddf = dask_pandas_to_dask_cudf(ddf)
-        return DaskDataFrame(ddf)
+        # dfd = dfd.run()
+        # dfd = dask_pandas_to_dask_cudf(dfd)
+        return DaskDataFrame(dfd)
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
