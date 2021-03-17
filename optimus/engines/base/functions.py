@@ -103,22 +103,11 @@ class Functions(ABC):
 
     def mad(self, series, error, more):
         series = self._to_float(series)
-        if series.isnull().any():
-            mad_value = {"mad": np.nan, "median": np.nan}
-        else:
-            print("aaaaa")
-            median_value = series.quantile(0.5)
-            mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
-            if more:
-                mad_value.update({"median": median_value})
-
-        # median_value = series.quantile(0.5)
-        # # In all case all the values from the column
-        # # are nan because can not be converted to number
-        # if not np.isnan(median_value):
-        #     mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
-        # else:
-        #     mad_value = np.nan
+        series = series[series.notnull()]
+        median_value = series.quantile(0.5)
+        mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
+        if more:
+            mad_value.update({"median": median_value})
 
         return mad_value
 
@@ -150,6 +139,17 @@ class Functions(ABC):
     #     return call(series, method_name="degrees")
 
     ###########################
+
+    def z_score(self, series):
+        t = self._to_float(series)
+        return t - t.mean() / t.std(ddof=0)
+
+    def modified_z_score(self, series):
+        mad_median = self.mad(series, True, True)
+        median = mad_median["median"]
+        mad = mad_median["mad"]
+
+        return abs(0.6745 * (series - median) / mad)
 
     def clip(self, series, lower_bound, upper_bound):
         return self._to_float(series).clip(float(lower_bound), float(upper_bound))
