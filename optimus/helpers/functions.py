@@ -654,10 +654,10 @@ def parse_size(size):
     :param size:
     :return:
     """
-    units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40}
+    units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40, "K": 2 ** 10, "M": 2 ** 20,
+             "G": 2 ** 30, "T": 2 ** 40}
     size = size.upper()
-    # print("parsing size ", size)
     if not re.match(r' ', size):
-        size = re.sub(r'([KMGT]?B)', r' \1', size)
+        size = re.sub(r'([KMGT]?B?)', r' \1', size)
     number, unit = [string.strip() for string in size.split()]
     return int(float(number) * units[unit])
