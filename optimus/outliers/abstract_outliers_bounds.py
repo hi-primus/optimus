@@ -67,16 +67,12 @@ class AbstractOutlierBounds(ABC):
     def select_lower_bound(self):
         col_name = self.col_name
         df = self.df
-        sample = {"columns": [{"title": cols} for cols in val_to_list(self.col_name)],
-                  "value": df.rows.select(df[col_name] < self.lower_bound).rows.limit(100).rows.to_list(col_name)}
-        return dump_json(sample)
+        return df.rows.select(df[col_name] <= self.lower_bound)
 
     def select_upper_bound(self):
         col_name = self.col_name
         df = self.df
-        sample = {"columns": [{"title": cols} for cols in val_to_list(col_name)],
-                  "value": df.rows.select(df[col_name] > self.upper_bound).rows.limit(100).rows.to_list(col_name)}
-        return dump_json(sample)
+        return df.rows.select(df[col_name] >= self.upper_bound)
 
     def drop(self):
         """

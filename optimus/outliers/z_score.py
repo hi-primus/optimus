@@ -23,21 +23,17 @@ class ZScore(AbstractOutlierThreshold):
         self.threshold = threshold
         self.col_name = one_list_to_val(parse_columns(df, col_name))
         self.tmp_col = name_col(col_name, "z_score")
-        self.df_score = self.z_score()
-        super().__init__(self.df_score, col_name, "z_score")
+        self.z_score = self.df[self.col_name].cols.z_score()
+        # print("self.df_score",self.df_score)
+        # print("self.df",self.df)
+        super().__init__()
 
-    def z_score(self):
-        df = self.df
-        col_name = self.col_name
-
-        return df.cols.z_score(col_name, output_cols=self.tmp_col)
-
-    def info(self):
+    def info(self, output="dict"):
         self.tmp_col = name_col(self.col_name, "z_score")
 
-        df = self.z_score()
-
-        max_z_score = df.rows.select(df[self.tmp_col] > self.threshold).cols.max(self.tmp_col)
+        # df = self.z_score()
+        df = self.df
+        max_z_score = df.cols.max()
 
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                 "max_z_score": max_z_score}

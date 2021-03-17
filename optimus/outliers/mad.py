@@ -6,7 +6,7 @@ from optimus.outliers.abstract_outliers_bounds import AbstractOutlierBounds
 
 class MAD(AbstractOutlierBounds):
     """
-    Handle outliers using mad
+    Handle outliers using mad http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     """
 
     def __init__(self, df, col_name, threshold: int, relative_error: int = RELATIVE_ERROR):

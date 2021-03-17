@@ -33,34 +33,19 @@ class ModifiedZScore(AbstractOutlierThreshold):
         self.threshold = threshold
         self.relative_error = relative_error
         self.col_name = one_list_to_val(parse_columns(df, col_name))
-        self.df_score = self._m_z_score()
-        super().__init__(self.df_score, col_name, "modified_z_score")
+        self.z_score = df.cols.modified_z_score(col_name)
+        super().__init__()
 
-    def _m_z_score(self):
-        df = self.df
-        col_name = self.col_name
-
-        mad = df.cols.mad(col_name, self.relative_error, True)
-        m_z_col_name = name_col(col_name, "modified_z_score")
-
-        def func(pdf, *args):
-            median = args[0]
-            mad = args[1]
-
-            return abs(0.6745 * (pdf - median) / mad)
-
-        df = df.cols.apply(col_name, func, args=(mad[col_name]["median"], mad[col_name]["mad"]),
-                           output_cols=m_z_col_name, set_index=True)
-        return df
 
         # return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))
 
     def info(self, output: str = "dict"):
         m_z_col_name = name_col(self.col_name, "modified_z_score")
 
-        df = self.df_score
-        # return df
-        max_m_z_score = df.rows.select(df[m_z_col_name] > self.threshold).cols.max(m_z_col_name)
+        df = self.df
+        z_score = self.z_score
+
+        max_m_z_score = df.rows.select(z_score > self.threshold).cols.max()
         #
         return {"count_outliers": self.count(), "count_non_outliers": self.non_outliers_count(),
                 "max_m_z_score": format_dict(max_m_z_score)}

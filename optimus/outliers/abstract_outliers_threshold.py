@@ -10,26 +10,26 @@ class AbstractOutlierThreshold(ABC):
      Also you need to add the function to outliers.py
      """
 
-    def __init__(self, df, col_name: str, prefix: str):
-        """
-
-        :param df: Spark Dataframe
-        :param col_name: column name
-        """
-
-        self.df = df
-        self.col_name = one_list_to_val(parse_columns(df, col_name))
-        self.tmp_col = name_col(self.col_name, prefix)
-
     def select(self):
         """
         Select outliers rows using the selected column
         :return:
         """
-
         df = self.df
+        z_score = self.z_score
 
-        return df.rows.select(df[self.tmp_col] > self.threshold).cols.drop(self.tmp_col)
+        return df.rows.select(
+            (z_score > self.threshold) | (z_score < (self.threshold) * -1))
+
+    def select_lower_bound(self):
+        df = self.df
+        z_score = self.z_score
+        return df.rows.select((z_score < (self.threshold) * -1))
+
+    def select_upper_bound(self):
+        df = self.df
+        z_score = self.z_score
+        return df.rows.select((z_score > (self.threshold)))
 
     def drop(self):
         """
@@ -38,7 +38,8 @@ class AbstractOutlierThreshold(ABC):
         """
 
         df = self.df
-        return df.rows.drop(df[self.tmp_col] >= self.threshold).cols.drop(self.tmp_col)
+        z_score = self.z_score
+        return df.rows.drop(z_score.cols.abs() >= self.threshold)
 
     def count_lower_bound(self, bound: int):
         """
@@ -61,7 +62,8 @@ class AbstractOutlierThreshold(ABC):
         Count the outliers rows using the selected column
         :return:
         """
-        return self.select().rows.count(compute=False)
+        df = self.z_score
+        return df.rows.select(df > self.threshold).rows.count(compute=False)
 
     def non_outliers_count(self):
         """
@@ -69,7 +71,9 @@ class AbstractOutlierThreshold(ABC):
         :return:
         """
         df = self.df
-        return df.rows.select(df[self.tmp_col] < self.threshold).cols.drop(self.tmp_col).rows.count(compute=False)
+        z_score = self.z_score
+
+        return df.rows.select(z_score < self.threshold).rows.count(compute=False)
 
     @abstractmethod
     def info(self, output: str = "dict"):
