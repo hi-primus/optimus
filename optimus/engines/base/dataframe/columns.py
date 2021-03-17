@@ -1,9 +1,10 @@
 from functools import reduce
 
-import dask.dataframe as dd
+from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.columns import parse_columns, get_output_cols
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 
 
@@ -37,32 +38,32 @@ class DataFrameBaseColumns(BaseColumns):
     def scatter(columns, buckets=10):
         pass
 
-    @staticmethod
-    def standard_scaler(self, input_cols, output_cols=None):
-        pass
+    def standard_scaler(self, input_cols="*", output_cols=None):
+        df = self.root
 
-    @staticmethod
-    def max_abs_scaler(input_cols, output_cols=None):
-        pass
+        def _standard_scaler(_value):
+            return StandardScaler().fit_transform(_value.values.reshape(-1, 1))
+
+        return df.cols.apply(input_cols, func=_standard_scaler, output_cols=output_cols, meta_action=Actions.STANDARD_SCALER.value)
+
+    def max_abs_scaler(self, input_cols="*", output_cols=None):
+
+        df = self.root
+
+        def _max_abs_scaler(_value):
+            return MaxAbsScaler().fit_transform(_value.values.reshape(-1, 1))
+
+        return df.cols.apply(input_cols, func=_max_abs_scaler, output_cols=output_cols,meta_action=Actions.MAX_ABS_SCALER.value )
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
 
         df = self.root
 
-        scaler = MinMaxScaler()
+        def _min_max_scaler(_value):
+            return MinMaxScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        # _df = df[input_cols]
-        scaler.fit(df[input_cols])
-        arr = scaler.transform(df[input_cols])
-        darr = dd.from_array(arr)
-        darr.name = 'z'
-        df = df.merge(darr)
-
-        return df
+        return df.cols.apply(input_cols, func=_min_max_scaler, output_cols=output_cols, meta_action=Actions.MIN_MAX_SCALER.value )
 
     def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
         """

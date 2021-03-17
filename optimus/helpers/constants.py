@@ -50,6 +50,7 @@ class Actions(Enum):
     INDEX_TO_STRING = "index_to_string"
     MIN_MAX_SCALER = "min_max_scaler"
     MAX_ABS_SCALER = "max_abs_scaler"
+    STANDARD_SCALER = "standard_scaler"
     APPLY_COLS = "apply_cols"
     YEARS_BETWEEN = "apply_cols"
     IMPUTE = "impute"
