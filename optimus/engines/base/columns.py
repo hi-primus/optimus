@@ -650,24 +650,23 @@ class BaseColumns(ABC):
         df = self.root
         # Check that column is a string or a list
         column = parse_columns(df, column)
-        ref_col = parse_columns(df, ref_col)
 
         # Get dataframe columns
         all_columns = df.cols.names()
 
         # Get source and reference column index position
-        new_index = all_columns.index(ref_col[0])
-
+        if ref_col:
+            ref_col = parse_columns(df, ref_col)
+            new_index = all_columns.index(ref_col[0])
+        else:
+            new_index = all_columns
         # Column to move
-        column_to_move_index = all_columns.index(column[0])
 
         if position == 'after':
             # Check if the movement is from right to left:
-            if new_index < column_to_move_index:
-                new_index = new_index + 1
-        elif position == 'before':  # If position if before:
-            if new_index >= column_to_move_index:  # Check if the movement if from right to left:
-                new_index = new_index - 1
+            new_index = new_index + 1
+        elif position == 'before':
+            new_index = new_index
         elif position == 'beginning':
             new_index = 0
         elif position == 'end':
@@ -675,9 +674,14 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
 
-        # Move the column to the new place
+        # Remove
+        new_columns = []
         for col_name in column:
-            all_columns.insert(new_index, all_columns.pop(all_columns.index(col_name)))  # insert and delete a element
+            new_columns.append(all_columns.pop(all_columns.index(col_name)))  # delete
+        # Move the column to the new place
+        for col_name in new_columns[::-1]:
+            print("col_name", col_name, new_index)
+            all_columns.insert(new_index, col_name)  # insert and delete a element
             # new_index = new_index + 1
         return df[all_columns]
 
