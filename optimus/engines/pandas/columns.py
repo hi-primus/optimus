@@ -135,15 +135,15 @@ class Cols(DataFrameBaseColumns):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
-        df = self.df
+    def string_to_index(self, input_cols="*", output_cols=None, columns=None):
+        df = self.root
         le = preprocessing.LabelEncoder()
         df = string_to_index(df, input_cols, output_cols, le)
 
         return df
 
     def index_to_string(self, input_cols=None, output_cols=None, columns=None):
-        df = self.df
+        df = self.root
         le = preprocessing.LabelEncoder()
         df = index_to_string(df, input_cols, output_cols, le)
 
