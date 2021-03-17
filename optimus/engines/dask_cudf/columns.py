@@ -124,11 +124,11 @@ class Cols(DaskBaseColumns):
     #     :param mode:
     #     """
     #     df = self.root
-    #     ddf = self.root.data
+    #     dfd = self.root.data
     #     input_cols = parse_columns(df, input_cols)
     #
     #     for input_col in input_cols:
-    #         a= ddf[input_col].str.split(separator, splits, expand=True)
+    #         a= dfd[input_col].str.split(separator, splits, expand=True)
     #         a.o
     #     return a
     #     # return df

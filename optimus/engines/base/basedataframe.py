@@ -718,9 +718,9 @@ class BaseDataFrame(ABC):
         Return a dict the Dask tasks graph
         :return:
         """
-        ddf = self.root.data
+        dfd = self.root.data
 
-        return ddf.__dask_graph__().layers
+        return dfd.__dask_graph__().layers
 
     def get_series(self):
         col1 = self.cols.names(0)[0]
