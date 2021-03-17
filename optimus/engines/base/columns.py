@@ -921,6 +921,17 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
+    def reciprocal(self, input_cols="*", output_cols=None):
+        """
+        Apply sqrt to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        return self.apply(input_cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized")
+
     def round(self, input_cols="*", decimals=0, output_cols=None):
         """
 

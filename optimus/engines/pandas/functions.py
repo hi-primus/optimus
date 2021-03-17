@@ -47,6 +47,9 @@ class PandasFunctions(Functions):
     def sqrt(self, series):
         return np.sqrt(self._to_float(series))
 
+    def reciprocal(self, series):
+        return np.reciprocal(self._to_float(series))
+
     def radians(self, series):
         return np.radians(self._to_float(series))
 
