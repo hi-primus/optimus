@@ -2,7 +2,7 @@ from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
-from optimus.engines.base.odataframe import BaseDataFrame
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, absolute_path
@@ -133,14 +133,14 @@ class SparkDataFrame(BaseDataFrame):
         else:
             RaiseIt.value_error(random, ["True", "False"])
 
-        rows_count = self.count()
+        rows_count = self.rows.count()
         if n < rows_count:
             # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
             fraction = (n / rows_count) * 1.1
         else:
             fraction = 1.0
 
-        return self.sample(False, fraction, seed=seed).limit(n)
+        return self.data.sample(False, fraction, seed=seed).limit(n)
 
     @staticmethod
     def stratified_sample(col_name, seed: int = 1):
