@@ -19,7 +19,7 @@ class Load(BaseLoad):
         self.op = op
 
     @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
+    def json(path, multiline=False, conn=None, *args, **kwargs):
         """
         Return a dask dataframe from a json file.
         :param path: path or location of the file.
@@ -94,6 +94,12 @@ class Load(BaseLoad):
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
+
+        remove_param = "chunk_size"
+        if kwargs[remove_param]:
+            # This is handle in this way to preserve compatibility with others dataframe technologies.
+            logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
+            kwargs.pop(remove_param)
 
         try:
             # From the panda docs using na_filter

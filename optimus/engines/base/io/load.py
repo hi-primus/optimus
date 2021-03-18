@@ -143,10 +143,5 @@ class BaseLoad:
         else:
             RaiseIt.value_error(file_type, ["csv", "json", "xml", "xls", "xlsx"])
 
-        # print(os.path.abspath(__file__))
-        # df.meta.update("mime_info", value=mime_info)
-
         return df
 
-    # def to_optimus_pandas(self, df):
-    #     return PandasDataFrame(df.to_pandas())

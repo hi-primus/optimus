@@ -12,7 +12,7 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
-    
+
     def __init__(self, op):
         self.op = op
 
@@ -25,13 +25,13 @@ class Load(BaseLoad):
 
         :return:
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
-        
+
         file, file_name = prepare_path(path, "json")[0]
 
         try:
@@ -46,7 +46,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def tsv(path, header=0, infer_schema='true', *args, **kwargs):
+    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
         """
         Return a spark from a tsv file.
         :param path: path or location of the file.
@@ -62,11 +62,14 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=True, na_filter=True,
-            storage_options=None, conn=None, *args,**kwargs):
+            storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
+        :param n_rows:
+        :param conn:
+        :param storage_options:
         :param path: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param keep_default_na:
@@ -89,13 +92,19 @@ class Load(BaseLoad):
             path = conn.path(path)
             storage_options = conn.storage_options
 
+        remove_param = "chunk_size"
+        if kwargs[remove_param]:
+            # This is handle in this way to preserve compatibility with others dataframe technologies.
+            logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
+            kwargs.pop(remove_param)
+
         try:
             import dask_cudf
             dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                       quoting=quoting, error_bad_lines=error_bad_lines,
                                       keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter,
                                       storage_options=storage_options)
-            
+
             if n_rows > -1:
                 dcdf = dask_cudf.from_cudf(dcdf.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
@@ -118,9 +127,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         :return: Spark Dataframe
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -148,9 +157,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         :return: Spark Dataframe
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -177,9 +186,9 @@ class Load(BaseLoad):
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: Spark Dataframe
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
