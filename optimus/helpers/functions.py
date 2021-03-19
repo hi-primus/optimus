@@ -8,15 +8,13 @@ import re
 import subprocess
 import sys
 import tempfile
-
 from collections import Counter
 from pathlib import Path
-from urllib.request import Request, urlopen
 from urllib.parse import unquote
+from urllib.request import Request, urlopen
 
 import fastnumbers
 import humanize
-import numpy as np
 import pandas as pd
 import six
 from fastnumbers import isint, isfloat
@@ -27,7 +25,6 @@ from optimus.helpers.check import is_url
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, is_list_of_str
 
 
 def random_int(n=5):
@@ -646,18 +643,3 @@ def singleton(cls):
     attribute to access decorated class directly in unit tests
     """
     return _SingletonWrapper(cls)
-
-
-def parse_size(size):
-    """
-    Parse a size string to bytes.
-    :param size:
-    :return:
-    """
-    units = {"B": 1, "KB": 2 ** 10, "MB": 2 ** 20, "GB": 2 ** 30, "TB": 2 ** 40, "K": 2 ** 10, "M": 2 ** 20,
-             "G": 2 ** 30, "T": 2 ** 40}
-    size = size.upper()
-    if not re.match(r' ', size):
-        size = re.sub(r'([KMGT]?B?)', r' \1', size)
-    number, unit = [string.strip() for string in size.split()]
-    return int(float(number) * units[unit])
