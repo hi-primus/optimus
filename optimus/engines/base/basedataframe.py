@@ -1,5 +1,4 @@
 import operator
-import time
 from abc import abstractmethod, ABC
 
 import humanize
@@ -260,7 +259,6 @@ class BaseDataFrame(ABC):
     def reset_buffer(self):
         self._reset_buffer()
         self.meta = Meta.reset(self.meta, "buffer_time")
-
 
     def buffer_window(self, columns="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
