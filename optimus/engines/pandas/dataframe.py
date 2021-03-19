@@ -54,36 +54,6 @@ class PandasDataFrame(BaseDataFrame):
     def get_buffer(self):
         return self
 
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=None):
-
-        if lower_bound is None:
-            lower_bound = 0
-
-        if lower_bound < 0:
-            lower_bound = 0
-
-        df_length = self.rows.count()
-
-        if upper_bound is None:
-            upper_bound = df_length
-
-        input_columns = parse_columns(self, columns)
-
-        if lower_bound == 0 and upper_bound == df_length:
-            result = self[input_columns]
-        else:
-            if upper_bound > df_length:
-                upper_bound = df_length
-
-            if lower_bound >= df_length:
-                diff = upper_bound - lower_bound
-                lower_bound = df_length - diff
-                upper_bound = df_length
-
-            result = self._buffer_window(input_columns, lower_bound, upper_bound)
-
-        return result
-
     def to_optimus_pandas(self):
         return self.root
 
