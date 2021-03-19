@@ -21,6 +21,8 @@ from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
 from .meta import Meta
+from ...outliers.outliers import Outliers
+from ...plots.plots import Plot
 
 
 class BaseDataFrame(ABC):
@@ -175,6 +177,18 @@ class BaseDataFrame(ABC):
 
     def cols(self):
         return BaseColumns
+
+    @property
+    def plot(self):
+        return Plot(self)
+
+    @property
+    def outliers(self):
+        return Outliers(self)
+
+    @abstractmethod
+    def encoding(self):
+        pass
 
     @abstractmethod
     def visualize(self):
@@ -728,9 +742,9 @@ class BaseDataFrame(ABC):
         Return a dict the Dask tasks graph
         :return:
         """
-        ddf = self.root.data
+        dfd = self.root.data
 
-        return ddf.__dask_graph__().layers
+        return dfd.__dask_graph__().layers
 
     def get_series(self):
         col1 = self.cols.names(0)[0]

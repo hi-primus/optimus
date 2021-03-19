@@ -2,9 +2,14 @@ import re
 from abc import abstractmethod, ABC
 
 import numpy as np
+import pandas as pd
+from jsonschema._format import is_email
 
+from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
-from optimus.infer import regex_full_url
+from optimus.infer import regex_full_url, is_list, is_null, is_bool, \
+    is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object, is_ip, is_url, is_missing, \
+    is_gender, is_list_of_int, is_list_of_str
 
 
 class Functions(ABC):
@@ -17,7 +22,7 @@ class Functions(ABC):
 
     def from_delayed(self, delayed):
         return delayed[0]
-    
+
     def to_delayed(self, delayed):
         return [delayed]
 
@@ -29,7 +34,7 @@ class Functions(ABC):
 
     def to_string(self, series):
         return series
-    
+
     def to_string_accessor(self, series):
         return self.to_string(series)
 
@@ -67,7 +72,7 @@ class Functions(ABC):
     def var(self, series):
         return self._to_float(series).var()
 
-    def count_uniques(self, series, values = None, estimate: bool = True):
+    def count_uniques(self, series, values=None, estimate: bool = True):
         return self.to_string(series).nunique()
 
     def unique(self, series, *args):
@@ -96,28 +101,14 @@ class Functions(ABC):
     def skew(series):
         pass
 
-    @staticmethod
-    def mad(series, *args):
-        error, more = args
-
-        series = series._to_float()
-        if series.isnull().any():
-            mad_value = np.nan
-            median_value = np.nan
-        else:
-            median_value = series.quantile(0.5)
-            mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
-
-        # median_value = series.quantile(0.5)
-        # # In all case all the values from the column
-        # # are nan because can not be converted to number
-        # if not np.isnan(median_value):
-        #     mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
-        # else:
-        #     mad_value = np.nan
-
+    def mad(self, series, error, more):
+        series = self._to_float(series)
+        series = series[series.notnull()]
+        median_value = series.quantile(0.5)
+        mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
         if more:
             mad_value.update({"median": median_value})
+
         return mad_value
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
@@ -149,13 +140,27 @@ class Functions(ABC):
 
     ###########################
 
+    def z_score(self, series):
+        t = self._to_float(series)
+        return t - t.mean() / t.std(ddof=0)
+
+    def modified_z_score(self, series):
+        mad_median = self.mad(series, True, True)
+        median = mad_median["median"]
+        mad = mad_median["mad"]
+
+        return abs(0.6745 * (series - median) / mad)
+
     def clip(self, series, lower_bound, upper_bound):
         return self._to_float(series).clip(float(lower_bound), float(upper_bound))
 
-    @staticmethod
-    @abstractmethod
-    def cut(series, bins):
-        pass
+    def cut(self, series, bins, labels, default):
+        if is_list_of_int(bins):
+            return pd.cut(self._to_float(series), bins, include_lowest=True, labels=labels)
+        elif is_list_of_str(bins):
+            conditions = [series.str.contains(i) for i in bins]
+
+            return np.select(conditions, labels, default=default)
 
     def abs(self, series):
         return self._to_float(series).abs()
@@ -314,7 +319,7 @@ class Functions(ABC):
         search = val_to_list(search)
         str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
         return self.to_string_accessor(series).replace(str_regex, replace_by)
-    
+
     def replace_values(self, series, search, replace_by):
         search = val_to_list(search)
         return series.mask(series.isin(search), replace_by)
@@ -435,3 +440,46 @@ class Functions(ABC):
 
     def email_domain(self, series):
         return series.str.split('@')[0][1]
+
+    def infer_dtypes(self, value, cols_dtype):
+        """
+        Infer the dtype.
+        Please be aware that the order in which the value is checked is important and will change the final result
+        :param value:
+        :param cols_dtype:
+        :return:
+        """
+
+        if is_list(value):
+            dtype = ProfilerDataTypes.ARRAY.value
+        elif is_null(value):
+            dtype = ProfilerDataTypes.NULL.value
+        elif is_bool(value):
+            dtype = ProfilerDataTypes.BOOLEAN.value
+        elif is_credit_card_number(value):
+            dtype = ProfilerDataTypes.CREDIT_CARD_NUMBER.value
+        elif is_zip_code(value):
+            dtype = ProfilerDataTypes.ZIP_CODE.value
+        elif is_int(value):
+            dtype = ProfilerDataTypes.INT.value
+        elif is_decimal(value):
+            dtype = ProfilerDataTypes.DECIMAL.value
+        elif is_datetime(value):
+            dtype = ProfilerDataTypes.DATE.value
+        elif is_missing(value):
+            dtype = ProfilerDataTypes.MISSING.value
+        elif is_object(value):
+            dtype = ProfilerDataTypes.OBJECT.value
+        elif is_ip(value):
+            dtype = ProfilerDataTypes.IP.value
+        elif is_url(value):
+            dtype = ProfilerDataTypes.URL.value
+        elif is_email(value):
+            dtype = ProfilerDataTypes.EMAIL.value
+        elif is_gender(value):
+            dtype = ProfilerDataTypes.GENDER.value
+        else:
+            dtype = ProfilerDataTypes.STRING.value
+
+        # return Infer.ProfilerDataTypesID[dtype]
+        return dtype

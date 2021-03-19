@@ -40,9 +40,9 @@ class Cols(DataFrameBaseColumns):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         df = self.root
-        return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
+        return impute(df, input_cols, data_type=data_type, strategy=strategy, fill_value=fill_value, output_cols=None)
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -135,15 +135,15 @@ class Cols(DataFrameBaseColumns):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
-        df = self.df
+    def string_to_index(self, input_cols="*", output_cols=None, columns=None):
+        df = self.root
         le = preprocessing.LabelEncoder()
         df = string_to_index(df, input_cols, output_cols, le)
 
         return df
 
     def index_to_string(self, input_cols=None, output_cols=None, columns=None):
-        df = self.df
+        df = self.root
         le = preprocessing.LabelEncoder()
         df = index_to_string(df, input_cols, output_cols, le)
 

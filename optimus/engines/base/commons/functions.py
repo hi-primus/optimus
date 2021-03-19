@@ -11,12 +11,11 @@ from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
-from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str
 
 
 def is_integer(series):
-    return pd.Series(np.vectorize(fastnumbers.isint)(series).flatten())
+    return pd.Series(np.vectorize(fastnumbers.isintlike)(series).flatten())
 
 
 def is_float(series):
@@ -92,7 +91,7 @@ def to_datetime_cudf(value, format):
     return cudf.to_datetime(value, format=format, errors="coerce")
 
 
-def impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+def impute(df, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
     """
 
     :param df:
@@ -110,19 +109,17 @@ def impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=
     :param output_cols:
     :return:
     """
-    imputer = SimpleImputer(strategy=strategy, copy=False)
+
+    imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
 
     def _imputer(value):
-        return imputer.fit_transform(value.to_frame())[value.name]
+        return imputer.fit_transform(value.values.reshape(-1, 1))
 
-    if data_type == "continuous":
-        return df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
-                             mode="vectorized")
-    elif data_type == "categorical":
-        # return df.cols.mode()
-        raise
-    else:
-        RaiseIt.value_error(data_type, ["continuous", "categorical"])
+    if strategy != "most_frequent":
+        df = df.cols.to_float(input_cols)
+
+    return df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
+                         mode="vectorized")
 
 
 def string_to_index(df, input_cols, output_cols=None, le=None, **kwargs):

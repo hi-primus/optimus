@@ -4,8 +4,8 @@ from pyspark.sql import DataFrame as SparkDataFrame, functions as F
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, ArrayType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
-from optimus.infer import is_bool, is_list, is_datetime, is_date, is_binary, is_str, str_to_boolean, str_to_date, \
-    str_to_array
+from optimus.infer import is_bool_value, is_list_value, is_datetime, is_date, is_binary, is_str, is_bool_str, str_to_date, \
+    is_list_str
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
                      "double": DoubleType, "boolean": BooleanType, "struct": StructType, "array": ArrayType,
@@ -82,7 +82,7 @@ def to_spark(value):
     if value is None:
         result = "null"
 
-    elif is_bool(value):
+    elif is_bool_value(value):
         result = "bool"
 
     elif fastnumbers.isint(value):
@@ -91,7 +91,7 @@ def to_spark(value):
     elif fastnumbers.isfloat(value):
         result = "float"
 
-    elif is_list(value):
+    elif is_list_value(value):
         result = ArrayType(to_spark(value[0]))
 
     elif is_datetime(value):
@@ -104,11 +104,11 @@ def to_spark(value):
         result = "binary"
 
     elif is_str(value):
-        if str_to_boolean(value):
+        if is_bool_str(value):
             result = "bool"
-        elif str_to_date(value):
+        elif is_datetime(value):
             result = "string"  # date
-        elif str_to_array(value):
+        elif is_list_str(value):
             result = "string"  # array
         else:
             result = "string"

@@ -7,7 +7,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str
+from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -47,7 +47,7 @@ def escape_columns(columns):
     """
 
     escaped_columns = []
-    if is_list(columns):
+    if is_list_value(columns):
         for col in columns:
             # Check if the column is already escaped
             if col[0] != "`" and col[len(col) - 1] != "`":

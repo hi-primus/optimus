@@ -2,7 +2,7 @@ from dask import dataframe as dd
 
 # from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
 #     is_pandas_dataframe, is_cudf_series
-from optimus.infer import is_dict, is_dict_of_one_element, is_list, is_list_of_one_element
+from optimus.infer import is_dict, is_dict_of_one_element, is_list_value, is_list_of_one_element
 
 
 def tuple_to_dict(value):
@@ -59,7 +59,7 @@ def format_dict(_dict, tidy=True):
         return repeat(_format_dict, 2, _dict)
     else:
         # Return the dict from a list
-        if is_list(_dict):
+        if is_list_value(_dict):
             return _dict[0]
         else:
             return _dict

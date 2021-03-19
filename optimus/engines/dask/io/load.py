@@ -100,6 +100,12 @@ class Load(BaseLoad):
             path = conn.path(path)
             storage_options = conn.storage_options
 
+        remove_param = "chunk_size"
+        if kwargs[remove_param]:
+            # This is handle in this way to preserve compatibility with others dataframe technologies.
+            logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
+            kwargs.pop(remove_param)
+
         try:
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
@@ -164,15 +170,15 @@ class Load(BaseLoad):
         file_list = os.listdir(wd)
         destdir = '/extracted/destination/'
 
-        ddf = dd.from_pandas(pd.DataFrame())
+        dfd = dd.from_pandas(pd.DataFrame())
 
         for f in file_list:
             with ZipFile(wd + f, "r") as zip:
                 zip.extractall(destdir, None, None)
                 df = dd.read_csv(zip.namelist(), usecols=['Enter', 'Columns', 'Here'], parse_dates=['Date'])
-                ddf = optimus.helpers.functions_spark.append(df)
+                dfd = optimus.helpers.functions_spark.append(df)
 
-        ddf.compute()
+        dfd.compute()
 
         try:
             df = dd.read_csv(file, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value,
@@ -211,9 +217,9 @@ class Load(BaseLoad):
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            ddf = dd.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
+            dfd = dd.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
 
-            df = DaskDataFrame(ddf)
+            df = DaskDataFrame(dfd)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)

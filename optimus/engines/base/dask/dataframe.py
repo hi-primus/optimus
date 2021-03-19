@@ -191,7 +191,7 @@ class DaskBaseDataFrame(BaseDataFrame):
             n = int(df.size() / part_recommended_size)
             # Partition can not be lower than 1
             n = n if n < 0 else 1
-
+            # TODO .repartition(partition_size="100MB"). https://stackoverflow.com/questions/44657631/strategy-for-partitioning-dask-dataframes-efficiently
             dfd = dfd.repartition(npartitions=n, *args, **kwargs)
         else:
             dfd = dfd.repartition(npartitions=n, *args, **kwargs)

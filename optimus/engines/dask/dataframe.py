@@ -56,6 +56,11 @@ class DaskDataFrame(DaskBaseDataFrame):
         from optimus.engines.dask.mask import DaskMask
         return DaskMask(self)
 
+    @property
+    def encoding(self):
+        from optimus.engines.pandas.ml.encoding import Encoding
+        return Encoding()
+
     def to_optimus_pandas(self):
         return PandasDataFrame(self.root.to_pandas())
 

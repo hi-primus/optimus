@@ -7,8 +7,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
-from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import Infer, is_dict, is_list
+from optimus.infer import Infer, is_dict, is_list_value
 from optimus.profiler.functions import fill_missing_var_types
 
 
@@ -17,11 +16,8 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def _map(self, df, input_col, output_col, func, args, kw_columns):
-        # def _func(value):
-        #     return value.map(func)
-        kw_columns[output_col] = df[input_col].map(func, *args)
-        return kw_columns
+    def _map(self, df, input_col, output_col, func, *args):
+        return df[input_col].apply(func, args=(*args,))
 
     @staticmethod
     def exec_agg(exprs, compute):
@@ -44,7 +40,7 @@ class DaskBaseColumns(BaseColumns):
         :return:
         """
 
-        if not is_list(dfs):
+        if not is_list_value(dfs):
             dfs = [dfs]
 
         df = self.root
@@ -55,7 +51,7 @@ class DaskBaseColumns(BaseColumns):
 
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
 
-        df = self.df
+        df = self.root.data
         columns = parse_columns(df, columns)
         # s.fillna(np.nan)
         df[columns] = df[columns].map_partitions(pd.qcut, num_buckets)

@@ -2,14 +2,12 @@ from optimus.engines.base.dataframe.dataframe import Ext as BaseDataFrame
 # from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
 class PandasDataFrame(BaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
-    
     def _assign(self, kw_columns):
         return self.root.data.assign(**kw_columns)
 
@@ -42,6 +40,14 @@ class PandasDataFrame(BaseDataFrame):
         from optimus.engines.pandas.constants import constants
         return constants(self)
 
+    @property
+    def encoding(self):
+        from optimus.engines.pandas.ml.encoding import Encoding
+        return Encoding(self)
+
+
+    def _create_buffer_df(self, input_cols, n):
+        pass
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound])
@@ -57,9 +63,9 @@ class PandasDataFrame(BaseDataFrame):
 
     # def to_optimus_dask(self):
     #     df = self.root
-    #     ddf = DaskDataFrame(pandas_to_dask_dataframe(self.root.data))
-    #     ddf.meta = df.meta
-    #     return ddf
+    #     dfd = DaskDataFrame(pandas_to_dask_dataframe(self.root.data))
+    #     dfd.meta = df.meta
+    #     return dfd
 
     def to_pandas(self):
         return self.root.data

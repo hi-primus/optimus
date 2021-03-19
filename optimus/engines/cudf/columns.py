@@ -158,7 +158,7 @@ class Cols(DataFrameBaseColumns):
 
         return df
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None,output_cols=None):
         """
 
         :param input_cols:

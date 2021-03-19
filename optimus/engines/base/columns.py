@@ -20,9 +20,8 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list, is_one_element, is_list_of_tuples, \
-    is_int, is_list_of_str, \
-    is_tuple, US_STATES_NAMES
+from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list_value, is_one_element, \
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, US_STATES_NAMES, is_null
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -78,7 +77,7 @@ class BaseColumns(ABC):
 
         if columns is None:
             input_cols = parse_columns(df, input_cols)
-            if is_list(input_cols) or is_one_element(input_cols):
+            if is_list_value(input_cols) or is_one_element(input_cols):
                 output_cols = get_output_cols(input_cols, output_cols)
 
         if columns:
@@ -132,7 +131,7 @@ class BaseColumns(ABC):
         :param regex: Regex expression to select the columns
         :return:
         """
-        df = self.df
+        df = self.root
         dfd = df.data
         if regex:
             # r = re.compile(regex)
@@ -154,7 +153,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        df = self.df
+        df = self.root
         dfd = df.data
 
         input_cols = parse_columns(df, input_cols)
@@ -168,7 +167,7 @@ class BaseColumns(ABC):
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
-    def _map(self, df, input_col, output_col, func, args, kw_columns):
+    def _map(self, df, input_col, output_col, func, args):
         pass
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
@@ -202,7 +201,7 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
             elif mode == "map":
-                kw_columns = self._map(dfd, input_col, str(output_col), func, args, kw_columns)
+                kw_columns[output_col] = self._map(dfd, input_col, str(output_col), func, *args)
 
             # Preserve column order
             if output_col not in self.names():
@@ -227,11 +226,11 @@ class BaseColumns(ABC):
     def set(self, col_name, value=None, where=None, default=None, eval_value=False):
         """
         Set a column value using a number, string or a expression.
-        :param where: mask
-        :param value: expression, number or string
         :param col_name:
-        :param default: value
         :param value: expression, number or string
+        :param where: mask
+        :param default: value
+        :param eval_value:
         :return:
         """
         df = self.root
@@ -331,7 +330,7 @@ class BaseColumns(ABC):
         Parse a spark data type to a profiler data type
         :return:
         """
-        df = self.df
+        df = self.root
         columns = {}
         for k, v in col_data_type.items():
             # Initialize values to 0
@@ -572,17 +571,8 @@ class BaseColumns(ABC):
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
 
-        return df
-
-    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
-        """
-        Get how many equal patterns there are in a column. Triggers the operation only if necessary
-        :param input_cols:
-        :param n: Top n matches
-        :param mode:
-        :param flush: Flushes the cache to process again
-        :return:
-        """
+            else:
+                result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
 
         df = self.root
 
@@ -623,15 +613,12 @@ class BaseColumns(ABC):
 
         return result
 
-    def groupby(self, by, agg, order="asc", *args, **kwargs):
+    def groupby(self, by, agg):
         """
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns
         :param by: Column names
         :param agg:
-        :param order:
-        :param args:
-        :param kwargs:
         :return:
         """
         df = self.root.data
@@ -733,24 +720,23 @@ class BaseColumns(ABC):
         df = self.root
         # Check that column is a string or a list
         column = parse_columns(df, column)
-        ref_col = parse_columns(df, ref_col)
 
         # Get dataframe columns
         all_columns = df.cols.names()
 
         # Get source and reference column index position
-        new_index = all_columns.index(ref_col[0])
-
+        if ref_col:
+            ref_col = parse_columns(df, ref_col)
+            new_index = all_columns.index(ref_col[0])
+        else:
+            new_index = all_columns
         # Column to move
-        column_to_move_index = all_columns.index(column[0])
 
         if position == 'after':
             # Check if the movement is from right to left:
-            if new_index < column_to_move_index:
-                new_index = new_index + 1
-        elif position == 'before':  # If position if before:
-            if new_index >= column_to_move_index:  # Check if the movement if from right to left:
-                new_index = new_index - 1
+            new_index = new_index + 1
+        elif position == 'before':
+            new_index = new_index
         elif position == 'beginning':
             new_index = 0
         elif position == 'end':
@@ -758,9 +744,14 @@ class BaseColumns(ABC):
         else:
             RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
 
-        # Move the column to the new place
+        # Remove
+        new_columns = []
         for col_name in column:
-            all_columns.insert(new_index, all_columns.pop(all_columns.index(col_name)))  # insert and delete a element
+            new_columns.append(all_columns.pop(all_columns.index(col_name)))  # delete
+        # Move the column to the new place
+        for col_name in new_columns[::-1]:
+            print("col_name", col_name, new_index)
+            all_columns.insert(new_index, col_name)  # insert and delete a element
             # new_index = new_index + 1
         return df[all_columns]
 
@@ -834,8 +825,7 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
         all_funcs = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
-                     func in
-                     funcs]
+                     func in funcs]
         a = self.exec_agg(all_funcs, compute)
         result = {}
 
@@ -1003,6 +993,17 @@ class BaseColumns(ABC):
         """
 
         return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
+                          mode="vectorized")
+
+    def reciprocal(self, input_cols="*", output_cols=None):
+        """
+        Apply sqrt to column
+        :param input_cols:
+        :param output_cols:
+        :return:(
+        """
+
+        return self.apply(input_cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
     def round(self, input_cols="*", decimals=0, output_cols=None):
@@ -1269,6 +1270,12 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
+    def infer(self, input_cols="*", output_cols=None):
+        dtypes = self.root[input_cols].cols.dtypes()
+        return self.apply(input_cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
+                          output_cols=output_cols,
+                          meta_action=Actions.LOWER.value, mode="map", func_type="column_expr")
+
     def upper(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
@@ -1502,10 +1509,10 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def impute(input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         pass
 
-    def fill_na(self, input_cols, value=None, output_cols=None, fill_empty=True):
+    def fill_na(self, input_cols, value=None, output_cols=None):
         """
         Replace null data with a specified value
         :param input_cols: '*', list of columns names or a single column name.
@@ -1583,8 +1590,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.root
-        return df.cols._math(columns, lambda x, y: x + y, output_col)
+        return self._math(columns, lambda x, y: x + y, output_col)
 
     def sub(self, columns, output_col="sub"):
         """
@@ -1593,8 +1599,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.root
-        return df.cols._math(columns, lambda x, y: x - y, output_col)
+        return self._math(columns, lambda x, y: x - y, output_col)
 
     def mul(self, columns, output_col="mul"):
         """
@@ -1603,8 +1608,7 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
-        df = self.root
-        return df.cols._math(columns, lambda x, y: x * y, output_col)
+        return self._math(columns, lambda x, y: x * y, output_col)
 
     def div(self, columns, output_col="div"):
         """
@@ -1613,20 +1617,18 @@ class BaseColumns(ABC):
         :param output_col:
         :return:
         """
+        return self._math(columns, lambda x, y: x / y, output_col)
+
+    def z_score(self, input_cols="*", output_cols=None):
+
         df = self.root
-        return df.cols._math(columns, lambda x, y: x / y, output_col)
+        return df.cols.apply(input_cols, self.F.z_score, func_return_type=float, output_cols=output_cols,
+                             meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
-    def z_score(self, input_cols, output_cols=None):
-
+    def modified_z_score(self, input_cols="*", output_cols=None):
         df = self.root
-
-        def _z_score(value):
-            t = value.astype(float)
-            return (t - t.mean()) / t.std(ddof=0)
-
-        return df.cols.apply(input_cols, _z_score, func_return_type=float, output_cols=output_cols,
-                             meta_action=Actions.Z_SCORE.value, mode="vectorized",
-                             filter_col_by_dtypes=df.constants.NUMERIC_TYPES)
+        return df.cols.apply(input_cols, self.F.modified_z_score, func_return_type=float, output_cols=output_cols,
+                             meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod
@@ -1659,7 +1661,7 @@ class BaseColumns(ABC):
             "percentile"]
         # print("quantile",quartile)
         for col_name in columns:
-            if is_nan(quartile[col_name]):
+            if is_null(quartile[col_name]):
                 iqr_result[col_name] = np.nan
             else:
                 q1 = quartile[col_name][0.25]
@@ -1717,7 +1719,7 @@ class BaseColumns(ABC):
                 final_columns = [input_col + "_" + str(i) for i in range(splits)]
             elif is_list_of_tuples(output_cols):
                 final_columns = output_cols[idx]
-            elif is_list(output_cols):
+            elif is_list_value(output_cols):
                 final_columns = output_cols
             else:
                 final_columns = [output_cols + "_" + str(i) for i in range(splits)]
@@ -1817,6 +1819,7 @@ class BaseColumns(ABC):
         """
         Count mismatches values in columns
         :param columns_type:
+        :param compute:
         :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
         df = self.root
@@ -1844,9 +1847,9 @@ class BaseColumns(ABC):
                 mismatch = total_rows - match
             # elif dtype in [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]:
             #     TODO: Check matching rows using fastnumbers instead of regex
-            #     match = df.cols.select(col_name).cols.apply(col_name, profiler_dtype_func, args=(dtype,)).cols.frequency()
             else:
-                regex = Infer.ProfilerDataTypesFunctions[dtype]
+                regex = Infer.ProfilerDataTypesRegex[dtype]
+
                 freq = df.cols.select(col_name).cols.to_string().cols.match(col_name, regex).cols.frequency()
 
                 values = {list(j.values())[0]: list(j.values())[1] for j in freq["frequency"][col_name]["values"]}
@@ -1893,22 +1896,19 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_pandas()
-        rows_count = len(sample)  # In case the dataframe is smaller that 100
-        pdf_dtypes = sample.applymap(Infer.parse_pandas)
+        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
+        rows_count = sample.rows.count()  # In case the dataframe is smaller that 100
+        pdf_dtypes = sample.cols.infer().cols.frequency()
 
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            infer_value_counts = pdf_dtypes[col_name].value_counts()
-
-            dtype = infer_value_counts.index[0]
-            pdf_dict = infer_value_counts.to_dict()
-            dtypes = list(pdf_dict.keys())
-            second_dtype = dtypes[1] if len(dtypes) > 1 else None
+            infer_value_counts = pdf_dtypes["frequency"][col_name]["values"]
+            dtype = infer_value_counts[0]["value"]
+            second_dtype = infer_value_counts[1]["value"] if len(infer_value_counts) > 1 else None
 
             if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
                 _dtype = second_dtype
-            elif dtype != "null" and dtype != ProfilerDataTypes.MISSING.value:
+            elif dtype != ProfilerDataTypes.NULL.value and dtype != ProfilerDataTypes.MISSING.value:
                 if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
                     # In case we have integers and decimal values no matter if we have more integer we cast to decimal
                     _dtype = second_dtype
@@ -1920,20 +1920,20 @@ class BaseColumns(ABC):
                 _dtype = ProfilerDataTypes.OBJECT.value
 
             # Infer if and integer or zipcode
-            _value_counts = pdf_dtypes[col_name].value_counts()
+            _unique_counts = dtype = len(infer_value_counts)
             # print(len(_value_counts) / rows_count)
             is_categorical = False
 
             if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
                     and _dtype == ProfilerDataTypes.ZIP_CODE.value \
-                    and len(_value_counts) / rows_count < ZIPCODE_THRESHOLD:
+                    and _unique_counts / rows_count < ZIPCODE_THRESHOLD:
                 _dtype = ProfilerDataTypes.INT.value
 
             # Is the column categorical?. Try to infer the datatype using the column name
             if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = False
             if dtype in [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value] \
-                    or len(_value_counts) / rows_count < CATEGORICAL_THRESHOLD:
+                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD:
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
@@ -2050,23 +2050,18 @@ class BaseColumns(ABC):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
-    def cut(self, input_cols, bins, output_cols=None):
-        df = self.root
+    def cut(self, input_cols, bins, labels=None, default=None, output_cols=None):
 
-        def _cut(value, args):
-            return self.F.cut(value, bins)
-
-        return self.apply(input_cols, _cut, output_cols=output_cols, meta_action=Actions.CUT.value,
+        return self.apply(input_cols, self.F.cut, output_cols=output_cols, args=(bins, labels, default),
+                          meta_action=Actions.CUT.value,
                           mode="vectorized")
 
     def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
-        df = self.root
 
         def _clip(value):
             return self.F.clip(value, lower_bound, upper_bound)
 
-        return df.cols.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value,
-                             mode="vectorized")
+        return self.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod

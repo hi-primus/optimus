@@ -1,96 +1,89 @@
 # from dask_ml.preprocessing import DummyEncoder
-from sklearn import preprocessing
 
-from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
-from optimus.helpers.columns import parse_columns, name_col, prepare_columns
-from optimus.helpers.constants import Actions
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
+import pandas as pd
 
 
-def n_gram(df, input_col, n=2):
-    """
-    Converts the input array of strings inside of a Spark DF into an array of n-grams.
-    :param df: Pyspark dataframe to analyze
-    :param input_col: Column to analyzer.
-    :param n: number of elements per n-gram >=1.
-    :return: Spark DataFrame with n-grams calculated.
-    """
+class Encoding:
+    def __init__(self, root):
+        self.root = root
 
-    pass
+    def n_gram(self, input_col, n=2):
+        """
+        Converts the input array of strings inside of a Spark DF into an array of n-grams.
+        :param df: Pyspark dataframe to analyze
+        :param input_col: Column to analyzer.
+        :param n: number of elements per n-gram >=1.
+        :return:
+        """
 
+        pass
 
+    def one_hot_encoder(self, input_cols, prefix=None, **kargs):
+        """
+        Maps a column of label indices to a column of binary vectors, with at most a single one-value.
+        :param df: Dataframe to be transformed.
+        :param input_cols: Columns to be encoded.
+        :param output_col: Column where the output is going to be saved.
+        :return: Dataframe with encoded columns.
+        """
+        dfd = self.root.data
+        df = self.root
+        input_cols = parse_columns(df, input_cols)
 
-def one_hot_encoder(df, input_cols, output_col=None, **kargs):
-    """
-    Maps a column of label indices to a column of binary vectors, with at most a single one-value.
-    :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be encoded.
-    :param output_col: Column where the output is going to be saved.
-    :return: Dataframe with encoded columns.
-    """
+        return self.root.new(pd.concat([dfd, pd.get_dummies(dfd[input_cols], prefix=prefix)], axis=1))
 
-    input_cols = parse_columns(df, input_cols)
+    # TODO: Must we use the pipeline version?
+    def vector_assembler(self, input_cols, output_col=None):
+        """
+        Combines a given list of columns into a single vector column.
+        :param df: Dataframe to be transformed.
+        :param input_cols: Columns to be assembled.
+        :param output_col: Column where the output is going to be saved.
+        :return: Dataframe with assembled column.
+        """
 
-    if output_col is None:
-        output_col = name_col(input_cols, "one_hot_encoder")
+        input_cols = parse_columns(df, input_cols)
 
-    # de = DummyEncoder()
-    # df[output_col] = de.fit_transform(df[input_cols])
+        if output_col is None:
+            output_col = name_col(input_cols, "vector_assembler")
 
-    return df
+        # df = pipeline.fit(df).transform(df)
 
+        return df
 
-# TODO: Must we use the pipeline version?
-def vector_assembler(df, input_cols, output_col=None):
-    """
-    Combines a given list of columns into a single vector column.
-    :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be assembled.
-    :param output_col: Column where the output is going to be saved.
-    :return: Dataframe with assembled column.
-    """
+    def normalizer(df, input_cols, output_col=None, p=2.0):
+        """
+        Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
+        specifies the p-norm used for normalization. (p=2) by default.
+        :param df: Dataframe to be transformed
+        :param input_cols: Columns to be normalized.
+        :param output_col: Column where the output is going to be saved.
+        :param p:  p-norm used for normalization.
+        :return: Dataframe with normalized columns.
+        """
 
-    input_cols = parse_columns(df, input_cols)
+        # Check if columns argument must be a string or list datat ype:
+        if not is_(input_cols, (str, list)):
+            RaiseIt.type_error(input_cols, ["str", "list"])
 
-    if output_col is None:
-        output_col = name_col(input_cols, "vector_assembler")
+        if is_str(input_cols):
+            input_cols = [input_cols]
 
-    # df = pipeline.fit(df).transform(df)
+        if is_(input_cols, (float, int)):
+            RaiseIt.type_error(input_cols, ["float", "int"])
 
-    return df
+        # Try to create a vector
+        if len(input_cols) > 1:
+            df = df.cols.cast(input_cols, "vector")
 
+        if output_col is None:
+            output_col = name_col(input_cols, "normalizer")
 
-def normalizer(df, input_cols, output_col=None, p=2.0):
-    """
-    Transforms a dataset of Vector rows, normalizing each Vector to have unit norm. It takes parameter p, which
-    specifies the p-norm used for normalization. (p=2) by default.
-    :param df: Dataframe to be transformed
-    :param input_cols: Columns to be normalized.
-    :param output_col: Column where the output is going to be saved.
-    :param p:  p-norm used for normalization.
-    :return: Dataframe with normalized columns.
-    """
+        # TODO https://developer.ibm.com/code/2018/04/10/improve-performance-ml-pipelines-wide-dataframes-apache-spark-2-3/
 
-    # Check if columns argument must be a string or list datat ype:
-    if not is_(input_cols, (str, list)):
-        RaiseIt.type_error(input_cols, ["str", "list"])
+        # df = pipeline.fit(df).transform(df)
 
-    if is_str(input_cols):
-        input_cols = [input_cols]
-
-    if is_(input_cols, (float, int)):
-        RaiseIt.type_error(input_cols, ["float", "int"])
-
-    # Try to create a vector
-    if len(input_cols) > 1:
-        df = df.cols.cast(input_cols, "vector")
-
-    if output_col is None:
-        output_col = name_col(input_cols, "normalizer")
-
-    # TODO https://developer.ibm.com/code/2018/04/10/improve-performance-ml-pipelines-wide-dataframes-apache-spark-2-3/
-
-    # df = pipeline.fit(df).transform(df)
-
-    return df
+        return df

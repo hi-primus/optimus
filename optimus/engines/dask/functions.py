@@ -4,6 +4,7 @@
 
 from datetime import datetime, timedelta
 
+import dask
 import dask.array as da
 import pandas as pd
 from dask.array import stats
@@ -11,7 +12,6 @@ from dask.array import stats
 from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
-import dask
 
 
 class DaskFunctions(Functions):
@@ -134,10 +134,6 @@ class DaskFunctions(Functions):
 
     def atanh(self, series):
         return da.arctanh(self._to_float(series))
-
-
-    def cut(self, series, bins):
-        return series._to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
     def remove_special_chars(self, series):
         return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')

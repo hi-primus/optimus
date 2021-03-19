@@ -2,17 +2,19 @@ import ntpath
 
 import pandas as pd
 import pandavro as pdx
+import psutil
 
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
-from optimus.helpers.logger import logger
 from optimus.infer import is_str
+from optimus.helpers.logger import logger
+import pandas as pd
 
 
 class Load(BaseLoad):
-    
+
     def __init__(self, op):
         self.op = op
 
@@ -25,9 +27,9 @@ class Load(BaseLoad):
 
         :return:
         """
-        
+
         path = unquote_path(path)
-        
+
         local_file_names = prepare_path(path, "json")
         try:
             df_list = []
@@ -61,14 +63,17 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3,
-            lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False, storage_options=None, conn=None,
+            null_value="None", quoting=3, lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False,
+            storage_options=None, conn=None,
             *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
 
+        :param encoding:
+        :param storage_options:
+        :param quoting:
         :param filepath_or_buffer: path or location of the file.
         :param sep: usually delimiter mark are ',' or ';'.
         :param header: tell the function whether dataset has a header row. True default.
@@ -84,11 +89,12 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
-        
+
         filepath_or_buffer = unquote_path(filepath_or_buffer)
-        
+
+        meta = None
         if is_str(filepath_or_buffer):
-            _meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
         try:
 
@@ -102,13 +108,20 @@ class Load(BaseLoad):
             else:
                 storage_options = None
 
+            if kwargs["chunk_size"] == "auto":
+                ## Chunk size is going to be 75% of the memory available
+                kwargs.pop("chunk_size")
+                kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
+
             df = pd.read_csv(filepath_or_buffer, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                              na_filter=na_filter, index_col=False, storage_options=storage_options, *args, **kwargs)
+            if isinstance(df, pd.io.parsers.TextFileReader):
+                df = df.get_chunk()
 
             df = PandasDataFrame(df)
 
-            df.meta = Meta.set(df.meta, value=_meta)
+            df.meta = Meta.set(df.meta, value=meta)
 
         except IOError as error:
             print(error)
@@ -126,9 +139,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         """
-        
+
         path = unquote_path(path)
-        
+
         # file, file_name = prepare_path(path, "parquet")[0]
 
         if conn is not None:
@@ -155,9 +168,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -184,9 +197,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -225,13 +238,13 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
-        
+
         file, file_name = prepare_path(path, "orc")[0]
 
         try:

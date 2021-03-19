@@ -21,10 +21,10 @@ from fastnumbers import isint, isfloat
 from string_grouper import match_strings
 
 from optimus import ROOT_DIR
-from optimus.helpers.check import is_url
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_url
 
 
 def random_int(n=5):

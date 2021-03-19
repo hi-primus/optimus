@@ -16,10 +16,10 @@ class Cols(DaskBaseColumns):
     def _names(self):
         return list(self.root.data.columns)
 
-    def _map(self, df, input_col, output_col, func, args, kw_columns):
-        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
-        kw_columns[output_col] = df[input_col].map_partitions(func, *args)
-        return kw_columns
+    def _map(self, df, input_col, output_col, func, args):
+        return df[input_col].map_partitions(func, *args)
+        # kw_columns[output_col] = df[input_col].map_partitions(func, *args)
+        # return kw_columns
 
     def _series_to_dict(self, series):
         return series.to_pandas().to_dict()
@@ -54,7 +54,7 @@ class Cols(DaskBaseColumns):
 
         return result
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         df = self.root
         return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
@@ -124,11 +124,11 @@ class Cols(DaskBaseColumns):
     #     :param mode:
     #     """
     #     df = self.root
-    #     ddf = self.root.data
+    #     dfd = self.root.data
     #     input_cols = parse_columns(df, input_cols)
     #
     #     for input_col in input_cols:
-    #         a= ddf[input_col].str.split(separator, splits, expand=True)
+    #         a= dfd[input_col].str.split(separator, splits, expand=True)
     #         a.o
     #     return a
     #     # return df

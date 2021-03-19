@@ -23,8 +23,8 @@ class Outliers:
         return ModifiedZScore(self.df, columns, threshold, relative_error)
 
 
-def outliers(self):
-    return Outliers(self)
+# def outliers(self):
+#     return Outliers(self)
 
 
 
