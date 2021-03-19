@@ -14,12 +14,16 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
-    
+
     def __init__(self, op):
         self.op = op
 
+    class test:
+        def __init__(self):
+            pass
+
     @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
+    def json(path, multiline=False, lines=True, conn=None, storage_options=None, *args, **kwargs):
         """
         Return a dask dataframe from a json file.
         :param path: path or location of the file.
@@ -38,8 +42,9 @@ class Load(BaseLoad):
 
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
-            df = dd.read_json(path, lines=multiline, storage_options=storage_options, *args, **kwargs)
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            dfd = dd.read_json(path, lines=lines, storage_options=storage_options, *args, **kwargs)
+            df = DaskDataFrame(dfd)
+            # df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
             logger.print(error)
