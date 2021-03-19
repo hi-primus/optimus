@@ -84,8 +84,10 @@ class DaskCUDFEngine(BaseEngine):
                     n_workers = n_gpus
                     # n_gpus = 1
 
-                cluster = LocalCUDACluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=True,
-                                           memory_limit=memory_limit)
+                cluster = LocalCUDACluster(rmm_pool_size=GPUtil.memoryTotal,
+                                           device_memory_limit=GPUtil.memoryTotal * 0.8
+                                           # Spill to RAM when 80% memory is full
+                                           )
                 self.client = Client(cluster, *args, **kwargs)
             use_remote = False
 
