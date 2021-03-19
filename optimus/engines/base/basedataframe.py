@@ -524,13 +524,12 @@ class BaseDataFrame(ABC):
         """
         :return:
         """
-        return self.head(n=n)
+        return self.data.head(n=n)
 
     @staticmethod
     @abstractmethod
     def debug():
         pass
-
 
     def reset(self):
         # df = self.df
