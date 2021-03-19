@@ -262,15 +262,7 @@ class BaseDataFrame(ABC):
         self.meta = Meta.reset(self.meta, "buffer_time")
 
 
-        df_length = self.rows.count()
-
-        if n > df_length:
-            n = df_length
-
-        self.buffer = self._create_buffer_df(input_cols, n)
-        self.meta = Meta.set(self.meta, "buffer_time", int(time.time()))
-
-    def buffer_window(self, columns=None, lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+    def buffer_window(self, columns="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
 
         df = self
 
@@ -282,30 +274,8 @@ class BaseDataFrame(ABC):
             if buffer_time > last_action_time:
                 self.set_buffer(columns, n)
 
-        df_buffer = self.get_buffer()
-
-        if df_buffer is None:
-            self.set_buffer(columns, n)
-            df_buffer = self.get_buffer()
-
-        df_length = df_buffer.rows.count()
-
-        if lower_bound is None:
+        if lower_bound is None or lower_bound < 0:
             lower_bound = 0
-
-        if lower_bound < 0:
-            lower_bound = 0
-
-        if upper_bound is None:
-            upper_bound = df_length
-
-        if upper_bound > df_length:
-            upper_bound = df_length
-
-        if lower_bound >= df_length:
-            diff = upper_bound - lower_bound
-            lower_bound = df_length - diff
-            upper_bound = df_length
 
         input_columns = parse_columns(df, columns)
         return self._buffer_window(input_columns, lower_bound, upper_bound)
