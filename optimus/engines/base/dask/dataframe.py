@@ -60,12 +60,6 @@ class DaskBaseDataFrame(BaseDataFrame):
             Variable(self.buffer).delete()
             self.buffer = None
 
-    def _create_buffer_df(df, input_cols, n):
-        import uuid
-        unique_id = str(uuid.uuid4())
-        Variable(unique_id).set(PandasDataFrame(df.cols.select(input_cols).head(n=n)))
-        return unique_id
-
     def get_buffer(self):
         return Variable(self.buffer).get() if self.buffer else None
 

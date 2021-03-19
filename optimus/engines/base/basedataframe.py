@@ -251,10 +251,6 @@ class BaseDataFrame(ABC):
         return self.buffer
 
     @abstractmethod
-    def _create_buffer_df(self, input_cols, n):
-        pass
-
-    @abstractmethod
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         pass
 
@@ -265,8 +261,6 @@ class BaseDataFrame(ABC):
         self._reset_buffer()
         self.meta = Meta.reset(self.meta, "buffer_time")
 
-    def set_buffer(self, columns="*", n=BUFFER_SIZE):
-        input_cols = parse_columns(self, columns)
 
         df_length = self.rows.count()
 

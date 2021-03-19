@@ -39,9 +39,6 @@ class SparkDataFrame(BaseDataFrame):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions()
 
-    def _create_buffer_df():
-        pass
-
     def _buffer_window():
         pass
 
