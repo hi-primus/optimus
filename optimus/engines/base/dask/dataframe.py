@@ -69,12 +69,11 @@ class DaskBaseDataFrame(BaseDataFrame):
     def get_buffer(self):
         return Variable(self.buffer).get() if self.buffer else None
 
-    @staticmethod
-    def _buffer_window(df, input_cols, lower_bound, upper_bound):
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
         def func(value):
             return value[lower_bound:upper_bound]
 
-        return PandasDataFrame(df.data[input_cols].partitions[0].map_partitions(func).compute())
+        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute())
 
     def sample(self, n=10, random=False):
         """
