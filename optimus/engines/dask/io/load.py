@@ -104,16 +104,15 @@ class Load(BaseLoad):
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            ddf = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                            quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                            keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                            storage_options=storage_options, sample=10000000000, low_memory=False, *args, **kwargs)
-
+            dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                              storage_options=storage_options, sample=10000000000, low_memory=False, *args, **kwargs)
 
             if n_rows > -1:
-                ddf = dd.from_pandas(ddf.head(n=n_rows), npartitions=1).reset_index(drop=True)
+                dfd = dd.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
-            df = DaskDataFrame(ddf)
+            df = DaskDataFrame(dfd)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
@@ -253,7 +252,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None,
-            conn=None, *args, **kwargs):
+              conn=None, *args, **kwargs):
         """
         Return a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -282,7 +281,7 @@ class Load(BaseLoad):
             n_rows = None
 
         pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows,
-                            storage_options=storage_options, *args, **kwargs)
+                             storage_options=storage_options, *args, **kwargs)
         sheet_names = list(pd.read_excel(file, None, storage_options=storage_options).keys())
 
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)
