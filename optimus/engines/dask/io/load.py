@@ -101,7 +101,7 @@ class Load(BaseLoad):
             storage_options = conn.storage_options
 
         remove_param = "chunk_size"
-        if kwargs[remove_param]:
+        if kwargs.get(remove_param):
             # This is handle in this way to preserve compatibility with others dataframe technologies.
             logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
             kwargs.pop(remove_param)
