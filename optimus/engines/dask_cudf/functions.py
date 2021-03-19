@@ -91,6 +91,13 @@ class DaskCUDFFunctions(Functions):
     def to_string_accessor(self, series):
         return self.to_string(series).str
 
+    def min(self, series):
+        return series.min()
+
+    def max(self, series):
+        return series.max()
+
+
     def count_zeros(self, series):
         return int((series.to_float().values == 0).sum())
 
