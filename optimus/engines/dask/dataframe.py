@@ -9,7 +9,7 @@ class DaskDataFrame(DaskBaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
-    def _pandas_to_dfd(self, pdf, n_partitions):
+    def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_dask_dataframe(pdf, n_partitions)
 
     @staticmethod

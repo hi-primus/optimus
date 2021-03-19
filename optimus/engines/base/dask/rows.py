@@ -125,7 +125,7 @@ class DaskBaseRows(BaseRows):
 
         partitions = df.partitions()
         # return self.root.new(self.root._pandas_to_dfd(df.cols.select("*").data.head(count), partitions))
-        return self.root.new(self.root._pandas_to_dfd(df.cols.select("*").data.head(count), partitions))
+        return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """

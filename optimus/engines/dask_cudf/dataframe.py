@@ -3,7 +3,7 @@ from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.dask_cudf.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.converter import pandas_to_dask_cudf_dataframe
+from optimus.helpers.converter import cudf_to_dask_cudf
 
 
 class DaskCUDFDataFrame(DaskBaseDataFrame):
@@ -11,8 +11,8 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     def __init__(self, data):
         super().__init__(self, data)
 
-    def _pandas_to_dfd(self, pdf, n_partitions):
-        return pandas_to_dask_cudf_dataframe(pdf, n_partitions)
+    def _base_to_dfd(self, pdf, n_partitions):
+        return cudf_to_dask_cudf(pdf, n_partitions)
 
     @property
     def rows(self):

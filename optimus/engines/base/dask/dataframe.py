@@ -30,7 +30,13 @@ class DaskBaseDataFrame(BaseDataFrame):
 
     @staticmethod
     @abstractmethod
-    def _pandas_to_dfd(pdf, n_partitions):
+    def _base_to_dfd(df, n_partitions):
+        """
+        Convert a dataframe from the dataframe base (pandas, cudf) in a distributed engine dataframe (dask, dask_cudf)
+        :param pdf:
+        :param n_partitions:
+        :return:
+        """
         pass
 
     def execute(self):
