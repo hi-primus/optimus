@@ -243,14 +243,6 @@ class Rows(DaskBaseRows):
         df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.data[columns].limit(n)
 
     def limit(self, count):
         """

@@ -73,7 +73,7 @@ class Load:
                              **kwargs)
             partitions = df.partitions()
             if n_rows > -1:
-                df = df.head(n_rows)
+                df = df.rows.limit(n_rows)
                 df = dd.from_pandas(df, npartitions=partitions)
                 # print(type(df))
 

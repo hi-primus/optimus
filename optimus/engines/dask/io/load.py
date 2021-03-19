@@ -107,7 +107,7 @@ class Load(BaseLoad):
             dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                               quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                               keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                              storage_options=storage_options, sample=10000000000, low_memory=False, *args, **kwargs)
+                              storage_options=storage_options, low_memory=False, *args, **kwargs)
 
             if n_rows > -1:
                 dfd = dd.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
@@ -179,7 +179,7 @@ class Load(BaseLoad):
                              compression="gzip", *args, **kwargs)
 
             if n_rows > -1:
-                df = df.head(n_rows)
+                df = df.rows.limit(n_rows)
 
             df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:

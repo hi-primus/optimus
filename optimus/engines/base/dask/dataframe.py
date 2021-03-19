@@ -205,14 +205,6 @@ class DaskBaseDataFrame(BaseDataFrame):
         """
         raise NotImplementedError
 
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.data[columns].head(n, npartitions=-1)
 
     @staticmethod
     def create_id(column="id"):

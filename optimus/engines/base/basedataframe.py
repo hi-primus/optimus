@@ -1,9 +1,7 @@
 import operator
 import time
 from abc import abstractmethod, ABC
-from collections import OrderedDict
 
-import copy
 import humanize
 import imgkit
 import jinja2
@@ -15,11 +13,11 @@ from tabulate import tabulate
 from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import PROFILER_NUMERIC_DTYPES, BUFFER_SIZE, Actions
+from optimus.helpers.constants import BUFFER_SIZE, Actions
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
-from optimus.helpers.output import print_html, print_json
-from optimus.infer import is_str, is_dict, is_tuple, is_list_of_str
+from optimus.helpers.output import print_html
+from optimus.infer import is_str, is_tuple
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
@@ -40,17 +38,11 @@ class BaseDataFrame(ABC):
 
     def _repr_html_(self):
         df = self
-        # try:
         return df.table()
-        # except Exception:
-        #     pass
 
     def __repr__(self):
         df = self
-        # try:
         return df.ascii()
-        # except Exception:
-        #     pass
 
     def __getitem__(self, item):
         if isinstance(item, slice):
@@ -575,14 +567,6 @@ class BaseDataFrame(ABC):
     def debug():
         pass
 
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.data[columns].head(n)
 
     def reset(self):
         # df = self.df
@@ -624,7 +608,7 @@ class BaseDataFrame(ABC):
 
             cols_dtypes = {}
             cols_to_infer = [*cols_to_profile]
-            
+
             for col_name in cols_to_profile:
                 _props = Meta.get(df.meta, f"columns_dtypes.{col_name}")
 
@@ -633,8 +617,8 @@ class BaseDataFrame(ABC):
                     cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_dtypes = { **cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer) }
-                cols_dtypes = { col: cols_dtypes[col] for col in cols_to_profile }
+                cols_dtypes = {**cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer)}
+                cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
 
             compute = True
             # print("cols_dtypes, compute",cols_dtypes, compute)

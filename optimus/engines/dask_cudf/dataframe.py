@@ -49,14 +49,6 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas())
 
-    def head(self, columns="*", n=10):
-        """
-
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return df.data[columns].head(n, npartitions=-1).to_pandas()
 
     @staticmethod
     def pivot(index, column, values):

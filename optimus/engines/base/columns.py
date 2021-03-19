@@ -143,9 +143,9 @@ class BaseColumns(ABC):
 
         dfd = dfd.drop(columns=list(set(df.columns) - set(columns)))
 
-        df.meta = Meta.action(df.meta, df, Actions.KEEP.value, columns)
+        df.meta = Meta.action(df.meta, Actions.KEEP.value, columns)
 
-        return self.root.new(dfd, meta=meta)
+        return self.root.new(dfd, meta=df.meta)
 
     def word_count(self, input_cols, output_cols=None):
         """
@@ -369,7 +369,7 @@ class BaseColumns(ABC):
     @dispatch(dict)
     def set_dtype(self, columns: dict):
         return self.set_dtype(columns, False)
-        
+
     @dispatch(dict, bool)
     def set_dtype(self, columns: dict, inferred=False):
         """
@@ -392,7 +392,7 @@ class BaseColumns(ABC):
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
         return df
-    
+
     def unset_dtype(self, columns="*"):
         """
         Unset profiler data type
@@ -407,7 +407,7 @@ class BaseColumns(ABC):
 
             if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_dtypes.{col_name}")
-                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)                
+                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
 
         return df
 
@@ -595,7 +595,7 @@ class BaseColumns(ABC):
             patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
             patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
 
-            if patterns_values is None or (len(patterns_values)<n and patterns_more):
+            if patterns_values is None or (len(patterns_values) < n and patterns_more):
                 calculate = True
                 break
 
@@ -620,7 +620,7 @@ class BaseColumns(ABC):
             if len(result[input_col]["values"]) > n:
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
-            
+
         return result
 
     def groupby(self, by, agg, order="asc", *args, **kwargs):

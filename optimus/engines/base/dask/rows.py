@@ -124,7 +124,7 @@ class DaskBaseRows(BaseRows):
             limit = 1 if limit > 1 else limit
 
         partitions = df.partitions()
-        return self.root.new(self.root._pandas_to_dfd(df.head("*", count), partitions))
+        return self.root.new(self.root._pandas_to_dfd(df.rows.limit("*", count), partitions))
 
     def between_index(self, columns, lower_bound=None, upper_bound=None):
         """
