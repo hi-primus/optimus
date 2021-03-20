@@ -14,8 +14,7 @@ from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 
 # This function return True or False if a string can be converted to any datatype.
-from optimus.helpers.constants import ProfilerDataTypes
-from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.constants import ProfilerDataTypes, CURRENCIES
 
 
 def is_datetime_str(_value):
@@ -673,74 +672,3 @@ class Infer(object):
                            ProfilerDataTypes.HTTP_CODE.value: 15,
                            ProfilerDataTypes.MISSING.value: 16,
                            }
-
-    @staticmethod
-    def parse(col_and_value, infer: bool = False, dtypes=None, str_funcs=None, int_funcs=None, full=True):
-        """
-
-        :param col_and_value: Column and value tuple
-        :param infer: If 'True' try to infer in all the dataTypes available. See int_func and str_funcs
-        :param dtypes:
-        :param str_funcs: Custom string function to infer.
-        :param int_funcs: Custom numeric functions to infer.
-        {col_name: regular_expression}
-        :param full: True return a tuple with (col_name, dtype), count or False return dtype
-        :return:
-        """
-        col_name, value = col_and_value
-
-        # Try to order the functions from less to more computational expensive
-        if int_funcs is None:
-            int_funcs = [(is_credit_card_number, "credit_card_number"), (is_zip_code, "zip_code")]
-
-        if str_funcs is None:
-            str_funcs = [
-                (is_missing, "missing"), (is_bool_str, "boolean"), (is_datetime, "date"),
-                (is_list_str, "array"), (str_to_object, "object"), (is_ip, "ip"),
-                (str_to_url, "url"),
-                (is_email, "email"), (is_gender, "gender"), (str_to_null, "null")
-            ]
-        # Check 'string' for Spark, 'object' for Dask
-        if (dtypes[col_name] == "object" or dtypes[col_name] == "string") and infer is True:
-
-            if isinstance(value, bool):
-                _data_type = "boolean"
-            elif fastnumbers.isint(value):  # Check if value is integer
-                _data_type = "int"
-                for func in int_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-
-            elif value != value:
-                _data_type = "null"
-
-            elif fastnumbers.isfloat(value):
-                _data_type = "decimal"
-
-            elif isinstance(value, str):
-                _data_type = "string"
-                for func in str_funcs:
-                    if func[0](value) is True:
-                        _data_type = func[1]
-                        break
-
-        else:
-            _data_type = dtypes[col_name]
-            if is_null(value) is True:
-                _data_type = "null"
-            elif is_missing(value) is True:
-                _data_type = "missing"
-            else:
-                if dtypes[col_name].startswith("array"):
-                    _data_type = "array"
-                else:
-                    _data_type = dtypes[col_name]
-                    # print(_data_type)
-
-        result = (col_name, _data_type), 1
-
-        if full:
-            return result
-        else:
-            return _data_type
