@@ -73,6 +73,7 @@ class Actions(Enum):
     PORT = "port"
     COPY = "copy"
     RENAME = "rename"
+    UNIQUE = "unique"
 
     # URL Example	http://search.somedb.com:8080/history?era=darkages
     # scheme	http
@@ -128,7 +129,7 @@ class ProfilerDataTypes(Enum):
     SOCIAL_SECURITY_NUMBER = "social_security_number"
     HTTP_CODE = "http_code"
     US_STATE = "us_state"
-    NULL ="null"
+    NULL = "null"
 
     @staticmethod
     def list():
@@ -136,6 +137,7 @@ class ProfilerDataTypes(Enum):
 
     # NULL = "null"
     # MISSING = "missing"
+
 
 class Schemas(Enum):
     S3 = 's3://'
