@@ -12,28 +12,28 @@ class Mask(ABC):
         self.root = root
 
     def greater_than(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] > value).to_frame())
+        df = self.root
+        return df[col_name] > value
 
     def greater_than_equal(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] >= value).to_frame())
+        df = self.root
+        return df[col_name] >= value
 
     def less_than(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] < value).to_frame())
+        df = self.root
+        return df[col_name] < value
 
     def less_than_equal(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] <= value).to_frame())
+        df = self.root
+        return df[col_name] <= value
 
     def equal(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] == value).to_frame())
+        df = self.root
+        return df[col_name] == value
 
     def not_equal(self, col_name, value):
-        dfd = self.root.data
-        return self.root.new((dfd[col_name] != value).to_frame())
+        df = self.root
+        return df[col_name] != value
 
     def missing(self, col_name):
         """
