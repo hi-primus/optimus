@@ -107,7 +107,7 @@ class Mask(ABC):
     def numeric(self, col_name):
         pass
 
-    def nulls(self, columns, how="any"):
+    def nulls(self, columns="*", how="any"):
         """
         Find the rows that have null values
         :param how:
