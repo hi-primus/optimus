@@ -4,6 +4,7 @@ import fastnumbers
 import numpy as np
 import pandas as pd
 from dask_ml.impute import SimpleImputer
+from fastnumbers import isintlike, isfloat, isreal
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
@@ -15,15 +16,15 @@ from optimus.infer import is_str
 
 
 def is_integer(series):
-    return pd.Series(np.vectorize(fastnumbers.isintlike)(series).flatten())
+    return pd.Series(np.vectorize(isintlike)(series).flatten())
 
 
 def is_float(series):
-    return pd.Series(np.vectorize(fastnumbers.isfloat)(series).flatten())
+    return pd.Series(np.vectorize(isfloat)(series).flatten())
 
 
 def is_numeric(series):
-    return pd.Series(np.vectorize(fastnumbers.isreal)(series).flatten())
+    return pd.Series(np.vectorize(isreal)(series).flatten())
 
 
 def is_integer_cudf(series):
@@ -33,8 +34,10 @@ def is_integer_cudf(series):
 def is_float_cudf(series):
     return series.is_float()
 
+
 def is_numeric_cudf(series):
     return series.is_numeric()
+
 
 # Convertion functions
 def to_integer_cudf(series):
