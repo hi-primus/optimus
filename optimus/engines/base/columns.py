@@ -1270,7 +1270,7 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
-    def infer(self, input_cols="*", output_cols=None):
+    def infer_dtypes(self, input_cols="*", output_cols=None):
         dtypes = self.root[input_cols].cols.dtypes()
         return self.apply(input_cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
@@ -1830,38 +1830,31 @@ class BaseColumns(ABC):
         total_rows = df.rows.count()
         # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
 
+        profiler_to_mask_func = {
+            "decimal": "float",
+            "int": "integer",
+        }
+        # print("columns_type", columns_type)
         for col_name, props in columns_type.items():
+            # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
+            _dtype = props["dtype"]
+            dtype = profiler_to_mask_func.get(props["dtype"])
+            dtype = _dtype if dtype is None else dtype
 
-            dtype = props["dtype"]
+            matches_mismatches = getattr(df.mask, dtype)(col_name).cols.frequency()
+            values = {list(j.values())[0]: list(j.values())[1] for j in
+                      matches_mismatches["frequency"][col_name]["values"]}
+            missing = df.mask.nulls(col_name).cols.sum()
 
-            missing = nulls.get(col_name, 0)
-            # match = total_rows - missing
-            # mismatch = 0
+            matches = values.get(True)
+            mismatches = values.get(False, missing) - missing
 
-            if dtype == ProfilerDataTypes.STRING.value:
-                match = total_rows - missing
-                mismatch = 0
-
-            elif dtype == ProfilerDataTypes.US_STATE.value:
-                match = dfd[col_name].astype(str).str.isin(US_STATES_NAMES).value_counts().to_dict()
-                mismatch = total_rows - match
-            # elif dtype in [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]:
-            #     TODO: Check matching rows using fastnumbers instead of regex
-            else:
-                regex = Infer.ProfilerDataTypesRegex[dtype]
-
-                freq = df.cols.select(col_name).cols.to_string().cols.match(col_name, regex).cols.frequency()
-
-                values = {list(j.values())[0]: list(j.values())[1] for j in freq["frequency"][col_name]["values"]}
-
-                match = values.get(True)
-                mismatch = values.get(False, missing) - missing
-
-            match = 0 if match is None else int(match)
-            mismatch = 0 if mismatch is None else int(mismatch)
+            # Ensure that value are not None
+            matches = 0 if matches is None else int(matches)
+            mismatches = 0 if mismatches is None else int(mismatches)
             missing = 0 if missing is None else int(missing)
 
-            result[col_name] = {"match": match, "missing": missing, "mismatch": mismatch}
+            result[col_name] = {"match": matches, "missing": missing, "mismatch": mismatches}
 
         for col_name in columns_type.keys():
             result[col_name].update({"profiler_dtype": columns_type[col_name]})
@@ -1898,8 +1891,8 @@ class BaseColumns(ABC):
         # Infer the data type from every element in a Series.
         sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()  # In case the dataframe is smaller that 100
-        pdf_dtypes = sample.cols.infer().cols.frequency()
-
+        pdf_dtypes = sample.cols.infer_dtypes().cols.frequency()
+        _unique_counts = df.cols.count_uniques()
         cols_and_inferred_dtype = {}
         for col_name in columns:
             infer_value_counts = pdf_dtypes["frequency"][col_name]["values"]
@@ -1920,7 +1913,8 @@ class BaseColumns(ABC):
                 _dtype = ProfilerDataTypes.OBJECT.value
 
             # Infer if and integer or zipcode
-            _unique_counts = dtype = len(infer_value_counts)
+            dtype = len(infer_value_counts)
+            _unique_counts = df[col_name].cols.count_uniques()
             # print(len(_value_counts) / rows_count)
             is_categorical = False
 
@@ -1940,7 +1934,7 @@ class BaseColumns(ABC):
             if dtype == ProfilerDataTypes.DATE.value:
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
-                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer(filtered_dates)})
+                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer_dtypes(filtered_dates)})
         return cols_and_inferred_dtype
 
     # def match(self, input_cols, regex):
