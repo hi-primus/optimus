@@ -2,9 +2,8 @@ import math
 
 import simplejson as json
 
-from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT
+from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT, PROFILER_COLUMN_TYPES
 from optimus.helpers.json import json_converter
-from optimus.infer import PROFILER_COLUMN_TYPES
 
 
 def fill_missing_var_types(var_types, dtypes):

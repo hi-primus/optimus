@@ -1,5 +1,6 @@
 from optimus.helpers.logger import logger
-from optimus.infer import PYTHON_SHORT_TYPES, is_numeric, is_nan
+from optimus.infer import is_numeric, is_nan
+from optimus.helpers.constants import PYTHON_SHORT_TYPES
 
 
 def compress_dict(lst, col_name):
