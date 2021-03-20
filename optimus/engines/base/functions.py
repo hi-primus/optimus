@@ -9,7 +9,7 @@ from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
 from optimus.infer import regex_full_url, is_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object, is_ip, is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str
+    is_gender, is_list_of_int, is_list_of_str, is_string
 
 
 class Functions(ABC):
@@ -443,7 +443,7 @@ class Functions(ABC):
 
     def infer_dtypes(self, value, cols_dtype):
         """
-        Infer the dtype.
+        Infer the data types.
         Please be aware that the order in which the value is checked is important and will change the final result
         :param value:
         :param cols_dtype:
@@ -468,8 +468,6 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.DATE.value
         elif is_missing(value):
             dtype = ProfilerDataTypes.MISSING.value
-        elif is_object(value):
-            dtype = ProfilerDataTypes.OBJECT.value
         elif is_ip(value):
             dtype = ProfilerDataTypes.IP.value
         elif is_url(value):
@@ -478,8 +476,10 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.EMAIL.value
         elif is_gender(value):
             dtype = ProfilerDataTypes.GENDER.value
-        else:
+        elif is_string:
             dtype = ProfilerDataTypes.STRING.value
+        elif is_object(value):
+            dtype = ProfilerDataTypes.OBJECT.value
 
         # return Infer.ProfilerDataTypesID[dtype]
         return dtype
