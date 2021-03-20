@@ -726,10 +726,9 @@ class BaseDataFrame(ABC):
                         calculate = True
 
             if calculate:
-                df = df.calculate_profile(columns, bins, flush, size)
+                df = df[columns].calculate_profile("*", bins, flush, size)
                 profile = Meta.get(df.meta, "profile")
                 self.meta = df.meta
-
             profile["columns"] = {key: profile["columns"][key] for key in columns}
 
         if output == "json":
