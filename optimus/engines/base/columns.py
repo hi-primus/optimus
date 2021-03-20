@@ -1561,10 +1561,10 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
 
-    def unique(self, input_cols="*", relative_error=RELATIVE_ERROR, output_cols=None):
-        return self.apply(input_cols, self.F.unique, args=(relative_error,), func_return_type=str,
-                          output_cols=output_cols,
-                          meta_action=Actions.UNIQUE.value, mode="vectorized", func_type="column_expr")
+    def unique(self, columns="*", values=None, estimate=True, tidy=True, compute=True):
+
+        df = self.root
+        return df.cols.agg_exprs(columns, self.F.unique, values, estimate, tidy=tidy, compute=compute)
 
     def count_uniques(self, columns="*", values=None, estimate=True, tidy=True, compute=True):
         df = self.root

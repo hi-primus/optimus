@@ -77,7 +77,7 @@ class Functions(ABC):
 
     def unique(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
-        return self.to_string(series).unique()
+        return list(self.to_string(series).unique())
 
     @staticmethod
     def count_na(series):
