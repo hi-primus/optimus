@@ -51,10 +51,10 @@ class Mask(ABC):
         :param dtype:
         :return:
         """
-        dfd = self.root.data
-        mask_mismatch = ~dfd[col_name].astype("str").str.match(Infer.ProfilerDataTypesRegex[dtype])
-        mask_null = dfd[col_name].isnull()
-        return self.root.new((mask_mismatch | mask_null).to_frame())
+        df = self.root
+        mask_match = getattr(df[col_name].mask, dtype)(col_name)
+        mask_null = df[col_name].mask.nulls(col_name)
+        return ~(mask_match | mask_null)
 
     def match(self, col_name, dtype):
         """
@@ -63,8 +63,9 @@ class Mask(ABC):
         :param dtype:
         :return:
         """
-        mask = self.root.data[col_name].astype("str").str.match(Infer.ProfilerDataTypesRegex[dtype])
-        return self.root.new(mask.to_frame())
+        df = self.root
+        mask_match = getattr(df[col_name].mask, dtype)(col_name)
+        return mask_match
 
     def values_in(self, col_name, values):
         values = val_to_list(values)
