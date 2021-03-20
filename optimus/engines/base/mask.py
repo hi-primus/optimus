@@ -162,7 +162,8 @@ class Mask(ABC):
         return self.root.new(mask)
 
     def string(self, col_name="*"):
-        return ~self.root.mask.nulls(col_name)
+        return self.root[col_name].cols.apply(col_name, is_str)
+        # return ~self.root.mask.nulls(col_name)
 
     def email(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_email)
@@ -177,7 +178,8 @@ class Mask(ABC):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_gender)
 
     def boolean(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_boolean)
+        return self.root.cols.apply(col_name, is_bool)
+        # return self.root[col_name].cols.to_string().cols.match(col_name, regex_boolean)
 
     def zip_code(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_zip_code)
@@ -186,17 +188,18 @@ class Mask(ABC):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_credit_card_number)
 
     def datetime(self, col_name="*"):
-        df = self.root
-        if df[col_name].cols.dtype  == df.constants.
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesRegex[
-            ProfilerDataTypes.DATE.value])
+        # df = self.root
+        # if df[col_name].cols.dtype  == df.constants.
+        return self.root.cols.apply(col_name, is_datetime)
+        # return self.root[col_name].cols.to_string().cols.match(col_name, regex_date)
 
     def object(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, Infer.ProfilerDataTypesRegex[
-            ProfilerDataTypes.OBJECT.value])
+        return self.root[col_name].cols.apply(col_name, is_object)
+        # return self.root[col_name].cols.to_string().cols.match(col_name, is_object)
 
     def array(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_array)
+        return self.root[col_name].cols.apply(col_name, is_list)
+        # return self.root[col_name].cols.to_string().cols.match(col_name, is_list_value)
 
     def phone_number(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_phone_number)
