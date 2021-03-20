@@ -63,6 +63,15 @@ def str_to_data_type(_value, _dtypes):
         return False
 
 
+def is_list_value(value):
+    """
+    Check if an object is a list
+    :param value:
+    :return:
+    """
+    return isinstance(value, list)
+
+
 def is_list_str(_value):
     return False
     # return str_to_data_type(_value, (list, tuple))
@@ -526,6 +535,15 @@ def is_str(value):
     # Seems 20% faster than
     return isinstance(value, str)
     # return True if type("str") == "str" else False
+
+
+def is_string(value):
+    """
+    Check if an object is a string
+    :param value:
+    :return:
+    """
+    return isinstance(value, str)
 
 
 def is_object(value):
