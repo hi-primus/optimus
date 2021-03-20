@@ -20,8 +20,8 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_str, Infer, profiler_dtype_func, is_list_value, is_one_element, \
-    is_list_of_tuples, is_int, is_list_of_str, is_tuple, US_STATES_NAMES, is_null
+from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -690,24 +690,24 @@ class BaseColumns(ABC):
 
         return df
 
-    def is_match(self, columns, dtype, invert=False):
-        """
-        Find the rows that match a data type
-        :param columns:
-        :param dtype: data type to match
-        :param invert: Invert the match
-        :return:
-        """
-        df = self.root
-        dfd = df.data
-        columns = parse_columns(df, columns)
-
-        f = profiler_dtype_func(dtype)
-        if f is not None:
-            for col_name in columns:
-                dfd = dfd[col_name].apply(f)
-                dfd = ~dfd if invert is True else dfd
-        return self.root.new(dfd)
+    # def is_match(self, columns, dtype, invert=False):
+    #     """
+    #     Find the rows that match a data type
+    #     :param columns:
+    #     :param dtype: data type to match
+    #     :param invert: Invert the match
+    #     :return:
+    #     """
+    #     df = self.root
+    #     dfd = df.data
+    #     columns = parse_columns(df, columns)
+    #
+    #     f = profiler_dtype_func(dtype)
+    #     if f is not None:
+    #         for col_name in columns:
+    #             dfd = dfd[col_name].apply(f)
+    #             dfd = ~dfd if invert is True else dfd
+    #     return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None):
         """
@@ -1823,18 +1823,13 @@ class BaseColumns(ABC):
         :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
         df = self.root
-        dfd = df.data
 
         result = {}
-        nulls = df.cols.count_na(tidy=False)['count_na']
-        total_rows = df.rows.count()
-        # TODO: Test this cudf.Series(cudf.core.column.string.cpp_is_integer(a["A"]._column)) and fast_numbers
-
         profiler_to_mask_func = {
             "decimal": "float",
             "int": "integer",
         }
-        # print("columns_type", columns_type)
+
         for col_name, props in columns_type.items():
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
             _dtype = props["dtype"]
