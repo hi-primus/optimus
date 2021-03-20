@@ -108,7 +108,7 @@ class Load(BaseLoad):
             else:
                 storage_options = None
 
-            if kwargs["chunk_size"] == "auto":
+            if kwargs.get("chunk_size") == "auto":
                 ## Chunk size is going to be 75% of the memory available
                 kwargs.pop("chunk_size")
                 kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
