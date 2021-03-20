@@ -310,21 +310,12 @@ def a_object(value):
     return True if is_object(value) or str_to_object(value) else False
 
 
-def is_bool(value, mode=None):
-    if mode == "string":
-        result = is_bool_str(value)
-    else:
-        result = is_bool_value(value)
-    return result
-
-
-def is_list_value(value):
-    """
-    Check if an object is a list
-    :param value:
-    :return:
-    """
-    return isinstance(value, list)
+def is_bool(value):
+    if is_bool_value(value):
+        return True
+    elif is_bool_value(value):
+        return True
+    return False
 
 
 def is_list_empty(value):
