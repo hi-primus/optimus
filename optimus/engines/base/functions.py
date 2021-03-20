@@ -465,7 +465,7 @@ class Functions(ABC):
         elif is_decimal(value):
             dtype = ProfilerDataTypes.DECIMAL.value
         elif is_datetime(value):
-            dtype = ProfilerDataTypes.DATE.value
+            dtype = ProfilerDataTypes.DATETIME.value
         elif is_missing(value):
             dtype = ProfilerDataTypes.MISSING.value
         elif is_ip(value):
@@ -481,5 +481,5 @@ class Functions(ABC):
         elif is_object(value):
             dtype = ProfilerDataTypes.OBJECT.value
 
-        # return Infer.ProfilerDataTypesID[dtype]
+
         return dtype

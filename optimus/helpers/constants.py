@@ -114,7 +114,7 @@ class ProfilerDataTypes(Enum):
     DECIMAL = "decimal"
     STRING = "string"
     BOOLEAN = "boolean"
-    DATE = "date"
+    DATETIME = "datetime"
     ARRAY = "array"
     OBJECT = "object"
     GENDER = "gender"
@@ -158,7 +158,7 @@ class Schemas(Enum):
 
 PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
 PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,
-                          ProfilerDataTypes.DATE.value, ProfilerDataTypes.ARRAY.value,
+                          ProfilerDataTypes.DATETIME.value, ProfilerDataTypes.ARRAY.value,
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
                           ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
                           ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
