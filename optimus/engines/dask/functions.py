@@ -74,7 +74,7 @@ class DaskFunctions(Functions):
     def unique(self, series, *args):
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
-        return self.to_string(series).unique().to_dict(index=False)
+        return self.to_string(series).unique()
 
     # def mod(self, other):
     #     series = self.series
