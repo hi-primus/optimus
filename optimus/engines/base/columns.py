@@ -1926,7 +1926,7 @@ class BaseColumns(ABC):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
-            if dtype == ProfilerDataTypes.DATE.value:
+            if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer_dtypes(filtered_dates)})
