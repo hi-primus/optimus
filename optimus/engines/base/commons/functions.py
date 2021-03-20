@@ -22,6 +22,10 @@ def is_float(series):
     return pd.Series(np.vectorize(fastnumbers.isfloat)(series).flatten())
 
 
+def is_numeric(series):
+    return pd.Series(np.vectorize(fastnumbers.isreal)(series).flatten())
+
+
 def is_integer_cudf(series):
     return series.is_integer()
 
@@ -29,7 +33,10 @@ def is_integer_cudf(series):
 def is_float_cudf(series):
     return series.is_float()
 
+def is_numeric_cudf(series):
+    return series.is_numeric()
 
+# Convertion functions
 def to_integer_cudf(series):
     import cudf
     return cudf.to_numeric(series, errors="ignore", downcast="integer")

@@ -102,6 +102,10 @@ class Mask(ABC):
     def float(self, col_name):
         pass
 
+    @abstractmethod
+    def numeric(self, col_name):
+        pass
+
     def nulls(self, columns, how="any"):
         """
         Find the rows that have null values
