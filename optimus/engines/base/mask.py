@@ -1,10 +1,12 @@
 from abc import abstractmethod, ABC
 
+
+
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
 from optimus.infer import Infer, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
-    regex_credit_card_number, regex_zip_code, regex_boolean, regex_gender, regex_url, regex_ip, regex_email
+    regex_credit_card_number, regex_zip_code, regex_boolean, regex_gender, regex_url, regex_ip, regex_email, \
+    is_datetime, is_object, is_list, is_bool
 
 
 class Mask(ABC):
@@ -41,8 +43,9 @@ class Mask(ABC):
         :param col_name:
         :return:
         """
-        mask = self.root.data[col_name].isnull()
-        return self.root.new(mask.to_frame())
+        df = self.root
+
+        return df.mask.nulls(col_name)
 
     def mismatch(self, col_name, dtype):
         """
