@@ -218,12 +218,6 @@ def str_to_currency(value, compile=False):
     return str_to(value, regex_boolean, regex_boolean_compiled, compile)
 
 
-class Infer(object):
-    """
-    This functions return True or False if match and specific dataType
-    """
-
-
 def is_nan(value):
     """
     Check if a value is nan
@@ -642,28 +636,3 @@ def is_date(value):
     """
 
     return isinstance(value, datetime.date)
-
-
-class Infer(object):
-    """
-    This functions return True or False if match and specific dataType
-    """
-
-    ProfilerDataTypesID = {ProfilerDataTypes.INT.value: 0,
-                           ProfilerDataTypes.DECIMAL.value: 1,
-                           ProfilerDataTypes.STRING.value: 2,
-                           ProfilerDataTypes.BOOLEAN.value: 3,
-                           ProfilerDataTypes.DATETIME.value: 4,
-                           ProfilerDataTypes.ARRAY.value: 5,
-                           ProfilerDataTypes.OBJECT.value: 6,
-                           ProfilerDataTypes.IP.value: 7,
-                           ProfilerDataTypes.URL.value: 8,
-                           ProfilerDataTypes.EMAIL.value: 9,
-                           ProfilerDataTypes.GENDER.value: 10,
-                           ProfilerDataTypes.CREDIT_CARD_NUMBER.value: 11,
-                           ProfilerDataTypes.ZIP_CODE.value: 12,
-                           ProfilerDataTypes.PHONE_NUMBER.value: 13,
-                           ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: 14,
-                           ProfilerDataTypes.HTTP_CODE.value: 15,
-                           ProfilerDataTypes.MISSING.value: 16,
-                           }

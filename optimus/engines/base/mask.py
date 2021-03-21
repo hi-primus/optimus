@@ -1,12 +1,10 @@
 from abc import abstractmethod, ABC
 
-
-
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
-from optimus.infer import Infer, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
-    regex_credit_card_number, regex_zip_code, regex_boolean, regex_gender, regex_url, regex_ip, regex_email, \
-    is_datetime, is_object_value, is_list, is_bool
+from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
+    regex_credit_card_number, regex_zip_code, regex_gender, regex_url, regex_ip, regex_email, \
+    is_datetime, is_list, is_bool, is_object
 
 
 class Mask(ABC):

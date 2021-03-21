@@ -7,7 +7,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
-from optimus.infer import Infer, is_dict, is_list_value
+from optimus.infer import is_dict, is_list_value
 from optimus.profiler.functions import fill_missing_var_types
 
 
