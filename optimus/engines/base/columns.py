@@ -1873,7 +1873,8 @@ class BaseColumns(ABC):
 
     def infer_profiler_dtypes(self, columns="*"):
         """
-        Infer datatypes in a dataframe from a sample
+        Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
+        After that it takes all ghe values apply som heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
         :param columns: Columns in which you want to infer the datatype.
