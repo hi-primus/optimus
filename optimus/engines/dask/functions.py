@@ -76,14 +76,6 @@ class DaskFunctions(Functions):
         # Cudf can not handle null so we fill it with non zero values.
         return self.to_string(series).unique()
 
-    # def mod(self, other):
-    #     series = self.series
-    #     return da.mod(self._to_float(series), other)
-
-    # def pow(self, other):
-    #     series = self.series
-    #     return da.power(self._to_float(series), other)
-
     def radians(self, series):
         return da.radians(self._to_float(series))
 
