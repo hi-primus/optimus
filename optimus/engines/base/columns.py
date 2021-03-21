@@ -16,7 +16,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
@@ -1884,13 +1884,13 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
-        rows_count = sample.rows.count()  # In case the dataframe is smaller that 100
-        pdf_dtypes = sample.cols.infer_dtypes().cols.frequency()
+        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS)
+        rows_count = sample.rows.count()
+        sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
         _unique_counts = df.cols.count_uniques()
         cols_and_inferred_dtype = {}
         for col_name in columns:
-            infer_value_counts = pdf_dtypes["frequency"][col_name]["values"]
+            infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
             dtype = infer_value_counts[0]["value"]
             second_dtype = infer_value_counts[1]["value"] if len(infer_value_counts) > 1 else None
 
@@ -1902,16 +1902,12 @@ class BaseColumns(ABC):
                     _dtype = second_dtype
                 else:
                     _dtype = dtype
-            elif infer_value_counts[0] < len(pdf_dtypes):
+            elif infer_value_counts[0] < len(sample_dtypes):
                 _dtype = infer_value_counts.index[1]
             else:
                 _dtype = ProfilerDataTypes.OBJECT.value
 
-            # Infer if and integer or zipcode
-            dtype = len(infer_value_counts)
             _unique_counts = df[col_name].cols.count_uniques()
-            # print(len(_value_counts) / rows_count)
-            is_categorical = False
 
             if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
                     and _dtype == ProfilerDataTypes.ZIP_CODE.value \
@@ -1919,10 +1915,14 @@ class BaseColumns(ABC):
                 _dtype = ProfilerDataTypes.INT.value
 
             # Is the column categorical?. Try to infer the datatype using the column name
-            if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
-                is_categorical = False
-            if dtype in [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value] \
-                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD:
+            is_categorical = False
+
+            # if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
+            #     is_categorical = False
+
+            if _dtype in PROFILER_CATEGORICAL_DTYPES \
+                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD\
+                    or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
@@ -1930,6 +1930,7 @@ class BaseColumns(ABC):
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer_dtypes(filtered_dates)})
+
         return cols_and_inferred_dtype
 
     # def match(self, input_cols, regex):
