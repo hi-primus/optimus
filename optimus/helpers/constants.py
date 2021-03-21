@@ -376,7 +376,7 @@ PYTHON_SHORT_TYPES = {"string": "string",
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
-                      "decimal": "numeric", "date": "date", "array": "array", "binaty": "binary", "null": "null"}
+                      "decimal": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
 
 PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
                                ProfilerDataTypes.INT.value]
