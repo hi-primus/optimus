@@ -8,7 +8,7 @@ from jsonschema._format import is_email
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
 from optimus.infer import regex_full_url, is_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object, is_ip, is_url, is_missing, \
+    is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_string
 
 
@@ -478,8 +478,7 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.GENDER.value
         elif is_string:
             dtype = ProfilerDataTypes.STRING.value
-        elif is_object(value):
+        elif is_object_value(value):
             dtype = ProfilerDataTypes.OBJECT.value
-
 
         return dtype
