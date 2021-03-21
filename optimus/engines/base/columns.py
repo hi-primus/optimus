@@ -1274,7 +1274,7 @@ class BaseColumns(ABC):
         dtypes = self.root[input_cols].cols.dtypes()
         return self.apply(input_cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.LOWER.value, mode="map", func_type="column_expr")
+                          meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
     def upper(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
