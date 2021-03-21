@@ -76,7 +76,7 @@ def is_list_str(_value):
     # return str_to_data_type(_value, (list, tuple))
 
 
-def str_to_object(_value):
+def is_object_str(_value):
     return False
     # return str_to_data_type(_value, (dict, set))
 
@@ -309,13 +309,13 @@ def is_list(value, mode=None):
     return result
 
 
-def a_object(value):
+def is_object(value):
     """
     Check if a string or any not string value is a python list
     :param value:
     :return:
     """
-    return True if is_object(value) or str_to_object(value) else False
+    return True if is_object_value(value) or is_object_str(value) else False
 
 
 def is_bool(value):
@@ -545,13 +545,13 @@ def is_string(value):
     return isinstance(value, str)
 
 
-def is_object(value):
+def is_object_value(value):
     """
     Check if an object is a string
     :param value:
     :return:
     """
-    return isinstance(value, str)
+    return isinstance(value, object)
 
 
 def is_list_of_futures(value):
