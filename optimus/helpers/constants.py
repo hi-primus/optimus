@@ -74,6 +74,7 @@ class Actions(Enum):
     COPY = "copy"
     RENAME = "rename"
     UNIQUE = "unique"
+    INFER = "infer"
 
     # URL Example	http://search.somedb.com:8080/history?era=darkages
     # scheme	http
