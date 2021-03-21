@@ -234,9 +234,8 @@ def is_nan(value):
     if is_str(value):
         if value.lower() == "nan":
             result = True
-    elif is_numeric(value):
-        if math.isnan(value):
-            result = True
+    elif math.isnan(value):
+        result = True
     return result
 
 
@@ -611,21 +610,17 @@ def is_bool_value(value):
     return isinstance(value, bool)
 
 
-def is_datetime(value, mode=None):
+def is_datetime(value):
     """
     Check if an object is a datetime
     :param value:
     :return:
     """
-
-    if mode == "string":
-        result = is_datetime_str(value)
-    else:
-
-        if isinstance(value, datetime.datetime):
-            result = True
-        else:
-            result = is_datetime_str(str(value))
+    result = False
+    if isinstance(value, datetime.datetime):
+        result = True
+    # else:
+    #     result = is_datetime_str(str(value))
 
     return result
 
