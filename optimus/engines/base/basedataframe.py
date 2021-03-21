@@ -551,7 +551,7 @@ class BaseDataFrame(ABC):
 
     def calculate_profile(self, columns="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
         """
-        Returns a new dataframe with the profile in its meta
+        Returns a new dataframe with the profile data in its added to the meta property
         :param columns:
         :param bins:
         :param flush:
@@ -578,6 +578,10 @@ class BaseDataFrame(ABC):
         cols_dtypes = None
 
         if cols_to_profile or not is_cached or flush is True:
+            # Reset profiler metadata
+            meta = Meta.set(meta, "profile", {})
+            df.meta = meta
+
             numeric_cols = []
             string_cols = []
 
@@ -675,9 +679,7 @@ class BaseDataFrame(ABC):
 
         # Order columns
         actual_columns = profiler_data["columns"]
-
         profiler_data["columns"] = {key: actual_columns[key] for key in all_columns_names if key in actual_columns}
-
         meta = Meta.set(meta, "profile", profiler_data)
 
         if cols_dtypes is not None:
@@ -687,7 +689,6 @@ class BaseDataFrame(ABC):
 
         # Reset Actions
         meta = Meta.reset_actions(meta)
-
         df.meta = meta
 
         return df
