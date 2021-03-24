@@ -188,12 +188,11 @@ class DaskBaseDataFrame(BaseDataFrame):
 
             part_recommended_size = worker_memory / nthreads / 10
             n = int(df.size() / part_recommended_size)
+
             # Partition can not be lower than 1
             n = n if n < 0 else 1
             # TODO .repartition(partition_size="100MB"). https://stackoverflow.com/questions/44657631/strategy-for-partitioning-dask-dataframes-efficiently
-            dfd = dfd.repartition(npartitions=n, *args, **kwargs)
-        else:
-            dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+        dfd = dfd.repartition(npartitions=n, *args, **kwargs)
 
         return self.new(dfd, meta=self.meta)
 
