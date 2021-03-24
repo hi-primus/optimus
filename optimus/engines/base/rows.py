@@ -158,13 +158,16 @@ class BaseRows(ABC):
 
         if is_str(where):
             if where in df.cols.names():
-                where = df[where]
+                where = [where]
             else:
                 where = eval(where)
-        # dfd = dfd[where]
-        dfd = dfd[where.data[where.cols.names()[0]]]
-        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
-        return self.root.new(dfd, meta=meta)
+        else:
+            where = where.get_series()
+        meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
+
+        dfd = dfd[where]
+        df = self.root.new(dfd, meta=meta)
+        return df
 
     def count(self, compute=True) -> int:
         """
