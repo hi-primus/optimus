@@ -59,7 +59,7 @@ class Mask(ABC):
 
     def match(self, col_name, dtype):
         """
-        Return Match values
+        Return values that match with a datatype
         :param col_name:
         :param dtype:
         :return:
