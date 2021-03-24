@@ -55,7 +55,7 @@ class DaskBaseDataFrame(BaseDataFrame):
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.data
+        df = self.root
         df_data = df.to_json()
         df_schema = df.cols.dtypes()
 
