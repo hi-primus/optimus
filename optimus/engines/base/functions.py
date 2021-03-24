@@ -114,8 +114,11 @@ class Functions(ABC):
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
-        series = series._to_float()
-        return {"min": series.min(), "max": series.max()}
+
+        return {"min": self._to_float(series).min(), "max": self._to_float(series).max()}
+
+    def var(self, series):
+        return self._to_float(series).var()
 
     def percentile(self, series, values, error):
 
