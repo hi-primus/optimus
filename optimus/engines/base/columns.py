@@ -913,6 +913,14 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
 
+    def get(self, input_cols="*", keys=None, output_cols=None):
+        def func(value, keys):
+            # return value.get(keys)
+            return glom(value, keys, skip_exc=KeyError)
+
+        return self.apply(input_cols, func, args=(keys,), output_cols=output_cols, meta_action=Actions.ABS.value,
+                          mode="map")
+
     # Math Operations
     def abs(self, input_cols="*", output_cols=None):
         """
