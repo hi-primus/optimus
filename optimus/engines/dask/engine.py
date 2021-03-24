@@ -1,7 +1,7 @@
 import dask
 from dask.distributed import Client, get_client
 
-from optimus.engines.base.create import Create
+from optimus.engines.dask.create import Create
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
