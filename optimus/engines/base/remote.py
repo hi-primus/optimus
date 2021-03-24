@@ -25,7 +25,7 @@ class RemoteDummyAttribute:
             obj = op.get_var(unique_id)
             if obj is None:
                 op.del_var(unique_id)
-                raise Exception("Remote variable with id "+unique_id+" not found or null")
+                raise Exception("Remote variable with id " + unique_id + " not found or null")
             func = obj
             for me in method:
                 func = getattr(func, me)
@@ -82,13 +82,12 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
             df = op.get_var(unique_id)
             if df is None:
                 op.del_var(unique_id)
-                raise Exception("Remote variable with id "+unique_id+" not found or null")
+                raise Exception("Remote variable with id " + unique_id + " not found or null")
             return getattr(df, attr)
 
         return self.op.remote_run(_get_attr, self.id, "meta")
-        
 
-    
+
 class ClientActor:
     op = {}
     _vars = {}
@@ -108,7 +107,7 @@ class ClientActor:
         self.op.update_vars = self.update_vars
         self.set_var("_load", self.op.load)
         self.set_var("_create", self.op.create)
-        
+
     def list_vars(self):
         return list(self._vars.keys())
 
@@ -122,18 +121,18 @@ class ClientActor:
             print(name + " not found")
 
     def del_var(self, name):
-        
+
         for _name in self._del_next:
             self._del_var(_name)
 
         self._del_next = []
-        
+
         if not name.startswith("_"):
             if self._vars[name] is None:
                 print(name + " not found")
             else:
                 self._del_next.append(name)
-        
+
     def set_var(self, name, value):
         self._vars[name] = value
 
