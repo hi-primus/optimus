@@ -16,7 +16,7 @@ from optimus.helpers.constants import BUFFER_SIZE, Actions
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
-from optimus.infer import is_str, is_tuple
+from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
@@ -102,7 +102,16 @@ class BaseDataFrame(ABC):
         df1 = BaseDataFrame.__operator__(df1, dtype)
         df2 = BaseDataFrame.__operator__(df2, dtype)
 
-        return self.new(opb(df1, df2).to_frame())
+        # Name
+        name_left = name_right = ""
+
+        if not isinstance(df1, (int, float, str, dict, list)):
+            name_left = df1.name
+        if not isinstance(df2, (int, float, str, dict, list)):
+            name_right = df2.name
+        name = name_left + "_" + name_right
+
+        return self.new(opb(df1, df2).rename(name).to_frame())
 
     def __invert__(self):
         return self.unary_operation(self, operator.invert)
