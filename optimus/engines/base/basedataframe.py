@@ -46,9 +46,13 @@ class BaseDataFrame(ABC):
         return df.ascii()
 
     def __getitem__(self, item):
+
         if isinstance(item, slice):
             return self.buffer_window("*", item.start, item.stop)
-        return self.cols.select(item)
+        elif is_str(item) or is_list(item):
+            return self.cols.select(item)
+        elif isinstance(item, BaseDataFrame):
+            return self.root.rows.select(item)
 
     def __setitem__(self, key, value):
         df = self.cols.assign({key: value})
