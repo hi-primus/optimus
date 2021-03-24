@@ -245,7 +245,10 @@ class BaseColumns(ABC):
             default = dfd[temp_col_name]
             del dfd[temp_col_name]
         elif col_name:
-            default = dfd[col_name]
+            if dfd.get(col_name):
+                default = dfd[col_name]
+            else:
+                default = None
 
         if eval_value and is_str(value):
             value = eval(value)
