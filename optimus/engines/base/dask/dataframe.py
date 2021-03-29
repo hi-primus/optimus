@@ -25,7 +25,13 @@ class DaskBaseDataFrame(BaseDataFrame):
             for key in kw_columns:
                 kw_column = kw_columns[key]
                 if not is_one_element(kw_column) and not callable(kw_column) and not kw_column.known_divisions:
-                    kw_columns[key] = kw_column.reset_index().set_index('index')[key]
+                    _dfd = kw_column.reset_index().set_index('index')
+                    if key in _dfd:
+                        # the incoming series has the same column key
+                        kw_columns[key] = _dfd[key]
+                    else:
+                        # the incoming series has no column key
+                        kw_columns[key] = _dfd[0]
         return dfd.assign(**kw_columns)
 
     @staticmethod
