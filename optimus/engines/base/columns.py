@@ -1339,6 +1339,11 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.trim, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
+    def strip_html(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.strip_html, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
+
+
     def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
 
         df = self.root
