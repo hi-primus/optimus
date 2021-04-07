@@ -308,6 +308,9 @@ class Functions(ABC):
     def trim(self, series):
         return self.to_string_accessor(series).strip()
 
+    def strip_html(self, value):
+        return re.sub('<.*?>', '', value)
+
     @staticmethod
     @abstractmethod
     def replace_chars(series, search, replace_by):

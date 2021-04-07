@@ -66,11 +66,8 @@ class Cols(DataFrameBaseColumns):
     def remove_stopwords(self):
         df = self
 
-    def strip_html(self):
-        df = self.root
-        # soup = BeautifulSoup(self.text, "html.parser")
-        # self.text = soup.get_text()
-        return self
+
+
 
     # @staticmethod
     # def mismatches_1(columns, dtype):
