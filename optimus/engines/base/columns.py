@@ -246,7 +246,7 @@ class BaseColumns(ABC):
             default = dfd[temp_col_name]
             del dfd[temp_col_name]
         elif col_name:
-            if dfd.get(col_name):
+            if col_name in  df.cols.names():
                 default = dfd[col_name]
             else:
                 default = None
@@ -261,7 +261,8 @@ class BaseColumns(ABC):
                 where = eval(where)
 
         if where:
-            where = where.data[where.cols.names()[0]]
+            where = where.get_series()
+            print(where)
             if isinstance(value, self.root.__class__):
                 value = value.data[value.cols.names()[0]]
             else:
