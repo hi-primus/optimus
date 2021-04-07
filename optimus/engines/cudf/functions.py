@@ -61,7 +61,7 @@ class CUDFFunctions(Functions):
         return self.to_float(series).ceil()
 
     def floor(self, series):
-        return self.to_float(series).ceil()
+        return self.to_float(series).floor()
 
     def sin(self, series):
         return self.to_float(series).sin()
