@@ -147,7 +147,6 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     # if columns value is * get all dataframes columns
 
     df_columns = df.cols._names()
-
     if is_regex is not None:
         r = re.compile(is_regex)
         cols = list(filter(r.match, df_columns))
@@ -155,7 +154,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
     elif is_int(cols_args):
-        cols = df_columns[cols_args]
+        cols = val_to_list(df_columns[cols_args])
     elif is_list_of_int(cols_args):
         cols = list(df_columns[i] for i in cols_args)
 
