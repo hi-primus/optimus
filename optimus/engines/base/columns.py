@@ -62,7 +62,6 @@ class BaseColumns(ABC):
         dfd = df.data
         if columns is not None:
             dfd = dfd[columns]
-
         return self.root.new(dfd, meta=meta)
 
     def copy(self, input_cols, output_cols=None, columns=None):
@@ -220,7 +219,6 @@ class BaseColumns(ABC):
 
         if kw_columns:
             df = df.cols.assign(kw_columns)
-        # print("df.data", df.data)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
 
@@ -242,8 +240,7 @@ class BaseColumns(ABC):
         col_name = one_list_to_val(col_name)
 
         temp_col_name = name_col(col_name, "SET")
-
-        if default:
+        if default is not None:
             dfd[temp_col_name] = default
             default = dfd[temp_col_name]
             del dfd[temp_col_name]
@@ -252,7 +249,6 @@ class BaseColumns(ABC):
                 default = dfd[col_name]
             else:
                 default = None
-
         if eval_value and is_str(value):
             value = eval(value)
 
@@ -264,10 +260,11 @@ class BaseColumns(ABC):
 
         if where:
             where = where.get_series()
-            print(where)
             if isinstance(value, self.root.__class__):
-                value = value.data[value.cols.names()[0]]
+
+                value = value.get_series()
             else:
+
                 # TO-DO: Create the value series
                 dfd[temp_col_name] = value
                 value = dfd[temp_col_name]
@@ -1251,21 +1248,9 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
 
     def to_integer(self, input_cols="*", output_cols=None):
-        # Filter columns that are not integer
-        # filtered_columns = []
-        # df = self.parent
-        #
-        # input_cols = parse_columns(df, input_cols)
-        # for col_name in input_cols:
-        #     if df.data[col_name].dtype != np.int64:
-        #         filtered_columns.append(col_name)
-        #
-        # print("filtered_columns", filtered_columns)
-        # if len(filtered_columns) > 0:
+
         return self.apply(input_cols, self.F.to_integer, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
-        # else:
-        #     return df
 
     def to_boolean(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_boolean, func_return_type=int,
@@ -1954,7 +1939,7 @@ class BaseColumns(ABC):
             #     is_categorical = False
 
             if _dtype in PROFILER_CATEGORICAL_DTYPES \
-                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD\
+                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD \
                     or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = True
 
