@@ -9,7 +9,7 @@ import dask.array as da
 import pandas as pd
 from dask.array import stats
 
-from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean
+from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean, to_datetime
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
 
@@ -142,7 +142,7 @@ class DaskFunctions(Functions):
                                errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
 
     def to_datetime(self, series, format):
-        return pd.to_datetime(series, format=format, errors="coerce")
+        return to_datetime(series, format)
 
     def replace_chars(self, series, search, replace_by):
         # if ignore_case is True:
