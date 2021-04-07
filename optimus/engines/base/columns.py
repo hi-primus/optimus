@@ -578,6 +578,18 @@ class BaseColumns(ABC):
             else:
                 result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
 
+        return df
+
+    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
+        """
+        Get how many equal patterns there are in a column. Triggers the operation only if necessary
+        :param input_cols:
+        :param n: Top n matches
+        :param mode:
+        :param flush: Flushes the cache to process again
+        :return:
+        """
+        
         df = self.root
 
         result = {}
