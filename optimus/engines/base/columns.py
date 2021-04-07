@@ -197,11 +197,13 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = func(dfd[input_col], *args)
 
             elif mode == "partitioned":
-                partitions = self.F.to_delayed(dfd[input_col].to_frame())
-                delayed_parts = [self.F.delayed(func)(part[input_col], *args) for part in partitions]
+
+                partitions = self.F.to_delayed(dfd[input_col])
+                delayed_parts = [self.F.delayed(func)(part, *args) for part in partitions]
                 kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
             elif mode == "map":
+
                 kw_columns[output_col] = self._map(dfd, input_col, str(output_col), func, *args)
 
             # Preserve column order
