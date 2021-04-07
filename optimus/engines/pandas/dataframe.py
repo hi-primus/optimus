@@ -36,6 +36,11 @@ class PandasDataFrame(BaseDataFrame):
         return PandasMask(self)
 
     @property
+    def ml(self):
+        from optimus.engines.pandas.ml.models import ML
+        return ML(self)
+
+    @property
     def constants(self):
         from optimus.engines.pandas.constants import constants
         return constants(self)
@@ -44,7 +49,6 @@ class PandasDataFrame(BaseDataFrame):
     def encoding(self):
         from optimus.engines.pandas.ml.encoding import Encoding
         return Encoding(self)
-
 
     def _create_buffer_df(self, input_cols, n):
         pass

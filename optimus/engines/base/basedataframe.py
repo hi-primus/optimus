@@ -188,6 +188,13 @@ class BaseDataFrame(ABC):
     def __xor__(self, df2):
         return self.operation(self, df2, operator.__xor__, "bool")
 
+    def _to_values(self):
+        """
+        Return values from a dataframe in numpy or cupy format. Aimed to be used internally in Machine Learning models
+        :return:
+        """
+        return self.root.data.values
+
     def cols(self):
         return BaseColumns
 
