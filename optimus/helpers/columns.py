@@ -3,11 +3,13 @@ import re
 from ordered_set import OrderedSet
 
 # from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe, is_cudf_dataframe
+
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_dtypes
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str
+from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str, is_list, \
+    is_int, is_list_of_int
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -152,6 +154,10 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
 
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
+    elif is_int(cols_args):
+        cols = df_columns[cols_args]
+    elif is_list_of_int(cols_args):
+        cols = list(df_columns[i] for i in cols_args)
 
     elif is_tuple(cols_args) or is_list_of_tuples(cols_args):
         # In case we have a list of tuples we use the first element of the tuple is taken as the column name
