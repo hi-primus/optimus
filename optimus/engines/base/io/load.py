@@ -3,6 +3,7 @@ import os
 from abc import abstractmethod
 
 import boto3
+import joblib
 import magic
 
 from optimus.helpers.functions import prepare_path
@@ -145,3 +146,6 @@ class BaseLoad:
 
         return df
 
+    @staticmethod
+    def model(path):
+        return joblib.load(path)
