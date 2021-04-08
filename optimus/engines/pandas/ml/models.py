@@ -50,7 +50,7 @@ class Model:
         return list(self.model.predict(value))
 
     def predict_proba(self, value):
-        return self.model.predict_proba(value)
+        return self.model.predict_proba(value).tolist()
 
     def roc_auc(self):
         visualizer = ROCAUC(self.model, classes=["0", "1", "2"])
