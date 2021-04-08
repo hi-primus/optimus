@@ -496,14 +496,10 @@ class ML:
                                           ccp_alpha,
                                           max_samples)
         fm = regressor.fit(X_train, y_train.ravel())
+        model = Model(fm, X_train, y_train, X_test, y_test)
+        # y_pred = regressor.predict(X_test)
 
-        y_pred = regressor.predict(X_test)
-
-        # print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
-        # print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
-        # print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-        return Model(fm, X_test, y_test, )
-        # return regressor
+        return model
 
     @staticmethod
     def gbt(df, columns, input_col, **kwargs):
