@@ -352,7 +352,7 @@ def is_list_of_int(value):
     :param value:
     :return:
     """
-    return bool(value) and isinstance(value, list) and all(isinstance(elem, int) for elem in value)
+    return isinstance(value, list) and all(isinstance(elem, int) for elem in value)
 
 
 def is_list_of_float(value):
