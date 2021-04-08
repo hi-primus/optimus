@@ -3,7 +3,7 @@ from functools import reduce
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
 from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 
@@ -110,7 +110,7 @@ class DataFrameBaseColumns(BaseColumns):
         dfd = df.data
 
         if output_col is None:
-            RaiseIt.type_error(output_col, ["str"])
+            output_col = name_col(input_cols)
 
         input_cols = parse_columns(df, input_cols)
 
@@ -126,7 +126,7 @@ class DataFrameBaseColumns(BaseColumns):
             # dfd[output_col] = dfd[input_cols].values.tolist()
         elif shape == "string":
             dfds = [dfd[input_col].astype(str) for input_col in input_cols]
-            dfd[output_col] = reduce((lambda x, y: x + separator + y), dfds)
+            dfd = dfd.assign(**{output_col:reduce((lambda x, y: x + separator + y), dfds)})
 
         if output_col not in output_ordered_columns:
             col_index = output_ordered_columns.index(input_cols[-1]) + 1
