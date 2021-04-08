@@ -107,7 +107,7 @@ class Model:
         plt.show()
 
     def plot_PCA(self):
-        finalDf= self.root.data
+        final_df = self.root.data
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(1, 1, 1)
         ax.set_xlabel('Principal Component 1', fontsize=15)
@@ -117,9 +117,9 @@ class Model:
         targets = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
         colors = ['r', 'g', 'b']
         for target, color in zip(targets, colors):
-            indicesToKeep = finalDf['target'] == target
-            ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1']
-                       , finalDf.loc[indicesToKeep, 'principal component 2']
+            indicesToKeep = final_df['target'] == target
+            ax.scatter(final_df.loc[indicesToKeep, 'principal component 1']
+                       , final_df.loc[indicesToKeep, 'principal component 2']
                        , c=color
                        , s=50)
         ax.legend(targets)
@@ -323,9 +323,10 @@ class ML:
         n_jobs = kwargs.pop('n_jobs', 1)
 
         lm = LogisticRegression(
+            multi_class="auto", solver="liblinear",
             fit_intercept=fit_intercept,
             penalty=penalty,
-            solver=solver,
+            # solver=solver,
             max_iter=max_iter,
             n_jobs=n_jobs
         )
@@ -426,11 +427,11 @@ class ML:
         principalComponents = pca.fit_transform(X)
 
         col_names = ["PCA_" + str(i) for i in range(n_components)]
-        principalDf = pd.DataFrame(data=principalComponents, columns=col_names)
+        principal_df = pd.DataFrame(data=principalComponents, columns=col_names)
         if target:
-            finalDf = pd.concat([principalDf, df.data[target]], axis=1)
+            finalDf = pd.concat([principal_df, df.data[target]], axis=1)
         else:
-            finalDf= principalDf
+            finalDf = principal_df
         return self.root.new(finalDf)
 
     def random_forest(self, features, target,
