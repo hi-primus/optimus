@@ -1,5 +1,5 @@
 import pandavro as pdx
-
+import os
 from optimus.helpers.logger import logger
 
 
@@ -24,7 +24,7 @@ class Save:
             logger.print(e)
             raise
 
-    def csv(self, path, mode="w", **kwargs):
+    def csv(self, path, mode="w",show_path=False, **kwargs):
         """
         Save data frame to a CSV file.
         :param path: path where the spark will be saved.
@@ -42,6 +42,10 @@ class Save:
             # Dask reference
             # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
             # df.to_csv(filename=path)
+
+            if show_path is True:
+                print(os.path.abspath(path))
+
             df.to_csv(path, index=False, mode=mode)
 
         except IOError as error:
@@ -59,13 +63,6 @@ class Save:
 
         try:
             df = self.root.data
-            # columns = parse_columns(self, "*",
-            #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
-            # df = df.cols.cast(columns, "str").repartition(num_partitions)
-
-            # Dask reference
-            # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
-            # df.to_csv(filename=path)
             df.to_excel(path, index=False)
 
         except IOError as error:
