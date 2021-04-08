@@ -39,8 +39,6 @@ class Rows(BaseRows):
         df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
         return self.root.new(df)
 
-        return df_list
-
     def _sort(self, dfd, col_name, ascending):
         return dfd.sort_values(col_name, ascending=ascending)
 
@@ -125,7 +123,6 @@ class Rows(BaseRows):
         """
         dfd = self.root.data
         return self.root.new(dfd[:count - 1])
-
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:
