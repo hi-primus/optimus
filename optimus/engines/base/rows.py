@@ -19,7 +19,7 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
-    def _sort():
+    def _sort(df, col_name, ascending):
         pass
 
     def _sort_multiple(self, dfd, meta, col_sort):
