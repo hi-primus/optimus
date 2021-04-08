@@ -25,10 +25,6 @@ def json_converter(obj):
             return int(obj)
 
 
-
-
-
-
 def json_enconding(obj):
     """
     Encode a json. Used for testing.
@@ -38,5 +34,17 @@ def json_enconding(obj):
     return json.dumps(obj, default=json_converter)
 
 
-def dump_json(value):
-    return json.dumps(value, ignore_nan=True, default=json_converter)
+def dump_json(value, *args, **kwargs):
+
+    def _replace(data):
+        if isinstance(data, dict):
+            return {k: _replace(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [_replace(i) for i in data]
+        elif data == float("inf"):
+            return "Infinity"
+        elif data == float("-inf"):
+            return "-Infinity"
+        else:
+            return data
+    return json.dumps(_replace(value), ignore_nan=True, default=json_converter, *args, **kwargs)
