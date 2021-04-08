@@ -1,5 +1,5 @@
 from time import time
-
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import decomposition
@@ -180,6 +180,9 @@ class Model:
         plt.xticks(())
         plt.yticks(())
         plt.show()
+
+    def save(self, path):
+        joblib.dump(self.model, path)
 
 
 class ML:
