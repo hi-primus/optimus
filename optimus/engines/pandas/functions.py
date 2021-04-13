@@ -62,9 +62,6 @@ class PandasFunctions(Functions):
     def log(self, series, base=10):
         return np.log(self._to_float(series)) / np.log(base)
 
-    def ceil(self, series):
-        return np.ceil(self._to_float(series))
-
     def sin(self, series):
         return np.sin(self._to_float(series))
 
@@ -100,6 +97,12 @@ class PandasFunctions(Functions):
 
     def atanh(self, series):
         return np.arctanh(self._to_float(series))
+
+    def floor(self, series):
+        return np.floor(self._to_float(series))
+
+    def ceil(self, series):
+        return np.ceil(self._to_float(series))
 
     def replace_chars(self, series, search, replace_by):
         # if ignore_case is True:

@@ -91,6 +91,9 @@ class DaskFunctions(Functions):
     def ceil(self, series):
         return da.ceil(self._to_float(series))
 
+    def floor(self, series):
+        return da.floor(self._to_float(series))
+
     def sin(self, series):
         return da.sin(self._to_float(series))
 
