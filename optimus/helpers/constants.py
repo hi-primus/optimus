@@ -75,6 +75,8 @@ class Actions(Enum):
     RENAME = "rename"
     UNIQUE = "unique"
     INFER = "infer"
+    WORD_TOKENIZE = "word_tokenize"
+    LENGTH = "length"
 
     # URL Example	http://search.somedb.com:8080/history?era=darkages
     # scheme	http
@@ -378,5 +380,9 @@ PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "bin
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
                       "decimal": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
 
-PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
-                               ProfilerDataTypes.INT.value]
+PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
+                               ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
+                               ProfilerDataTypes.INT.value, ProfilerDataTypes.IP.value, ProfilerDataTypes.GENDER.value,
+                               ProfilerDataTypes.PHONE_NUMBER.value, ProfilerDataTypes.US_STATE.value,
+                               ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value
+                               ]
