@@ -414,13 +414,7 @@ def is_ip(value):
     :param value:
     :return:
     """
-    parts = value.split(".")
-    if len(parts) != 4:
-        return False
-    for item in parts:
-        if not 0 <= int(item) <= 255:
-            return False
-    return True
+    return re.match(regex_ip_compiled, value)
 
 
 def is_list_of_str(value):
