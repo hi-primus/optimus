@@ -1920,8 +1920,8 @@ class BaseColumns(ABC):
                     _dtype = second_dtype
                 else:
                     _dtype = dtype
-            elif infer_value_counts[0] < len(sample_dtypes):
-                _dtype = infer_value_counts.index[1]
+            elif infer_value_counts[0]["count"] < len(sample_dtypes):
+                _dtype = second_dtype
             else:
                 _dtype = ProfilerDataTypes.OBJECT.value
 
