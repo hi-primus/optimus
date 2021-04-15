@@ -445,10 +445,10 @@ class Functions(ABC):
         return series.str.extract(regex_full_url)[4]
 
     def email_username(self, series):
-        return series.str.split('@')[0][0]
+        return series.str.split('@').str[0]
 
     def email_domain(self, series):
-        return series.str.split('@')[0][1]
+        return series.str.split('@').str[1]
 
     def infer_dtypes(self, value, cols_dtype):
         """
