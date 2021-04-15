@@ -9,7 +9,7 @@ from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
 from optimus.infer import regex_full_url, is_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str, is_string
+    is_gender, is_list_of_int, is_list_of_str, is_string, is_str
 
 
 class Functions(ABC):
@@ -333,6 +333,9 @@ class Functions(ABC):
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")
 
+    def normalize_spaces(self, series):
+        return self.to_string_accessor(series).replace(" +", " ")
+
     @staticmethod
     def len(series):
         return series.str.len()
@@ -474,16 +477,17 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.DATETIME.value
         elif is_missing(value):
             dtype = ProfilerDataTypes.MISSING.value
-        elif is_ip(value):
-            dtype = ProfilerDataTypes.IP.value
-        elif is_url(value):
-            dtype = ProfilerDataTypes.URL.value
-        elif is_email(value):
-            dtype = ProfilerDataTypes.EMAIL.value
-        elif is_gender(value):
-            dtype = ProfilerDataTypes.GENDER.value
-        elif is_string:
-            dtype = ProfilerDataTypes.STRING.value
+        elif is_str(value):
+            if is_ip(value):
+                dtype = ProfilerDataTypes.IP.value
+            elif is_url(value):
+                dtype = ProfilerDataTypes.URL.value
+            elif is_email(value):
+                dtype = ProfilerDataTypes.EMAIL.value
+            elif is_gender(value):
+                dtype = ProfilerDataTypes.GENDER.value
+            else:
+                dtype = ProfilerDataTypes.STRING.value
         elif is_object_value(value):
             dtype = ProfilerDataTypes.OBJECT.value
 
