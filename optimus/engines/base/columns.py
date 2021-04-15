@@ -1384,6 +1384,17 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
+    def normalize_spaces(self, input_cols="*", output_cols=None):
+        """
+        Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        return self.apply(input_cols, self.F.normalize_spaces, func_return_type=str,
+                          output_cols=output_cols, mode="vectorized")
+
     def remove_special_chars(self, input_cols="*", output_cols=None):
         """
         Remove special chars from a dataframe
