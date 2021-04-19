@@ -1,16 +1,15 @@
 import ntpath
 
-import dask.bag as db
-import pandas as pd
-from dask import dataframe as dd
-
-from optimus.helpers.functions import prepare_path
-from optimus.helpers.logger import logger
+import vaex
 
 from optimus.engines.base.meta import Meta
+from optimus.engines.vaex.dataframe import VaexDataFrame
+from optimus.helpers.functions import prepare_path, unquote_path
+from optimus.helpers.logger import logger
+
 
 class Load:
-    
+
     def __init__(self, op):
         self.op = op
 
@@ -50,8 +49,9 @@ class Load:
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1, *args,
-            **kwargs):
+    def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
+            na_filter=False, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -66,21 +66,39 @@ class Load:
 
         :return dataFrame
         """
-        # file, file_name = prepare_path(path, "csv")
+        path = unquote_path(path)
+
+        if cache is False:
+            prepare_path.cache_clear()
+
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
+        remove_param = "chunk_size"
+        if kwargs.get(remove_param):
+            # This is handle in this way to preserve compatibility with others dataframe technologies.
+            logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
+            kwargs.pop(remove_param)
 
         try:
-            df = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=charset, na_values=null_value, *args,
-                             **kwargs)
-            partitions = df.partitions()
-            if n_rows > -1:
-                df = df.rows.limit(n_rows)
-                df = dd.from_pandas(df, npartitions=partitions)
-                # print(type(df))
+            # From the panda docs using na_filter
+            # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
+            # passing na_filter=False can improve the performance of reading a large file.
+            dfd = vaex.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                              storage_options=storage_options, low_memory=False, *args, **kwargs)
 
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            if n_rows > -1:
+                dfd = vaex.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
+
+            df = VaexDataFrame(dfd)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
             raise
+
         return df
 
     @staticmethod
