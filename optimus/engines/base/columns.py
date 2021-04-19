@@ -1344,6 +1344,11 @@ class BaseColumns(ABC):
     def word_count(self, input_cols="*", output_cols=None):
 
         return self.word_tokenize(input_cols, output_cols).cols.len(output_cols)
+
+    def len(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.len, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LENGTH.value, mode="map")
+
     @staticmethod
     @abstractmethod
     def reverse(input_cols, output_cols=None):

@@ -346,9 +346,9 @@ class Functions(ABC):
     def normalize_spaces(self, series):
         return self.to_string_accessor(series).replace(" +", " ")
 
-    @staticmethod
-    def len(series):
-        return series.str.len()
+    # @staticmethod
+    # def len(series):
+    #     return series.str.len()
 
     def to_datetime(self, series, format):
         pass
