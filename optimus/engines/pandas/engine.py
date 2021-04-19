@@ -14,7 +14,7 @@ Pandas.instance = None
 class PandasEngine(BaseEngine):
     __version__ = __version__
 
-    def __init__(self, verbose=False, comm=None, *args, **kwargs):
+    def __init__(self, verbose=False, *args, **kwargs):
         self.extract = Extract()
 
         self.verbose(verbose)

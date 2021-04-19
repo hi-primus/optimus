@@ -55,6 +55,7 @@ class BaseColumns(ABC):
         :param accepts_missing_cols:
         :return:
         """
+
         df = self.root
         columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
@@ -202,7 +203,6 @@ class BaseColumns(ABC):
                 kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
             elif mode == "map":
-
                 kw_columns[output_col] = self._map(dfd, input_col, str(output_col), func, *args)
 
             # Preserve column order
@@ -245,7 +245,7 @@ class BaseColumns(ABC):
             default = dfd[temp_col_name]
             del dfd[temp_col_name]
         elif col_name:
-            if col_name in  df.cols.names():
+            if col_name in df.cols.names():
                 default = dfd[col_name]
             else:
                 default = None
@@ -773,7 +773,7 @@ class BaseColumns(ABC):
 
     def sort(self, order: [str, list] = "asc", columns=None):
         """
-        Sort data frames columns asc or desc
+        Sort data frames columns in asc or desc order
         :param order: 'asc' or 'desc' accepted
         :param columns:
         :return: DataFrame
@@ -1211,10 +1211,8 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     def extract(self, input_cols, regex, output_cols=None):
-        def _extract(_value, _regex):
-            return self.F.extract(_value, _regex)
 
-        return self.apply(input_cols, _extract, args=(regex,), func_return_type=str,
+        return self.apply(input_cols, self.F.extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
         # def replace_regex(input_cols, regex=None, value=None, output_cols=None):
@@ -2166,7 +2164,6 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     def email_domain(self, input_cols="*", output_cols=None):
-
         df = self.root
         return df.cols.apply(input_cols, self.F.email_domain, output_cols=output_cols,
                              meta_action=Actions.EMAIL_DOMAIN.value,
