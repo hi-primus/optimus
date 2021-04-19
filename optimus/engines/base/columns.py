@@ -1399,6 +1399,10 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.lower(input_cols).cols.replace("*", stop, "", "words").cols.normalize_spaces()
 
+    def remove_urls(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, self.F.remove_urls, func_return_type=str,
+                          output_cols=output_cols, mode="vectorized")
+
     def normalize_spaces(self, input_cols="*", output_cols=None):
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.

@@ -340,6 +340,9 @@ class Functions(ABC):
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")
 
+    def remove_urls(self, series):
+        return self.to_string_accessor(series).replace("https?://\S+|www\.\S+", "", regex=True)
+
     def normalize_spaces(self, series):
         return self.to_string_accessor(series).replace(" +", " ")
 
