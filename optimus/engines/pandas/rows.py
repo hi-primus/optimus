@@ -115,14 +115,7 @@ class Rows(BaseRows):
 
         return self.root.new(dfd)
 
-    def limit(self, count) -> DataFrame:
-        """
-        Limit the number of rows
-        :param count:
-        :return:
-        """
-        dfd = self.root.data
-        return self.root.new(dfd[:count - 1])
+
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:

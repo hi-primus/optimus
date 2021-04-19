@@ -14,6 +14,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_str_or_int, is_list_value
 from optimus.engines.base.meta import Meta
 
+
 class Rows(BaseRows):
     def __init__(self, df):
         super(Rows, self).__init__(df)
@@ -115,16 +116,6 @@ class Rows(BaseRows):
         dfd = dfd.drop_duplicates(subset=input_cols)
 
         return self.root.new(dfd)
-
-    def limit(self, count=10) -> DataFrame:
-        """
-        Limit the number of rows
-        :param count:
-        :return:
-        """
-
-        return self.root.new(self.root.data[:count - 1])
-
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:

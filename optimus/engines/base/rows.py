@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABC
 
-import pandas as pd
 from multipledispatch import dispatch
 
 from optimus.engines.base.meta import Meta
@@ -194,13 +193,11 @@ class BaseRows(ABC):
 
         return value
 
-
     @dispatch(str)
     def sort(self, input_col):
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, "desc",)])
-
 
     @dispatch(str, bool)
     def sort(self, input_col, asc=False):
@@ -211,7 +208,6 @@ class BaseRows(ABC):
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, "asc" if asc else "desc",)])
 
-
     @dispatch(str, str)
     def sort(self, input_col, order="desc"):
         """
@@ -220,13 +216,11 @@ class BaseRows(ABC):
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, order,)])
-    
 
     @dispatch(dict)
     def sort(self, col_sort):
         df = self.root
         return df.rows.sort([(k, v) for k, v in col_sort.items()])
-
 
     @dispatch(list)
     def sort(self, col_sort):
@@ -314,16 +308,13 @@ class BaseRows(ABC):
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def limit(count):
+    def limit(self, count):
         """
         Limit the number of rows
         :param count:
         :return:
         """
-
-        pass
+        return self.root.new(self.root.data[:count - 1])
 
     def is_in(self, input_cols, values, output_cols=None):
 

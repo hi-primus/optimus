@@ -35,7 +35,6 @@ class Rows(BaseRows):
             result = dfd.count()
         return result
 
-
     def append(self, rows):
         """
 
@@ -180,16 +179,6 @@ class Rows(BaseRows):
         df = df.drop_duplicates(subset=subset)
 
         return df
-
-    def limit(self, count=10) -> DataFrame:
-        """
-        Limit the number of rows
-        :param count:
-        :return:
-        """
-
-        return self.root.new(self.root.data[:10 - 1])
-
 
     @staticmethod
     def unnest(input_cols) -> DataFrame:
