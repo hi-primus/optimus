@@ -40,6 +40,10 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
         from optimus.engines.pandas.engine import PandasEngine
         op = PandasEngine(*args, **kwargs)
 
+    elif engine == Engine.VAEX.value:
+        from optimus.engines.vaex.engine import VaexEngine
+        op = VaexEngine(*args, **kwargs)
+
     elif engine == Engine.SPARK.value:
         from optimus.engines.spark.engine import SparkEngine
         op = SparkEngine(*args, **kwargs)
