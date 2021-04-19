@@ -168,6 +168,9 @@ class BaseRows(ABC):
         df = self.root.new(dfd, meta=meta)
         return df
 
+    def _count(self, compute=True) -> int:
+        return len(self.root.data.index)
+
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
@@ -176,7 +179,7 @@ class BaseRows(ABC):
         dfd = df.data
         # TODO: Be sure that we need the compute param
         if compute is True:
-            result = len(dfd.index)
+            result = self._count(compute)
         else:
             result = df.functions.delayed(len)(dfd)
         return result
