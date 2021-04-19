@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean
+from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean, word_tokenize
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
+import nltk
 
 
 class PandasFunctions(Functions):
@@ -31,6 +32,9 @@ class PandasFunctions(Functions):
 
     def to_string_accessor(self, series):
         return self.to_string(series).str
+
+    def word_tokenize(self, value):
+        return word_tokenize(value)
 
     def count_zeros(self, series, *args):
         return int((self._to_float(series).values == 0).sum())

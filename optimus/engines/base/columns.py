@@ -1338,6 +1338,10 @@ class BaseColumns(ABC):
                              output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
                              set_index=False)
 
+    def word_tokenize(self, input_cols="*", output_cols=None):
+
+        return self.apply(input_cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.WORD_TOKENIZE.value, mode="map")
     @staticmethod
     @abstractmethod
     def reverse(input_cols, output_cols=None):

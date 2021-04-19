@@ -171,6 +171,13 @@ class Functions(ABC):
     def exp(self, series):
         return self._to_float(series).exp()
 
+    @abstractmethod
+    def word_tokenize(self, series):
+        pass
+
+    def len(self, value):
+        return len(value)
+
     @staticmethod
     @abstractmethod
     def sqrt(series):

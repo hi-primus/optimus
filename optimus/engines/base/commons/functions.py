@@ -27,6 +27,11 @@ def is_numeric(series):
     return pd.Series(np.vectorize(isreal)(series).flatten())
 
 
+def word_tokenize(series):
+    import nltk
+    return nltk.word_tokenize(series)
+
+
 def is_integer_cudf(series):
     return series.is_integer()
 
