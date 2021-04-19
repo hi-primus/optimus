@@ -1388,6 +1388,19 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
+    def remove_stopwords(self, input_cols="*", language="english", output_cols=None):
+        """
+        Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
+        :param input_cols:
+        :param language: specify the stopwords language
+        :param output_cols:
+        :return:
+        """
+
+        stop = stopwords.words(language)
+        df = self.root
+        return df.cols.lower(input_cols).cols.replace("*", stop, "", "words").cols.normalize_spaces()
+
     def normalize_spaces(self, input_cols="*", output_cols=None):
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.

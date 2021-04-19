@@ -34,6 +34,8 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
 
     # Dummy so pycharm not complain about not used imports
     # columns, rows, constants, extension, functions, save, plots
+    # Stopwords
+    nltk.download('stopwords', quiet=True)
 
     # Init engine
     if engine == Engine.PANDAS.value:

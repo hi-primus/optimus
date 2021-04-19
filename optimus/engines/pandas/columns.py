@@ -63,12 +63,6 @@ class Cols(DataFrameBaseColumns):
         df = df.cols.apply(input_cols, func, output_cols)
         return df
 
-    def remove_stopwords(self):
-        df = self
-
-
-
-
     # @staticmethod
     # def mismatches_1(columns, dtype):
     #     """

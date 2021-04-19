@@ -134,10 +134,6 @@ class Cols(DataFrameBaseColumns):
         df = df.cols.apply(input_cols, func, output_cols)
         return df
 
-    def remove_stopwords(self):
-        # Reference https://medium.com/rapids-ai/show-me-the-word-count-3146e1173801
-        raise NotImplementedError('Not implemented yet')
-
     def strip_html(self):
         df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")
