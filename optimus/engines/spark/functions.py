@@ -433,26 +433,3 @@ class SparkFunctions(Functions):
         # print(expr)
         return expr
 
-    def domain(self, series):
-        return F.regexp_extract(series, regex_full_url, 5)
-
-    def url_scheme(self, series):
-        return F.regexp_extract(series, regex_full_url, 1)
-
-    def url_params(self, series):
-        return F.regexp_extract(series, regex_full_url, 9)
-
-    def url_path(self, series):
-        return F.regexp_extract(series, regex_full_url, 8)
-
-    def port(self, series):
-        return F.regexp_extract(series, regex_full_url, 6)
-
-    def subdomain(self, series):
-        return F.regexp_extract(series, regex_full_url, 4)
-
-    def email_username(self, series):
-        return F.split(series, '@')[0]
-
-    def email_domain(self, series):
-        return F.split(series, '@')[1]

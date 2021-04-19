@@ -266,10 +266,6 @@ class SparkDataFrame(BaseDataFrame):
 
         self.createOrReplaceTempView(value)
 
-    def to_pandas(self):
-
-        df = self.data
-        return df.toPandas()
 
     def partitions(self):
         """

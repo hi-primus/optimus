@@ -589,7 +589,7 @@ class BaseColumns(ABC):
         :param flush: Flushes the cache to process again
         :return:
         """
-        
+
         df = self.root
 
         result = {}

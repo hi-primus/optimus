@@ -38,7 +38,7 @@ class PandasEngine(BaseEngine):
     def remote_run(self, callback, *args, **kwargs):
         if kwargs.get("client_timeout"):
             del kwargs["client_timeout"]
-        
+
         callback(op=self, *args, **kwargs)
 
     def remote_submit(self, callback, *args, **kwargs):
@@ -48,4 +48,5 @@ class PandasEngine(BaseEngine):
         import uuid
         def _func():
             return func(*args, **kwargs)
+
         return {"result": _func, "key": str(uuid.uuid4()), "status": "finished"}

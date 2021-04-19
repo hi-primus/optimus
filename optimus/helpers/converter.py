@@ -1,7 +1,5 @@
 from dask import dataframe as dd
 
-# from optimus.helpers.check import is_cudf_dataframe, is_dask_dataframe, is_dask_cudf_dataframe, is_spark_dataframe, \
-#     is_pandas_dataframe, is_cudf_series
 from optimus.infer import is_dict, is_dict_of_one_element, is_list_value, is_list_of_one_element
 
 
@@ -47,7 +45,6 @@ def format_dict(_dict, tidy=True):
             _dict = next(iter(_dict.values()))
 
         # Some aggregation like min or max return a string column
-
         def repeat(f, n, _dict):
             if n == 1:  # note 1, not 0
                 return f(_dict)
@@ -63,58 +60,6 @@ def format_dict(_dict, tidy=True):
             return _dict[0]
         else:
             return _dict
-
-
-#
-# def str_to_boolean(value):
-#     """
-#     Check if a str can be converted to boolean
-#     :param value:
-#     :return:
-#     """
-#     value = value.lower()
-#     if value == "true" or value == "false":
-#         return True
-#
-#
-# def str_to_date(value):
-#     try:
-#         dateutil.parser.parse(value)
-#         return True
-#     except (ValueError, OverflowError):
-#         pass
-#
-#
-# def str_to_array(value):
-#     """
-#     Check if value can be parsed to a tuple or and array.
-#     Because Spark can handle tuples we will try to transform tuples to arrays
-#     :param value:
-#     :return:
-#     """
-#     try:
-#         if isinstance(literal_eval((value.encode('ascii', 'ignore')).decode("utf-8")), (list, tuple)):
-#             return True
-#     except (ValueError, SyntaxError,):
-#         pass
-#
-
-# Functions to convert dataframe between engines
-
-def any_dataframe_to_pandas(df):
-    # print(type(df))
-    if is_pandas_dataframe(df):
-        result = df
-    elif is_spark_dataframe(df):
-        result = spark_to_pandas(df)
-    elif is_dask_dataframe(df):
-        result = dask_dataframe_to_pandas(df)
-    elif is_cudf_dataframe(df) or is_cudf_series(df):
-        result = cudf_to_pandas(df)
-    elif is_dask_cudf_dataframe(df):
-        result = dask_cudf_to_pandas(df)
-
-    return result
 
 
 #
@@ -157,6 +102,8 @@ def cudf_to_pandas(df):
 def cudf_to_dask_cudf(df, n_partitions=1):
     import dask_cudf
     return dask_cudf.from_cudf(df, npartitions=1)
+
+
 #
 #
 # def cudf_to_cupy_arr(df):
