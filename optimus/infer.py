@@ -176,11 +176,12 @@ def is_http_code(value, compile=False):
 
 
 # Reference https://stackoverflow.com/questions/8634139/phone-validation-regex
-regex_phone_number = r"/\(?([0-9]{3})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/"
+regex_phone_number = r"\+?\(?([0-9]{3})\)?[-.]?\(?([0-9]{3})\)?[-.]?\(?([0-9]{4})\)?"
 regex_phone_number_compiled = re.compile(regex_phone_number, re.IGNORECASE)
 
 
 def is_phone_number(value, compile=False):
+    # print("value",value, str_to(value, regex_phone_number, regex_phone_number_compiled, compile))
     return str_to(value, regex_phone_number, regex_phone_number_compiled, compile)
 
 

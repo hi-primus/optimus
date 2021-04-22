@@ -4,13 +4,16 @@ from abc import abstractmethod, ABC
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
+from url_parser import parse_url
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
-from optimus.infer import regex_full_url, is_list, is_null, is_bool, \
+from optimus.infer import is_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str, is_string, is_str
+    is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number
 
+
+# ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
 class Functions(ABC):
     @staticmethod
@@ -496,6 +499,8 @@ class Functions(ABC):
                 dtype = ProfilerDataTypes.EMAIL.value
             elif is_gender(value):
                 dtype = ProfilerDataTypes.GENDER.value
+            elif is_phone_number(value):
+                dtype= ProfilerDataTypes.PHONE_NUMBER.value
             else:
                 dtype = ProfilerDataTypes.STRING.value
         elif is_object_value(value):
