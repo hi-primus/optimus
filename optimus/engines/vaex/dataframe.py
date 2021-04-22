@@ -47,7 +47,7 @@ class VaexDataFrame(BaseDataFrame):
 
     @property
     def cols(self):
-        from optimus.engines.dask.columns import Cols
+        from optimus.engines.vaex.columns import Cols
         return Cols(self)
 
     @property
