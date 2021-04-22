@@ -275,6 +275,7 @@ class BaseDataFrame(ABC):
         return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
                 "value": df.rows.to_list(columns)}
 
+    @abstractmethod
     def to_pandas(self):
         pass
 
@@ -435,9 +436,8 @@ class BaseDataFrame(ABC):
 
         return calculate_columns
 
-    @staticmethod
     @abstractmethod
-    def partitions():
+    def partitions(self):
         pass
 
     @staticmethod
@@ -533,7 +533,6 @@ class BaseDataFrame(ABC):
         print(self.ascii(limit, columns))
 
     def table(self, limit=None, columns=None, title=None, truncate=True):
-
         df = self
         try:
             if is_notebook():
