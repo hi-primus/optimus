@@ -1,33 +1,29 @@
-import vaex
-
-from optimus.engines.base.columns import BaseColumns
-from optimus.helpers.constants import Actions
+from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 
 
-@vaex.register_dataframe_accessor('cols', override=True)
-class Cols(BaseColumns):
+# @vaex.register_dataframe_accessor('cols', override=True)
+class Cols(DataFrameBaseColumns):
     def __init__(self, df):
-        self.df = df
+        super(DataFrameBaseColumns, self).__init__(df)
 
+    def _names(self):
+        return self.root.data.get_column_names(strings=True)
 
-    def frequency(self, columns, n=10, percentage=False, total_rows=None):
-
-        return df
-
-    @staticmethod
-    def lower(input_cols, output_cols=None):
+    def append(self, dfs):
         pass
 
-    def mul(self, a):
-        df = self.df.copy()
-        for col in df.get_column_names(strings=False):
-            if df[col].dtype:
-                df[col] = df[col] * a
-        return df
+    @staticmethod
+    def impute(input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+        pass
 
-    def add(self, a):
-        df = self.df.copy()
-        for col in df.get_column_names(strings=False):
-            if df[col].dtype:
-                df[col] = df[col] + a
-        return df
+    @staticmethod
+    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+        pass
+
+    @staticmethod
+    def string_to_index(input_cols=None, output_cols=None, columns=None):
+        pass
+
+    @staticmethod
+    def index_to_string(input_cols=None, output_cols=None, columns=None):
+        pass
