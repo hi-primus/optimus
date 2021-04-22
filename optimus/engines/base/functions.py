@@ -440,26 +440,29 @@ class Functions(ABC):
         pass
 
     def top_domain(self, value):
-        print(value)
         return parse_url(value)["domain"]
 
-    def domain(self, series):
-        return series.str.extract(regex_full_url)[5]
+    def domain(self, value):
+        return parse_url(value)["domain"]
+        # return parse_url(value)["domain"]
 
-    def url_scheme(self, series):
-        return series.str.extract(regex_full_url)[1]
+    def url_scheme(self, value):
+        return parse_url(value)["protocol"]
 
-    def url_params(self, series):
-        return series.str.extract(regex_full_url)[9]
+    def url_params(self, value):
+        return parse_url(value).params
 
-    def url_path(self, series):
-        return series.str.extract(regex_full_url)[8]
+    def url_path(self, value):
+        return parse_url(value).path
 
-    def port(self, series):
-        return series.str.extract(regex_full_url)[6]
+    def url_query(self, value):
+        return parse_url(value).query
 
-    def subdomain(self, series):
-        return series.str.extract(regex_full_url)[4]
+    def port(self, value):
+        return parse_url(value).port
+
+    def sub_domain(self, series):
+        return parse_url(value).sub_domain
 
     def email_username(self, series):
         return series.str.split('@').str[0]
