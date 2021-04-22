@@ -32,13 +32,11 @@ class DaskBaseRows(BaseRows):
         ds = [reverse_pdf(d) for d in ds][::-1]
         return dd.from_delayed(ds)
 
-
     def _sort(self, dfd, col_name, ascending):
         dfd = dfd.set_index(col_name)
         if not ascending:
             dfd = self._reverse(dfd)
         return dfd.reset_index()[self.root.cols.names()]
-
 
     def create_id(self, column="id"):
         # Reference https://github.com/dask/dask/issues/1426
@@ -107,21 +105,10 @@ class DaskBaseRows(BaseRows):
         :return:
         """
         df = self.root
-        dfd = df.data
         # Reference https://stackoverflow.com/questions/49139371/slicing-out-a-few-rows-from-a-dask-dataframe
 
         if count is None:
             return df
-
-        length_df = len(dfd)
-
-        if length_df == 0:
-            limit = 0
-        else:
-            limit = count / length_df
-
-            # Param frac can not be greater than 1
-            limit = 1 if limit > 1 else limit
 
         partitions = df.partitions()
 
