@@ -2120,6 +2120,18 @@ class BaseColumns(ABC):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
+    def top_domain(self, input_cols="*", output_cols=None):
+        """
+        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        df = self.root
+        return df.cols.apply(input_cols, self.F.top_domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
+                             mode="vectorized")
+
     # URL methods
     def domain(self, input_cols="*", output_cols=None):
         """

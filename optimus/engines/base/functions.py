@@ -439,6 +439,10 @@ class Functions(ABC):
     def years_between(self, date_format=None):
         pass
 
+    def top_domain(self, value):
+        print(value)
+        return parse_url(value)["domain"]
+
     def domain(self, series):
         return series.str.extract(regex_full_url)[5]
 
