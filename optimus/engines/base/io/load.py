@@ -6,6 +6,7 @@ import boto3
 import joblib
 import magic
 
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.raiseit import RaiseIt
 
@@ -18,34 +19,40 @@ class BaseLoad:
 
     @staticmethod
     @abstractmethod
-    def csv(filepath_or_buffer, *args, **kwargs):
-        pass
-
-    def xml(self, full_path, *args, **kwargs):
-        pass
-
-    def json(self, full_path, *args, **kwargs):
-        pass
-
-    def excel(self, full_path, *args, **kwargs):
+    def csv(filepath_or_buffer, *args, **kwargs) -> BaseDataFrame:
         pass
 
     @staticmethod
     @abstractmethod
-    def avro(full_path, *args, **kwargs):
+    def xml(self, full_path, *args, **kwargs) -> BaseDataFrame:
         pass
 
     @staticmethod
     @abstractmethod
-    def parquet(full_path, *args, **kwargs):
+    def json(self, full_path, *args, **kwargs) -> BaseDataFrame:
         pass
 
     @staticmethod
     @abstractmethod
-    def orc(full_path, columns=None, *args, **kwargs):
+    def excel(self, full_path, *args, **kwargs) -> BaseDataFrame:
         pass
 
-    def file(self, path, *args, **kwargs):
+    @staticmethod
+    @abstractmethod
+    def avro(full_path, *args, **kwargs) -> BaseDataFrame:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def parquet(full_path, *args, **kwargs) -> BaseDataFrame:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def orc(full_path, columns=None, *args, **kwargs) -> BaseDataFrame:
+        pass
+
+    def file(self, path, *args, **kwargs) -> BaseDataFrame:
         """
         Try to  infer the file data format and encoding
         :param path: Path to the file we want to load.
