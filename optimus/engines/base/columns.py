@@ -2088,7 +2088,7 @@ class BaseColumns(ABC):
         columns = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
         return columns
 
-    def count_zeros(self, columns, tidy=True, compute=True):
+    def count_zeros(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.count_zeros, tidy=True, compute=True)
 
