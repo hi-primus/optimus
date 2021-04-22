@@ -78,6 +78,10 @@ class BaseDataFrame(ABC):
                 df = df.data[col1]
         return df
 
+    @abstractmethod
+    def _base_to_dfd(self, pdf, n_partitions):
+        pass
+
     def unary_operation(self, df, opb, dtype=None):
         """
         Helper to process binary operations
@@ -194,6 +198,14 @@ class BaseDataFrame(ABC):
         :return:
         """
         return self.root.data.values
+
+    @abstractmethod
+    def save(self):
+        pass
+
+    @abstractmethod
+    def rows(self):
+        pass
 
     def cols(self):
         return BaseColumns
