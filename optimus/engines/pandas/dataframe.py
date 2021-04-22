@@ -5,11 +5,15 @@ from optimus.helpers.columns import parse_columns
 
 
 class PandasDataFrame(BaseDataFrame):
+
     def __init__(self, data):
         super().__init__(self, data)
 
     def _assign(self, kw_columns):
         return self.root.data.assign(**kw_columns)
+
+    def _base_to_dfd(self, pdf, n_partitions):
+        pass
 
     @property
     def rows(self):
