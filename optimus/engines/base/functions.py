@@ -344,7 +344,7 @@ class Functions(ABC):
         return self.to_string_accessor(series).replace("https?://\S+|www\.\S+", "", regex=True)
 
     def normalize_spaces(self, series):
-        return self.to_string_accessor(series).replace(" +", " ")
+        return self.to_string_accessor(series).replace(" +", " ", regex=True)
 
     # @staticmethod
     # def len(series):
