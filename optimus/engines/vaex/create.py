@@ -1,13 +1,14 @@
 import pandas as pd
 
 from optimus.engines.vaex.dataframe import VaexDataFrame
+from optimus.infer import is_dict
 
 
 class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, data, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
@@ -17,7 +18,8 @@ class Create:
         :return: Dataframe
         """
 
-        pdf = pd.DataFrame(dict)
+        if is_dict(data):
+            data = pd.DataFrame(data)
 
-        df = VaexDataFrame(pdf)
+        df = VaexDataFrame(data)
         return df
