@@ -120,6 +120,11 @@ def pandas_to_dask_dataframe(pdf, n_partitions=1):
     return dd.from_pandas(pdf, npartitions=n_partitions)
 
 
+def pandas_to_vaex_dataframe(pdf, n_partitions=1):
+    import vaex
+    return vaex.from_pandas(pdf)
+
+
 def pandas_to_dask_cudf_dataframe(pdf, n_partitions=1):
     import cudf
     import dask_cudf
