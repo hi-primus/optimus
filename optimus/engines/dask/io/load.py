@@ -105,15 +105,26 @@ class Load(BaseLoad):
             # This is handle in this way to preserve compatibility with others dataframe technologies.
             logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
             kwargs.pop(remove_param)
+        # if engine=="pandas":
 
         try:
-            # From the panda docs using na_filter
+            # From the panda docs using na_flailter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                              quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                              keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                              storage_options=storage_options, low_memory=False, *args, **kwargs)
+            print("sep", sep, kwargs)
+            if engine == "python":
+
+                # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
+                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                  quoting=quoting, lineterminator=lineterminator,
+                                  keep_default_na=True, na_values=None, engine=engine,
+                                  storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
+
+            elif engine == "c":
+                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                  keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                                  storage_options=storage_options, low_memory=False, *args, **kwargs)
 
             if n_rows > -1:
                 dfd = dd.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
