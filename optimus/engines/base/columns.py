@@ -11,6 +11,7 @@ import wordninja
 from dask import dataframe as dd
 from glom import glom
 from multipledispatch import dispatch
+from nltk.corpus import stopwords
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
@@ -1948,6 +1949,7 @@ class BaseColumns(ABC):
         cols_and_inferred_dtype = {}
         for col_name in columns:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
+            # Common datatype in a column
             dtype = infer_value_counts[0]["value"]
             second_dtype = infer_value_counts[1]["value"] if len(infer_value_counts) > 1 else None
 
@@ -2150,28 +2152,33 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.apply(input_cols, self.F.url_scheme, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_SCHEME.value,
-                             mode="vectorized")
+                             mode="map")
 
     def url_params(self, input_cols="*", output_cols=None):
 
         df = self.root
         return df.cols.apply(input_cols, self.F.url_params, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_PARAMS.value,
-                             mode="vectorized")
+                             mode="map")
 
     def url_path(self, input_cols="*", output_cols=None):
 
         df = self.root
         return df.cols.apply(input_cols, self.F.url_path, output_cols=output_cols,
                              meta_action=Actions.DOMAIN_PATH.value,
-                             mode="vectorized")
+                             mode="map")
 
     def port(self, input_cols="*", output_cols=None):
-        # From https://www.hi-bumblebee.com:8080 it returns 8080
 
         df = self.root
         return df.cols.apply(input_cols, self.F.port, output_cols=output_cols, meta_action=Actions.PORT.value,
-                             mode="vectorized")
+                             mode="map")
+
+    def url_query(self, input_cols="*", output_cols=None):
+
+        df = self.root
+        return df.cols.apply(input_cols, self.F.url_query, output_cols=output_cols, meta_action=Actions.PORT.value,
+                             mode="map")
 
     def subdomain(self, input_cols="*", output_cols=None):
         # From https://www.hi-bumblebee.com:8080 it returns www
