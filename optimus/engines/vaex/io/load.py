@@ -2,13 +2,14 @@ import ntpath
 
 import vaex
 
+from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.vaex.dataframe import VaexDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
 
 
-class Load:
+class Load(BaseLoad):
 
     def __init__(self, op):
         self.op = op
