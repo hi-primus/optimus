@@ -2,6 +2,7 @@ from enum import Enum
 
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
+import nltk
 
 
 # if importlib.util.find_spec("vaex") is not None:
@@ -32,8 +33,8 @@ class Engine(Enum):
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     logger.print("ENGINE", engine)
 
-    # Dummy so pycharm not complain about not used imports
-    # columns, rows, constants, extension, functions, save, plots
+    # lemmatizer
+    nltk.download('wordnet', quiet= True)
     # Stopwords
     nltk.download('stopwords', quiet=True)
 
