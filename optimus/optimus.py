@@ -4,7 +4,6 @@ from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 import nltk
 
-
 # if importlib.util.find_spec("vaex") is not None:
 #     from vaex import DataFrame as VaexDataFrame
 #     # import pandas as pd
@@ -31,10 +30,18 @@ class Engine(Enum):
 
 
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
+    """
+    This is the entry point to initialize the selected engine.
+    :param engine: A string identifying an engine :classL`Engine`.
+    :param args:
+    :param kwargs:
+    :return:
+    """
     logger.print("ENGINE", engine)
 
     # lemmatizer
     nltk.download('wordnet', quiet= True)
+
     # Stopwords
     nltk.download('stopwords', quiet=True)
 
