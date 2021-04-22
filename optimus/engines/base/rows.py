@@ -311,7 +311,7 @@ class BaseRows(ABC):
         """
         pass
 
-    def limit(self, count):
+    def limit(self, count=10):
         """
         Limit the number of rows
         :param count:
