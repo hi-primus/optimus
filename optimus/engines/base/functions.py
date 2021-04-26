@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
-from url_parser import parse_url
+from url_parser import UrlObject
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
@@ -440,29 +440,29 @@ class Functions(ABC):
         pass
 
     def top_domain(self, value):
-        return parse_url(value)["domain"]
+        return UrlObject.parse_url(value)["domain"]
 
     def domain(self, value):
-        return parse_url(value)["domain"]
-        # return parse_url(value)["domain"]
+        return UrlObject.parse_url(value)["domain"]
+        # return UrlObject.parse_url(value)["domain"]
 
     def url_scheme(self, value):
-        return parse_url(value)["protocol"]
+        return UrlObject.parse_url(value)["protocol"]
 
     def url_params(self, value):
-        return parse_url(value).params
+        return UrlObject.parse_url(value)["params"]
 
     def url_path(self, value):
-        return parse_url(value).path
+        return UrlObject.parse_url(value)["path"]
 
     def url_query(self, value):
-        return parse_url(value).query
+        return UrlObject.parse_url(value)["query"]
 
     def port(self, value):
-        return parse_url(value).port
+        return UrlObject.parse_url(value)["port"]
 
     def sub_domain(self, series):
-        return parse_url(value).sub_domain
+        return UrlObject.parse_url(value)["sub_domain"]
 
     def email_username(self, series):
         return series.str.split('@').str[0]
