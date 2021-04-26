@@ -156,7 +156,8 @@ class Load(BaseLoad):
             storage_options = conn.storage_options
 
         try:
-            df = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args, **kwargs)
+            dfd = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args, **kwargs)
+            df = DaskDataFrame(dfd)
             df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
