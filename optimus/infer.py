@@ -571,6 +571,15 @@ def is_int(value):
     :param value:
     :return:
     """
+    return isinstance(value, int)
+
+
+def is_int_like(value):
+    """
+    Check if an object is an integer
+    :param value:
+    :return:
+    """
     return fastnumbers.isintlike(value)
 
 

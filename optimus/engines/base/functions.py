@@ -489,7 +489,7 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.CREDIT_CARD_NUMBER.value
         elif is_zip_code(value):
             dtype = ProfilerDataTypes.ZIP_CODE.value
-        elif is_int(value):
+        elif is_int_like(value):
             dtype = ProfilerDataTypes.INT.value
         elif is_decimal(value):
             dtype = ProfilerDataTypes.DECIMAL.value
