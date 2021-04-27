@@ -17,6 +17,13 @@ class VaexDataFrame(BaseDataFrame):
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         pass
 
+    def _assign(self, kw_columns):
+        dfd = self.root.data
+        for col_name, functions in kw_columns.items():
+            dfd[col_name] = functions
+
+        return dfd
+
     def to_pandas(self):
         return self.data.to_pandas_df()
 
