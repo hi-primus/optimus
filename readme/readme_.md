@@ -24,27 +24,46 @@ jupyter:
 [![Downloads](https://pepy.tech/badge/optimuspyspark/month)](https://pepy.tech/project/optimuspyspark/month)
 [![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
 
+```python
+!python --version
+```
+
+```python
+import nltk
+nltk.__version__
+```
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ironmussa/Optimus/master)
 [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
 
-Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Apache Spark(PySpark).
+PyOptimus is the missing framework to profile, clean, process and plot small and big data. PyOptimus run over pandas, Dask, cuDF, Dask-cuDF, Spark, Vaex so you can use any of this librearies withou changing your code.
 
 ## Installation (pip):  
   
-In your terminal just type  `pip install optimuspyspark`
+In your terminal just type  `pip install pyoptimus`
 
 ### Requirements
-* Apache Spark>= 2.4.0  
-* Python>=3.6  
+* Python>=3.8  
+
+For the engines
+* RAPIDS >= 0.19
+* Dask >= 2021.2.0
+* Vaex >= 4.1
+* Apache Spark >= 3.0.0 
+* Ibis(WIP)
+
+## Why PyOptimus
+
+Why so many engines
+Every engine has
 
 ## Examples 
 
 You can go to the 10 minutes to Optimus [notebook](https://github.com/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb) where you can find the basic to start working. 
 
-Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data wrangling, profiling and how to create ML.
 
 Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ironmussa/Optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
 
@@ -484,7 +503,7 @@ db.table.show("*",20)
 ```
 
 ```python
-spark
+# # Get a table as dataframe
 df_ = db.table_to_df("places_interest").table()
 ```
 
@@ -660,13 +679,8 @@ including:
 [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)  
   
 ## Core Team
-Argenis Leon and Favio Vazquez
+Argenis Leon and Luis Aguirre
 
-## Contributors:
-Here is the amazing people that make Optimus possible:
-  
-[![0](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/0)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/0)[![1](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/1)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/1)[![2](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/2)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/2)[![3](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/3)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/3)[![4](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/4)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/4)[![5](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/5)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/5)[![6](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/6)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/6)[![7](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/images/7)](https://sourcerer.io/fame/FavioVazquez/ironmussa/Optimus/links/7)    
-   
 ## License:  
   
 Apache 2.0 © [Iron](https://github.com/ironmussa)  
