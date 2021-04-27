@@ -89,7 +89,7 @@ class Load(BaseLoad):
             dfd = vaex.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                               quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                               keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                              storage_options=storage_options, low_memory=False, *args, **kwargs)
+                              storage_options=storage_options, *args, **kwargs)
 
             if n_rows > -1:
                 dfd = vaex.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
