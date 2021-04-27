@@ -1,6 +1,7 @@
 import dask
 import dask.dataframe as dd
 import pandas as pd
+from dask import delayed
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.columns import BaseColumns
@@ -26,11 +27,11 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
-        if is_dict(exprs):
-            result = exprs
+        if compute:
+            result = dask.compute(exprs)[0]
         else:
-            # result = exprs.compute()
-            result = dd.compute(exprs)[0]
+            result = delayed(exprs)
+
         return result
 
     def append(self, dfs):

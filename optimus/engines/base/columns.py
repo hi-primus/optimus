@@ -822,7 +822,7 @@ class BaseColumns(ABC):
                 result[col_name] = np.dtype(dfd[col_name]).type
         return format_dict(result)
 
-    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
+    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True, parallel=False):
         """
         Create and run aggregation
         :param columns:
@@ -841,15 +841,24 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
-        all_funcs = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
-                     func in funcs]
-        a = self.exec_agg(all_funcs, compute)
-        result = {}
+        if parallel:
 
-        # Reformat aggregation
-        for i in a:
-            for x, y in i.items():
-                result.setdefault(x, {}).update(y)
+            all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
+            agg_result = {func.__name__: self.exec_agg(all_funcs, compute)[0].to_dict() for func in funcs}
+
+            return agg_result
+        else:
+
+            all_funcs = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
+                         func in funcs]
+            agg_result = self.exec_agg(all_funcs, compute)
+
+            result = {}
+
+            # Reformat aggregation
+            for agg in agg_result:
+                for x, y in agg.items():
+                    result.setdefault(x, {}).update(y)
 
         return format_dict(result, tidy)
 
@@ -863,12 +872,13 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
     def min(self, columns="*", tidy=True, compute=True):
+
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=tidy, parallel=True)
 
     def max(self, columns="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.max, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(columns, self.F.max, compute=compute, tidy=tidy, parallel=True)
 
     def mode(self, columns="*", tidy=True, compute=True):
         df = self.root
