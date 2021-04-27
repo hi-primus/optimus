@@ -31,8 +31,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        chmod +x install-spark.sh
-        install-spark.sh
+        chmod +x ./install-spark.sh ./install-spark.sh
         pip install --upgrade pip
         pip install pytest pytest-cov
         pip install coveralls
