@@ -31,7 +31,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install wheel; ./setup.py bdist_wheel
+        pip install wheel
         chmod +x ./install-spark.sh ./install-spark.sh
         pip install --upgrade pip
         pip install pytest pytest-cov
