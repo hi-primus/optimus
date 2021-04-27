@@ -89,12 +89,12 @@ class Save:
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
-
+        dfd = df.data
         try:
             if engine == 'pyarrow':
-                df.to_parquet(path, num_partitions=num_partitions, engine='pyarrow', storage_options=storage_options, **kwargs)
+                dfd.to_parquet(path,  engine='pyarrow', storage_options=storage_options, **kwargs)
             elif engine == "fastparquet":
-                df.to_parquet(path, engine='fastparquet', storage_options=storage_options, **kwargs)
+                dfd.to_parquet(path, engine='fastparquet', storage_options=storage_options, **kwargs)
 
         except IOError as e:
             logger.print(e)
