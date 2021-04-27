@@ -51,7 +51,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'Optimus'
 copyright = '2017, Iron Mussa'
-author = 'Argenis León and Favio Vázquez'
+author = 'Argenis León and Luis Aguirre'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
