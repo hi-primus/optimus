@@ -1,5 +1,5 @@
-dask[complete]==2021.2.0
-distributed==2021.2.0
+dask[complete]==2021.4.0
+distributed==2021.4.0
 numba>=0.49
 simplejson>=3.16.0
 cryptography>=2.7
