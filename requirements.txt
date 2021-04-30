@@ -29,6 +29,7 @@ python-magic-bin>=0.4.14; platform_system == "Windows"
 gputil
 xlrd>=1.2.0
 string-grouper==0.1.0
+nltk
 pendulum>=2.0.5
 rply==0.7.7
 pybigquery==0.4.15
