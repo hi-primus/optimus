@@ -2,6 +2,7 @@ import ntpath
 
 import vaex
 
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.vaex.dataframe import VaexDataFrame
@@ -13,6 +14,15 @@ class Load(BaseLoad):
 
     def __init__(self, op):
         self.op = op
+
+    @staticmethod
+    def hdf5(path, columns=None, *args, **kwargs):
+        path = unquote_path(path)
+        dfd = vaex.open(path)
+        df = VaexDataFrame(dfd)
+        df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+        return df
+
 
     @staticmethod
     def json(path, multiline=False, *args, **kwargs):
