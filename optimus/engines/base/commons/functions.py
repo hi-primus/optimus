@@ -54,6 +54,9 @@ def is_float_cudf(series):
 def is_numeric_cudf(series):
     return series.str.isnumeric()
 
+def is_string_cudf(series):
+    return series.str.isalpha()
+
 
 # Convertion functions
 # cuDF

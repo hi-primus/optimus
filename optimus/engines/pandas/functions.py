@@ -18,6 +18,9 @@ class PandasFunctions(Functions):
     def to_float(self, series):
         return to_float(series)
 
+    def to_string(self, series):
+        return to_float(series)
+
     def _to_integer(self, value):
         return value.map(to_integer)
 

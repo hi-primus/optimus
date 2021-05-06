@@ -166,8 +166,9 @@ class Mask(ABC):
         mask = self.root.data[col_name] == ""
         return self.root.new(mask)
 
+    @abstractmethod
     def string(self, col_name="*"):
-        return self.root[col_name].cols.apply(col_name, is_string)
+        pass
 
     def email(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_email)
