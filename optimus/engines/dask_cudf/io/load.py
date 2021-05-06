@@ -61,7 +61,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=True, na_filter=True,
+            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=True, na_filter=True,
             storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -100,10 +100,20 @@ class Load(BaseLoad):
 
         try:
             import dask_cudf
-            dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                      quoting=quoting, error_bad_lines=error_bad_lines,
-                                      keep_default_na=keep_default_na, na_values=null_value, na_filter=na_filter,
-                                      storage_options=storage_options)
+            if engine == "python":
+
+                # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
+                dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                          quoting=quoting, lineterminator=lineterminator,
+                                          keep_default_na=True, na_values=None, engine=engine,
+                                          storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
+
+            elif engine == "c":
+                dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                          quoting=quoting, lineterminator=lineterminator,
+                                          error_bad_lines=error_bad_lines,
+                                          keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                                          storage_options=storage_options, low_memory=False, *args, **kwargs)
 
             if n_rows > -1:
                 dcdf = dask_cudf.from_cudf(dcdf.head(n=n_rows), npartitions=1).reset_index(drop=True)
