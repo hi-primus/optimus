@@ -63,8 +63,8 @@ class VaexDataFrame(BaseDataFrame):
 
     @property
     def functions(self):
-        from optimus.engines.dask.functions import DaskFunctions
-        return DaskFunctions()
+        from optimus.engines.vaex.functions import VaexFunctions
+        return VaexFunctions()
 
     @property
     def mask(self):
