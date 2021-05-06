@@ -124,10 +124,10 @@ class BaseDataFrame(ABC):
         return self.unary_operation(self, operator.neg)
 
     def __add__(self, df2):
-        return self.operation(self, df2, operator.add, "float")
+        return self.operation(self, df2, operator.add)
 
     def __radd__(self, df2):
-        return self.operation(df2, self, operator.add, "float")
+        return self.operation(df2, self, operator.add)
 
     def __sub__(self, df2):
         return self.operation(self, df2, operator.sub, "float")
