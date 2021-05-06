@@ -58,7 +58,21 @@ def to_float_cudf(series):
 def to_string_cudf(series):
     return series.astype(str)
 
+# Vaex
 
+def to_integer_vaex(series):
+    return fast_int(series, default=np.nan)
+
+
+def to_float_vaex(series):
+    return fast_float(series, default=np.nan)
+
+
+def to_string_vaex(series):
+    return series.astype(str)
+
+
+#Pandas Dask
 def to_integer(value, *args):
     try:
         # fastnumbers can only handle string or numeric values. Not None, dates or list
