@@ -77,6 +77,8 @@ class Actions(Enum):
     INFER = "infer"
     WORD_TOKENIZE = "word_tokenize"
     LENGTH = "length"
+    GET = "get"
+    ITEM = "item"
 
     # URL Example	http://search.somedb.com:8080/history?era=darkages
     # scheme	http

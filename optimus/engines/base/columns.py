@@ -940,12 +940,36 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
 
-    def get(self, input_cols="*", keys=None, output_cols=None):
+    def item(self, input_cols="*", n=None, output_cols=None, mode="list"):
+        """
+        Get items from list
+        :param input_cols:
+        :param n:
+        :param output_cols:
+        :param mode:
+        :return:
+        """
+
         def func(value, keys):
-            # return value.get(keys)
+            return value.str[keys]
+
+        return self.apply(input_cols, func, args=(n,), output_cols=output_cols, meta_action=Actions.ITEM.value,
+                          mode="vectorized")
+
+    def get(self, input_cols="*", keys=None, output_cols=None):
+        """
+        Get items from dicts
+        :param input_cols:
+        :param keys:
+        :param output_cols:
+        :param mode:
+        :return:
+        """
+
+        def func(value, keys):
             return glom(value, keys, skip_exc=KeyError)
 
-        return self.apply(input_cols, func, args=(keys,), output_cols=output_cols, meta_action=Actions.ABS.value,
+        return self.apply(input_cols, func, args=(keys,), output_cols=output_cols, meta_action=Actions.GET.value,
                           mode="map")
 
     # Math Operations
