@@ -8,6 +8,9 @@ from optimus.engines.base.functions import Functions
 
 class CUDFFunctions(Functions):
 
+    def word_tokenize(self, series):
+        pass
+
     def to_float(self, series):
         return to_float_cudf(series)
 
