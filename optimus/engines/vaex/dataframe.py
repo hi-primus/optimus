@@ -1,7 +1,7 @@
 from optimus.engines.base.basedataframe import BaseDataFrame
 
 from optimus.engines.cudf.dataframe import CUDFDataFrame
-from optimus.engines.dask.io.save import Save
+from optimus.engines.vaex.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.converter import pandas_to_vaex_dataframe
 
@@ -19,10 +19,10 @@ class VaexDataFrame(BaseDataFrame):
 
     def _assign(self, kw_columns):
         dfd = self.root.data
-        for col_name, functions in kw_columns.items():
-            dfd[col_name] = functions
-
-        return dfd
+        _dfd = dfd.copy()
+        for col_name, expr in kw_columns.items():
+            _dfd[col_name] = expr
+        return _dfd
 
     def to_pandas(self):
         return self.data.to_pandas_df()
