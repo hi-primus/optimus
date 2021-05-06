@@ -12,7 +12,7 @@ from tabulate import tabulate
 from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE, Actions
+from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter, dump_json
 from optimus.helpers.output import print_html
@@ -80,6 +80,10 @@ class BaseDataFrame(ABC):
 
     @abstractmethod
     def _base_to_dfd(self, pdf, n_partitions):
+        pass
+
+    @abstractmethod
+    def to_optimus_pandas(self):
         pass
 
     def unary_operation(self, df, opb, dtype=None):
