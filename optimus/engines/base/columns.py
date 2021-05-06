@@ -1976,7 +1976,7 @@ class BaseColumns(ABC):
         # Infer the data type from every element in a Series.
         sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS)
         rows_count = sample.rows.count()
-        sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
+        sample_dtypes = sample.to_optimus_pandas().cols.infer_dtypes().cols.frequency()
         _unique_counts = df.cols.count_uniques()
         cols_and_inferred_dtype = {}
         for col_name in columns:
