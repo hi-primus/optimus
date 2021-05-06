@@ -34,8 +34,6 @@ class Load(BaseLoad):
 
         path = unquote_path(path)
 
-        file, file_name = prepare_path(path, "json")[0]
-
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
@@ -111,7 +109,6 @@ class Load(BaseLoad):
             # From the panda docs using na_flailter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            print("sep", sep, kwargs)
             if engine == "python":
 
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
@@ -156,7 +153,8 @@ class Load(BaseLoad):
             storage_options = conn.storage_options
 
         try:
-            dfd = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args, **kwargs)
+            dfd = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args,
+                                  **kwargs)
             df = DaskDataFrame(dfd)
             df.meta = Meta.set(df.meta, "file_name", path)
 
