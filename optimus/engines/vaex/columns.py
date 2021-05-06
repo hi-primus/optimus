@@ -6,6 +6,9 @@ class Cols(DataFrameBaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
+    def _map(self, df, input_col, output_col, func, *args):
+        return df.apply(func, arguments=(df[input_col], *args,), vectorize=False)
+
     def _names(self):
         return self.root.data.get_column_names(strings=True)
 
