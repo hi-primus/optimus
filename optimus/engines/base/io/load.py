@@ -52,6 +52,16 @@ class BaseLoad:
     def orc(full_path, columns=None, *args, **kwargs) -> BaseDataFrame:
         pass
 
+    @staticmethod
+    @abstractmethod
+    def zip(zip_path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> BaseDataFrame:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def hdf5(full_path, columns=None, *args, **kwargs) -> BaseDataFrame:
+        pass
+
     def file(self, path, *args, **kwargs) -> BaseDataFrame:
         """
         Try to  infer the file data format and encoding
