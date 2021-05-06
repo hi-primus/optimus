@@ -19,6 +19,7 @@ from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
+from optimus.optimus import Engine
 from optimus.version import __version__
 
 # Singletons
