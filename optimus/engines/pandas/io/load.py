@@ -1,4 +1,9 @@
+import glob
 import ntpath
+import uuid
+import zipfile
+from pathlib import Path
+from zipfile import ZipFile
 
 import pandas as pd
 import pandavro as pdx
@@ -8,9 +13,8 @@ from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
-from optimus.infer import is_str
 from optimus.helpers.logger import logger
-import pandas as pd
+from optimus.infer import is_str, is_list
 
 
 class Load(BaseLoad):
@@ -114,9 +118,20 @@ class Load(BaseLoad):
                 kwargs.pop("chunk_size")
                 kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
 
-            df = pd.read_csv(filepath_or_buffer, sep=sep, header=0 if header else -1, encoding=encoding, nrows=n_rows,
-                             quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                             na_filter=na_filter, index_col=False, storage_options=storage_options, *args, **kwargs)
+            def _read(_filepath_or_buffer):
+                return pd.read_csv(_filepath_or_buffer, sep=sep, header=0 if header else -1, encoding=encoding,
+                                   nrows=n_rows,
+                                   quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                   na_filter=na_filter, index_col=False, storage_options=storage_options, *args,
+                                   **kwargs)
+
+            if is_list(filepath_or_buffer):
+                df = pd.DataFrame()
+                for f in filepath_or_buffer:
+                    df = df.append(_read(f))
+            else:
+                df = _read(filepath_or_buffer)
+
             if isinstance(df, pd.io.parsers.TextFileReader):
                 df = df.get_chunk()
 
@@ -222,7 +237,6 @@ class Load(BaseLoad):
             df = df.astype(column_dtype)
 
             # Create spark data frame
-            # df = pd.from_pandas(pdf, npartitions=3)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
