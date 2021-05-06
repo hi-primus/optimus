@@ -207,9 +207,9 @@ class Cols(DataFrameBaseColumns):
 
         result = {}
         for col_name in columns:
-
-            df_numeric = cp.array(to_float_cudf(df.data[col_name]).to_gpu_array())
-
+            # Seems to be some kind of bug of some types of data sets that converts all values to nan,
+            # we drop na before  converting to array
+            df_numeric = cp.array(to_float_cudf(df.data[col_name]).dropna().to_gpu_array())
             if len(df_numeric) > 0:
                 _count, _bins = cp.histogram(df_numeric, buckets)
                 result[col_name] = [
