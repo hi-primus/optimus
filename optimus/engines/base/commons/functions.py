@@ -15,6 +15,17 @@ from optimus.helpers.core import val_to_list
 from optimus.infer import is_str
 
 
+def is_string(series):
+    def _is_string(value):
+
+        if isinstance(value, str):
+            return True
+        else:
+            return False
+
+    return pd.Series(np.vectorize(_is_string)(series.values).flatten())
+
+
 def is_integer(series):
     return pd.Series(np.vectorize(isintlike)(series).flatten())
 
@@ -59,6 +70,7 @@ def to_float_cudf(series):
 def to_string_cudf(series):
     return series.astype(str)
 
+
 # Vaex
 
 def to_integer_vaex(series):
@@ -73,7 +85,7 @@ def to_string_vaex(series):
     return series.astype(str)
 
 
-#Pandas Dask
+# Pandas Dask
 def to_integer(value, *args):
     try:
         # fastnumbers can only handle string or numeric values. Not None, dates or list

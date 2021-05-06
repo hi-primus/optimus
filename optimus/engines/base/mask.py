@@ -1,5 +1,6 @@
 from abc import abstractmethod, ABC
 
+from optimus.engines.base.commons.functions import is_string
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
@@ -166,8 +167,7 @@ class Mask(ABC):
         return self.root.new(mask)
 
     def string(self, col_name="*"):
-        return self.root[col_name].cols.apply(col_name, is_str, mode="map")
-        # return ~self.root.mask.nulls(col_name)
+        return self.root[col_name].cols.apply(col_name, is_string)
 
     def email(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_email)
