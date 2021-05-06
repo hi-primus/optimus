@@ -4,7 +4,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_url, regex_ip, regex_email, \
-    is_datetime, is_list, is_bool, is_object
+    is_datetime, is_list, is_bool, is_object, regex_full_url
 
 
 class Mask(ABC):
@@ -91,12 +91,12 @@ class Mask(ABC):
         mask = self.root.data[col_name].str.contains(value, case=case, flags=flags, na=na, regex=regex)
         return self.root.new(mask.to_frame())
 
-    def find(self, col_name, value):
+    def find(self, input_col="*", value=None, output_col=None):
         dfd = self.root.data
         if is_str(value):
-            mask = self.root.data[col_name].astype(str).str.match(value, na=False)
+            mask = self.root.data[input_col].astype(str).str.match(value, na=False)
         else:
-            mask = dfd[col_name] == value
+            mask = dfd[input_col] == value
         return self.root.new(mask.to_frame())
 
     @abstractmethod
