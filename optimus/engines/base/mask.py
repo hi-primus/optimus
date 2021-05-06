@@ -163,7 +163,7 @@ class Mask(ABC):
         return self.root.new(mask)
 
     def string(self, col_name="*"):
-        return self.root[col_name].cols.apply(col_name, is_str)
+        return self.root[col_name].cols.apply(col_name, is_str, mode="map")
         # return ~self.root.mask.nulls(col_name)
 
     def email(self, col_name="*"):
