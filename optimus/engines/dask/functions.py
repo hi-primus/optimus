@@ -34,7 +34,7 @@ class DaskFunctions(Functions):
         return value.to_delayed()
 
     def _to_float(self, series):
-        return series.map(to_float)
+        return to_float(series)
 
     def to_float(self, series):
         return to_float(series)
