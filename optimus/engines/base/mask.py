@@ -84,8 +84,11 @@ class Mask(ABC):
         mask = self.root.data[col_name].str.endswith(value, na=False)
         return self.root.new(mask.to_frame())
 
-    def contains(self, col_name, value):
-        mask = self.root.data[col_name].str.contains(value, na=False)
+    def contains(self, col_name, value, case=True, flags=0, na=False, regex=False):
+        if is_list(value):
+            value = "|".join(value)
+            regex = True
+        mask = self.root.data[col_name].str.contains(value, case=case, flags=flags, na=na, regex=regex)
         return self.root.new(mask.to_frame())
 
     def find(self, col_name, value):
