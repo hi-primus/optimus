@@ -90,7 +90,8 @@ class Load(BaseLoad):
         :return dataFrame
         """
 
-        filepath_or_buffer = unquote_path(filepath_or_buffer)
+        filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
+
 
         meta = None
         if is_str(filepath_or_buffer):
