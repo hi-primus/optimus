@@ -44,7 +44,7 @@ class Load(BaseLoad):
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             dfd = dd.read_json(path, lines=lines, storage_options=storage_options, *args, **kwargs)
             df = DaskDataFrame(dfd)
-            # df.meta = Meta.set(df.meta, "file_name", file_name)
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
             logger.print(error)
