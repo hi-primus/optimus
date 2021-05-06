@@ -4,7 +4,7 @@ import fastnumbers
 import numpy as np
 import pandas as pd
 from dask_ml.impute import SimpleImputer
-from fastnumbers import isintlike, isfloat, isreal
+from fastnumbers import isintlike, isfloat, isreal, fast_float, fast_int
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
@@ -82,15 +82,17 @@ def to_integer(value, *args):
         return np.nan
 
 
-def to_float(value, *args):
+def to_float(series, *args):
     # if value is None or isinstance(value, str):
     #     return None
     # else:
-    try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return fastnumbers.fast_float(value, default=np.nan)
-    except TypeError:
-        return np.nan
+    return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+
+    # try:
+    #     # fastnumbers can only handle string or numeric values. Not None, dates or list
+    #     return fastnumbers.fast_float(value, default=np.nan)
+    # except TypeError:
+    #     return np.nan
 
 
 def to_string(value, *args):
