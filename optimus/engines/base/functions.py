@@ -39,7 +39,7 @@ class Functions(ABC):
         return series
 
     def to_string_accessor(self, series):
-        return self.to_string(series)
+        return self.to_string(series).str
 
     # Aggregation
     def min(self, series):

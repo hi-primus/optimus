@@ -53,9 +53,6 @@ class DaskFunctions(Functions):
             return series
         return series.astype(str)
 
-    def to_string_accessor(self, series):
-        return self.to_string(series).str
-
     def word_tokenize(self, value):
         return word_tokenize(value)
 

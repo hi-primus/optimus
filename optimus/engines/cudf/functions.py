@@ -17,9 +17,6 @@ class CUDFFunctions(Functions):
     def to_string(self, series):
         return series.astype(str)
 
-    def to_string_accessor(self, series):
-        return self.to_string(series).str
-
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         non_zero_value = 1

@@ -30,9 +30,6 @@ class PandasFunctions(Functions):
     def to_string(self, series):
         return to_string(series)
 
-    def to_string_accessor(self, series):
-        return self.to_string(series).str
-
     def word_tokenize(self, value):
         return word_tokenize(value)
 

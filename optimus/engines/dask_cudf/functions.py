@@ -88,9 +88,6 @@ class DaskCUDFFunctions(Functions):
     def to_string(self, series):
         return series.astype(str)
 
-    def to_string_accessor(self, series):
-        return self.to_string(series).str
-
     def min(self, series):
         return series.min()
 
