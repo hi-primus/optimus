@@ -14,7 +14,7 @@ from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
-from optimus.infer import is_str, is_list
+from optimus.infer import is_str, is_list, is_url
 
 
 class Load(BaseLoad):
@@ -93,8 +93,8 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
-
-        filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
+        if not is_url(filepath_or_buffer):
+            filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
 
 
         meta = None
