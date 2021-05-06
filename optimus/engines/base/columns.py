@@ -39,6 +39,9 @@ class BaseColumns(ABC):
         self.root = root
         self.F = self.root.functions
 
+    def _map(self, df, input_col, output_col, func, *args):
+        return df[input_col].apply(func, args=(*args,))
+
     def _names(self):
         pass
 
@@ -167,9 +170,6 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
-
-    def _map(self, df, input_col, output_col, func, args):
         pass
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
