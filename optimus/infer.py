@@ -524,15 +524,6 @@ def is_str(value):
     # return True if type("str") == "str" else False
 
 
-def is_string(value):
-    """
-    Check if an object is a string
-    :param value:
-    :return:
-    """
-    return isinstance(value, str)
-
-
 def is_object_value(value):
     """
     Check if an object is a string

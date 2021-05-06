@@ -13,9 +13,6 @@ class DataFrameBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
-    def _map(self, df, input_col, output_col, func, *args):
-        return df[input_col].apply(func, args=(*args,))
-
     @staticmethod
     def exec_agg(exprs, compute=None):
         """
