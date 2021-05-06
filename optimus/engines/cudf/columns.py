@@ -4,15 +4,15 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find, to_float_cudf, \
     to_string_cudf, to_integer_cudf
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.core import val_to_list
 from optimus.infer import is_list_of_tuples
-from optimus.engines.base.meta import Meta
 
 
 class Cols(DataFrameBaseColumns):
+
     def __init__(self, df):
         super(DataFrameBaseColumns, self).__init__(df)
 
@@ -154,7 +154,7 @@ class Cols(DataFrameBaseColumns):
 
         return df
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None,output_cols=None):
+    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         """
 
         :param input_cols:
