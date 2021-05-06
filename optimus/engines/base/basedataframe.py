@@ -631,14 +631,15 @@ class BaseDataFrame(ABC):
                 cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
 
             compute = True
-            # print("cols_dtypes, compute",cols_dtypes, compute)
             mismatch = df.cols.count_mismatch(cols_dtypes)
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             cols = cols_dtypes.items()
-
             for col_name, properties in cols:
-                if properties.get("categorical"):
+                if properties.get("categorical") is True \
+                        or properties.get("dtype") == ProfilerDataTypes.EMAIL.value \
+                        or properties.get("dtype") == ProfilerDataTypes.URL.value \
+                        or properties.get("dtype") == ProfilerDataTypes.OBJECT.value:
                     string_cols.append(col_name)
                 else:
                     numeric_cols.append(col_name)
