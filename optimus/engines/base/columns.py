@@ -1252,7 +1252,7 @@ class BaseColumns(ABC):
 
         # def replace_regex(input_cols, regex=None, value=None, output_cols=None):
 
-    def slice(self, input_cols, start, stop, step, output_cols=None):
+    def slice(self, input_cols, start, stop, step=None, output_cols=None):
         def _slice(value, _start, _stop, _step):
             return self.F.slice(value, _start, _stop, _step)
 
