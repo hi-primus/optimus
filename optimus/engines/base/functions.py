@@ -227,64 +227,52 @@ class Functions(ABC):
     def ceil(series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def sin(series):
+    def sin(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def cos(series):
+    def cos(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def tan(series):
+    def tan(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def asin(series):
+    def asin(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def acos(series):
+    def acos(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def atan(series):
+    def atan(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def sinh(series):
+    def sinh(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def cosh(series):
+    def cosh(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def tanh(series):
+    def tanh(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def asinh(series):
+    def asinh(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def acosh(series):
+    def acosh(self, series):
         pass
 
-    @staticmethod
     @abstractmethod
-    def atanh(series):
+    def atanh(self, series):
         pass
 
     # Strings
@@ -507,7 +495,7 @@ class Functions(ABC):
             elif is_gender(value):
                 dtype = ProfilerDataTypes.GENDER.value
             elif is_phone_number(value):
-                dtype= ProfilerDataTypes.PHONE_NUMBER.value
+                dtype = ProfilerDataTypes.PHONE_NUMBER.value
             else:
                 dtype = ProfilerDataTypes.STRING.value
         elif is_object_value(value):
