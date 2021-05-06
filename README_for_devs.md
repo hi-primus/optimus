@@ -299,8 +299,23 @@ conda install -c conda-forge jupyter_kernel_gateway
 Dask try to infer the column datatype for every partition so it can cause problem the inferred datatype does not match. 
 Optimus will always parse the columns as object and the try to optimize the data type using the `.ext.optimize` function.
 
-##Infering data types
+## Update RAPIDS
+### List Jupyter Kernels
+`jupyter kernelspec list` 
+
+If you want to upgrade a RAPIDS use `conda install` and remove the create channel from the RAPIDS instructions   
+###
+`conda create -n rapids-0.19 -c rapidsai -c nvidia -c conda-forge rapids-blazing=0.19 python=3.7 cudatoolkit=11.0`
+
+`conda install -c rapidsai -c nvidia -c conda-forge rapids-blazing=0.19 python=3.7 cudatoolkit=11.0`
+
+
+### Remove conda environment
+`conda env remove --name project-env`
  
+###
+python -m pip install git+https://github.com/ironmussa/url_parser
+
 ## About apply
 
 Process 
