@@ -176,7 +176,7 @@ class Mask(ABC):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_ip)
 
     def url(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_url)
+        return self.root[col_name].cols.to_string().cols.match(col_name, regex_full_url)
 
     def gender(self, col_name="*"):
         return self.root[col_name].cols.to_string().cols.match(col_name, regex_gender)
