@@ -117,6 +117,7 @@ class BaseRows(ABC):
         :param func:
         :return:
         """
+        df = self.root
         dfd = self.root.data
         kw_columns = {}
 
