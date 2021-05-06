@@ -1,10 +1,18 @@
 from optimus.engines.base.dataframe.dataframe import Ext as BaseDataFrame
 from optimus.engines.cudf.io.save import Save
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class CUDFDataFrame(BaseDataFrame):
+
     def __init__(self, data):
         super().__init__(self, data)
+
+    def _base_to_dfd(self, pdf, n_partitions):
+        pass
+
+    def to_optimus_pandas(self):
+        return PandasDataFrame(self.root.data.to_pandas())
 
     @property
     def rows(self):
@@ -21,6 +29,11 @@ class CUDFDataFrame(BaseDataFrame):
         return Save(self)
 
     @property
+    def mask(self):
+        from optimus.engines.cudf.mask import CUDFMask
+        return CUDFMask(self)
+
+    @property
     def functions(self):
         from optimus.engines.cudf.functions import CUDFFunctions
         return CUDFFunctions()
@@ -33,9 +46,11 @@ class CUDFDataFrame(BaseDataFrame):
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas())
 
+    def encoding(self):
+        pass
+
     def get_buffer(self):
         return self
-
 
     def to_pandas(self):
         return self.data.to_pandas()
