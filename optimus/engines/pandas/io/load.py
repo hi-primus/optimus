@@ -257,3 +257,27 @@ class Load(BaseLoad):
             raise
 
         return df
+
+    @staticmethod
+    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, **kwargs):
+
+        if dest is None:
+            dest = str(uuid.uuid4()) + "/"
+
+        zip_path = glob.glob(zip_path)
+
+        dest = Path(dest).expanduser()
+
+        # if csv concat all files
+        # if json multilie concat files
+
+        for filename in zip_path:
+            # print(filename)
+            with zipfile.ZipFile(filename) as zf:
+                zf.infolist()
+                for member in zf.infolist():
+                    # print(member.filename)
+                    try:
+                        zf.extract(member, dest)
+                    except zipfile.error as e:
+                        pass
