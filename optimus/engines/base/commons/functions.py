@@ -33,18 +33,19 @@ def word_tokenize(series):
 
 
 def is_integer_cudf(series):
-    return series.is_integer()
+    return series.str.isinteger()
 
 
 def is_float_cudf(series):
-    return series.is_float()
+    return series.str.isfloat()
 
 
 def is_numeric_cudf(series):
-    return series.is_numeric()
+    return series.str.isnumeric()
 
 
 # Convertion functions
+# cuDF
 def to_integer_cudf(series):
     import cudf
     return cudf.to_numeric(series, errors="ignore", downcast="integer")
