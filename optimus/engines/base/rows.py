@@ -212,18 +212,12 @@ class BaseRows(ABC):
 
     @dispatch(str, bool)
     def sort(self, input_col, asc=False):
-        """
-        Sort column by row
-        """
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, "asc" if asc else "desc",)])
 
     @dispatch(str, str)
     def sort(self, input_col, order="desc"):
-        """
-        Sort column by row
-        """
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, order,)])
@@ -233,12 +227,22 @@ class BaseRows(ABC):
         df = self.root
         return df.rows.sort([(k, v) for k, v in col_sort.items()])
 
+    @dispatch(list, bool)
+    def sort(self, input_col, asc=False):
+        df = self.root
+        return df.rows.sort(input_col, "asc" if asc else "desc")
+
     @dispatch(list)
-    def sort(self, col_sort):
+    def sort(self, input_col):
+        df = self.root
+        return df.rows.sort(input_col)
+
+    @dispatch(list, str)
+    def sort(self, input_col, order="desc"):
         """
         Sort rows taking into account multiple columns
-        :param col_sort: column and sort type combination (col_name, "asc")
-        :type col_sort: list of tuples
+        :param input_col: column and sort type combination (col_name, "asc")
+        :type input_col: list of tuples
         """
         # If a list of columns names are given order this by desc. If you need to specify the order of every
         # column use a list of tuples (col_name, "asc")
@@ -246,13 +250,13 @@ class BaseRows(ABC):
         dfd = df.data
         meta = df.meta
 
-        if is_list_of_str_or_int(col_sort):
+        if is_list_of_str_or_int(input_col):
             t = []
-            for col_name in col_sort:
-                t.append(tuple([col_name, "desc"]))
-            col_sort = t
+            for col_name in input_col:
+                t.append(tuple([col_name, order]))
+            input_col = t
 
-        dfd, meta = self._sort_multiple(dfd, meta, col_sort)
+        dfd, meta = self._sort_multiple(dfd, meta, input_col)
 
         return self.root.new(dfd, meta=meta)
 
