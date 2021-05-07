@@ -278,9 +278,8 @@ class BaseRows(ABC):
                 where = df[where]
             else:
                 where = eval(where)
-        # dfd = dfd[where]
-        dfd = dfd[~where.get_series()]
-        meta = Meta.action(df.meta, Actions.SORT_ROW.value, df.cols.names())
+        dfd = dfd[where.get_series()==0]
+        meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
     @staticmethod
