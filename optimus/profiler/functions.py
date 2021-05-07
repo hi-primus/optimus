@@ -14,7 +14,7 @@ def fill_missing_var_types(var_types, dtypes):
     :return:
     """
     for k, v in var_types.items():
-        if dtypes[k] == "string":
+        if dtypes[k] == ProfilerDataTypes.STRING.value:
             for label in ProfilerDataTypes:
                 if label.value not in v:
                     var_types[k][label.value] = 0

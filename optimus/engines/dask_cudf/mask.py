@@ -8,7 +8,7 @@ from optimus.engines.base.mask import Mask
 
 class DaskCUDFMask(Mask):
 
-    def integer(self, col_name="*"):
+    def int(self, col_name="*"):
         return self.root.cols.apply(col_name, is_integer_cudf)
 
     def float(self, col_name="*"):

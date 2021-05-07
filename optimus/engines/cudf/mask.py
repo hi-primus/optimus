@@ -12,11 +12,11 @@ class CUDFMask(Mask):
     def numeric(self, col_name):
         return self.root.cols.apply(col_name, is_numeric_cudf)
 
-    def integer(self, col_name="*"):
+    def int(self, col_name="*"):
         return self.root.cols.apply(col_name, is_integer_cudf)
 
     def float(self, col_name="*"):
         return self.root.cols.apply(col_name, is_float_cudf)
 
-    def string(self, col_name="*"):
+    def str(self, col_name="*"):
         return self.root.cols.apply(col_name, is_string_cudf)

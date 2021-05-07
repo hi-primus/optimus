@@ -117,7 +117,7 @@ class ProfilerDataTypesQuality(Enum):
 class ProfilerDataTypes(Enum):
     INT = "int"
     DECIMAL = "decimal"
-    STRING = "string"
+    STRING = "str"
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     ARRAY = "array"

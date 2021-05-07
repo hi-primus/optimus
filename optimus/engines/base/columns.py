@@ -452,7 +452,7 @@ class BaseColumns(ABC):
             elif arg == "str":
                 df = df.cols.to_string(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, ["float", "integer", "datetime", "bool", "str"])
+                RaiseIt.value_error(arg, ["float", "int", "datetime", "bool", "str"])
 
         return df
 
@@ -1914,15 +1914,12 @@ class BaseColumns(ABC):
 
         result = {}
         profiler_to_mask_func = {
-            "decimal": "float",
-            "int": "integer",
+            "decimal": "float"
         }
 
         for col_name, props in columns_type.items():
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
-            _dtype = props["dtype"]
-            dtype = profiler_to_mask_func.get(props["dtype"])
-            dtype = _dtype if dtype is None else dtype
+            dtype = profiler_to_mask_func.get(props["dtype"], props["dtype"])
 
             matches_mismatches = getattr(df.mask, dtype)(col_name).cols.frequency()
             values = {list(j.values())[0]: list(j.values())[1] for j in

@@ -101,7 +101,7 @@ class Mask(ABC):
         return self.root.new(mask.to_frame())
 
     @abstractmethod
-    def integer(self, col_name):
+    def int(self, col_name):
         pass
 
     @abstractmethod
@@ -167,7 +167,7 @@ class Mask(ABC):
         return self.root.new(mask)
 
     @abstractmethod
-    def string(self, col_name="*"):
+    def str(self, col_name="*"):
         pass
 
     def email(self, col_name="*"):
