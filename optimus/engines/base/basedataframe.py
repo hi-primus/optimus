@@ -23,6 +23,7 @@ from .columns import BaseColumns
 from .meta import Meta
 from ...outliers.outliers import Outliers
 from ...plots.plots import Plot
+from .profile import BaseProfile
 
 
 class BaseDataFrame(ABC):
@@ -233,6 +234,10 @@ class BaseDataFrame(ABC):
 
     def cols(self):
         return BaseColumns
+
+    @property
+    def profile(self):
+        return BaseProfile(self)        
 
     @property
     def plot(self):
@@ -748,50 +753,6 @@ class BaseDataFrame(ABC):
         df.meta = meta
 
         return df
-
-    def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
-        """
-        Return a dict the profile of the dataset
-        :param columns:
-        :param bins:
-        :param output:
-        :param flush:
-        :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
-        :return:
-        """
-
-        df = self.root
-
-        meta = self.meta
-        profile = Meta.get(meta, "profile")
-
-        if not profile:
-            flush = True
-
-        if columns or flush:
-            columns = parse_columns(df, columns) if columns else []
-            transformations = Meta.get(meta, "transformations")
-
-            calculate = False
-
-            if flush or len(transformations):
-                calculate = True
-
-            else:
-                for col in columns:
-                    if col not in profile["columns"]:
-                        calculate = True
-
-            if calculate:
-                df = df[columns].calculate_profile("*", bins, flush, size)
-                profile = Meta.get(df.meta, "profile")
-                self.meta = df.meta
-            profile["columns"] = {key: profile["columns"][key] for key in columns}
-
-        if output == "json":
-            profile = dump_json(profile)
-
-        return profile
 
     def graph(self) -> dict:
         """
