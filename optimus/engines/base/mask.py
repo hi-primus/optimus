@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 
 from optimus.engines.base.commons.functions import is_string
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_url, regex_ip, regex_email, \
     is_datetime, is_list, is_bool, is_object, regex_full_url
@@ -46,27 +46,44 @@ class Mask(ABC):
 
         return df.mask.nulls(col_name)
 
-    def mismatch(self, col_name, dtype):
+    def mismatch(self, columns="*", dtype=None):
         """
         Return missing values
-        :param col_name:
+        :param columns:
         :param dtype:
         :return:
         """
+
         df = self.root
-        mask_match = getattr(df[col_name].mask, dtype)(col_name)
-        mask_null = df[col_name].mask.nulls(col_name)
+        columns = one_list_to_val(parse_columns(df, columns))
+
+        mask_match = df[columns].mask.match(columns, dtype)
+        mask_null = df[columns].mask.nulls(columns)
         return ~(mask_match | mask_null)
 
-    def match(self, col_name, dtype):
+    def match(self, columns="*", dtype=None):
         """
         Return values that match with a datatype
-        :param col_name:
+        :param columns:
         :param dtype:
         :return:
         """
         df = self.root
-        mask_match = getattr(df[col_name].mask, dtype)(col_name)
+        columns = one_list_to_val(parse_columns(df, columns))
+
+        if dtype is None:
+            dtype = df.profile.dtypes(columns)
+
+        if is_list(dtype):
+            mask_match = None
+            for i, j in zip(columns, dtype):
+                if mask_match is None:
+                    mask_match = getattr(df[i].mask, j)(i)
+                else:
+                    mask_match[i] = getattr(df[i].mask, j)(i)
+        else:
+            mask_match = getattr(df[columns].mask, dtype)(columns)
+            
         return mask_match
 
     def values_in(self, col_name, values):
