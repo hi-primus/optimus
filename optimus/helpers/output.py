@@ -46,7 +46,7 @@ def print_html(html):
     :return:
     """
     if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-        displayHTML(result)
+        displayHTML(html)
     else:
         display(HTML(html))
 
