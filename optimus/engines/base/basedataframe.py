@@ -11,6 +11,7 @@ from tabulate import tabulate
 
 from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
 from optimus.helpers.check import is_notebook
+from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
@@ -772,3 +773,37 @@ class BaseDataFrame(ABC):
             clusters = n_gram_fingerprint_cluster(self, columns)
 
         return clusters
+
+    def agg(self, aggregations: dict, groupby=None, output="dict"):
+
+        df = self.root
+        dfd = df.data
+
+        if groupby:
+            groupby = parse_columns(df, groupby)
+
+            for column, aggregations_set in aggregations.items():
+                aggregations[column] = val_to_list(aggregations_set)
+
+            dfd = dfd.groupby(groupby).agg(aggregations)
+
+            dfd.columns = ['_'.join(col).strip() for col in dfd.columns.values]
+
+            if output == "dict":
+                result = dfd.to_dict()
+
+            elif output == "dataframe":
+                result = self.root.new(dfd.reset_index())
+                
+        else:
+            result = {}
+
+            for column, aggregations_set in aggregations.items():
+                aggregations_set = val_to_list(aggregations_set)
+                for aggregation in aggregations_set:
+                    result[column+"_"+aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
+            
+            if output == "dataframe":
+                result = self.root.new(result)
+        
+        return result
