@@ -508,10 +508,15 @@ class BaseDataFrame(ABC):
             limit = 10
 
         df = self
+
+        total_rows = df.rows.approx_count()
+
         if limit == "all":
+            limit = total_rows
             data = df.cols.select(columns).to_dict()
         else:
-            data = df.cols.select(columns).rows.limit(limit).to_dict()
+            limit = min(limit, total_rows)
+            data = df.cols.select(columns).rows.limit(limit+1).to_dict()
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -526,14 +531,6 @@ class BaseDataFrame(ABC):
             for j in columns:
                 if i[0] == j:
                     final_columns.append(i)
-
-        # if count is True:
-
-        # else:
-        #     count = None
-        total_rows = df.rows.approx_count()
-        if limit == "all" or total_rows < limit:
-            limit = total_rows
 
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
@@ -576,8 +573,9 @@ class BaseDataFrame(ABC):
     def ascii(self, limit=10, columns=None):
         df = self
         if not columns:
-            columns = "*"
-        return tabulate(df.rows.limit(limit).cols.select(columns).to_pandas(),
+            columns="*"
+        limit = min(limit, df.rows.approx_count())
+        return tabulate(df.rows.limit(limit+1).cols.select(columns).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
                         tablefmt="simple",
                         showindex="never")
