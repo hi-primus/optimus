@@ -69,13 +69,18 @@ class BaseDataFrame(ABC):
         return new_df
 
     @staticmethod
-    def __operator__(df, dtype):
+    def __operator__(df, dtype, multiple_columns=False):
         if isinstance(df, (BaseDataFrame,)):
-            col1 = df.cols.names(0)[0]
+            col1 = "*" if multiple_columns else df.cols.names(0)[0]
+            
             if dtype:
-                df = df.cols.cast(col1, dtype).data[col1]
+                df = df.cols.cast(col1, dtype).data
             else:
-                df = df.data[col1]
+                df = df.data
+            
+            if not multiple_columns:
+                df = df[col1]
+            
         return df
 
     @abstractmethod
@@ -94,9 +99,9 @@ class BaseDataFrame(ABC):
         :param dtype: 
         :return:
         """
-        df = BaseDataFrame.__operator__(df, dtype)
+        df = BaseDataFrame.__operator__(df, dtype, True)
 
-        return self.new(opb(df).to_frame())
+        return self.new(opb(df))
 
     def operation(self, df1, df2, opb, dtype=None):
         """
@@ -107,19 +112,34 @@ class BaseDataFrame(ABC):
         :param dtype:
         :return:
         """
-        df1 = BaseDataFrame.__operator__(df1, dtype)
-        df2 = BaseDataFrame.__operator__(df2, dtype)
+        if (not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,))):
+            multiple_columns = True
+        else:
+            multiple_columns = df1.cols.names() == df2.cols.names()
+        df1 = BaseDataFrame.__operator__(df1, dtype, multiple_columns)
+        df2 = BaseDataFrame.__operator__(df2, dtype, multiple_columns)
 
-        # Name
-        name_left = name_right = ""
+        if multiple_columns:
+            df = self.new(opb(df1, df2))
 
-        if not isinstance(df1, (int, float, str, dict, list)):
-            name_left = df1.name
-        if not isinstance(df2, (int, float, str, dict, list)):
-            name_right = df2.name
-        name = name_left + "_" + name_right
+        else:
 
-        return self.new(opb(df1, df2).rename(name).to_frame())
+            name_left = name_right = ""
+
+            if not isinstance(df1, (int, float, str, dict, list)):
+                name_left = getattr(df1, "name", 0)
+
+            if not isinstance(df2, (int, float, str, dict, list)):
+                name_right = getattr(df2, "name", 0)
+
+            if name_left and name_right:
+                name = (name_left + "_" + name_right) if name_left != name_right else name_left
+            else:
+                name = name_left if name_left else name_right
+
+            df = self.new(opb(df1, df2).rename(name).to_frame())
+
+        return df
 
     def __invert__(self):
         return self.unary_operation(self, operator.invert)
