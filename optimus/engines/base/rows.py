@@ -146,10 +146,9 @@ class BaseRows(ABC):
 
         return df.cols.assign({output_col: where})
 
-    def select(self, col_name=None, expr=None, contains=None, case=None, flags=0, na=False, regex=False):
+    def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False):
         """
-        :param col_name:
-        :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000)
+        :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
         :param contains: List of string
         :param case:
         :param flags:
@@ -161,19 +160,19 @@ class BaseRows(ABC):
         df = self.root
         dfd = df.data
 
-        if contains is not None:
-            expr = df.mask.contains(col_name, value=contains, case=case, flags=flags, na=na, regex=regex)
-
         if is_str(expr):
-            if contains in df.cols.names():
-                expr = [expr]
+            if expr in df.cols.names():
+                if contains is not None:
+                    expr = df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex)
+                else:
+                    expr = df[expr]
             else:
                 expr = eval(expr)
-        else:
+        elif expr:
             expr = expr.get_series()
+            dfd = dfd[expr]
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
-        dfd = dfd[expr]
         df = self.root.new(dfd, meta=meta)
         return df
 
