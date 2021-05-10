@@ -35,76 +35,76 @@ class PandasFunctions(Functions):
         return word_tokenize(value)
 
     def count_zeros(self, series, *args):
-        return int((self._to_float(series).values == 0).sum())
+        return int((self.to_float(series).values == 0).sum())
 
     def kurtosis(self, series):
-        return self._to_float(series).kurtosis()
+        return self.to_float(series).kurtosis()
 
     def skew(self, series):
-        return self._to_float(series).skew()
+        return self.to_float(series).skew()
 
     def exp(self, series):
-        return np.exp(self._to_float(series))
+        return np.exp(self.to_float(series))
 
     def sqrt(self, series):
-        return np.sqrt(self._to_float(series))
+        return np.sqrt(self.to_float(series))
 
     def reciprocal(self, series):
-        return np.reciprocal(self._to_float(series))
+        return np.reciprocal(self.to_float(series))
 
     def radians(self, series):
-        return np.radians(self._to_float(series))
+        return np.radians(self.to_float(series))
 
     def degrees(self, series):
-        return np.degrees(self._to_float(series))
+        return np.degrees(self.to_float(series))
 
     def ln(self, series):
-        return np.log(self._to_float(series))
+        return np.log(self.to_float(series))
 
     def log(self, series, base=10):
-        return np.log(self._to_float(series)) / np.log(base)
+        return np.log(self.to_float(series)) / np.log(base)
 
     def sin(self, series):
-        return np.sin(self._to_float(series))
+        return np.sin(self.to_float(series))
 
     def cos(self, series):
-        return np.cos(self._to_float(series))
+        return np.cos(self.to_float(series))
 
     def tan(self, series):
-        return np.tan(self._to_float(series))
+        return np.tan(self.to_float(series))
 
     def asin(self, series):
-        return np.arcsin(self._to_float(series))
+        return np.arcsin(self.to_float(series))
 
     def acos(self, series):
-        return np.arccos(self._to_float(series))
+        return np.arccos(self.to_float(series))
 
     def atan(self, series):
-        return np.arctan(self._to_float(series))
+        return np.arctan(self.to_float(series))
 
     def sinh(self, series):
-        return np.arcsinh(self._to_float(series))
+        return np.arcsinh(self.to_float(series))
 
     def cosh(self, series):
-        return np.cosh(self._to_float(series))
+        return np.cosh(self.to_float(series))
 
     def tanh(self, series):
-        return np.tanh(self._to_float(series))
+        return np.tanh(self.to_float(series))
 
     def asinh(self, series):
-        return np.arcsinh(self._to_float(series))
+        return np.arcsinh(self.to_float(series))
 
     def acosh(self, series):
-        return np.arccosh(self._to_float(series))
+        return np.arccosh(self.to_float(series))
 
     def atanh(self, series):
-        return np.arctanh(self._to_float(series))
+        return np.arctanh(self.to_float(series))
 
     def floor(self, series):
-        return np.floor(self._to_float(series))
+        return np.floor(self.to_float(series))
 
     def ceil(self, series):
-        return np.ceil(self._to_float(series))
+        return np.ceil(self.to_float(series))
 
     def replace_chars(self, series, search, replace_by):
         search = list(map(re.escape, search))
