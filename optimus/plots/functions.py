@@ -42,7 +42,6 @@ def plot_boxplot(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
-
     for col_name, stats in column_data.items():
         fig, axes = plt.subplots(1, 1)
 
@@ -77,16 +76,15 @@ def plot_frequency(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
-
     for col_name, data in column_data.items():
 
         # Transform Optimus' format to matplotlib's format
         x = []
         h = []
-
-        for d in data:
-            x.append(ellipsis(d["value"]))
-            h.append(d["count"])
+        for _data in data.values():
+            _item =_data[0]
+            x.append(ellipsis(_item["value"]))
+            h.append(_item["count"])
 
         # Plot
         fig = plt.figure(figsize=(12, 5))
