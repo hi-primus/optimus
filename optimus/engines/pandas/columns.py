@@ -53,16 +53,6 @@ class Cols(DataFrameBaseColumns):
     def stem_words(input_col):
         df = self
 
-    @staticmethod
-    def lemmatize_verbs(input_cols, output_cols=None):
-        df = self
-
-        def func(value, args=None):
-            return value + "aaa"
-
-        df = df.cols.apply(input_cols, func, output_cols)
-        return df
-
     # @staticmethod
     # def mismatches_1(columns, dtype):
     #     """

@@ -125,14 +125,6 @@ class Cols(DataFrameBaseColumns):
     def stem_words(self, input_col):
         raise NotImplementedError('Not implemented yet')
 
-    def lemmatize_verbs(self, input_cols, output_cols=None):
-        df = self.root
-
-        def func(value, args=None):
-            return value + "aaa"
-
-        df = df.cols.apply(input_cols, func, output_cols)
-        return df
 
     def strip_html(self):
         df = self.root

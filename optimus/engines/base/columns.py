@@ -1594,6 +1594,16 @@ class BaseColumns(ABC):
     def replace_regex(input_cols, regex=None, value=None, output_cols=None):
         pass
 
+    def lemmatize_verbs(self, input_cols="*", regex=None, value=None, output_cols=None):
+
+        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+        lemmatizer = nltk.stem.WordNetLemmatizer()
+
+        def lemmatize_text(text):
+            return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
+
+        return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
+
     @staticmethod
     @abstractmethod
     def impute(input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
