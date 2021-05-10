@@ -1,6 +1,5 @@
 import copy
-from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL, FINGERPRINT_COL, \
-    CLUSTER_SUM_COL
+from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL
 from optimus.helpers.columns import parse_columns, name_col
 
 
@@ -98,7 +97,7 @@ def fingerprint(df, input_cols):
 
     input_cols = parse_columns(df, input_cols)
     for input_col in input_cols:
-        output_col = name_col(input_col, FINGERPRINT_COL)
+        output_col = name_col(input_col, CLUSTER_COL)
         df = (df
               .cols.trim(input_col, output_col)
               .cols.lower(output_col)
@@ -138,8 +137,7 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
     input_cols = parse_columns(df, input_cols)
 
     for input_col in input_cols:
-        ngram_fingerprint_col = name_col(input_col, FINGERPRINT_COL)
-        # ngram_fingerprint_col = name_col(input_col, NGRAM_FINGERPRINT_COL)
+        ngram_fingerprint_col = name_col(input_col, CLUSTER_COL)
 
         df = (df
               .cols.copy(input_col, ngram_fingerprint_col)
@@ -176,18 +174,18 @@ def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
 
     for input_col in input_cols:
 
-        fingerprint_col = name_col(input_col, FINGERPRINT_COL)
+        cluster_col = name_col(input_col, CLUSTER_COL)
         df = func(df, input_col, *args, **kwargs)
 
-        _dfd = df.cols.select([input_col, fingerprint_col]).data.set_index(input_col)
+        _dfd = df.cols.select([input_col, cluster_col]).data.set_index(input_col)
         _df = df.new(_dfd)
-        values = _df.to_pandas().to_dict()[fingerprint_col]
+        values = _df.to_pandas().to_dict()[cluster_col]
         
         suggestions_items = {}
         for k, v in values.items():
             suggestions_items[v] = suggestions_items.get(v, []) + [k]
 
-        counts_list = df.cols.frequency(fingerprint_col, len(values))['frequency'][fingerprint_col]['values']
+        counts_list = df.cols.frequency(cluster_col, len(values))['frequency'][cluster_col]['values']
         suggestions = []
 
         for d in counts_list:
