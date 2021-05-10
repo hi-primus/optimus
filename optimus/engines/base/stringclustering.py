@@ -1,5 +1,6 @@
 import copy
-from optimus.engines.base.ml.contants import FINGERPRINT_COL
+from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL, FINGERPRINT_COL, \
+    CLUSTER_SUM_COL
 from optimus.helpers.columns import parse_columns, name_col
 
 
@@ -14,24 +15,32 @@ class Clusters:
 
     def __repr__(self):
         return str(self.to_dict())
+
+
+    def set_suggestions(self, suggestions, column=0):
+
+        for i, suggestion in enumerate(suggestions):
+            self.set_suggestion(i, suggestion, column)
         
     
-    def set_suggestion(self, suggestion_or_id, new_value, column = 0):
+    def set_suggestion(self, suggestion_or_id, new_value, column=0):
 
         if isinstance(suggestion_or_id, (str,)):
             for i in range(len(self.clusters[column])):
                 if (self.clusters[column][i]["suggestion"] == suggestion_or_id):
                     suggestion_or_id = i
                     break
+
+        if isinstance(column, (int,)):
+            column = list(self.clusters.keys())[column]
                     
         self.clusters[column][suggestion_or_id]["suggestion"] = new_value
         
     
-    def to_dict(self, columns="*", limit_clusters = None, limit_suggestions = None, verbose=False):
+    def to_dict(self, columns="*", limit_clusters=None, limit_suggestions=None, verbose=False):
         result = {}
         
         columns = self._parse_columns(columns)
-        
         
         for column in columns:
             result[column] = {}
@@ -145,18 +154,51 @@ def n_gram_fingerprint(df, input_cols, n_size=2):
     return df
 
 
-def fingerprint_cluster(df, input_cols, output: str = "dict"):
-    return base_clustering_function(df, input_cols, output, func=fingerprint, args=[input_cols])
-
-
-def n_gram_fingerprint_cluster(df, input_cols, n_size=2, output: str = "dict"):
-    return base_clustering_function(df, input_cols, output, func=n_gram_fingerprint, args=[input_cols, n_size])
-
-
-def base_clustering_function(df, input_cols, output, func=None, args=None):
+def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
     """
     Cluster a dataframe column based on the Fingerprint algorithm
     :return:
     """
 
-    raise
+    funcs = {
+        "fingerprint": fingerprint,
+        "n_gram_fingerprint": n_gram_fingerprint
+    }
+
+    if algorithm in funcs.keys():
+        func = funcs[algorithm]
+    else:
+        RaiseIt.value_error(search_by, funcs.keys())
+
+    input_cols = parse_columns(df, input_cols)
+
+    result = {}
+
+    for input_col in input_cols:
+
+        fingerprint_col = name_col(input_col, FINGERPRINT_COL)
+        df = func(df, input_col, *args, **kwargs)
+
+        _dfd = df.cols.select([input_col, fingerprint_col]).data.set_index(input_col)
+        _df = df.new(_dfd)
+        values = _df.to_pandas().to_dict()[fingerprint_col]
+        
+        suggestions_items = {}
+        for k, v in values.items():
+            suggestions_items[v] = suggestions_items.get(v, []) + [k]
+
+        counts_list = df.cols.frequency(fingerprint_col, len(values))['frequency'][fingerprint_col]['values']
+        suggestions = []
+
+        for d in counts_list:
+            value = d['value']
+            suggestion = { "suggestion": value, "total_count": d['count'] }
+            if suggestions_items[value]:
+                suggestion["suggestions"] = suggestions_items[value]
+                suggestion["suggestions_size"] = len(suggestions_items[value])
+
+            suggestions += [suggestion]
+
+        result[input_col] = suggestions
+
+    return Clusters(result)

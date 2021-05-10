@@ -9,7 +9,7 @@ from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
 
-from optimus.engines.base.stringclustering import fingerprint_cluster, n_gram_fingerprint_cluster
+from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns
@@ -766,13 +766,10 @@ class BaseDataFrame(ABC):
         col1 = self.cols.names(0)[0]
         return self.data[col1]
 
-    def string_clustering(self, columns="*", algorithm="fingerprint"):
-        if algorithm == "fingerprint":
-            clusters = fingerprint_cluster(self, columns)
-        elif algorithm == "n_gram_fingerprint":
-            clusters = n_gram_fingerprint_cluster(self, columns)
+    def string_clustering(self, columns="*", algorithm="fingerprint", *args, **kwargs):
+        return string_clustering(self.root, columns, algorithm, *args, **kwargs)
+        # return clusters
 
-        return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict"):
 

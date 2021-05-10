@@ -1556,7 +1556,30 @@ class BaseColumns(ABC):
         :return: DataFrame
         """
 
-        # df = self.parent
+        df = self.root
+
+        if is_dict(input_cols):
+            for col, replace in input_cols.items():
+                for replace_by, search in replace.items():
+                    df = df.cols._replace(col, search, replace_by)
+
+        else:
+            df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
+
+        return df
+    
+    def _replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+                output_cols=None):
+        """
+        Replace a value, list of values by a specified string
+        :param input_cols: '*', list of columns names or a single column name.
+        :param search: Values to look at to be replaced
+        :param replace_by: New value to replace the old one. Supports an array when searching by characters.
+        :param search_by: Can be "full","words","chars" or "values".
+        :param ignore_case: Ignore case when searching for match
+        :param output_cols:
+        :return: DataFrame
+        """
 
         search = val_to_list(search)
 
