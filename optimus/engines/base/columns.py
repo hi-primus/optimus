@@ -12,7 +12,7 @@ from dask import dataframe as dd
 from glom import glom
 from multipledispatch import dispatch
 from nltk.corpus import stopwords
-
+import nltk
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
