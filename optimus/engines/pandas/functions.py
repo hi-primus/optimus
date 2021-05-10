@@ -3,11 +3,9 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-
+import re
 from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean, word_tokenize
 from optimus.engines.base.functions import Functions
-from optimus.helpers.core import val_to_list
-import nltk
 
 
 class PandasFunctions(Functions):
@@ -109,19 +107,8 @@ class PandasFunctions(Functions):
         return np.ceil(self._to_float(series))
 
     def replace_chars(self, series, search, replace_by):
-        # if ignore_case is True:
-        #     # Cudf do not accept re.compile as argument for replace
-        #     # regex = re.compile(str_regex, re.IGNORECASE)
-        #     regex = str_regex
-        # else:
-        #     regex = str_regex
-        replace_by = val_to_list(replace_by)
-        for i, j in zip(search, replace_by):
-            series = self.to_string_accessor(series).replace(i, j)
-        return series
-
-    def remove_special_chars(self, series):
-        return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')
+        search = list(map(re.escape, search))
+        return series.replace(search, replace_by, regex=True)
 
     def normalize_chars(self, series):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
