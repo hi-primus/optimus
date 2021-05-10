@@ -82,9 +82,9 @@ def plot_frequency(column_data=None, output=None, path=None):
         x = []
         h = []
         for _data in data.values():
-            _item =_data[0]
-            x.append(ellipsis(_item["value"]))
-            h.append(_item["count"])
+            for _item in _data:
+                x.append(ellipsis(_item["value"]))
+                h.append(_item["count"])
 
         # Plot
         fig = plt.figure(figsize=(12, 5))
