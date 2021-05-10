@@ -5,7 +5,6 @@ from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
-from optimus.helpers.raiseit import RaiseIt
 
 
 class DataFrameBaseColumns(BaseColumns):
@@ -51,7 +50,8 @@ class DataFrameBaseColumns(BaseColumns):
         def _max_abs_scaler(_value):
             return MaxAbsScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_max_abs_scaler, output_cols=output_cols,meta_action=Actions.MAX_ABS_SCALER.value )
+        return df.cols.apply(input_cols, func=_max_abs_scaler, output_cols=output_cols,
+                             meta_action=Actions.MAX_ABS_SCALER.value)
 
     def min_max_scaler(self, input_cols, output_cols=None):
         # https://github.com/dask/dask/issues/2690
@@ -61,7 +61,8 @@ class DataFrameBaseColumns(BaseColumns):
         def _min_max_scaler(_value):
             return MinMaxScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_min_max_scaler, output_cols=output_cols, meta_action=Actions.MIN_MAX_SCALER.value )
+        return df.cols.apply(input_cols, func=_min_max_scaler, output_cols=output_cols,
+                             meta_action=Actions.MIN_MAX_SCALER.value)
 
     def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
         """
@@ -124,7 +125,7 @@ class DataFrameBaseColumns(BaseColumns):
             # dfd[output_col] = dfd[input_cols].values.tolist()
         elif shape == "string":
             dfds = [dfd[input_col].astype(str) for input_col in input_cols]
-            dfd = dfd.assign(**{output_col:reduce((lambda x, y: x + separator + y), dfds)})
+            dfd = dfd.assign(**{output_col: reduce((lambda x, y: x + separator + y), dfds)})
 
         if output_col not in output_ordered_columns:
             col_index = output_ordered_columns.index(input_cols[-1]) + 1
