@@ -68,7 +68,7 @@ class Plot:
         """
         df = self.df
         columns = parse_columns(df, columns)
-        data = df.cols.frequency(columns, buckets)
+        data = df.cols.frequency(columns, buckets, tidy=True)
 
         for k, v in data.items():
             plot_frequency({k: v}, output=output_format, path=output_path)
