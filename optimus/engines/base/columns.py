@@ -1559,27 +1559,25 @@ class BaseColumns(ABC):
         # df = self.parent
 
         search = val_to_list(search)
-        replace_by = val_to_list(replace_by)
 
-        if search_by == "full" and not is_list_of_str(search) or not is_list_of_str(replace_by):
+        if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
             search_by = "values"
 
         if search_by == "chars":
-            # print("F", type(F), F)
             func = self.F.replace_chars
             func_return_type = str
         elif search_by == "words":
             func = self.F.replace_words
             func_return_type = str
-            replace_by = replace_by[0]
+            replace_by = replace_by
         elif search_by == "full":
             func = self.F.replace_full
             func_return_type = str
-            replace_by = replace_by[0]
+            replace_by = replace_by
         elif search_by == "values":
             func = self.F.replace_values
             func_return_type = None
-            replace_by = replace_by[0]
+            replace_by = replace_by
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full", "values"])
 
