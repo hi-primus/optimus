@@ -1853,9 +1853,8 @@ class BaseColumns(ABC):
 
         return df
 
-    @staticmethod
     @abstractmethod
-    def scatter(columns, buckets=10):
+    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):
