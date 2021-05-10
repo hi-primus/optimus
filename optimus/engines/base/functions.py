@@ -29,8 +29,8 @@ class Functions(ABC):
     def to_delayed(self, delayed):
         return [delayed]
 
-    def _to_float(self, series):
-        return series
+    # def _to_float(self, series):
+    #     return series
 
     def to_integer(self, series):
         return series
@@ -49,31 +49,31 @@ class Functions(ABC):
         return series.max()
 
     def mean(self, series):
-        return self._to_float(series).mean()
+        return self.to_float(series).mean()
 
     def mode(self, series):
-        return self._to_float(series).mode().to_dict()
+        return self.to_float(series).mode().to_dict()
 
     def std(self, series):
-        return self._to_float(series).std()
+        return self.to_float(series).std()
 
     def sum(self, series):
-        return self._to_float(series).sum()
+        return self.to_float(series).sum()
 
     def cumsum(self, series):
-        return self._to_float(series).cumsum()
+        return self.to_float(series).cumsum()
 
     def cumprod(self, series):
-        return self._to_float(series).cumprod()
+        return self.to_float(series).cumprod()
 
     def cummax(self, series):
-        return self._to_float(series).cummax()
+        return self.to_float(series).cummax()
 
     def cummin(self, series):
-        return self._to_float(series).cummin()
+        return self.to_float(series).cummin()
 
     def var(self, series):
-        return self._to_float(series).var()
+        return self.to_float(series).var()
 
     def count_uniques(self, series, values=None, estimate: bool = True):
         return self.to_string(series).nunique()
@@ -105,7 +105,7 @@ class Functions(ABC):
         pass
 
     def mad(self, series, error, more):
-        series = self._to_float(series)
+        series = self.to_float(series)
         series = series[series.notnull()]
         median_value = series.quantile(0.5)
         mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
@@ -118,14 +118,14 @@ class Functions(ABC):
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
 
-        return {"min": self._to_float(series).min(), "max": self._to_float(series).max()}
+        return {"min": self.to_float(series).min(), "max": self.to_float(series).max()}
 
     def var(self, series):
-        return self._to_float(series).var()
+        return self.to_float(series).var()
 
     def percentile(self, series, values, error):
 
-        series = self._to_float(series)
+        series = self.to_float(series)
 
         @self.delayed
         def to_dict(_result):
@@ -139,7 +139,7 @@ class Functions(ABC):
         return to_dict(series)
 
     # def radians(series):
-    #     return series._to_float().radians()
+    #     return series.to_float().radians()
     #
     # def degrees(series, *args):
     #     return call(series, method_name="degrees")
@@ -147,7 +147,7 @@ class Functions(ABC):
     ###########################
 
     def z_score(self, series):
-        t = self._to_float(series)
+        t = self.to_float(series)
         return t - t.mean() / t.std(ddof=0)
 
     def modified_z_score(self, series):
@@ -158,21 +158,21 @@ class Functions(ABC):
         return abs(0.6745 * (series - median) / mad)
 
     def clip(self, series, lower_bound, upper_bound):
-        return self._to_float(series).clip(float(lower_bound), float(upper_bound))
+        return self.to_float(series).clip(float(lower_bound), float(upper_bound))
 
     def cut(self, series, bins, labels, default):
         if is_list_of_int(bins):
-            return pd.cut(self._to_float(series), bins, include_lowest=True, labels=labels)
+            return pd.cut(self.to_float(series), bins, include_lowest=True, labels=labels)
         elif is_list_of_str(bins):
             conditions = [series.str.contains(i) for i in bins]
 
             return np.select(conditions, labels, default=default)
 
     def abs(self, series):
-        return self._to_float(series).abs()
+        return self.to_float(series).abs()
 
     def exp(self, series):
-        return self._to_float(series).exp()
+        return self.to_float(series).exp()
 
     @abstractmethod
     def word_tokenize(self, series):
@@ -187,20 +187,20 @@ class Functions(ABC):
         pass
 
     def mod(self, series, other):
-        return self._to_float(series).mod(other)
+        return self.to_float(series).mod(other)
 
     def round(self, series, decimals):
-        return self._to_float(series).round(decimals)
+        return self.to_float(series).round(decimals)
 
     def pow(self, series, exponent):
-        return self._to_float(series).pow(exponent)
+        return self.to_float(series).pow(exponent)
 
     def floor(self, series):
-        return self._to_float(series).floor()
+        return self.to_float(series).floor()
 
     # def trunc(self):
     #     series = self.series
-    #     return series._to_float().truncate()
+    #     return series.to_float().truncate()
 
     @staticmethod
     @abstractmethod
@@ -317,12 +317,12 @@ class Functions(ABC):
     def replace_words(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return self.to_string_accessor(series).replace(str_regex, replace_by)
+        return self.to_string_accessor(series).replace(str_regex, replace_by, regex= True)
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
-        return self.to_string_accessor(series).replace(str_regex, replace_by)
+        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True)
 
     def replace_values(self, series, search, replace_by):
         search = val_to_list(search)
@@ -332,11 +332,13 @@ class Functions(ABC):
         return self.to_string_accessor(series).replace(" ", "")
 
     def remove_urls(self, series):
-        return self.to_string_accessor(series).replace("https?://\S+|www\.\S+", "", regex=True)
+        return self.to_string_accessor(series).replace(r"https?://\S+|www\.\S+", "", regex=True)
 
     def normalize_spaces(self, series):
-        return self.to_string_accessor(series).replace(" +", " ", regex=True)
+        return self.to_string_accessor(series).replace(r" +", " ", regex=True)
 
+    def expand_contractions(self, series):
+        pass
     # @staticmethod
     # def len(series):
     #     return series.str.len()
