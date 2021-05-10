@@ -130,9 +130,6 @@ class DaskFunctions(Functions):
     def atanh(self, series):
         return da.arctanh(self._to_float(series))
 
-    def remove_special_chars(self, series):
-        return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')
-
     def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8').astype(str)

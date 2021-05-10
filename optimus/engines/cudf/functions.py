@@ -105,9 +105,6 @@ class CUDFFunctions(Functions):
     def replace_chars(self, series, search, replace_by):
         return self.to_string_accessor(series).replace(search, replace_by)
 
-    def remove_special_chars(self, series):
-        return self.to_string_accessor(series).filter_alphanum()
-
     def normalize_chars(self, series):
         if not series.isnull().all():
             return self.to_string_accessor(series).normalize_characters()

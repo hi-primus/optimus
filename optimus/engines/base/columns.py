@@ -1462,9 +1462,8 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-
-        return self.apply(input_cols, self.F.remove_special_chars, func_return_type=str,
-                          output_cols=output_cols, mode="vectorized")
+        df = self.root
+        return df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
     def to_datetime(self, input_cols, format, output_cols=None):
         """

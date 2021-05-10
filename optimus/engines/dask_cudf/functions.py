@@ -167,8 +167,6 @@ class DaskCUDFFunctions(Functions):
     def cut(self, series, bins, labels):
         raise NotImplementedError
 
-    # def remove_special_chars(self, series):
-    #     return self.to_string_accessor(series).replace('[^A-Za-z0-9]+', '')
 
     def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again

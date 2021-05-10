@@ -131,10 +131,6 @@ class IbisFunctions(Functions):
             series = series.astype(str).str.replace(i, j)
         return series
 
-    def remove_special_chars(self):
-        series = self.series
-        return series.astype(str).str.replace('[^A-Za-z0-9]+', '')
-
     def normalize_chars(self):
         series = self.series
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
