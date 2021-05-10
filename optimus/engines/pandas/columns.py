@@ -53,43 +53,11 @@ class Cols(DataFrameBaseColumns):
     def stem_words(input_col):
         df = self
 
-    # @staticmethod
-    # def mismatches_1(columns, dtype):
-    #     """
-    #     Find the rows that have null values
-    #     :param dtype:
-    #     :param columns:
-    #     :return:
-    #     """
-    #     df = self
-    #     columns = parse_columns(df, columns)
-    #
-    #     from optimus.infer import is_bool, is_list
-    #
-    #     def func(d_type):
-    #         if d_type == "bool":
-    #             return is_bool
-    #         elif d_type == "int":
-    #             return fastnumbers.isint
-    #         elif d_type == "float":
-    #             return fastnumbers.isfloat
-    #         elif d_type == "list":
-    #             return is_list
-    #         elif d_type == "str":
-    #             return None
-    #         elif d_type == "object":
-    #             return None
-    #
-    #     f = func(dtype)
-    #     if f is None:
-    #         for col_name in columns:
-    #             # df[col_name + "__match_positions__"] = df[col_name].apply(get_match_positions, args=sub)
-    #             df = df[df[col_name].apply(f)]
-    #         return df
-
-    @staticmethod
-    def scatter(columns, buckets=10):
-        pass
+    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
+        df = self.root.data
+        heatmap, xedges, yedges = np.histogram2d(df[col_x].values, df[col_y].values, bins=[bins_x, bins_y])
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        return {"x": {"name": col_x, "values": heatmap.T.tolist()}, "y": {"name": col_y, "values": extent}}
 
     def count_by_dtypes(self, columns, dtype):
         df = self.root

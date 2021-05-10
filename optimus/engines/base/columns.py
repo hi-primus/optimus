@@ -2115,10 +2115,10 @@ class BaseColumns(ABC):
             fliers = df.rows.select(query).cols.select(col_name).rows.limit(1000).to_dict()
             stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb,
                                'whisker_high': ub,
-                               'fliers': fliers, 'label': one_list_to_val(col_name)}
+                               'fliers': [fliers[0][col_name]], 'label': one_list_to_val(col_name)}
 
-            return stats
-        pass
+        return stats
+
 
     def names(self, col_names="*", by_dtypes=None, invert=False):
 

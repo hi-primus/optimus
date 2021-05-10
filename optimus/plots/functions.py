@@ -19,7 +19,7 @@ def plot_scatterplot(column_data=None, output=None, path=None):
     """
 
     fig = plt.figure(figsize=(12, 5))
-    plt.scatter(column_data["x"]["data"], column_data["y"]["data"], s=column_data["s"], alpha=0.5)
+    plt.imshow(column_data["x"]["values"], extent=column_data["y"]["values"], origin='lower')
     plt.xlabel(column_data["x"]["name"])
     plt.ylabel(column_data["y"]["name"])
 
@@ -44,8 +44,10 @@ def plot_boxplot(column_data=None, output=None, path=None):
     """
     for col_name, stats in column_data.items():
         fig, axes = plt.subplots(1, 1)
-
-        bp = axes.bxp(stats, patch_artist=True)
+        stats["whislo"] = stats.pop("whisker_low")
+        stats["whishi"] = stats.pop("whisker_high")
+        stats["med"] = stats.pop("median")
+        bp = axes.bxp([stats], patch_artist=True)
 
         axes.set_title(col_name)
         plt.figure(figsize=(12, 5))

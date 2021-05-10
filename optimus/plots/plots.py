@@ -1,4 +1,3 @@
-from optimus.helpers.columns import check_column_numbers
 from optimus.helpers.columns import parse_columns
 from optimus.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
     plot_correlation, plot_qqplot
@@ -22,23 +21,20 @@ class Plot:
 
         data = df.cols.hist(columns, buckets)["hist"]
         for col_name in data.keys():
-
             plot_hist({col_name: data[col_name]}, output=output_format, path=output_path)
 
-    def scatter(self, columns=None, buckets=30, output_format="plot", output_path=None):
+    def scatter(self, col_x, col_y, bins_x=10, bins_y=10, output_format="plot", output_path=None):
         """
         Plot scatter
-        :param columns: columns to be printed
-        :param buckets: number of buckets
+        :param col_x: columns to be printed
+        :param bins_x: number of buckets
         :param output_format:
         :param output_path: path where the image is going to be saved
         :return:
         """
         df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        data = df.cols.scatter(col_x, col_y, bins_x, bins_y)
 
-        data = df.cols.scatter(columns, buckets)
         plot_scatterplot(data, output=output_format, path=output_path)
 
     def box(self, columns=None, output_format="plot", output_path=None):
@@ -50,12 +46,10 @@ class Plot:
         :return:
         """
         df = self.df
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
+        columns = parse_columns(df, columns)
 
-        for col_name in columns:
-            stats = df.cols.boxplot(col_name)
-            plot_boxplot({col_name: stats}, output=output_format, path=output_path)
+        stats = df.cols.boxplot(columns)
+        plot_boxplot(stats, output=output_format, path=output_path)
 
     def frequency(self, columns=None, buckets=10, output_format="plot", output_path=None):
         """

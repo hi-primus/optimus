@@ -24,15 +24,15 @@ class DataFrameBaseColumns(BaseColumns):
         """
         return exprs
 
-    def qcut(self, columns, num_buckets, handle_invalid="skip"):
+    @staticmethod
+    def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    @staticmethod
-    def scatter(columns, buckets=10):
+    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
     def standard_scaler(self, input_cols="*", output_cols=None):
@@ -41,7 +41,8 @@ class DataFrameBaseColumns(BaseColumns):
         def _standard_scaler(_value):
             return StandardScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_standard_scaler, output_cols=output_cols, meta_action=Actions.STANDARD_SCALER.value)
+        return df.cols.apply(input_cols, func=_standard_scaler, output_cols=output_cols,
+                             meta_action=Actions.STANDARD_SCALER.value)
 
     def max_abs_scaler(self, input_cols="*", output_cols=None):
 
