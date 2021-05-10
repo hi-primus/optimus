@@ -67,7 +67,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator="\n", error_bad_lines=False, cache=False, na_filter=False,
+            null_value="None", quoting=3, lineterminator=b'\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None,
             *args, **kwargs):
         """
@@ -84,7 +84,7 @@ class Load(BaseLoad):
         :param infer_schema: infers the input schema automatically from data.
         :param n_rows:
         :param null_value:
-        :param charset:
+        :param cache:
         :param na_filter:
         :param lineterminator:
         :param error_bad_lines:
@@ -95,10 +95,8 @@ class Load(BaseLoad):
         """
         if not is_url(filepath_or_buffer):
             filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
-
-
-        meta = None
-        if is_str(filepath_or_buffer):
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
+        else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
         try:
