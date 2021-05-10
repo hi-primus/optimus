@@ -2084,8 +2084,8 @@ class BaseColumns(ABC):
         else:
             result = c
 
-        # if tidy is True:
-        #     format_dict(result)
+        if tidy is True:
+            result = result["frequency"]
         return result
 
     @staticmethod
