@@ -193,6 +193,7 @@ def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
             suggestion = { "suggestion": value, "total_count": d['count'] }
             if suggestions_items[value]:
                 suggestion["suggestions"] = suggestions_items[value]
+                suggestion["suggestion"] = suggestion["suggestions"][0]
                 suggestion["suggestions_size"] = len(suggestions_items[value])
 
             suggestions += [suggestion]
