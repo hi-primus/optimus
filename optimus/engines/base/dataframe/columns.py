@@ -27,7 +27,7 @@ class DataFrameBaseColumns(BaseColumns):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
-    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
     def standard_scaler(self, input_cols="*", output_cols=None):

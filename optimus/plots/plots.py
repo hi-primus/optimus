@@ -1,5 +1,5 @@
 from optimus.helpers.columns import parse_columns
-from optimus.plots.functions import plot_scatterplot, plot_boxplot, plot_frequency, plot_hist, \
+from optimus.plots.functions import plot_heatmap, plot_boxplot, plot_frequency, plot_hist, \
     plot_correlation, plot_qqplot
 
 
@@ -23,9 +23,9 @@ class Plot:
         for col_name in data.keys():
             plot_hist({col_name: data[col_name]}, output=output_format, path=output_path)
 
-    def scatter(self, col_x, col_y, bins_x=10, bins_y=10, output_format="plot", output_path=None):
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10, output_format="plot", output_path=None):
         """
-        Plot scatter
+        Plot heat map
         :param col_x: columns to be printed
         :param bins_x: number of buckets
         :param output_format:
@@ -33,9 +33,9 @@ class Plot:
         :return:
         """
         df = self.df
-        data = df.cols.scatter(col_x, col_y, bins_x, bins_y)
+        data = df.cols.heatmap(col_x, col_y, bins_x, bins_y)
 
-        plot_scatterplot(data, output=output_format, path=output_path)
+        plot_heatmap(data, output=output_format, path=output_path)
 
     def box(self, columns=None, output_format="plot", output_path=None):
         """

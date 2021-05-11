@@ -189,7 +189,7 @@ class Cols(DataFrameBaseColumns):
             return df
 
     @staticmethod
-    def scatter(columns, buckets=10):
+    def heatmap(columns, buckets=10):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):

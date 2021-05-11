@@ -1448,9 +1448,9 @@ class Cols(BaseColumns):
         return df
 
     @staticmethod
-    def scatter(columns, buckets=10):
+    def heatmap(columns, buckets=10):
         """
-        Return scatter plot data in json format
+        Returns heat map data in a dictionary
         :param columns:
         :param buckets: number of buckets
         :return:

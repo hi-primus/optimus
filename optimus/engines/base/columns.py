@@ -1890,7 +1890,7 @@ class BaseColumns(ABC):
         return df
 
     @abstractmethod
-    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
     def hist(self, columns="*", buckets=20, compute=True):
