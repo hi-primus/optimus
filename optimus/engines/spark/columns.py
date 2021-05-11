@@ -1598,8 +1598,8 @@ class Cols(BaseColumns):
 
             return {"frequency": result}
 
-    @staticmethod
-    def correlation(input_cols, method="pearson", output="json"):
+
+    def correlation(self, input_cols, method="pearson", output="json"):
         """
         Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
         missing values

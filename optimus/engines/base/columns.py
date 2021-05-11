@@ -580,6 +580,19 @@ class BaseColumns(ABC):
 
         return df
 
+    def correlation(self, columns, method="pearson", output="json"):
+        """
+
+        :param columns:
+        :param method:
+        :param output:
+        :return:
+        """
+        df = self.root
+        dfd = self.root.data
+        columns = parse_columns(df, columns)
+        return dfd[columns].corr(method).to_dict()
+
     def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
         """
         Get how many equal patterns there are in a column. Triggers the operation only if necessary
@@ -2086,11 +2099,6 @@ class BaseColumns(ABC):
         if tidy is True:
             result = result["frequency"]
         return result
-
-    @staticmethod
-    @abstractmethod
-    def correlation(input_cols, method="pearson", output="json"):
-        pass
 
     def boxplot(self, columns):
         """

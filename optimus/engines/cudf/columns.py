@@ -220,10 +220,6 @@ class Cols(DataFrameBaseColumns):
 
         # return np.count_nonzero(df.isnull().values.ravel())
 
-    @staticmethod
-    def correlation(input_cols, method="pearson", output="json"):
-        pass
-
     def qcut(self, columns, num_buckets, handle_invalid="skip"):
         pass
 

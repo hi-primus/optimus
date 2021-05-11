@@ -175,10 +175,9 @@ def plot_correlation(cols_data, output=None, path=None):
     :return:
     """
     import pandas as pd
-    df = pd.DataFrame(data=cols_data["data"], columns=cols_data["cols"], index=cols_data["cols"])
+    df = pd.DataFrame(data=cols_data)
 
-    sns_plot = sns.heatmap(df, mask=np.zeros_like(cols_data["data"], dtype=np.bool),
-                           cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
+    sns_plot = sns.heatmap(df, cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
 
     if output == "base64":
         # fig = sns.get_figure()

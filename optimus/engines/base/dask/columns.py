@@ -56,10 +56,6 @@ class DaskBaseColumns(BaseColumns):
         return df
 
     @staticmethod
-    def correlation(input_cols, method="pearson", output="json"):
-        pass
-
-    @staticmethod
     def scatter(columns, buckets=10):
         pass
 

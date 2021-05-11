@@ -78,10 +78,6 @@ class Cols(DataFrameBaseColumns):
         return result
 
     @staticmethod
-    def correlation(input_cols, method="pearson", output="json"):
-        pass
-
-    @staticmethod
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 

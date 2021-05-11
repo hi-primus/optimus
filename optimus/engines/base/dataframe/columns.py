@@ -27,10 +27,6 @@ class DataFrameBaseColumns(BaseColumns):
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
-    @staticmethod
-    def correlation(input_cols, method="pearson", output="json"):
-        pass
-
     def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
