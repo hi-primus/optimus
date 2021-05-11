@@ -23,6 +23,7 @@ from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
 from .meta import Meta
 from ...outliers.outliers import Outliers
+from ...plots.functions import plot_hist, plot_frequency
 from ...plots.plots import Plot
 from .profile import BaseProfile
 
@@ -807,3 +808,73 @@ class BaseDataFrame(ABC):
                 result = self.root.new(result)
         
         return result
+
+    def report(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
+            mismatch=None, advanced_stats=True):
+        """
+        Return dataframe statistical information in HTML Format
+        :param df: Dataframe to be analyzed
+        :param columns: Columns to be analyzed
+        :param buckets: Number of buckets calculated to print the histogram
+        :param infer: infer data type
+        :param relative_error: Relative Error for quantile discretizer calculation
+        :param approx_count: Use approx_count_distinct or countDistinct
+        :param mismatch:
+        :param advanced_stats:
+        :return:
+        """
+
+        columns = parse_columns(df, columns)
+        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
+                              mismatch=mismatch, advanced_stats=advanced_stats)
+
+        # Load jinja
+        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
+        template_env = jinja2.Environment(loader=template_loader, autoescape=True)
+
+        # Render template
+        # Create the profiler info header
+        html = ""
+        general_template = template_env.get_template("general_info.html")
+        html = html + general_template.render(data=output)
+
+        template = template_env.get_template("one_column.html")
+        # Create every column stats
+        for col_name in columns:
+            hist_pic = None
+            freq_pic = None
+
+            col = output["columns"][col_name]
+            if "hist" in col["stats"]:
+                hist_dict = col["stats"]["hist"]
+
+                if col["column_dtype"] == "date":
+                    hist_year = plot_hist({col_name: hist_dict["years"]}, "base64", "years")
+                    hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
+                    hist_weekday = plot_hist({col_name: hist_dict["weekdays"]}, "base64", "weekdays")
+                    hist_hour = plot_hist({col_name: hist_dict["hours"]}, "base64", "hours")
+                    hist_minute = plot_hist({col_name: hist_dict["minutes"]}, "base64", "minutes")
+                    hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
+                                "hist_hours": hist_hour, "hist_minutes": hist_minute}
+
+                elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col[
+                    "column_dtype"] == "decimal":
+                    hist = plot_hist({col_name: hist_dict}, output="base64")
+                    hist_pic = {"hist_numeric_string": hist}
+            if "frequency" in col:
+                freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
+
+            html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
+
+        # Save in case we want to output to a html file
+        # self.html = html + df.table_html(10)
+        self.html = html
+
+        # Display HTML
+        print_html(self.html)
+
+        # JSON
+        # Save in case we want to output to a json file
+        self.json = output
+
+        return self
