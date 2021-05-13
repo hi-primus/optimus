@@ -2323,21 +2323,12 @@ class BaseColumns(ABC):
         """
 
         df = self.root
+        from nltk import ngrams
 
-        def calculate_ngrams(value, args):
-            # remove white spaces
-            ngram = list(ngrams(value, n_size))
-
-            # sort and remove duplicated
+        def calculate_ngrams(value):
+            ngram = list(map("".join, list(ngrams(value, n_size))))
             ngram = sorted(set(ngram))
-
-            _result = ""
-            for item in ngram:
-                for i in item:
-                    _result = _result + i
-
-            # join the tokens back together
-            _result = "".join(_result)
+            _result = "".join(ngram)
 
             return _result
 
@@ -2345,15 +2336,14 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col in zip(input_cols, output_cols):
-            output_col = name_col(input_col, CLUSTER_COL)
 
             df = (df
                 .cols.copy(input_col, output_col)
                 .cols.lower(output_col)
                 .cols.remove_white_spaces(output_col)
-                .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col)
                 .cols.remove_special_chars(output_col)
                 .cols.normalize_chars(output_col)
+                .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
                 )
 
         df.meta = Meta.action(df.meta, Actions.N_GRAM_FINGERPRINT.value, output_cols)
