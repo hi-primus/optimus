@@ -54,7 +54,7 @@ class Cols(DataFrameBaseColumns):
     def stem_words(input_col):
         df = self
 
-    def scatter(self, col_x, col_y, bins_x=10, bins_y=10):
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         df = self.root.data
         heatmap, xedges, yedges = np.histogram2d(df[col_x].values, df[col_y].values, bins=[bins_x, bins_y])
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]

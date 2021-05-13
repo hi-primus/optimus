@@ -133,7 +133,7 @@ class Cols(DataFrameBaseColumns):
         return df
 
     @staticmethod
-    def scatter(columns, buckets=10):
+    def heatmap(columns, buckets=10):
         pass
 
     def count_by_dtypes(self, columns, dtype):

@@ -9,7 +9,7 @@ from optimus.helpers.functions import ellipsis
 from optimus.helpers.output import output_image, output_base64, print_html
 
 
-def plot_scatterplot(column_data=None, output=None, path=None):
+def plot_heatmap(column_data=None, output=None, path=None):
     """
     Scatter plot
     :param column_data: column data in json format

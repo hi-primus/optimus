@@ -400,7 +400,7 @@ op.profiler.run(df, "mass (g)", infer=False, relative_error =1, approx_count=Tru
 ```
 
 ## Plots
-Besides histograms and frequency plots you also have scatter plots and box plots. All powered by Apache by pyspark
+Besides histograms and frequency plots you also have heat maps and box plots. All powered by Apache by pyspark
 
 ```python
 df = op.load.excel("../examples/data/titanic3.xls")
@@ -420,8 +420,8 @@ df.plot.frequency("age", output_format="image", output_path="images/frequency.pn
 ```
 
 ```python
-df.plot.scatter(["fare", "age"], buckets=30)
-df.plot.scatter(["fare", "age"], buckets=30, output_format="image", output_path="images/scatter.png")
+df.plot.heatmap("fare", "age", 30, 30)
+df.plot.heatmap("fare", "age", 30, 30, output_format="image", output_path="images/heatmap.png")
 ```
 
 ```python
@@ -435,7 +435,7 @@ df.plot.correlation("*", output_format="image", output_path="images/correlation.
 ### Using other plotting libraries
 
 
-Optimus has a tiny API so you can use any plotting library. For example, you can use ```df.cols.scatter()```, ```df.cols.frequency()```, ```df.cols.boxplot()``` or ```df.cols.hist()``` to output a JSON that you can process to adapt the data to any plotting library.
+Optimus has a tiny API so you can use any plotting library. For example, you can use ```df.cols.heatmap()```, ```df.cols.frequency()```, ```df.cols.boxplot()``` or ```df.cols.hist()``` to output a JSON that you can process to adapt the data to any plotting library.
 
 
 ## Outliers

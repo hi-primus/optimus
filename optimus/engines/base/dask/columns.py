@@ -56,7 +56,7 @@ class DaskBaseColumns(BaseColumns):
         return df
 
     @staticmethod
-    def scatter(columns, buckets=10):
+    def heatmap(columns, buckets=10):
         pass
 
     @staticmethod
