@@ -2,6 +2,7 @@ import copy
 from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_str
 
 
 class Clusters:
@@ -14,7 +15,7 @@ class Clusters:
 
 
     def __repr__(self):
-        return str(self.to_dict())
+        return str(self.to_dict(verbose=True))
 
 
     def set_suggestions(self, suggestions, column=0):
@@ -25,14 +26,17 @@ class Clusters:
     
     def set_suggestion(self, suggestion_or_id, new_value, column=0):
 
-        if isinstance(suggestion_or_id, (str,)):
-            for i in range(len(self.clusters[column])):
-                if (self.clusters[column][i]["suggestion"] == suggestion_or_id):
-                    suggestion_or_id = i
-                    break
-
         if isinstance(column, (int,)):
             column = list(self.clusters.keys())[column]
+
+        if is_str(suggestion_or_id):
+            for i in range(len(self.clusters[column])):
+                if (self.clusters[column][i]["suggestion"] == suggestion_or_id) or (self.clusters[column][i]["cluster"] == suggestion_or_id):
+                    suggestion_or_id = i
+                    break
+            
+            if is_str(suggestion_or_id):
+                raise ValueError(f"'{suggestion_or_id}' is not a cluster of '{column}'")
                     
         self.clusters[column][suggestion_or_id]["suggestion"] = new_value
         
@@ -73,85 +77,6 @@ class Clusters:
     def display(self, columns="*", limit_clusters = None, limit_suggestions = None, verbose=True):
         return self.to_dict(columns, limit_clusters, limit_suggestions, verbose)
 
-def fingerprint(df, input_cols):
-    """
-    Create the fingerprint for a column
-    :param df: Dataframe to be processed
-    :param input_cols: Column to be processed
-    :return:
-    """
-
-    # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
-    def _split_sort_remove_join(value):
-        """
-        Helper function to split, remove duplicates, sort and join back together
-        """
-        # Split into whitespace-separated token
-        # print("value", type(value), value)
-        split_key = value.split()
-
-        # Sort and remove duplicated items
-        split_key = sorted(set(split_key))
-
-        # join the tokens back together
-        return "".join(split_key)
-
-    input_cols = parse_columns(df, input_cols)
-    for input_col in input_cols:
-        output_col = name_col(input_col, CLUSTER_COL)
-        df = (df
-              .cols.trim(input_col, output_col)
-              .cols.lower(output_col)
-              .cols.remove_special_chars(output_col)
-              .cols.normalize_chars(output_col)
-              .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
-              )
-    return df
-
-
-def n_gram_fingerprint(df, input_cols, n_size=2):
-    """
-    Calculate the ngram for a fingerprinted string
-    :param df: Dataframe to be processed
-    :param input_cols: Columns to be processed
-    :param n_size:
-    :return:
-    """
-
-    def calculate_ngrams(value, args):
-        # remove white spaces
-        ngram = list(ngrams(value, n_size))
-
-        # sort and remove duplicated
-        ngram = sorted(set(ngram))
-
-        _result = ""
-        for item in ngram:
-            for i in item:
-                _result = _result + i
-
-        # join the tokens back together
-        _result = "".join(_result)
-
-        return _result
-
-    input_cols = parse_columns(df, input_cols)
-
-    for input_col in input_cols:
-        ngram_fingerprint_col = name_col(input_col, CLUSTER_COL)
-
-        df = (df
-              .cols.copy(input_col, ngram_fingerprint_col)
-              .cols.lower(ngram_fingerprint_col)
-              .cols.remove_white_spaces(ngram_fingerprint_col)
-              .cols.apply(ngram_fingerprint_col, calculate_ngrams, "string", output_cols=ngram_fingerprint_col)
-              .cols.remove_special_chars(ngram_fingerprint_col)
-              .cols.normalize_chars(ngram_fingerprint_col)
-
-              )
-
-    return df
-
 
 def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
     """
@@ -159,15 +84,13 @@ def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
     :return:
     """
 
-    funcs = {
-        "fingerprint": fingerprint,
-        "n_gram_fingerprint": n_gram_fingerprint
-    }
+    funcs = [ "fingerprint", "n_gram_fingerprint", "metaphone", "nysiis", "match_rating_codex",
+              "double_methaphone", "soundex" ]
 
-    if algorithm in funcs.keys():
-        func = funcs[algorithm]
+    if algorithm in funcs:
+        func = getattr(df.cols, algorithm)
     else:
-        RaiseIt.value_error(search_by, funcs.keys())
+        RaiseIt.value_error(algorithm, funcs)
 
     input_cols = parse_columns(df, input_cols)
 
@@ -176,11 +99,15 @@ def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
     for input_col in input_cols:
 
         cluster_col = name_col(input_col, CLUSTER_COL)
-        df = func(df, input_col, *args, **kwargs)
+        df = func(input_col, output_cols=cluster_col, *args, **kwargs)
+
+        # sets the original values as indices: {"VALUE": "value", "Value": "value"}
 
         _dfd = df.cols.select([input_col, cluster_col]).data.set_index(input_col)
         _df = df.new(_dfd)
         values = _df.to_pandas().to_dict()[cluster_col]
+
+        # turns in into: {"value": ["VALUE", "Value"]}
         
         suggestions_items = {}
         for k, v in values.items():
@@ -191,7 +118,7 @@ def string_clustering(df, input_cols, algorithm=None, *args, **kwargs):
 
         for d in counts_list:
             value = d['value']
-            suggestion = { "suggestion": value, "total_count": d['count'] }
+            suggestion = { "suggestion": value, "cluster": value, "total_count": d['count'] }
             if suggestions_items[value]:
                 suggestion["suggestions"] = suggestions_items[value]
                 suggestion["suggestion"] = suggestion["suggestions"][0]

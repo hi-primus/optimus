@@ -2271,7 +2271,95 @@ class BaseColumns(ABC):
     def missing(self, input_cols, output_cols=None):
         return self.append(self.root.mask.missing())
 
-    ## phonetic encoding
+    # String clustering algorithms
+    def fingerprint(self, input_cols, output_cols=None):
+        """
+        Create the fingerprint for a column
+        :param df: Dataframe to be processed
+        :param input_cols: Column to be processed
+        :return:
+        """
+
+        df = self.root
+
+        # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
+        def _split_sort_remove_join(value):
+            """
+            Helper function to split, remove duplicates, sort and join back together
+            """
+            # Split into whitespace-separated token
+            # print("value", type(value), value)
+            split_key = value.split()
+
+            # Sort and remove duplicated items
+            split_key = sorted(set(split_key))
+
+            # join the tokens back together
+            return "".join(split_key)
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = (df
+                .cols.trim(input_col, output_col)
+                .cols.lower(output_col)
+                .cols.remove_special_chars(output_col)
+                .cols.normalize_chars(output_col)
+                .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
+                )
+
+        df.meta = Meta.action(df.meta, Actions.FINGERPRINT.value, output_cols)
+
+        return df
+    
+    def n_gram_fingerprint(self, input_cols, n_size=2, output_cols=None):
+        """
+        Calculate the ngram for a fingerprinted string
+        :param df: Dataframe to be processed
+        :param input_cols: Columns to be processed
+        :param n_size:
+        :return:
+        """
+
+        df = self.root
+
+        def calculate_ngrams(value, args):
+            # remove white spaces
+            ngram = list(ngrams(value, n_size))
+
+            # sort and remove duplicated
+            ngram = sorted(set(ngram))
+
+            _result = ""
+            for item in ngram:
+                for i in item:
+                    _result = _result + i
+
+            # join the tokens back together
+            _result = "".join(_result)
+
+            return _result
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            output_col = name_col(input_col, CLUSTER_COL)
+
+            df = (df
+                .cols.copy(input_col, output_col)
+                .cols.lower(output_col)
+                .cols.remove_white_spaces(output_col)
+                .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col)
+                .cols.remove_special_chars(output_col)
+                .cols.normalize_chars(output_col)
+                )
+
+        df.meta = Meta.action(df.meta, Actions.N_GRAM_FINGERPRINT.value, output_cols)
+
+        return df
+
     def metaphone(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")

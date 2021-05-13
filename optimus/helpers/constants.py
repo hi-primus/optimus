@@ -97,6 +97,9 @@ class Actions(Enum):
     EMAIL_DOMAIN = "email_domain"
     EMAIL_USER = "email_user"
 
+    FINGERPRINT = "fingerprint"
+    N_GRAM_FINGERPRINT = "n_gram_fingerprint"
+
     # PHONETIC ENCODING
     SOUNDEX = "soundex"
     METAPHONE = "metaphone"
