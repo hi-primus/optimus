@@ -97,6 +97,13 @@ class Actions(Enum):
     EMAIL_DOMAIN = "email_domain"
     EMAIL_USER = "email_user"
 
+    # PHONETIC ENCODING
+    SOUNDEX = "soundex"
+    METAPHONE = "metaphone"
+    DOUBLE_METAPHONE = "double_metaphone"
+    MATCH_RATING_CODEX = "match_rating_codex"
+    NYSIIS = "nysiis"
+
     # ROWS
     SELECT_ROW = "select_row"
     DROP_ROW = "drop_row"
@@ -566,4 +573,3 @@ contractions = [
     ("you're", "you are"),
     ("you've", "you have")
 ]
-

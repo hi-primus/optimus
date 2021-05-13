@@ -1,6 +1,7 @@
 import copy
 from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL
 from optimus.helpers.columns import parse_columns, name_col
+from optimus.helpers.raiseit import RaiseIt
 
 
 class Clusters:

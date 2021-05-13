@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod, ABC
 from functools import reduce
 
+import jellyfish as jellyfish
 import numpy as np
 import pandas as pd
 import pydateinfer
@@ -2269,3 +2270,30 @@ class BaseColumns(ABC):
     # Mask functions
     def missing(self, input_cols, output_cols=None):
         return self.append(self.root.mask.missing())
+
+    ## phonetic encoding
+    def metaphone(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+
+    def nysiis(self, input_cols="*", output_cols=None):
+        """
+        NYSIIS (New York State Identification and Intelligence System)
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+        return self.apply(input_cols, jellyfish.nysiis, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.NYSIIS.value, mode="map", func_type="column_expr")
+
+    def match_rating_codex(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, jellyfish.match_rating_codex, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.MATCH_RATING_CODEX.value, mode="map", func_type="column_expr")
+
+    def double_methaphone(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, jellyfish.dou, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+
+    def soundex(self, input_cols="*", output_cols=None):
+        return self.apply(input_cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.SOUNDEX.value, mode="map", func_type="column_expr")
