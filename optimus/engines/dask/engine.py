@@ -3,6 +3,7 @@ from dask.distributed import Client, get_client
 
 from optimus.engines.dask.create import Create
 from optimus.engines.base.engine import BaseEngine
+from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
@@ -22,6 +23,11 @@ class DaskEngine(BaseEngine):
             threads_per_worker = psutil.cpu_count() * 4
 
         self.verbose(verbose)
+
+        use_remote = kwargs.get("use_remote", coiled_token is not None)
+        
+        if kwargs.get("use_remote", None):
+            del kwargs["use_remote"]
 
         if coiled_token:
             import coiled
@@ -63,6 +69,13 @@ class DaskEngine(BaseEngine):
             except ValueError:
                 self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
                                      processes=processes, memory_limit=memory_limit, *args, **kwargs)
+            # use_remote = False
+
+        if use_remote:
+            self.remote = self.client.submit(ClientActor, Engine.DASK.value, actor=True).result(10)
+
+        else:
+            self.remote = False
 
     @property
     def dask(self):
@@ -74,11 +87,19 @@ class DaskEngine(BaseEngine):
 
     @property
     def create(self):
-        return Create(self)
+        if self.remote:
+            return RemoteDummyVariable(self, "_create")
+
+        else:
+            return Create(self)
 
     @property
     def load(self):
-        return Load(self)
+        if self.remote:
+            return RemoteDummyVariable(self, "_load")
+
+        else:
+            return Load(self)
 
     @property
     def engine(self):
@@ -90,12 +111,42 @@ class DaskEngine(BaseEngine):
 
     def remote_run(self, callback, *args, **kwargs):
         if kwargs.get("client_timeout"):
+            client_timeout = kwargs.get("client_timeout")
             del kwargs["client_timeout"]
-        
-        self.submit(callback, op=self, *args, **kwargs).result()
+        else:
+            client_timeout = 600
+
+        return self.remote_submit(callback, *args, **kwargs).result(client_timeout)
 
     def remote_submit(self, callback, *args, **kwargs):
-        return self.submit(callback, op=self, *args, **kwargs)
 
-    def submit(self, func,*args, **kwargs):
+        if not self.remote:
+            fut = self.submit(callback, op=self, *args, **kwargs)
+        else:
+            fut = self.remote.submit(callback, *args, **kwargs)
+
+        fut.__result = fut.result
+        _op = self
+
+        def _result(self, *args, **kwargs):
+            result = self.__result(*args, **kwargs)
+            if isinstance(result, dict):
+                if result.get("status") == "error" and result.get("error"):
+                    raise Exception(result.get("error"))
+                elif result.get("dummy"):
+                    if result.get("dataframe"):
+                        return RemoteDummyDataFrame(_op, result.get("dummy"))
+                    else:
+                        return RemoteDummyVariable(_op, result.get("dummy"))
+            return result
+
+        import types
+        fut.result = types.MethodType(_result, fut)
+
+        return fut
+
+    def submit(self, func, *args, **kwargs):
+        from optimus.engines.base.remote import RemoteDummyAttribute
+        if isinstance(func, (RemoteDummyAttribute,)):
+            return func(client_submit=True, *args, **kwargs)
         return dask.distributed.get_client().submit(func, *args, **kwargs)

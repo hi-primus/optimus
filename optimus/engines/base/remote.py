@@ -140,7 +140,12 @@ class ClientActor:
         return self._vars.get(name, None)
 
     def _return(self, value):
-        import cupy as cp
+        from optimus.optimus import Engine
+        if self.op.engine == Engine.DASK_CUDF.value:
+            import cupy as cp
+            cp_generic = cp.generic
+        else:
+            cp_generic = int
         import numpy as np
         if isinstance(value, (dict,)):
             for key in value:
@@ -154,7 +159,7 @@ class ClientActor:
             return tuple(map(self._return, value))
         elif isinstance(value, (PandasDataFrame,)):
             return value.head()
-        elif not isinstance(value, (str, bool, int, float, complex, np.generic, cp.generic)) and value is not None:
+        elif not isinstance(value, (str, bool, int, float, complex, np.generic, cp_generic)) and value is not None:
             import uuid
             unique_id = str(uuid.uuid4())
             self.set_var(unique_id, value)
