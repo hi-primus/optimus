@@ -1,6 +1,7 @@
 import re
 from abc import abstractmethod, ABC
 
+import jellyfish
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
@@ -338,6 +339,7 @@ class Functions(ABC):
         return self.to_string_accessor(series).replace(r" +", " ", regex=True)
 
     def expand_contractions(self, series):
+
         pass
     # @staticmethod
     # def len(series):
@@ -504,3 +506,6 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.OBJECT.value
 
         return dtype
+
+    def levenshtein(self, col_A, col_B):
+        return jellyfish.levenshtein_distance(col_A,col_B)
