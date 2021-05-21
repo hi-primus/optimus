@@ -1651,7 +1651,18 @@ class BaseColumns(ABC):
         lemmatizer = nltk.stem.WordNetLemmatizer()
 
         def lemmatize_text(text):
-            return [lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)]
+            return " ".join([lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)])
+
+        return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
+
+    def steammer(self, input_cols="*", regex=None, value=None, output_cols=None):
+        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+        stemmer = PorterStemmer()
+
+        # w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+
+        def lemmatize_text(text):
+            return " ".join([stemmer.steam(w) for w in w_tokenizer.tokenize(text)])
 
         return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
 
