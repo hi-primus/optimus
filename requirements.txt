@@ -44,5 +44,7 @@ wordninja==2.0.0
 vaex==4.1
 pyarrow==3.0
 jellyfish==0.8.2
+Metaphone==0.6
+python-Levenshtein==0.12.2
 url_parser @ git+https://github.com/ironmussa/url_parser@master
 py-dateinfer @ git+https://github.com/ironmussa/dateinfer@master

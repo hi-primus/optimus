@@ -5,6 +5,9 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import jellyfish as jellyfish
+from metaphone import doublemetaphone
+
+import nltk
 import numpy as np
 import pandas as pd
 import pydateinfer
@@ -13,18 +16,20 @@ from dask import dataframe as dd
 from glom import glom
 from multipledispatch import dispatch
 from nltk.corpus import stopwords
-import nltk
+from nltk.stem import PorterStemmer
+
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
+    CONTRACTIONS
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
-    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -1395,6 +1400,11 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.len, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LENGTH.value, mode="map")
 
+    def expand_contrated_words(self, input_cols="*", output_cols=None):
+        i, j = zip(*CONTRACTIONS)
+        df = self.replace(input_cols, i, j, search_by="words")
+        return df
+
     @staticmethod
     @abstractmethod
     def reverse(input_cols, output_cols=None):
@@ -1578,12 +1588,18 @@ class BaseColumns(ABC):
                     df = df.cols._replace(col, search, replace_by)
 
         else:
-            df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
+            if is_list(replace_by):
+                search = val_to_list(search)
+                replace_by = val_to_list(replace_by)
+                for _search, _replace_by in zip(search, replace_by):
+                    df = df.cols._replace(input_cols, _search, _replace_by, search_by, ignore_case, output_cols)
+            else:
+                df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
-    
+
     def _replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
-                output_cols=None):
+                 output_cols=None):
         """
         Replace a value, list of values by a specified string
         :param input_cols: '*', list of columns names or a single column name.
@@ -2150,7 +2166,6 @@ class BaseColumns(ABC):
 
         return stats
 
-
     def names(self, col_names="*", by_dtypes=None, invert=False):
 
         columns = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
@@ -2295,25 +2310,25 @@ class BaseColumns(ABC):
             split_key = sorted(set(split_key))
 
             # join the tokens back together
-            return "".join(split_key)
+            return " ".join(split_key)
 
         input_cols = parse_columns(df, input_cols)
         output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col in zip(input_cols, output_cols):
             df = (df
-                .cols.trim(input_col, output_col)
-                .cols.lower(output_col)
-                .cols.remove_special_chars(output_col)
-                .cols.normalize_chars(output_col)
-                .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
-                )
+                  .cols.trim(input_col, output_col)
+                  .cols.lower(output_col)
+                  .cols.remove_special_chars(output_col)
+                  .cols.normalize_chars(output_col)
+                  .cols.apply(output_col, _split_sort_remove_join, "string", mode="map")
+                  )
 
         df.meta = Meta.action(df.meta, Actions.FINGERPRINT.value, output_cols)
 
         return df
-    
-    def n_gram_fingerprint(self, input_cols, n_size=2, output_cols=None):
+
+    def ngram_fingerprint(self, input_cols, n_size=2, output_cols=None):
         """
         Calculate the ngram for a fingerprinted string
         :param df: Dataframe to be processed
@@ -2336,22 +2351,31 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(input_cols, output_cols)
 
         for input_col, output_col in zip(input_cols, output_cols):
-
             df = (df
-                .cols.copy(input_col, output_col)
-                .cols.lower(output_col)
-                .cols.remove_white_spaces(output_col)
-                .cols.remove_special_chars(output_col)
-                .cols.normalize_chars(output_col)
-                .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
-                )
+                  .cols.copy(input_col, output_col)
+                  .cols.lower(output_col)
+                  .cols.remove_white_spaces(output_col)
+                  .cols.remove_special_chars(output_col)
+                  .cols.normalize_chars(output_col)
+                  .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+                  )
 
-        df.meta = Meta.action(df.meta, Actions.N_GRAM_FINGERPRINT.value, output_cols)
+        df.meta = Meta.action(df.meta, Actions.NGRAM_FINGERPRINT.value, output_cols)
 
         return df
 
     def metaphone(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+
+    def double_metaphone(self, input_cols="*", output_cols=None):
+
+        return self.apply(input_cols, doublemetaphone, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+
+    def levenshtein(self, col_A, col_B, output_cols=None):
+        return self.apply(input_cols, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
+                          output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
 
     def nysiis(self, input_cols="*", output_cols=None):
