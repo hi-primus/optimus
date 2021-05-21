@@ -98,7 +98,7 @@ class Actions(Enum):
     EMAIL_USER = "email_user"
 
     FINGERPRINT = "fingerprint"
-    N_GRAM_FINGERPRINT = "n_gram_fingerprint"
+    NGRAM_FINGERPRINT = "ngram_fingerprint"
 
     # PHONETIC ENCODING
     SOUNDEX = "soundex"
@@ -399,11 +399,11 @@ PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOLEAN.value, ProfilerDataType
                                ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value
                                ]
 
-contractions = [
+CONTRACTIONS = [
     ("a'ight", "alright"),
     ("ain't", "am not"),
     ("amn't", "am not"),
-    ("arencha", "aren't you / are not you (colloquial)"),
+    ("arencha", "are not you"),
     ("aren't", "are not"),
     ("'bout", "about"),
     ("cannot", "can not"),
@@ -484,7 +484,7 @@ contractions = [
     ("ol'", "old"),
     ("oughtn't", "ought not"),
     ("'round", "around"),
-    ("'s", "is, has, does, or us"),
+    ("'s", "is"),
     ("shalln't", "shall not"),
     ("shan't", "shall not"),
     ("she'd", "she would"),
@@ -497,7 +497,7 @@ contractions = [
     ("someone's", "someone is"),
     ("something's", "something is"),
     ("so're", "so are"),
-    ("so's", "so is / so has"),
+    ("so's", "so is"),
     ("so've", "so have"),
     ("that'll", "that will"),
     ("that're", "that are"),
