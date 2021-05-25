@@ -2,7 +2,7 @@ import dask
 from dask.distributed import Client, get_client
 
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
+from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimus, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.optimus import Engine
@@ -92,7 +92,7 @@ class DaskCUDFEngine(BaseEngine):
             use_remote = False
 
         if use_remote:
-            self.remote = self.client.submit(ClientActor, Engine.DASK_CUDF.value, actor=True).result(10)
+            self.remote = self.client.submit(RemoteOptimus, Engine.DASK_CUDF.value, actor=True).result(10)
 
         else:
             self.remote = False
@@ -119,21 +119,21 @@ class DaskCUDFEngine(BaseEngine):
         from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
         return DaskCUDFDataFrame(dask_cudf.from_cudf(cdf, npartitions=n_partitions, *args, **kwargs))
 
-    def remote_run(self, callback, *args, **kwargs):
+    def remote_run(self, func, *args, **kwargs):
         if kwargs.get("client_timeout"):
             client_timeout = kwargs.get("client_timeout")
             del kwargs["client_timeout"]
         else:
-            client_timeout = 600
+            client_timeout = MAX_TIMEOUT
 
-        return self.remote_submit(callback, *args, **kwargs).result(client_timeout)
+        return self.remote_submit(func, *args, **kwargs).result(client_timeout)
 
-    def remote_submit(self, callback, *args, **kwargs):
+    def remote_submit(self, func, *args, **kwargs):
 
         if not self.remote:
-            fut = self.submit(callback, op=self, *args, **kwargs)
+            fut = self.submit(func, op=self, *args, **kwargs)
         else:
-            fut = self.remote.submit(callback, *args, **kwargs)
+            fut = self.remote.submit(func, *args, **kwargs)
 
         fut.__result = fut.result
         _op = self

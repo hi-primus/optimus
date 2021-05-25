@@ -3,7 +3,7 @@ from dask.distributed import Client, get_client
 
 from optimus.engines.dask.create import Create
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.remote import ClientActor, RemoteDummyVariable, RemoteDummyDataFrame
+from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimusInterface, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
@@ -69,10 +69,10 @@ class DaskEngine(BaseEngine):
             except ValueError:
                 self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
                                      processes=processes, memory_limit=memory_limit, *args, **kwargs)
-            # use_remote = False
+            use_remote = False
 
         if use_remote:
-            self.remote = self.client.submit(ClientActor, Engine.DASK.value, actor=True).result(10)
+            self.remote = RemoteOptimusInterface(self.client, Engine.DASK.value)
 
         else:
             self.remote = False
@@ -109,21 +109,22 @@ class DaskEngine(BaseEngine):
         from dask import dataframe as dd
         return DaskDataFrame(dd.from_pandas(pdf, npartitions=n_partitions, *args, **kwargs))
 
-    def remote_run(self, callback, *args, **kwargs):
+    def remote_run(self, func, *args, **kwargs):
         if kwargs.get("client_timeout"):
             client_timeout = kwargs.get("client_timeout")
             del kwargs["client_timeout"]
         else:
-            client_timeout = 600
+            client_timeout = MAX_TIMEOUT
 
-        return self.remote_submit(callback, *args, **kwargs).result(client_timeout)
+        return self.remote_submit(func, *args, **kwargs).result(client_timeout)
 
-    def remote_submit(self, callback, *args, **kwargs):
+    def remote_submit(self, func, *args, **kwargs):
+
 
         if not self.remote:
-            fut = self.submit(callback, op=self, *args, **kwargs)
+            fut = self.submit(func, op=self, *args, **kwargs)
         else:
-            fut = self.remote.submit(callback, *args, **kwargs)
+            fut = self.remote.submit(func, *args, **kwargs)
 
         fut.__result = fut.result
         _op = self
@@ -141,14 +142,9 @@ class DaskEngine(BaseEngine):
             return result
 
         import types
-        from distributed.client import Future
-
         fut.result = types.MethodType(_result, fut)
-        fut.add_done_callback = getattr(fut, "add_done_callback", types.MethodType(Future.add_done_callback, fut) )
-        fut.client = getattr(fut, "client", self.client)
-        # TODO: Error handling
-        fut.status = getattr(fut, "status", "finished")
 
+        # TODO: Implement this on remote.submit
 
         return fut
 

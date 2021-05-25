@@ -1,6 +1,8 @@
 from pandas import DataFrame as PandasDataFrame
 from optimus.engines.base.basedataframe import BaseDataFrame
 
+MAX_TIMEOUT = 600
+
 class RemoteDummyAttribute:
     
     def __init__(self, name, names, dummy_id, op):
@@ -87,8 +89,62 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
 
         return self.op.remote_run(_get_attr, self.id, "meta")
 
+class RemoteOptimusInterface:
+    op = {}
+    _vars = {}
+    _del_next = []
 
-class ClientActor:
+    def __init__(self, client, engine=False):
+        if not engine:
+            from optimus.optimus import Engine
+            engine = Engine.DASK.value
+        
+        self.client = client
+        self.engine = engine
+
+        future = self._create_actor(self.engine)
+        future.result(MAX_TIMEOUT)
+
+
+    def _create_actor(self, engine):
+        self.engine = engine
+
+        def _init(_engine):
+            from dask.distributed import get_worker
+            worker = get_worker()
+            worker.actor = RemoteOptimus(_engine)
+            return f"Created remote Optimus instance using \"{_engine}\""
+
+        return self.client.submit(_init, self.engine)
+
+    def submit(self, func, *args, **kwargs):
+        def _remote(_func, *args, **kwargs):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return _func(op, *args, **kwargs)
+        
+        return self.client.submit(_remote, func, *args, **kwargs)
+
+    def run(self, func, *args, **kwargs):
+        if kwargs.get("client_timeout"):
+            client_timeout = kwargs.get("client_timeout")
+            del kwargs["client_timeout"]
+        else:
+            client_timeout = MAX_TIMEOUT
+
+        return self.submit(func, *args, **kwargs).result(client_timeout)
+
+    def del_var(self, name):
+        def _del_var(name):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.del_var(name)
+        
+        return self.client.submit(_del_var, name)
+            
+
+
+class RemoteOptimus:
     op = {}
     _vars = {}
     _del_next = []
