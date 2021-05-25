@@ -141,7 +141,14 @@ class DaskEngine(BaseEngine):
             return result
 
         import types
+        from distributed.client import Future
+
         fut.result = types.MethodType(_result, fut)
+        fut.add_done_callback = getattr(fut, "add_done_callback", types.MethodType(Future.add_done_callback, fut) )
+        fut.client = getattr(fut, "client", self.client)
+        # TODO: Error handling
+        fut.status = getattr(fut, "status", "finished")
+
 
         return fut
 
