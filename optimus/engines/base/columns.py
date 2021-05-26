@@ -1296,7 +1296,7 @@ class BaseColumns(ABC):
 
     def to_float(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_float, func_return_type=float,
-                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="partitioned")
 
     def to_integer(self, input_cols="*", output_cols=None):
 
