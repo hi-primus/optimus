@@ -445,20 +445,21 @@ class BaseColumns(ABC):
         df = self.root
 
         columns = prepare_columns(df, input_cols, output_cols, args=dtype)
+
+        func_map = {
+            "float": "to_float",
+            "int": "to_integer",
+            "datetime": "to_datetime",
+            "bool": "to_boolean",
+            "str": "to_string"
+        }
+
         for input_col, output_col, arg in columns:
 
-            if arg == "float":
-                df = df.cols.to_float(input_col, output_col)
-            elif arg == "int":
-                df = df.cols.to_integer(input_col, output_col)
-            elif arg == "datetime":
-                df = df.cols.to_datetime(input_col, output_col)
-            elif arg == "bool":
-                df = df.cols.to_boolean(input_col, output_col)
-            elif arg == "str":
-                df = df.cols.to_string(input_col, output_col)
+            if arg in func_map.keys():
+                df = getattr(df.cols, func_map[arg])(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, ["float", "int", "datetime", "bool", "str"])
+                RaiseIt.value_error(arg, func_map.keys())
 
         return df
 
