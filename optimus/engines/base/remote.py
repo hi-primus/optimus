@@ -78,6 +78,9 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
     def _repr_html_(self):
         return self.table()
 
+    def __len__(self):
+        return self.rows.count()
+
     @property
     def meta(self):
         def _get_attr(op, unique_id, attr):

@@ -65,6 +65,9 @@ class BaseDataFrame(ABC):
         self.root = df.root
         self.meta = df.meta
 
+    def __len__(self):
+        return self.rows.count()
+
     def new(self, df, meta=None):
         new_df = self.__class__(df)
         if meta is not None:
