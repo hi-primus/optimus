@@ -2,7 +2,7 @@ import dask
 from dask.distributed import Client, get_client
 
 from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimus, RemoteDummyVariable, RemoteDummyDataFrame
+from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimusInterface, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
 from optimus.optimus import Engine
@@ -92,7 +92,7 @@ class DaskCUDFEngine(BaseEngine):
             use_remote = False
 
         if use_remote:
-            self.remote = self.client.submit(RemoteOptimus, Engine.DASK_CUDF.value, actor=True).result(10)
+            self.remote = RemoteOptimusInterface(self.client, Engine.DASK_CUDF.value)
 
         else:
             self.remote = False
