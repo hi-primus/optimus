@@ -123,8 +123,8 @@ class RemoteOptimusInterface:
     def submit(self, func, *args, **kwargs):
         def _remote(_func, *args, **kwargs):
             from dask.distributed import get_worker
-            op = get_worker().actor.op
-            return _func(op, *args, **kwargs)
+            actor = get_worker().actor
+            return actor.submit(_func, *args, **kwargs)
         
         return self.client.submit(_remote, func, *args, **kwargs)
 
@@ -153,8 +153,9 @@ class RemoteOptimus:
     _del_next = []
 
     def __init__(self, engine=False):
+        from optimus.optimus import Engine
+
         if not engine:
-            from optimus.optimus import Engine
             engine = Engine.DASK.value
 
         from optimus import Optimus
@@ -166,6 +167,14 @@ class RemoteOptimus:
         self.op.update_vars = self.update_vars
         self.set_var("_load", self.op.load)
         self.set_var("_create", self.op.create)
+
+        import numpy as np
+        if engine == Engine.DASK_CUDF.value:
+            import cupy as cp
+            self.allowed_types =  (str, bool, int, float, complex, np.generic, cp.generic)
+        else:
+            self.allowed_types =  (str, bool, int, float, complex, np.generic)
+            
 
     def list_vars(self):
         return list(self._vars.keys())
@@ -199,13 +208,6 @@ class RemoteOptimus:
         return self._vars.get(name, None)
 
     def _return(self, value):
-        from optimus.optimus import Engine
-        if self.op.engine == Engine.DASK_CUDF.value:
-            import cupy as cp
-            cp_generic = cp.generic
-        else:
-            cp_generic = int
-        import numpy as np
         if isinstance(value, (dict,)):
             for key in value:
                 value[key] = self._return(value[key])
@@ -218,7 +220,7 @@ class RemoteOptimus:
             return tuple(map(self._return, value))
         elif isinstance(value, (PandasDataFrame,)):
             return value.head()
-        elif not isinstance(value, (str, bool, int, float, complex, np.generic, cp_generic)) and value is not None:
+        elif not isinstance(value, self.allowed_types) and value is not None:
             import uuid
             unique_id = str(uuid.uuid4())
             self.set_var(unique_id, value)
