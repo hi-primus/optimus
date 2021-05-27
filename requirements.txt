@@ -1,6 +1,7 @@
 dask[complete]==2021.4.0
 distributed==2021.4.0
 numba>=0.49
+jsonschema
 simplejson>=3.16.0
 cryptography>=2.7
 imgkit>=1.0.1
