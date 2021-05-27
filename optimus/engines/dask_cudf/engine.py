@@ -89,7 +89,6 @@ class DaskCUDFEngine(BaseEngine):
                                            # Spill to RAM when 80% memory is full
                                            )
                 self.client = Client(cluster, *args, **kwargs)
-            use_remote = False
 
         if use_remote:
             self.remote = RemoteOptimusInterface(self.client, Engine.DASK_CUDF.value)

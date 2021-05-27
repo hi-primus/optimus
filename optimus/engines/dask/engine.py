@@ -69,7 +69,6 @@ class DaskEngine(BaseEngine):
             except ValueError:
                 self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
                                      processes=processes, memory_limit=memory_limit, *args, **kwargs)
-            use_remote = False
 
         if use_remote:
             self.remote = RemoteOptimusInterface(self.client, Engine.DASK.value)
