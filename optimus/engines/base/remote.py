@@ -196,7 +196,7 @@ class RemoteOptimus:
         self._del_next = []
 
         if not name.startswith("_"):
-            if self._vars[name] is None:
+            if name not in self._vars or self._vars[name] is None:
                 print(name + " not found")
             else:
                 self._del_next.append(name)
