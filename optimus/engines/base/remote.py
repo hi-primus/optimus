@@ -139,53 +139,53 @@ class RemoteOptimusInterface:
 
         return self.submit(func, *args, **kwargs).result(client_timeout)
 
-    def list_vars(self):
+    def list_vars(self, client_timeout=MAX_TIMEOUT):
         def _list_vars():
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.list_vars()
         
-        return self.client.submit(_list_vars)
+        return self.client.submit(_list_vars, pure=False).result(client_timeout)
 
-    def clear_vars(self, keep=[]):
+    def clear_vars(self, keep=[], client_timeout=MAX_TIMEOUT):
         def _clear_vars(keep=[]):
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.clear_vars(keep)
         
-        return self.client.submit(_clear_vars, keep)
+        return self.client.submit(_clear_vars, keep, pure=False).result(client_timeout)
 
-    def update_vars(self, values):
+    def update_vars(self, values, client_timeout=MAX_TIMEOUT):
         def _update_vars(values):
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.update_vars(values)
         
-        return self.client.submit(_update_vars, values)
+        return self.client.submit(_update_vars, values, pure=False).result(client_timeout)
 
-    def del_var(self, name):
+    def del_var(self, name, client_timeout=MAX_TIMEOUT):
         def _del_var(name):
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.del_var(name)
         
-        return self.client.submit(_del_var, name)
+        return self.client.submit(_del_var, name, pure=False).result(client_timeout)
 
-    def set_var(self, name, value):
+    def set_var(self, name, value, client_timeout=MAX_TIMEOUT):
         def _set_var(name):
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.set_var(name, value)
         
-        return self.client.submit(_set_var, name, value)
+        return self.client.submit(_set_var, name, value, pure=False).result(client_timeout)
 
-    def get_var(self, name):
+    def get_var(self, name, client_timeout=MAX_TIMEOUT):
         def _get_var(name):
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.get_var(name)
         
-        return self.client.submit(_get_var, name)
+        return self.client.submit(_get_var, name, pure=False).result(client_timeout)
             
 
 
@@ -225,6 +225,7 @@ class RemoteOptimus:
     def clear_vars(self, keep=[]):
         keep = keep + ["_load", "_create"]
         self._vars = { k: self._vars[k] for k in keep }
+        return list(self._vars.keys())
 
     def update_vars(self, values):
         self._vars.update(values)
