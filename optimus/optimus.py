@@ -45,6 +45,9 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     # Stopwords
     nltk.download('stopwords', quiet=True)
 
+    # POS
+    nltk.download('averaged_perceptron_tagger')
+
     # Init engine
     if engine == Engine.PANDAS.value:
         from optimus.engines.pandas.engine import PandasEngine
