@@ -336,14 +336,7 @@ class ML:
 
         #
         fm = lm.fit(X_train, y_train.ravel())
-        # print("lm.score(x,Y)", lm.score(X, y))
-        # predictions = fm.predict(X_test)
-        # print("y_test", predictions.ravel())
-        # print("predictions",predictions)
-        # print("cm = metrics.confusion_matrix(y_test, predictions)", metrics.confusion_matrix(y_test, predictions))
         model = Model(fm, X_train, y_train, X_test, y_test)
-        # model.score = {i: list(score["test_" + i]) for i in scoring.keys()}
-        # print(model.score)
         model.evaluation = {"accuracy": fm.score(X, y),
                             "standard deviation": score["test_score"].mean()}
         #
@@ -434,8 +427,7 @@ class ML:
             finalDf = principal_df
         return self.root.new(finalDf)
 
-    def random_forest(self, features, target,
-                      *args, **kwargs):
+    def random_forest(self, features, target, *args, **kwargs):
         """
         Runs a random forest classifier for input DataFrame.
         :param features: List of columns to select for prediction.
@@ -498,7 +490,7 @@ class ML:
                                           max_samples)
         fm = regressor.fit(X_train, y_train.ravel())
         model = Model(fm, X_train, y_train, X_test, y_test)
-        # y_pred = regressor.predict(X_test)
+        # y_pred = regressor.predict(X_test
 
         return model
 
@@ -513,3 +505,5 @@ class ML:
         """
 
         pass
+
+
