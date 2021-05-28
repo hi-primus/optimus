@@ -1,9 +1,4 @@
-import fastnumbers
-import numpy as np
-import pandas as pd
-
-from optimus.engines.base.commons.functions import is_integer, is_float, is_integer_cudf, is_float_cudf, \
-    is_numeric_cudf, is_string_cudf
+from optimus.engines.base.commons.functions import is_integer_cudf, is_float_cudf, is_numeric_cudf, is_string_cudf
 from optimus.engines.base.mask import Mask
 
 
