@@ -139,6 +139,22 @@ class RemoteOptimusInterface:
 
         return self.submit(func, *args, **kwargs).result(client_timeout)
 
+    def list_vars(self):
+        def _list_vars():
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.list_vars()
+        
+        return self.client.submit(_list_vars)
+
+    def update_vars(self, values):
+        def _update_vars(values):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.update_vars(values)
+        
+        return self.client.submit(_update_vars, values)
+
     def del_var(self, name):
         def _del_var(name):
             from dask.distributed import get_worker
@@ -146,6 +162,22 @@ class RemoteOptimusInterface:
             return op.del_var(name)
         
         return self.client.submit(_del_var, name)
+
+    def set_var(self, name, value):
+        def _set_var(name):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.set_var(name, value)
+        
+        return self.client.submit(_set_var, name, value)
+
+    def get_var(self, name):
+        def _get_var(name):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.get_var(name)
+        
+        return self.client.submit(_get_var, name)
             
 
 
