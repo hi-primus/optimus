@@ -12,7 +12,7 @@ from optimus.helpers.core import val_to_list
 from optimus.infer import is_list_of_tuples
 
 
-class Cols(PandasBaseColumns, CUDFBaseColumns):
+class Cols(CUDFBaseColumns, PandasBaseColumns):
 
     def __init__(self, df):
         super(PandasBaseColumns, self).__init__(df)

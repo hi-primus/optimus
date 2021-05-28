@@ -9,7 +9,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.profiler.functions import fill_missing_var_types
 
 
-class Cols(DaskBaseColumns, CUDFBaseColumns):
+class Cols(CUDFBaseColumns, DaskBaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
