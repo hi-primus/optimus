@@ -61,6 +61,9 @@ def create_func(_df, input_cols, output_cols, func, args=None):
 
 
 class DaskCUDFFunctions(Functions):
+    def word_tokenize(self, series):
+        pass
+
     def delayed(self, func):
         def wrapper(*args, **kwargs):
             return dask.delayed(func)(*args, **kwargs)
