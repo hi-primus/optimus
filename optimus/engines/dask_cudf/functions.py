@@ -13,7 +13,7 @@ import dask
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
 from optimus.helpers.core import val_to_list
-
+import dask.dataframe as dd
 
 def get_random_string(length):
     # Random string with the combination of lower and upper case
@@ -71,7 +71,7 @@ class DaskCUDFFunctions(Functions):
         return wrapper
 
     def from_delayed(self, delayed):
-        return dask.from_delayed(delayed)
+        return dd.from_delayed(delayed)
 
     def to_delayed(self, value):
         return value.to_delayed()
