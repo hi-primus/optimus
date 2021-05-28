@@ -147,6 +147,14 @@ class RemoteOptimusInterface:
         
         return self.client.submit(_list_vars)
 
+    def clear_vars(self, keep=[]):
+        def _clear_vars(keep=[]):
+            from dask.distributed import get_worker
+            op = get_worker().actor.op
+            return op.clear_vars(keep)
+        
+        return self.client.submit(_clear_vars, keep)
+
     def update_vars(self, values):
         def _update_vars(values):
             from dask.distributed import get_worker
@@ -197,6 +205,7 @@ class RemoteOptimus:
         self.op.set_var = self.set_var
         self.op.get_var = self.get_var
         self.op.del_var = self.del_var
+        self.op.clear_vars = self.clear_vars
         self.op.list_vars = self.list_vars
         self.op.update_vars = self.update_vars
         self.set_var("_load", self.op.load)
@@ -212,6 +221,10 @@ class RemoteOptimus:
 
     def list_vars(self):
         return list(self._vars.keys())
+
+    def clear_vars(self, keep=[]):
+        keep = keep + ["_load", "_create"]
+        self._vars = { k: self._vars[k] for k in keep }
 
     def update_vars(self, values):
         self._vars.update(values)
