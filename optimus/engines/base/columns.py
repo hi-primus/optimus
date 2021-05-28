@@ -5,8 +5,6 @@ from abc import abstractmethod, ABC
 from functools import reduce
 
 import jellyfish as jellyfish
-from metaphone import doublemetaphone
-
 import nltk
 import numpy as np
 import pandas as pd
@@ -14,9 +12,16 @@ import pydateinfer
 import wordninja
 from dask import dataframe as dd
 from glom import glom
+from metaphone import doublemetaphone
 from multipledispatch import dispatch
+from nltk import LancasterStemmer
+from nltk import ngrams
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from nltk.stem import SnowballStemmer
+from num2words import num2words
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
@@ -29,7 +34,7 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
-    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -1669,16 +1674,20 @@ class BaseColumns(ABC):
 
         return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
 
-    def steammer(self, input_cols="*", regex=None, value=None, output_cols=None):
+    def stem_verbs(self, input_cols="*", stemmer="porter", language="english", output_cols=None, ):
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
-        stemmer = PorterStemmer()
 
-        # w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+        if stemmer == "snowball":
+            stemming = SnowballStemmer(language)
+        elif stemmer == "porter":
+            stemming = PorterStemmer()
+        elif stemmer == "lancaster":
+            stemming = LancasterStemmer()
 
-        def lemmatize_text(text):
-            return " ".join([stemmer.steam(w) for w in w_tokenizer.tokenize(text)])
+        def stemmer_text(text):
+            return " ".join([stemming.stem(w) for w in w_tokenizer.tokenize(text)])
 
-        return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
+        return self.apply(input_cols, stemmer_text, output_cols=output_cols, mode="map")
 
     @staticmethod
     @abstractmethod
