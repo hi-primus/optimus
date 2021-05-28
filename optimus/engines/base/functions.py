@@ -36,6 +36,12 @@ class Functions(ABC):
     def to_integer(self, series):
         return series
 
+    def _to_float_delayed(self, series):
+        return self.to_float(series)
+
+    def _to_integer_delayed(self, series):
+        return self.to_integer(series)
+
     def to_string(self, series):
         return series
 

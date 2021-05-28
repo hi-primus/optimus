@@ -76,16 +76,16 @@ class DaskCUDFFunctions(Functions):
     def to_delayed(self, value):
         return value.to_delayed()
 
-    def _to_float(self, series, *args):
+    def to_float(self, series, *args):
         return series.map_partitions(to_float_cudf, meta=float)
 
-    def _to_integer(self, series, *args):
+    def to_integer(self, series, *args):
         return series.map_partitions(to_integer_cudf, meta=int)
 
-    def to_float(self, series):
+    def _to_float_delayed(self, series):
         return to_float_cudf(series)
 
-    def to_integer(self, series):
+    def _to_integer_delayed(self, series):
         return to_integer_cudf(series)
 
     def to_string(self, series):
