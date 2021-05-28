@@ -125,6 +125,8 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             actor = get_worker().actor
             return actor.submit(_func, *args, **kwargs)
+
+        kwargs.update({"pure": False})
         
         return self.client.submit(_remote, func, *args, **kwargs)
 
