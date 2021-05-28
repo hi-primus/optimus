@@ -2,9 +2,7 @@ from abc import abstractmethod
 
 import pandas as pd
 
-from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-
-class PandasBaseColumns(DataFrameBaseColumns):
+class PandasBaseColumns():
 
     def _names(self):
         return list(self.root.data.columns)

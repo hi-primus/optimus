@@ -5,6 +5,7 @@ from optimus.engines.base.commons.functions import string_to_index, index_to_str
     to_string_cudf, to_integer_cudf
 from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
+from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -12,7 +13,7 @@ from optimus.helpers.core import val_to_list
 from optimus.infer import is_list_of_tuples
 
 
-class Cols(CUDFBaseColumns, PandasBaseColumns):
+class Cols(CUDFBaseColumns, PandasBaseColumns, DataFrameBaseColumns):
 
     def __init__(self, df):
         super(PandasBaseColumns, self).__init__(df)
@@ -20,6 +21,9 @@ class Cols(CUDFBaseColumns, PandasBaseColumns):
     @property
     def _pd(self):
         return cudf
+
+    def _series_to_pandas(self, series):
+        return series.to_pandas()
 
     def find(self, columns, sub, ignore_case=False):
         """

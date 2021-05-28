@@ -50,6 +50,12 @@ class BaseColumns(ABC):
         self.root = root
         self.F = self.root.functions
 
+    def _series_to_dict(self, series):
+        return self._series_to_pandas(series).to_dict()
+
+    def _series_to_pandas(self, series):
+        pass
+
     def _map(self, df, input_col, output_col, func, *args):
         return df[input_col].apply(func, args=(*args,))
 
@@ -2117,9 +2123,6 @@ class BaseColumns(ABC):
     #     dfd = self.root.data
     #
     #     return self.root.new(dfd[input_cols].str.match(regex).to_frame())
-
-    def _series_to_dict(self, series):
-        return series.to_dict()
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):

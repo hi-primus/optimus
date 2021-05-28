@@ -4,17 +4,21 @@ from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string, find
 from optimus.engines.base.pandas.columns import PandasBaseColumns
+from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 
 DataFrame = pd.DataFrame
 
 
-class Cols(PandasBaseColumns):
+class Cols(PandasBaseColumns, DataFrameBaseColumns):
     def __init__(self, df):
-        super(PandasBaseColumns, self).__init__(df)
+        super(DataFrameBaseColumns, self).__init__(df)
 
     @property
     def _pd(self):
         return pd
+
+    def _series_to_pandas(self, series):
+        return series
 
     def find(self, columns, sub, ignore_case=False):
         """
