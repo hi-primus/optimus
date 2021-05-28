@@ -24,7 +24,7 @@ class DaskCUDFFunctions(DaskBaseFunctions, Functions):
     def _to_integer_partition(self, series):
         return to_integer_cudf(series)
 
-     def kurtosis(self, series):
+    def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())
 
     def skew(self, series):
