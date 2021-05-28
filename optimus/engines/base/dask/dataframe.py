@@ -24,7 +24,7 @@ class DaskBaseDataFrame(BaseDataFrame):
         if dfd.known_divisions:
             for key in kw_columns:
                 kw_column = kw_columns[key]
-                if not is_one_element(kw_column) and not callable(kw_column) and not kw_column.known_divisions:
+                if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
                     _dfd = kw_column.reset_index().set_index('index')
                     if key in _dfd:
                         # the incoming series has the same column key

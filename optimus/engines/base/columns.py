@@ -1304,19 +1304,17 @@ class BaseColumns(ABC):
         return df
 
     def mid(self, input_cols, start=0, n=1, output_cols=None):
-
         df = self.apply(input_cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
     def to_float(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_float, func_return_type=float,
-                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="partitioned")
+                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
     def to_integer(self, input_cols="*", output_cols=None):
-
         return self.apply(input_cols, self.F.to_integer, func_return_type=int,
-                          output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_boolean, func_return_type=int,
