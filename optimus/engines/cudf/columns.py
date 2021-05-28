@@ -244,6 +244,8 @@ class Cols(PandasBaseColumns, CUDFBaseColumns):
         index = val_to_list(index)
         output_ordered_columns = df.cols.names()
 
+        dfd = df.data
+
         for idx, input_col in enumerate(input_cols):
 
             if is_list_of_tuples(index):
