@@ -17,9 +17,6 @@ class DaskBaseColumns(BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
-    def _series_to_pandas(self, series):
-        return series.compute().to_pandas()
-
     @staticmethod
     def exec_agg(exprs, compute):
         """

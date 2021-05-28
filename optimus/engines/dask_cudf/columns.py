@@ -13,6 +13,9 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
+    def _series_to_pandas(self, series):
+        return series.compute().to_pandas()
+
     def _names(self):
         return list(self.root.data.columns)
 
