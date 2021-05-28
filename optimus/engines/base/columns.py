@@ -2340,6 +2340,47 @@ class BaseColumns(ABC):
 
         return df
 
+    def pos(self, input_cols, output_cols=None):
+        df = self.root
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+
+        def calculate_ngrams(text):
+            if not is_list_value(text):
+                text = w_tokenizer.tokenize(text)
+            return nltk.pos_tag(text)
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+        return df
+
+    def ngrams(self, input_cols, n_size=2, output_cols=None):
+        """
+            Calculate the ngram for a fingerprinted string
+            :param df: Dataframe to be processed
+            :param input_cols: Columns to be processed
+            :param n_size:
+            :return:
+            """
+
+        df = self.root
+
+        input_cols = parse_columns(df, input_cols)
+        output_cols = get_output_cols(input_cols, output_cols)
+
+        def calculate_ngrams(value):
+            return list(map("".join, list(ngrams(value, n_size))))
+
+        for input_col, output_col in zip(input_cols, output_cols):
+            df = df.cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+
+        df.meta = Meta.action(df.meta, Actions.NGRAMS.value, output_cols)
+
+        return df
+
     def ngram_fingerprint(self, input_cols, n_size=2, output_cols=None):
         """
         Calculate the ngram for a fingerprinted string
