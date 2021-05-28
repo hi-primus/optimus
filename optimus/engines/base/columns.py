@@ -2452,3 +2452,37 @@ class BaseColumns(ABC):
     def soundex(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.SOUNDEX.value, mode="map", func_type="column_expr")
+
+    def tf_idf(self, features):
+
+        df = self.root
+        vectorizer = TfidfVectorizer()
+        X = df[features]._to_values().ravel()
+        vectors = vectorizer.fit_transform(X)
+
+        feature_names = vectorizer.get_feature_names()
+        dense = vectors.todense()
+        denselist = dense.tolist()
+        return self.root.new(pd.DataFrame(denselist, columns=feature_names))
+
+    def bag_of_words(self, features, analyzer="word", ngram_range=2):
+        """
+
+        :param features:
+        :param ngram_range:
+        :return:
+        """
+
+        df = self.root
+        if is_int(ngram_range):
+            ngram_range = (ngram_range, ngram_range)
+
+        features = parse_columns(df, features)
+
+        df = df.cols.select(features).rows.drop_na()
+
+        X = df[features]._to_values().ravel()
+        vectorizer = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
+        matrix = vectorizer.fit_transform(X)
+
+        return self.root.new(pd.DataFrame(matrix.toarray(), columns=vectorizer.get_feature_names()))
