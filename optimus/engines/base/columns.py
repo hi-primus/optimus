@@ -1388,14 +1388,14 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
                           set_index=False)
 
-    def word_tokenize(self, input_cols="*", output_cols=None):
+    def word_tokenizer(self, input_cols="*", output_cols=None):
 
         return self.apply(input_cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.WORD_TOKENIZE.value, mode="map")
 
     def word_count(self, input_cols="*", output_cols=None):
 
-        return self.word_tokenize(input_cols, output_cols).cols.len(output_cols)
+        return self.word_tokenizer(input_cols, output_cols).cols.len(output_cols)
 
     def len(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.len, func_return_type=str, output_cols=output_cols,
