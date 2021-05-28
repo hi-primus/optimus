@@ -1646,7 +1646,20 @@ class BaseColumns(ABC):
     def replace_regex(input_cols, regex=None, value=None, output_cols=None):
         pass
 
-    def lemmatize_verbs(self, input_cols="*", regex=None, value=None, output_cols=None):
+    def num_to_words(self, input_cols="*", language="en", output_cols=None):
+        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+
+        def _num_to_words(text):
+            if not is_list_value(text):
+                text = w_tokenizer.tokenize(text)
+                result = " ".join([num2words(w, lang=language) if str_to_int(w) else w for w in text])
+            else:
+                result = [num2words(w, lang=language) if str_to_int(w) else w for w in text]
+            return result
+
+        return self.apply(input_cols, _num_to_words, output_cols=output_cols, mode="map")
+
+    def lemmatize_verbs(self, input_cols="*", output_cols=None):
 
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
         lemmatizer = nltk.stem.WordNetLemmatizer()
