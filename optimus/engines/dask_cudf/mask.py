@@ -4,7 +4,7 @@ from optimus.engines.base.mask import Mask
 
 class DaskCUDFMask(Mask):
 
-    def numeric(self, col_name):
+    def numeric(self, col_name="*"):
         return self.root.cols.apply(col_name, is_numeric_cudf)
 
     def int(self, col_name="*"):
