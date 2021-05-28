@@ -3,28 +3,18 @@ import pandas as pd
 from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string, find
-from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.pandas.columns import PandasBaseColumns
 
 DataFrame = pd.DataFrame
 
 
-class Cols(DataFrameBaseColumns):
+class Cols(PandasBaseColumns):
     def __init__(self, df):
-        super(DataFrameBaseColumns, self).__init__(df)
+        super(PandasBaseColumns, self).__init__(df)
 
-    def _names(self):
-        return list(self.root.data.columns)
-
-    def append(self, dfs):
-        """
-
-        :param dfs:
-        :return:
-        """
-
-        df = self.root
-        dfd = pd.concat([*[_df.data.reset_index(drop=True) for _df in dfs], df.data.reset_index(drop=True)], axis=1)
-        return self.root.new(dfd)
+    @property
+    def _pd(self):
+        return pd
 
     def find(self, columns, sub, ignore_case=False):
         """
