@@ -16,6 +16,9 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
     def _series_to_pandas(self, series):
         return series.compute().to_pandas()
 
+    def _series_to_dict_delayed(self, series):
+        return series.to_pandas().to_dict()
+
     def _names(self):
         return list(self.root.data.columns)
 
