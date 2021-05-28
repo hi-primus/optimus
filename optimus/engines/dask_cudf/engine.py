@@ -76,7 +76,8 @@ class DaskCUDFEngine(BaseEngine):
             except ValueError:
                 from dask_cuda import LocalCUDACluster
                 from GPUtil import GPUtil
-                n_gpus = len(GPUtil.getAvailable(order='first', limit=BIG_NUMBER))
+                available_gpus = GPUtil.getAvailable(order='first', limit=BIG_NUMBER)
+                n_gpus = len(available_gpus)
 
                 if n_workers > n_gpus:
                     logger.print(
@@ -84,8 +85,10 @@ class DaskCUDFEngine(BaseEngine):
                     n_workers = n_gpus
                     # n_gpus = 1
 
-                cluster = LocalCUDACluster(rmm_pool_size=GPUtil.memoryTotal,
-                                           device_memory_limit=GPUtil.memoryTotal * 0.8
+                memoryTotal = GPUtil.getGPUs()[available_gpus[0]].memoryTotal
+
+                cluster = LocalCUDACluster(rmm_pool_size=memoryTotal,
+                                           device_memory_limit=memoryTotal * 0.8
                                            # Spill to RAM when 80% memory is full
                                            )
                 self.client = Client(cluster, *args, **kwargs)
