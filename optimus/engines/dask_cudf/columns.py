@@ -64,7 +64,6 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
         columns = parse_columns(df, columns)
         import cupy as cp
 
-        @dask.delayed
         def _bins_col(_columns, _min, _max):
             # In some cases a string can be passed as min or max values. Try to convert them to numeric if not nan
             return {col_name: cp.linspace(fastnumbers.fast_float(_min["min"][col_name], default=cp.nan),
@@ -77,7 +76,6 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
 
         _bins = _bins_col(columns, _min, _max)
 
-        @dask.delayed
         def chunk(pdf, _bins):
             _count, _bins = cp.histogram(cp.array(pdf.to_gpu_array()), bins=_bins)
             return _count
