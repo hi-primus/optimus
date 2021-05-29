@@ -2036,6 +2036,7 @@ class BaseColumns(ABC):
 
         for col_name in columns_type.keys():
             result[col_name].update({"profiler_dtype": columns_type[col_name]})
+
         return result
 
     @staticmethod
@@ -2125,7 +2126,6 @@ class BaseColumns(ABC):
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):
-
         df = self.root
         columns = parse_columns(df, columns)
 
@@ -2174,6 +2174,7 @@ class BaseColumns(ABC):
 
         if tidy is True:
             result = result["frequency"]
+
         return result
 
     def boxplot(self, columns):

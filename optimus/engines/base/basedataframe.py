@@ -11,21 +11,21 @@ from tabulate import tabulate
 
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
-from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
-from optimus.helpers.json import json_converter, dump_json
+from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from .columns import BaseColumns
 from .meta import Meta
+from .profile import BaseProfile
 from ...outliers.outliers import Outliers
 from ...plots.functions import plot_hist, plot_frequency
 from ...plots.plots import Plot
-from .profile import BaseProfile
 
 
 class BaseDataFrame(ABC):
@@ -78,15 +78,15 @@ class BaseDataFrame(ABC):
     def __operator__(df, dtype, multiple_columns=False):
         if isinstance(df, (BaseDataFrame,)):
             col1 = "*" if multiple_columns else df.cols.names(0)[0]
-            
+
             if dtype:
                 df = df.cols.cast(col1, dtype).data
             else:
                 df = df.data
-            
+
             if not multiple_columns:
                 df = df[col1]
-            
+
         return df
 
     @abstractmethod
@@ -242,7 +242,7 @@ class BaseDataFrame(ABC):
 
     @property
     def profile(self):
-        return BaseProfile(self)        
+        return BaseProfile(self)
 
     @property
     def plot(self):
@@ -578,9 +578,9 @@ class BaseDataFrame(ABC):
     def ascii(self, limit=10, columns=None):
         df = self
         if not columns:
-            columns="*"
+            columns = "*"
         limit = min(limit, df.rows.approx_count())
-        return tabulate(df.rows.limit(limit+1).cols.select(columns).to_pandas(),
+        return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
                         tablefmt="simple",
                         showindex="never")
@@ -774,7 +774,6 @@ class BaseDataFrame(ABC):
         return string_clustering(self.root, columns, algorithm, *args, **kwargs)
         # return clusters
 
-
     def agg(self, aggregations: dict, groupby=None, output="dict"):
 
         df = self.root
@@ -795,22 +794,23 @@ class BaseDataFrame(ABC):
 
             elif output == "dataframe":
                 result = self.root.new(dfd.reset_index())
-                
+
         else:
             result = {}
 
             for column, aggregations_set in aggregations.items():
                 aggregations_set = val_to_list(aggregations_set)
                 for aggregation in aggregations_set:
-                    result[column+"_"+aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
-            
+                    result[column + "_" + aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
+
             if output == "dataframe":
                 result = self.root.new(result)
-        
+
         return result
 
-    def report(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR, approx_count=True,
-            mismatch=None, advanced_stats=True):
+    def report(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
+               approx_count=True,
+               mismatch=None, advanced_stats=True):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed

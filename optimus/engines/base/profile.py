@@ -1,13 +1,12 @@
-from abc import abstractmethod, ABC
-
-from multipledispatch import dispatch
+from abc import ABC
 
 from optimus.engines.base.meta import Meta
-from optimus.helpers.core import one_list_to_val
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.core import one_list_to_val
+from optimus.helpers.json import dump_json
 from optimus.infer import is_list
-
 from optimus.profiler.constants import MAX_BUCKETS
+
 
 class BaseProfile(ABC):
     """Base class for all profile implementations"""
@@ -15,16 +14,14 @@ class BaseProfile(ABC):
     def __init__(self, root):
         self.root = root
 
-
     def summary(self, columns="*"):
-        
+
         df = self.root
 
         return Meta.get(df.meta, f"profile.summary")
 
-
     def columns(self, columns="*"):
-        
+
         df = self.root
         columns = parse_columns(df, columns) if columns else []
 
@@ -35,9 +32,8 @@ class BaseProfile(ABC):
 
         return one_list_to_val(columns)
 
-
     def dtypes(self, columns="*"):
-        
+
         df = self.root
         columns = parse_columns(df, columns) if columns else []
 
@@ -47,7 +43,6 @@ class BaseProfile(ABC):
             dtype = Meta.get(df.meta, f"profile.columns.{columns}.stats.profiler_dtype.dtype")
 
         return one_list_to_val(dtype)
-
 
     def __call__(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         # def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):

@@ -103,7 +103,6 @@ def cudf_to_dask_cudf(df, n_partitions=1):
     import dask_cudf
     return dask_cudf.from_cudf(df, npartitions=1)
 
-
 #
 #
 # def cudf_to_cupy_arr(df):
