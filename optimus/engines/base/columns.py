@@ -1409,7 +1409,7 @@ class BaseColumns(ABC):
 
     def len(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.len, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.LENGTH.value, mode="map")
+                          meta_action=Actions.LENGTH.value, mode="vectorized")
 
     def expand_contrated_words(self, input_cols="*", output_cols=None):
         i, j = zip(*CONTRACTIONS)
