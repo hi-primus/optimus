@@ -1,6 +1,6 @@
 import operator
 from abc import abstractmethod, ABC
-
+import time
 import humanize
 import imgkit
 import jinja2
@@ -521,7 +521,7 @@ class BaseDataFrame(ABC):
             data = df.cols.select(columns).to_dict()
         else:
             limit = min(limit, total_rows)
-            data = df.cols.select(columns).rows.limit(limit+1).to_dict()
+            data = df.cols.select(columns).rows.limit(limit + 1).to_dict()
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
@@ -622,6 +622,9 @@ class BaseDataFrame(ABC):
         :return:
         """
 
+
+        profiler_time = {"hist": {}, "frequency": {}, "count_mismatch": {}}
+
         df = self
         meta = self.meta
 
@@ -663,7 +666,10 @@ class BaseDataFrame(ABC):
                 cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
 
             compute = True
+
+            _t = time.process_time()
             mismatch = df.cols.count_mismatch(cols_dtypes)
+            profiler_time["count_mismatch"] = {"columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             cols = cols_dtypes.items()
@@ -679,13 +685,19 @@ class BaseDataFrame(ABC):
             hist = None
             count_uniques = None
 
+            # do some stuff
+
             if len(numeric_cols):
+                _t = time.process_time()
                 hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
+                profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
 
             freq = None
 
             if len(string_cols):
+                _t = time.process_time()
                 freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=False)
+                profiler_time["frequency"] = {"columns": string_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _f = {}
@@ -703,7 +715,6 @@ class BaseDataFrame(ABC):
                     elif _col_name in _hist:
                         h = _hist[_col_name]
                         _f[_col_name]["stats"]["hist"] = h
-                        # _f[_col_name]["stats"]["count_uniques"] = count_uniques["count_uniques"][_col_name]
 
                 return {"columns": _f}
 
