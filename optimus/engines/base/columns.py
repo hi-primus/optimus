@@ -2016,10 +2016,12 @@ class BaseColumns(ABC):
         }
 
         for col_name, props in columns_type.items():
+
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
             dtype = profiler_to_mask_func.get(props["dtype"], props["dtype"])
 
-            matches_mismatches = getattr(df.mask, dtype)(col_name).cols.frequency()
+            matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
             missing = df.mask.nulls(col_name).cols.sum()
