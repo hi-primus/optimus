@@ -38,12 +38,10 @@ class Save:
         """
 
         try:
-            df = self.root.data
+            df = self.root
+            dfd = self.root.data
             df = df.cols.cast("*", "str")
-
-            # Dask reference
-            # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
-            df.to_csv(path, index=False, **kwargs)
+            dfd.to_csv(path, index=False, **kwargs)
 
         except IOError as error:
             logger.print(error)
