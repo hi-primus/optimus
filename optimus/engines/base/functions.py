@@ -180,7 +180,7 @@ class Functions(ABC):
         pass
 
     def len(self, value):
-        return len(value)
+        return value.str.len()
 
     @staticmethod
     @abstractmethod
