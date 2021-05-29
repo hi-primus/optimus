@@ -29,7 +29,7 @@ class DaskBaseColumns(BaseColumns):
         else:
             result = delayed(exprs)
 
-        return result
+        return result.to_dict()
 
     def append(self, dfs):
         """

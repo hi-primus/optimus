@@ -855,11 +855,12 @@ class BaseColumns(ABC):
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True, parallel=False):
         """
         Create and run aggregation
-        :param columns:
-        :param funcs:
-        :param args:
-        :param compute:
-        :param tidy:
+        :param columns: Column over with to apply the aggregations
+        :param funcs: Aggregation list
+        :param args:Aggregations params
+        :param compute: Compute the result or return a delayed function
+        :param tidy: compact the dict output
+        :param parallel: Execute the function in every column or apply it over the whole dataframe
         :return:
         """
         df = self.root
@@ -871,17 +872,16 @@ class BaseColumns(ABC):
             args = (args,)
 
         funcs = val_to_list(funcs)
+
         if parallel:
 
             all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
-            agg_result = {func.__name__: self.exec_agg(all_funcs, compute)[0].to_dict() for func in funcs}
-
+            agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
             return agg_result
-        else:
 
-            all_funcs = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
-                         func in funcs]
-            agg_result = self.exec_agg(all_funcs, compute)
+        else:
+            agg_result = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
+                          func in funcs]
 
             result = {}
 
@@ -890,10 +890,9 @@ class BaseColumns(ABC):
                 for x, y in agg.items():
                     result.setdefault(x, {}).update(y)
 
-        return format_dict(result, tidy)
+            return format_dict(result, tidy)
 
     @staticmethod
-    @abstractmethod
     def exec_agg(exprs, compute):
         pass
 

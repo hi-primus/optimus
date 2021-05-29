@@ -13,17 +13,6 @@ class DataFrameBaseColumns(BaseColumns):
         super(DataFrameBaseColumns, self).__init__(df)
 
     @staticmethod
-    def exec_agg(exprs, compute=None):
-        """
-        Exectute and aggregation
-        Expression in Non dask dataframe can not handle compute. See exec_agg dask implementation
-        :param exprs:
-        :param compute:
-        :return:
-        """
-        return exprs
-
-    @staticmethod
     def qcut(columns, num_buckets, handle_invalid="skip"):
         pass
 
