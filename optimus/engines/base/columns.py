@@ -53,6 +53,9 @@ class BaseColumns(ABC):
     def _series_to_dict(self, series):
         return self._series_to_pandas(series).to_dict()
 
+    def _series_to_dict_delayed(self, series):
+        return series.to_dict()
+
     def _series_to_pandas(self, series):
         pass
 
@@ -1300,19 +1303,17 @@ class BaseColumns(ABC):
         return df
 
     def mid(self, input_cols, start=0, n=1, output_cols=None):
-
         df = self.apply(input_cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
     def to_float(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_float, func_return_type=float,
-                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="partitioned")
+                          output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
     def to_integer(self, input_cols="*", output_cols=None):
-
         return self.apply(input_cols, self.F.to_integer, func_return_type=int,
-                          output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, input_cols="*", output_cols=None):
         return self.apply(input_cols, self.F.to_boolean, func_return_type=int,
@@ -2133,7 +2134,7 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j} for i, j in self._series_to_dict(_series).items()]
+            _result = [{"value": i, "count": j} for i, j in self._series_to_dict_delayed(_series).items()]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}

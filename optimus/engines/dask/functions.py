@@ -11,10 +11,11 @@ from dask.array import stats
 
 from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean, to_datetime, word_tokenize
 from optimus.engines.base.functions import Functions
+from optimus.engines.base.dask.functions import DaskBaseFunctions
 from optimus.helpers.core import val_to_list
 
 
-class DaskFunctions(Functions):
+class DaskFunctions(DaskBaseFunctions, Functions):
 
     @property
     def constants(self):
@@ -27,20 +28,8 @@ class DaskFunctions(Functions):
 
         return wrapper
 
-    def from_delayed(self, delayed):
-        return dask.dataframe.from_delayed(delayed)
-
-    def to_delayed(self, value):
-        return value.to_delayed()
-
-    def _to_float(self, series):
-        return to_float(series)
-
     def to_float(self, series):
         return to_float(series)
-
-    def _to_integer(self, value):
-        return value.map(to_integer)
 
     def to_integer(self, series):
         return to_integer(series)
@@ -55,9 +44,6 @@ class DaskFunctions(Functions):
 
     def word_tokenize(self, value):
         return word_tokenize(value)
-
-    def count_zeros(self, series, *args):
-        return int((self._to_float(series).values == 0).sum())
 
     def kurtosis(self, series):
         return stats.kurtosis(self._to_float(series))
@@ -143,15 +129,3 @@ class DaskFunctions(Functions):
 
     def to_datetime(self, series, format):
         return to_datetime(series, format)
-
-    def replace_chars(self, series, search, replace_by):
-        # if ignore_case is True:
-        #     # Cudf do not accept re.compile as argument for replace
-        #     # regex = re.compile(str_regex, re.IGNORECASE)
-        #     regex = str_regex
-        # else:
-        #     regex = str_regex
-        replace_by = val_to_list(replace_by)
-        for i, j in zip(search, replace_by):
-            series = self.to_string_accessor(series).replace(i, j)
-        return series
