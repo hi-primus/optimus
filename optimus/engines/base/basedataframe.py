@@ -1,6 +1,7 @@
 import operator
-from abc import abstractmethod, ABC
 import time
+from abc import abstractmethod, ABC
+
 import humanize
 import imgkit
 import jinja2
@@ -621,14 +622,11 @@ class BaseDataFrame(ABC):
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
         """
-
-
+        _t = time.process_time()
         profiler_time = {"hist": {}, "frequency": {}, "count_mismatch": {}}
 
         df = self
         meta = self.meta
-
-        previous_columns = Meta.get(meta, "profile.columns")
 
         if flush is False:
             cols_to_profile = df._cols_to_profile(columns)
@@ -643,6 +641,7 @@ class BaseDataFrame(ABC):
             profiler_data = {}
         cols_dtypes = None
 
+        profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
         if cols_to_profile or not is_cached or flush is True:
             # Reset profiler metadata
             meta = Meta.set(meta, "profile", {})
@@ -763,12 +762,11 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
             assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
 
+        # _t = time.process_time()
+
         all_columns_names = df.cols.names()
 
         meta = Meta.set(meta, "transformations", value={})
-
-        if not previous_columns:
-            previous_columns = {}
 
         # Order columns
         actual_columns = profiler_data["columns"]
@@ -783,7 +781,8 @@ class BaseDataFrame(ABC):
         # Reset Actions
         meta = Meta.reset_actions(meta)
         df.meta = meta
-
+        profiler_time["end"] = {"elapsed_time": time.process_time() - _t}
+        # print(profiler_time)
         return df
 
     def graph(self) -> dict:
