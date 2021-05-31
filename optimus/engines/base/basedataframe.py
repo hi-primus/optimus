@@ -629,9 +629,9 @@ class BaseDataFrame(ABC):
         meta = self.meta
 
         if flush is False:
-            cols_to_profile = df._cols_to_profile(columns)
+            cols_to_profile = df._cols_to_profile(columns) or []
         else:
-            cols_to_profile = parse_columns(df, columns)
+            cols_to_profile = parse_columns(df, columns) or []
 
         profiler_data = Meta.get(meta, "profile")
 
