@@ -156,7 +156,7 @@ class Ext(BaseDataFrame):
         :return:
         """
         df = self.data
-        result = df.memory_usage(index=True, deep=deep).sum().compute()
+        result = df.memory_usage(index=True, deep=deep).sum()
         if format == "human":
             result = humanize.naturalsize(result)
 
