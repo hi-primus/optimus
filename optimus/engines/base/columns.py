@@ -1952,7 +1952,7 @@ class BaseColumns(ABC):
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
-    def hist(self, columns="*", buckets=20, compute=True):
+    def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True):
 
         df = self.root
         columns = parse_columns(df, columns)
