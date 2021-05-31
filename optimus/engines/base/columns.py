@@ -2019,7 +2019,6 @@ class BaseColumns(ABC):
         }
 
         for col_name, props in columns_type.items():
-
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
             dtype = profiler_to_mask_func.get(props["dtype"], props["dtype"])
 

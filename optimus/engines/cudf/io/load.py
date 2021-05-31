@@ -10,7 +10,7 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
-    
+
     def __init__(self, op):
         self.op = op
 
@@ -23,9 +23,9 @@ class Load(BaseLoad):
 
         :return:
         """
-        
+
         path = unquote_path(path)
-        
+
         local_file_names = prepare_path(path, "json")
         try:
             df_list = []
@@ -84,9 +84,9 @@ class Load(BaseLoad):
 
         :return dataFrame
         """
-        
+
         path = unquote_path(path)
-        
+
         # file, file_name = prepare_path(path, "csv")[0]
 
         try:
@@ -122,9 +122,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the parquet function
         :param kwargs: custom keyword arguments to be passed to the parquet function
         """
-        
+
         path = unquote_path(path)
-        
+
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
             df = CUDFDataFrame(df)
@@ -144,13 +144,13 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
-        
+
         file, file_name = prepare_path(path, "avro")[0]
 
         try:
@@ -173,13 +173,13 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the avro function
         :param kwargs: custom keyword arguments to be passed to the avro function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options
-        
+
         file, file_name = prepare_path(path, "orc")[0]
 
         try:
@@ -202,9 +202,9 @@ class Load(BaseLoad):
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
-        
+
         path = unquote_path(path)
-        
+
         if conn is not None:
             path = conn.path(path)
             storage_options = conn.storage_options

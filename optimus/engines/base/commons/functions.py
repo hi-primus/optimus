@@ -17,7 +17,6 @@ from optimus.infer import is_str
 
 def is_string(series):
     def _is_string(value):
-
         if isinstance(value, str):
             return True
         else:
@@ -53,6 +52,7 @@ def is_float_cudf(series):
 
 def is_numeric_cudf(series):
     return series.str.isnumeric()
+
 
 def is_string_cudf(series):
     return series.str.isalpha()
