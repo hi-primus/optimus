@@ -1,5 +1,6 @@
 import pandas as pd
 
+from optimus.engines.base.meta import Meta
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.helpers.check import is_pandas_dataframe
 from optimus.helpers.converter import pandas_to_dask_dataframe
@@ -25,4 +26,5 @@ class Create:
         # elif is_pandas_dataframe(data):
         data = pandas_to_dask_dataframe(data, n_partitions)
         df = DaskDataFrame(data)
+        df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         return df

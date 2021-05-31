@@ -105,7 +105,7 @@ class Load(BaseLoad):
                                 na_filter=na_filter, dtype=dtype, *args, **kwargs)
             df = CUDFDataFrame(cdf)
             df.meta = Meta.set(df.meta, None,
-                               {"file_name": path, "max_cell_length": df.cols.len("*").cols.max()["max"]})
+                               {"file_name": path, "max_cell_length": df.cols.len("*").cols.max()})
 
 
         except IOError as error:
