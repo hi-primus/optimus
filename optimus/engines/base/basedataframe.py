@@ -690,7 +690,7 @@ class BaseDataFrame(ABC):
                 hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
                 profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
 
-            freq = {"frequency": {}}
+            freq = []
 
             if len(string_cols):
                 _t = time.process_time()
@@ -707,11 +707,11 @@ class BaseDataFrame(ABC):
 
                 if len(non_sliced_cols) > 0:
                     # print("non_sliced_cols",non_sliced_cols)
-                    freq.update(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
+                    freq.append(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
-                    freq.update(
+                    freq.append(
                         df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
                                                                          compute=False))
 
@@ -744,7 +744,7 @@ class BaseDataFrame(ABC):
             if compute is True:
                 hist, freq, mismatch = dd.compute(hist, freq, mismatch)
 
-            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
+            updated_columns = merge(cols_to_profile, hist, freq[0], mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
