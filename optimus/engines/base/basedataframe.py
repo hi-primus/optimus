@@ -685,18 +685,36 @@ class BaseDataFrame(ABC):
             hist = None
             count_uniques = None
 
-            # do some stuff
-
             if len(numeric_cols):
                 _t = time.process_time()
                 hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
                 profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
 
-            freq = None
+            freq = {"frequency": {}}
 
             if len(string_cols):
                 _t = time.process_time()
-                freq = df.cols.frequency(string_cols, n=bins, count_uniques=True, compute=False)
+                sliced_cols = []
+                non_sliced_cols = []
+
+                # Extract the columns with cells larger thatn
+                for i, j in df.meta["max_cell_length"].items():
+                    if i in string_cols:
+                        if j > 50:
+                            sliced_cols.append(i)
+                        else:
+                            non_sliced_cols.append(i)
+
+                if len(non_sliced_cols) > 0:
+                    # print("non_sliced_cols",non_sliced_cols)
+                    freq.update(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
+
+                if len(sliced_cols) > 0:
+                    # print("sliced_cols", sliced_cols)
+                    freq.update(
+                        df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
+                                                                         compute=False))
+
                 profiler_time["frequency"] = {"columns": string_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
