@@ -2074,10 +2074,13 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS)
+        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()
-        sample_dtypes = sample.to_optimus_pandas().cols.infer_dtypes().cols.frequency()
+        sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
+
+
         _unique_counts = sample.cols.count_uniques()
+
         cols_and_inferred_dtype = {}
         for col_name in columns:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
@@ -2097,7 +2100,6 @@ class BaseColumns(ABC):
                 _dtype = second_dtype
             else:
                 _dtype = ProfilerDataTypes.OBJECT.value
-
             _unique_counts = df[col_name].cols.count_uniques()
 
             if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
@@ -2123,11 +2125,6 @@ class BaseColumns(ABC):
                 cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer_dtypes(filtered_dates)})
 
         return cols_and_inferred_dtype
-
-    # def match(self, input_cols, regex):
-    #     dfd = self.root.data
-    #
-    #     return self.root.new(dfd[input_cols].str.match(regex).to_frame())
 
     def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False):
