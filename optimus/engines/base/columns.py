@@ -2075,7 +2075,7 @@ class BaseColumns(ABC):
         sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS)
         rows_count = sample.rows.count()
         sample_dtypes = sample.to_optimus_pandas().cols.infer_dtypes().cols.frequency()
-        _unique_counts = df.cols.count_uniques()
+        _unique_counts = sample.cols.count_uniques()
         cols_and_inferred_dtype = {}
         for col_name in columns:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
