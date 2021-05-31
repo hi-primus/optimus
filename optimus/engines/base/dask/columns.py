@@ -8,7 +8,7 @@ from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
-from optimus.infer import is_dict, is_list_value
+from optimus.infer import is_list_value
 from optimus.profiler.functions import fill_missing_var_types
 
 
@@ -24,12 +24,15 @@ class DaskBaseColumns(BaseColumns):
         :param exprs:
         :return:
         """
+
         if compute:
             result = dask.compute(exprs)[0]
+            if is_list_value(exprs):
+                result = result[0].to_dict()
         else:
             result = delayed(exprs)
 
-        return result.to_dict()
+        return result
 
     def append(self, dfs):
         """

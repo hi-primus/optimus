@@ -877,23 +877,25 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
 
         if parallel:
-
             all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
-            return agg_result
+            # return agg_result
 
         else:
-            agg_result = [{func.__name__: {col_name: func(df.data[col_name], *args)}} for col_name in columns for
-                          func in funcs]
+            agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
+                          col_name in columns } for func in funcs}
+            # agg_result = [{func.__name__: {self.exec_agg({col_name: func(df.data[col_name], *args)}, compute)}} for
+            #               col_name in columns for func in funcs]
 
             result = {}
 
-            # Reformat aggregation
-            for agg in agg_result:
-                for x, y in agg.items():
-                    result.setdefault(x, {}).update(y)
+        # # Reformat aggregation
+        # for agg in agg_result:
+        #     print("agg",agg)
+        #     for x, y in agg.items():
+        #         result.setdefault(x, {}).update(y)
 
-            return format_dict(result, tidy)
+        return format_dict(agg_result, tidy)
 
     @staticmethod
     def exec_agg(exprs, compute):
