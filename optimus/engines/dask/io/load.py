@@ -127,7 +127,8 @@ class Load(BaseLoad):
                 dfd = dd.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
             df = DaskDataFrame(dfd)
-            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path),
+                                               "max_cell_length": df.cols.len("*").cols.max()})
         except IOError as error:
             logger.print(error)
             raise
