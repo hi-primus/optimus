@@ -5,7 +5,7 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 class IbisDataFrame(BaseDataFrame):
 
     def __init__(self, data):
-        super().__init__(self, data)
+        super().__init__(data)
 
     @property
     def rows(self):

@@ -11,8 +11,8 @@ from optimus.infer import is_list_value
 
 class Ext(BaseDataFrame):
 
-    def __init__(self, root, data):
-        super().__init__(root, data)
+    def __init__(self, data):
+        super().__init__(data)
 
     def execute(self):
         df = self.data

@@ -34,12 +34,15 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, root, data):
+    def __init__(self, data):
         self.data = data
         self.buffer = None
         self.updated = None
-        self.root = root
         self.meta = {}
+
+    @property
+    def root(self):
+        return self
 
     def _repr_html_(self):
         df = self
@@ -63,7 +66,6 @@ class BaseDataFrame(ABC):
         self.data = df.data
         self.buffer = df.buffer
         self.updated = df.updated
-        self.root = df.root
         self.meta = df.meta
 
     def __len__(self):

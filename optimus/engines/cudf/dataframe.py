@@ -6,7 +6,7 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 class CUDFDataFrame(BaseDataFrame):
 
     def __init__(self, data):
-        super().__init__(self, data)
+        super().__init__(data)
 
     def _base_to_dfd(self, pdf, n_partitions):
         pass

@@ -7,7 +7,7 @@ from optimus.helpers.converter import pandas_to_dask_dataframe
 
 class DaskDataFrame(DaskBaseDataFrame):
     def __init__(self, data):
-        super().__init__(self, data)
+        super().__init__(data)
 
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_dask_dataframe(pdf, n_partitions)

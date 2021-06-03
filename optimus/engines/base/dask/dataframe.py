@@ -14,8 +14,8 @@ from optimus.infer import is_one_element
 
 class DaskBaseDataFrame(BaseDataFrame):
 
-    def __init__(self, root, data):
-        super().__init__(root, data)
+    def __init__(self, data):
+        super().__init__(data)
 
     def _assign(self, kw_columns):
 
