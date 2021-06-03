@@ -666,8 +666,6 @@ class BaseDataFrame(ABC):
                 cols_dtypes = {**cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer)}
                 cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
 
-            compute = True
-
             _t = time.process_time()
             mismatch = df.cols.count_mismatch(cols_dtypes)
             profiler_time["count_mismatch"] = {"columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
@@ -685,6 +683,7 @@ class BaseDataFrame(ABC):
 
             hist = None
             freq = {}
+            sliced_freq = {}
             count_uniques = None
 
             if len(hist_cols):
@@ -713,13 +712,12 @@ class BaseDataFrame(ABC):
 
                 if len(non_sliced_cols) > 0:
                     # print("non_sliced_cols",non_sliced_cols)
-                    freq.update(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
+                    freq = df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False)
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
-                    freq.update(
-                        df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
-                                                                         compute=False))
+                    sliced_freq = df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
+                                                                         compute=False)
 
                 profiler_time["frequency"] = {"columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
@@ -747,8 +745,9 @@ class BaseDataFrame(ABC):
 
             dtypes = df.cols.dtypes("*")
 
-            if compute is True:
-                hist, freq, mismatch = dd.compute(hist, freq, mismatch)
+            hist, freq, sliced_freq, mismatch = dd.compute(hist, freq, sliced_freq, mismatch)
+
+            freq = {**freq, **sliced_freq}
 
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
