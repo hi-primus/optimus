@@ -699,7 +699,7 @@ class BaseDataFrame(ABC):
                 non_sliced_cols = []
 
                 # Extract the columns with cells larger thatn
-                for i, j in df.meta["max_cell_length"].items():
+                for i, j in getattr(df.meta, "max_cell_length", {}).items():
                     if i in string_cols:
                         if j > 50:
                             sliced_cols.append(i)
