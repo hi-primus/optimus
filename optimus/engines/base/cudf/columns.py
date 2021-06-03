@@ -13,4 +13,9 @@ class CUDFBaseColumns():
         :return:
         """
         # print("exprs",type(exprs[0]),exprs[0])
-        return exprs[0].to_pandas().to_dict()
+        try:
+            return exprs[0].to_pandas().to_dict()
+        except TypeError:
+            return exprs
+        except AttributeError:
+            return exprs
