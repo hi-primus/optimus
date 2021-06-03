@@ -2155,7 +2155,7 @@ class BaseColumns(ABC):
             return _value_counts
 
         value_counts = [df.data[col_name].value_counts() for col_name in columns]
-        n_largest = [_value_counts.nlargest(n, keep="last") for _value_counts in value_counts]
+        n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
         if count_uniques is True:
             count_uniques = [_value_counts.count() for _value_counts in value_counts]
