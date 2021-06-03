@@ -59,7 +59,7 @@ class BaseDataFrame(ABC):
         elif is_str(item) or is_list(item):
             return self.cols.select(item)
         elif isinstance(item, BaseDataFrame):
-            return self.root.rows.select(item)
+            return self.rows.select(item)
 
     def __setitem__(self, key, value):
         df = self.cols.assign({key: value})
@@ -71,11 +71,11 @@ class BaseDataFrame(ABC):
     def __len__(self):
         return self.rows.count()
 
-    def new(self, df, meta=None):
-        new_df = self.__class__(df)
+    def new(self, dfd, meta=None):
+        df = self.__class__(dfd)
         if meta is not None:
-            new_df.meta = meta
-        return new_df
+            df.meta = meta
+        return df
 
     @staticmethod
     def __operator__(df, dtype, multiple_columns=False):
@@ -230,7 +230,7 @@ class BaseDataFrame(ABC):
         Return values from a dataframe in numpy or cupy format. Aimed to be used internally in Machine Learning models
         :return:
         """
-        return self.root.data.values
+        return self.data.values
 
     @abstractmethod
     def save(self):
@@ -278,7 +278,7 @@ class BaseDataFrame(ABC):
 
     def _assign(self, kw_columns):
 
-        dfd = self.root.data
+        dfd = self.data
         return dfd.assign(**kw_columns)
 
     def to_json(self, columns="*"):
@@ -295,7 +295,7 @@ class BaseDataFrame(ABC):
             [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
         """
-        return self.root.to_pandas().to_dict(orient)
+        return self.to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
@@ -483,7 +483,7 @@ class BaseDataFrame(ABC):
 
     def repartition(self, n=None, *args, **kwargs):
         df = self.data
-        return self.root.new(df, meta=self.root.meta)
+        return self.new(df, meta=self.meta)
 
     def table_image(self, path, limit=10):
         """
@@ -792,7 +792,7 @@ class BaseDataFrame(ABC):
         Return a dict the Dask tasks graph
         :return:
         """
-        dfd = self.root.data
+        dfd = self.data
 
         return dfd.__dask_graph__().layers
 
@@ -801,12 +801,12 @@ class BaseDataFrame(ABC):
         return self.data[col1]
 
     def string_clustering(self, columns="*", algorithm="fingerprint", *args, **kwargs):
-        return string_clustering(self.root, columns, algorithm, *args, **kwargs)
+        return string_clustering(self, columns, algorithm, *args, **kwargs)
         # return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict"):
 
-        df = self.root
+        df = self
         dfd = df.data
 
         if groupby:
@@ -823,7 +823,7 @@ class BaseDataFrame(ABC):
                 result = dfd.to_dict()
 
             elif output == "dataframe":
-                result = self.root.new(dfd.reset_index())
+                result = self.new(dfd.reset_index())
 
         else:
             result = {}
@@ -834,7 +834,7 @@ class BaseDataFrame(ABC):
                     result[column + "_" + aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
 
             if output == "dataframe":
-                result = self.root.new(result)
+                result = self.new(result)
 
         return result
 
