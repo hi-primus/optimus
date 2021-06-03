@@ -67,7 +67,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator=b'\r\n', error_bad_lines=False, cache=False, na_filter=False,
+            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None,
             *args, **kwargs):
         """
