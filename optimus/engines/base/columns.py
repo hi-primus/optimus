@@ -879,7 +879,6 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
-            # return agg_result
 
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
@@ -899,7 +898,10 @@ class BaseColumns(ABC):
 
     @staticmethod
     def exec_agg(exprs, compute):
-        pass
+        try:
+            return exprs[0].to_dict()
+        except Exception:
+            return exprs
 
     def mad(self, columns="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.root
