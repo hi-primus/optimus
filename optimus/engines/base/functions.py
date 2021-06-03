@@ -185,8 +185,8 @@ class Functions(ABC):
     def word_tokenize(self, series):
         pass
 
-    def len(self, value):
-        return value.str.len()
+    def len(self, series):
+        return self.to_string_accessor(series).len()
 
     @staticmethod
     @abstractmethod
