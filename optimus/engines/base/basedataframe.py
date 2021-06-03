@@ -649,8 +649,8 @@ class BaseDataFrame(ABC):
             meta = Meta.set(meta, "profile", {})
             df.meta = meta
 
-            numeric_cols = []
-            string_cols = []
+            hist_cols = []
+            freq_cols = []
 
             cols_dtypes = {}
             cols_to_infer = [*cols_to_profile]
@@ -679,69 +679,68 @@ class BaseDataFrame(ABC):
                         or properties.get("dtype") == ProfilerDataTypes.EMAIL.value \
                         or properties.get("dtype") == ProfilerDataTypes.URL.value \
                         or properties.get("dtype") == ProfilerDataTypes.OBJECT.value:
-                    string_cols.append(col_name)
+                    freq_cols.append(col_name)
                 else:
-                    numeric_cols.append(col_name)
+                    hist_cols.append(col_name)
 
             hist = None
-            freq = []
+            freq = {}
             count_uniques = None
 
-            if len(numeric_cols):
+            if len(hist_cols):
                 _t = time.process_time()
-                hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
-                profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
+                hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
+                profiler_time["hist"] = {"columns": hist_cols, "elapsed_time": time.process_time() - _t}
 
-            if len(string_cols):
+            if len(freq_cols):
                 _t = time.process_time()
                 sliced_cols = []
                 non_sliced_cols = []
 
                 # Extract the columns with cells larger thatn
-                for i, j in getattr(df.meta, "max_cell_length", {}).items():
-                    if i in string_cols:
-                        if j > 50:
-                            sliced_cols.append(i)
-                        else:
-                            non_sliced_cols.append(i)
+                max_cell_length = getattr(df.meta, "max_cell_length", None)
+                
+                if max_cell_length:
+                    for i, j in max_cell_length.items():
+                        if i in freq_cols:
+                            if j > 50:
+                                sliced_cols.append(i)
+                            else:
+                                non_sliced_cols.append(i)
+
+                else:
+                    non_sliced_cols = freq_cols
 
                 if len(non_sliced_cols) > 0:
                     # print("non_sliced_cols",non_sliced_cols)
-                    freq.append(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
+                    freq.update(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
-                    freq.append(
+                    freq.update(
                         df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
                                                                          compute=False))
 
-                profiler_time["frequency"] = {"columns": string_cols, "elapsed_time": time.process_time() - _t}
+                profiler_time["frequency"] = {"columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
-                _columns = {}
+                _c = {}
                 
-                if _hist == [] or _hist is None:
-                    _hist = {}
-                else:
-                    _hist = _hist["hist"]
-
-                if _freq == [] or _freq is None:
-                    _freq = {}
-                else:
-                    _freq = _freq["frequency"]
+                _hist = {} if _hist is None else _hist["hist"]
+                _freq = {} if _freq is None else _freq["frequency"]
 
                 for _col_name in _columns:
-                    _columns[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
+                    _c[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
                     if _col_name in _freq:
                         f = _freq[_col_name]
-                        _columns[_col_name]["stats"]["frequency"] = f["values"]
-                        _columns[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
+                        _c[_col_name]["stats"]["frequency"] = f["values"]
+                        _c[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
                     elif _col_name in _hist:
                         h = _hist[_col_name]
-                        _columns[_col_name]["stats"]["hist"] = h
+                        _c[_col_name]["stats"]["hist"] = h
 
-                return {"columns": _columns}
+                return {"columns": _c}
 
             # Nulls
             total_count_na = 0
@@ -750,8 +749,6 @@ class BaseDataFrame(ABC):
 
             if compute is True:
                 hist, freq, mismatch = dd.compute(hist, freq, mismatch)
-
-            freq = one_list_to_val(freq)
 
             updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
