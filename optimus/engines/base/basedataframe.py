@@ -14,7 +14,7 @@ from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -684,14 +684,13 @@ class BaseDataFrame(ABC):
                     numeric_cols.append(col_name)
 
             hist = None
+            freq = []
             count_uniques = None
 
             if len(numeric_cols):
                 _t = time.process_time()
                 hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
                 profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
-
-            freq = []
 
             if len(string_cols):
                 _t = time.process_time()
@@ -719,23 +718,30 @@ class BaseDataFrame(ABC):
                 profiler_time["frequency"] = {"columns": string_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
-                _f = {}
+                _columns = {}
+                
+                if _hist == [] or _hist is None:
+                    _hist = {}
+                else:
+                    _hist = _hist["hist"]
 
-                _freq = {} if _freq is None else _freq["frequency"]
-                _hist = {} if _hist is None else _hist["hist"]
+                if _freq == [] or _freq is None:
+                    _freq = {}
+                else:
+                    _freq = _freq["frequency"]
 
                 for _col_name in _columns:
-                    _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
+                    _columns[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
                     if _col_name in _freq:
                         f = _freq[_col_name]
-                        _f[_col_name]["stats"]["frequency"] = f["values"]
-                        _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
+                        _columns[_col_name]["stats"]["frequency"] = f["values"]
+                        _columns[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
                     elif _col_name in _hist:
                         h = _hist[_col_name]
-                        _f[_col_name]["stats"]["hist"] = h
+                        _columns[_col_name]["stats"]["hist"] = h
 
-                return {"columns": _f}
+                return {"columns": _columns}
 
             # Nulls
             total_count_na = 0
@@ -745,7 +751,9 @@ class BaseDataFrame(ABC):
             if compute is True:
                 hist, freq, mismatch = dd.compute(hist, freq, mismatch)
 
-            updated_columns = merge(cols_to_profile, hist, freq[0], mismatch, dtypes, count_uniques)
+            freq = one_list_to_val(freq)
+
+            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
