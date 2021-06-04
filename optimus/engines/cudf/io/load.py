@@ -15,7 +15,7 @@ class Load(BaseLoad):
         self.op = op
 
     @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
+    def json(path, multiline=False, n_rows=-1, *args, **kwargs):
         """
         Return a dataframe from a json file.
         :param path: path or location of the file.
@@ -31,7 +31,7 @@ class Load(BaseLoad):
             df_list = []
 
             for file_name, j in local_file_names:
-                df = cudf.read_json(file_name, lines=multiline, *args, **kwargs)
+                df = cudf.read_json(file_name, lines=multiline, nrows=n_rows, *args, **kwargs)
                 df_list.append(df)
 
             df = cudf.concat(df_list, axis=0, ignore_index=True)

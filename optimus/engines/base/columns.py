@@ -158,14 +158,15 @@ class BaseColumns(ABC):
         """
         df = self.root
         dfd = df.data
+        _columns = parse_columns(df, "*")
         if regex:
             # r = re.compile(regex)
-            columns = [c for c in list(df.columns) if re.match(regex, c)]
+            columns = [c for c in _columns if re.match(regex, c)]
 
         columns = parse_columns(df, columns)
         check_column_numbers(columns, "*")
 
-        dfd = dfd.drop(columns=list(set(df.columns) - set(columns)))
+        dfd = dfd.drop(columns=list(set(_columns) - set(columns)))
 
         df.meta = Meta.action(df.meta, Actions.KEEP.value, columns)
 
@@ -879,7 +880,6 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
-            # return agg_result
 
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
@@ -899,7 +899,10 @@ class BaseColumns(ABC):
 
     @staticmethod
     def exec_agg(exprs, compute):
-        pass
+        try:
+            return exprs[0].to_dict()
+        except Exception:
+            return exprs
 
     def mad(self, columns="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.root

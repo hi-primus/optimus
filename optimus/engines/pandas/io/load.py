@@ -23,7 +23,7 @@ class Load(BaseLoad):
         self.op = op
 
     @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
+    def json(path, multiline=False, n_rows=-1, *args, **kwargs):
         """
         Return a dataframe from a json file.
         :param path: path or location of the file.
@@ -39,7 +39,7 @@ class Load(BaseLoad):
             df_list = []
 
             for file_name, j in local_file_names:
-                df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
+                df = pd.read_json(file_name, lines=multiline, nrows=n_rows, *args, **kwargs)
                 df_list.append(df)
 
             df = pd.concat(df_list, axis=0, ignore_index=True)
@@ -67,7 +67,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator=b'\r\n', error_bad_lines=False, cache=False, na_filter=False,
+            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None,
             *args, **kwargs):
         """

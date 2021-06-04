@@ -14,7 +14,7 @@ from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -34,12 +34,15 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, root, data):
+    def __init__(self, data):
         self.data = data
         self.buffer = None
         self.updated = None
-        self.root = root
         self.meta = {}
+
+    @property
+    def root(self):
+        return self
 
     def _repr_html_(self):
         df = self
@@ -56,24 +59,23 @@ class BaseDataFrame(ABC):
         elif is_str(item) or is_list(item):
             return self.cols.select(item)
         elif isinstance(item, BaseDataFrame):
-            return self.root.rows.select(item)
+            return self.rows.select(item)
 
     def __setitem__(self, key, value):
         df = self.cols.assign({key: value})
         self.data = df.data
         self.buffer = df.buffer
         self.updated = df.updated
-        self.root = df.root
         self.meta = df.meta
 
     def __len__(self):
         return self.rows.count()
 
-    def new(self, df, meta=None):
-        new_df = self.__class__(df)
+    def new(self, dfd, meta=None):
+        df = self.__class__(dfd)
         if meta is not None:
-            new_df.meta = meta
-        return new_df
+            df.meta = meta
+        return df
 
     @staticmethod
     def __operator__(df, dtype, multiple_columns=False):
@@ -228,7 +230,7 @@ class BaseDataFrame(ABC):
         Return values from a dataframe in numpy or cupy format. Aimed to be used internally in Machine Learning models
         :return:
         """
-        return self.root.data.values
+        return self.data.values
 
     @abstractmethod
     def save(self):
@@ -276,7 +278,7 @@ class BaseDataFrame(ABC):
 
     def _assign(self, kw_columns):
 
-        dfd = self.root.data
+        dfd = self.data
         return dfd.assign(**kw_columns)
 
     def to_json(self, columns="*"):
@@ -293,7 +295,7 @@ class BaseDataFrame(ABC):
             [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
             :return:
         """
-        return self.root.to_pandas().to_dict(orient)
+        return self.to_pandas().to_dict(orient)
 
     @staticmethod
     @abstractmethod
@@ -481,7 +483,7 @@ class BaseDataFrame(ABC):
 
     def repartition(self, n=None, *args, **kwargs):
         df = self.data
-        return self.root.new(df, meta=self.root.meta)
+        return self.new(df, meta=self.meta)
 
     def table_image(self, path, limit=10):
         """
@@ -647,8 +649,8 @@ class BaseDataFrame(ABC):
             meta = Meta.set(meta, "profile", {})
             df.meta = meta
 
-            numeric_cols = []
-            string_cols = []
+            hist_cols = []
+            freq_cols = []
 
             cols_dtypes = {}
             cols_to_infer = [*cols_to_profile]
@@ -664,8 +666,6 @@ class BaseDataFrame(ABC):
                 cols_dtypes = {**cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer)}
                 cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
 
-            compute = True
-
             _t = time.process_time()
             mismatch = df.cols.count_mismatch(cols_dtypes)
             profiler_time["count_mismatch"] = {"columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
@@ -677,73 +677,79 @@ class BaseDataFrame(ABC):
                         or properties.get("dtype") == ProfilerDataTypes.EMAIL.value \
                         or properties.get("dtype") == ProfilerDataTypes.URL.value \
                         or properties.get("dtype") == ProfilerDataTypes.OBJECT.value:
-                    string_cols.append(col_name)
+                    freq_cols.append(col_name)
                 else:
-                    numeric_cols.append(col_name)
+                    hist_cols.append(col_name)
 
             hist = None
+            freq = {}
+            sliced_freq = {}
             count_uniques = None
 
-            if len(numeric_cols):
+            if len(hist_cols):
                 _t = time.process_time()
-                hist = df.cols.hist(numeric_cols, buckets=bins, compute=False)
-                profiler_time["hist"] = {"columns": numeric_cols, "elapsed_time": time.process_time() - _t}
+                hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
+                profiler_time["hist"] = {"columns": hist_cols, "elapsed_time": time.process_time() - _t}
 
-            freq = []
-
-            if len(string_cols):
+            if len(freq_cols):
                 _t = time.process_time()
                 sliced_cols = []
                 non_sliced_cols = []
 
                 # Extract the columns with cells larger thatn
-                for i, j in df.meta["max_cell_length"].items():
-                    if i in string_cols:
-                        if j > 50:
-                            sliced_cols.append(i)
-                        else:
-                            non_sliced_cols.append(i)
+                max_cell_length = getattr(df.meta, "max_cell_length", None)
+                
+                if max_cell_length:
+                    for i, j in max_cell_length.items():
+                        if i in freq_cols:
+                            if j > 50:
+                                sliced_cols.append(i)
+                            else:
+                                non_sliced_cols.append(i)
+
+                else:
+                    non_sliced_cols = freq_cols
 
                 if len(non_sliced_cols) > 0:
                     # print("non_sliced_cols",non_sliced_cols)
-                    freq.append(df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False))
+                    freq = df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False)
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
-                    freq.append(
-                        df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
-                                                                         compute=False))
+                    sliced_freq = df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
+                                                                         compute=False)
 
-                profiler_time["frequency"] = {"columns": string_cols, "elapsed_time": time.process_time() - _t}
+                profiler_time["frequency"] = {"columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
-                _f = {}
-
-                _freq = {} if _freq is None else _freq["frequency"]
+                _c = {}
+                
                 _hist = {} if _hist is None else _hist["hist"]
+                _freq = {} if _freq is None else _freq["frequency"]
 
                 for _col_name in _columns:
-                    _f[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
+                    _c[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
                     if _col_name in _freq:
                         f = _freq[_col_name]
-                        _f[_col_name]["stats"]["frequency"] = f["values"]
-                        _f[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
+                        _c[_col_name]["stats"]["frequency"] = f["values"]
+                        _c[_col_name]["stats"]["count_uniques"] = f["count_uniques"]
 
                     elif _col_name in _hist:
                         h = _hist[_col_name]
-                        _f[_col_name]["stats"]["hist"] = h
+                        _c[_col_name]["stats"]["hist"] = h
 
-                return {"columns": _f}
+                return {"columns": _c}
 
             # Nulls
             total_count_na = 0
 
             dtypes = df.cols.dtypes("*")
 
-            if compute is True:
-                hist, freq, mismatch = dd.compute(hist, freq, mismatch)
+            hist, freq, sliced_freq, mismatch = dd.compute(hist, freq, sliced_freq, mismatch)
 
-            updated_columns = merge(cols_to_profile, hist, freq[0], mismatch, dtypes, count_uniques)
+            freq = {**freq, **sliced_freq}
+
+            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
@@ -790,7 +796,7 @@ class BaseDataFrame(ABC):
         Return a dict the Dask tasks graph
         :return:
         """
-        dfd = self.root.data
+        dfd = self.data
 
         return dfd.__dask_graph__().layers
 
@@ -799,12 +805,12 @@ class BaseDataFrame(ABC):
         return self.data[col1]
 
     def string_clustering(self, columns="*", algorithm="fingerprint", *args, **kwargs):
-        return string_clustering(self.root, columns, algorithm, *args, **kwargs)
+        return string_clustering(self, columns, algorithm, *args, **kwargs)
         # return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict"):
 
-        df = self.root
+        df = self
         dfd = df.data
 
         if groupby:
@@ -821,7 +827,7 @@ class BaseDataFrame(ABC):
                 result = dfd.to_dict()
 
             elif output == "dataframe":
-                result = self.root.new(dfd.reset_index())
+                result = self.new(dfd.reset_index())
 
         else:
             result = {}
@@ -832,7 +838,7 @@ class BaseDataFrame(ABC):
                     result[column + "_" + aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
 
             if output == "dataframe":
-                result = self.root.new(result)
+                result = self.new(result)
 
         return result
 

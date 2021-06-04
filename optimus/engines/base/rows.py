@@ -328,7 +328,7 @@ class BaseRows(ABC):
         :param count:
         :return:
         """
-        return self.root.new(self.root.data[:count - 1])
+        return self.root.new(self.root.data[:count])
 
     def is_in(self, input_cols, values, output_cols=None):
 

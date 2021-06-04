@@ -12,7 +12,7 @@ from optimus.helpers.raiseit import RaiseIt
 
 class SparkDataFrame(BaseDataFrame):
     def __init__(self, data):
-        super().__init__(self, data)
+        super().__init__(data)
 
     @property
     def rows(self):

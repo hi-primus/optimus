@@ -9,7 +9,7 @@ from optimus.helpers.converter import cudf_to_dask_cudf
 class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def __init__(self, data):
-        super().__init__(self, data)
+        super().__init__(data)
 
     def _base_to_dfd(self, pdf, n_partitions):
         return cudf_to_dask_cudf(pdf, n_partitions)
