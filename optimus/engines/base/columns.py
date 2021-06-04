@@ -1601,17 +1601,19 @@ class BaseColumns(ABC):
 
         if is_dict(input_cols):
             for col, replace in input_cols.items():
+                _search = []
+                _replace_by = []
                 for replace_by, search in replace.items():
-                    df = df.cols._replace(col, search, replace_by)
+                    _replace_by.append(replace_by)
+                    _search.append(search)
+                df = df.cols._replace(col, _search, _replace_by)
 
         else:
-            if is_list(replace_by):
-                search = val_to_list(search)
-                replace_by = val_to_list(replace_by)
-                for _search, _replace_by in zip(search, replace_by):
-                    df = df.cols._replace(input_cols, _search, _replace_by, search_by, ignore_case, output_cols)
-            else:
-                df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
+            search = val_to_list(search)
+            replace_by = val_to_list(replace_by)
+            if len(replace_by) == 1:
+                replace_by = replace_by[0]
+            df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
@@ -1639,15 +1641,12 @@ class BaseColumns(ABC):
         elif search_by == "words":
             func = self.F.replace_words
             func_return_type = str
-            replace_by = replace_by
         elif search_by == "full":
             func = self.F.replace_full
             func_return_type = str
-            replace_by = replace_by
         elif search_by == "values":
             func = self.F.replace_values
             func_return_type = None
-            replace_by = replace_by
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full", "values"])
 
