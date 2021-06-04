@@ -3,6 +3,7 @@
 import cudf
 
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
+from optimus.helpers.core import val_to_list
 from optimus.engines.base.functions import Functions
 
 
@@ -103,6 +104,7 @@ class CUDFFunctions(Functions):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
     def replace_chars(self, series, search, replace_by):
+        replace_by = val_to_list(replace_by)
         return self.to_string_accessor(series).replace(search, replace_by)
 
     def normalize_chars(self, series):
