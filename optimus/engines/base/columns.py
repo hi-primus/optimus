@@ -512,7 +512,7 @@ class BaseColumns(ABC):
         alpha_lower = split(string.ascii_lowercase)
         alpha_upper = split(string.ascii_uppercase)
         digits = split(string.digits)
-        punctuation = [f"\\{s}" for s in string.punctuation]
+        punctuation = split(string.punctuation)
 
         if mode == 0:
             search_by = alpha_lower + alpha_upper + digits
@@ -1504,7 +1504,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        return df.cols.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
+        return df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
     def to_datetime(self, input_cols, format, output_cols=None):
         """
@@ -1631,6 +1631,7 @@ class BaseColumns(ABC):
         """
 
         search = val_to_list(search)
+        replace_by = one_list_to_val(replace_by)
 
         if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
             search_by = "values"
