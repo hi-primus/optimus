@@ -96,7 +96,7 @@ class Load(BaseLoad):
             elif header is False:
                 header = None
             # The str to ["str] is due to a bug in cudf https://github.com/rapidsai/cudf/issues/6606
-            if dtype is None or dtype == str:
+            if dtype == str or dtype is None:
                 dtype = ["str"]
 
             cdf = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,

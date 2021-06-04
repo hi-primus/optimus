@@ -1963,9 +1963,10 @@ class BaseColumns(ABC):
                     for
                     col_name in _columns}
 
-        _min = df.cols.min(columns, compute=False, tidy=False)
-        _max = df.cols.max(columns, compute=False, tidy=False)
+        _min = df.cols.min(columns, compute=True, tidy=False)
+        _max = df.cols.max(columns, compute=True, tidy=False)
         _bins = _bins_col(columns, _min, _max)
+
 
         @self.F.delayed
         def _hist(pdf, col_name, _bins):

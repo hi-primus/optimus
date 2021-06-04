@@ -78,3 +78,5 @@ tests/creator/dask-worker-space/
 conda/recipes/conda
 
 conda/recipes/conda-build
+
+examples/store.csv
