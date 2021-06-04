@@ -818,7 +818,7 @@ class Cols(BaseColumns):
         input_cols = parse_columns(self.root, input_cols, filter_by_column_dtypes=self.root.constants.STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
-        df = self.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
+        df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
         return df
 
     def remove_white_spaces(self, input_cols="*", output_cols=None):
