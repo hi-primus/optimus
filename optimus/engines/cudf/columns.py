@@ -224,63 +224,12 @@ class Cols(CUDFBaseColumns, PandasBaseColumns, DataFrameBaseColumns):
         le = preprocessing.LabelEncoder()
         return index_to_string(df, input_cols, output_cols, le)
 
-    def unnest(self, input_cols, separator=None, splits=-1, index=None, output_cols=None, drop=False,
-               mode="string"):
+    @staticmethod
+    def _unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols):
+        if mode == "string":
+            dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits)
 
-        """
-        Split an array or string in different columns
-        :param input_cols: Columns to be un-nested
-        :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
-        (output_col_2_1, output_col_2]
-        :param separator: char or regex
-        :param splits: Number of columns splits.
-        :param index: Return a specific index per columns. [1,2]
-        :param drop:
-        :param mode:
-        """
-        df = self.root
+        else:
+            RaiseIt.value_error(mode, ["string"])
 
-        # if separator is not None:
-        #     separator = re.escape(separator)
-
-        input_cols = parse_columns(df, input_cols)
-
-        index = val_to_list(index)
-        output_ordered_columns = df.cols.names()
-
-        dfd = df.data
-
-        for idx, input_col in enumerate(input_cols):
-
-            if is_list_of_tuples(index):
-                final_index = index[idx]
-            else:
-                final_index = index
-
-            if mode == "string":
-
-                dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits)
-                final_splits = dfd_new.cols.count()
-                if output_cols is None:
-                    final_columns = [input_col + "_" + str(i) for i in range(final_splits)]
-                elif is_list_of_tuples(output_cols):
-                    final_columns = output_cols[idx]
-                else:
-                    final_columns = [output_cols + "_" + str(i) for i in range(final_splits)]
-
-            # If columns split is shorter than the number of splits
-            dfd_new.columns = final_columns[:len(dfd_new.columns)]
-            if final_index:
-                dfd_new = dfd_new.cols.select(final_index[idx])
-            df_new = self.root.new(dfd_new)
-            df = self.root.new(dfd).cols.append([df_new])
-
-        if drop is True:
-            df = df.cols.drop(columns=input_cols)
-            for input_col in input_cols:
-                if input_col in output_ordered_columns:
-                    output_ordered_columns.remove(input_col)
-
-        df.meta = Meta.action(df.meta, Actions.UNNEST.value, final_columns)
-
-        return df.cols.move(df_new.cols.names(), "after", input_cols)
+        return dfd_new
