@@ -20,6 +20,7 @@ class Cols(CUDFBaseColumns, PandasBaseColumns, DataFrameBaseColumns):
 
     @property
     def _pd(self):
+        import cudf
         return cudf
 
     def _series_to_pandas(self, series):
