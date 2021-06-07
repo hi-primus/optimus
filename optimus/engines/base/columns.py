@@ -1877,6 +1877,10 @@ class BaseColumns(ABC):
 
     @staticmethod
     def _unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols):
+        
+        if separator is not None:
+            separator = re.escape(separator)
+
         if mode == "string":
             dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits-1)
 
@@ -1910,9 +1914,6 @@ class BaseColumns(ABC):
         :param mode:
         """
         df = self.root
-
-        if separator is not None:
-            separator = re.escape(separator)
 
         input_cols = parse_columns(df, input_cols)
 
