@@ -936,11 +936,11 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def kurtosis(self, columns="*", tidy=True, compute=False):
+    def kurtosis(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.kurtosis, tidy=tidy, compute=compute)
 
-    def skew(self, columns="*", tidy=True, compute=False):
+    def skew(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.skew, tidy=tidy, compute=compute)
 
