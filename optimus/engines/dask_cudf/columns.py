@@ -3,13 +3,14 @@ import fastnumbers
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, impute
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.helpers.columns import parse_columns
 from optimus.profiler.functions import fill_missing_var_types
 
 
-class Cols(CUDFBaseColumns, DaskBaseColumns):
+class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
     def __init__(self, df):
         super(DaskBaseColumns, self).__init__(df)
 
