@@ -40,6 +40,9 @@ class BaseDataFrame(ABC):
         self.updated = None
         self.meta = {}
 
+    def __del__(self):
+        del self.data
+
     @property
     def root(self):
         return self
