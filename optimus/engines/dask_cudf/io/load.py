@@ -104,14 +104,12 @@ class Load(BaseLoad):
 
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
                 dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                          quoting=quoting, lineterminator=lineterminator,
-                                          keep_default_na=True, na_values=None, engine=engine,
+                                          quoting=quoting, keep_default_na=True, na_values=None, engine=engine,
                                           storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
 
             elif engine == "c":
                 dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                          quoting=quoting, lineterminator=lineterminator,
-                                          error_bad_lines=error_bad_lines,
+                                          quoting=quoting, error_bad_lines=error_bad_lines,
                                           keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
                                           storage_options=storage_options, low_memory=False, *args, **kwargs)
 
