@@ -474,7 +474,7 @@ class BaseColumns(ABC):
             if arg in func_map.keys():
                 df = getattr(df.cols, func_map[arg])(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, func_map.keys())
+                RaiseIt.value_error(arg, list(func_map.keys()))
 
         return df
 
