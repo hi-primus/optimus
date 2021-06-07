@@ -27,6 +27,23 @@ class Cols(CUDFBaseColumns, PandasBaseColumns, DataFrameBaseColumns):
     def _series_to_pandas(self, series):
         return series.to_pandas()
 
+    @staticmethod
+    def exec_agg(exprs, compute):
+        """
+        Execute and aggregation
+        :param exprs:
+        :return:
+        """
+        # print("exprs",type(exprs))
+        try:
+            return exprs[0].to_pandas().to_dict()
+        except TypeError:
+            return exprs
+        except AttributeError:
+            return exprs
+        except IndexError:
+            return exprs
+
     def find(self, columns, sub, ignore_case=False):
         """
         Find the start and end position for a char or substring
