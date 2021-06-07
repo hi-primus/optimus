@@ -10,6 +10,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
+from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_tuples
 
 
