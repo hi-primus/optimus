@@ -12,7 +12,7 @@ from optimus.profiler.functions import fill_missing_var_types
 
 class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DaskBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     def _series_to_pandas(self, series):
         return series.compute().to_pandas()

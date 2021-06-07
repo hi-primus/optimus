@@ -3,9 +3,9 @@ from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find, to_float_cudf, \
     to_string_cudf, to_integer_cudf
-from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.constants import Actions
@@ -14,10 +14,10 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_of_tuples
 
 
-class Cols(CUDFBaseColumns, PandasBaseColumns, DataFrameBaseColumns):
+class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
     def __init__(self, df):
-        super(PandasBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     @property
     def _pd(self):

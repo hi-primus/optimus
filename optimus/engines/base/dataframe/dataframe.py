@@ -9,10 +9,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_value
 
 
-class Ext(BaseDataFrame):
-
-    def __init__(self, data):
-        super().__init__(data)
+class DataFrameBaseDataFrame():
 
     def execute(self):
         df = self.data

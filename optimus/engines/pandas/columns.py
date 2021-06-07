@@ -3,15 +3,15 @@ import pandas as pd
 from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string, find
-from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.columns import BaseColumns
 
 DataFrame = pd.DataFrame
 
 
-class Cols(PandasBaseColumns, DataFrameBaseColumns):
+class Cols(DataFrameBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DataFrameBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     @property
     def _pd(self):
